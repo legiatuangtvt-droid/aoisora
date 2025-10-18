@@ -1,5 +1,5 @@
 import { db } from './firebase.js';
-import { collection, getDocs, addDoc, deleteDoc, doc, serverTimestamp, writeBatch, setDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { collection, getDocs, addDoc, deleteDoc, doc, serverTimestamp, writeBatch, setDoc, onSnapshot, query, orderBy, getDoc, where } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 const taskGroupsCollection = collection(db, 'task_groups');
 
@@ -26,7 +26,7 @@ function renderTaskGroups(groups) {
             <td class="px-6 py-4 text-sm text-gray-600">${group.description}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${group.taskCount || 0}</td>
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-3"><i class="fas fa-eye"></i> Xem chi tiết</a>
+                <button data-id="${group.id}" class="view-details-btn text-indigo-600 hover:text-indigo-900 mr-3"><i class="fas fa-eye"></i> Xem chi tiết</button>
                 <button data-id="${group.id}" class="delete-btn text-red-600 hover:text-red-900"><i class="fas fa-trash"></i> Xóa</button>
             </td>
         `;
@@ -68,6 +68,10 @@ const bulkImportModal = document.getElementById('bulk-import-modal');
 const bulkImportBtn = document.getElementById('bulk-import-btn');
 const bulkImportForm = document.getElementById('bulk-import-form');
 
+// --- UI & Modal Logic for Details ---
+const detailsModal = document.getElementById('details-modal');
+
+
 window.openModal = function() {
     modal.classList.remove('hidden');
     modal.classList.add('flex');
@@ -87,6 +91,62 @@ window.openBulkModal = function() {
 window.closeBulkModal = function() {
     bulkImportModal.classList.add('hidden');
     bulkImportModal.classList.remove('flex');
+}
+
+window.closeDetailsModal = function() {
+    detailsModal.classList.add('hidden');
+    detailsModal.classList.remove('flex');
+    // Xóa dữ liệu cũ để lần mở sau không bị hiển thị sót
+    document.getElementById('details-task-list').innerHTML = `<tr><td colspan="3" class="text-center p-4 text-gray-500">Đang tải...</td></tr>`;
+}
+
+/**
+ * Mở modal chi tiết và tải dữ liệu cho một nhóm công việc cụ thể.
+ * @param {string} groupId - ID của nhóm công việc trong Firestore.
+ */
+async function openDetailsModal(groupId) {
+    detailsModal.classList.remove('hidden');
+    detailsModal.classList.add('flex');
+
+    try {
+        // 1. Lấy thông tin chi tiết của nhóm
+        const groupDocRef = doc(db, 'task_groups', groupId);
+        const groupDocSnap = await getDoc(groupDocRef);
+
+        if (!groupDocSnap.exists()) {
+            alert("Không tìm thấy nhóm công việc!");
+            closeDetailsModal();
+            return;
+        }
+        const groupData = groupDocSnap.data();
+        document.getElementById('details-modal-title').textContent = `Chi tiết: ${groupData.name}`;
+        document.getElementById('details-group-name').textContent = groupData.name;
+        document.getElementById('details-group-id').textContent = groupId;
+        document.getElementById('details-group-desc').textContent = groupData.description || '(Không có mô tả)';
+
+        // 2. Lấy danh sách các công việc thuộc nhóm này
+        const tasksCollection = collection(db, 'main_tasks');
+        const q = query(tasksCollection, where("groupId", "==", groupId));
+        const querySnapshot = await getDocs(q);
+
+        const taskListEl = document.getElementById('details-task-list');
+        if (querySnapshot.empty) {
+            taskListEl.innerHTML = `<tr><td colspan="3" class="text-center p-4 text-gray-500">Chưa có công việc nào trong nhóm này.</td></tr>`;
+        } else {
+            taskListEl.innerHTML = querySnapshot.docs.map(doc => {
+                const task = doc.data();
+                return `<tr>
+                            <td class="px-4 py-3 text-sm text-gray-700">${doc.id}</td>
+                            <td class="px-4 py-3 text-sm font-medium text-gray-900">${task.name}</td>
+                            <td class="px-4 py-3 text-sm text-gray-700">${task.estimatedTime || 'N/A'}</td>
+                        </tr>`;
+            }).join('');
+        }
+    } catch (error) {
+        console.error("Lỗi khi tải chi tiết nhóm công việc: ", error);
+        alert("Đã xảy ra lỗi khi tải chi tiết. Vui lòng thử lại.");
+        closeDetailsModal();
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -184,6 +244,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert("Đã xảy ra lỗi khi xóa. Vui lòng thử lại.");
                 }
             }
+        }
+
+        const viewDetailsButton = e.target.closest('.view-details-btn');
+        if (viewDetailsButton) {
+            const groupId = viewDetailsButton.dataset.id;
+            openDetailsModal(groupId);
         }
     });
 });
