@@ -48,65 +48,30 @@ function listenForTaskGroupChanges() {
         }, (error) => {
             // Callback này sẽ được gọi nếu có lỗi khi đang lắng nghe
             console.error("Lỗi khi lắng nghe thay đổi nhóm công việc: ", error);
-            alert("Mất kết nối tới dữ liệu. Vui lòng kiểm tra và thử lại.");
+            showToast("Mất kết nối tới dữ liệu. Vui lòng kiểm tra và thử lại.", "error");
         });
     } catch (error) {
         console.error("Lỗi khi thiết lập listener: ", error);
-        alert("Không thể tải danh sách nhóm công việc. Vui lòng kiểm tra kết nối và thử lại.");
+        showToast("Không thể tải danh sách nhóm công việc. Vui lòng kiểm tra kết nối và thử lại.", "error");
     }
 }
 
-// --- UI & Modal Logic ---
-const modal = document.getElementById('group-modal');
 const sidebarAddGroupBtn = document.getElementById('sidebar-add-group-btn');
 const mainAddGroupBtn = document.getElementById('main-add-group-btn');
 const addGroupForm = document.getElementById('add-group-form');
 const taskGroupList = document.getElementById('task-groups-list');
 
-// --- UI & Modal Logic for Bulk Import ---
-const bulkImportModal = document.getElementById('bulk-import-modal');
 const bulkImportBtn = document.getElementById('bulk-import-btn');
 const bulkImportForm = document.getElementById('bulk-import-form');
-
-// --- UI & Modal Logic for Details ---
-const detailsModal = document.getElementById('details-modal');
-
-
-window.openModal = function() {
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-}
-
-window.closeModal = function() {
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
-    addGroupForm.reset();
-}
-
-window.openBulkModal = function() {
-    bulkImportModal.classList.remove('hidden');
-    bulkImportModal.classList.add('flex');
-}
-
-window.closeBulkModal = function() {
-    bulkImportModal.classList.add('hidden');
-    bulkImportModal.classList.remove('flex');
-}
-
-window.closeDetailsModal = function() {
-    detailsModal.classList.add('hidden');
-    detailsModal.classList.remove('flex');
-    // Xóa dữ liệu cũ để lần mở sau không bị hiển thị sót
-    document.getElementById('details-task-list').innerHTML = `<tr><td colspan="3" class="text-center p-4 text-gray-500">Đang tải...</td></tr>`;
-}
 
 /**
  * Mở modal chi tiết và tải dữ liệu cho một nhóm công việc cụ thể.
  * @param {string} groupId - ID của nhóm công việc trong Firestore.
  */
 async function openDetailsModal(groupId) {
-    detailsModal.classList.remove('hidden');
-    detailsModal.classList.add('flex');
+    // Xóa dữ liệu cũ trước khi mở modal mới
+    document.getElementById('details-task-list').innerHTML = `<tr><td colspan="3" class="text-center p-4 text-gray-500">Đang tải...</td></tr>`;
+    showModal('details-modal');
 
     try {
         // 1. Lấy thông tin chi tiết của nhóm
@@ -114,8 +79,8 @@ async function openDetailsModal(groupId) {
         const groupDocSnap = await getDoc(groupDocRef);
 
         if (!groupDocSnap.exists()) {
-            alert("Không tìm thấy nhóm công việc!");
-            closeDetailsModal();
+            showToast("Không tìm thấy nhóm công việc!", "error");
+            hideModal();
             return;
         }
         const groupData = groupDocSnap.data();
@@ -155,8 +120,8 @@ async function openDetailsModal(groupId) {
         }
     } catch (error) {
         console.error("Lỗi khi tải chi tiết nhóm công việc: ", error);
-        alert("Đã xảy ra lỗi khi tải chi tiết. Vui lòng thử lại.");
-        closeDetailsModal();
+        showToast("Đã xảy ra lỗi khi tải chi tiết. Vui lòng thử lại.", "error");
+        hideModal();
     }
 }
 
@@ -164,11 +129,11 @@ document.addEventListener('DOMContentLoaded', () => {
     listenForTaskGroupChanges(); // Thay đổi ở đây
 
     // Gán sự kiện mở modal
-    sidebarAddGroupBtn.addEventListener('click', openModal);
-    mainAddGroupBtn.addEventListener('click', openModal);
+    sidebarAddGroupBtn.addEventListener('click', () => showModal('group-modal'));
+    mainAddGroupBtn.addEventListener('click', () => showModal('group-modal'));
 
     // Gán sự kiện mở modal nhập hàng loạt
-    bulkImportBtn.addEventListener('click', openBulkModal);
+    bulkImportBtn.addEventListener('click', () => showModal('bulk-import-modal'));
 
     // Xử lý gửi form để thêm nhóm mới vào Firestore
     addGroupForm.addEventListener('submit', async function(e) {
@@ -187,12 +152,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const docRef = await addDoc(taskGroupsCollection, newGroup);
-            alert(`Đã tạo thành công nhóm: ${groupName}`);
-            closeModal();
+            showToast(`Đã tạo thành công nhóm: ${groupName}`, "success");
+            hideModal();
             // Không cần gọi fetch nữa, onSnapshot sẽ tự động cập nhật
         } catch (error) {
             console.error("Lỗi khi thêm nhóm công việc: ", error);
-            alert("Đã xảy ra lỗi khi tạo nhóm. Vui lòng thử lại.");
+            showToast("Đã xảy ra lỗi khi tạo nhóm. Vui lòng thử lại.", "error");
         }
     });
 
@@ -203,14 +168,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const lines = bulkData.split('\n').filter(line => line.trim() !== '');
 
         if (lines.length === 0) {
-            alert('Không có dữ liệu để nhập.');
+            showToast('Không có dữ liệu để nhập.', 'warning');
             return;
         }
 
-        if (!confirm(`Bạn có chắc chắn muốn nhập ${lines.length} nhóm công việc mới không?`)) {
+        const confirmed = await showConfirmation(`Bạn có chắc chắn muốn nhập ${lines.length} nhóm công việc? Các nhóm có ID trùng lặp sẽ bị ghi đè.`, 'Xác nhận Nhập hàng loạt');
+        if (!confirmed) {
             return;
         }
 
+        showToast('Đang xử lý nhập dữ liệu...', 'info');
         const batch = writeBatch(db);
         let processedCount = 0;
 
@@ -235,8 +202,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         await batch.commit();
-        alert(`Hoàn tất! Đã nhập thành công ${processedCount} / ${lines.length} nhóm công việc.`);
-        closeBulkModal();
+        showToast(`Hoàn tất! Đã nhập ${processedCount}/${lines.length} nhóm công việc.`, "success");
+        hideModal();
         // Không cần gọi fetch nữa, onSnapshot sẽ tự động cập nhật
     });
 
@@ -245,14 +212,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const deleteButton = e.target.closest('.delete-btn');
         if (deleteButton) {
             const groupId = deleteButton.dataset.id;
-            if (confirm(`Bạn có chắc chắn muốn xóa nhóm công việc này (ID: ${groupId}) không?`)) {
+            const confirmed = await showConfirmation(
+                `Bạn có chắc chắn muốn xóa nhóm công việc này (ID: ${groupId}) không? Hành động này không thể hoàn tác.`,
+                'Xác nhận Xóa Nhóm'
+            );
+            if (confirmed) {
                 try {
                     await deleteDoc(doc(db, 'task_groups', groupId));
-                    alert('Đã xóa thành công!');
+                    showToast('Đã xóa thành công!', 'success');
                     // Không cần gọi fetch nữa, onSnapshot sẽ tự động cập nhật
                 } catch (error) {
                     console.error("Lỗi khi xóa nhóm công việc: ", error);
-                    alert("Đã xảy ra lỗi khi xóa. Vui lòng thử lại.");
+                    showToast("Đã xảy ra lỗi khi xóa. Vui lòng thử lại.", "error");
                 }
             }
         }
