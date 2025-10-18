@@ -1,0 +1,1027 @@
+/**
+ * Store Tasks - Logic for the main store task view screen (index.html).
+ * Encapsulated to avoid global scope pollution.
+ */
+(function () {
+    'use strict';
+
+    //================================================================================
+    // CONFIG & CONSTANTS
+    //================================================================================
+
+    const API_URL = window.location.hostname === 'localhost' ? 'http://localhost/auraProject/api' : 'https://auraorientalis.vn/auraProject/api';
+    const DEPT_COLORS = {
+      12: "#8ecae6", // OP
+      13: "#219ebc", // ORD
+      14: "#bde0fe", // ADM
+      15: "#ffd54f", // HR
+      16: "#ffc8dd", // IMP
+      17: "#c5e1a5", // MKT
+      18: "#ffafcc"  // QC
+    };
+    const STATUS_CLASS_MAP = { "Not Yet": "status-notyet", "Overdue": "status-overdue", "On Progress": "status-progress", "Done": "status-done" };
+    const XP_PER_STAR = 20;
+
+    const TASKS_PER_PAGE = 10;
+    //================================================================================
+    // DOM & STATE
+    //================================================================================
+    const dom = {
+        weekLabel: document.getElementById("weekLabel"),
+        weekRange: document.getElementById("weekRange"),
+        prevWeekBtn: document.getElementById("prevWeek"),
+        nextWeekBtn: document.getElementById("nextWeek"),
+        dayTabs: document.getElementById("dayTabs"),
+        summary: document.getElementById("status-summary"),
+        weekTitle: document.getElementById("weekTitle"),
+        storeFilter: document.getElementById("store-filter"),
+        staffFilter: document.getElementById("staff-filter"),
+        hqScreenBtn: document.getElementById('hq-screen'),
+        taskList: document.getElementById("task-list"),
+        paginationContainer: document.getElementById("pagination-container"),
+        popup: document.getElementById("popup"),
+        xpFill: document.getElementById("xpFill"),
+        xpCount: document.getElementById("xpCount"),
+        xpStar: document.getElementById("xpStar"),
+        notificationBell: document.getElementById('notification-bell'),
+        notificationCount: document.getElementById('notification-count'),
+        notificationPanel: document.getElementById('notification-panel'),
+        notificationList: document.getElementById('notification-list'),
+        closeNotificationPanelBtn: document.getElementById('close-notification-panel'),
+        userSwitcher: document.getElementById('user-switcher'),
+        userStoreInfo: document.getElementById('user-store-info'),
+    };
+    const state = {
+        taskUpdateChannel: new BroadcastChannel('task_updates'),
+        allTasks: [],
+        allStaff: [],
+        codeMap: {},
+        selectedDay: new Date(),
+        statusFilter: null,
+        storeFilter: "all",
+        staffFilter: "all",
+        allWeekMode: false,
+        xp: 0,
+        audioCtx: null,
+        currentPage: 1,
+        notifications: [],
+        currentUserId: 0, // Mặc định ID người dùng hiện tại là Admin để test
+        notificationViewUserId: 0, // ID của người dùng để xem thông báo, mặc định là người dùng hiện tại
+        currentUserData: null, // Lưu thông tin đầy đủ của user hiện tại
+    };
+
+    //================================================================================
+    // API & DATA FETCHING
+    //================================================================================
+    async function fetchFromAPI(endpoint) {
+        try {
+            const [path, queryString] = endpoint.split('?');
+            const url = `${API_URL}/${path}.php${queryString ? '?' + queryString : ''}`;
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            return await response.json();
+        } catch (error) {
+            console.error(`Error fetching ${endpoint}:`, error);
+            return [];
+        }
+    }
+    async function updateTaskCheckListBatch(taskId, checks) {
+        try {
+            const res = await fetch(`${API_URL}/task_check_list.php`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ task_id: taskId, checks })
+            });
+            if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+            return await res.json();
+        } catch (err) {
+            console.error("Error updating task_check_list batch:", err);
+            return { success: false, message: err.message };
+        }
+    }
+
+    //================================================================================
+    // UI & RENDERING
+    //================================================================================
+    function renderWeekHeader() {
+        // ===== Week label =====
+        const slDay = new Date(state.selectedDay); slDay.setHours(0, 0, 0, 0);
+        slDay.setDate(slDay.getDate() + 3 - (slDay.getDay()+6)%7);
+        const week1 = new Date(slDay.getFullYear(),0,4);
+        const selectedWeek = 1 + Math.round(((slDay-week1)/86400000-3+(week1.getDay()+6)%7)/7);
+        dom.weekLabel.innerHTML = `W${String(selectedWeek).padStart(2, '0')}`;
+        const start = getWeekStart(state.selectedDay), end = new Date(start); end.setDate(start.getDate() + 6);
+        const options = {month:'short',day:'2-digit'};
+        dom.weekRange.innerHTML = (start.getFullYear() === end.getFullYear())
+    ? `${start.toLocaleDateString('en-US',options)} ~ ${end.toLocaleDateString('en-US',options)} ${end.getFullYear()}`
+    : `${start.toLocaleDateString('en-US',options)} ${start.getFullYear()} ~ ${end.toLocaleDateString('en-US',options)} ${end.getFullYear()}`;
+    }
+    function renderDayTabs() {
+        const dayNames=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+        const weekStart = getWeekStart(state.selectedDay);
+        dom.dayTabs.innerHTML = dayNames.map((day, i) => {
+            const d = addDays(weekStart, i);
+            const dayNum = String(d.getDate()).padStart(2, '0');
+            const monthNum = String(d.getMonth() + 1).padStart(2, '0');
+            return `<button data-day-index="${i}">
+                        ${day}
+                        <small>${dayNum}/${monthNum}</small>
+                    </button>`;
+        }).join('');
+        const selectedIndex = (state.selectedDay.getDay() + 6) % 7;
+        const activeButton = dom.dayTabs.querySelector(`[data-day-index="${selectedIndex}"]`);
+        if (activeButton) activeButton.classList.add("active");
+    }
+
+    function renderDayTabs_OLD() {
+        const dayNames=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+        dom.dayTabs.innerHTML = dayNames.map((day, i) => `<button data-day-index="${i}">${day}</button>`).join('');
+        const selectedIndex = (state.selectedDay.getDay() + 6) % 7;
+        const activeButton = dom.dayTabs.querySelector(`[data-day-index="${selectedIndex}"]`);
+        if (activeButton) activeButton.classList.add("active");
+    }
+    function renderSummary(tasksToSummarize) {
+        const counts = { all: 0, "Not Yet": 0, "Overdue": 0, "On Progress": 0, "Done": 0 };
+        tasksToSummarize.forEach(t => {
+            const s = t.status_name;
+            if (s && counts[s] !== undefined) counts[s]++;
+        });
+        counts.all = tasksToSummarize.length;
+        const rieHour = tasksToSummarize.reduce((sum, t) => sum + (Number(t.re) || 0), 0);
+
+        dom.summary.innerHTML = `
+            <div data-filter="all" class="${state.statusFilter === 'all' || !state.statusFilter ? 'selected' : ''}"><strong>${counts.all}</strong> Active</div>
+            <div data-filter="Not Yet" class="${state.statusFilter === 'Not Yet' ? 'selected' : ''}" style="color:red;"><strong>${counts["Not Yet"]}</strong> Not Yet</div>
+            <div data-filter="Overdue" class="${state.statusFilter === 'Overdue' ? 'selected' : ''}" style="color:darkred;"><strong>${counts["Overdue"]}</strong> Overdue</div>
+            <div data-filter="On Progress" class="${state.statusFilter === 'On Progress' ? 'selected' : ''}" style="color:blue;"><strong>${counts["On Progress"]}</strong> On Progress</div>
+            <div data-filter="Done" class="${state.statusFilter === 'Done' ? 'selected' : ''}" style="color:green;"><strong>${counts["Done"]}</strong> Done</div>
+            <div><strong>${rieHour}</strong> RE</div>
+        `;
+    }
+    function renderTaskList(tasksToRender) {
+        const startIndex = (state.currentPage - 1) * TASKS_PER_PAGE;
+        const endIndex = startIndex + TASKS_PER_PAGE;
+        const paginatedTasks = tasksToRender.slice(startIndex, endIndex);
+
+        dom.taskList.innerHTML = paginatedTasks.map((t, i) => {
+            const sName = t.status_name; // Trạng thái task
+            const itemIndex = startIndex + i + 1;
+
+            // --- LOGIC HIỂN THỊ ĐỒNG TIỀN (CẬP NHẬT) ---
+            // 1. Điều kiện cơ bản để hiển thị đồng tiền: Task phải ở trạng thái "Done".
+            const isTaskDone = Number(t.status_id) === 9;
+
+            // 2. Điều kiện để đồng tiền "nhảy" và có thể thu thập:
+            //    - Task đã "Done" VÀ EXP chưa được thu thập.
+            //    - Người dùng hiện tại chính là người thực hiện task đó.
+            //    - Admin (id=0) không thể thu thập.
+            const canCollectAndBounce = isTaskDone && t.is_exp_collected == 0 && (state.currentUserId === t.do_staff_id) && state.currentUserId !== 0;
+
+            return `<div class="task" data-task-id="${t.task_id}">
+                <div class="task-left">
+                    <div class="task-number">${itemIndex}.</div>
+                    <div class="task-icon">
+                        <div class="square" style="background:${DEPT_COLORS[t.dept_id] || '#ccc'}">
+                            ${(t.department_name || '').toUpperCase().slice(0, 3)}
+                        </div>
+                    </div>
+                    <div class="task-details">
+                        ${t.task_name}<br>
+                        <small>RE ${t.re || 0} min • ${formatDate(t.start_date)} – ${formatDate(t.end_date)}</small>
+                    </div>
+                </div>
+                <div class="task-status ${STATUS_CLASS_MAP[sName] || ''} ${canCollectAndBounce ? 'can-collect' : ''}">
+                    ${isTaskDone ? `<button class="done-star-btn" title="Collect EXP" ${!canCollectAndBounce ? 'disabled' : ''}>${starSVG(42)}</button>` : ''}
+                    <span>${sName || ""}</span>
+                </div>
+            </div>`;
+        }).join('') || `<div class="muted">No tasks for selected day/week.</div>`;
+    }
+    function renderPagination(totalTasks) {
+        dom.paginationContainer.innerHTML = ''; // Clear old pagination
+        const totalPages = Math.ceil(totalTasks / TASKS_PER_PAGE);
+    
+        if (totalPages <= 1) return;
+    
+        let paginationHtml = '';
+        const maxVisibleButtons = 5;
+    
+        // << (Previous 5 pages) and < (Previous page) buttons
+        paginationHtml += `<button class="page-btn" data-page="${Math.max(1, state.currentPage - 5)}" ${state.currentPage <= 1 ? 'disabled' : ''}>&lt;&lt;</button>`;
+        paginationHtml += `<button class="page-btn" data-page="${state.currentPage - 1}" ${state.currentPage === 1 ? 'disabled' : ''}>&lt;</button>`;
+    
+        let startPage = 1;
+        let endPage = totalPages;
+    
+        if (totalPages > maxVisibleButtons) {
+            const half = Math.floor(maxVisibleButtons / 2);
+            startPage = state.currentPage - half;
+            endPage = state.currentPage + half;
+    
+            if (startPage < 1) {
+                startPage = 1;
+                endPage = maxVisibleButtons;
+            }
+    
+            if (endPage > totalPages) {
+                endPage = totalPages;
+                startPage = totalPages - maxVisibleButtons + 1;
+            }
+        }
+    
+        // Ellipsis at the beginning
+        if (startPage > 1) {
+            paginationHtml += `<button class="page-btn" data-page="1">1</button>`;
+            if (startPage > 2) {
+                paginationHtml += `<span class="pagination-info">...</span>`;
+            }
+        }
+    
+        // Page number buttons
+        for (let i = startPage; i <= endPage; i++) {
+            paginationHtml += `<button class="page-btn ${i === state.currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
+        }
+    
+        // Ellipsis at the end
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                paginationHtml += `<span class="pagination-info">...</span>`;
+            }
+            paginationHtml += `<button class="page-btn" data-page="${totalPages}">${totalPages}</button>`;
+        }
+    
+        // > (Next page) and >> (Next 5 pages) buttons
+        paginationHtml += `<button class="page-btn" data-page="${state.currentPage + 1}" ${state.currentPage === totalPages ? 'disabled' : ''}>&gt;</button>`;
+        paginationHtml += `<button class="page-btn" data-page="${Math.min(totalPages, state.currentPage + 5)}" ${state.currentPage >= totalPages ? 'disabled' : ''}>&gt;&gt;</button>`;
+    
+        dom.paginationContainer.innerHTML = paginationHtml;
+    }
+    function renderNotifications() {
+        if (state.notifications.length === 0) {
+            dom.notificationList.innerHTML = `<div class="muted" style="padding: 20px; text-align: center;">No notifications.</div>`;
+            return;
+        }
+        dom.notificationList.innerHTML = state.notifications.map(n => {
+            const isUnread = n.is_read == 0;
+            const timeAgo = formatTimeAgo(n.created_at);
+            return `
+                <div class="notification-item ${isUnread ? 'unread' : ''}" data-notification-id="${n.notification_id}" data-task-id="${n.task_id}">
+                    <p>${n.message}</p>
+                    <small>${timeAgo}</small>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderNotificationCount() {
+        const unreadCount = state.notifications.filter(n => n.is_read == 0).length;
+        if (unreadCount > 0) {
+            dom.notificationCount.textContent = unreadCount;
+            dom.notificationCount.style.display = 'block';
+        } else {
+            dom.notificationCount.style.display = 'none';
+        }
+    }
+
+    /**
+     * Fetches only the count of unread notifications for performance.
+     * This is used for polling.
+     */
+    async function fetchUnreadNotificationCount() {
+        // Sử dụng notificationViewUserId để lấy số lượng thông báo
+        const data = await fetchFromAPI(`notifications?recipient_id=${state.notificationViewUserId}&mode=unread_count`);
+        if (data && data.unread_count !== undefined) {
+            const currentCount = parseInt(dom.notificationCount.textContent, 10) || 0;
+            if (data.unread_count > currentCount) {
+                // Optional: Add a visual cue like a shake animation
+                // Chỉ rung chuông nếu đang xem thông báo của chính mình
+                if (state.notificationViewUserId === state.currentUserId) dom.notificationBell.classList.add('shake');
+                setTimeout(() => dom.notificationBell.classList.remove('shake'), 500);
+            }
+            dom.notificationCount.textContent = data.unread_count;
+            dom.notificationCount.style.display = data.unread_count > 0 ? 'block' : 'none';
+        }
+    }
+
+    async function fetchAndRenderNotifications() {
+        // Sử dụng notificationViewUserId để lấy danh sách thông báo
+        state.notifications = await fetchFromAPI(`notifications?recipient_id=${state.notificationViewUserId}`);
+        renderNotifications();
+        fetchUnreadNotificationCount(); // Update count after opening
+    }
+
+    async function markNotificationAsRead(notificationId) {
+        await fetch(`${API_URL}/notifications.php`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ notification_id: notificationId, is_read: 1 })
+        });
+    }
+
+        /**
+     * Công thức tính EXP mới: (10 * Level) + (Level - 1)^2
+     * @param {number} level - Cấp độ hiện tại của người dùng.
+     * @returns {number} Lượng EXP cần thiết để lên cấp độ tiếp theo.
+     */
+    function getExpForNextLevel(level) {
+        return (10 * level) + Math.pow(level - 1, 2);
+    }
+
+    function renderXPHud() {
+        if (!state.currentUserData || !document.getElementById('xpHud')) return;
+
+        const user = state.currentUserData;
+        const expNeeded = getExpForNextLevel(user.level);
+        const currentExp = user.exp;
+
+        // Cập nhật số Level trong ngôi sao
+        const xpStarContent = dom.xpStar.querySelector('svg'); // Giữ lại SVG
+        dom.xpStar.innerHTML = ''; // Xóa nội dung cũ
+        if (xpStarContent) dom.xpStar.appendChild(xpStarContent); // Thêm lại SVG
+        dom.xpStar.innerHTML += `<span class="level-text">${user.level}</span>`;
+
+        // Cập nhật thanh EXP
+        const percentage = (currentExp / expNeeded) * 100;
+        dom.xpFill.style.width = `${Math.min(percentage, 100)}%`;
+
+        // Cập nhật text hiển thị a/b
+        dom.xpCount.textContent = `${currentExp}/${expNeeded}`;
+    }
+
+    function renderFilters() {
+        // Render bộ lọc cửa hàng
+        const stores = [...new Map(state.allTasks.map(t => [t.store_id, { id: t.store_id, name: t.do_staff_store_name }])).values()]
+            .filter(s => s.id && s.name)
+            .sort((a, b) => a.id - b.id);
+
+        // Lưu giá trị hiện tại để không bị mất khi render lại
+        const currentStoreFilter = dom.storeFilter.value;
+        dom.storeFilter.innerHTML = `<option value="all" data-i18n-key="all-stores">${translate('all-stores')}</option>` + stores.map(s => `<option value="${s.id}">${s.name || 'Unknown Store'}</option>`).join('');
+        dom.storeFilter.value = currentStoreFilter;
+
+        // Render bộ lọc nhân viên dựa trên cửa hàng đã chọn
+        let staffForFilter = [];
+        if (state.storeFilter !== 'all') {
+            staffForFilter = state.allStaff.filter(s => s.store_id == state.storeFilter);
+        } else {
+            staffForFilter = state.allStaff;
+        }
+
+        const staffs = staffForFilter.filter(s => s.staff_id && s.staff_name)
+                                   .sort((a, b) => (b.role_id || 0) - (a.role_id || 0));
+        
+        // Lưu giá trị hiện tại
+        const currentStaffFilter = dom.staffFilter.value;
+        dom.staffFilter.innerHTML = `<option value="all" data-i18n-key="all-staff">${translate('all-staff')}</option>` + staffs.map(s => `<option value="${s.staff_id}">${s.staff_name || 'Unknown Staff'}</option>`).join('');
+        dom.staffFilter.value = currentStaffFilter;
+    }
+
+    async function render() {
+        renderWeekHeader();
+        renderDayTabs();
+
+        if (!state.allTasks.length) { dom.taskList.innerHTML = `<div class="muted">Loading tasks...</div>`; return; }
+        // ===== Filter tasks =====
+        const slDay = new Date(state.selectedDay); slDay.setHours(0, 0, 0, 0);
+        const start = getWeekStart(state.selectedDay);
+        const end = addDays(start, 6);
+
+        let visibleTasks = [];
+        let applyGlobalFilters = true; // Cờ để quyết định có áp dụng bộ lọc store/staff hay không
+
+        // --- LOGIC LỌC TASK THEO VAI TRÒ (USER/ADMIN) ---
+        
+        if (state.currentUserId === 0) { // Admin view
+            // Admin không có HUD, ẩn đi
+            if (document.getElementById('xpHud')) document.getElementById('xpHud').style.display = 'none';
+            visibleTasks = state.allTasks;
+            applyGlobalFilters = true;
+        } else { // User view
+            const currentUser = state.allStaff.find(s => parseInt(s.staff_id, 10) === state.currentUserId);
+
+
+        if (currentUser) {
+            applyGlobalFilters = false; // User thường không cần bộ lọc store/staff toàn cục
+            state.currentUserData = currentUser; // Cập nhật currentUserData
+            const userStoreId = currentUser.store_id;
+            
+            // Tìm tất cả nhân viên trong cùng cửa hàng
+            const staffInSameStore = state.allStaff.filter(s => s.store_id === userStoreId);
+
+            
+            // Tìm quản lý (người có role_id cao nhất trong cửa hàng)
+            let storeManager = null;
+            if (staffInSameStore.length > 0) {
+                storeManager = staffInSameStore.reduce((max, staff) => (staff.role_id > max.role_id ? staff : max), staffInSameStore[0]);
+            }
+
+            if (storeManager && currentUser.staff_id === storeManager.staff_id) {
+                // Nếu là quản lý, xem tất cả task của cửa hàng
+                visibleTasks = state.allTasks.filter(t => t.store_id === userStoreId);
+            } else {
+                // Nếu là nhân viên, chỉ xem task của mình
+                visibleTasks = state.allTasks.filter(t => parseInt(t.do_staff_id, 10) === state.currentUserId);
+            }
+            // Hiển thị HUD cho user
+            if (document.getElementById('xpHud')) document.getElementById('xpHud').style.display = 'flex';
+            renderXPHud();
+        }
+    }
+
+        let baseTasks = state.allWeekMode
+            ? visibleTasks.filter(t => t.start_date && new Date(t.start_date) >= start && new Date(t.start_date) <= end)
+            : visibleTasks.filter(t => t.start_date && new Date(t.start_date).setHours(0, 0, 0, 0) === slDay.getTime());
+
+        // ===== Filter by Store and Staff =====
+        if (applyGlobalFilters) {
+            if (state.storeFilter !== 'all') {
+                baseTasks = baseTasks.filter(t => t.store_id == state.storeFilter);
+            }
+            if (state.staffFilter !== 'all') {
+                baseTasks = baseTasks.filter(t => t.do_staff_id == state.staffFilter);
+            }
+        }
+        // ===== Apply status filter and render =====
+        const tasksToDisplay = (!state.statusFilter || state.statusFilter === 'all')
+            ? baseTasks
+            : baseTasks.filter(t => t.status_name === state.statusFilter);
+
+        // Summary should reflect the tasks after store/staff filter
+        renderSummary(baseTasks);
+        renderTaskList(tasksToDisplay);
+        renderPagination(tasksToDisplay.length);
+    }
+    function showTaskPopup(taskId) {
+        const task = state.allTasks.find(t => t.task_id === taskId);
+        if (!task) return;
+    
+        const isInteractive = task.status_name === "Not Yet" || task.status_name === "On Progress" || task.status_name === "Overdue";
+        const responseTypeName = state.codeMap[task.response_type_id] || 'Check list';
+    
+        let responseContent = '';
+        switch (responseTypeName) {
+                case 'Check list':
+                    const checks = task.check_lists || [];
+                    let tableHTML = `<table>
+                        <thead>
+                            <tr><th>STT</th><th>Check</th><th>Check Name</th><th>Status</th><th>Time</th></tr>
+                        </thead>
+                        <tbody>`;
+                    checks.forEach((c, i) => {
+                        tableHTML += `<tr data-check-id="${c.check_list_id}">
+                            <td>${i + 1}</td>
+                            <td><input type="checkbox" ${c.check_status === "Done" ? 'checked' : ''} ${!isInteractive ? 'disabled' : ''}></td>
+                            <td>${c.check_list_name}</td>
+                            <td>${c.check_status || ''}</td>
+                            <td>${c.completed_at && c.check_status === "Done" ? formatDate(c.completed_at) : ''}</td>
+                        </tr>`;
+                    });
+                    tableHTML += '</tbody></table>';
+                    responseContent = tableHTML;
+                    break;
+                case 'Yes-No':
+                    responseContent = `
+                        <div class="response-yes-no">
+                            <label><input type="radio" name="yes-no-response" value="Yes" ${!isInteractive ? 'disabled' : ''}> Yes</label> <label><input type="radio" name="yes-no-response" value="No" ${!isInteractive ? 'disabled' : ''}> No</label>
+                        </div>
+                    `;
+                    if (isInteractive) responseContent += `<button class="popup-submit-btn">Submit</button>`;
+                    break;
+                case 'Picture':
+                    responseContent = `
+                        <div class="response-picture">
+                            <input type="file" id="picture-upload" accept="image/*" style="display:none;" multiple>
+                            <button class="popup-upload-btn" onclick="document.getElementById('picture-upload').click();">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/></svg>
+                                Upload Image
+                            </button>
+                            <div id="image-preview"></div>
+                        </div>`;
+                    if (isInteractive) responseContent += `<button class="popup-submit-btn">Submit</button>`;
+                    break;
+                default:
+                    responseContent = `<p><i>(No interactive response type defined)</i></p>`;
+            }
+        dom.popup.innerHTML = `
+            <div class="popup-content">
+                <h3 data-task-id-in-popup="${task.task_id}">Task #${task.task_id}: ${task.task_name}</h3>
+                <p><strong>Store:</strong> ${task.do_staff_store_name||''} • <strong>Dept:</strong> ${task.department_name||''} • <strong>Staff:</strong> ${task.do_staff_name||''}</p>
+                <p><strong>RE:</strong> ${task.re||0} min • <strong>Start:</strong> ${formatDate(task.start_date)} • <strong>End:</strong> ${formatDate(task.end_date)}</p>
+                <div class="response-container">${responseContent}</div>
+                <button id="closePopup">Close</button>
+            </div>
+        `;
+        dom.popup.style.display = 'flex';
+
+        // Add event listener for picture upload preview
+        const picUpload = document.getElementById('picture-upload');
+        if (picUpload) picUpload.addEventListener('change', handlePicturePreview);
+    }
+
+    //================================================================================
+    // HELPERS & EVENT HANDLERS
+    //================================================================================
+    function formatDate(d) {
+        if (!d) return "";
+        const date = new Date(d);
+        const dd = String(date.getDate()).padStart(2, '0');
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const yyyy = date.getFullYear();
+        const hh = String(date.getHours()).padStart(2, '0');
+        const min = String(date.getMinutes()).padStart(2, '0');
+        return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
+    }
+    function formatTimeAgo(dateString) {
+        const seconds = Math.floor((new Date() - new Date(dateString)) / 1000);
+        let interval = seconds / 31536000;
+        if (interval > 1) return Math.floor(interval) + " years ago";
+        interval = seconds / 2592000;
+        if (interval > 1) return Math.floor(interval) + " months ago";
+        interval = seconds / 86400;
+        if (interval > 1) return Math.floor(interval) + " days ago";
+        interval = seconds / 3600;
+        if (interval > 1) return Math.floor(interval) + " hours ago";
+        interval = seconds / 60;
+        if (interval > 1) return Math.floor(interval) + " minutes ago";
+        return Math.floor(seconds) + " seconds ago";
+    }
+    function handlePicturePreview(event) {
+        const preview = document.getElementById('image-preview');
+        if (!preview) return;
+        preview.innerHTML = ''; // Clear previous previews
+        const files = event.target.files;
+        if (files) {
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    preview.innerHTML += `<img src="${e.target.result}" alt="Preview" style="max-width: 100px; max-height: 100px; margin: 5px;">`;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+    }
+    function getWeekStart(date){ const d=new Date(date); const day=(d.getDay()+6)%7; d.setDate(d.getDate()-day); d.setHours(0,0,0,0); return d; }
+    function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
+
+    /* === EXP HUD logic === */
+    function playChime(){
+      try{
+        state.audioCtx = state.audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+        const o = state.audioCtx.createOscillator();
+        const g = state.audioCtx.createGain();
+        o.connect(g); g.connect(state.audioCtx.destination);
+        o.type="triangle";
+        const t = state.audioCtx.currentTime;
+        o.frequency.setValueAtTime(660,t);
+        g.gain.setValueAtTime(0.0001,t);
+        g.gain.exponentialRampToValueAtTime(0.2,t+0.02);
+        o.frequency.exponentialRampToValueAtTime(1320,t+0.15);
+        g.gain.exponentialRampToValueAtTime(0.0001,t+0.22);
+        o.start(t); o.stop(t+0.24);
+      }catch(e){ console.warn("Audio context error", e); }
+    }
+
+    /**
+     * Xử lý logic cộng EXP và kiểm tra lên cấp sau khi animation kết thúc.
+     * EXP dư sẽ được chuyển sang level tiếp theo.
+     * @param {number} n - Số EXP nhận được.
+     */
+    function collectExp(n = 1) {
+      // --- GỌI API ĐỂ CẬP NHẬT EXP TRONG DATABASE ---
+      fetch(`${API_URL}/staff_master.php`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ staff_id: state.currentUserId, exp_increment: n })
+      });
+      // ---------------------------------------------
+      if (!state.currentUserData) return;
+  
+      state.currentUserData.exp += n;
+  
+      let leveledUp = false;
+      let expNeeded = getExpForNextLevel(state.currentUserData.level);
+  
+      // Vòng lặp để xử lý trường hợp lên nhiều cấp cùng lúc
+      while (state.currentUserData.exp >= expNeeded) {
+          leveledUp = true;
+          state.currentUserData.level++;
+          state.currentUserData.exp -= expNeeded; // Trừ đi EXP đã dùng để lên cấp
+          expNeeded = getExpForNextLevel(state.currentUserData.level); // Cập nhật EXP cần cho cấp mới
+      }
+  
+      if (leveledUp) {
+          playLevelUpAnimation();
+      } else {
+          renderXPHud(); // Cập nhật HUD bình thường nếu không lên cấp
+          playChime();
+      }
+    }
+
+    /**
+     * Chạy animation khi người dùng lên cấp.
+     */
+    async function playLevelUpAnimation() {
+      // 1. Animate thanh EXP đầy 100%
+      dom.xpFill.style.transition = 'width 0.3s ease-in';
+      dom.xpFill.style.width = '100%';
+  
+      // 2. Thêm class để kích hoạt hiệu ứng phát sáng
+      dom.xpStar.classList.add('level-up-flash');
+      playChime(); // Chơi âm thanh ngay khi bắt đầu hiệu ứng
+  
+      // 3. Đợi hiệu ứng phát sáng kết thúc (dựa trên thời gian animation trong CSS)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+  
+      // 4. Reset thanh EXP và cập nhật HUD cho cấp độ mới
+      dom.xpFill.style.transition = 'none'; // Tắt transition để reset ngay lập tức
+      dom.xpFill.style.width = '0%';
+      void dom.xpFill.offsetWidth; // Bắt buộc trình duyệt render lại
+      dom.xpFill.style.transition = 'width 0.5s ease-out'; // Bật lại transition
+      renderXPHud(); // Render lại HUD với giá trị EXP và Level mới
+      dom.xpStar.classList.remove('level-up-flash'); // Xóa class hiệu ứng
+    }
+    function starSVG(size){
+      return `
+        <svg viewBox="0 0 100 100" width="${size}" height="${size}" aria-hidden="true">
+        <defs>
+            <radialGradient id="goldCoinGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+            <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+            <stop offset="60%" style="stop-color:#FFC400;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#DAA520;stop-opacity:1" />
+            </radialGradient>
+            
+            <filter id="dropshadow" height="130%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
+            <feOffset dx="0" dy="1" result="offsetblur" />
+            <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+            </feMerge>
+            </filter>
+        </defs>
+
+        <circle cx="50" cy="50" r="45" fill="url(#goldCoinGradient)" stroke="#B8860B" stroke-width="2" filter="url(#dropshadow)"/>
+        
+        <circle cx="50" cy="50" r="41" fill="none" stroke="#FFC800" stroke-width="2.5"/>
+        <circle cx="50" cy="50" r="41" fill="none" stroke="#FFFACD" stroke-width="0.5"/>
+        
+        <text x="50" y="60" font-family="Arial, sans-serif" font-size="45" font-weight="bold" fill="#B8860B" text-anchor="middle" stroke="#DAA520" stroke-width="0.5" >$</text>
+
+        <circle cx="20" cy="25" r="2" fill="#fff8b3" opacity="0.8"/>
+        <circle cx="80" cy="28" r="2.5" fill="#fff8b3" opacity="0.9"/>
+        <circle cx="35" cy="85" r="1.5" fill="#fff8b3" opacity="0.7"/>
+        </svg>`;
+    } 
+    function spawnFlyingStar(fromBtn){
+      const svgHTML = starSVG(38);
+      const fly = document.createElement('div');
+      fly.className = 'fly-star';
+      fly.innerHTML = svgHTML;
+      document.body.appendChild(fly);
+
+      const r = fromBtn.getBoundingClientRect();
+      const startX = r.left + r.width/2;
+      const startY = r.top + r.height/2;
+
+      const t = dom.xpStar.getBoundingClientRect();
+      const endX = t.left + t.width/2;
+      const endY = t.top  + t.height/2;
+
+      fly.style.left = startX+'px';
+      fly.style.top  = startY+'px';
+      fly.style.transform = 'translate(-50%,-50%)';
+
+      const midX = (startX + endX)/2 - 120;
+      const midY = Math.min(startY, endY) - 150;
+
+      const frames = [
+        { transform: `translate(-50%,-50%) translate(0px,0px) scale(1) rotate(0deg)`, offset: 0 },
+        { offset: .55, transform: `translate(-50%,-50%) translate(${midX-startX}px, ${midY-startY}px) scale(1.1) rotate(180deg)` },
+        { transform: `translate(-50%,-50%) translate(${endX-startX}px, ${endY-startY}px) scale(.6) rotate(360deg)`, offset: 1 }
+      ];
+      const anim = fly.animate(frames, { duration: 900, easing: 'cubic-bezier(.25,.1,.3,1)' });
+  anim.onfinish = () => { fly.remove(); collectExp(1); };
+    }
+
+    /**
+     * Fetches the latest task data from the server and re-renders the UI.
+     * This is used when returning to the page to ensure data is fresh.
+     */
+    async function refetchAndRender() {
+        const tasks = await fetchFromAPI('tasks');
+        state.allTasks = tasks;
+        
+        render(); // Re-render with the new data, preserving current filters.
+    }
+
+    /**
+     * Handles messages from other tabs/windows to update the task list in real-time.
+     * @param {MessageEvent} event The event containing the updated task data.
+     */
+    async function handleTaskUpdateBroadcast(event) {
+        const { taskId } = event.data;
+        if (!taskId) return;
+
+        // Fetch the updated details for the specific task
+        const updatedTaskData = await fetchFromAPI(`tasks?task_id=${taskId}`);
+        
+        // Find and update the task in the local state
+        const taskIndex = state.allTasks.findIndex(t => t.task_id === taskId);
+        if (taskIndex !== -1) {
+            state.allTasks[taskIndex] = { ...state.allTasks[taskIndex], ...updatedTaskData };
+            
+            render(); // Re-render the entire view with the new data
+        }
+    }
+
+    function updateUserStoreDisplay() {
+        state.currentUserData = state.allStaff.find(s => s.staff_id === state.currentUserId);
+        if (state.currentUserData && dom.userStoreInfo) {
+            dom.userStoreInfo.textContent = `Store: ${state.currentUserData.store_name || 'N/A'}`;
+        } else if (dom.userStoreInfo) {
+            if (state.currentUserId === 0) {
+                dom.userStoreInfo.textContent = 'All Stores';
+            } else
+            dom.userStoreInfo.textContent = '';
+        }
+    }
+
+    async function setupUserSwitcher() {
+        if (state.allStaff.length > 0 && dom.userSwitcher) {
+            // --- Logic sắp xếp và định dạng người dùng ---
+
+            // 1. Tìm quản lý cho mỗi cửa hàng
+            const storeManagers = {};
+            state.allStaff.forEach(staff => {
+                if (!storeManagers[staff.store_id] || staff.role_id > storeManagers[staff.store_id].role_id) {
+                    storeManagers[staff.store_id] = staff;
+                }
+            });
+
+            // 2. Sắp xếp danh sách nhân viên: theo cửa hàng, sau đó quản lý lên trước, rồi đến tên
+            const sortedStaff = [...state.allStaff].sort((a, b) => {
+                if (a.store_id < b.store_id) return -1;
+                if (a.store_id > b.store_id) return 1;
+                // Cùng cửa hàng, đưa quản lý lên đầu
+                if (a.staff_id === storeManagers[a.store_id]?.staff_id) return -1;
+                if (b.staff_id === storeManagers[b.store_id]?.staff_id) return 1;
+                // Cùng là nhân viên, sắp xếp theo tên
+                return a.staff_name.localeCompare(b.staff_name);
+            });
+
+            // 3. Tạo HTML cho các option
+            const optionsHtml = sortedStaff.map(staff => {
+                const isManager = staff.staff_id === storeManagers[staff.store_id]?.staff_id;
+                const roleLabel = isManager ? 'Quản lý' : 'Nhân viên';
+                const displayText = `${staff.staff_name}, Store ${staff.store_name}, ${roleLabel}`;
+                return `<option value="${staff.staff_id}" class="${isManager ? 'manager-option' : ''}">${displayText}</option>`;
+            }).join('');
+
+            dom.userSwitcher.innerHTML = '<option value="0">Admin (View All)</option>' + optionsHtml;
+            dom.userSwitcher.value = state.currentUserId; // Set initial value
+            updateUserStoreDisplay(); // Display store for initial user
+
+            // Xóa event listener cũ để tránh bị gọi nhiều lần khi initialize()
+            dom.userSwitcher.replaceWith(dom.userSwitcher.cloneNode(true));
+            dom.userSwitcher = document.getElementById('user-switcher'); // Lấy lại tham chiếu đến element mới
+            dom.userSwitcher.addEventListener('change', handleUserChange);
+        }
+    }
+
+    async function handleUserChange(e) {
+        state.currentUserId = parseInt(e.target.value, 10);
+        state.notificationViewUserId = state.currentUserId; // Đồng bộ ID xem thông báo với người dùng hiện tại
+        updateUserStoreDisplay();
+
+        // Tải lại số lượng thông báo cho người dùng mới ngay lập tức
+        fetchUnreadNotificationCount();
+
+        // Khi chọn Admin, reset các bộ lọc và hiển thị chúng
+        if (state.currentUserId === 0) {
+            state.storeFilter = "all";
+            state.staffFilter = "all";
+            if (dom.storeFilter.parentElement) dom.storeFilter.parentElement.style.display = 'block';
+            if (dom.staffFilter.parentElement) dom.staffFilter.parentElement.style.display = 'block';
+        } else {
+            // Khi chọn user thường, ẩn bộ lọc cửa hàng và nhân viên
+            if (dom.storeFilter.parentElement) dom.storeFilter.parentElement.style.display = 'none';
+            if (dom.staffFilter.parentElement) dom.staffFilter.parentElement.style.display = 'none';
+        }
+
+        // Chỉ tải lại dữ liệu và render, không khởi tạo lại toàn bộ
+        // Dùng setTimeout để đảm bảo UI (ẩn/hiện) được cập nhật trước khi render lại
+        setTimeout(() => refetchAndRender(), 0);
+    }
+
+    function setupEventListeners() {
+        dom.hqScreenBtn.addEventListener('click', () => window.location.href = 'hq-store.html');
+
+        dom.nextWeekBtn.addEventListener("click", () => {
+            state.selectedDay.setDate(state.selectedDay.getDate() + 7);
+            render();
+        });
+        dom.prevWeekBtn.addEventListener("click", () => {
+            state.selectedDay.setDate(state.selectedDay.getDate() - 7);
+            render();
+        });
+        dom.weekTitle.addEventListener("click", () => {
+            state.allWeekMode = !state.allWeekMode;
+            render();
+        });
+        if (dom.storeFilter) dom.storeFilter.addEventListener('change', (e) => {
+            state.storeFilter = e.target.value;
+            state.currentPage = 1; // Reset page when filter changes
+            state.staffFilter = 'all'; // Reset staff filter when store changes
+            renderFilters(); // Re-render staff filter based on new store
+            render();
+        });
+        if (dom.staffFilter) dom.staffFilter.addEventListener('change', (e) => {
+            state.staffFilter = e.target.value;
+            state.currentPage = 1; // Reset page when filter changes
+
+            // Logic mới: Cập nhật người dùng để xem thông báo
+            if (state.currentUserId === 0) { // Chỉ áp dụng cho Admin
+                const selectedStaffId = parseInt(e.target.value, 10);
+                state.notificationViewUserId = isNaN(selectedStaffId) ? state.currentUserId : selectedStaffId;
+                fetchUnreadNotificationCount(); // Cập nhật số lượng thông báo ngay lập tức
+            }
+
+            render();
+        });
+        // Event Delegation for day tabs, summary filters, and task clicks
+        dom.dayTabs.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') {
+                const dayIndex = parseInt(e.target.dataset.dayIndex, 10);
+                const currentIndex = (state.selectedDay.getDay() + 6) % 7;
+                state.selectedDay.setDate(state.selectedDay.getDate() + (dayIndex - currentIndex));
+                render();
+            }
+        });
+        dom.summary.addEventListener('click', (e) => {
+            const filterEl = e.target.closest('[data-filter]');
+            if (filterEl) {
+                const filter = filterEl.dataset.filter;
+                state.statusFilter = (state.statusFilter === filter) ? null : filter;
+                state.currentPage = 1; // Reset page when filter changes
+                render();
+            }
+        });
+        dom.taskList.addEventListener('click', (e) => {
+            const taskEl = e.target.closest('.task');
+            const starBtn = e.target.closest('.done-star-btn');
+
+            if (starBtn) {
+                const taskId = Number(taskEl.dataset.taskId);
+                // Vô hiệu hóa nút để tránh click nhiều lần
+                starBtn.disabled = true;
+                // Xóa hiệu ứng nhảy
+                starBtn.parentElement.classList.remove('can-collect');
+
+                // Gọi API để cập nhật is_exp_collected = 1
+                fetch(`${API_URL}/tasks.php`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ task_id: taskId, is_exp_collected: 1 })
+                });
+
+                spawnFlyingStar(starBtn); // Bắt đầu animation
+            } else if (taskEl) {
+                const taskId = Number(taskEl.dataset.taskId); 
+                const task = state.allTasks.find(t => parseInt(t.task_id, 10) === taskId);
+                if (task) {
+                    const taskStatus = task.status_name;
+                    // Truyền cả userId để các trang sau biết người dùng hiện tại là ai
+                    const urlParams = `?id=${task.task_id}&userId=${state.currentUserId}`;
+                    if (taskStatus === 'Not Yet') {
+                        window.location.href = `do-task.html${urlParams}`;
+                    } else {
+                        window.location.href = `detail-task.html${urlParams}`; // Giả định detail-task cũng cần userId
+                    }
+                }
+            }
+        });
+        // Popup event handlers
+        dom.popup.addEventListener('click', async (e) => {
+            if (e.target.id === 'closePopup' || e.target.classList.contains('popup-content') === false && e.target.closest('.popup-content') === null) {
+                dom.popup.style.display = 'none';
+            }
+            if (e.target.type === 'checkbox') {
+                const taskId = Number(dom.popup.querySelector('[data-task-id-in-popup]').dataset.taskIdInPopup);
+                const trs = dom.popup.querySelectorAll("tbody tr");
+                const checksToUpdate = Array.from(trs).map(tr => ({
+                    check_list_id: Number(tr.dataset.checkId),
+                    check_status: tr.querySelector("input").checked ? "Done" : "On Progress"
+                }));
+                await updateTaskCheckListBatch(taskId, checksToUpdate);
+                // Re-fetch data and re-render
+                state.allTasks = await fetchFromAPI('tasks');
+                render();
+            }
+        });
+        // Pagination event handler
+        dom.paginationContainer.addEventListener('click', (e) => {
+            const pageBtn = e.target.closest('.page-btn[data-page]');
+            if (pageBtn && !pageBtn.disabled) {
+                const page = parseInt(pageBtn.dataset.page, 10);
+                if (page !== state.currentPage) {
+                    state.currentPage = page;
+                    render();
+                }
+            }
+        });
+        // Notification Panel Handlers
+        dom.notificationBell.addEventListener('click', () => {
+            // Khi mở panel, fetch và render nội dung mới nhất
+            dom.notificationPanel.classList.add('open');
+            fetchAndRenderNotifications();
+        });
+
+        dom.closeNotificationPanelBtn.addEventListener('click', () => {
+            dom.notificationPanel.classList.remove('open');
+        });
+
+        dom.notificationList.addEventListener('click', (e) => {
+            const item = e.target.closest('.notification-item');
+            // Logic mới: Nếu Admin đang xem thông báo của người khác (read-only), không làm gì cả
+            if (item && item.classList.contains('non-interactive')) {
+                return;
+            }
+
+            if (item) {
+                const notificationId = parseInt(item.dataset.notificationId, 10);
+                const taskId = parseInt(item.dataset.taskId, 10);
+                
+                // --- Cập nhật giao diện tức thời (Optimistic UI Update) ---
+                if (item.classList.contains('unread')) {
+                    // 1. Cập nhật trạng thái trong state
+                    const notif = state.notifications.find(n => n.notification_id == notificationId);
+                    if (notif) {
+                        notif.is_read = 1;
+                    }
+                    // 2. Xóa class 'unread' khỏi item
+                    item.classList.remove('unread');
+                    // 3. Cập nhật lại số lượng trên chuông báo
+                    const unreadCount = state.notifications.filter(n => n.is_read == 0).length;
+                    dom.notificationCount.textContent = unreadCount;
+                    if (unreadCount === 0) {
+                        dom.notificationCount.style.display = 'none';
+                    }
+                }
+
+                markNotificationAsRead(notificationId); // Gửi yêu cầu ngầm
+                window.location.href = `detail-task.html?id=${taskId}`; // Điều hướng ngay lập tức
+            }
+        });
+
+        // Lắng nghe sự kiện khi trang được hiển thị (bao gồm cả khi nhấn nút Back)
+        window.addEventListener('pageshow', function(event) {
+            // event.persisted là true nếu trang được tải từ bfcache
+            // Luôn fetch lại tasks khi quay lại trang để đảm bảo dữ liệu luôn mới nhất.
+            // Nếu trang được tải từ cache, luôn fetch lại dữ liệu để đảm bảo tính mới nhất.
+            if (event.persisted) {
+                refetchAndRender(); // Gọi hàm chuyên dụng để tải lại và vẽ lại
+            }
+        });
+
+        // Lắng nghe các cập nhật từ các tab khác
+        state.taskUpdateChannel.onmessage = handleTaskUpdateBroadcast;
+
+        // Re-render on language change
+        document.addEventListener('languageChanged', render);
+    }
+
+    //================================================================================
+    // INITIALIZATION
+    //================================================================================
+    async function initialize() {
+        // Chỉ thiết lập event listeners một lần để tránh lặp lại
+        if (!state.isInitialized) {
+            state.isInitialized = true; // Đặt isInitialized lên đầu để tránh race condition
+            setupEventListeners();
+            // Bắt đầu polling để kiểm tra thông báo mới mỗi 30 giây
+            setInterval(fetchUnreadNotificationCount, 30000);
+            fetchUnreadNotificationCount(); // Lấy số lượng thông báo lần đầu khi tải trang
+            // setupUserSwitcher sẽ được gọi sau khi có dữ liệu
+        }
+        render(); // Render layout
+        const [tasks, codes, allStaff] = await Promise.all([
+            fetchFromAPI('tasks'),
+            fetchFromAPI('code_master'),
+            fetchFromAPI('staff_master')
+        ]);
+        state.allTasks = tasks;
+        state.allStaff = allStaff;
+        // Gán currentUserData ban đầu
+        state.currentUserData = state.allStaff.find(s => s.staff_id === state.currentUserId);
+
+        codes.forEach(c => state.codeMap[c.code_master_id] = c.name);        
+
+        // Render filters for the first time
+        renderFilters();
+        
+        await setupUserSwitcher(); // Thiết lập bộ chọn người dùng sau khi có danh sách nhân viên
+        render(); // Render lại với dữ liệu mới
+    }
+
+    initialize();
+})();

@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="logo.png" type="image/png">
+    <title>Lịch Hàng Ngày - AoiSora</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <!-- Thêm thư viện SortableJS cho chức năng kéo thả -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+</head>
+<body class="flex h-screen text-gray-800">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-800 text-white flex flex-col flex-shrink-0">
+        <div class="h-16 flex items-center justify-center text-2xl font-bold border-b border-slate-700">
+            <i class="fas fa-tasks mr-3 text-green-400"></i>
+            <span>AoiSora</span>
+        </div>
+        <nav class="flex-1 p-4 space-y-2">
+            <h3 class="px-4 text-sm font-semibold text-slate-400 uppercase tracking-wider">Lịch trình</h3>
+            <a href="#" class="flex items-center px-4 py-2 text-white bg-green-600 rounded-lg">
+                <i class="fas fa-calendar-day w-6"></i>
+                <span>Lịch Hàng Ngày</span>
+            </a>
+            <a href="/month.html" class="flex items-center px-4 py-2 text-slate-300 hover:bg-slate-700 rounded-lg">
+                <i class="fas fa-calendar-alt w-6"></i>
+                <span>Lịch Hàng Tháng</span>
+            </a>
+            <h3 class="px-4 pt-4 text-sm font-semibold text-slate-400 uppercase tracking-wider">Tổ chức</h3>
+            <a href="/store.html" class="flex items-center px-4 py-2 text-slate-300 hover:bg-slate-700 rounded-lg">
+                <i class="fas fa-store w-6"></i>
+                <span>Cửa Hàng</span>
+            </a>
+            <a href="/staff.html" class="flex items-center px-4 py-2 text-slate-300 hover:bg-slate-700 rounded-lg">
+                <i class="fas fa-users w-6"></i>
+                <span>Nhân Viên</span>
+            </a>
+             <h3 class="px-4 pt-4 text-sm font-semibold text-slate-400 uppercase tracking-wider">Quản lý</h3>
+            <a href="/main-tasks.html" class="flex items-center px-4 py-2 text-slate-300 hover:bg-slate-700 rounded-lg">
+                <i class="fas fa-clipboard-list w-6"></i>
+                <span>Công Việc Chính</span>
+            </a>
+             <a href="/task-groups.html" class="flex items-center px-4 py-2 text-slate-300 hover:bg-slate-700 rounded-lg">
+                <i class="fas fa-layer-group w-6"></i>
+                <span>Nhóm Công Việc</span>
+            </a>
+        </nav>
+        <div class="p-4 border-t border-slate-700">
+            <button id="sidebar-add-schedule-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                <i class="fas fa-plus-circle mr-2"></i>Thêm Lịch Làm Việc
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Header -->
+        <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 flex-shrink-0">
+             <div class="flex items-center space-x-4">
+                <button class="text-gray-500 hover:text-gray-800" onclick="changeDate(-1)"><i class="fas fa-chevron-left"></i></button>
+                <input type="date" id="date" value="2025-10-03" class="bg-gray-100 border-gray-300 rounded-md p-2 text-base focus:outline-none focus:ring-2 focus:ring-green-500">
+                <button class="text-gray-500 hover:text-gray-800" onclick="changeDate(1)"><i class="fas fa-chevron-right"></i></button>
+            </div>
+            <div class="flex items-center space-x-6">
+                <!-- Nút thêm lịch làm việc (Tùy chọn) -->
+                 <button id="main-add-schedule-btn" class="text-white bg-blue-500 hover:bg-blue-600 font-medium py-2 px-4 rounded-lg shadow-md transition-colors">
+                    <i class="fas fa-calendar-plus mr-2"></i> Thêm Lịch
+                </button>
+                <!-- ICON GIỚI THIỆU DỰ ÁN -->
+                <a href="intro.html" target="_blank" class="text-gray-500 hover:text-green-600" title="Giới thiệu & Hướng dẫn">
+                    <i class="fas fa-question-circle text-xl"></i>
+                </a>
+                <a href="#" class="text-gray-600 hover:text-green-600"><i class="fas fa-user-check mr-2"></i>Xác nhận</a>
+                <a href="#" class="text-gray-600 hover:text-green-600"><i class="fas fa-clipboard-check mr-2"></i>Kiểm tra</a>
+                <a href="#" class="text-gray-600 hover:text-green-600 relative">
+                    <i class="fas fa-bell"></i>
+                    <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">3</span>
+                </a>
+                <div class="flex items-center">
+                    <img class="w-9 h-9 rounded-full object-cover" src="https://placehold.co/40x40/E2E8F0/4A5568?text=AV" alt="User Avatar">
+                    <span class="ml-3 font-semibold">J. Manager</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <main class="flex-1 overflow-auto p-6 bg-white">
+            <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-auto">
+                <!-- Đã tăng min-w để chứa 7 cột rộng 300px -->
+                <div id="schedule-container" class="min-w-[2600px]"> 
+                    <!-- Schedule content will be generated by JavaScript -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL: Thêm Lịch Làm Việc (Giữ nguyên) -->
+    <div id="schedule-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl p-6">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center pb-3 border-b">
+                <h3 class="text-xl font-semibold text-gray-800"><i class="fas fa-calendar-plus mr-2 text-blue-500"></i> Lập Lịch Làm Việc Mới</h3>
+                <button class="text-gray-400 hover:text-gray-600" onclick="closeScheduleModal()">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            
+            <!-- Modal Body (Form) -->
+            <form class="mt-4 space-y-4" id="add-schedule-form">
+                
+                <!-- Hàng 1: Nhân viên & Ngày -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="schedule-staff" class="block text-sm font-medium text-gray-700">Nhân Viên (*)</label>
+                        <select id="schedule-staff" name="schedule-staff" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                            <option value="">-- Chọn Nhân Viên --</option>
+                            <option value="SON_PV">SƠN_PV (POS)</option>
+                            <option value="TUNG_NV">TÙNG_NV (MMD)</option>
+                            <option value="THAO_PT">THẢO_PT (Cafe)</option>
+                            <option value="NEW_STAFF">NHÂN VIÊN MỚI (POS)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="schedule-date" class="block text-sm font-medium text-gray-700">Ngày Áp Dụng (*)</label>
+                        <input type="date" id="schedule-date" name="schedule-date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                    </div>
+                </div>
+
+                <!-- Hàng 2: Ca làm việc -->
+                <div>
+                    <label for="schedule-shift" class="block text-sm font-medium text-gray-700">Chọn Ca Làm Việc (*)</label>
+                    <select id="schedule-shift" name="schedule-shift" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                        <option value="">-- Chọn Ca --</option>
+                        <option value="V612">V612 (06:00 - 12:00)</option>
+                        <option value="V915">V915 (09:00 - 15:00)</option>
+                        <option value="C1521">C1521 (15:00 - 21:00)</option>
+                    </select>
+                </div>
+                
+                <!-- Hàng 3: Công việc (Mô phỏng bằng một textarea đơn giản) -->
+                <div>
+                    <label for="schedule-tasks" class="block text-sm font-medium text-gray-700">Phân Công Việc (Mã Task cách nhau bằng dấu phẩy, VD: 1002, 1004)</label>
+                    <textarea id="schedule-tasks" name="schedule-tasks" rows="3" placeholder="Nhập mã công việc cho 9:00 (Mô phỏng)" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border"></textarea>
+                </div>
+
+
+                <!-- Modal Footer -->
+                <div class="pt-4 flex justify-end space-x-3 border-t">
+                    <button type="button" onclick="closeScheduleModal()" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        Hủy
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600 shadow-md">
+                        <i class="fas fa-save mr-1"></i> Lưu Lịch
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // --- Dữ liệu Công việc chính giả lập (Để dùng trong hàm parseTasks) ---
+        const MOCK_MAIN_TASKS = {
+            "1002": { name: "Display Delica", code: "1002" },
+            "1003": { name: "Display Dry", code: "1003" },
+            "1004": { name: "Check POP", code: "1004" },
+            "1010": { name: "Check OOS", code: "1010" },
+            "2001": { name: "Clean Coffee Machine", code: "2001" },
+            "M999": { name: "New Task (M)", code: "M999" },
+            "1005": { name: "Check Freezer", code: "1005" },
+            "1006": { name: "Restock Veggie", code: "1006" },
+            "1007": { name: "Check chiller", code: "1007" },
+            "1008": { name: "Rotate Stock", code: "1008" },
+            "1009": { name: "Check Date", code: "1009" },
+            "1011": { name: "Clean Floor", code: "1011" },
+            "1012": { name: "Re-Check POS", code: "1012" },
+            "2002": { name: "Prep Bread", code: "2002" },
+            "2003": { name: "Open Counter", code: "2003" },
+            "2004": { name: "Serve Customers", code: "2004" },
+            "2005": { name: "Clean Tables", code: "2005" },
+            "0001": { name: "Finish Shift", code: "0001" },
+            "9998": { name: "Lunch Break", code: "9998" },
+            "0002": { name: "Handover", code: "0002" },
+            "1013": { name: "Restock Drinks", code: "1013" },
+        };
+
+        // --- Dữ liệu Lịch theo Ngày ---
+        const scheduleByDate = {
+            // Ngày mặc định: 2025-10-03 (Dữ liệu cũ)
+            "2025-10-03": [
+                {
+                    name: "SƠN_PV", role: "POS", shift: "V612: 06:00 ~ 12:00", subTask: "Sub Task: Cleaning", staffId: "S001",
+                    tasks: {
+                        // Thêm 4 task ở 6:00 để kiểm tra layout 4 ô
+                        "6:00": [ MOCK_MAIN_TASKS["1002"], MOCK_MAIN_TASKS["1003"], MOCK_MAIN_TASKS["1004"], MOCK_MAIN_TASKS["1005"] ],
+                        "7:00": [ MOCK_MAIN_TASKS["1003"], MOCK_MAIN_TASKS["1010"] ],
+                        "8:00": [ MOCK_MAIN_TASKS["1010"] ],
+                        "9:00": [ MOCK_MAIN_TASKS["1005"], MOCK_MAIN_TASKS["1006"] ],
+                        "10:00": [ MOCK_MAIN_TASKS["1010"], MOCK_MAIN_TASKS["1011"] ],
+                        "11:00": [ MOCK_MAIN_TASKS["1012"] ],
+                        "12:00": [ MOCK_MAIN_TASKS["0001"] ],
+                    }
+                },
+                {
+                    name: "TÙNG_NV", role: "MMD", shift: "V614: 07:00 ~ 13:00", subTask: "Sub Task: Cleaning", staffId: "T002",
+                    tasks: {
+                        "7:00": [ MOCK_MAIN_TASKS["1002"], MOCK_MAIN_TASKS["1004"] ],
+                        "8:00": [ MOCK_MAIN_TASKS["1002"], MOCK_MAIN_TASKS["1010"] ],
+                        "9:00": [ MOCK_MAIN_TASKS["1007"], MOCK_MAIN_TASKS["1008"] ],
+                        "10:00": [ MOCK_MAIN_TASKS["1009"] ],
+                        "11:00": [ MOCK_MAIN_TASKS["1013"] ],
+                        "12:00": [ MOCK_MAIN_TASKS["9998"] ],
+                    }
+                },
+                {
+                    name: "THẢO_PT", role: "Aeon Cafe", shift: "V612: 06:00 ~ 12:00", subTask: "Sub Task: Cleaning", staffId: "H003",
+                    tasks: {
+                        "6:00": [ MOCK_MAIN_TASKS["2001"], MOCK_MAIN_TASKS["2002"], MOCK_MAIN_TASKS["2003"], MOCK_MAIN_TASKS["2004"] ],
+                        "7:00": [ MOCK_MAIN_TASKS["2003"] ],
+                        "8:00": [ MOCK_MAIN_TASKS["2004"], MOCK_MAIN_TASKS["2005"] ],
+                        "9:00": [ 
+                            { name: "Wash Utensils", code: "2006" }, 
+                            { name: "Restock Cups", code: "2007" }, 
+                            { name: "Check POS", code: "2008" },
+                            { name: "Wipe Counter", code: "2009" } 
+                        ],
+                        "10:00": [ MOCK_MAIN_TASKS["2004"] ],
+                        "11:00": [ MOCK_MAIN_TASKS["2005"] ],
+                        "12:00": [ MOCK_MAIN_TASKS["0002"] ],
+                    }
+                },                // 4. LINH_TT (POS) - Ca giữa
+                {
+                    name: "LINH_TT", role: "POS", shift: "V915: 09:00 ~ 15:00", subTask: "Phục vụ cao điểm", staffId: "L004",
+                    tasks: {
+                        "9:00": [ MOCK_MAIN_TASKS["1004"], MOCK_MAIN_TASKS["1009"], MOCK_MAIN_TASKS["1012"] ],
+                        "10:00": [ MOCK_MAIN_TASKS["2004"] ],
+                        "12:00": [ MOCK_MAIN_TASKS["9998"] ],
+                        "13:00": [ MOCK_MAIN_TASKS["1010"] ],
+                    }
+                },
+                // 5. KHANH_MMD (MMD) - Ca giữa
+                {
+                    name: "KHANH_MMD", role: "MMD", shift: "V915: 09:00 ~ 15:00", subTask: "Xoay vòng kho", staffId: "K005",
+                    tasks: {
+                        "9:00": [ MOCK_MAIN_TASKS["1006"], MOCK_MAIN_TASKS["1013"] ],
+                        "11:00": [ MOCK_MAIN_TASKS["1008"] ],
+                        "13:00": [ MOCK_MAIN_TASKS["1011"] ],
+                    }
+                },
+                // 6. CHÂU_SS (Support) - Ca giữa/chiều
+                {
+                    name: "CHÂU_SS", role: "Support", shift: "V715: 07:00 ~ 15:00", subTask: "Hỗ trợ vệ sinh", staffId: "C006",
+                    tasks: {
+                        "7:00": [ MOCK_MAIN_TASKS["2005"] ],
+                        "8:00": [ MOCK_MAIN_TASKS["1011"] ],
+                        "11:00": [ MOCK_MAIN_TASKS["1005"] ],
+                        "12:00": [ MOCK_MAIN_TASKS["9998"] ],
+                    }
+                },
+                // 7. NAM_MMD (MMD) - Ca sáng
+                {
+                    name: "NAM_MMD", role: "MMD", shift: "V612: 06:00 ~ 12:00", subTask: "Trưng bày chính", staffId: "N009",
+                    tasks: {
+                        "6:00": [ MOCK_MAIN_TASKS["1002"], MOCK_MAIN_TASKS["1007"], MOCK_MAIN_TASKS["1003"] ],
+                        "7:00": [ MOCK_MAIN_TASKS["1008"], MOCK_MAIN_TASKS["1009"] ],
+                        "8:00": [ MOCK_MAIN_TASKS["1004"] ],
+                        "10:00": [ MOCK_MAIN_TASKS["1006"] ],
+                        "12:00": [ MOCK_MAIN_TASKS["0001"] ],
+                    }
+                },
+                // 8. YẾN_SS (Support) - Ca giữa
+                {
+                    name: "YẾN_SS", role: "Support", shift: "V816: 08:00 ~ 16:00", subTask: "Hỗ trợ giờ ăn", staffId: "Y010",
+                    tasks: {
+                        "8:00": [ MOCK_MAIN_TASKS["2005"] ],
+                        "10:00": [ MOCK_MAIN_TASKS["1004"] ],
+                        "12:00": [ MOCK_MAIN_TASKS["9998"] ],
+                        "14:00": [ MOCK_MAIN_TASKS["1011"] ],
+                    }
+                },
+                // 9. THỊNH_POS (POS) - Ca sáng
+                 {
+                    name: "THỊNH_POS", role: "POS", shift: "V610: 06:00 ~ 10:00", subTask: "Thu ngân chính", staffId: "T011",
+                    tasks: {
+                        "6:00": [ MOCK_MAIN_TASKS["0001"], MOCK_MAIN_TASKS["1012"] ],
+                        "7:00": [ MOCK_MAIN_TASKS["2004"] ],
+                        "8:00": [ MOCK_MAIN_TASKS["2004"] ],
+                        "9:00": [ MOCK_MAIN_TASKS["2004"] ],
+                        "10:00": [ MOCK_MAIN_TASKS["0002"] ],
+                    }
+                },
+                // 10. PHƯƠNG_NT (Cafe) - Ca giữa
+                {
+                    name: "PHƯƠNG_NT", role: "Cafe", shift: "V1015: 10:00 ~ 15:00", subTask: "Phục vụ Cafe", staffId: "P012",
+                    tasks: {
+                        "10:00": [ MOCK_MAIN_TASKS["2004"], MOCK_MAIN_TASKS["2005"] ],
+                        "11:00": [ MOCK_MAIN_TASKS["2004"], MOCK_MAIN_TASKS["2005"], MOCK_MAIN_TASKS["2003"] ],
+                        "12:00": [ MOCK_MAIN_TASKS["9998"] ],
+                    }
+                },
+            ],
+            // Dữ liệu ngày trước đó: 2025-10-02 (Ít nhân viên hơn)
+            "2025-10-02": [
+                {
+                    name: "HÀ_VD", role: "POS", shift: "V816: 08:00 ~ 16:00", subTask: "Cuối tuần", staffId: "H004",
+                    tasks: {
+                        "8:00": [ MOCK_MAIN_TASKS["1002"], MOCK_MAIN_TASKS["1004"] ],
+                        "9:00": [ MOCK_MAIN_TASKS["1010"] ],
+                        "10:00": [ MOCK_MAIN_TASKS["1003"] ],
+                        "12:00": [ MOCK_MAIN_TASKS["9998"] ],
+                    }
+                },
+                {
+                    name: "MINH_HN", role: "Cafe", shift: "V713: 07:00 ~ 13:00", subTask: "Đầu ca", staffId: "M005",
+                    tasks: {
+                        "7:00": [ MOCK_MAIN_TASKS["2001"] ],
+                        "8:00": [ MOCK_MAIN_TASKS["2004"] ],
+                        "11:00": [ MOCK_MAIN_TASKS["2005"] ],
+                    }
+                }
+            ],
+            // Dữ liệu ngày sau đó: 2025-10-04 (Ngày bận rộn)
+            "2025-10-04": [
+                {
+                    name: "SƠN_PV", role: "POS", shift: "V612: 06:00 ~ 12:00", subTask: "Cleaning", staffId: "S001",
+                    tasks: {
+                        "6:00": [ MOCK_MAIN_TASKS["1002"], MOCK_MAIN_TASKS["1003"] ],
+                        "7:00": [ MOCK_MAIN_TASKS["1004"], MOCK_MAIN_TASKS["1010"] ],
+                    }
+                },
+                {
+                    name: "NGỌC_NK", role: "POS", shift: "V915: 09:00 ~ 15:00", subTask: "Trưng bày", staffId: "N006",
+                    tasks: {
+                        "9:00": [ MOCK_MAIN_TASKS["1002"], MOCK_MAIN_TASKS["1003"], MOCK_MAIN_TASKS["1010"] ],
+                        "10:00": [ MOCK_MAIN_TASKS["1006"] ],
+                        "13:00": [ MOCK_MAIN_TASKS["9998"] ],
+                    }
+                },
+            ]
+        };
+        
+        let currentScheduleData = scheduleByDate[document.getElementById('date').value] || [];
+
+        const timeSlots = ["6:00", "7:00", "8:00", "9:00", "10:00", "11:00", "12:00"];
+
+        // Định nghĩa các lớp màu dựa trên loại công việc (Giữ nguyên)
+        const taskColorMap = {
+            'Display': { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-300' },
+            'Restock': { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-300' },
+            'Check': { bg: 'bg-amber-100', text: 'text-amber-700', border: 'border-amber-300' },
+            'Clean': { bg: 'bg-teal-100', text: 'text-teal-700', border: 'border-teal-300' },
+            'Cafe': { bg: 'bg-purple-100', text: 'text-purple-700', border: 'border-purple-300' },
+            'System': { bg: 'bg-red-100', text: 'text-red-700', border: 'border-red-300' },
+            'Admin': { bg: 'bg-gray-100', text: 'text-gray-700', border: 'border-gray-300' },
+        };
+
+        function getTaskColor(task) {
+            const name = task.name;
+            const code = task.code;
+
+            if (name.includes('Display')) return taskColorMap.Display;
+            if (name.includes('Restock') || name.includes('Rotate')) return taskColorMap.Restock;
+            if (name.includes('Clean') || name.includes('Wash')) return taskColorMap.Clean;
+            if (name.includes('Check') || name.includes('OOS') || name.includes('POP')) return taskColorMap.Check;
+            if (name.includes('Serve') || name.includes('Prep') || name.includes('Coffee')) return taskColorMap.Cafe; 
+
+            if (code.startsWith('2')) return taskColorMap.Cafe; 
+            if (code === '1010') return taskColorMap.System; 
+            
+            if (code.startsWith('0') || code.startsWith('99')) return taskColorMap.Admin; 
+            
+            return taskColorMap.Check; 
+        }
+        
+        // --- LOGIC KÉO THẢ (DRAG AND DROP) ---
+
+        function updateScheduleDataFromDOM() {
+            const selectedDate = document.getElementById('date').value;
+            const currentDaySchedule = scheduleByDate[selectedDate];
+
+            if (!currentDaySchedule) return;
+            // Tạm thời tạo một bản đồ task code -> task object để tìm kiếm nhanh
+            const taskMap = Object.values(MOCK_MAIN_TASKS).reduce((acc, task) => {
+                acc[task.code] = task;
+                return acc;
+            }, {});
+
+            currentDaySchedule.forEach(employee => {
+                const staffId = employee.staffId || employee.name;
+                employee.tasks = {};
+
+                timeSlots.forEach(slot => {
+                    // Đảm bảo ID được tạo đúng
+                    const tasksGridId = `task-grid-${staffId}-${slot}`; 
+                    const container = document.getElementById(tasksGridId);
+                    
+                    if (container) {
+                        const taskElements = container.querySelectorAll('.sub-task-card');
+                        if (taskElements.length > 0) {
+                            employee.tasks[slot] = [];
+                            taskElements.forEach(el => {
+                                const taskCode = el.getAttribute('data-task-code');
+                                const taskInfo = taskMap[taskCode] || { name: `Unknown (${taskCode})`, code: taskCode };
+                                employee.tasks[slot].push(taskInfo);
+                            });
+                        }
+                    }
+                });
+            });
+        }
+        window.deleteTask = function(buttonElement) {
+            // Tìm thẻ công việc cha
+            const taskCard = buttonElement.closest('.sub-task-card');
+            const taskName = taskCard.querySelector('.sub-task-name').textContent;
+
+            if (confirm(`Bạn có chắc chắn muốn xóa công việc "${taskName}" khỏi lịch?`)) {
+                // 1. Xóa khỏi DOM
+                taskCard.remove();
+                
+                // 2. Cập nhật lại cấu trúc dữ liệu toàn cục
+                updateScheduleDataFromDOM();
+                
+                // 3. Vẽ lại lịch (để cập nhật Man Hour và đảm bảo SortableJS hoạt động ổn định)
+                renderSchedule();
+                
+                // Alert nhẹ
+                console.log(`Đã xóa task: ${taskName}`);
+            }
+        };
+
+        // Khởi tạo kéo thả
+        let sortableInstances = [];
+        
+        function initializeDragAndDrop() {
+            sortableInstances.forEach(instance => instance.destroy());
+            sortableInstances = [];
+
+            document.querySelectorAll('.sub-task-grid').forEach(container => {
+                const sortable = Sortable.create(container, {
+                    group: 'shared', 
+                    animation: 150,
+                    dataIdAttr: 'data-task-code',
+                    onEnd: function (evt) {
+                        updateScheduleDataFromDOM();
+                        renderSchedule(); 
+                    }
+                });
+                sortableInstances.push(sortable);
+            });
+        }
+        
+        // Hàm chính để render lịch
+        function renderSchedule() {
+            const dateInput = document.getElementById('date');
+            const selectedDate = dateInput.value;
+            
+            currentScheduleData = scheduleByDate[selectedDate] || [];
+            
+            const container = document.getElementById('schedule-container');
+            container.innerHTML = ''; 
+
+            // Calculate man hours 
+            const manHours = {};
+            timeSlots.forEach(slot => {
+                let total = 0;
+                currentScheduleData.forEach(employee => {
+                    if (employee.tasks[slot] && employee.tasks[slot].length > 0) {
+                        total++; 
+                    }
+                });
+                manHours[slot] = { total, display: `${total} Man Hour` }; 
+            });
+
+            // --- Build Header ---
+            const header = document.createElement('div');
+            header.className = 'grid grid-cols-12 sticky top-0 bg-gray-100 z-10 border-b-2 border-gray-300';
+            
+            const topLeftHeader = document.createElement('div');
+            topLeftHeader.className = 'col-span-2 p-3 text-sm font-semibold text-gray-700 border-r flex items-center justify-center';
+            topLeftHeader.innerHTML = `<div class="text-lg">${selectedDate.split('-').reverse().join('-')}</div>`;
+            header.appendChild(topLeftHeader);
+
+            const timeHeaderContainer = document.createElement('div');
+            timeHeaderContainer.className = 'col-span-10 grid grid-cols-7'; 
+            
+            timeSlots.forEach(slot => {
+                const timeCell = document.createElement('div');
+                timeCell.className = 'text-center p-0 border-l';
+                timeCell.innerHTML = `
+                    <div class="man-hour-header">${manHours[slot].display}</div>
+                    <div class="time-slot-header">${slot}</div>
+                `;
+                timeHeaderContainer.appendChild(timeCell);
+            });
+            header.appendChild(timeHeaderContainer);
+            container.appendChild(header);
+
+            // --- Build Body Rows ---
+            if (currentScheduleData.length === 0) {
+                const emptyRow = document.createElement('div');
+                emptyRow.className = 'p-10 text-center text-gray-500 col-span-full';
+                emptyRow.textContent = `Không có lịch làm việc nào được tìm thấy cho ngày ${selectedDate}.`;
+                container.appendChild(emptyRow);
+            } else {
+                currentScheduleData.forEach(employee => {
+                    const employeeRow = document.createElement('div');
+                    employeeRow.className = 'grid grid-cols-12 border-b min-h-[120px]';
+
+                    const nameCell = document.createElement('div');
+                    nameCell.className = 'col-span-2 p-3 border-r flex items-center';
+                    nameCell.innerHTML = `
+                        <div class="flex-1">
+                            <div class="employee-name text-gray-800 text-lg">${employee.name}</div>
+                            <div class="text-sm text-gray-600">${employee.role}</div>
+                            <div class="text-xs text-gray-500 mt-2 font-medium">${employee.shift}</div>
+                            <div class="text-xs text-gray-500">${employee.subTask}</div>
+                        </div>
+                        <div class="w-12 h-12 flex-shrink-0 relative">
+                            <!-- Vòng tròn tiến độ (Giả lập 80% hoàn thành) -->
+                            <svg viewBox="0 0 36 36" class="w-full h-full transform -rotate-90">
+                                <path class="text-gray-200" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3"></path>
+                                <path class="text-green-500" stroke-dasharray="80, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path>
+                            </svg>
+                            <span class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-xs font-semibold text-gray-700">80%</span>
+                        </div>
+                    `;
+                    employeeRow.appendChild(nameCell);
+                    
+                    const tasksCellContainer = document.createElement('div');
+                    tasksCellContainer.className = 'col-span-10 grid grid-cols-7';
+
+                    timeSlots.forEach(slot => {
+                        const tasks = employee.tasks[slot] || [];
+                        const taskCell = document.createElement('div');
+                        taskCell.className = 'p-2 border-l'; 
+                        
+                        const staffIdentifier = employee.staffId || employee.name; 
+                        const tasksGridId = `task-grid-${staffIdentifier}-${slot}`; 
+                        
+                        let tasksHtml = `<div class="sub-task-grid" id="${tasksGridId}">`;
+                        
+                        tasks.forEach(task => {
+                            const color = getTaskColor(task); 
+                            tasksHtml += `
+                                <div class="sub-task-card border ${color.bg} ${color.border} shadow-sm" data-task-code="${task.code}">
+                                    <div class="sub-task-name ${color.text}">${task.name}</div>
+                                    <div class="sub-task-code">${task.code}</div>
+                                    <!-- NÚT XÓA MỚI -->
+                                    <button class="delete-task-btn" onclick="deleteTask(this)">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                    <!-- END NÚT XÓA -->
+                                </div>
+                            `;
+                        });
+
+                        tasksHtml += '</div>';
+
+                        taskCell.innerHTML = tasksHtml;
+                        tasksCellContainer.appendChild(taskCell);
+                    });
+                    employeeRow.appendChild(tasksCellContainer);
+                    container.appendChild(employeeRow);
+                });
+            }
+            
+            // Khởi tạo kéo thả sau khi DOM đã được render
+            initializeDragAndDrop();
+        }
+        
+        // Hàm thay đổi ngày (cho nút mũi tên)
+        function changeDate(delta) {
+            const dateInput = document.getElementById('date');
+            let currentDate = new Date(dateInput.value);
+            currentDate.setDate(currentDate.getDate() + delta);
+            
+            const year = currentDate.getFullYear();
+            const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+            const day = String(currentDate.getDate()).padStart(2, '0');
+            dateInput.value = `${year}-${month}-${day}`;
+            
+            renderSchedule();
+        }
+
+        // --- LOGIC MODAL THÊM LỊCH LÀM VIỆC (Giữ nguyên) ---
+        const scheduleModal = document.getElementById('schedule-modal');
+        const sidebarAddScheduleBtn = document.getElementById('sidebar-add-schedule-btn');
+        const mainAddScheduleBtn = document.getElementById('main-add-schedule-btn');
+        const addScheduleForm = document.getElementById('add-schedule-form');
+
+        window.openScheduleModal = function() {
+            scheduleModal.classList.remove('hidden');
+            scheduleModal.classList.add('flex');
+            document.getElementById('schedule-date').value = document.getElementById('date').value;
+        }
+
+        window.closeScheduleModal = function() {
+            scheduleModal.classList.add('hidden');
+            scheduleModal.classList.remove('flex');
+            addScheduleForm.reset(); 
+        }
+
+        function parseTasks(taskString) {
+            const tasks = { "9:00": [] };
+            const codes = taskString.split(',').map(code => code.trim()).filter(code => code !== '');
+            
+            codes.forEach(code => {
+                if (MOCK_MAIN_TASKS[code]) {
+                    tasks["9:00"].push(MOCK_MAIN_TASKS[code]);
+                }
+            });
+
+            return tasks;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderSchedule();
+            document.getElementById('date').addEventListener('change', renderSchedule);
+
+            // Gán sự kiện cho các nút mở Modal
+            sidebarAddScheduleBtn.addEventListener('click', openScheduleModal);
+            mainAddScheduleBtn.addEventListener('click', openScheduleModal);
+
+            // Xử lý submit form
+            addScheduleForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const staffElement = document.getElementById('schedule-staff');
+                const selectedDate = document.getElementById('schedule-date').value;
+                
+                const staffFullName = staffElement.options[staffElement.selectedIndex].text;
+                const match = staffFullName.match(/(.*)\s\((.*)\)/);
+                const staffName = match ? match[1] : staffFullName;
+                const staffRole = match ? match[2] : "N/A";
+                
+                const shiftElement = document.getElementById('schedule-shift');
+                const shiftCode = shiftElement.value;
+                const shiftTime = shiftElement.options[shiftElement.selectedIndex].text.substring(shiftCode.length).trim();
+
+                const taskInput = document.getElementById('schedule-tasks').value;
+
+                // Tạo ID nhân viên giả lập cho người mới
+                const newStaffId = staffElement.value;
+
+                const newScheduleEntry = {
+                    name: staffName,
+                    role: staffRole,
+                    shift: `${shiftCode}: ${shiftTime}`,
+                    subTask: "Phân công mới",
+                    staffId: newStaffId, 
+                    tasks: parseTasks(taskInput) 
+                };
+
+                // Thêm lịch mới vào dữ liệu cho ngày đã chọn
+                if (!scheduleByDate[selectedDate]) {
+                    scheduleByDate[selectedDate] = [];
+                }
+                scheduleByDate[selectedDate].push(newScheduleEntry);
+                
+                renderSchedule();
+
+                alert(`Đã thêm lịch làm việc mới cho ${newScheduleEntry.name} vào ngày ${selectedDate}.`);
+                closeScheduleModal();
+            });
+        });
+
+    </script>
+</body>
+</html>
