@@ -8,7 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css"> <!-- CSS chung -->
+    <link rel="stylesheet" href="task-groups.css"> <!-- CSS riêng -->
 </head>
 <body class="flex h-screen text-gray-800">
 
@@ -24,16 +25,16 @@
                 <i class="fas fa-calendar-day w-6"></i>
                 <span>Lịch Hàng Ngày</span>
             </a>
-            <a href="/month.html" class="flex items-center px-4 py-2 text-slate-300 hover:bg-slate-700 rounded-lg">
+            <a href="month.html" class="flex items-center px-4 py-2 text-slate-300 hover:bg-slate-700 rounded-lg">
                 <i class="fas fa-calendar-alt w-6"></i>
                 <span>Lịch Hàng Tháng</span>
             </a>
             <h3 class="px-4 pt-4 text-sm font-semibold text-slate-400 uppercase tracking-wider">Tổ chức</h3>
-            <a href="/store.html" class="flex items-center px-4 py-2 text-slate-300 hover:bg-slate-700 rounded-lg">
+            <a href="store.html" class="flex items-center px-4 py-2 text-slate-300 hover:bg-slate-700 rounded-lg">
                 <i class="fas fa-store w-6"></i>
                 <span>Cửa Hàng</span>
             </a>
-            <a href="/staff.html" class="flex items-center px-4 py-2 text-slate-300 hover:bg-slate-700 rounded-lg">
+            <a href="staff.html" class="flex items-center px-4 py-2 text-slate-300 hover:bg-slate-700 rounded-lg">
                 <i class="fas fa-users w-6"></i>
                 <span>Nhân Viên</span>
             </a>
@@ -77,11 +78,16 @@
             <div class="bg-white p-6 rounded-lg shadow-md">
                 
                 <!-- Toolbar -->
-                <div class="flex justify-between items-center mb-6">
-                    <!-- Nút Thêm Nhóm Công Việc Mới trong Main Content -->
-                    <button id="main-add-group-btn" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg transition-colors shadow-md">
-                        <i class="fas fa-plus mr-2"></i> Thêm Nhóm Công Việc Mới
-                    </button>
+                <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+                    <div class="flex space-x-2">
+                        <!-- Nút Thêm Nhóm Công Việc Mới trong Main Content -->
+                        <button id="main-add-group-btn" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg transition-colors shadow-md flex items-center">
+                            <i class="fas fa-plus mr-2"></i> Thêm Nhóm Mới
+                        </button>
+                        <button id="bulk-import-btn" class="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg transition-colors shadow-md flex items-center">
+                            <i class="fas fa-file-import mr-2"></i> Nhập Hàng Loạt
+                        </button>
+                    </div>
                     <div class="relative w-1/3">
                         <input type="text" placeholder="Tìm kiếm nhóm..." class="w-full border border-gray-300 p-2 pl-10 rounded-lg focus:ring-green-500 focus:border-green-500">
                         <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
@@ -154,85 +160,42 @@
         </div>
     </div>
 
-    <script>
-        const taskGroups = [
-            { id: "TS01", name: "Trưng Bày Tươi Sống", description: "Các công việc liên quan đến hàng tươi, rau củ, thịt cá", count: 12 },
-            { id: "HK02", name: "Trưng Bày Hàng Khô", description: "Sắp xếp, kiểm tra OOS khu vực hàng đóng gói", count: 8 },
-            { id: "KT03", name: "Marketing & Giá", description: "Quản lý biển giá, POSM và khuyến mãi", count: 5 },
-            { id: "VS04", name: "Vệ Sinh Chung", description: "Các công việc vệ sinh định kỳ trong ngày", count: 3 },
-        ];
+    <!-- MODAL: Nhập Hàng Loạt -->
+    <div id="bulk-import-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl p-6">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center pb-3 border-b">
+                <h3 class="text-xl font-semibold text-gray-800"><i class="fas fa-file-import mr-2 text-teal-500"></i> Nhập Hàng Loạt Nhóm Công Việc</h3>
+                <button class="text-gray-400 hover:text-gray-600" onclick="closeBulkModal()">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            
+            <!-- Modal Body (Form) -->
+            <form class="mt-4 space-y-4" id="bulk-import-form">
+                <div>
+                    <label for="bulk-data" class="block text-sm font-medium text-gray-700">Dữ liệu nhập</label>
+                    <p class="text-xs text-gray-500 mb-2">
+                        Dán dữ liệu từ Excel/Google Sheets. Mỗi dòng là một nhóm công việc, các cột cách nhau bằng phím Tab.
+                        <br>
+                        Định dạng: <strong>ID Nhóm</strong> (Tab) <strong>Tên Nhóm</strong> (Tab) <strong>Mô Tả</strong>
+                    </p>
+                    <textarea id="bulk-data" name="bulk-data" rows="10" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 p-2 border font-mono text-sm" placeholder="GR005	Nhóm Vệ Sinh Sàn	Vệ sinh sàn khu vực bán hàng&#10;GR006	Nhóm Kho	Kiểm kê, sắp xếp kho"></textarea>
+                </div>
 
-        function renderTaskGroups() {
-            const list = document.getElementById('task-groups-list');
-            list.innerHTML = '';
+                <!-- Modal Footer -->
+                <div class="pt-4 flex justify-end space-x-3 border-t">
+                    <button type="button" onclick="closeBulkModal()" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        Hủy
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-teal-500 text-white rounded-md text-sm font-medium hover:bg-teal-600 shadow-md">
+                        <i class="fas fa-check-circle mr-1"></i> Bắt đầu Nhập
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-            taskGroups.forEach(group => {
-                const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-50';
-                
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${group.id}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${group.name}</td>
-                    <td class="px-6 py-4 text-sm text-gray-600">${group.description}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${group.count}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-3"><i class="fas fa-eye"></i> Xem chi tiết</a>
-                        <a href="#" class="text-red-600 hover:text-red-900"><i class="fas fa-trash"></i> Xóa</a>
-                    </td>
-                `;
-                list.appendChild(row);
-            });
-        }
-
-        // --- Logic Modal Thêm Nhóm Công Việc ---
-        
-        const modal = document.getElementById('group-modal');
-        const sidebarAddGroupBtn = document.getElementById('sidebar-add-group-btn');
-        const mainAddGroupBtn = document.getElementById('main-add-group-btn');
-        const addGroupForm = document.getElementById('add-group-form');
-
-        window.openModal = function() {
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        }
-
-        window.closeModal = function() {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-            addGroupForm.reset(); // Reset form khi đóng
-        }
-        
-        document.addEventListener('DOMContentLoaded', () => {
-            renderTaskGroups();
-
-            // Gán sự kiện cho các nút
-            sidebarAddGroupBtn.addEventListener('click', openModal);
-            mainAddGroupBtn.addEventListener('click', openModal);
-
-            // Xử lý gửi form (Mô phỏng)
-            addGroupForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const groupName = document.getElementById('group-name').value;
-                const groupArea = document.getElementById('group-area').value;
-                const groupDesc = document.getElementById('group-desc').value;
-
-                // Thêm nhóm mới vào dữ liệu giả lập
-                const newId = 'GR' + (taskGroups.length + 1).toString().padStart(2, '0');
-                taskGroups.push({
-                    id: newId,
-                    name: groupName,
-                    description: groupDesc,
-                    count: 0 // Nhóm mới chưa có công việc
-                });
-                
-                // Cập nhật lại danh sách hiển thị
-                renderTaskGroups();
-
-                alert(`Đã tạo thành công nhóm: ${groupName} (ID: ${newId})`);
-                closeModal();
-            });
-        });
-
-    </script>
+    <script type="module" src="task-groups.js" defer></script>
 </body>
 </html>
