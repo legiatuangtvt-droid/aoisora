@@ -1,5 +1,5 @@
-import { db } from '../firebase.js';
-import { collection, getDocs, addDoc, deleteDoc, doc, serverTimestamp, writeBatch, setDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { db } from './firebase.js';
+import { collection, getDocs, addDoc, deleteDoc, doc, serverTimestamp, writeBatch, setDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 const taskGroupsCollection = collection(db, 'task_groups');
 
@@ -35,17 +35,23 @@ function renderTaskGroups(groups) {
 }
 
 /**
- * Lấy dữ liệu từ Firestore và render ra bảng.
+ * Lắng nghe các thay đổi từ Firestore và render lại bảng trong thời gian thực.
  */
-async function fetchAndRenderTaskGroups() {
+function listenForTaskGroupChanges() {
     try {
-        const snapshot = await getDocs(taskGroupsCollection);
-        const groups = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        // Sắp xếp theo thời gian tạo để nhóm mới nhất lên đầu
-        groups.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
-        renderTaskGroups(groups);
+        // Tạo một query để sắp xếp theo thời gian tạo, nhóm mới nhất sẽ lên đầu
+        const q = query(taskGroupsCollection, orderBy("createdAt", "desc"));
+
+        onSnapshot(q, (snapshot) => {
+            const groups = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderTaskGroups(groups);
+        }, (error) => {
+            // Callback này sẽ được gọi nếu có lỗi khi đang lắng nghe
+            console.error("Lỗi khi lắng nghe thay đổi nhóm công việc: ", error);
+            alert("Mất kết nối tới dữ liệu. Vui lòng kiểm tra và thử lại.");
+        });
     } catch (error) {
-        console.error("Lỗi khi lấy dữ liệu nhóm công việc: ", error);
+        console.error("Lỗi khi thiết lập listener: ", error);
         alert("Không thể tải danh sách nhóm công việc. Vui lòng kiểm tra kết nối và thử lại.");
     }
 }
@@ -84,7 +90,7 @@ window.closeBulkModal = function() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    fetchAndRenderTaskGroups();
+    listenForTaskGroupChanges(); // Thay đổi ở đây
 
     // Gán sự kiện mở modal
     sidebarAddGroupBtn.addEventListener('click', openModal);
@@ -112,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const docRef = await addDoc(taskGroupsCollection, newGroup);
             alert(`Đã tạo thành công nhóm: ${groupName}`);
             closeModal();
-            fetchAndRenderTaskGroups(); // Tải lại danh sách
+            // Không cần gọi fetch nữa, onSnapshot sẽ tự động cập nhật
         } catch (error) {
             console.error("Lỗi khi thêm nhóm công việc: ", error);
             alert("Đã xảy ra lỗi khi tạo nhóm. Vui lòng thử lại.");
@@ -160,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
         await batch.commit();
         alert(`Hoàn tất! Đã nhập thành công ${processedCount} / ${lines.length} nhóm công việc.`);
         closeBulkModal();
-        fetchAndRenderTaskGroups();
+        // Không cần gọi fetch nữa, onSnapshot sẽ tự động cập nhật
     });
 
     // Sử dụng event delegation để xử lý sự kiện xóa
@@ -172,7 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                     await deleteDoc(doc(db, 'task_groups', groupId));
                     alert('Đã xóa thành công!');
-                    fetchAndRenderTaskGroups(); // Tải lại danh sách
+                    // Không cần gọi fetch nữa, onSnapshot sẽ tự động cập nhật
                 } catch (error) {
                     console.error("Lỗi khi xóa nhóm công việc: ", error);
                     alert("Đã xảy ra lỗi khi xóa. Vui lòng thử lại.");
