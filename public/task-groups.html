@@ -194,6 +194,50 @@
         </div>
     </div>
 
+    <!-- MODAL: Chi Tiết Nhóm Công Việc -->
+    <div id="details-modal" class="modal-overlay">
+        <div class="modal-content max-w-2xl">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h3 id="details-modal-title" class="modal-title"><i class="fas fa-info-circle mr-2 text-indigo-500"></i> Chi tiết Nhóm Công Việc</h3>
+                <button class="modal-close-btn" onclick="closeDetailsModal()">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-form">
+                <!-- Group Info -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg border">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500">Tên Nhóm</label>
+                        <p id="details-group-name" class="text-lg font-semibold text-gray-900"></p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500">ID Nhóm</label>
+                        <p id="details-group-id" class="text-sm text-gray-700 font-mono"></p>
+                    </div>
+                    <div class="col-span-1 md:col-span-2">
+                        <label class="block text-xs font-medium text-gray-500">Mô tả</label>
+                        <p id="details-group-desc" class="text-sm text-gray-700"></p>
+                    </div>
+                </div>
+
+                <!-- Task List in Group -->
+                <div class="mt-4">
+                    <h4 class="text-md font-semibold text-gray-800 mb-2">Các công việc trong nhóm</h4>
+                    <div class="overflow-x-auto border rounded-lg max-h-60">
+                        <table class="data-table">
+                            <tbody id="details-task-list" class="table-body">
+                                <!-- Task rows will be populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="task-groups.js" defer></script>
 </body>
 </html>

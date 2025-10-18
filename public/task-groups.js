@@ -130,17 +130,28 @@ async function openDetailsModal(groupId) {
         const querySnapshot = await getDocs(q);
 
         const taskListEl = document.getElementById('details-task-list');
+        // Thêm thead cho bảng chi tiết để rõ ràng hơn
+        const tableHeader = `
+            <thead class="table-header sticky top-0">
+                <tr>
+                    <th class="th-cell">Mã Công Việc</th>
+                    <th class="th-cell">Tên Công Việc</th>
+                    <th class="th-cell">Thời gian (phút)</th>
+                </tr>
+            </thead>`;
+
         if (querySnapshot.empty) {
-            taskListEl.innerHTML = `<tr><td colspan="3" class="text-center p-4 text-gray-500">Chưa có công việc nào trong nhóm này.</td></tr>`;
+            taskListEl.innerHTML = tableHeader + `<tbody><tr><td colspan="3" class="text-center p-4 text-gray-500">Chưa có công việc nào trong nhóm này.</td></tr></tbody>`;
         } else {
-            taskListEl.innerHTML = querySnapshot.docs.map(doc => {
+            const taskRows = querySnapshot.docs.map(doc => {
                 const task = doc.data();
-                return `<tr>
-                            <td class="px-4 py-3 text-sm text-gray-700">${doc.id}</td>
+                return `<tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3 text-sm text-gray-700 font-mono">${doc.id}</td>
                             <td class="px-4 py-3 text-sm font-medium text-gray-900">${task.name}</td>
                             <td class="px-4 py-3 text-sm text-gray-700">${task.estimatedTime || 'N/A'}</td>
                         </tr>`;
             }).join('');
+            taskListEl.innerHTML = tableHeader + `<tbody>${taskRows}</tbody>`;
         }
     } catch (error) {
         console.error("Lỗi khi tải chi tiết nhóm công việc: ", error);
