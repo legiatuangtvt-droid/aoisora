@@ -1,6 +1,9 @@
 import { db } from './firebase.js';
 import { collection, getDocs, addDoc, deleteDoc, doc, serverTimestamp, writeBatch, setDoc, onSnapshot, query, orderBy, getDoc, where } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
+// Biến toàn cục để lưu trữ toàn bộ danh sách nhóm, giúp cho việc tìm kiếm không cần gọi lại Firestore
+let allTaskGroups = [];
+
 const taskGroupsCollection = collection(db, 'task_groups');
 
 /**
@@ -43,8 +46,9 @@ function listenForTaskGroupChanges() {
         const q = query(taskGroupsCollection, orderBy("createdAt", "desc"));
 
         onSnapshot(q, (snapshot) => {
-            const groups = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderTaskGroups(groups);
+            allTaskGroups = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            // Sau khi cập nhật dữ liệu, áp dụng lại bộ lọc tìm kiếm hiện tại
+            filterAndRenderGroups();
         }, (error) => {
             // Callback này sẽ được gọi nếu có lỗi khi đang lắng nghe
             console.error("Lỗi khi lắng nghe thay đổi nhóm công việc: ", error);
@@ -54,6 +58,28 @@ function listenForTaskGroupChanges() {
         console.error("Lỗi khi thiết lập listener: ", error);
         showToast("Không thể tải danh sách nhóm công việc. Vui lòng kiểm tra kết nối và thử lại.", "error");
     }
+}
+
+/**
+ * Lọc và render lại danh sách nhóm dựa trên nội dung ô tìm kiếm.
+ */
+function filterAndRenderGroups() {
+    const searchInput = document.getElementById('search-input');
+    const searchTerm = searchInput.value.toLowerCase().trim();
+
+    if (!searchTerm) {
+        renderTaskGroups(allTaskGroups);
+        return;
+    }
+
+    const filteredGroups = allTaskGroups.filter(group => {
+        const nameMatch = group.name.toLowerCase().includes(searchTerm);
+        const idMatch = group.id.toLowerCase().includes(searchTerm);
+        const descMatch = (group.description || '').toLowerCase().includes(searchTerm);
+        return nameMatch || idMatch || descMatch;
+    });
+
+    renderTaskGroups(filteredGroups);
 }
 
 const sidebarAddGroupBtn = document.getElementById('sidebar-add-group-btn');
@@ -134,6 +160,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Gán sự kiện mở modal nhập hàng loạt
     bulkImportBtn.addEventListener('click', () => showModal('bulk-import-modal'));
+
+    // Gán sự kiện cho ô tìm kiếm
+    document.getElementById('search-input').addEventListener('input', filterAndRenderGroups);
 
     // Xử lý gửi form để thêm nhóm mới vào Firestore
     addGroupForm.addEventListener('submit', async function(e) {
