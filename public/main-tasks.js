@@ -22,7 +22,7 @@ function getGroupBadge(groupName) {
     else if (groupName.includes('Tồn Kho')) colorClass = 'bg-red-100 text-red-800';
     else if (groupName.includes('Vệ Sinh')) colorClass = 'bg-teal-100 text-teal-800';
 
-    return `<span class="group-badge ${colorClass}">${groupName}</span>`;
+    return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass}">${groupName}</span>`;
 }
 
 /**

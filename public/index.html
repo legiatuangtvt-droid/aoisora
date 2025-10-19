@@ -5,23 +5,173 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="logo.png" type="image/png">
     <title>Lịch Hàng Ngày - AoiSora</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="output.css">
-    <link rel="stylesheet" href="layout.css">
     <!-- Thêm thư viện SortableJS cho chức năng kéo thả -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f8fc;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #a8a8a8;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        .employee-name {
+            font-weight: 600;
+        }
+
+        /* --- CSS cho hiển thị dọc như hình mẫu --- */
+        .sub-task-grid {
+            display: flex;
+            flex-direction: row; /* Xếp các thẻ task theo chiều ngang */
+            flex-wrap: wrap; 
+            gap: 4px; /* Khoảng cách giữa các thẻ task */
+            align-content: flex-start;
+            height: 100%;
+            min-height: 40px; 
+        }
+
+        .sub-task-card {
+            border-radius: 0.25rem;
+            padding: 4px; 
+            width: 70px; /* Chiều rộng cho card task (4 * 70 = 280px) */
+            height: 100px; /* Chiều cao cố định */
+            text-align: center;
+            display: flex;
+            flex-direction: column; 
+            justify-content: space-between; 
+            transition: all 0.2s;
+            cursor: move; 
+            box-sizing: border-box; 
+        }
+        .sub-task-card:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+        }
+        /* CSS CHO NÚT XÓA */
+        .delete-task-btn {
+            position: absolute;
+            top: 1px;
+            right: 1px;
+            cursor: pointer;
+            color: #ef4444; /* red-500 */
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            padding: 0 3px;
+            font-size: 10px;
+            line-height: 1;
+            opacity: 0; /* Hidden by default */
+            transition: opacity 0.2s;
+            border: 1px solid #ef4444;
+        }
+
+        .sub-task-card:hover .delete-task-btn {
+            opacity: 1; /* Show on hover */
+        }
+        /* END CSS CHO NÚT XÓA */
+
+        .sub-task-name {
+            font-size: 10px; 
+            font-weight: 600; 
+            line-height: 1.1; 
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal; 
+            display: -webkit-box; 
+            -webkit-line-clamp: 5; 
+            -webkit-box-orient: vertical;
+            flex-grow: 1; 
+        }
+        .sub-task-code {
+            font-size: 9px; 
+            color: #6b7280;
+            margin-top: 2px;
+            flex-shrink: 0; 
+        }
+        
+        /* --- CSS cho Header (Khớp với hình mẫu) --- */
+        .time-slot-header {
+            background-color: #10B981; /* Green-500/600 */
+            color: white;
+            padding: 0.5rem;
+            text-align: center;
+            font-weight: bold;
+            border-left: 1px solid #059669;
+        }
+
+        .man-hour-header {
+            background-color: #D1FAE5; /* Green-100 */
+            color: #065F46; /* Green-900 */
+            font-size: 12px;
+            padding: 0.25rem 0;
+            border-bottom: 1px solid #10B981;
+        }
+    </style>
 </head>
 <body class="flex h-screen text-gray-800">
 
-    <!-- Sidebar Placeholder -->
-    <div id="sidebar-placeholder"></div>
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-800 text-white flex flex-col flex-shrink-0">
+        <div class="h-16 flex items-center justify-center text-2xl font-bold border-b border-slate-700">
+            <i class="fas fa-tasks mr-3 text-green-400"></i>
+            <span>AoiSora</span>
+        </div>
+        <nav class="flex-1 p-4 space-y-2">
+            <h3 class="px-4 text-sm font-semibold text-slate-400 uppercase tracking-wider">Lịch trình</h3>
+            <a href="#" class="flex items-center px-4 py-2 text-white bg-green-600 rounded-lg">
+                <i class="fas fa-calendar-day w-6"></i>
+                <span>Lịch Hàng Ngày</span>
+            </a>
+            <a href="/month.html" class="flex items-center px-4 py-2 text-slate-300 hover:bg-slate-700 rounded-lg">
+                <i class="fas fa-calendar-alt w-6"></i>
+                <span>Lịch Hàng Tháng</span>
+            </a>
+            <h3 class="px-4 pt-4 text-sm font-semibold text-slate-400 uppercase tracking-wider">Tổ chức</h3>
+            <a href="/store.html" class="flex items-center px-4 py-2 text-slate-300 hover:bg-slate-700 rounded-lg">
+                <i class="fas fa-store w-6"></i>
+                <span>Cửa Hàng</span>
+            </a>
+            <a href="/staff.html" class="flex items-center px-4 py-2 text-slate-300 hover:bg-slate-700 rounded-lg">
+                <i class="fas fa-users w-6"></i>
+                <span>Nhân Viên</span>
+            </a>
+             <h3 class="px-4 pt-4 text-sm font-semibold text-slate-400 uppercase tracking-wider">Quản lý</h3>
+            <a href="/main-tasks.html" class="flex items-center px-4 py-2 text-slate-300 hover:bg-slate-700 rounded-lg">
+                <i class="fas fa-clipboard-list w-6"></i>
+                <span>Công Việc Chính</span>
+            </a>
+             <a href="/task-groups.html" class="flex items-center px-4 py-2 text-slate-300 hover:bg-slate-700 rounded-lg">
+                <i class="fas fa-layer-group w-6"></i>
+                <span>Nhóm Công Việc</span>
+            </a>
+        </nav>
+        <div class="p-4 border-t border-slate-700">
+            <button id="sidebar-add-schedule-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                <i class="fas fa-plus-circle mr-2"></i>Thêm Lịch Làm Việc
+            </button>
+        </div>
+    </aside>
 
     <!-- Main Content -->
     <div class="flex-1 flex flex-col overflow-hidden">
-        <!-- Header (sẽ bị thay thế bởi layout.js, nhưng giữ lại cấu trúc để tương thích) -->
-        <header class="page-main-header">
+        <!-- Header -->
+        <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 flex-shrink-0">
              <div class="flex items-center space-x-4">
                 <button class="text-gray-500 hover:text-gray-800" onclick="changeDate(-1)"><i class="fas fa-chevron-left"></i></button>
                 <input type="date" id="date" value="2025-10-03" class="bg-gray-100 border-gray-300 rounded-md p-2 text-base focus:outline-none focus:ring-2 focus:ring-green-500">
@@ -29,13 +179,9 @@
             </div>
             <div class="flex items-center space-x-6">
                 <!-- Nút thêm lịch làm việc (Tùy chọn) -->
-                 <button id="main-add-schedule-btn" class="btn btn-indigo">
+                 <button id="main-add-schedule-btn" class="text-white bg-blue-500 hover:bg-blue-600 font-medium py-2 px-4 rounded-lg shadow-md transition-colors">
                     <i class="fas fa-calendar-plus mr-2"></i> Thêm Lịch
                 </button>
-                <!-- ICON GIỚI THIỆU DỰ ÁN -->
-                <a href="intro.html" target="_blank" class="text-gray-500 hover:text-green-600" title="Giới thiệu & Hướng dẫn">
-                    <i class="fas fa-question-circle text-xl"></i>
-                </a>
                 <a href="#" class="text-gray-600 hover:text-green-600"><i class="fas fa-user-check mr-2"></i>Xác nhận</a>
                 <a href="#" class="text-gray-600 hover:text-green-600"><i class="fas fa-clipboard-check mr-2"></i>Kiểm tra</a>
                 <a href="#" class="text-gray-600 hover:text-green-600 relative">
@@ -123,7 +269,6 @@
         </div>
     </div>
 
-    <script src="layout.js"></script>
     <script>
         // --- Dữ liệu Công việc chính giả lập (Để dùng trong hàm parseTasks) ---
         const MOCK_MAIN_TASKS = {
@@ -550,6 +695,7 @@
 
         // --- LOGIC MODAL THÊM LỊCH LÀM VIỆC (Giữ nguyên) ---
         const scheduleModal = document.getElementById('schedule-modal');
+        const sidebarAddScheduleBtn = document.getElementById('sidebar-add-schedule-btn');
         const mainAddScheduleBtn = document.getElementById('main-add-schedule-btn');
         const addScheduleForm = document.getElementById('add-schedule-form');
 
@@ -583,6 +729,7 @@
             document.getElementById('date').addEventListener('change', renderSchedule);
 
             // Gán sự kiện cho các nút mở Modal
+            sidebarAddScheduleBtn.addEventListener('click', openScheduleModal);
             mainAddScheduleBtn.addEventListener('click', openScheduleModal);
 
             // Xử lý submit form

@@ -58,9 +58,12 @@ function initializeLayout() {
      * Tải và hiển thị nội dung của một trang mà không cần tải lại toàn bộ.
      * @param {string} href - URL của trang cần tải.
      */
-    async function loadPageContent(href) {
+    async function loadPageContent(path) {
         try {
-            const response = await fetch(href);
+            // Luôn sử dụng đường dẫn tương đối để fetch, tránh lỗi file://
+            const relativePath = path.startsWith('/') ? path.substring(1) : path.split('/').pop();
+
+            const response = await fetch(relativePath);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -79,12 +82,11 @@ function initializeLayout() {
 
             // Phát ra một sự kiện tùy chỉnh để thông báo rằng nội dung đã được tải
             // main.js sẽ lắng nghe sự kiện này để tải module JS tương ứng
-            const pageName = href.split('/').pop();
-            document.dispatchEvent(new CustomEvent('page-content-loaded', { detail: { pageName } }));
+            document.dispatchEvent(new CustomEvent('page-content-loaded', { detail: { pageName: relativePath } }));
 
         } catch (error) {
             console.error('Không thể tải trang:', error);
-            document.querySelector('main').innerHTML = `<div class="p-8 text-center text-red-500"><h1>Lỗi tải trang</h1><p>Không thể tải nội dung từ ${href}. Vui lòng kiểm tra lại đường dẫn và kết nối mạng.</p></div>`;
+            document.querySelector('main').innerHTML = `<div class="p-8 text-center text-red-500"><h1>Lỗi tải trang</h1><p>Không thể tải nội dung từ ${path}. Vui lòng kiểm tra lại đường dẫn và kết nối mạng.</p></div>`;
         }
     }
 
@@ -94,9 +96,9 @@ function initializeLayout() {
      */
     function navigate(href) {
         // Cập nhật thanh URL mà không tải lại trang
-        history.pushState({}, '', href);
+        history.pushState({}, '', href); // Vẫn dùng href đầy đủ để cập nhật URL trình duyệt
         // Tải nội dung trang mới
-        loadPageContent(href);
+        loadPageContent(href); // Nhưng hàm loadPageContent sẽ tự xử lý để lấy đường dẫn tương đối
         // Cập nhật trạng thái active cho sidebar
         setActiveSidebarLink(href);
     }
