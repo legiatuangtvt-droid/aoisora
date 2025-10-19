@@ -335,22 +335,34 @@ document.addEventListener('DOMContentLoaded', () => {
     // Xử lý gửi form để thêm nhóm mới vào Firestore
     addGroupForm.addEventListener('submit', async function(e) {
         e.preventDefault();
+        const groupId = document.getElementById('group-id').value.trim().toUpperCase();
         const groupName = document.getElementById('group-name').value;
         const groupArea = document.getElementById('group-area').value;
         const groupDesc = document.getElementById('group-desc').value;
+
+        if (!groupId) {
+            showToast("ID Nhóm là bắt buộc.", "warning");
+            return;
+        }
 
         const newGroup = {
             name: groupName,
             area: groupArea,
             description: groupDesc,
             taskCount: 0, // Mặc định là 0
-            createdAt: serverTimestamp() // Thêm dấu thời gian
+            createdAt: serverTimestamp(), // Thêm dấu thời gian
+            id: groupId // Thêm ID vào dữ liệu để tiện truy vấn nếu cần
         };
 
         try {
-            const docRef = await addDoc(taskGroupsCollection, newGroup);
+            // Dùng setDoc để tạo document với ID tự định nghĩa
+            // Firestore sẽ tự tạo collection nếu chưa tồn tại
+            const docRef = doc(db, 'task_groups', groupId);
+            await setDoc(docRef, newGroup);
+
             showToast(`Đã tạo thành công nhóm: ${groupName}`, "success");
             hideModal();
+            addGroupForm.reset(); // Reset form sau khi thêm thành công
             // Không cần gọi fetch nữa, onSnapshot sẽ tự động cập nhật
         } catch (error) {
             console.error("Lỗi khi thêm nhóm công việc: ", error);
