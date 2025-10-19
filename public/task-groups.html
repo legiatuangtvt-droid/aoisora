@@ -87,6 +87,9 @@
                         <button id="bulk-import-btn" class="btn btn-teal">
                             <i class="fas fa-file-import btn-icon-text"></i> Nhập Hàng Loạt
                         </button>
+                        <button id="manage-areas-btn" class="btn btn-orange">
+                            <i class="fas fa-map-marked-alt btn-icon-text"></i> Quản lý Khu vực
+                        </button>
                     </div>
                     <div class="search-input-wrapper">
                         <input type="text" id="search-input" placeholder="Tìm kiếm theo ID, tên, mô tả..." class="search-input">
@@ -102,6 +105,7 @@
                                 <th class="th-cell">ID Nhóm</th>
                                 <th class="th-cell">Tên Nhóm</th>
                                 <th class="th-cell">Mô Tả</th>
+                                <th class="th-cell">Khu Vực Áp Dụng</th>
                                 <th class="th-cell">Số Lượng Công Việc</th>
                                 <th class="th-cell">Hành Động</th>
                             </tr>
@@ -136,10 +140,7 @@
                 <div class="form-group">
                     <label for="group-area" class="block text-sm font-medium text-gray-700">Khu vực áp dụng</label>
                     <select id="group-area" name="group-area" class="form-select">
-                        <option value="POS">POS (Quầy thu ngân)</option>
-                        <option value="MMD">MMD (Hàng khô/Tạp hóa)</option>
-                        <option value="Cafe">Aeon Cafe</option>
-                        <option value="All">Toàn bộ cửa hàng</option>
+                        <!-- Options will be populated by JS -->
                     </select>
                 </div>
                 <div class="form-group">
@@ -157,6 +158,82 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Sửa Nhóm Công Việc -->
+    <div id="edit-group-modal" class="modal-overlay">
+        <div class="modal-content max-w-lg">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fas fa-edit mr-2 text-indigo-500"></i> Chỉnh Sửa Nhóm Công Việc</h3>
+                <button class="modal-close-btn">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            
+            <!-- Modal Body (Form) -->
+            <form class="modal-form" id="edit-group-form">
+                <input type="hidden" id="edit-group-id">
+                <div class="form-group">
+                    <label for="edit-group-name" class="block text-sm font-medium text-gray-700">Tên Nhóm (*)</label>
+                    <input type="text" id="edit-group-name" name="edit-group-name" required class="form-input">
+                </div>
+                <div class="form-group">
+                    <label for="edit-group-area" class="block text-sm font-medium text-gray-700">Khu vực áp dụng</label>
+                    <select id="edit-group-area" name="edit-group-area" class="form-select">
+                        <!-- Options will be populated by JS -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit-group-desc" class="block text-sm font-medium text-gray-700">Mô tả chi tiết</label>
+                    <textarea id="edit-group-desc" name="edit-group-desc" rows="3" class="form-textarea"></textarea>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary modal-close-btn">Hủy</button>
+                    <button type="submit" class="btn btn-indigo text-sm"><i class="fas fa-save mr-1"></i> Cập Nhật</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Quản Lý Khu Vực Áp Dụng -->
+    <div id="manage-areas-modal" class="modal-overlay">
+        <div class="modal-content max-w-2xl">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fas fa-map-marked-alt mr-2 text-orange-500"></i> Quản Lý Khu Vực Áp Dụng</h3>
+                <button class="modal-close-btn"><i class="fas fa-times text-lg"></i></button>
+            </div>
+            <div class="modal-form">
+                <!-- Form Thêm Mới -->
+                <form id="add-area-form-inline" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end bg-gray-50 p-4 rounded-lg border mb-4">
+                    <div class="form-group p-0 m-0">
+                        <label for="inline-area-id" class="block text-xs font-medium text-gray-600">Mã Khu Vực (*)</label>
+                        <input type="text" id="inline-area-id" required class="form-input text-sm" placeholder="POS, MMD...">
+                    </div>
+                    <div class="form-group p-0 m-0">
+                        <label for="inline-area-name" class="block text-xs font-medium text-gray-600">Tên Khu Vực (*)</label>
+                        <input type="text" id="inline-area-name" required class="form-input text-sm" placeholder="Quầy thu ngân...">
+                    </div>
+                    <button type="submit" class="btn btn-indigo text-sm h-10"><i class="fas fa-plus mr-2"></i>Thêm</button>
+                </form>
+
+                <!-- Danh sách khu vực -->
+                <div class="overflow-y-auto max-h-80 border rounded-lg">
+                     <table class="data-table">
+                        <thead class="table-header sticky top-0">
+                            <tr>
+                                <th class="th-cell">Mã</th>
+                                <th class="th-cell">Tên Khu Vực</th>
+                                <th class="th-cell text-right">Hành Động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="managed-areas-list" class="table-body"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 

@@ -1,10 +1,72 @@
 import { db } from './firebase.js';
-import { collection, getDocs, addDoc, deleteDoc, doc, serverTimestamp, writeBatch, setDoc, onSnapshot, query, orderBy, getDoc, where } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { collection, getDocs, addDoc, deleteDoc, doc, serverTimestamp, writeBatch, setDoc, onSnapshot, query, orderBy, getDoc, where, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 // Biến toàn cục để lưu trữ toàn bộ danh sách nhóm, giúp cho việc tìm kiếm không cần gọi lại Firestore
 let allTaskGroups = [];
+let allTaskAreas = {}; // Lưu trữ khu vực dưới dạng {id: name} để tra cứu nhanh
 
 const taskGroupsCollection = collection(db, 'task_groups');
+const taskAreasCollection = collection(db, 'task_areas');
+
+/**
+ * Tải danh sách các khu vực áp dụng từ Firestore và điền vào các dropdown.
+ */
+function listenForAreaChanges() {
+    const q = query(taskAreasCollection, orderBy("name"));
+    onSnapshot(q, (snapshot) => {
+        const areas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
+        // 1. Cập nhật object tra cứu `allTaskAreas`
+        allTaskAreas = areas.reduce((acc, area) => {
+            acc[area.id] = area.name;
+            return acc;
+        }, {});
+
+        // 2. Populate các dropdown chọn khu vực
+        populateAreaDropdowns(areas);
+
+        // 3. Render danh sách khu vực trong modal quản lý
+        renderManagedAreas(areas);
+
+        // 4. Render lại danh sách nhóm công việc để cập nhật tên khu vực nếu có thay đổi
+        if (allTaskGroups.length > 0) {
+            filterAndRenderGroups();
+        }
+
+    }, (error) => {
+        console.error("Lỗi khi lắng nghe thay đổi khu vực: ", error);
+        showToast("Mất kết nối tới dữ liệu khu vực.", "error");
+    });
+}
+
+/**
+ * Điền dữ liệu khu vực vào các thẻ <select>
+ * @param {Array} areas - Mảng các đối tượng khu vực
+ */
+function populateAreaDropdowns(areas) {
+    const addSelect = document.getElementById('group-area');
+    const editSelect = document.getElementById('edit-group-area');
+    
+    const currentAddValue = addSelect.value;
+    const currentEditValue = editSelect.value;
+
+    addSelect.innerHTML = '<option value="">-- Chọn khu vực --</option>';
+    editSelect.innerHTML = '<option value="">-- Chọn khu vực --</option>';
+
+    areas.forEach(area => {
+        const option = `<option value="${area.id}">${area.name} (${area.id})</option>`;
+        addSelect.innerHTML += option;
+        editSelect.innerHTML += option;
+    });
+
+    // Khôi phục giá trị đã chọn nếu còn tồn tại
+    if (Array.from(addSelect.options).some(opt => opt.value === currentAddValue)) {
+        addSelect.value = currentAddValue;
+    }
+    if (Array.from(editSelect.options).some(opt => opt.value === currentEditValue)) {
+        editSelect.value = currentEditValue;
+    }
+}
 
 /**
  * Render danh sách các nhóm công việc ra bảng.
@@ -15,7 +77,7 @@ function renderTaskGroups(groups) {
     list.innerHTML = '';
 
     if (groups.length === 0) {
-        list.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-gray-500">Chưa có nhóm công việc nào. Hãy thêm một nhóm mới!</td></tr>`;
+        list.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-gray-500">Chưa có nhóm công việc nào. Hãy thêm một nhóm mới!</td></tr>`;
         return;
     }
 
@@ -23,13 +85,17 @@ function renderTaskGroups(groups) {
         const row = document.createElement('tr');
         row.className = 'hover:bg-gray-50';
         
+        const areaName = allTaskAreas[group.area] || group.area || '(Chưa có)';
+
         row.innerHTML = `
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">${group.id}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">${group.name}</td>
             <td class="px-6 py-4 text-sm text-gray-600">${group.description}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${areaName}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${group.taskCount || 0}</td>
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <button data-id="${group.id}" class="view-details-btn text-indigo-600 hover:text-indigo-900 mr-3"><i class="fas fa-eye"></i> Xem chi tiết</button>
+                <button data-id="${group.id}" class="edit-btn text-blue-600 hover:text-blue-900 mr-3"><i class="fas fa-edit"></i> Sửa</button>
                 <button data-id="${group.id}" class="delete-btn text-red-600 hover:text-red-900"><i class="fas fa-trash"></i> Xóa</button>
             </td>
         `;
@@ -86,6 +152,8 @@ const sidebarAddGroupBtn = document.getElementById('sidebar-add-group-btn');
 const mainAddGroupBtn = document.getElementById('main-add-group-btn');
 const addGroupForm = document.getElementById('add-group-form');
 const taskGroupList = document.getElementById('task-groups-list');
+const editGroupForm = document.getElementById('edit-group-form');
+const manageAreasBtn = document.getElementById('manage-areas-btn');
 
 const bulkImportBtn = document.getElementById('bulk-import-btn');
 const bulkImportForm = document.getElementById('bulk-import-form');
@@ -151,12 +219,112 @@ async function openDetailsModal(groupId) {
     }
 }
 
+/**
+ * Mở modal chỉnh sửa và điền dữ liệu cho một nhóm công việc.
+ * @param {string} groupId - ID của nhóm công việc.
+ */
+async function openEditModal(groupId) {
+    try {
+        const docRef = doc(db, 'task_groups', groupId);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            const group = docSnap.data();
+            document.getElementById('edit-group-id').value = groupId;
+            document.getElementById('edit-group-name').value = group.name;
+            document.getElementById('edit-group-desc').value = group.description || '';
+            document.getElementById('edit-group-area').value = group.area || '';
+            showModal('edit-group-modal');
+        } else {
+            showToast("Không tìm thấy nhóm công việc để sửa.", "error");
+        }
+    } catch (error) {
+        console.error("Lỗi khi lấy dữ liệu để sửa: ", error);
+        showToast("Đã xảy ra lỗi khi lấy dữ liệu. Vui lòng thử lại.", "error");
+    }
+}
+
+/**
+ * Render danh sách khu vực trong modal quản lý.
+ * @param {Array} areas - Mảng các đối tượng khu vực.
+ */
+function renderManagedAreas(areas) {
+    const list = document.getElementById('managed-areas-list');
+    list.innerHTML = '';
+
+    if (areas.length === 0) {
+        list.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-gray-500">Chưa có khu vực nào.</td></tr>`;
+        return;
+    }
+
+    areas.forEach(area => {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-gray-50';
+        row.dataset.id = area.id;
+        
+        row.innerHTML = `
+            <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-500">${area.id}</td>
+            <td class="px-4 py-2 whitespace-nowrap text-sm font-semibold text-gray-900">${area.name}</td>
+            <td class="px-4 py-2 whitespace-nowrap text-right text-sm font-medium">
+                <button class="edit-area-btn text-blue-600 hover:text-blue-900 mr-3"><i class="fas fa-edit"></i> Sửa</button>
+                <button class="delete-area-btn text-red-600 hover:text-red-900"><i class="fas fa-trash"></i> Xóa</button>
+            </td>
+        `;
+        list.appendChild(row);
+    });
+}
+
+/**
+ * Chuyển một dòng trong bảng khu vực sang chế độ chỉnh sửa inline.
+ * @param {HTMLElement} row - Phần tử <tr> cần chỉnh sửa.
+ */
+function turnOnAreaEditMode(row) {
+    const areaId = row.dataset.id;
+    const areaName = row.cells[1].textContent;
+
+    row.cells[1].innerHTML = `<input type="text" class="form-input text-sm py-1" value="${areaName}">`;
+    row.cells[2].innerHTML = `
+        <button class="save-area-btn text-green-600 hover:text-green-900 mr-3"><i class="fas fa-check"></i> Lưu</button>
+        <button class="cancel-edit-area-btn text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i> Hủy</button>
+    `;
+    row.querySelector('input').focus();
+}
+
+/**
+ * Lưu thay đổi khi sửa khu vực (inline).
+ * @param {HTMLElement} row - Phần tử <tr> đang được sửa.
+ */
+async function saveAreaEdit(row) {
+    const areaId = row.dataset.id;
+    const newName = row.querySelector('input').value.trim();
+
+    if (!newName) {
+        showToast("Tên khu vực không được để trống.", "warning");
+        return;
+    }
+
+    try {
+        const docRef = doc(db, 'task_areas', areaId);
+        await updateDoc(docRef, { name: newName });
+        showToast(`Đã cập nhật khu vực: ${areaId}`, "success");
+        // onSnapshot sẽ tự động render lại, không cần làm gì thêm.
+    } catch (error) {
+        console.error("Lỗi khi cập nhật khu vực: ", error);
+        showToast("Lỗi khi cập nhật khu vực.", "error");
+        // Nếu lỗi, render lại để hủy chế độ edit
+        listenForAreaChanges();
+    }
+}
+
+
 document.addEventListener('DOMContentLoaded', () => {
-    listenForTaskGroupChanges(); // Thay đổi ở đây
+    listenForTaskGroupChanges();
+    listenForAreaChanges();
 
     // Gán sự kiện mở modal
     sidebarAddGroupBtn.addEventListener('click', () => showModal('group-modal'));
     mainAddGroupBtn.addEventListener('click', () => showModal('group-modal'));
+    manageAreasBtn.addEventListener('click', () => showModal('manage-areas-modal'));
 
     // Gán sự kiện mở modal nhập hàng loạt
     bulkImportBtn.addEventListener('click', () => showModal('bulk-import-modal'));
@@ -187,6 +355,56 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error("Lỗi khi thêm nhóm công việc: ", error);
             showToast("Đã xảy ra lỗi khi tạo nhóm. Vui lòng thử lại.", "error");
+        }
+    });
+
+    // Xử lý form sửa nhóm
+    editGroupForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const groupId = document.getElementById('edit-group-id').value;
+        const groupName = document.getElementById('edit-group-name').value;
+        const groupArea = document.getElementById('edit-group-area').value;
+        const groupDesc = document.getElementById('edit-group-desc').value;
+
+        const updatedData = {
+            name: groupName,
+            area: groupArea,
+            description: groupDesc,
+        };
+
+        try {
+            const docRef = doc(db, 'task_groups', groupId);
+            await updateDoc(docRef, updatedData);
+            showToast(`Đã cập nhật thành công nhóm: ${groupName}`, "success");
+            hideModal();
+            // onSnapshot sẽ tự động cập nhật UI
+        } catch (error) {
+            console.error("Lỗi khi cập nhật nhóm: ", error);
+            showToast("Đã xảy ra lỗi khi cập nhật. Vui lòng thử lại.", "error");
+        }
+    });
+
+    // Xử lý form thêm khu vực (inline trong modal)
+    document.getElementById('add-area-form-inline').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const id = document.getElementById('inline-area-id').value.trim().toUpperCase();
+        const name = document.getElementById('inline-area-name').value.trim();
+
+        if (!id || !name) {
+            showToast("Mã và Tên khu vực là bắt buộc.", "warning");
+            return;
+        }
+
+        try {
+            // Dùng setDoc để tạo document với ID tự định nghĩa
+            const docRef = doc(db, 'task_areas', id);
+            await setDoc(docRef, { name });
+            showToast(`Đã tạo thành công khu vực: ${name}`, "success");
+            e.target.reset();
+            document.getElementById('inline-area-id').focus();
+        } catch (error) {
+            console.error("Lỗi khi thêm khu vực: ", error);
+            showToast("Đã xảy ra lỗi hoặc mã khu vực đã tồn tại.", "error");
         }
     });
 
@@ -261,6 +479,46 @@ document.addEventListener('DOMContentLoaded', () => {
         if (viewDetailsButton) {
             const groupId = viewDetailsButton.dataset.id;
             openDetailsModal(groupId);
+        }
+
+        const editButton = e.target.closest('.edit-btn');
+        if (editButton) {
+            const groupId = editButton.dataset.id;
+            openEditModal(groupId);
+        }
+    });
+
+    // Event delegation cho modal quản lý khu vực
+    document.getElementById('managed-areas-list').addEventListener('click', async (e) => {
+        const row = e.target.closest('tr');
+        if (!row) return;
+
+        // Nút Sửa
+        if (e.target.closest('.edit-area-btn')) {
+            turnOnAreaEditMode(row);
+        }
+        // Nút Lưu (khi đang sửa)
+        else if (e.target.closest('.save-area-btn')) {
+            await saveAreaEdit(row);
+        }
+        // Nút Hủy (khi đang sửa)
+        else if (e.target.closest('.cancel-edit-area-btn')) {
+            // Chỉ cần re-render lại từ snapshot là được
+            listenForAreaChanges();
+        }
+        // Nút Xóa
+        else if (e.target.closest('.delete-area-btn')) {
+            const areaId = row.dataset.id;
+            const confirmed = await showConfirmation(`Bạn có chắc muốn xóa khu vực "${areaId}" không?`, 'Xác nhận xóa');
+            if (confirmed) {
+                try {
+                    await deleteDoc(doc(db, 'task_areas', areaId));
+                    showToast(`Đã xóa khu vực: ${areaId}`, 'success');
+                } catch (error) {
+                    console.error("Lỗi khi xóa khu vực: ", error);
+                    showToast("Lỗi khi xóa khu vực.", "error");
+                }
+            }
         }
     });
 });

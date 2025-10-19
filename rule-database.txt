@@ -12,6 +12,11 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    // Cho phép bất kỳ ai cũng có thể đọc và ghi vào collection 'task_areas'
+    match /task_areas/{areaId} {
+      allow read, write: if true;
+    }
+
     // Các quy tắc khác
   }
 }
