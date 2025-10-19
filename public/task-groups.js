@@ -88,11 +88,11 @@ function renderTaskGroups(groups) {
         const areaName = allTaskAreas[group.area] || group.area || '(Chưa có)';
 
         row.innerHTML = `
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">${group.id}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">${group.name}</td>
-            <td class="px-6 py-4 text-sm text-gray-600">${group.description}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${areaName}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${group.taskCount || 0}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500 text-center">${group.id}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 text-center">${group.name}</td>
+            <td class="px-6 py-4 text-sm text-gray-600 text-left">${group.description}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">${areaName}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">${group.taskCount || 0}</td>
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <button data-id="${group.id}" class="view-details-btn text-indigo-600 hover:text-indigo-900 mr-3"><i class="fas fa-eye"></i> Xem chi tiết</button>
                 <button data-id="${group.id}" class="edit-btn text-blue-600 hover:text-blue-900 mr-3"><i class="fas fa-edit"></i> Sửa</button>
