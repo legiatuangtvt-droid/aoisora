@@ -24,17 +24,22 @@ function initializeLayout() {
             });
     };
     const setActiveSidebarLink = (pathname) => {
-        const currentPage = window.location.pathname.split('/').pop();
+        const currentPage = pathname.split('/').pop() || 'index.html';
         const navLinks = document.querySelectorAll('#sidebar-placeholder .nav-link');
         
+        // Các lớp CSS của Tailwind cho trạng thái active
+        const activeClasses = ['bg-green-600', 'text-white'];
+        // Các lớp CSS của Tailwind cho trạng thái không active (để đảm bảo reset đúng)
+        const inactiveClasses = ['text-slate-300', 'hover:bg-slate-700'];
+
         navLinks.forEach(link => {
             const linkPage = link.getAttribute('href').split('/').pop();
             if (linkPage === currentPage) {
-                link.classList.add('active');
-            }
-            // Xóa class active khỏi các link khác
-            else {
-                link.classList.remove('active');
+                link.classList.remove(...inactiveClasses);
+                link.classList.add(...activeClasses);
+            } else {
+                link.classList.remove(...activeClasses);
+                link.classList.add(...inactiveClasses);
             }
         });
     };
