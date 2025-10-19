@@ -26,6 +26,29 @@ function getGroupBadge(groupName) {
 }
 
 /**
+ * Lọc và render lại danh sách công việc dựa trên nội dung ô tìm kiếm.
+ */
+function filterAndRenderTasks() {
+    const searchInput = document.getElementById('search-input');
+    if (!searchInput) return;
+
+    const searchTerm = searchInput.value.toLowerCase().trim();
+
+    if (!searchTerm) {
+        renderMainTasks(mainTasks); // Render toàn bộ danh sách nếu không có từ khóa
+        return;
+    }
+
+    const filteredTasks = mainTasks.filter(task => {
+        return task.id.toLowerCase().includes(searchTerm) ||
+               task.name.toLowerCase().includes(searchTerm) ||
+               task.description.toLowerCase().includes(searchTerm);
+    });
+
+    renderMainTasks(filteredTasks);
+}
+
+/**
  * Render danh sách công việc chính ra bảng.
  */
 function renderMainTasks() {
@@ -33,21 +56,23 @@ function renderMainTasks() {
     if (!list) return;
     list.innerHTML = '';
 
-    mainTasks.forEach(task => {
+    const tasksToRender = arguments.length > 0 ? arguments[0] : mainTasks;
+
+    tasksToRender.forEach(task => {
         const row = document.createElement('tr');
         row.className = 'hover:bg-gray-50';
         
         row.innerHTML = `
-            <td class="task-id">${task.id}</td>
-            <td class="task-name">${task.name}</td>
-            <td class="task-desc">${task.description}</td>
-            <td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${task.id}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${task.name}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${task.description}</td>
+            <td class="px-6 py-4 whitespace-nowrap">
                 ${getGroupBadge(task.group)}
             </td>
-            <td class="task-duration">${task.duration}</td>
-            <td class="text-right actions">
-                <a href="#" class="text-indigo-600 hover:text-indigo-900"><i class="fas fa-edit"></i> Sửa</a>
-                <a href="#" class="text-red-600 hover:text-red-900"><i class="fas fa-trash"></i> Xóa</a>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${task.duration}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-4"><i class="fas fa-edit mr-1"></i>Sửa</a>
+                <a href="#" class="text-red-600 hover:text-red-900"><i class="fas fa-trash mr-1"></i>Xóa</a>
             </td>
         `;
         list.appendChild(row);
@@ -56,7 +81,7 @@ function renderMainTasks() {
     // Cập nhật tóm tắt
     const taskSummary = document.getElementById('task-summary');
     if (taskSummary) {
-        taskSummary.textContent = `Hiển thị 1 đến ${mainTasks.length} trên ${mainTasks.length} Công việc Chính`;
+        taskSummary.textContent = `Hiển thị ${tasksToRender.length} trên ${mainTasks.length} Công việc Chính`;
     }
 }
 
@@ -83,6 +108,11 @@ export function init() {
 
     renderMainTasks();
 
+    // Gán sự kiện cho ô tìm kiếm
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+        searchInput.addEventListener('input', filterAndRenderTasks, { signal: domController.signal });
+    }
     // Gán sự kiện cho nút mở Modal
     if (mainAddTaskBtn) {
         mainAddTaskBtn.addEventListener('click', () => showModal('task-modal'), { signal: domController.signal });

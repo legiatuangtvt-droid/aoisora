@@ -1,0 +1,8 @@
+/*
+ * File này là điểm đầu vào cho Tailwind CSS.
+ * Tailwind sẽ quét file này và các file được cấu hình trong tailwind.config.js
+ * để tạo ra file output.css cuối cùng.
+ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

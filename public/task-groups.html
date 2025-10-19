@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="output.css">
     <link rel="stylesheet" href="toast.css">
     <link rel="stylesheet" href="modal.css">
-    <link rel="stylesheet" href="layout.css">
 </head>
 <body class="flex h-screen text-gray-800">
 
@@ -28,38 +27,40 @@
                 
                 <!-- Toolbar -->
                 <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
-                    <div class="flex space-x-2">
+                    <div class="flex items-center gap-2">
                         <!-- Nút Thêm Nhóm Công Việc Mới trong Main Content -->
-                        <button id="main-add-group-btn" class="btn btn-indigo">
-                            <i class="fas fa-plus btn-icon-text"></i> Thêm Nhóm Mới
+                        <button id="main-add-group-btn" class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
+                            <i class="fas fa-plus mr-2"></i> Thêm Nhóm Mới
                         </button>
-                        <button id="bulk-import-btn" class="btn btn-teal">
-                            <i class="fas fa-file-import btn-icon-text"></i> Nhập Hàng Loạt
+                        <button id="bulk-import-btn" class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700">
+                            <i class="fas fa-file-import mr-2"></i> Nhập Hàng Loạt
                         </button>
-                        <button id="manage-areas-btn" class="btn btn-orange">
-                            <i class="fas fa-map-marked-alt btn-icon-text"></i> Quản lý Khu vực
+                        <button id="manage-areas-btn" class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-600">
+                            <i class="fas fa-map-marked-alt mr-2"></i> Quản lý Khu vực
                         </button>
                     </div>
-                    <div class="search-input-wrapper">
-                        <input type="text" id="search-input" placeholder="Tìm kiếm theo ID, tên, mô tả..." class="search-input">
-                        <i class="fas fa-search search-icon"></i>
+                    <div class="relative min-w-[250px]">
+                        <input type="text" id="search-input" placeholder="Tìm kiếm theo ID, tên, mô tả..." class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-gray-400"></i>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Task Group List -->
                 <div class="overflow-x-auto">
-                    <table class="data-table">
-                        <thead class="table-header">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
                             <tr>
-                                <th class="th-cell">ID Nhóm</th>
-                                <th class="th-cell">Tên Nhóm</th>
-                                <th class="th-cell">Mô Tả</th>
-                                <th class="th-cell">Khu Vực Áp Dụng</th>
-                                <th class="th-cell">Số Lượng Công Việc</th>
-                                <th class="th-cell">Hành Động</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">ID Nhóm</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Tên Nhóm</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mô Tả</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Khu Vực Áp Dụng</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Số Lượng Công Việc</th>
+                                <th scope="col" class="relative px-6 py-3"><span class="sr-only">Hành Động</span></th>
                             </tr>
                         </thead>
-                        <tbody class="table-body" id="task-groups-list">
+                        <tbody class="bg-white divide-y divide-gray-200" id="task-groups-list">
                             <!-- Data will be populated by JavaScript -->
                         </tbody>
                     </table>
