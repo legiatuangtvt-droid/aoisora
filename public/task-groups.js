@@ -510,8 +510,22 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (e.target.closest('.delete-area-btn')) {
             const areaId = row.dataset.id;
             const confirmed = await showConfirmation(`Bạn có chắc muốn xóa khu vực "${areaId}" không?`, 'Xác nhận xóa');
+            
             if (confirmed) {
                 try {
+                    // **KIỂM TRA TRƯỚC KHI XÓA**
+                    // Kiểm tra xem có nhóm công việc nào đang sử dụng khu vực này không
+                    const usageQuery = query(taskGroupsCollection, where("area", "==", areaId));
+                    const querySnapshot = await getDocs(usageQuery);
+
+                    if (!querySnapshot.empty) {
+                        // Nếu có, không cho xóa và thông báo
+                        const groupNames = querySnapshot.docs.map(doc => `"${doc.data().name}"`).join(', ');
+                        showToast(`Không thể xóa. Khu vực đang được sử dụng bởi nhóm: ${groupNames}.`, 'warning', 5000);
+                        return; // Dừng hành động xóa
+                    }
+
+                    // Nếu không có nhóm nào sử dụng, tiến hành xóa
                     await deleteDoc(doc(db, 'task_areas', areaId));
                     showToast(`Đã xóa khu vực: ${areaId}`, 'success');
                 } catch (error) {
