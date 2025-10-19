@@ -16,7 +16,7 @@ let currentPageModule = null;
  * Tải và thực thi module JS cho một trang cụ thể.
  * @param {string} pageName - Tên file của trang (ví dụ: 'task-groups.html').
  */
-async function loadPageModule(pageName) {
+function loadPageModule(pageName) {
     // 1. Dọn dẹp module của trang cũ trước khi tải module mới
     if (currentPageModule && typeof currentPageModule.cleanup === 'function') {
         try {
@@ -27,21 +27,24 @@ async function loadPageModule(pageName) {
     }
 
     const modulePath = pageModules[pageName];
-    if (modulePath) {
-        try {
-            // Sử dụng dynamic import để tải module
-            const pageModule = await import(modulePath);
-            currentPageModule = pageModule; // 2. Lưu lại module mới
-            // Nếu module có hàm init(), gọi nó.
-            if (pageModule && typeof pageModule.init === 'function') {
-                pageModule.init();
+    return new Promise(async (resolve) => {
+        if (modulePath) {
+            try {
+                // Sử dụng dynamic import để tải module
+                const pageModule = await import(modulePath);
+                currentPageModule = pageModule; // 2. Lưu lại module mới
+                // Nếu module có hàm init(), gọi nó.
+                if (pageModule && typeof pageModule.init === 'function') {
+                    pageModule.init();
+                }
+            } catch (error) {
+                console.error(`Lỗi khi tải module cho trang ${pageName}:`, error);
             }
-        } catch (error) {
-            console.error(`Lỗi khi tải module cho trang ${pageName}:`, error);
+        } else {
+            currentPageModule = null; // Reset nếu trang mới không có module
         }
-    } else {
-        currentPageModule = null; // Reset nếu trang mới không có module
-    }
+        resolve(); // Báo cho layout.js biết là đã xong
+    });
 }
 
 /**
@@ -52,7 +55,7 @@ function initializeRouter() {
     // Lắng nghe sự kiện tùy chỉnh 'page-content-loaded' từ layout.js
     document.addEventListener('page-content-loaded', (event) => {
         const pageName = event.detail.pageName;
-        loadPageModule(pageName);
+        return loadPageModule(pageName);
     });
 
     // Tải module cho trang đầu tiên khi load

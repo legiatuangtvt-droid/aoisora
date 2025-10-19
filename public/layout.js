@@ -82,7 +82,8 @@ function initializeLayout() {
 
             // Phát ra một sự kiện tùy chỉnh để thông báo rằng nội dung đã được tải
             // main.js sẽ lắng nghe sự kiện này để tải module JS tương ứng
-            document.dispatchEvent(new CustomEvent('page-content-loaded', { detail: { pageName: relativePath } }));
+            const event = new CustomEvent('page-content-loaded', { detail: { pageName: relativePath } });
+            document.dispatchEvent(event);
 
         } catch (error) {
             console.error('Không thể tải trang:', error);
@@ -94,11 +95,11 @@ function initializeLayout() {
      * Xử lý việc điều hướng SPA.
      * @param {string} href - URL đích.
      */
-    function navigate(href) {
+    async function navigate(href) {
         // Cập nhật thanh URL mà không tải lại trang
         history.pushState({}, '', href); // Vẫn dùng href đầy đủ để cập nhật URL trình duyệt
         // Tải nội dung trang mới
-        loadPageContent(href); // Nhưng hàm loadPageContent sẽ tự xử lý để lấy đường dẫn tương đối
+        await loadPageContent(href); // Đợi cho HTML và JS được tải xong
         // Cập nhật trạng thái active cho sidebar
         setActiveSidebarLink(href);
     }
@@ -113,7 +114,7 @@ function initializeLayout() {
             // Kiểm tra xem đó có phải là link điều hướng nội bộ không
             if (link && link.href && link.origin === window.location.origin && !link.getAttribute('target')) {
                 e.preventDefault(); // Chặn trình duyệt chuyển trang
-                navigate(link.href); // Gọi hàm navigate của SPA
+                navigate(link.href); // Gọi hàm navigate bất đồng bộ của SPA
             }
         });
 

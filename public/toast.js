@@ -46,3 +46,6 @@ function showToast(message, type = 'success', duration = 3000) {
         toast.addEventListener('transitionend', () => toast.remove());
     }, duration);
 }
+
+// Gán hàm vào window để các module khác có thể truy cập
+window.showToast = showToast;
