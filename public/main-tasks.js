@@ -215,7 +215,6 @@ export function init() {
     const addTaskForm = document.getElementById('add-task-form');
     const editTaskForm = document.getElementById('edit-task-form');
     const taskList = document.getElementById('main-tasks-list');
-    const seedDataBtn = document.getElementById('seed-data-btn');
 
     domController = new AbortController();
 
@@ -231,42 +230,6 @@ export function init() {
     // Gán sự kiện cho các nút mở Modal
     if (mainAddTaskBtn) {
         mainAddTaskBtn.addEventListener('click', () => showModal('task-modal'), { signal: domController.signal });
-    }
-    if (seedDataBtn) {
-        seedDataBtn.addEventListener('click', async () => {
-            const confirmed = await showConfirmation(
-                `Bạn có chắc muốn nhập 15 công việc mẫu từ file data.json? Các công việc có ID trùng sẽ bị ghi đè.`,
-                'Xác nhận Nhập Dữ Liệu Mẫu'
-            );
-            if (!confirmed) return;
-
-            try {
-                showToast('Đang tải và xử lý dữ liệu mẫu...', 'info');
-                const response = await fetch('data.json');
-                if (!response.ok) throw new Error('Không thể tải file data.json');
-                
-                const tasks = await response.json();
-                const batch = writeBatch(db);
-                
-                tasks.forEach(task => {
-                    if (task.id && task.name) {
-                        const docRef = doc(db, 'main_tasks', task.id);
-                        batch.set(docRef, {
-                            name: task.name,
-                            description: task.description || '',
-                            groupId: task.groupId || '',
-                            estimatedTime: task.estimatedTime || 15,
-                            createdAt: serverTimestamp()
-                        });
-                    }
-                });
-                await batch.commit();
-                showToast(`Hoàn tất! Đã nhập ${tasks.length} công việc mẫu.`, "success");
-            } catch (error) {
-                console.error("Lỗi khi nhập dữ liệu mẫu: ", error);
-                showToast("Lỗi khi nhập dữ liệu mẫu. Vui lòng kiểm tra console.", "error");
-            }
-        }, { signal: domController.signal });
     }
 
     // Xử lý gửi form Thêm mới

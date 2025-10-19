@@ -1,0 +1,98 @@
+/*
+ * AoiSora - Dev Menu Styles
+ */
+
+#dev-menu-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 10000;
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+    transition: all 0.3s ease-in-out;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+}
+
+#dev-menu-container.expanded {
+    width: 280px;
+    height: auto;
+    border-radius: 12px;
+}
+
+.dev-menu-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 60px;
+    cursor: pointer;
+    user-select: none;
+    background-color: #1e293b; /* bg-slate-800 */
+    color: #fff;
+    transition: background-color 0.2s;
+}
+
+#dev-menu-container.expanded .dev-menu-header {
+    justify-content: space-between;
+    padding: 0 16px;
+    cursor: grab;
+}
+
+.dev-menu-header:active {
+    cursor: grabbing;
+}
+
+.dev-menu-icon {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.dev-menu-title {
+    font-weight: 600;
+    display: none;
+}
+
+#dev-menu-container.expanded .dev-menu-title {
+    display: block;
+}
+
+.dev-menu-body {
+    padding: 16px;
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#dev-menu-container.expanded .dev-menu-body {
+    display: flex;
+}
+
+.dev-menu-button {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background-color: #f9fafb;
+    font-weight: 500;
+    color: #374151;
+    text-align: left;
+    transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.dev-menu-button:hover {
+    background-color: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+.dev-menu-button i {
+    margin-right: 10px;
+    color: #6b7280;
+    width: 20px;
+    text-align: center;
+}

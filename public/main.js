@@ -1,6 +1,7 @@
 // Import các tiện ích toàn cục. Chúng sẽ chỉ được tải một lần.
 import './modal.js';
 import './toast.js';
+import { initializeDevMenu } from './dev-menu.js';
 
 // Ánh xạ từ tên file HTML đến module JS tương ứng của nó.
 const pageModules = {
@@ -69,6 +70,8 @@ document.addEventListener('DOMContentLoaded', () => {
         window.initializeLayout().then(() => {
             // Sau khi layout sẵn sàng, khởi tạo router
             initializeRouter();
+            // Khởi tạo Dev Menu để nó hiển thị trên tất cả các trang
+            initializeDevMenu();
         });
     }
 });

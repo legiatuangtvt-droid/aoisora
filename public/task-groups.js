@@ -341,7 +341,6 @@ export function init() {
     const editGroupForm = document.getElementById('edit-group-form');
     const manageAreasBtn = document.getElementById('manage-areas-btn');
     const bulkImportBtn = document.getElementById('bulk-import-btn');
-    const bulkImportForm = document.getElementById('bulk-import-form');
 
     // Khởi tạo controller cho các sự kiện DOM
     domController = new AbortController();
@@ -444,52 +443,6 @@ export function init() {
             console.error("Lỗi khi thêm khu vực: ", error);
             showToast("Đã xảy ra lỗi hoặc mã khu vực đã tồn tại.", "error");
         }
-    }, { signal: domController.signal });
-
-    // Xử lý form nhập hàng loạt
-    bulkImportForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const bulkData = document.getElementById('bulk-data').value;
-        const lines = bulkData.split('\n').filter(line => line.trim() !== '');
-
-        if (lines.length === 0) {
-            showToast('Không có dữ liệu để nhập.', 'warning');
-            return;
-        }
-
-        const confirmed = await showConfirmation(`Bạn có chắc chắn muốn nhập ${lines.length} nhóm công việc? Các nhóm có ID trùng lặp sẽ bị ghi đè.`, 'Xác nhận Nhập hàng loạt');
-        if (!confirmed) {
-            return;
-        }
-
-        showToast('Đang xử lý nhập dữ liệu...', 'info');
-        const batch = writeBatch(db);
-        let processedCount = 0;
-
-        lines.forEach(line => {
-            const parts = line.split('\t'); // Tách bằng phím Tab
-            if (parts.length >= 2) { // Yêu cầu tối thiểu ID và Tên
-                const groupId = parts[0].trim();
-                const groupName = parts[1].trim();
-                const groupDesc = (parts[2] || '').trim();
-
-                if (groupId && groupName) {
-                    const docRef = doc(db, 'task_groups', groupId);
-                    batch.set(docRef, {
-                        name: groupName,
-                        description: groupDesc,
-                        taskCount: 0,
-                        createdAt: serverTimestamp()
-                    });
-                    processedCount++;
-                }
-            }
-        });
-
-        await batch.commit();
-        showToast(`Hoàn tất! Đã nhập ${processedCount}/${lines.length} nhóm công việc.`, "success");
-        hideModal();
-        // Không cần gọi fetch nữa, onSnapshot sẽ tự động cập nhật
     }, { signal: domController.signal });
 
     // Sử dụng event delegation để xử lý sự kiện xóa

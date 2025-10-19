@@ -1,67 +1,64 @@
-[
-  {
-    "id": "1001",
-    "name": "Trưng bày hàng tươi Delica",
-    "description": "Kiểm tra và trưng bày hàng tươi Delica theo đúng layout.",
-    "groupId": "TBTS",
-    "estimatedTime": 30
-  },
-  {
-    "id": "1002",
-    "name": "Sắp xếp hàng khô",
-    "description": "Sắp xếp lại khu vực hàng khô theo tiêu chuẩn FIFO.",
-    "groupId": "TBHK",
-    "estimatedTime": 45
-  },
-  {
-    "id": "1003",
-    "name": "Kiểm tra POP/Bảng giá",
-    "description": "Kiểm tra và thay thế các biển POP, bảng giá đã cũ hoặc sai giá.",
-    "groupId": "MKTG",
-    "estimatedTime": 20
-  },
-  {
-    "id": "1004",
-    "name": "Rà soát lỗi hết hàng (OOS)",
-    "description": "Rà soát các mã hàng bị hết trên quầy kệ và báo cáo.",
-    "groupId": "QLTK",
-    "estimatedTime": 60
-  },
-  {
-    "id": "1005",
-    "name": "Vệ sinh sàn khu vực bán hàng",
-    "description": "Lau dọn sàn khu vực bán hàng, đảm bảo sạch sẽ.",
-    "groupId": "VS",
-    "estimatedTime": 15
-  },
-  {
-    "id": "1006", "name": "Kiểm tra nhiệt độ tủ mát", "description": "Ghi nhận nhiệt độ các tủ mát, tủ đông.", "groupId": "TBTS", "estimatedTime": 10
-  },
-  {
-    "id": "1007", "name": "Châm hàng khuyến mãi", "description": "Bổ sung hàng hóa tại các khu vực khuyến mãi.", "groupId": "MKTG", "estimatedTime": 25
-  },
-  {
-    "id": "1008", "name": "Vệ sinh quầy kệ", "description": "Lau chùi bụi bẩn trên các quầy kệ hàng khô.", "groupId": "VS", "estimatedTime": 30
-  },
-  {
-    "id": "1009", "name": "Đếm tồn kho đột xuất", "description": "Thực hiện đếm tồn kho một vài mã hàng theo yêu cầu.", "groupId": "QLTK", "estimatedTime": 45
-  },
-  {
-    "id": "1010", "name": "Tưới rau củ", "description": "Tưới nước cho các loại rau củ tươi để giữ độ tươi.", "groupId": "TBTS", "estimatedTime": 10
-  },
-  {
-    "id": "1011", "name": "Sắp xếp kho hàng", "description": "Dọn dẹp và sắp xếp lại hàng hóa trong kho.", "groupId": "QLTK", "estimatedTime": 90
-  },
-  {
-    "id": "1012", "name": "Hủy hàng hết hạn", "description": "Lập biên bản và thực hiện hủy hàng hết hạn sử dụng.", "groupId": "QLTK", "estimatedTime": 30
-  },
-  {
-    "id": "1013", "name": "Vệ sinh khu vực thanh toán", "description": "Lau dọn khu vực quầy thu ngân.", "groupId": "VS", "estimatedTime": 15
-  },
-  {
-    "id": "1014", "name": "Thay đổi layout trưng bày", "description": "Thực hiện thay đổi layout trưng bày theo chương trình mới.", "groupId": "MKTG", "estimatedTime": 120
-  },
-  {
-    "id": "1015", "name": "Pha chế Cafe", "description": "Pha chế đồ uống tại quầy Aeon Cafe.", "groupId": "CAFE", "estimatedTime": 20
-  }
-]
+{
+  "task_areas": [
+    { "id": "POS", "name": "Khu vực Thu ngân" },
+    { "id": "MMD", "name": "Khu vực Bán hàng" },
+    { "id": "CAFE", "name": "Quầy Aeon Cafe" },
+    { "id": "KHO", "name": "Khu vực Kho" },
+    { "id": "VP", "name": "Văn phòng" }
+  ],
+  "task_groups": [
+    { "id": "TBTS", "name": "Trưng Bày Tươi Sống", "description": "Các công việc liên quan đến hàng tươi sống, rau củ, thịt cá.", "area": "MMD", "taskCount": 3 },
+    { "id": "TBHK", "name": "Trưng Bày Hàng Khô", "description": "Các công việc liên quan đến hàng khô, đóng gói.", "area": "MMD", "taskCount": 1 },
+    { "id": "MKTG", "name": "Marketing & Giá", "description": "Kiểm tra, thay thế bảng giá, POP, các chương trình khuyến mãi.", "area": "MMD", "taskCount": 3 },
+    { "id": "QLTK", "name": "Quản Lý Tồn Kho", "description": "Kiểm kê, sắp xếp kho, xử lý hàng tồn.", "area": "KHO", "taskCount": 4 },
+    { "id": "VS", "name": "Vệ Sinh Chung", "description": "Các công việc vệ sinh không gian chung.", "area": "MMD", "taskCount": 3 },
+    { "id": "CAFE", "name": "Vận hành quầy Cafe", "description": "Các công việc tại quầy Aeon Cafe.", "area": "CAFE", "taskCount": 1 }
+  ],
+  "main_tasks": [
+    {
+      "id": "1001",
+      "name": "Trưng bày hàng tươi Delica",
+      "description": "Kiểm tra và trưng bày hàng tươi Delica theo đúng layout.",
+      "groupId": "TBTS",
+      "estimatedTime": 30
+    },
+    {
+      "id": "1002",
+      "name": "Sắp xếp hàng khô",
+      "description": "Sắp xếp lại khu vực hàng khô theo tiêu chuẩn FIFO.",
+      "groupId": "TBHK",
+      "estimatedTime": 45
+    },
+    {
+      "id": "1003",
+      "name": "Kiểm tra POP/Bảng giá",
+      "description": "Kiểm tra và thay thế các biển POP, bảng giá đã cũ hoặc sai giá.",
+      "groupId": "MKTG",
+      "estimatedTime": 20
+    },
+    {
+      "id": "1004",
+      "name": "Rà soát lỗi hết hàng (OOS)",
+      "description": "Rà soát các mã hàng bị hết trên quầy kệ và báo cáo.",
+      "groupId": "QLTK",
+      "estimatedTime": 60
+    },
+    {
+      "id": "1005",
+      "name": "Vệ sinh sàn khu vực bán hàng",
+      "description": "Lau dọn sàn khu vực bán hàng, đảm bảo sạch sẽ.",
+      "groupId": "VS",
+      "estimatedTime": 15
+    },
+    { "id": "1006", "name": "Kiểm tra nhiệt độ tủ mát", "description": "Ghi nhận nhiệt độ các tủ mát, tủ đông.", "groupId": "TBTS", "estimatedTime": 10 },
+    { "id": "1007", "name": "Châm hàng khuyến mãi", "description": "Bổ sung hàng hóa tại các khu vực khuyến mãi.", "groupId": "MKTG", "estimatedTime": 25 },
+    { "id": "1008", "name": "Vệ sinh quầy kệ", "description": "Lau chùi bụi bẩn trên các quầy kệ hàng khô.", "groupId": "VS", "estimatedTime": 30 },
+    { "id": "1009", "name": "Đếm tồn kho đột xuất", "description": "Thực hiện đếm tồn kho một vài mã hàng theo yêu cầu.", "groupId": "QLTK", "estimatedTime": 45 },
+    { "id": "1010", "name": "Tưới rau củ", "description": "Tưới nước cho các loại rau củ tươi để giữ độ tươi.", "groupId": "TBTS", "estimatedTime": 10 },
+    { "id": "1011", "name": "Sắp xếp kho hàng", "description": "Dọn dẹp và sắp xếp lại hàng hóa trong kho.", "groupId": "QLTK", "estimatedTime": 90 },
+    { "id": "1012", "name": "Hủy hàng hết hạn", "description": "Lập biên bản và thực hiện hủy hàng hết hạn sử dụng.", "groupId": "QLTK", "estimatedTime": 30 },
+    { "id": "1013", "name": "Vệ sinh khu vực thanh toán", "description": "Lau dọn khu vực quầy thu ngân.", "groupId": "VS", "estimatedTime": 15 },
+    { "id": "1014", "name": "Thay đổi layout trưng bày", "description": "Thực hiện thay đổi layout trưng bày theo chương trình mới.", "groupId": "MKTG", "estimatedTime": 120 },
+    { "id": "1015", "name": "Pha chế Cafe", "description": "Pha chế đồ uống tại quầy Aeon Cafe.", "groupId": "CAFE", "estimatedTime": 20 }
+  ]
+}
