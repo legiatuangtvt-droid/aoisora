@@ -1,11 +1,11 @@
-document.addEventListener('DOMContentLoaded', function() {
+function initializeLayout() {
     /**
-     * Tải các thành phần layout chung (sidebar, header) từ một file duy nhất
-     * và chèn chúng vào các placeholder tương ứng trên trang.
+     * Tải và chèn các thành phần layout chung (sidebar, header).
+     * Hàm này chỉ được gọi một lần khi trang được tải lần đầu.
      */
     const loadLayoutComponents = () => {
-        fetch('layout.html')
-            .then(response => response.text())
+        return fetch('layout.html')
+            .then(response => response.ok ? response.text() : Promise.reject(`File layout.html không tìm thấy`))
             .then(html => {
                 // Tạo một div tạm để chứa nội dung HTML và parse nó
                 const parser = new DOMParser();
@@ -19,11 +19,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('header-placeholder').innerHTML = headerTemplate.innerHTML;
 
                 // Sau khi chèn xong, thực hiện các callback để cập nhật UI
-                setActiveSidebarLink();
+                setActiveSidebarLink(window.location.pathname);
                 setPageTitle();
-            }).catch(error => console.error('Error loading layout components:', error));
-    }
-    const setActiveSidebarLink = () => {
+            });
+    };
+    const setActiveSidebarLink = (pathname) => {
         const currentPage = window.location.pathname.split('/').pop();
         const navLinks = document.querySelectorAll('#sidebar-placeholder .nav-link');
         
@@ -31,6 +31,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const linkPage = link.getAttribute('href').split('/').pop();
             if (linkPage === currentPage) {
                 link.classList.add('active');
+            }
+            // Xóa class active khỏi các link khác
+            else {
+                link.classList.remove('active');
             }
         });
     };
@@ -45,6 +49,75 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    // Bắt đầu quá trình tải layout
-    loadLayoutComponents();
-});
+    /**
+     * Tải và hiển thị nội dung của một trang mà không cần tải lại toàn bộ.
+     * @param {string} href - URL của trang cần tải.
+     */
+    async function loadPageContent(href) {
+        try {
+            const response = await fetch(href);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const html = await response.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            // Lấy nội dung chính và tiêu đề từ trang mới
+            const newContent = doc.querySelector('main');
+            const newTitle = doc.querySelector('title').textContent;
+
+            // Thay thế nội dung và cập nhật tiêu đề
+            document.querySelector('main').replaceWith(newContent);
+            document.title = newTitle;
+            setPageTitle(); // Cập nhật header
+
+            // Phát ra một sự kiện tùy chỉnh để thông báo rằng nội dung đã được tải
+            // main.js sẽ lắng nghe sự kiện này để tải module JS tương ứng
+            const pageName = href.split('/').pop();
+            document.dispatchEvent(new CustomEvent('page-content-loaded', { detail: { pageName } }));
+
+        } catch (error) {
+            console.error('Không thể tải trang:', error);
+            document.querySelector('main').innerHTML = `<div class="p-8 text-center text-red-500"><h1>Lỗi tải trang</h1><p>Không thể tải nội dung từ ${href}. Vui lòng kiểm tra lại đường dẫn và kết nối mạng.</p></div>`;
+        }
+    }
+
+    /**
+     * Xử lý việc điều hướng SPA.
+     * @param {string} href - URL đích.
+     */
+    function navigate(href) {
+        // Cập nhật thanh URL mà không tải lại trang
+        history.pushState({}, '', href);
+        // Tải nội dung trang mới
+        loadPageContent(href);
+        // Cập nhật trạng thái active cho sidebar
+        setActiveSidebarLink(href);
+    }
+
+    // --- KHỞI TẠO ---
+    return loadLayoutComponents().then(() => {
+        // 2. Sau khi layout đã tải xong, bắt sự kiện click trên toàn bộ document
+        document.body.addEventListener('click', e => {
+            // Tìm thẻ <a> gần nhất mà người dùng đã click
+            const link = e.target.closest('a');
+
+            // Kiểm tra xem đó có phải là link điều hướng nội bộ không
+            if (link && link.href && link.origin === window.location.origin && !link.getAttribute('target')) {
+                e.preventDefault(); // Chặn trình duyệt chuyển trang
+                navigate(link.href); // Gọi hàm navigate của SPA
+            }
+        });
+
+        // 3. Xử lý khi người dùng nhấn nút back/forward của trình duyệt
+        window.addEventListener('popstate', () => {
+            // Tải lại nội dung cho URL hiện tại trên thanh địa chỉ
+            loadPageContent(window.location.pathname);
+            setActiveSidebarLink(window.location.pathname);
+        });
+    });
+}
+
+// Expose hàm khởi tạo ra global scope để main.js có thể gọi
+window.initializeLayout = initializeLayout;

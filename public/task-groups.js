@@ -148,16 +148,6 @@ function filterAndRenderGroups() {
     renderTaskGroups(filteredGroups);
 }
 
-const sidebarAddGroupBtn = document.getElementById('sidebar-add-group-btn');
-const mainAddGroupBtn = document.getElementById('main-add-group-btn');
-const addGroupForm = document.getElementById('add-group-form');
-const taskGroupList = document.getElementById('task-groups-list');
-const editGroupForm = document.getElementById('edit-group-form');
-const manageAreasBtn = document.getElementById('manage-areas-btn');
-
-const bulkImportBtn = document.getElementById('bulk-import-btn');
-const bulkImportForm = document.getElementById('bulk-import-form');
-
 /**
  * Mở modal chi tiết và tải dữ liệu cho một nhóm công việc cụ thể.
  * @param {string} groupId - ID của nhóm công việc trong Firestore.
@@ -316,16 +306,25 @@ async function saveAreaEdit(row) {
     }
 }
 
+/**
+ * Hàm khởi tạo, được gọi bởi main.js khi trang này được tải.
+ */
+export function init() {
+    // Lấy các element cần thiết
+    const mainAddGroupBtn = document.getElementById('main-add-group-btn');
+    const addGroupForm = document.getElementById('add-group-form');
+    const taskGroupList = document.getElementById('task-groups-list');
+    const editGroupForm = document.getElementById('edit-group-form');
+    const manageAreasBtn = document.getElementById('manage-areas-btn');
+    const bulkImportBtn = document.getElementById('bulk-import-btn');
+    const bulkImportForm = document.getElementById('bulk-import-form');
 
-document.addEventListener('DOMContentLoaded', () => {
     listenForTaskGroupChanges();
     listenForAreaChanges();
 
     // Gán sự kiện mở modal
-    sidebarAddGroupBtn.addEventListener('click', () => showModal('group-modal'));
     mainAddGroupBtn.addEventListener('click', () => showModal('group-modal'));
     manageAreasBtn.addEventListener('click', () => showModal('manage-areas-modal'));
-
     // Gán sự kiện mở modal nhập hàng loạt
     bulkImportBtn.addEventListener('click', () => showModal('bulk-import-modal'));
 
@@ -547,4 +546,4 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
-});
+}
