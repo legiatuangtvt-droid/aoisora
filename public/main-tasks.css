@@ -1,0 +1,117 @@
+/* ==========================================================================
+   Styles for Main Tasks Page (main-tasks.html)
+   ========================================================================== */
+
+/* Toolbar */
+.main-tasks-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.main-tasks-toolbar .actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Main Task List Table */
+.main-tasks-table {
+    min-width: 100%;
+    border-collapse: collapse;
+}
+
+.main-tasks-table thead {
+    background-color: #f9fafb; /* bg-gray-50 */
+}
+
+.main-tasks-table th,
+.main-tasks-table td {
+    padding: 0.75rem 1.5rem; /* px-6 py-3 */
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb; /* divide-y divide-gray-200 */
+}
+
+.main-tasks-table th {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #6b7280; /* text-gray-500 */
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.main-tasks-table tbody tr:hover {
+    background-color: #f9fafb; /* hover:bg-gray-50 */
+}
+
+.main-tasks-table .task-id {
+    font-weight: 500;
+    color: #374151; /* text-gray-900 */
+}
+
+.main-tasks-table .task-name {
+    color: #4b5563; /* text-gray-800 */
+}
+
+.main-tasks-table .task-desc {
+    color: #4b5563; /* text-gray-600 */
+}
+
+.main-tasks-table .task-duration {
+    color: #6b7280; /* text-gray-500 */
+}
+
+.main-tasks-table .actions a {
+    margin-right: 0.75rem;
+}
+
+.main-tasks-table .actions a:last-child {
+    margin-right: 0;
+}
+
+/* Group Badge */
+.group-badge {
+    display: inline-flex;
+    padding: 0 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1.25rem;
+    font-weight: 600;
+    border-radius: 9999px;
+}
+
+/* Pagination */
+.pagination-summary {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pagination-summary .summary-text {
+    font-size: 0.875rem;
+    color: #4b5563;
+}
+
+.pagination-controls {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.pagination-controls button {
+    padding: 0.25rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    color: #4b5563;
+}
+
+.pagination-controls button:hover {
+    background-color: #f3f4f6;
+}
+
+.pagination-controls button.active {
+    background-color: #22c55e; /* bg-green-500 */
+    color: white;
+    border-color: #22c55e;
+}

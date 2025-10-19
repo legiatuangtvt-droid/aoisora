@@ -1,0 +1,124 @@
+/*
+ * AoiSora - Global Layout Styles
+ * File này chứa các quy tắc CSS cho các thành phần layout chung (sidebar, header).
+ */
+
+/* ===================================
+   Sidebar
+====================================== */
+.sidebar {
+    width: 16rem; /* w-64 */
+    background-color: #1e293b; /* bg-slate-800 */
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    height: 100vh; /* Đảm bảo sidebar luôn chiếm toàn bộ chiều cao màn hình */
+}
+
+.sidebar-header {
+    height: 4rem; /* h-16 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid #334155; /* border-slate-700 */
+}
+
+.sidebar-logo-link {
+    display: flex;
+    align-items: center;
+    font-size: 1.5rem; /* text-2xl */
+    font-weight: 700; /* font-bold */
+}
+
+.sidebar-logo-icon {
+    margin-right: 0.75rem; /* mr-3 */
+    color: #4ade80; /* text-green-400 */
+}
+
+.sidebar-nav {
+    flex: 1 1 0%;
+    padding: 1rem; /* p-4 */
+}
+
+.sidebar-nav > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 0.5rem; /* space-y-2 */
+}
+
+.nav-category-title {
+    padding-left: 1rem; /* px-4 */
+    padding-right: 1rem;
+    padding-top: 1rem; /* pt-4 for subsequent titles */
+    font-size: 0.75rem; /* text-sm */
+    font-weight: 600; /* font-semibold */
+    color: #94a3b8; /* text-slate-400 */
+    text-transform: uppercase;
+    letter-spacing: 0.05em; /* tracking-wider */
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem; /* px-4 py-2 */
+    color: #cbd5e1; /* text-slate-300 */
+    border-radius: 0.5rem; /* rounded-lg */
+    transition: background-color 0.2s;
+}
+
+.nav-link:hover {
+    background-color: #334155; /* hover:bg-slate-700 */
+}
+
+.nav-link.active {
+    background-color: #16a34a; /* bg-green-600 */
+    color: #fff;
+}
+
+.nav-link-icon {
+    width: 1.5rem; /* w-6 */
+}
+
+.sidebar-footer {
+    padding: 1rem; /* p-4 */
+    border-top: 1px solid #334155; /* border-slate-700 */
+}
+
+.sidebar-footer-button {
+    width: 100%;
+    justify-content: center;
+}
+
+/* ===================================
+   Header
+====================================== */
+.page-main-header {
+    height: 4rem; /* h-16 */
+    background-color: #fff;
+    border-bottom: 1px solid #e5e7eb; /* border-gray-200 */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem; /* px-6 */
+    flex-shrink: 0;
+}
+
+.header-user-info {
+    display: flex;
+    align-items: center;
+}
+
+.header-user-info > :not([hidden]) ~ :not([hidden]) {
+    margin-left: 1.5rem; /* space-x-6 */
+}
+
+.header-user-avatar {
+    width: 2.25rem; /* w-9 */
+    height: 2.25rem; /* h-9 */
+    border-radius: 9999px; /* rounded-full */
+    object-fit: cover;
+}
+
+.header-user-name {
+    margin-left: 0.75rem; /* ml-3 */
+    font-weight: 600; /* font-semibold */
+}

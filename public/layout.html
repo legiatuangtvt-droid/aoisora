@@ -1,0 +1,67 @@
+<!-- 
+  File này chứa các thành phần layout chung (Sidebar và Header) cho toàn bộ trang.
+  Sử dụng thẻ <template> để chứa mã HTML, giúp JavaScript dễ dàng trích xuất và chèn vào đúng vị trí.
+-->
+
+<!-- TEMPLATE CHO SIDEBAR -->
+<template id="template-sidebar">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="intro.html" class="sidebar-logo-link">
+                <i class="fas fa-tasks sidebar-logo-icon"></i>
+                <span>AoiSora</span>
+            </a>
+        </div>
+        <nav class="sidebar-nav">
+            <h3 class="nav-category-title">Lịch trình</h3>
+            <a href="index.html" class="nav-link">
+                <i class="fas fa-calendar-day nav-link-icon"></i>
+                <span>Lịch Hàng Ngày</span>
+            </a>
+            <a href="month.html" class="nav-link">
+                <i class="fas fa-calendar-alt nav-link-icon"></i>
+                <span>Lịch Hàng Tháng</span>
+            </a>
+            <h3 class="nav-category-title">Tổ chức</h3>
+            <a href="store.html" class="nav-link">
+                <i class="fas fa-store nav-link-icon"></i>
+                <span>Cửa Hàng</span>
+            </a>
+            <a href="staff.html" class="nav-link">
+                <i class="fas fa-users nav-link-icon"></i>
+                <span>Nhân Viên</span>
+            </a>
+             <h3 class="nav-category-title">Quản lý</h3>
+            <a href="main-tasks.html" class="nav-link">
+                <i class="fas fa-clipboard-list nav-link-icon"></i>
+                <span>Công Việc Chính</span>
+            </a>
+             <a href="task-groups.html" class="nav-link">
+                <i class="fas fa-layer-group nav-link-icon"></i>
+                <span>Nhóm Công Việc</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="intro.html" class="btn btn-secondary sidebar-footer-button">
+                <i class="fas fa-info-circle mr-2"></i>Giới thiệu
+            </a>
+        </div>
+    </aside>
+</template>
+
+<!-- TEMPLATE CHO HEADER -->
+<template id="template-header">
+    <header class="page-main-header">
+         <h1 id="page-title" class="page-header">Đang tải...</h1>
+        <div class="header-user-info">
+            <a href="#" class="text-gray-600 hover:text-green-600 relative">
+                <i class="fas fa-bell"></i>
+                <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">3</span>
+            </a>
+            <div class="flex items-center">
+                <img class="header-user-avatar" src="https://placehold.co/40x40/E2E8F0/4A5568?text=AV" alt="User Avatar">
+                <span class="header-user-name">J. Manager</span>
+            </div>
+        </div>
+    </header>
+</template>

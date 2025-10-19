@@ -5,121 +5,73 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" href="logo.png" type="image/png"> 
     <title>Công Việc Chính - AoiSora</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="output.css">
+    <link rel="stylesheet" href="toast.css">
+    <link rel="stylesheet" href="modal.css">
+    <link rel="stylesheet" href="layout.css">
+    <link rel="stylesheet" href="main-tasks.css">
 </head>
 <body class="flex h-screen text-gray-800">
 
-    <!-- Sidebar -->
-    <aside class="w-64 bg-slate-800 text-white flex flex-col flex-shrink-0">
-        <div class="h-16 flex items-center justify-center text-2xl font-bold border-b border-slate-700">
-            <i class="fas fa-tasks mr-3 text-green-400"></i>
-            <span>AoiSora</span>
-        </div>
-        <nav class="flex-1 p-4 space-y-2">
-            <h3 class="px-4 text-sm font-semibold text-slate-400 uppercase tracking-wider">Lịch trình</h3>
-            <a href="index.html" class="flex items-center px-4 py-2 text-slate-300 hover:bg-slate-700 rounded-lg">
-                <i class="fas fa-calendar-day w-6"></i>
-                <span>Lịch Hàng Ngày</span>
-            </a>
-            <a href="/month.html" class="flex items-center px-4 py-2 text-slate-300 hover:bg-slate-700 rounded-lg">
-                <i class="fas fa-calendar-alt w-6"></i>
-                <span>Lịch Hàng Tháng</span>
-            </a>
-            <h3 class="px-4 pt-4 text-sm font-semibold text-slate-400 uppercase tracking-wider">Tổ chức</h3>
-            <a href="/store.html" class="flex items-center px-4 py-2 text-slate-300 hover:bg-slate-700 rounded-lg">
-                <i class="fas fa-store w-6"></i>
-                <span>Cửa Hàng</span>
-            </a>
-            <a href="/staff.html" class="flex items-center px-4 py-2 text-slate-300 hover:bg-slate-700 rounded-lg">
-                <i class="fas fa-users w-6"></i>
-                <span>Nhân Viên</span>
-            </a>
-             <h3 class="px-4 pt-4 text-sm font-semibold text-slate-400 uppercase tracking-wider">Quản lý</h3>
-            <a href="/main-tasks.html" class="flex items-center px-4 py-2 text-white bg-green-600 rounded-lg">
-                <i class="fas fa-clipboard-list w-6"></i>
-                <span>Công Việc Chính</span>
-            </a>
-             <a href="/task-groups.html" class="flex items-center px-4 py-2 text-slate-300 hover:bg-slate-700 rounded-lg">
-                <i class="fas fa-layer-group w-6"></i>
-                <span>Nhóm Công Việc</span>
-            </a>
-        </nav>
-        <div class="p-4 border-t border-slate-700">
-            <button id="sidebar-add-task-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                <i class="fas fa-plus-circle mr-2"></i>Thêm Công Việc Mới
-            </button>
-        </div>
-    </aside>
+    <!-- Sidebar Placeholder -->
+    <div id="sidebar-placeholder"></div>
 
     <!-- Main Content -->
     <div class="flex-1 flex flex-col overflow-hidden">
-        <!-- Header -->
-        <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 flex-shrink-0">
-             <h1 class="text-xl font-semibold">Quản Lý Công Việc Chính</h1>
-            <div class="flex items-center space-x-6">
-                <a href="#" class="text-gray-600 hover:text-green-600 relative">
-                    <i class="fas fa-bell"></i>
-                    <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">3</span>
-                </a>
-                <div class="flex items-center">
-                    <img class="w-9 h-9 rounded-full object-cover" src="https://placehold.co/40x40/E2E8F0/4A5568?text=AV" alt="User Avatar">
-                    <span class="ml-3 font-semibold">J. Manager</span>
-                </div>
-            </div>
-        </header>
+        <!-- Header Placeholder -->
+        <div id="header-placeholder"></div>
 
         <!-- Content Area -->
         <main class="flex-1 overflow-auto p-6">
             <div class="bg-white p-6 rounded-lg shadow-md">
                 
                 <!-- Toolbar -->
-                <div class="flex justify-between items-center mb-6">
-                    <div class="flex space-x-4">
-                        <button id="main-add-task-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">
-                            <i class="fas fa-plus mr-2"></i> Thêm Công Việc
+                <div class="main-tasks-toolbar">
+                    <div class="actions">
+                        <button id="main-add-task-btn" class="btn btn-indigo">
+                            <i class="fas fa-plus btn-icon-text"></i> Thêm Công Việc
                         </button>
-                        <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg transition-colors">
-                            <i class="fas fa-filter mr-2"></i> Lọc
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-filter btn-icon-text"></i> Lọc
                         </button>
                     </div>
-                    <div class="relative w-1/3">
-                        <input type="text" placeholder="Tìm kiếm công việc..." class="w-full border border-gray-300 p-2 pl-10 rounded-lg focus:ring-green-500 focus:border-green-500">
-                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    <div class="search-input-wrapper">
+                        <input type="text" placeholder="Tìm kiếm công việc..." class="search-input">
+                        <i class="fas fa-search search-icon"></i>
                     </div>
                 </div>
 
                 <!-- Main Task List -->
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
+                    <table class="main-tasks-table">
+                        <thead>
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mã Công Việc</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên Công Việc</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mô Tả Ngắn</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nhóm Công Việc</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thời Gian Ước Tính</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hành Động</th>
+                                <th>Mã Công Việc</th>
+                                <th>Tên Công Việc</th>
+                                <th>Mô Tả Ngắn</th>
+                                <th>Nhóm Công Việc</th>
+                                <th>Thời Gian Ước Tính</th>
+                                <th class="text-right">Hành Động</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200" id="main-tasks-list">
+                        <tbody id="main-tasks-list">
                             <!-- Data will be populated by JavaScript -->
                         </tbody>
                     </table>
                 </div>
 
                 <!-- Pagination/Summary -->
-                <div class="mt-4 flex justify-between items-center">
-                    <span class="text-sm text-gray-600" id="task-summary">Hiển thị 1 đến 5 trên 5 Công việc Chính</span>
+                <div class="pagination-summary">
+                    <span class="summary-text" id="task-summary">Hiển thị 1 đến 5 trên 5 Công việc Chính</span>
                     <!-- Simple Pagination -->
-                    <div class="flex space-x-1">
-                        <button class="px-3 py-1 border rounded-lg text-gray-600 hover:bg-gray-100"><i class="fas fa-chevron-left"></i></button>
-                        <button class="px-3 py-1 border rounded-lg bg-green-500 text-white">1</button>
-                        <button class="px-3 py-1 border rounded-lg text-gray-600 hover:bg-gray-100">2</button>
-                        <button class="px-3 py-1 border rounded-lg text-gray-600 hover:bg-gray-100">3</button>
-                        <button class="px-3 py-1 border rounded-lg text-gray-600 hover:bg-gray-100"><i class="fas fa-chevron-right"></i></button>
+                    <div class="pagination-controls">
+                        <button><i class="fas fa-chevron-left"></i></button>
+                        <button class="active">1</button>
+                        <button>2</button>
+                        <button>3</button>
+                        <button><i class="fas fa-chevron-right"></i></button>
                     </div>
                 </div>
 
@@ -128,69 +80,69 @@
     </div>
 
     <!-- MODAL: Thêm Công Việc Chính -->
-    <div id="task-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-xl p-6">
+    <div id="task-modal" class="modal-overlay">
+        <div class="modal-content max-w-xl">
             <!-- Modal Header -->
-            <div class="flex justify-between items-center pb-3 border-b">
-                <h3 class="text-xl font-semibold text-gray-800"><i class="fas fa-plus-square mr-2 text-blue-500"></i> Thêm Công Việc Chính Mới</h3>
-                <button class="text-gray-400 hover:text-gray-600" onclick="closeModal()">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fas fa-plus-square mr-2 text-indigo-500"></i> Thêm Công Việc Chính Mới</h3>
+                <button class="modal-close-btn" onclick="closeModal()">
                     <i class="fas fa-times text-lg"></i>
                 </button>
             </div>
             
             <!-- Modal Body (Form) -->
-            <form class="mt-4 space-y-4" id="add-task-form">
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
+            <form class="modal-form" id="add-task-form">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="form-group p-0 m-0">
                         <label for="task-name" class="block text-sm font-medium text-gray-700">Tên Công Việc (*)</label>
-                        <input type="text" id="task-name" name="task-name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                        <input type="text" id="task-name" name="task-name" required class="form-input">
                     </div>
-                    <div>
+                    <div class="form-group p-0 m-0">
                         <label for="task-code" class="block text-sm font-medium text-gray-700">Mã Công Việc (*)</label>
-                        <input type="text" id="task-code" name="task-code" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                        <input type="text" id="task-code" name="task-code" required class="form-input">
                     </div>
                 </div>
                 
-                <div>
+                <div class="form-group">
                     <label for="task-group" class="block text-sm font-medium text-gray-700">Nhóm Công Việc (*)</label>
-                    <select id="task-group" name="task-group" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                    <select id="task-group" name="task-group" required class="form-select">
                         <option value="">-- Chọn Nhóm --</option>
                         <option value="Trưng Bày Tươi Sống">Trưng Bày Tươi Sống</option>
                         <option value="Trưng Bày Hàng Khô">Trưng Bày Hàng Khô</option>
                         <option value="Marketing & Giá">Marketing & Giá</option>
                         <option value="Quản Lý Tồn Kho">Quản Lý Tồn Kho</option>
                         <option value="Vệ Sinh Chung">Vệ Sinh Chung</option>
-                        <!-- Các nhóm sẽ được load động từ API/JS -->
+                        <!-- Các nhóm sẽ được load động -->
                     </select>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="form-group p-0 m-0">
                         <label for="task-duration" class="block text-sm font-medium text-gray-700">Thời Gian Ước Tính (Phút)</label>
-                        <input type="number" id="task-duration" name="task-duration" min="5" max="300" value="15" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                        <input type="number" id="task-duration" name="task-duration" min="5" max="300" value="15" class="form-input">
                     </div>
-                    <div>
+                    <div class="form-group p-0 m-0">
                         <label for="task-frequency" class="block text-sm font-medium text-gray-700">Tần Suất Khuyến Nghị</label>
-                        <select id="task-frequency" name="task-frequency" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                        <select id="task-frequency" name="task-frequency" class="form-select">
                             <option value="Daily">Hàng Ngày</option>
                             <option value="TwiceDaily">2 lần/ngày</option>
                             <option value="Weekly">Hàng Tuần</option>
                         </select>
                     </div>
                 </div>
-                
-                <div>
+
+                <div class="form-group">
                     <label for="task-description" class="block text-sm font-medium text-gray-700">Mô tả chi tiết</label>
-                    <textarea id="task-description" name="task-description" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border"></textarea>
+                    <textarea id="task-description" name="task-description" rows="2" class="form-textarea"></textarea>
                 </div>
 
 
                 <!-- Modal Footer -->
-                <div class="pt-4 flex justify-end space-x-3 border-t">
-                    <button type="button" onclick="closeModal()" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                <div class="modal-footer">
+                    <button type="button" onclick="closeModal()" class="btn-secondary">
                         Hủy
                     </button>
-                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600 shadow-md">
+                    <button type="submit" class="btn btn-indigo">
                         <i class="fas fa-save mr-1"></i> Lưu Công Việc
                     </button>
                 </div>
@@ -198,6 +150,7 @@
         </div>
     </div>
 
+    <script src="layout.js"></script>
     <script>
         const mainTasks = [
             { id: "1002", name: "Display Delica", description: "Kiểm tra và trưng bày hàng tươi Delica", group: "Trưng Bày Tươi Sống", duration: "30 phút" },
@@ -215,8 +168,8 @@
             else if (groupName.includes('Marketing') || groupName.includes('Giá')) colorClass = 'bg-yellow-100 text-yellow-800';
             else if (groupName.includes('Tồn Kho')) colorClass = 'bg-red-100 text-red-800';
             else if (groupName.includes('Vệ Sinh')) colorClass = 'bg-teal-100 text-teal-800';
-            
-            return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${colorClass}">${groupName}</span>`;
+
+            return `<span class="group-badge ${colorClass}">${groupName}</span>`;
         }
 
         function renderMainTasks() {
@@ -228,15 +181,15 @@
                 row.className = 'hover:bg-gray-50';
                 
                 row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${task.id}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${task.name}</td>
-                    <td class="px-6 py-4 text-sm text-gray-600">${task.description}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
+                    <td class="task-id">${task.id}</td>
+                    <td class="task-name">${task.name}</td>
+                    <td class="task-desc">${task.description}</td>
+                    <td>
                         ${getGroupBadge(task.group)}
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${task.duration}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-3"><i class="fas fa-edit"></i> Sửa</a>
+                    <td class="task-duration">${task.duration}</td>
+                    <td class="text-right actions">
+                        <a href="#" class="text-indigo-600 hover:text-indigo-900"><i class="fas fa-edit"></i> Sửa</a>
                         <a href="#" class="text-red-600 hover:text-red-900"><i class="fas fa-trash"></i> Xóa</a>
                     </td>
                 `;
@@ -250,18 +203,15 @@
         // --- Logic Modal Thêm Công Việc Chính ---
 
         const modal = document.getElementById('task-modal');
-        const sidebarAddTaskBtn = document.getElementById('sidebar-add-task-btn');
         const mainAddTaskBtn = document.getElementById('main-add-task-btn');
         const addTaskForm = document.getElementById('add-task-form');
 
         window.openModal = function() {
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+            modal.style.display = 'flex';
         }
 
         window.closeModal = function() {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            modal.style.display = 'none';
             addTaskForm.reset(); // Reset form khi đóng
         }
         
@@ -269,7 +219,6 @@
             renderMainTasks();
 
             // Gán sự kiện cho các nút mở Modal
-            sidebarAddTaskBtn.addEventListener('click', openModal);
             mainAddTaskBtn.addEventListener('click', openModal);
 
             // Xử lý gửi form (Mô phỏng)
