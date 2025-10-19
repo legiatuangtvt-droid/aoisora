@@ -5,21 +5,33 @@ import './toast.js';
 // Ánh xạ từ tên file HTML đến module JS tương ứng của nó.
 const pageModules = {
     'task-groups.html': './task-groups.js',
-    // Thêm các trang khác có logic JS riêng ở đây
-    // 'main-tasks.html': './main-tasks.js', 
+    'main-tasks.html': './main-tasks.js',
     // 'index.html': './daily-schedule.js',
 };
+
+// Biến để lưu trữ module của trang hiện tại, giúp gọi hàm cleanup
+let currentPageModule = null;
 
 /**
  * Tải và thực thi module JS cho một trang cụ thể.
  * @param {string} pageName - Tên file của trang (ví dụ: 'task-groups.html').
  */
 async function loadPageModule(pageName) {
+    // 1. Dọn dẹp module của trang cũ trước khi tải module mới
+    if (currentPageModule && typeof currentPageModule.cleanup === 'function') {
+        try {
+            currentPageModule.cleanup();
+        } catch (error) {
+            console.error(`Lỗi khi dọn dẹp module cũ:`, error);
+        }
+    }
+
     const modulePath = pageModules[pageName];
     if (modulePath) {
         try {
             // Sử dụng dynamic import để tải module
             const pageModule = await import(modulePath);
+            currentPageModule = pageModule; // 2. Lưu lại module mới
             // Nếu module có hàm init(), gọi nó.
             if (pageModule && typeof pageModule.init === 'function') {
                 pageModule.init();
@@ -27,6 +39,8 @@ async function loadPageModule(pageName) {
         } catch (error) {
             console.error(`Lỗi khi tải module cho trang ${pageName}:`, error);
         }
+    } else {
+        currentPageModule = null; // Reset nếu trang mới không có module
     }
 }
 

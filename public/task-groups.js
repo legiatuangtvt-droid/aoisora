@@ -5,6 +5,10 @@ import { collection, getDocs, addDoc, deleteDoc, doc, serverTimestamp, writeBatc
 let allTaskGroups = [];
 let allTaskAreas = {}; // Lưu trữ khu vực dưới dạng {id: name} để tra cứu nhanh
 
+// Biến để quản lý các listener, giúp dọn dẹp khi chuyển trang
+let activeListeners = [];
+let domController = null;
+
 const taskGroupsCollection = collection(db, 'task_groups');
 const taskAreasCollection = collection(db, 'task_areas');
 
@@ -13,7 +17,7 @@ const taskAreasCollection = collection(db, 'task_areas');
  */
 function listenForAreaChanges() {
     const q = query(taskAreasCollection, orderBy("name"));
-    onSnapshot(q, (snapshot) => {
+    const unsubscribe = onSnapshot(q, (snapshot) => {
         const areas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         
         // 1. Cập nhật object tra cứu `allTaskAreas`
@@ -37,6 +41,8 @@ function listenForAreaChanges() {
         console.error("Lỗi khi lắng nghe thay đổi khu vực: ", error);
         showToast("Mất kết nối tới dữ liệu khu vực.", "error");
     });
+    // Lưu lại hàm hủy listener để có thể dọn dẹp sau
+    activeListeners.push(unsubscribe);
 }
 
 /**
@@ -46,6 +52,7 @@ function listenForAreaChanges() {
 function populateAreaDropdowns(areas) {
     const addSelect = document.getElementById('group-area');
     const editSelect = document.getElementById('edit-group-area');
+    if (!addSelect || !editSelect) return; // Thoát nếu không tìm thấy element
     
     const currentAddValue = addSelect.value;
     const currentEditValue = editSelect.value;
@@ -110,8 +117,8 @@ function listenForTaskGroupChanges() {
     try {
         // Tạo một query để sắp xếp theo thời gian tạo, nhóm mới nhất sẽ lên đầu
         const q = query(taskGroupsCollection, orderBy("createdAt", "desc"));
-
-        onSnapshot(q, (snapshot) => {
+        
+        const unsubscribe = onSnapshot(q, (snapshot) => {
             allTaskGroups = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             // Sau khi cập nhật dữ liệu, áp dụng lại bộ lọc tìm kiếm hiện tại
             filterAndRenderGroups();
@@ -120,6 +127,8 @@ function listenForTaskGroupChanges() {
             console.error("Lỗi khi lắng nghe thay đổi nhóm công việc: ", error);
             showToast("Mất kết nối tới dữ liệu. Vui lòng kiểm tra và thử lại.", "error");
         });
+        // Lưu lại hàm hủy listener
+        activeListeners.push(unsubscribe);
     } catch (error) {
         console.error("Lỗi khi thiết lập listener: ", error);
         showToast("Không thể tải danh sách nhóm công việc. Vui lòng kiểm tra kết nối và thử lại.", "error");
@@ -307,6 +316,21 @@ async function saveAreaEdit(row) {
 }
 
 /**
+ * Dọn dẹp tất cả các listener (sự kiện DOM, Firestore) của module này.
+ * Được gọi bởi main.js trước khi chuyển sang trang khác.
+ */
+export function cleanup() {
+    // Hủy tất cả các listener của Firestore
+    activeListeners.forEach(unsubscribe => unsubscribe());
+    activeListeners = [];
+
+    // Hủy tất cả các event listener của DOM
+    if (domController) {
+        domController.abort();
+    }
+}
+
+/**
  * Hàm khởi tạo, được gọi bởi main.js khi trang này được tải.
  */
 export function init() {
@@ -319,17 +343,20 @@ export function init() {
     const bulkImportBtn = document.getElementById('bulk-import-btn');
     const bulkImportForm = document.getElementById('bulk-import-form');
 
+    // Khởi tạo controller cho các sự kiện DOM
+    domController = new AbortController();
+
     listenForTaskGroupChanges();
     listenForAreaChanges();
 
     // Gán sự kiện mở modal
-    mainAddGroupBtn.addEventListener('click', () => showModal('group-modal'));
-    manageAreasBtn.addEventListener('click', () => showModal('manage-areas-modal'));
+    mainAddGroupBtn.addEventListener('click', () => showModal('group-modal'), { signal: domController.signal });
+    manageAreasBtn.addEventListener('click', () => showModal('manage-areas-modal'), { signal: domController.signal });
     // Gán sự kiện mở modal nhập hàng loạt
-    bulkImportBtn.addEventListener('click', () => showModal('bulk-import-modal'));
+    bulkImportBtn.addEventListener('click', () => showModal('bulk-import-modal'), { signal: domController.signal });
 
     // Gán sự kiện cho ô tìm kiếm
-    document.getElementById('search-input').addEventListener('input', filterAndRenderGroups);
+    document.getElementById('search-input').addEventListener('input', filterAndRenderGroups, { signal: domController.signal });
 
     // Xử lý gửi form để thêm nhóm mới vào Firestore
     addGroupForm.addEventListener('submit', async function(e) {
@@ -367,7 +394,7 @@ export function init() {
             console.error("Lỗi khi thêm nhóm công việc: ", error);
             showToast("Đã xảy ra lỗi khi tạo nhóm. Vui lòng thử lại.", "error");
         }
-    });
+    }, { signal: domController.signal });
 
     // Xử lý form sửa nhóm
     editGroupForm.addEventListener('submit', async function(e) {
@@ -393,7 +420,7 @@ export function init() {
             console.error("Lỗi khi cập nhật nhóm: ", error);
             showToast("Đã xảy ra lỗi khi cập nhật. Vui lòng thử lại.", "error");
         }
-    });
+    }, { signal: domController.signal });
 
     // Xử lý form thêm khu vực (inline trong modal)
     document.getElementById('add-area-form-inline').addEventListener('submit', async function(e) {
@@ -417,7 +444,7 @@ export function init() {
             console.error("Lỗi khi thêm khu vực: ", error);
             showToast("Đã xảy ra lỗi hoặc mã khu vực đã tồn tại.", "error");
         }
-    });
+    }, { signal: domController.signal });
 
     // Xử lý form nhập hàng loạt
     bulkImportForm.addEventListener('submit', async function(e) {
@@ -463,7 +490,7 @@ export function init() {
         showToast(`Hoàn tất! Đã nhập ${processedCount}/${lines.length} nhóm công việc.`, "success");
         hideModal();
         // Không cần gọi fetch nữa, onSnapshot sẽ tự động cập nhật
-    });
+    }, { signal: domController.signal });
 
     // Sử dụng event delegation để xử lý sự kiện xóa
     taskGroupList.addEventListener('click', async (e) => {
@@ -497,7 +524,7 @@ export function init() {
             const groupId = editButton.dataset.id;
             openEditModal(groupId);
         }
-    });
+    }, { signal: domController.signal });
 
     // Event delegation cho modal quản lý khu vực
     document.getElementById('managed-areas-list').addEventListener('click', async (e) => {
@@ -545,5 +572,5 @@ export function init() {
                 }
             }
         }
-    });
+    }, { signal: domController.signal });
 }

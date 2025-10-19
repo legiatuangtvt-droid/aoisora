@@ -17,6 +17,35 @@
     gap: 0.5rem;
 }
 
+/* Search input - Thêm vào để hoàn thiện file */
+.search-input-wrapper {
+    position: relative;
+    min-width: 250px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.5rem 1rem 0.5rem 2.5rem; /* Thêm padding trái cho icon */
+    border: 1px solid #d1d5db; /* border-gray-300 */
+    border-radius: 0.5rem; /* rounded-lg */
+    font-size: 0.875rem; /* text-sm */
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #4f46e5; /* focus:border-indigo-500 */
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.3); /* focus:ring */
+}
+
+.search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af; /* text-gray-400 */
+}
+
 /* Main Task List Table */
 .main-tasks-table {
     min-width: 100%;
