@@ -92,9 +92,8 @@ async function checkCoreFeatures() {
 
         check('Trang `daily-schedule.html` phải tồn tại.', true);
         check('`daily-schedule.html` phải có container `#schedule-container` để render lịch.', $index('#schedule-container').length > 0);
-        check('`daily-schedule.html` phải có ô nhập ngày `#date`.', $index('#date').length > 0);
-        check('`daily-schedule.html` phải có nút "Thêm Lịch" `#main-add-schedule-btn`.', $index('#main-add-schedule-btn').length > 0);
         check('`daily-schedule.html` phải import thư viện `Sortable.min.js`.', indexContent.includes('Sortable.min.js'));
+        check('`daily-schedule.html` phải có modal `#schedule-modal` để thêm lịch.', $index('#schedule-modal').length > 0);
 
     } else {
         check('Trang `daily-schedule.html` phải tồn tại.', false);
