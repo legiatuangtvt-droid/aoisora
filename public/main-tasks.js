@@ -103,14 +103,14 @@ function renderMainTasks(tasksToRender) {
         }
 
         row.innerHTML = `
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${task.id}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${task.name}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${task.description || ''}</td>
-            <td class="px-6 py-4 whitespace-nowrap">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">${task.id}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 text-center">${task.name}</td>
+            <td class="px-6 py-4 text-sm text-gray-600">${task.description || ''}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-center">
                 ${getGroupBadge(task.groupId, groupName)}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${task.estimatedTime || 'N/A'} phút</td>
-            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">${task.estimatedTime || 'N/A'} phút</td>
+            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                 <button data-id="${task.id}" class="edit-task-btn text-indigo-600 hover:text-indigo-900 mr-4"><i class="fas fa-edit mr-1"></i>Sửa</button>
                 <button data-id="${task.id}" class="delete-task-btn text-red-600 hover:text-red-900"><i class="fas fa-trash mr-1"></i>Xóa</button>
             </td>
