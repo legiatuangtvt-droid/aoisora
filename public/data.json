@@ -44,5 +44,21 @@
     { "id": "ACTIVE", "name": "Hoạt động", "color": "green" },
     { "id": "PAUSED", "name": "Tạm dừng", "color": "orange" },
     { "id": "CLOSED", "name": "Đã đóng cửa", "color": "red" }
+  ],
+  "roles": [
+    { "id": "POS", "name": "Thu ngân" },
+    { "id": "MMD", "name": "Trưng bày hàng hóa" },
+    { "id": "CAFE", "name": "Pha chế Cafe" },
+    { "id": "SUPPORT", "name": "Hỗ trợ chung" }
+  ],
+  "staff": [
+    { "id": "YSHNG_01", "name": "YOSHINAGA", "roleId": "POS", "storeId": "MXV-TD", "phone": "090 111 2222", "status": "ACTIVE" },
+    { "id": "TUNG_02", "name": "TÙNG", "roleId": "MMD", "storeId": "MXV-TD", "phone": "090 333 4444", "status": "ACTIVE" },
+    { "id": "THAO_03", "name": "THẢO", "roleId": "CAFE", "storeId": "CK-Q1", "phone": "091 555 6666", "status": "INACTIVE" },
+    { "id": "KNGOC_04", "name": "KIM NGỌC", "roleId": "POS", "storeId": "VM-BT", "phone": "093 777 8888", "status": "ACTIVE" }
+  ],
+  "staff_statuses": [
+    { "id": "ACTIVE", "name": "Đang làm việc", "color": "green" },
+    { "id": "INACTIVE", "name": "Đã nghỉ việc", "color": "red" }
   ]
 }

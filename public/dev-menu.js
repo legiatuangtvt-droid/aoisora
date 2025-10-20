@@ -2,15 +2,13 @@ import { db } from './firebase.js';
 import { writeBatch, doc, serverTimestamp, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 function initializeDevMenu() {
-    // CSS giờ đã được quản lý bởi Tailwind, không cần inject file riêng.
-
     // Create and inject HTML
     const menuContainer = document.createElement('div');
     menuContainer.id = 'dev-menu-container';
     menuContainer.innerHTML = `
         <div class="dev-menu-header flex items-center p-2.5 bg-slate-50 border-b border-slate-200 cursor-grab select-none h-[60px] box-border flex-shrink-0 active:cursor-grabbing">
             <span class="dev-menu-icon bg-emerald-500 text-white font-bold text-sm rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0">DEV</span>
-            <span class="dev-menu-title ml-3 font-semibold text-slate-800 whitespace-nowrap opacity-0 transition-opacity">Dev Tools</span>
+            <span class="dev-menu-title ml-3 font-semibold text-slate-800 whitespace-nowrap opacity-0 transition-opacity ease-in">Dev Tools</span>
         </div>
         <div class="dev-menu-body p-3 flex flex-col gap-2 opacity-0 invisible transition-opacity delay-100">
             <button id="seed-all-data-btn" class="dev-menu-button flex items-center gap-2.5 px-3 py-2 border border-slate-300 rounded-md bg-white cursor-pointer text-sm text-slate-700 transition-colors hover:bg-slate-50 hover:border-slate-400">
@@ -28,6 +26,8 @@ function initializeDevMenu() {
     // Add functionality
     const header = menuContainer.querySelector('.dev-menu-header');
     const seedAllDataBtn = document.getElementById('seed-all-data-btn');
+    const menuBody = menuContainer.querySelector('.dev-menu-body');
+    const menuTitle = menuContainer.querySelector('.dev-menu-title');
 
     // --- Logic lưu/tải trạng thái từ localStorage ---
     const DEV_MENU_STORAGE_KEY = 'devMenuState';
@@ -67,31 +67,14 @@ function initializeDevMenu() {
     header.addEventListener('click', (e) => {
         // Only toggle if not dragging
         if (menuContainer.dataset.isDragging !== 'true') {
-            // Before toggling, check if we are about to expand
-            const isExpanding = !menuContainer.classList.contains('expanded');
+            const isCurrentlyExpanded = menuContainer.classList.contains('expanded');
 
-            if (isExpanding) {
-                const menuRect = menuContainer.getBoundingClientRect();
-                const expandedWidth = 300; // Chiều rộng của menu khi mở rộng
-                const expandedHeight = 200; // Chiều cao ước tính của menu khi mở rộng
-                let moved = false;
+            if (isCurrentlyExpanded) {
+                // --- LOGIC THU GỌN ---
+                menuBody.classList.add('opacity-0', 'invisible');
+                menuTitle.classList.add('opacity-0');
+                menuContainer.classList.remove('expanded');
 
-                // Nếu cạnh phải của menu mở rộng vượt ra ngoài màn hình
-                if (menuRect.left + expandedWidth > window.innerWidth) {
-                    menuContainer.dataset.originalLeft = menuContainer.style.left;
-                    // Tính toán vị trí left mới để nó không bị tràn
-                    const newLeft = window.innerWidth - expandedWidth - 10; // 10px là khoảng đệm
-                    menuContainer.style.left = `${Math.max(0, newLeft)}px`;
-                    moved = true;
-                }
-                // Nếu cạnh dưới của menu mở rộng vượt ra ngoài màn hình
-                if (menuRect.top + expandedHeight > window.innerHeight) {
-                    menuContainer.dataset.originalTop = menuContainer.style.top;
-                    const newTop = window.innerHeight - expandedHeight - 10; // 10px là khoảng đệm
-                    menuContainer.style.top = `${Math.max(0, newTop)}px`;
-                    moved = true;
-                }
-            } else { // Đang thu gọn lại
                 // Khôi phục vị trí ban đầu nếu nó đã bị di chuyển
                 if (menuContainer.dataset.originalLeft) {
                     menuContainer.style.left = menuContainer.dataset.originalLeft;
@@ -101,9 +84,27 @@ function initializeDevMenu() {
                     menuContainer.style.top = menuContainer.dataset.originalTop;
                     delete menuContainer.dataset.originalTop;
                 }
+            } else {
+                // --- LOGIC MỞ RỘNG ---
+                menuBody.classList.remove('opacity-0', 'invisible');
+                menuTitle.classList.remove('opacity-0');
+                menuContainer.classList.add('expanded');
+
+                // Xử lý chống tràn màn hình khi mở rộng
+                const menuRect = menuContainer.getBoundingClientRect();
+                const expandedWidth = 250; // Chiều rộng của menu khi mở rộng
+                const expandedHeight = 200; // Chiều cao ước tính
+
+                if (menuRect.right > window.innerWidth) {
+                    menuContainer.dataset.originalLeft = menuContainer.style.left;
+                    menuContainer.style.left = `${window.innerWidth - expandedWidth - 20}px`;
+                }
+                if (menuRect.bottom > window.innerHeight) {
+                    menuContainer.dataset.originalTop = menuContainer.style.top;
+                    menuContainer.style.top = `${window.innerHeight - expandedHeight - 20}px`;
+                }
             }
 
-            menuContainer.classList.toggle('expanded');
             saveMenuState(); // Lưu trạng thái sau khi mở/đóng
         }
     });
@@ -212,7 +213,7 @@ function initializeDevMenu() {
 
             // --- Bước 1: Xóa dữ liệu cũ ---
             window.showToast('Bước 1/2: Đang xóa dữ liệu cũ...', 'info');
-            const collectionsToDelete = ['task_areas', 'task_groups', 'main_tasks'];
+            const collectionsToDelete = ['task_areas', 'task_groups', 'main_tasks', 'stores', 'store_statuses', 'roles', 'staff', 'staff_statuses'];
             
             const deleteBatch = writeBatch(db);
             for (const collName of collectionsToDelete) {
@@ -260,6 +261,67 @@ function initializeDevMenu() {
                         groupId: task.groupId || '',
                         estimatedTime: task.estimatedTime || 15,
                         createdAt: serverTimestamp()
+                    });
+                }
+            });
+
+            // Seed Stores
+            data.stores?.forEach(store => {
+                if (store.id && store.name) {
+                    const docRef = doc(db, 'stores', store.id);
+                    addBatch.set(docRef, {
+                        name: store.name,
+                        address: store.address || '',
+                        phone: store.phone || '',
+                        status: store.status || 'ACTIVE',
+                        createdAt: serverTimestamp()
+                    });
+                }
+            });
+
+            // Seed Store Statuses
+            data.store_statuses?.forEach(status => {
+                if (status.id && status.name) {
+                    const docRef = doc(db, 'store_statuses', status.id);
+                    addBatch.set(docRef, {
+                        name: status.name,
+                        color: status.color || 'gray'
+                    });
+                }
+            });
+
+            // Seed Roles
+            data.roles?.forEach(role => {
+                if (role.id && role.name) {
+                    const docRef = doc(db, 'roles', role.id);
+                    addBatch.set(docRef, {
+                        name: role.name
+                    });
+                }
+            });
+
+            // Seed Staff
+            data.staff?.forEach(staff => {
+                if (staff.id && staff.name) {
+                    const docRef = doc(db, 'staff', staff.id);
+                    addBatch.set(docRef, {
+                        name: staff.name,
+                        roleId: staff.roleId || '',
+                        storeId: staff.storeId || '',
+                        phone: staff.phone || '',
+                        status: staff.status || 'ACTIVE',
+                        createdAt: serverTimestamp()
+                    });
+                }
+            });
+
+            // Seed Staff Statuses
+            data.staff_statuses?.forEach(status => {
+                if (status.id && status.name) {
+                    const docRef = doc(db, 'staff_statuses', status.id);
+                    addBatch.set(docRef, {
+                        name: status.name,
+                        color: status.color || 'gray'
                     });
                 }
             });

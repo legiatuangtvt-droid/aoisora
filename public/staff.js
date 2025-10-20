@@ -1,50 +1,65 @@
-// Hiện tại, chúng ta sẽ sử dụng dữ liệu giả lập (mock data)
-// Trong tương lai, dữ liệu này sẽ được lấy từ Firestore
-const allStaff = [
-    {
-        id: 'YSHNG_01',
-        name: 'YOSHINAGA',
-        role: 'POS',
-        store: 'Maxivelu Thủ Đức',
-        phone: '090 111 2222',
-        status: 'Đang làm việc'
-    },
-    {
-        id: 'TUNG_02',
-        name: 'TÙNG',
-        role: 'MMD',
-        store: 'Maxivelu Thủ Đức',
-        phone: '090 333 4444',
-        status: 'Đang làm việc'
-    },
-    {
-        id: 'THAO_03',
-        name: 'THẢO',
-        role: 'Aeon Cafe',
-        store: 'Maxivelu Quận 1',
-        phone: '091 555 6666',
-        status: 'Đã nghỉ việc'
-    },
-    {
-        id: 'KNGOC_04',
-        name: 'KIM NGỌC',
-        role: 'POS',
-        store: 'Maxivelu Bình Thạnh',
-        phone: '093 777 8888',
-        status: 'Đang làm việc'
-    }
-];
+import { db } from './firebase.js';
+import { collection, onSnapshot, query, orderBy, doc, setDoc, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
-// Dữ liệu giả lập cho chức vụ
-let allRoles = [
-    { id: 'POS', name: 'Thu ngân' },
-    { id: 'MMD', name: 'Trưng bày hàng hóa' },
-    { id: 'CAFE', name: 'Pha chế Cafe' },
-    { id: 'SUPPORT', name: 'Hỗ trợ chung' },
-];
-
+// Dữ liệu chức vụ sẽ được lấy từ Firestore
+let allStaff = [];
+let allRoles = [];
+let allStores = [];
+let allStaffStatuses = [];
 let domController = null;
 
+/**
+ * Tải tất cả dữ liệu cần thiết một lần (stores, statuses)
+ */
+async function fetchInitialData() {
+    const storesSnapshot = await getDocs(collection(db, 'stores'));
+    allStores = storesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    const statusesSnapshot = await getDocs(collection(db, 'staff_statuses'));
+    allStaffStatuses = statusesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+}
+
+/**
+ * Lắng nghe các thay đổi từ collection `roles` và render lại.
+ */
+function listenForRoleChanges() {
+    const rolesCollection = collection(db, 'roles');
+    const q = query(rolesCollection, orderBy("name"));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        allRoles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        renderManagedRoles(allRoles);
+        // Render lại danh sách nhân viên để cập nhật tên chức vụ nếu có thay đổi
+        renderStaffList(allStaff);
+    }, (error) => {
+        console.error("Lỗi khi lắng nghe thay đổi chức vụ:", error);
+        showToast("Mất kết nối tới dữ liệu chức vụ.", "error");
+    });
+
+    if (domController && !domController.signal.aborted) {
+        domController.signal.addEventListener('abort', unsubscribe);
+    }
+}
+
+/**
+ * Lắng nghe các thay đổi từ collection `staff` và render lại.
+ */
+function listenForStaffChanges() {
+    const staffCollection = collection(db, 'staff');
+    const q = query(staffCollection, orderBy("name"));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        allStaff = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        renderStaffList(allStaff);
+    }, (error) => {
+        console.error("Lỗi khi lắng nghe thay đổi nhân viên:", error);
+        showToast("Mất kết nối tới dữ liệu nhân viên.", "error");
+    });
+
+    if (domController && !domController.signal.aborted) {
+        domController.signal.addEventListener('abort', unsubscribe);
+    }
+}
 /**
  * Render danh sách nhân viên ra bảng.
  * @param {Array} staffList - Danh sách nhân viên cần hiển thị.
@@ -61,19 +76,21 @@ function renderStaffList(staffList) {
     }
 
     staffList.forEach(staff => {
-        const roleInfo = allRoles.find(r => r.id === staff.role) || { name: staff.role };
+        const roleInfo = allRoles.find(r => r.id === staff.roleId) || { name: staff.roleId || 'N/A' };
+        const storeInfo = allStores.find(s => s.id === staff.storeId) || { name: staff.storeId || 'N/A' };
+        const statusInfo = allStaffStatuses.find(s => s.id === staff.status) || { name: staff.status, color: 'gray' };
 
-        const statusBadge = staff.status === 'Đang làm việc'
-            ? `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Đang làm việc</span>`
-            : `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Đã nghỉ việc</span>`;
+        const statusColor = statusInfo.color || 'gray';
+        const statusBadge = `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-${statusColor}-100 text-${statusColor}-800">${statusInfo.name}</span>`;
 
         const row = document.createElement('tr');
         row.className = 'hover:bg-gray-50';
+        row.dataset.id = staff.id;
         row.innerHTML = `
             <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-medium text-gray-900">${staff.id}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-700">${staff.name}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500" title="${roleInfo.name}">${staff.role}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">${staff.store}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500" title="${roleInfo.name}">${staff.roleId}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">${storeInfo.name}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">${staff.phone}</td>
             <td class="px-6 py-4 whitespace-nowrap  text-center">${statusBadge}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-medium space-x-4">
@@ -133,12 +150,15 @@ export function cleanup() {
 /**
  * Hàm khởi tạo chính của module.
  */
-export function init() {
+export async function init() {
     domController = new AbortController();
 
-    // Render danh sách ban đầu
-    renderManagedRoles(allRoles); // Render trước để modal sẵn sàng
-    renderStaffList(allStaff);
+    // Tải dữ liệu nền
+    await fetchInitialData();
+
+    // Lắng nghe các thay đổi từ Firestore và render
+    listenForRoleChanges();
+    listenForStaffChanges();
 
     const addStaffBtn = document.getElementById('add-staff-btn');
     const manageRolesBtn = document.getElementById('manage-roles-btn');
@@ -158,7 +178,7 @@ export function init() {
     }
 
     if (addRoleForm) {
-        addRoleForm.addEventListener('submit', (e) => {
+        addRoleForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const idInput = document.getElementById('inline-role-id');
             const nameInput = document.getElementById('inline-role-name');
@@ -175,24 +195,61 @@ export function init() {
                 return;
             }
 
-            allRoles.push({ id, name });
-            renderManagedRoles(allRoles);
-            showToast(`Đã thêm chức vụ: ${name}`, "success");
-            addRoleForm.reset();
-            idInput.focus();
+            try {
+                const docRef = doc(db, 'roles', id);
+                await setDoc(docRef, { name });
+                showToast(`Đã thêm chức vụ: ${name}`, "success");
+                addRoleForm.reset();
+                idInput.focus();
+            } catch (error) {
+                console.error("Lỗi khi thêm chức vụ:", error);
+                showToast("Lỗi khi thêm chức vụ. Mã có thể đã tồn tại.", "error");
+            }
         }, { signal: domController.signal });
     }
 
     // Event delegation cho việc xóa chức vụ
     document.getElementById('managed-roles-list')?.closest('table').addEventListener('click', (e) => {
         const deleteBtn = e.target.closest('.delete-role-btn');
-        if (deleteBtn) {
-            const row = deleteBtn.closest('tr');
-            const roleId = row.dataset.id;
-            allRoles = allRoles.filter(role => role.id !== roleId);
-            renderManagedRoles(allRoles);
-            showToast(`Đã xóa chức vụ: ${roleId}`, 'success');
-        }
+        if (!deleteBtn) return;
+
+        const row = deleteBtn.closest('tr');
+        const roleId = row.dataset.id;
+        const roleName = row.querySelector('td:nth-child(2)').textContent;
+
+        showConfirmation(`Bạn có chắc chắn muốn xóa chức vụ "${roleName}"?`).then(async (confirmed) => {
+            if (confirmed) {
+                try {
+                    await deleteDoc(doc(db, 'roles', roleId));
+                    showToast(`Đã xóa chức vụ: ${roleName}`, 'success');
+                } catch (error) {
+                    console.error("Lỗi khi xóa chức vụ:", error);
+                    showToast("Đã xảy ra lỗi khi xóa chức vụ.", "error");
+                }
+            }
+        });
+    }, { signal: domController.signal });
+
+    // Event delegation cho việc xóa nhân viên
+    document.getElementById('staff-list')?.addEventListener('click', (e) => {
+        const deleteBtn = e.target.closest('.delete-staff-btn');
+        if (!deleteBtn) return;
+
+        const row = deleteBtn.closest('tr');
+        const staffId = row.dataset.id;
+        const staffName = row.querySelector('td:nth-child(2)').textContent;
+
+        showConfirmation(`Bạn có chắc chắn muốn xóa nhân viên "${staffName}"?`).then(async (confirmed) => {
+            if (confirmed) {
+                try {
+                    await deleteDoc(doc(db, 'staff', staffId));
+                    showToast(`Đã xóa nhân viên: ${staffName}`, 'success');
+                } catch (error) {
+                    console.error("Lỗi khi xóa nhân viên:", error);
+                    showToast("Đã xảy ra lỗi khi xóa nhân viên.", "error");
+                }
+            }
+        });
     }, { signal: domController.signal });
 
     // TODO: Thêm logic cho tìm kiếm, sửa, xóa

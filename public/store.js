@@ -1,11 +1,26 @@
 import { db } from './firebase.js';
-import { collection, onSnapshot, query, orderBy, doc, setDoc, getDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { collection, onSnapshot, query, orderBy, doc, setDoc, getDoc, updateDoc, deleteDoc, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 let allStores = [];
+let allStoreStatuses = [];
 let domController = null;
 
 // Tham chiếu đến collection 'stores' trên Firestore
 const storesCollection = collection(db, 'stores');
+
+/**
+ * Tải danh sách các trạng thái cửa hàng một lần khi trang được tải.
+ */
+async function fetchStoreStatuses() {
+    const statusesSnapshot = await getDocs(collection(db, 'store_statuses'));
+    allStoreStatuses = statusesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+    // Điền các lựa chọn vào dropdown trong modal
+    const statusSelect = document.getElementById('store-status');
+    if (statusSelect) {
+        statusSelect.innerHTML = allStoreStatuses.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    }
+}
 
 /**
  * Lắng nghe các thay đổi từ collection `stores` và render lại bảng.
@@ -41,16 +56,16 @@ function renderStoreList(storeList) {
     }
 
     storeList.forEach(store => {
-        const statusBadge = store.status === 'Hoạt động'
-            ? `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Hoạt động</span>`
-            : `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Tạm dừng</span>`;
+        const statusInfo = allStoreStatuses.find(s => s.id === store.status) || { name: store.status, color: 'gray' };
+        const statusColor = statusInfo.color || 'gray';
+        const statusBadge = `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-${statusColor}-100 text-${statusColor}-800">${statusInfo.name}</span>`;
 
         const row = document.createElement('tr');
         row.className = 'hover:bg-gray-50';
         row.innerHTML = `
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">${store.id}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-center">${store.name}</td>
-            <td class="px-6 py-4 text-sm text-gray-500">${store.address}</td>
+            <td class="px-6 py-4 text-sm text-right text-gray-500">${store.address}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">${store.phone}</td>
             <td class="px-6 py-4 whitespace-nowrap text-center">${statusBadge}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-4">
@@ -106,8 +121,9 @@ export function cleanup() {
 /**
  * Hàm khởi tạo chính của module.
  */
-export function init() {
+export async function init() {
     domController = new AbortController();
+    await fetchStoreStatuses();
     listenForStoreChanges();
 
     const addStoreBtn = document.getElementById('add-store-btn');

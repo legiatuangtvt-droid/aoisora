@@ -34,12 +34,12 @@
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-slate-50">
                             <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mã CH</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên Cửa Hàng</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Địa Chỉ</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số Điện Thoại</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng Thái</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hành Động</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Mã CH</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Tên Cửa Hàng</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Địa Chỉ</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Số Điện Thoại</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng Thái</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Hành Động</th>
                             </tr>
                         </thead>
                         <tbody id="store-list" class="divide-y divide-gray-200">
@@ -80,8 +80,7 @@
                     <div class="form-group p-0 m-0">
                         <label for="store-status" class="block text-sm font-medium text-gray-700">Trạng Thái</label>
                         <select id="store-status" class="form-select">
-                            <option value="Hoạt động">Hoạt động</option>
-                            <option value="Tạm dừng">Tạm dừng</option>
+                            <!-- Các lựa chọn sẽ được JS tải từ Firestore -->
                         </select>
                     </div>
                 </div>
