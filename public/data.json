@@ -2,7 +2,10 @@
   "task_areas": [
     { "id": "POS", "name": "Khu vực Thu ngân" },
     { "id": "MMD", "name": "Khu vực Bán hàng" },
-    { "id": "CAFE", "name": "Quầy Aeon Cafe" },
+    {
+      "id": "CAFE",
+      "name": "Quầy Aeon Cafe"
+    },
     { "id": "KHO", "name": "Khu vực Kho" },
     { "id": "VP", "name": "Văn phòng" }
   ],
@@ -30,5 +33,16 @@
     { "id": "1601", "name": "Kiểm tra nguyên liệu Cafe", "description": "Kiểm tra và châm thêm nguyên liệu (đường, sữa, syrup) tại quầy Cafe.", "groupId": "CAFE", "estimatedTime": 15 },
     { "id": "1602", "name": "Vệ sinh máy pha cà phê", "description": "Thực hiện quy trình vệ sinh máy pha cà phê cuối ca.", "groupId": "CAFE", "estimatedTime": 25 },
     { "id": "1603", "name": "Phục vụ khách hàng Cafe", "description": "Nhận order, pha chế và phục vụ đồ uống cho khách.", "groupId": "CAFE", "estimatedTime": 45 }
+  ],
+  "stores": [
+    { "id": "MXV-TD", "name": "Maxivelu Thủ Đức", "address": "1 Võ Văn Ngân, Thủ Đức, TP.HCM", "phone": "090 123 4567", "status": "ACTIVE" },
+    { "id": "CK-Q1", "name": "Maxivelu Quận 1", "address": "2 Nguyễn Du, Bến Nghé, Quận 1, TP.HCM", "phone": "098 765 4321", "status": "ACTIVE" },
+    { "id": "VM-BT", "name": "Maxivelu Bình Thạnh", "address": "208 Nguyễn Hữu Cảnh, Bình Thạnh, TP.HCM", "phone": "091 234 5678", "status": "PAUSED" },
+    { "id": "MXV-GV", "name": "Maxivelu Gò Vấp", "address": "19 Quang Trung, Gò Vấp, TP.HCM", "phone": "093 987 6543", "status": "ACTIVE" }
+  ],
+  "store_statuses": [
+    { "id": "ACTIVE", "name": "Hoạt động", "color": "green" },
+    { "id": "PAUSED", "name": "Tạm dừng", "color": "orange" },
+    { "id": "CLOSED", "name": "Đã đóng cửa", "color": "red" }
   ]
 }

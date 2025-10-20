@@ -17,6 +17,11 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    // Cho phép bất kỳ ai cũng có thể đọc và ghi vào collection 'stores'
+    match /stores/{storeId} {
+      allow read, write: if true;
+    }
+
     // Các quy tắc khác
   }
 }

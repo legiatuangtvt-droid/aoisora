@@ -136,6 +136,7 @@ function initializeDevMenu() {
             ghostElement = header.cloneNode(true);
             ghostElement.style.width = `${rect.width}px`;
             ghostElement.style.height = `${rect.height}px`;
+            ghostElement.style.borderRadius = '9999px'; // Thêm dòng này để đảm bảo ghost là hình tròn
         }
         ghostElement.id = 'dev-menu-ghost';
         ghostElement.style.left = `${initialLeft}px`;

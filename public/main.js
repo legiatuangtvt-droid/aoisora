@@ -7,6 +7,7 @@ import { initializeDevMenu } from './dev-menu.js';
 const pageModules = {
     'task-groups.html': './task-groups.js',
     'main-tasks.html': './main-tasks.js',
+    'store.html': './store.js',
     'staff.html': './staff.js',
     // 'index.html': './daily-schedule.js',
 };
