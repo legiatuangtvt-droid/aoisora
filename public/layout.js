@@ -21,6 +21,14 @@ function initializeLayout() {
                 // Sau khi chèn xong, thực hiện các callback để cập nhật UI
                 setActiveSidebarLink(window.location.pathname);
                 setPageTitle();
+
+                // Vô hiệu hóa nút chuông thông báo
+                const notificationBtn = document.getElementById('notification-bell-btn');
+                if (notificationBtn) {
+                    notificationBtn.addEventListener('click', () => {
+                        window.showToast('Chức năng Thông báo đang được hoàn thiện.', 'info');
+                    });
+                }
             });
     };
     const setActiveSidebarLink = (pathname) => {

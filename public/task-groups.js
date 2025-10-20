@@ -340,7 +340,6 @@ export function init() {
     const taskGroupList = document.getElementById('task-groups-list');
     const editGroupForm = document.getElementById('edit-group-form');
     const manageAreasBtn = document.getElementById('manage-areas-btn');
-    const bulkImportBtn = document.getElementById('bulk-import-btn');
 
     // Khởi tạo controller cho các sự kiện DOM
     domController = new AbortController();
@@ -351,8 +350,6 @@ export function init() {
     // Gán sự kiện mở modal
     mainAddGroupBtn.addEventListener('click', () => showModal('group-modal'), { signal: domController.signal });
     manageAreasBtn.addEventListener('click', () => showModal('manage-areas-modal'), { signal: domController.signal });
-    // Gán sự kiện mở modal nhập hàng loạt
-    bulkImportBtn.addEventListener('click', () => showModal('bulk-import-modal'), { signal: domController.signal });
 
     // Gán sự kiện cho ô tìm kiếm
     document.getElementById('search-input').addEventListener('input', filterAndRenderGroups, { signal: domController.signal });
