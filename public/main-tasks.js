@@ -8,6 +8,7 @@ let allTaskGroups = []; // Lưu trữ các nhóm để điền vào dropdown
 // Biến để quản lý các listener, giúp dọn dẹp khi chuyển trang
 let activeListeners = [];
 let domController = null;
+let activeModal = null;
 
 // Biến trạng thái cho phân trang
 let currentPage = 1;
@@ -211,6 +212,59 @@ export function cleanup() {
     }
 }
 
+//#region MODAL_MANAGEMENT
+/**
+ * Hiển thị một modal dựa trên ID của nó.
+ * @param {string} modalId - ID của phần tử modal.
+ */
+function showModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+
+    activeModal = modal;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    setTimeout(() => modal.classList.add('show'), 10);
+}
+
+/**
+ * Ẩn modal đang hoạt động.
+ */
+function hideModal() {
+    if (!activeModal) return;
+    const modal = activeModal;
+    modal.classList.remove('show');
+
+    const onTransitionEnd = () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        const form = modal.querySelector('form');
+        if (form) form.reset();
+        modal.removeEventListener('transitionend', onTransitionEnd);
+    };
+    modal.addEventListener('transitionend', onTransitionEnd);
+    activeModal = null;
+}
+
+/**
+ * Hiển thị popup xác nhận.
+ * @param {string} message - Thông điệp cần hiển thị.
+ * @returns {Promise<boolean>}
+ */
+function showConfirmation(message) {
+    const confirmModal = document.getElementById('confirmation-modal');
+    if (!confirmModal) {
+        return Promise.resolve(window.confirm(message)); // Fallback
+    }
+    return new Promise((resolve) => {
+        document.getElementById('confirmation-message').textContent = message;
+        document.getElementById('confirmation-confirm-btn').onclick = () => { hideModal(); resolve(true); };
+        document.getElementById('confirmation-cancel-btn').onclick = () => { hideModal(); resolve(false); };
+        showModal('confirmation-modal');
+    });
+}
+//#endregion
+
 /**
  * Lắng nghe các thay đổi từ collection `main_tasks` và render lại bảng.
  */
@@ -304,6 +358,19 @@ export function init() {
     const taskList = document.getElementById('main-tasks-list');
 
     domController = new AbortController();
+    const { signal } = domController;
+
+    // Gắn listener cho các hành động chung của modal
+    document.body.addEventListener('click', (e) => {
+        if (e.target.closest('.modal-close-btn') || e.target.classList.contains('modal-overlay')) {
+            hideModal();
+        }
+    }, { signal });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && activeModal) {
+            hideModal();
+        }
+    }, { signal });
 
     // Bắt đầu lắng nghe dữ liệu từ Firestore
     listenForMainTasksChanges();
@@ -312,17 +379,17 @@ export function init() {
     // Gán sự kiện cho ô tìm kiếm
     const searchInput = document.getElementById('search-input');
     if (searchInput) {
-        searchInput.addEventListener('input', filterAndRenderTasks, { signal: domController.signal });
+        searchInput.addEventListener('input', filterAndRenderTasks, { signal });
     }
     // Gán sự kiện cho các nút mở Modal
     if (mainAddTaskBtn) {
-        mainAddTaskBtn.addEventListener('click', () => showModal('task-modal'), { signal: domController.signal });
+        mainAddTaskBtn.addEventListener('click', () => showModal('task-modal'), { signal });
     }
 
     // Gán sự kiện cho dropdown chọn nhóm để gợi ý mã công việc
     const taskGroupSelect = document.getElementById('task-group');
     if (taskGroupSelect) {
-        taskGroupSelect.addEventListener('change', suggestTaskCode, { signal: domController.signal });
+        taskGroupSelect.addEventListener('change', suggestTaskCode, { signal });
     }
 
     // Xử lý gửi form Thêm mới
@@ -383,7 +450,7 @@ export function init() {
                     submitButton.innerHTML = '<i class="fas fa-save mr-1"></i> Lưu Công Việc';
                 }
             }
-        }, { signal: domController.signal });
+        }, { signal });
     }
 
     // Xử lý gửi form Chỉnh sửa
@@ -407,7 +474,7 @@ export function init() {
                 console.error("Lỗi khi cập nhật công việc: ", error);
                 showToast("Lỗi khi cập nhật công việc.", "error");
             }
-        }, { signal: domController.signal });
+        }, { signal });
     }
 
     // Sử dụng event delegation cho các nút Sửa/Xóa
@@ -434,6 +501,6 @@ export function init() {
                     }
                 }
             }
-        }, { signal: domController.signal });
+        }, { signal });
     }
 }

@@ -8,6 +8,7 @@ let allTaskAreas = {}; // Lưu trữ khu vực dưới dạng {id: name} để t
 // Biến để quản lý các listener, giúp dọn dẹp khi chuyển trang
 let activeListeners = [];
 let domController = null;
+let activeModal = null;
 
 const taskGroupsCollection = collection(db, 'task_groups');
 const taskAreasCollection = collection(db, 'task_areas');
@@ -315,6 +316,51 @@ async function saveAreaEdit(row) {
     }
 }
 
+//#region MODAL_MANAGEMENT
+/**
+ * Hiển thị một modal dựa trên ID của nó.
+ * @param {string} modalId - ID của phần tử modal.
+ */
+function showModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+
+    activeModal = modal;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    setTimeout(() => modal.classList.add('show'), 10);
+}
+
+/**
+ * Ẩn modal đang hoạt động.
+ */
+function hideModal() {
+    if (!activeModal) return;
+    const modal = activeModal;
+    modal.classList.remove('show');
+
+    const onTransitionEnd = () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        const form = modal.querySelector('form');
+        if (form) form.reset();
+        modal.removeEventListener('transitionend', onTransitionEnd);
+    };
+    modal.addEventListener('transitionend', onTransitionEnd);
+    activeModal = null;
+}
+
+/**
+ * Hiển thị popup xác nhận.
+ * @param {string} message - Thông điệp cần hiển thị.
+ * @returns {Promise<boolean>}
+ */
+function showConfirmation(message) {
+    // Tạm thời dùng confirm của trình duyệt, sẽ nâng cấp sau nếu cần modal đẹp hơn
+    return Promise.resolve(window.confirm(message));
+}
+//#endregion
+
 /**
  * Dọn dẹp tất cả các listener (sự kiện DOM, Firestore) của module này.
  * Được gọi bởi main.js trước khi chuyển sang trang khác.
@@ -344,21 +390,34 @@ export function init() {
 
     // Khởi tạo controller cho các sự kiện DOM
     domController = new AbortController();
+    const { signal } = domController;
+
+    // Gắn listener cho các hành động chung của modal
+    document.body.addEventListener('click', (e) => {
+        if (e.target.closest('.modal-close-btn') || e.target.classList.contains('modal-overlay')) {
+            hideModal();
+        }
+    }, { signal });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && activeModal) {
+            hideModal();
+        }
+    }, { signal });
 
     listenForTaskGroupChanges();
     listenForAreaChanges();
 
     // Gán sự kiện mở modal, chỉ gán nếu nút tồn tại
     if (mainAddGroupBtn) {
-        mainAddGroupBtn.addEventListener('click', () => showModal('group-modal'), { signal: domController.signal });
+        mainAddGroupBtn.addEventListener('click', () => showModal('group-modal'), { signal });
     }
     if (manageAreasBtn) {
-        manageAreasBtn.addEventListener('click', () => showModal('manage-areas-modal'), { signal: domController.signal });
+        manageAreasBtn.addEventListener('click', () => showModal('manage-areas-modal'), { signal });
     }
 
     // Gán sự kiện cho ô tìm kiếm
     if (searchInput) {
-        searchInput.addEventListener('input', filterAndRenderGroups, { signal: domController.signal });
+        searchInput.addEventListener('input', filterAndRenderGroups, { signal });
     }
 
     // Xử lý gửi form để thêm nhóm mới vào Firestore
@@ -397,7 +456,7 @@ export function init() {
             console.error("Lỗi khi thêm nhóm công việc: ", error);
             showToast("Đã xảy ra lỗi khi tạo nhóm. Vui lòng thử lại.", "error");
         }
-    }, { signal: domController.signal });
+    }, { signal });
 
     // Xử lý form sửa nhóm
     editGroupForm.addEventListener('submit', async function(e) {
@@ -423,7 +482,7 @@ export function init() {
             console.error("Lỗi khi cập nhật nhóm: ", error);
             showToast("Đã xảy ra lỗi khi cập nhật. Vui lòng thử lại.", "error");
         }
-    }, { signal: domController.signal });
+    }, { signal });
 
     // Xử lý form thêm khu vực (inline trong modal)
     document.getElementById('add-area-form-inline').addEventListener('submit', async function(e) {
@@ -447,7 +506,7 @@ export function init() {
             console.error("Lỗi khi thêm khu vực: ", error);
             showToast("Đã xảy ra lỗi hoặc mã khu vực đã tồn tại.", "error");
         }
-    }, { signal: domController.signal });
+    }, { signal });
 
     // Sử dụng event delegation để xử lý sự kiện xóa
     taskGroupList.addEventListener('click', async (e) => {
@@ -481,7 +540,7 @@ export function init() {
             const groupId = editButton.dataset.id;
             openEditModal(groupId);
         }
-    }, { signal: domController.signal });
+    }, { signal });
 
     // Event delegation cho modal quản lý khu vực
     document.getElementById('managed-areas-list').addEventListener('click', async (e) => {
@@ -529,5 +588,5 @@ export function init() {
                 }
             }
         }
-    }, { signal: domController.signal });
+    }, { signal });
 }

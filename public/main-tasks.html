@@ -69,140 +69,140 @@
                     </div>
                 </div>
 
+                <!-- MODAL: Thêm Công Việc Chính -->
+                <div id="task-modal" class="modal-overlay hidden">
+                    <div class="modal-content max-w-xl">
+                        <!-- Modal Header -->
+                        <div class="modal-header">
+                            <h3 class="modal-title"><i class="fas fa-plus-square mr-2 text-indigo-500"></i> Thêm Công Việc Chính Mới</h3>
+                            <button class="modal-close-btn">
+                                <i class="fas fa-times text-lg"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Modal Body (Form) -->
+                        <form class="modal-form" id="add-task-form">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="form-group p-0 m-0">
+                                    <label for="task-name" class="block text-sm font-medium text-gray-700">Tên Công Việc (*)</label>
+                                    <input type="text" id="task-name" name="task-name" required class="form-input">
+                                </div>
+                                <div class="form-group p-0 m-0">
+                                    <label for="task-code" class="block text-sm font-medium text-gray-700">Mã Công Việc (*)</label>
+                                    <input type="text" id="task-code" name="task-code" required class="form-input" placeholder="Ví dụ: 1001, VS-SAN...">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="task-group" class="block text-sm font-medium text-gray-700">Nhóm Công Việc (*)</label>
+                                <select id="task-group" name="task-group" required class="form-select">
+                                    <option value="">-- Chọn Nhóm --</option>
+                                    <!-- Các nhóm sẽ được load động từ Firestore -->
+                                </select>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="form-group p-0 m-0">
+                                    <label for="task-duration" class="block text-sm font-medium text-gray-700">Thời Gian Ước Tính (Phút)</label>
+                                    <input type="number" id="task-duration" name="task-duration" min="5" max="300" value="15" class="form-input">
+                                </div>
+                                <div class="form-group p-0 m-0">
+                                    <label for="task-frequency" class="block text-sm font-medium text-gray-700">Tần Suất Khuyến Nghị</label>
+                                    <select id="task-frequency" name="task-frequency" class="form-select">
+                                        <option value="Daily">Hàng Ngày</option>
+                                        <option value="TwiceDaily">2 lần/ngày</option>
+                                        <option value="Weekly">Hàng Tuần</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="task-description" class="block text-sm font-medium text-gray-700">Mô tả chi tiết</label>
+                                <textarea id="task-description" name="task-description" rows="2" class="form-textarea"></textarea>
+                            </div>
+
+
+                            <!-- Modal Footer -->
+                            <div class="modal-footer">
+                                <button type="button" class="btn-secondary modal-close-btn">
+                                    Hủy
+                                </button>
+                                <button type="submit" class="btn btn-indigo">
+                                    <i class="fas fa-save mr-1"></i> Lưu Công Việc
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- MODAL: Sửa Công Việc Chính -->
+                <div id="edit-task-modal" class="modal-overlay hidden">
+                    <div class="modal-content max-w-xl">
+                        <div class="modal-header">
+                            <h3 class="modal-title"><i class="fas fa-edit mr-2 text-indigo-500"></i> Chỉnh Sửa Công Việc Chính</h3>
+                            <button class="modal-close-btn"><i class="fas fa-times text-lg"></i></button>
+                        </div>
+                        <form class="modal-form" id="edit-task-form">
+                            <input type="hidden" id="edit-task-id">
+                            <div class="form-group">
+                                <label for="edit-task-name" class="block text-sm font-medium text-gray-700">Tên Công Việc (*)</label>
+                                <input type="text" id="edit-task-name" required class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-task-group" class="block text-sm font-medium text-gray-700">Nhóm Công Việc (*)</label>
+                                <select id="edit-task-group" required class="form-select">
+                                    <option value="">-- Chọn Nhóm --</option>
+                                </select>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="form-group p-0 m-0">
+                                    <label for="edit-task-duration" class="block text-sm font-medium text-gray-700">Thời Gian Ước Tính (Phút)</label>
+                                    <input type="number" id="edit-task-duration" min="5" max="300" class="form-input">
+                                </div>
+                                <div class="form-group p-0 m-0">
+                                     <label for="edit-task-frequency" class="block text-sm font-medium text-gray-700">Tần Suất Khuyến Nghị</label>
+                                    <select id="edit-task-frequency" class="form-select">
+                                        <option value="Daily">Hàng Ngày</option>
+                                        <option value="TwiceDaily">2 lần/ngày</option>
+                                        <option value="Weekly">Hàng Tuần</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-task-description" class="block text-sm font-medium text-gray-700">Mô tả chi tiết</label>
+                                <textarea id="edit-task-description" rows="2" class="form-textarea"></textarea>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn-secondary modal-close-btn">Hủy</button>
+                                <button type="submit" class="btn btn-indigo"><i class="fas fa-save mr-1"></i> Cập Nhật</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- MODAL: Confirmation Dialog (Thêm vào để hoạt động) -->
+                <div id="confirmation-modal" class="modal-overlay hidden">
+                    <div class="modal-content max-w-md">
+                        <div class="flex">
+                            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <i class="fas fa-exclamation-triangle text-red-600"></i>
+                            </div>
+                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                <h3 id="confirmation-title" class="text-lg leading-6 font-medium text-gray-900">Xác nhận</h3>
+                                <div class="mt-2">
+                                    <p id="confirmation-message" class="text-sm text-gray-500">Bạn có chắc chắn muốn thực hiện hành động này không?</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse mt-4 -mx-6 -mb-6 rounded-b-lg">
+                            <button id="confirmation-confirm-btn" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">Xác nhận</button>
+                            <button id="confirmation-cancel-btn" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm">Hủy</button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </main>
-    </div>
-
-    <!-- MODAL: Thêm Công Việc Chính -->
-    <div id="task-modal" class="modal-overlay hidden">
-        <div class="modal-content max-w-xl">
-            <!-- Modal Header -->
-            <div class="modal-header">
-                <h3 class="modal-title"><i class="fas fa-plus-square mr-2 text-indigo-500"></i> Thêm Công Việc Chính Mới</h3>
-                <button class="modal-close-btn" onclick="hideModal()">
-                    <i class="fas fa-times text-lg"></i>
-                </button>
-            </div>
-            
-            <!-- Modal Body (Form) -->
-            <form class="modal-form" id="add-task-form">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="form-group p-0 m-0">
-                        <label for="task-name" class="block text-sm font-medium text-gray-700">Tên Công Việc (*)</label>
-                        <input type="text" id="task-name" name="task-name" required class="form-input">
-                    </div>
-                    <div class="form-group p-0 m-0">
-                        <label for="task-code" class="block text-sm font-medium text-gray-700">Mã Công Việc (*)</label>
-                        <input type="text" id="task-code" name="task-code" required class="form-input" placeholder="Ví dụ: 1001, VS-SAN...">
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="task-group" class="block text-sm font-medium text-gray-700">Nhóm Công Việc (*)</label>
-                    <select id="task-group" name="task-group" required class="form-select">
-                        <option value="">-- Chọn Nhóm --</option>
-                        <!-- Các nhóm sẽ được load động từ Firestore -->
-                    </select>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="form-group p-0 m-0">
-                        <label for="task-duration" class="block text-sm font-medium text-gray-700">Thời Gian Ước Tính (Phút)</label>
-                        <input type="number" id="task-duration" name="task-duration" min="5" max="300" value="15" class="form-input">
-                    </div>
-                    <div class="form-group p-0 m-0">
-                        <label for="task-frequency" class="block text-sm font-medium text-gray-700">Tần Suất Khuyến Nghị</label>
-                        <select id="task-frequency" name="task-frequency" class="form-select">
-                            <option value="Daily">Hàng Ngày</option>
-                            <option value="TwiceDaily">2 lần/ngày</option>
-                            <option value="Weekly">Hàng Tuần</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="task-description" class="block text-sm font-medium text-gray-700">Mô tả chi tiết</label>
-                    <textarea id="task-description" name="task-description" rows="2" class="form-textarea"></textarea>
-                </div>
-
-
-                <!-- Modal Footer -->
-                <div class="modal-footer">
-                    <button type="button" onclick="hideModal()" class="btn-secondary">
-                        Hủy
-                    </button>
-                    <button type="submit" class="btn btn-indigo">
-                        <i class="fas fa-save mr-1"></i> Lưu Công Việc
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL: Sửa Công Việc Chính -->
-    <div id="edit-task-modal" class="modal-overlay hidden">
-        <div class="modal-content max-w-xl">
-            <div class="modal-header">
-                <h3 class="modal-title"><i class="fas fa-edit mr-2 text-indigo-500"></i> Chỉnh Sửa Công Việc Chính</h3>
-                <button class="modal-close-btn" onclick="hideModal()"><i class="fas fa-times text-lg"></i></button>
-            </div>
-            <form class="modal-form" id="edit-task-form">
-                <input type="hidden" id="edit-task-id">
-                <div class="form-group">
-                    <label for="edit-task-name" class="block text-sm font-medium text-gray-700">Tên Công Việc (*)</label>
-                    <input type="text" id="edit-task-name" required class="form-input">
-                </div>
-                <div class="form-group">
-                    <label for="edit-task-group" class="block text-sm font-medium text-gray-700">Nhóm Công Việc (*)</label>
-                    <select id="edit-task-group" required class="form-select">
-                        <option value="">-- Chọn Nhóm --</option>
-                    </select>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="form-group p-0 m-0">
-                        <label for="edit-task-duration" class="block text-sm font-medium text-gray-700">Thời Gian Ước Tính (Phút)</label>
-                        <input type="number" id="edit-task-duration" min="5" max="300" class="form-input">
-                    </div>
-                    <div class="form-group p-0 m-0">
-                         <label for="edit-task-frequency" class="block text-sm font-medium text-gray-700">Tần Suất Khuyến Nghị</label>
-                        <select id="edit-task-frequency" class="form-select">
-                            <option value="Daily">Hàng Ngày</option>
-                            <option value="TwiceDaily">2 lần/ngày</option>
-                            <option value="Weekly">Hàng Tuần</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="edit-task-description" class="block text-sm font-medium text-gray-700">Mô tả chi tiết</label>
-                    <textarea id="edit-task-description" rows="2" class="form-textarea"></textarea>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" onclick="hideModal()" class="btn-secondary">Hủy</button>
-                    <button type="submit" class="btn btn-indigo"><i class="fas fa-save mr-1"></i> Cập Nhật</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL: Confirmation Dialog (Thêm vào để hoạt động) -->
-    <div id="confirmation-modal" class="modal-overlay hidden">
-        <div class="modal-content max-w-md">
-            <div class="flex">
-                <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                    <i class="fas fa-exclamation-triangle text-red-600"></i>
-                </div>
-                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                    <h3 id="confirmation-title" class="text-lg leading-6 font-medium text-gray-900">Xác nhận</h3>
-                    <div class="mt-2">
-                        <p id="confirmation-message" class="text-sm text-gray-500">Bạn có chắc chắn muốn thực hiện hành động này không?</p>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse mt-4 -mx-6 -mb-6 rounded-b-lg">
-                <button id="confirmation-confirm-btn" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">Xác nhận</button>
-                <button id="confirmation-cancel-btn" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm">Hủy</button>
-            </div>
-        </div>
     </div>
 
     <script src="layout.js" defer></script>
