@@ -37,6 +37,19 @@ function initializeDevMenu() {
     header.addEventListener('click', (e) => {
         // Only toggle if not dragging
         if (menuContainer.dataset.isDragging !== 'true') {
+            // Before toggling, check if we are about to expand
+            if (!menuContainer.classList.contains('expanded')) {
+                const menuRect = menuContainer.getBoundingClientRect();
+                const expandedWidth = 300; // Giả định chiều rộng khi mở rộng là 250px.
+
+                // Nếu cạnh phải của menu mở rộng vượt ra ngoài màn hình
+                if (menuRect.left + expandedWidth > window.innerWidth) {
+                    // Tính toán vị trí left mới để nó không bị tràn
+                    const newLeft = window.innerWidth - expandedWidth - 10; // 10px là khoảng đệm
+                    menuContainer.style.left = `${Math.max(0, newLeft)}px`;
+                }
+            }
+
             menuContainer.classList.toggle('expanded');
         }
     });
