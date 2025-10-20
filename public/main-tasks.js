@@ -208,6 +208,21 @@ async function openEditModal(taskId) {
 }
 
 /**
+ * Tự động gợi ý mã công việc khi người dùng chọn một nhóm.
+ * Ví dụ: Chọn nhóm "Vệ Sinh" (VS) -> Gợi ý mã "VS-101", "VS-102",...
+ */
+function suggestTaskCode() {
+    const groupSelect = document.getElementById('task-group');
+    const codeInput = document.getElementById('task-code');
+    if (!groupSelect || !codeInput) return;
+
+    const selectedGroupId = groupSelect.value;
+    if (selectedGroupId) {
+        codeInput.value = `${selectedGroupId}-${Math.floor(100 + Math.random() * 900)}`;
+    }
+}
+
+/**
  * Hàm khởi tạo, được gọi bởi main.js khi trang này được tải.
  */
 export function init() {
@@ -232,6 +247,12 @@ export function init() {
         mainAddTaskBtn.addEventListener('click', () => showModal('task-modal'), { signal: domController.signal });
     }
 
+    // Gán sự kiện cho dropdown chọn nhóm để gợi ý mã công việc
+    const taskGroupSelect = document.getElementById('task-group');
+    if (taskGroupSelect) {
+        taskGroupSelect.addEventListener('change', suggestTaskCode, { signal: domController.signal });
+    }
+
     // Xử lý gửi form Thêm mới
     if (addTaskForm) {
         addTaskForm.addEventListener('submit', async function(e) {
@@ -241,6 +262,7 @@ export function init() {
             const groupId = document.getElementById('task-group').value;
             const estimatedTime = document.getElementById('task-duration').value;
             const taskDescription = document.getElementById('task-description').value;
+            const submitButton = addTaskForm.querySelector('button[type="submit"]');
 
             if (!taskCode || !taskName) {
                 showToast("Mã và Tên công việc là bắt buộc.", "warning");
@@ -255,15 +277,39 @@ export function init() {
                 createdAt: serverTimestamp()
             };
 
+            // Vô hiệu hóa nút submit để tránh double-click
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Đang lưu...';
+
             try {
                 const docRef = doc(db, 'main_tasks', taskCode);
+
+                // 1. Kiểm tra xem mã công việc đã tồn tại chưa
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    showToast(`Mã công việc "${taskCode}" đã tồn tại. Vui lòng chọn mã khác.`, "error");
+                    // Mở lại nút submit
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = '<i class="fas fa-save mr-1"></i> Lưu Công Việc';
+                    return; // Dừng thực thi
+                }
+
+                // 2. Nếu chưa tồn tại, tiến hành thêm mới
                 await setDoc(docRef, newTask);
                 showToast(`Đã thêm thành công công việc: ${taskName}`, 'success');
                 hideModal();
                 addTaskForm.reset();
+                // Reset cả dropdown về giá trị mặc định
+                document.getElementById('task-group').value = "";
             } catch (error) {
                 console.error("Lỗi khi thêm công việc: ", error);
-                showToast("Lỗi khi thêm công việc. Mã có thể đã tồn tại.", "error");
+                showToast("Lỗi khi thêm công việc. Vui lòng thử lại.", "error");
+            } finally {
+                // 3. Dù thành công hay thất bại, hãy kích hoạt lại nút bấm
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = '<i class="fas fa-save mr-1"></i> Lưu Công Việc';
+                }
             }
         }, { signal: domController.signal });
     }
