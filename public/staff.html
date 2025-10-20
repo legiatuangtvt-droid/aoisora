@@ -4,166 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" href="logo.png" type="image/png"> 
-    <title>Quản Lý Nhân Viên</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Quản Lý Nhân Viên - AoiSora</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="output.css">
 </head>
 <body class="flex h-screen text-gray-800">
 
-    <!-- Sidebar -->
-    <aside class="w-64 bg-slate-800 text-white flex flex-col flex-shrink-0">
-        <div class="h-16 flex items-center justify-center text-2xl font-bold border-b border-slate-700">
-            <i class="fas fa-tasks mr-3 text-green-400"></i>
-            <span>AoiSora</span>
-        </div>
-        <nav class="flex-1 p-4 space-y-2">
-            <h3 class="px-4 text-sm font-semibold text-slate-400 uppercase tracking-wider">Lịch trình</h3>
-            <a href="/index.html" class="flex items-center px-4 py-2 text-slate-300 hover:bg-slate-700 rounded-lg">
-                <i class="fas fa-calendar-day w-6"></i>
-                <span>Lịch Hàng Ngày</span>
-            </a>
-            <a href="/month.html" class="flex items-center px-4 py-2 text-slate-300 hover:bg-slate-700 rounded-lg">
-                <i class="fas fa-calendar-alt w-6"></i>
-                <span>Lịch Hàng Tháng</span>
-            </a>
-            <h3 class="px-4 pt-4 text-sm font-semibold text-slate-400 uppercase tracking-wider">Tổ chức</h3>
-            <a href="/store.html" class="flex items-center px-4 py-2 text-slate-300 hover:bg-slate-700 rounded-lg">
-                <i class="fas fa-store w-6"></i>
-                <span>Cửa Hàng</span>
-            </a>
-            <a href="/staff.html" class="flex items-center px-4 py-2 text-white bg-green-600 rounded-lg">
-                <i class="fas fa-users w-6"></i>
-                <span>Nhân Viên</span>
-            </a>
-             <h3 class="px-4 pt-4 text-sm font-semibold text-slate-400 uppercase tracking-wider">Quản lý</h3>
-            <a href="/main-tasks.html" class="flex items-center px-4 py-2 text-slate-300 hover:bg-slate-700 rounded-lg">
-                <i class="fas fa-clipboard-list w-6"></i>
-                <span>Công Việc Chính</span>
-            </a>
-             <a href="/main-tasks.html" class="flex items-center px-4 py-2 text-slate-300 hover:bg-slate-700 rounded-lg">
-                <i class="fas fa-layer-group w-6"></i>
-                <span>Nhóm Công Việc</span>
-            </a>
-        </nav>
-        <div class="p-4 border-t border-slate-700">
-            <button class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                <i class="fas fa-plus-circle mr-2"></i>Thêm Lịch Làm Việc
-            </button>
-        </div>
-    </aside>
+    <!-- Sidebar Placeholder -->
+    <div id="sidebar-placeholder"></div>
 
     <!-- Main Content -->
     <div class="flex-1 flex flex-col overflow-hidden">
-        <!-- Header -->
-        <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 flex-shrink-0">
-             <h1 class="text-xl font-bold">Quản Lý Nhân Viên</h1>
-            <div class="flex items-center space-x-6">
-                 <a href="#" class="text-gray-600 hover:text-green-600"><i class="fas fa-user-check mr-2"></i>Xác nhận</a>
-                <a href="#" class="text-gray-600 hover:text-green-600"><i class="fas fa-clipboard-check mr-2"></i>Kiểm tra</a>
-                <a href="#" class="text-gray-600 hover:text-green-600 relative">
-                    <i class="fas fa-bell"></i>
-                    <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">3</span>
-                </a>
-                <div class="flex items-center">
-                    <img class="w-9 h-9 rounded-full object-cover" src="https://placehold.co/40x40/E2E8F0/4A5568?text=AV" alt="User Avatar">
-                    <span class="ml-3 font-semibold">J. Manager</span>
-                </div>
-            </div>
-        </header>
+        <!-- Header Placeholder -->
+        <div id="header-placeholder"></div>
 
         <!-- Content Area -->
-        <main class="flex-1 overflow-auto p-6 bg-white">
-            <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-                <div class="flex justify-between items-center mb-6">
+        <main class="flex-1 overflow-auto p-6">
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
                     <h2 class="text-lg font-semibold text-gray-700">Danh Sách Nhân Viên</h2>
-                    <button class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                        <i class="fas fa-user-plus mr-2"></i>Thêm Nhân Viên Mới
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button id="add-staff-btn" class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
+                            <i class="fas fa-user-plus mr-2"></i>Thêm Nhân Viên
+                        </button>
+                        <button id="manage-roles-btn" class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700">
+                            <i class="fas fa-briefcase mr-2"></i> Quản lý Chức Vụ
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Staff List Table -->
                 <div class="overflow-x-auto">
-                    <table class="min-w-full bg-white">
+                    <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-slate-50">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mã NV</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Họ Tên</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Chức Vụ</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cửa Hàng</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số Điện Thoại</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng Thái</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hành Động</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Mã NV</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Họ Tên</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Chức Vụ</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Cửa Hàng</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Số Điện Thoại</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng Thái</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Hành Động</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200">
-                            <!-- Sample Data Rows -->
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">YSHNG_01</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">YOSHINAGA</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">POS</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Maxivelu Thủ Đức</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">090 111 2222</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                        Đang làm việc
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-4">
-                                    <a href="#" class="text-indigo-600 hover:text-indigo-900" title="Chỉnh sửa"><i class="fas fa-pencil-alt"></i></a>
-                                    <a href="#" class="text-red-600 hover:text-red-900" title="Xóa"><i class="fas fa-trash-alt"></i></a>
-                                </td>
-                            </tr>
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">TUNG_02</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">TÙNG</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">MMD</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Maxivelu Thủ Đức</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">090 333 4444</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                        Đang làm việc
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-4">
-                                    <a href="#" class="text-indigo-600 hover:text-indigo-900" title="Chỉnh sửa"><i class="fas fa-pencil-alt"></i></a>
-                                    <a href="#" class="text-red-600 hover:text-red-900" title="Xóa"><i class="fas fa-trash-alt"></i></a>
-                                </td>
-                            </tr>
-                             <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">THAO_03</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">THẢO</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Aeon Cafe</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Maxivelu Quận 1</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">091 555 6666</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                        Đã nghỉ việc
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-4">
-                                    <a href="#" class="text-indigo-600 hover:text-indigo-900" title="Chỉnh sửa"><i class="fas fa-pencil-alt"></i></a>
-                                    <a href="#" class="text-red-600 hover:text-red-900" title="Xóa"><i class="fas fa-trash-alt"></i></a>
-                                </td>
-                            </tr>
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">KNGOC_04</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">KIM NGỌC</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">POS</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Maxivelu Bình Thạnh</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">093 777 8888</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                     <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                        Đang làm việc
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-4">
-                                    <a href="#" class="text-indigo-600 hover:text-indigo-900" title="Chỉnh sửa"><i class="fas fa-pencil-alt"></i></a>
-                                    <a href="#" class="text-red-600 hover:text-red-900" title="Xóa"><i class="fas fa-trash-alt"></i></a>
-                                </td>
-                            </tr>
-                            <!-- More rows can be added here -->
+                        <tbody id="staff-list" class="divide-y divide-gray-200">
+                            <!-- Dữ liệu nhân viên sẽ được JS render vào đây -->
                         </tbody>
                     </table>
                 </div>
@@ -171,5 +57,40 @@
         </main>
     </div>
 
+    <!-- MODAL: Quản Lý Chức Vụ -->
+    <div id="manage-roles-modal" class="modal-overlay hidden">
+        <div class="modal-content max-w-2xl">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fas fa-briefcase mr-2 text-teal-500"></i> Quản Lý Chức Vụ</h3>
+                <button class="modal-close-btn" onclick="hideModal()"><i class="fas fa-times text-lg"></i></button>
+            </div>
+            <div class="modal-form">
+                <!-- Form Thêm Mới -->
+                <form id="add-role-form-inline" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end bg-gray-50 p-4 rounded-lg border mb-4">
+                    <div class="form-group p-0 m-0">
+                        <label for="inline-role-id" class="block text-xs font-medium text-gray-600">Mã Chức Vụ (*)</label>
+                        <input type="text" id="inline-role-id" required class="form-input text-sm" placeholder="POS, MMD...">
+                    </div>
+                    <div class="form-group p-0 m-0">
+                        <label for="inline-role-name" class="block text-xs font-medium text-gray-600">Tên Chức Vụ (*)</label>
+                        <input type="text" id="inline-role-name" required class="form-input text-sm" placeholder="Thu ngân, Trưng bày...">
+                    </div>
+                    <button type="submit" class="btn btn-indigo text-sm h-10"><i class="fas fa-plus mr-2"></i>Thêm</button>
+                </form>
+
+                <!-- Danh sách chức vụ -->
+                <div class="overflow-y-auto max-h-80 border rounded-lg">
+                     <table class="min-w-full">
+                        <tbody id="managed-roles-list" class="divide-y divide-gray-200">
+                            <!-- Dữ liệu chức vụ sẽ được JS render vào đây -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="layout.js" defer></script>
+    <script type="module" src="main.js" defer></script>
 </body>
 </html>
