@@ -33,6 +33,43 @@ function initializeDevMenu() {
     const header = menuContainer.querySelector('.dev-menu-header');
     const seedAllDataBtn = document.getElementById('seed-all-data-btn');
 
+    // --- Logic lưu/tải trạng thái từ localStorage ---
+    const DEV_MENU_STORAGE_KEY = 'devMenuState';
+
+    function saveMenuState() {
+        if (!menuContainer) return;
+        const state = {
+            left: menuContainer.style.left,
+            top: menuContainer.style.top,
+            expanded: menuContainer.classList.contains('expanded')
+        };
+        localStorage.setItem(DEV_MENU_STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function loadMenuState() {
+        const savedState = localStorage.getItem(DEV_MENU_STORAGE_KEY);
+        if (savedState) {
+            try {
+                const state = JSON.parse(savedState);
+                // Áp dụng vị trí
+                if (state.left) menuContainer.style.left = state.left;
+                if (state.top) menuContainer.style.top = state.top;
+
+                // Áp dụng trạng thái mở/đóng
+                if (state.expanded) {
+                    menuContainer.classList.add('expanded');
+                }
+
+                // Đảm bảo menu không bị ra ngoài màn hình khi tải lại
+                const rect = menuContainer.getBoundingClientRect();
+                menuContainer.style.left = `${Math.max(0, Math.min(rect.left, window.innerWidth - rect.width))}px`;
+                menuContainer.style.top = `${Math.max(0, Math.min(rect.top, window.innerHeight - rect.height))}px`;
+            } catch (e) {
+                console.error("Lỗi khi đọc trạng thái Dev Menu từ localStorage", e);
+            }
+        }
+    }
+
     // --- Toggle expand/collapse ---
     header.addEventListener('click', (e) => {
         // Only toggle if not dragging
@@ -74,13 +111,14 @@ function initializeDevMenu() {
             }
 
             menuContainer.classList.toggle('expanded');
+            saveMenuState(); // Lưu trạng thái sau khi mở/đóng
         }
     });
 
     // --- Draggable logic ---
     let isDragging = false;
     let startX, startY, initialLeft, initialTop;
-    let animationFrameId = null;
+    let ghostElement = null; // Phần tử "ảnh" khi kéo
 
     header.addEventListener('mousedown', (e) => {
         // Chỉ kéo bằng chuột trái
@@ -96,50 +134,59 @@ function initializeDevMenu() {
         initialLeft = rect.left;
         initialTop = rect.top;
 
+        // --- TẠO GHOST ELEMENT (Tối ưu) ---
+        // Nếu menu đang thu gọn, chỉ clone header để ghost là hình tròn.
+        // Nếu menu đang mở rộng, clone toàn bộ.
+        if (menuContainer.classList.contains('expanded')) {
+            ghostElement = menuContainer.cloneNode(true);
+        } else {
+            ghostElement = header.cloneNode(true);
+            ghostElement.style.width = `${rect.width}px`;
+            ghostElement.style.height = `${rect.height}px`;
+        }
+        ghostElement.id = 'dev-menu-ghost';
+        ghostElement.style.left = `${initialLeft}px`;
+        ghostElement.style.top = `${initialTop}px`;
+        document.body.appendChild(ghostElement);
+
+        menuContainer.classList.add('dragging'); // Làm mờ menu gốc
+
         // Ngăn chặn việc chọn văn bản khi kéo
         e.preventDefault();
     });
 
     document.addEventListener('mousemove', (e) => {
         if (isDragging) {
-            if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
-            }
+            // Di chuyển ghost element theo chuột
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            let newX = initialLeft + dx;
+            let newY = initialTop + dy;
 
-            animationFrameId = requestAnimationFrame(() => {
-                const dx = e.clientX - startX;
-                const dy = e.clientY - startY;
+            // Giữ ghost trong màn hình
+            const ghostRect = ghostElement.getBoundingClientRect();
+            newX = Math.max(0, Math.min(newX, window.innerWidth - ghostRect.width));
+            newY = Math.max(0, Math.min(newY, window.innerHeight - ghostRect.height));
 
-                const menuRect = menuContainer.getBoundingClientRect();
-                let newX = initialLeft + dx;
-                let newY = initialTop + dy;
-
-                // Giữ menu trong màn hình
-                newX = Math.max(0, Math.min(newX, window.innerWidth - menuRect.width));
-                newY = Math.max(0, Math.min(newY, window.innerHeight - menuRect.height));
-
-                menuContainer.style.transform = `translate(${newX - initialLeft}px, ${newY - initialTop}px)`;
-            });
+            ghostElement.style.left = `${newX}px`;
+            ghostElement.style.top = `${newY}px`;
         }
     });
 
     document.addEventListener('mouseup', () => {
         if (isDragging) {
-            if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
-                animationFrameId = null;
-            }
-
-            // Cập nhật vị trí cuối cùng vào top/left và reset transform
-            const transformMatrix = new DOMMatrix(window.getComputedStyle(menuContainer).transform);
-            const finalLeft = initialLeft + transformMatrix.e;
-            const finalTop = initialTop + transformMatrix.f;
-
-            menuContainer.style.transform = 'none';
-            menuContainer.style.left = `${finalLeft}px`;
-            menuContainer.style.top = `${finalTop}px`;
+            // Di chuyển menu thật đến vị trí của ghost và xóa ghost
+            const ghostRect = ghostElement.getBoundingClientRect();
+            menuContainer.style.left = `${ghostRect.left}px`;
+            menuContainer.style.top = `${ghostRect.top}px`;
             menuContainer.style.bottom = 'auto';
             menuContainer.style.right = 'auto';
+            
+            saveMenuState(); // Lưu vị trí sau khi kéo thả
+
+            document.body.removeChild(ghostElement);
+            ghostElement = null;
+            menuContainer.classList.remove('dragging');
 
             isDragging = false;
             header.style.cursor = 'grab';
@@ -149,6 +196,9 @@ function initializeDevMenu() {
             }, 100);
         }
     });
+
+    // Tải trạng thái đã lưu khi khởi tạo
+    loadMenuState();
 
     // --- Seed data logic ---
     seedAllDataBtn.addEventListener('click', async () => {
