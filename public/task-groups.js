@@ -335,11 +335,12 @@ export function cleanup() {
  */
 export function init() {
     // Lấy các element cần thiết
-    const mainAddGroupBtn = document.getElementById('main-add-group-btn');
+    const mainAddGroupBtn = document.getElementById('main-add-group-btn'); // Nút "Thêm Nhóm"
     const addGroupForm = document.getElementById('add-group-form');
     const taskGroupList = document.getElementById('task-groups-list');
     const editGroupForm = document.getElementById('edit-group-form');
     const manageAreasBtn = document.getElementById('manage-areas-btn');
+    const searchInput = document.getElementById('search-input');
 
     // Khởi tạo controller cho các sự kiện DOM
     domController = new AbortController();
@@ -347,12 +348,18 @@ export function init() {
     listenForTaskGroupChanges();
     listenForAreaChanges();
 
-    // Gán sự kiện mở modal
-    mainAddGroupBtn.addEventListener('click', () => showModal('group-modal'), { signal: domController.signal });
-    manageAreasBtn.addEventListener('click', () => showModal('manage-areas-modal'), { signal: domController.signal });
+    // Gán sự kiện mở modal, chỉ gán nếu nút tồn tại
+    if (mainAddGroupBtn) {
+        mainAddGroupBtn.addEventListener('click', () => showModal('group-modal'), { signal: domController.signal });
+    }
+    if (manageAreasBtn) {
+        manageAreasBtn.addEventListener('click', () => showModal('manage-areas-modal'), { signal: domController.signal });
+    }
 
     // Gán sự kiện cho ô tìm kiếm
-    document.getElementById('search-input').addEventListener('input', filterAndRenderGroups, { signal: domController.signal });
+    if (searchInput) {
+        searchInput.addEventListener('input', filterAndRenderGroups, { signal: domController.signal });
+    }
 
     // Xử lý gửi form để thêm nhóm mới vào Firestore
     addGroupForm.addEventListener('submit', async function(e) {

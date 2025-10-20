@@ -148,11 +148,6 @@ html, body {
     background-color: #bbdefb;
 }
 
-/* Đảm bảo body không bị che bởi thanh home-screen */
-body {
-  padding-top: 48px;
-}
-
 .button-group {
   display: flex;
   flex-direction: column;
