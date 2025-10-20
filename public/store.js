@@ -4,6 +4,7 @@ import { collection, onSnapshot, query, orderBy, doc, setDoc, getDoc, updateDoc,
 let allStores = [];
 let allStoreStatuses = [];
 let domController = null;
+let activeModal = null;
 
 // Tham chiếu đến collection 'stores' trên Firestore
 const storesCollection = collection(db, 'stores');
@@ -108,6 +109,51 @@ async function openStoreModal(storeId = null) {
     showModal('store-modal');
 }
 
+//#region MODAL_MANAGEMENT
+/**
+ * Hiển thị một modal dựa trên ID của nó.
+ * @param {string} modalId - ID của phần tử modal.
+ */
+function showModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+
+    activeModal = modal;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    setTimeout(() => modal.classList.add('show'), 10);
+}
+
+/**
+ * Ẩn modal đang hoạt động.
+ */
+function hideModal() {
+    if (!activeModal) return;
+    const modal = activeModal;
+    modal.classList.remove('show');
+
+    const onTransitionEnd = () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        const form = modal.querySelector('form');
+        if (form) form.reset();
+        modal.removeEventListener('transitionend', onTransitionEnd);
+    };
+    modal.addEventListener('transitionend', onTransitionEnd);
+    activeModal = null;
+}
+
+/**
+ * Hiển thị popup xác nhận.
+ * @param {string} message - Thông điệp cần hiển thị.
+ * @returns {Promise<boolean>}
+ */
+function showConfirmation(message) {
+    // Tạm thời dùng confirm của trình duyệt, sẽ nâng cấp sau nếu cần modal đẹp hơn
+    return Promise.resolve(window.confirm(message));
+}
+//#endregion
+
 /**
  * Dọn dẹp các sự kiện khi chuyển trang.
  */
@@ -123,6 +169,20 @@ export function cleanup() {
  */
 export async function init() {
     domController = new AbortController();
+    const { signal } = domController;
+
+    // Gắn listener cho các hành động chung của modal
+    document.body.addEventListener('click', (e) => {
+        if (e.target.closest('.modal-close-btn') || e.target.classList.contains('modal-overlay')) {
+            hideModal();
+        }
+    }, { signal });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && activeModal) {
+            hideModal();
+        }
+    }, { signal });
+
     await fetchStoreStatuses();
     listenForStoreChanges();
 
@@ -132,12 +192,12 @@ export async function init() {
 
     // Sự kiện mở modal thêm mới
     if (addStoreBtn) {
-        addStoreBtn.addEventListener('click', () => openStoreModal(), { signal: domController.signal });
+        addStoreBtn.addEventListener('click', () => openStoreModal(), { signal });
     }
 
     // Sự kiện submit form (cho cả thêm và sửa)
     if (storeForm) {
-        storeForm.addEventListener('submit', async (e) => {
+        storeForm.addEventListener('submit', async(e) => {
             e.preventDefault();
             const storeId = document.getElementById('store-id').value.trim().toUpperCase();
             const isEditMode = document.getElementById('store-id').readOnly;
@@ -169,12 +229,12 @@ export async function init() {
                 console.error("Lỗi khi lưu cửa hàng:", error);
                 showToast("Đã xảy ra lỗi khi lưu. Mã cửa hàng có thể đã tồn tại.", "error");
             }
-        }, { signal: domController.signal });
+        }, { signal });
     }
 
     // Event delegation cho các nút Sửa và Xóa
     if (storeListTable) {
-        storeListTable.addEventListener('click', async (e) => {
+        storeListTable.addEventListener('click', async(e) => {
             const editBtn = e.target.closest('.edit-store-btn');
             if (editBtn) {
                 openStoreModal(editBtn.dataset.id);
@@ -195,6 +255,6 @@ export async function init() {
                     }
                 }
             }
-        }, { signal: domController.signal });
+        }, { signal });
     }
 }

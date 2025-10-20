@@ -1,5 +1,5 @@
 import { db } from './firebase.js';
-import { collection, onSnapshot, query, orderBy, doc, setDoc, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { collection, onSnapshot, query, orderBy, doc, setDoc, deleteDoc, getDocs, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 // Dữ liệu chức vụ sẽ được lấy từ Firestore
 let allStaff = [];
@@ -7,6 +7,8 @@ let allRoles = [];
 let allStores = [];
 let allStaffStatuses = [];
 let domController = null;
+let activeModal = null;
+
 
 /**
  * Tải tất cả dữ liệu cần thiết một lần (stores, statuses)
@@ -103,6 +105,56 @@ function renderStaffList(staffList) {
 }
 
 /**
+ * Mở modal và chuẩn bị form để thêm hoặc sửa nhân viên.
+ * @param {string|null} staffId - ID của nhân viên cần sửa, hoặc null để thêm mới.
+ */
+function openStaffModal(staffId = null) {
+    const form = document.getElementById('staff-form');
+    const modalTitle = document.getElementById('staff-modal-title');
+    const idInput = document.getElementById('staff-id');
+    const submitBtn = document.getElementById('staff-form-submit-btn');
+    form.reset();
+
+    // Điền dữ liệu cho các dropdown
+    const roleSelect = document.getElementById('staff-role');
+    const storeSelect = document.getElementById('staff-store');
+    const statusSelect = document.getElementById('staff-status');
+
+    roleSelect.innerHTML = allRoles.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+    storeSelect.innerHTML = allStores.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    statusSelect.innerHTML = allStaffStatuses.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+
+    // Thêm một lựa chọn trống cho cửa hàng và chức vụ
+    roleSelect.insertAdjacentHTML('afterbegin', '<option value="">-- Chọn chức vụ --</option>');
+    storeSelect.insertAdjacentHTML('afterbegin', '<option value="">-- Chọn cửa hàng --</option>');
+
+    if (staffId) { // Chế độ Sửa
+        modalTitle.innerHTML = '<i class="fas fa-user-edit mr-2 text-indigo-500"></i> Chỉnh Sửa Nhân Viên';
+        submitBtn.innerHTML = '<i class="fas fa-save mr-1"></i> Cập Nhật';
+        idInput.value = staffId;
+        idInput.readOnly = true;
+
+        const staff = allStaff.find(s => s.id === staffId);
+        if (staff) {
+            document.getElementById('staff-name').value = staff.name;
+            document.getElementById('staff-phone').value = staff.phone || '';
+            roleSelect.value = staff.roleId || '';
+            storeSelect.value = staff.storeId || '';
+            statusSelect.value = staff.status || 'ACTIVE';
+        }
+    } else { // Chế độ Thêm
+        modalTitle.innerHTML = '<i class="fas fa-user-plus mr-2 text-indigo-500"></i> Thêm Nhân Viên Mới';
+        submitBtn.innerHTML = '<i class="fas fa-save mr-1"></i> Lưu';
+        idInput.readOnly = false;
+        roleSelect.value = "";
+        storeSelect.value = "";
+        statusSelect.value = "ACTIVE";
+    }
+
+    showModal('staff-modal');
+}
+
+/**
  * Render danh sách chức vụ trong modal quản lý.
  * @param {Array} roles - Mảng các đối tượng chức vụ.
  */
@@ -137,6 +189,51 @@ function renderManagedRoles(roles) {
     list.closest('table').innerHTML = header + `<tbody>${rowsHtml}</tbody>`;
 }
 
+//#region MODAL_MANAGEMENT
+/**
+ * Hiển thị một modal dựa trên ID của nó.
+ * @param {string} modalId - ID của phần tử modal.
+ */
+function showModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+
+    activeModal = modal;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    setTimeout(() => modal.classList.add('show'), 10);
+}
+
+/**
+ * Ẩn modal đang hoạt động.
+ */
+function hideModal() {
+    if (!activeModal) return;
+    const modal = activeModal;
+    modal.classList.remove('show');
+
+    const onTransitionEnd = () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        const form = modal.querySelector('form');
+        if (form) form.reset();
+        modal.removeEventListener('transitionend', onTransitionEnd);
+    };
+    modal.addEventListener('transitionend', onTransitionEnd);
+    activeModal = null;
+}
+
+/**
+ * Hiển thị popup xác nhận.
+ * @param {string} message - Thông điệp cần hiển thị.
+ * @returns {Promise<boolean>}
+ */
+function showConfirmation(message) {
+    // Tạm thời dùng confirm của trình duyệt, sẽ nâng cấp sau nếu cần modal đẹp hơn
+    return Promise.resolve(window.confirm(message));
+}
+//#endregion
+
 /**
  * Dọn dẹp các sự kiện khi chuyển trang.
  */
@@ -152,6 +249,19 @@ export function cleanup() {
  */
 export async function init() {
     domController = new AbortController();
+    const { signal } = domController;
+
+    // Gắn listener cho các hành động chung của modal
+    document.body.addEventListener('click', (e) => {
+        if (e.target.closest('.modal-close-btn') || e.target.classList.contains('modal-overlay')) {
+            hideModal();
+        }
+    }, { signal });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && activeModal) {
+            hideModal();
+        }
+    }, { signal });
 
     // Tải dữ liệu nền
     await fetchInitialData();
@@ -163,18 +273,55 @@ export async function init() {
     const addStaffBtn = document.getElementById('add-staff-btn');
     const manageRolesBtn = document.getElementById('manage-roles-btn');
     const addRoleForm = document.getElementById('add-role-form-inline');
+    const staffForm = document.getElementById('staff-form');
 
     if (addStaffBtn) {
-        addStaffBtn.addEventListener('click', () => {
-            // Logic mở modal thêm nhân viên sẽ ở đây
-            window.showToast('Chức năng "Thêm Nhân Viên" sẽ được phát triển sau.', 'info');
-        }, { signal: domController.signal });
+        addStaffBtn.addEventListener('click', () => openStaffModal(), { signal });
     }
 
     if (manageRolesBtn) {
         manageRolesBtn.addEventListener('click', () => {
             showModal('manage-roles-modal');
-        }, { signal: domController.signal });
+        }, { signal });
+    }
+
+    // Sự kiện submit form thêm/sửa nhân viên
+    if (staffForm) {
+        staffForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const idInput = document.getElementById('staff-id');
+            const staffId = idInput.value.trim().toUpperCase();
+            const isEditMode = idInput.readOnly;
+
+            if (!staffId) {
+                showToast("Mã nhân viên là bắt buộc.", "warning");
+                return;
+            }
+
+            const staffData = {
+                name: document.getElementById('staff-name').value.trim(),
+                phone: document.getElementById('staff-phone').value.trim(),
+                roleId: document.getElementById('staff-role').value,
+                storeId: document.getElementById('staff-store').value,
+                status: document.getElementById('staff-status').value,
+            };
+
+            try {
+                const docRef = doc(db, 'staff', staffId);
+                if (isEditMode) {
+                    await updateDoc(docRef, staffData);
+                    showToast(`Đã cập nhật nhân viên: ${staffData.name}`, 'success');
+                } else {
+                    staffData.createdAt = serverTimestamp();
+                    await setDoc(docRef, staffData);
+                    showToast(`Đã thêm nhân viên: ${staffData.name}`, 'success');
+                }
+                hideModal();
+            } catch (error) {
+                console.error("Lỗi khi lưu nhân viên:", error);
+                showToast("Đã xảy ra lỗi khi lưu. Mã nhân viên có thể đã tồn tại.", "error");
+            }
+        }, { signal });
     }
 
     if (addRoleForm) {
@@ -205,7 +352,7 @@ export async function init() {
                 console.error("Lỗi khi thêm chức vụ:", error);
                 showToast("Lỗi khi thêm chức vụ. Mã có thể đã tồn tại.", "error");
             }
-        }, { signal: domController.signal });
+        }, { signal });
     }
 
     // Event delegation cho việc xóa chức vụ
@@ -228,10 +375,17 @@ export async function init() {
                 }
             }
         });
-    }, { signal: domController.signal });
+    }, { signal });
 
     // Event delegation cho việc xóa nhân viên
     document.getElementById('staff-list')?.addEventListener('click', (e) => {
+        const editBtn = e.target.closest('.edit-staff-btn');
+        if (editBtn) {
+            const staffId = editBtn.dataset.id;
+            openStaffModal(staffId);
+            return;
+        }
+
         const deleteBtn = e.target.closest('.delete-staff-btn');
         if (!deleteBtn) return;
 
@@ -250,7 +404,7 @@ export async function init() {
                 }
             }
         });
-    }, { signal: domController.signal });
+    }, { signal });
 
     // TODO: Thêm logic cho tìm kiếm, sửa, xóa
 }

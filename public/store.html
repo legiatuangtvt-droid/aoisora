@@ -48,51 +48,51 @@
                     </table>
                 </div>
             </div>
-        </main>
-    </div>
 
-    <!-- MODAL: Thêm/Sửa Cửa Hàng -->
-    <div id="store-modal" class="modal-overlay hidden">
-        <div class="modal-content max-w-lg">
-            <div class="modal-header">
-                <h3 id="store-modal-title" class="modal-title"><i class="fas fa-store-alt mr-2 text-indigo-500"></i> Thêm Cửa Hàng Mới</h3>
-                <button class="modal-close-btn" onclick="hideModal()"><i class="fas fa-times text-lg"></i></button>
+            <!-- MODAL: Thêm/Sửa Cửa Hàng -->
+            <div id="store-modal" class="modal-overlay hidden">
+                <div class="modal-content max-w-lg">
+                    <div class="modal-header">
+                        <h3 id="store-modal-title" class="modal-title"><i class="fas fa-store-alt mr-2 text-indigo-500"></i> Thêm Cửa Hàng Mới</h3>
+                        <button class="modal-close-btn"><i class="fas fa-times text-lg"></i></button>
+                    </div>
+                    <form class="modal-form" id="store-form">
+                        <input type="hidden" id="store-form-mode" value="add">
+                        <div class="form-group">
+                            <label for="store-id" class="block text-sm font-medium text-gray-700">Mã Cửa Hàng (*)</label>
+                            <input type="text" id="store-id" required class="form-input" placeholder="Ví dụ: MXV-TD, CK-Q1...">
+                        </div>
+                        <div class="form-group">
+                            <label for="store-name" class="block text-sm font-medium text-gray-700">Tên Cửa Hàng (*)</label>
+                            <input type="text" id="store-name" required class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label for="store-address" class="block text-sm font-medium text-gray-700">Địa Chỉ</label>
+                            <input type="text" id="store-address" class="form-input">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="form-group p-0 m-0">
+                                <label for="store-phone" class="block text-sm font-medium text-gray-700">Số Điện Thoại</label>
+                                <input type="tel" id="store-phone" class="form-input">
+                            </div>
+                            <div class="form-group p-0 m-0">
+                                <label for="store-status" class="block text-sm font-medium text-gray-700">Trạng Thái</label>
+                                <select id="store-status" class="form-select">
+                                    <!-- Các lựa chọn sẽ được JS tải từ Firestore -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn-secondary modal-close-btn">Hủy</button>
+                            <button type="submit" id="store-form-submit-btn" class="btn btn-indigo">
+                                <i class="fas fa-save mr-1"></i> Lưu
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <form class="modal-form" id="store-form">
-                <input type="hidden" id="store-form-mode" value="add">
-                <div class="form-group">
-                    <label for="store-id" class="block text-sm font-medium text-gray-700">Mã Cửa Hàng (*)</label>
-                    <input type="text" id="store-id" required class="form-input" placeholder="Ví dụ: MXV-TD, CK-Q1...">
-                </div>
-                <div class="form-group">
-                    <label for="store-name" class="block text-sm font-medium text-gray-700">Tên Cửa Hàng (*)</label>
-                    <input type="text" id="store-name" required class="form-input">
-                </div>
-                <div class="form-group">
-                    <label for="store-address" class="block text-sm font-medium text-gray-700">Địa Chỉ</label>
-                    <input type="text" id="store-address" class="form-input">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="form-group p-0 m-0">
-                        <label for="store-phone" class="block text-sm font-medium text-gray-700">Số Điện Thoại</label>
-                        <input type="tel" id="store-phone" class="form-input">
-                    </div>
-                    <div class="form-group p-0 m-0">
-                        <label for="store-status" class="block text-sm font-medium text-gray-700">Trạng Thái</label>
-                        <select id="store-status" class="form-select">
-                            <!-- Các lựa chọn sẽ được JS tải từ Firestore -->
-                        </select>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" onclick="hideModal()" class="btn-secondary">Hủy</button>
-                    <button type="submit" id="store-form-submit-btn" class="btn btn-indigo">
-                        <i class="fas fa-save mr-1"></i> Lưu
-                    </button>
-                </div>
-            </form>
-        </div>
+        </main>
     </div>
 
     <script src="layout.js" defer></script>

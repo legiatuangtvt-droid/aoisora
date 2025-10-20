@@ -1,6 +1,20 @@
 import { db } from './firebase.js';
 import { writeBatch, doc, serverTimestamp, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
+/**
+ * Hiển thị một popup xác nhận tùy chỉnh.
+ * @param {string} message - Thông điệp cần hiển thị.
+ * @param {string} [title='Xác nhận'] - Tiêu đề của popup.
+ * @returns {Promise<boolean>} - Trả về Promise, resolve `true` nếu xác nhận, `false` nếu hủy.
+ */
+function showDevConfirmation(message, title = 'Xác nhận') {
+    // Tạm thời, chúng ta sẽ dùng hàm confirm() của trình duyệt cho đơn giản.
+    // Trong tương lai, có thể tạo một modal riêng cho dev-menu nếu cần.
+    const result = window.confirm(`[${title}]\n\n${message}`);
+    return Promise.resolve(result);
+}
+window.showConfirmation = showDevConfirmation; // Gán tạm vào window để các module khác có thể dùng
+
 function initializeDevMenu() {
     // Create and inject HTML
     const menuContainer = document.createElement('div');
@@ -197,14 +211,10 @@ function initializeDevMenu() {
 
     // --- Seed data logic ---
     seedAllDataBtn.addEventListener('click', async () => {
-        const confirmed = await window.showConfirmation(
-            'Hành động này sẽ XÓA SẠCH và ghi đè toàn bộ dữ liệu mẫu (Khu vực, Nhóm, Công việc). Bạn có chắc chắn muốn tiếp tục?',
-            'Xác nhận Nhập Dữ Liệu'
-        );
-        if (!confirmed) return;
+        // Loại bỏ hộp thoại xác nhận theo yêu cầu, thay bằng toast.
+        window.showToast('Bắt đầu nhập dữ liệu mô phỏng...', 'info');
 
         try {
-            window.showToast('Đang xử lý... Vui lòng chờ.', 'info');
             const response = await fetch('data.json');
             if (!response.ok) throw new Error('Không thể tải file data.json');
             

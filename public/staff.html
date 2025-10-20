@@ -53,41 +53,93 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
-        </main>
-    </div>
 
-    <!-- MODAL: Quản Lý Chức Vụ -->
-    <div id="manage-roles-modal" class="modal-overlay hidden">
-        <div class="modal-content max-w-2xl">
-            <div class="modal-header">
-                <h3 class="modal-title"><i class="fas fa-briefcase mr-2 text-teal-500"></i> Quản Lý Chức Vụ</h3>
-                <button class="modal-close-btn" onclick="hideModal()"><i class="fas fa-times text-lg"></i></button>
-            </div>
-            <div class="modal-form">
-                <!-- Form Thêm Mới -->
-                <form id="add-role-form-inline" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end bg-gray-50 p-4 rounded-lg border mb-4">
-                    <div class="form-group p-0 m-0">
-                        <label for="inline-role-id" class="block text-xs font-medium text-gray-600">Mã Chức Vụ (*)</label>
-                        <input type="text" id="inline-role-id" required class="form-input text-sm" placeholder="POS, MMD...">
+                <!-- MODAL: Thêm/Sửa Nhân Viên -->
+                <div id="staff-modal" class="modal-overlay hidden">
+                    <div class="modal-content max-w-xl">
+                        <div class="modal-header">
+                            <h3 id="staff-modal-title" class="modal-title"><i class="fas fa-user-plus mr-2 text-indigo-500"></i> Thêm Nhân Viên Mới</h3>
+                            <button class="modal-close-btn"><i class="fas fa-times text-lg"></i></button>
+                        </div>
+                        <form class="modal-form" id="staff-form">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="form-group p-0 m-0">
+                                    <label for="staff-id" class="form-label">Mã Nhân Viên (*)</label>
+                                    <input type="text" id="staff-id" required class="form-input" placeholder="Ví dụ: TUNG_02">
+                                </div>
+                                <div class="form-group p-0 m-0">
+                                    <label for="staff-name" class="form-label">Họ Tên (*)</label>
+                                    <input type="text" id="staff-name" required class="form-input">
+                                </div>
+                            </div>
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="form-group p-0 m-0">
+                                    <label for="staff-role" class="form-label">Chức Vụ</label>
+                                    <select id="staff-role" class="form-select">
+                                        <!-- Dữ liệu chức vụ sẽ được JS tải vào đây -->
+                                    </select>
+                                </div>
+                                <div class="form-group p-0 m-0">
+                                    <label for="staff-store" class="form-label">Cửa Hàng</label>
+                                    <select id="staff-store" class="form-select">
+                                        <!-- Dữ liệu cửa hàng sẽ được JS tải vào đây -->
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="form-group p-0 m-0">
+                                    <label for="staff-phone" class="form-label">Số Điện Thoại</label>
+                                    <input type="tel" id="staff-phone" class="form-input">
+                                </div>
+                                <div class="form-group p-0 m-0">
+                                    <label for="staff-status" class="form-label">Trạng Thái</label>
+                                    <select id="staff-status" class="form-select">
+                                        <!-- Dữ liệu trạng thái sẽ được JS tải vào đây -->
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn-secondary modal-close-btn">Hủy</button>
+                                <button type="submit" id="staff-form-submit-btn" class="btn btn-indigo"><i class="fas fa-save mr-1"></i> Lưu</button>
+                            </div>
+                        </form>
                     </div>
-                    <div class="form-group p-0 m-0">
-                        <label for="inline-role-name" class="block text-xs font-medium text-gray-600">Tên Chức Vụ (*)</label>
-                        <input type="text" id="inline-role-name" required class="form-input text-sm" placeholder="Thu ngân, Trưng bày...">
-                    </div>
-                    <button type="submit" class="btn btn-indigo text-sm h-10"><i class="fas fa-plus mr-2"></i>Thêm</button>
-                </form>
+                </div>
 
-                <!-- Danh sách chức vụ -->
-                <div class="overflow-y-auto max-h-80 border rounded-lg">
-                     <table class="min-w-full">
-                        <tbody id="managed-roles-list" class="divide-y divide-gray-200">
-                            <!-- Dữ liệu chức vụ sẽ được JS render vào đây -->
-                        </tbody>
-                    </table>
+                <!-- MODAL: Quản Lý Chức Vụ -->
+                <div id="manage-roles-modal" class="modal-overlay hidden">
+                    <div class="modal-content max-w-2xl">
+                        <div class="modal-header">
+                            <h3 class="modal-title"><i class="fas fa-briefcase mr-2 text-teal-500"></i> Quản Lý Chức Vụ</h3>
+                            <button class="modal-close-btn"><i class="fas fa-times text-lg"></i></button>
+                        </div>
+                        <div class="modal-form">
+                            <!-- Form Thêm Mới -->
+                            <form id="add-role-form-inline" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end bg-gray-50 p-4 rounded-lg border mb-4">
+                                <div class="form-group p-0 m-0">
+                                    <label for="inline-role-id" class="block text-xs font-medium text-gray-600">Mã Chức Vụ (*)</label>
+                                    <input type="text" id="inline-role-id" required class="form-input text-sm" placeholder="POS, MMD...">
+                                </div>
+                                <div class="form-group p-0 m-0">
+                                    <label for="inline-role-name" class="block text-xs font-medium text-gray-600">Tên Chức Vụ (*)</label>
+                                    <input type="text" id="inline-role-name" required class="form-input text-sm" placeholder="Thu ngân, Trưng bày...">
+                                </div>
+                                <button type="submit" class="btn btn-indigo text-sm h-10"><i class="fas fa-plus mr-2"></i>Thêm</button>
+                            </form>
+
+                            <!-- Danh sách chức vụ -->
+                            <div class="overflow-y-auto max-h-80 border rounded-lg">
+                                <table class="min-w-full">
+                                    <tbody id="managed-roles-list" class="divide-y divide-gray-200">
+                                        <!-- Dữ liệu chức vụ sẽ được JS render vào đây -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
+        </main>
     </div>
 
     <script src="layout.js" defer></script>

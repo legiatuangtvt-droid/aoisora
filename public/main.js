@@ -1,5 +1,4 @@
 // Import các tiện ích toàn cục. Chúng sẽ chỉ được tải một lần.
-import './modal.js';
 import './toast.js';
 import { initializeDevMenu } from './dev-menu.js';
 
