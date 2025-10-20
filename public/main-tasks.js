@@ -9,6 +9,10 @@ let allTaskGroups = []; // Lưu trữ các nhóm để điền vào dropdown
 let activeListeners = [];
 let domController = null;
 
+// Biến trạng thái cho phân trang
+let currentPage = 1;
+const ITEMS_PER_PAGE = 10;
+
 // Tham chiếu đến các collection trên Firestore
 const mainTasksCollection = collection(db, 'main_tasks');
 const taskGroupsCollection = collection(db, 'task_groups');
@@ -51,24 +55,85 @@ function filterAndRenderTasks() {
     const searchInput = document.getElementById('search-input');
     if (!searchInput) return;
 
+    // Khi tìm kiếm, luôn quay về trang 1
+    if (searchInput.value.toLowerCase().trim() !== (window.lastSearchTerm || '')) {
+        currentPage = 1;
+    }
+    window.lastSearchTerm = searchInput.value.toLowerCase().trim();
     const searchTerm = searchInput.value.toLowerCase().trim();
 
-    if (!searchTerm) {
-        renderMainTasks(allMainTasks); // Render toàn bộ danh sách nếu không có từ khóa
-        return;
+    const filteredTasks = searchTerm
+        ? allMainTasks.filter(task =>
+              task.id.toLowerCase().includes(searchTerm) ||
+              task.name.toLowerCase().includes(searchTerm) ||
+              (task.description || '').toLowerCase().includes(searchTerm)
+          )
+        : allMainTasks;
+
+    // Logic phân trang
+    const totalItems = filteredTasks.length;
+    const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+    
+    // Đảm bảo trang hiện tại không vượt quá tổng số trang
+    if (currentPage > totalPages && totalPages > 0) {
+        currentPage = totalPages;
     }
 
-    const filteredTasks = allMainTasks.filter(task => {
-        return task.id.toLowerCase().includes(searchTerm) ||
-               task.name.toLowerCase().includes(searchTerm) ||
-               (task.description || '').toLowerCase().includes(searchTerm);
-    });
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    const tasksToRender = filteredTasks.slice(startIndex, endIndex);
 
-    renderMainTasks(filteredTasks);
+    renderMainTasks(tasksToRender);
+    renderPaginationControls(totalPages, totalItems);
 }
 
 /**
- * Render danh sách công việc chính ra bảng.
+ * Render các nút điều khiển phân trang.
+ * @param {number} totalPages - Tổng số trang.
+ * @param {number} totalItems - Tổng số công việc (sau khi lọc).
+ */
+function renderPaginationControls(totalPages, totalItems) {
+    const container = document.getElementById('pagination-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (totalPages <= 1) return; // Không hiển thị nếu chỉ có 1 trang
+
+    // Nút "Trang trước"
+    const prevButton = document.createElement('button');
+    prevButton.innerHTML = `<i class="fas fa-chevron-left text-xs"></i>`;
+    prevButton.className = 'px-3 py-1 border border-gray-300 rounded-md text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed';
+    prevButton.disabled = currentPage === 1;
+    prevButton.addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            filterAndRenderTasks();
+        }
+    });
+    container.appendChild(prevButton);
+
+    // Hiển thị thông tin trang
+    const pageInfo = document.createElement('span');
+    pageInfo.className = 'px-3 py-1 text-sm text-gray-700';
+    pageInfo.textContent = `Trang ${currentPage} / ${totalPages}`;
+    container.appendChild(pageInfo);
+
+    // Nút "Trang sau"
+    const nextButton = document.createElement('button');
+    nextButton.innerHTML = `<i class="fas fa-chevron-right text-xs"></i>`;
+    nextButton.className = 'px-3 py-1 border border-gray-300 rounded-md text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed';
+    nextButton.disabled = currentPage === totalPages;
+    nextButton.addEventListener('click', () => {
+        if (currentPage < totalPages) {
+            currentPage++;
+            filterAndRenderTasks();
+        }
+    });
+    container.appendChild(nextButton);
+}
+
+/**
+ * Render danh sách công việc chính của trang hiện tại ra bảng.
  */
 function renderMainTasks(tasksToRender) {
     const list = document.getElementById('main-tasks-list');
@@ -78,8 +143,11 @@ function renderMainTasks(tasksToRender) {
         tasksToRender = allMainTasks;
     }
 
-    if (tasksToRender.length === 0) {
+    const searchTerm = document.getElementById('search-input')?.value.trim();
+    if (allMainTasks.length === 0) {
         list.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-gray-500">Chưa có công việc chính nào. Hãy thêm một công việc mới!</td></tr>`;
+    } else if (tasksToRender.length === 0 && searchTerm) {
+        list.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-gray-500">Không tìm thấy công việc nào khớp với "${searchTerm}".</td></tr>`;
     } else {
         list.innerHTML = '';
     }
@@ -120,7 +188,11 @@ function renderMainTasks(tasksToRender) {
     // Cập nhật tóm tắt
     const taskSummary = document.getElementById('task-summary');
     if (taskSummary) {
-        taskSummary.textContent = `Hiển thị ${tasksToRender.length} trên ${allMainTasks.length} Công việc Chính`;
+        const totalFiltered = (searchTerm ? tasksToRender.length : allMainTasks.length);
+        const startItem = (currentPage - 1) * ITEMS_PER_PAGE + 1;
+        const endItem = startItem + tasksToRender.length - 1;
+        
+        taskSummary.textContent = tasksToRender.length > 0 ? `Hiển thị từ ${startItem} đến ${endItem} trên tổng số ${allMainTasks.length} công việc` : `Hiển thị 0 trên ${allMainTasks.length} công việc`;
     }
 }
 
