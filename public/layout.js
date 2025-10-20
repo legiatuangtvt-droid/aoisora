@@ -32,7 +32,7 @@ function initializeLayout() {
             });
     };
     const setActiveSidebarLink = (pathname) => {
-        const currentPage = pathname.split('/').pop() || 'index.html';
+        const currentPage = pathname.split('/').pop() || 'daily-schedule.html';
         const navLinks = document.querySelectorAll('#sidebar-placeholder .nav-link');
         
         // Các lớp CSS của Tailwind cho trạng thái active
@@ -87,6 +87,12 @@ function initializeLayout() {
             document.querySelector('main').replaceWith(newContent);
             document.title = newTitle;
             setPageTitle(); // Cập nhật header
+
+            // Ẩn các control đặc thù của trang daily-schedule khi chuyển trang
+            const dateControls = document.getElementById('daily-schedule-controls');
+            if (dateControls && relativePath !== 'daily-schedule.html') {
+                dateControls.classList.add('hidden');
+            }
 
             // Phát ra một sự kiện tùy chỉnh để thông báo rằng nội dung đã được tải
             // main.js sẽ lắng nghe sự kiện này để tải module JS tương ứng

@@ -8,7 +8,7 @@ const pageModules = {
     'main-tasks.html': './main-tasks.js',
     'store.html': './store.js',
     'staff.html': './staff.js',
-    // 'index.html': './daily-schedule.js',
+    'daily-schedule.html': './daily-schedule.js',
 };
 
 // Biến để lưu trữ module của trang hiện tại, giúp gọi hàm cleanup
@@ -61,7 +61,7 @@ function initializeRouter() {
     });
 
     // Tải module cho trang đầu tiên khi load
-    const initialPageName = window.location.pathname.split('/').pop() || 'index.html';
+    const initialPageName = window.location.pathname.split('/').pop() || 'daily-schedule.html';
     loadPageModule(initialPageName);
 }
 

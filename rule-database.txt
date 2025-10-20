@@ -39,5 +39,10 @@ service cloud.firestore {
     match /staff_statuses/{statusId} {
       allow read, write: if true;
     }
+
+    // Cho phép đọc/ghi vào collection lịch làm việc
+    match /schedules/{scheduleId} {
+      allow read, write: if true;
+    }
   }
 }

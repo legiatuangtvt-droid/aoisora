@@ -85,22 +85,19 @@ async function checkCoreFeatures() {
     };
 
     // --- Kiểm tra file index.html ---
-    const indexPath = path.join(projectDir, 'index.html');
+    const indexPath = path.join(projectDir, 'daily-schedule.html');
     if (await fs.pathExists(indexPath)) {
         const indexContent = await fs.readFile(indexPath, 'utf-8');
         const $index = cheerio.load(indexContent);
 
-        check('Trang `index.html` phải tồn tại.', true);
-        check('`index.html` phải có container `#schedule-container` để render lịch.', $index('#schedule-container').length > 0);
-        check('`index.html` phải có ô nhập ngày `#date`.', $index('#date').length > 0);
-        check('`index.html` phải có nút "Thêm Lịch" `#main-add-schedule-btn`.', $index('#main-add-schedule-btn').length > 0);
-        check('`index.html` phải có icon giới thiệu liên kết đến `intro.html`.', $index('a[href="intro.html"]').length > 0);
-        check('`index.html` phải chứa logic JS cho hàm `renderSchedule`.', indexContent.includes('function renderSchedule()'));
-        check('`index.html` phải chứa logic JS cho hàm `updateScheduleDataFromDOM`.', indexContent.includes('function updateScheduleDataFromDOM()'));
-        check('`index.html` phải import thư viện `Sortable.min.js`.', indexContent.includes('Sortable.min.js'));
+        check('Trang `daily-schedule.html` phải tồn tại.', true);
+        check('`daily-schedule.html` phải có container `#schedule-container` để render lịch.', $index('#schedule-container').length > 0);
+        check('`daily-schedule.html` phải có ô nhập ngày `#date`.', $index('#date').length > 0);
+        check('`daily-schedule.html` phải có nút "Thêm Lịch" `#main-add-schedule-btn`.', $index('#main-add-schedule-btn').length > 0);
+        check('`daily-schedule.html` phải import thư viện `Sortable.min.js`.', indexContent.includes('Sortable.min.js'));
 
     } else {
-        check('Trang `index.html` phải tồn tại.', false);
+        check('Trang `daily-schedule.html` phải tồn tại.', false);
     }
 
     // --- Kiểm tra file main-tasks.html ---
@@ -118,9 +115,27 @@ async function checkCoreFeatures() {
         check('Trang `main-tasks.html` phải tồn tại.', false);
     }
 
-    // --- Kiểm tra file style.css ---
-    const stylePath = path.join(projectDir, 'style.css');
-    check('File `style.css` phải tồn tại.', await fs.pathExists(stylePath));
+    // --- Kiểm tra file data.json ---
+    const dataPath = path.join(projectDir, 'public', 'data.json');
+    if (await fs.pathExists(dataPath)) {
+        check('File `public/data.json` phải tồn tại.', true);
+        try {
+            const dataContent = await fs.readFile(dataPath, 'utf-8');
+            const data = JSON.parse(dataContent);
+            check('`public/data.json` phải là một file JSON hợp lệ.', true);
+            check('`data.json` phải chứa mảng `staff`.', Array.isArray(data.staff));
+            check('`data.json` phải chứa mảng `main_tasks`.', Array.isArray(data.main_tasks));
+            check('`data.json` phải chứa mảng `schedules`.', Array.isArray(data.schedules));
+        } catch (e) {
+            check('`public/data.json` phải là một file JSON hợp lệ.', false);
+        }
+    } else {
+        check('File `public/data.json` phải tồn tại.', false);
+    }
+
+    // --- Kiểm tra file output.css ---
+    const stylePath = path.join(projectDir, 'public', 'output.css');
+    check('File `public/output.css` (được build từ Tailwind) phải tồn tại.', await fs.pathExists(stylePath));
 
     // In kết quả
     results.forEach(res => console.log(res));
@@ -170,7 +185,7 @@ async function provideSuggestions() {
         }
 
         // Đề xuất 3: Tối ưu hóa hiệu năng cho index.html
-        if (file === 'index.html' && content.includes('updateScheduleDataFromDOM')) {
+        if (file === 'daily-schedule.html' && content.includes('updateScheduleDataFromDOM')) {
             suggestions.push({
                 file,
                 type: 'Hiệu năng',

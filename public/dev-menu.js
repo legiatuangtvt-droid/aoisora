@@ -223,7 +223,7 @@ function initializeDevMenu() {
 
             // --- Bước 1: Xóa dữ liệu cũ ---
             window.showToast('Bước 1/2: Đang xóa dữ liệu cũ...', 'info');
-            const collectionsToDelete = ['task_areas', 'task_groups', 'main_tasks', 'stores', 'store_statuses', 'roles', 'staff', 'staff_statuses'];
+            const collectionsToDelete = ['task_areas', 'task_groups', 'main_tasks', 'stores', 'store_statuses', 'roles', 'staff', 'staff_statuses', 'schedules'];
             
             const deleteBatch = writeBatch(db);
             for (const collName of collectionsToDelete) {
@@ -332,6 +332,19 @@ function initializeDevMenu() {
                     addBatch.set(docRef, {
                         name: status.name,
                         color: status.color || 'gray'
+                    });
+                }
+            });
+
+            // Seed Schedules
+            data.schedules?.forEach((schedule, index) => {
+                if (schedule.date && schedule.staffId) {
+                    // Tạo ID tự động cho document để tránh trùng lặp
+                    const docRef = doc(collection(db, 'schedules'));
+                    addBatch.set(docRef, {
+                        date: schedule.date,
+                        staffId: schedule.staffId,
+                        tasks: schedule.tasks || {}
                     });
                 }
             });
