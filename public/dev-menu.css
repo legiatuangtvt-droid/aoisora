@@ -9,9 +9,10 @@
     border: 1px solid #e2e8f0;
     width: 60px;
     height: 60px;
+    max-height: 60px; /* Thêm max-height để tạo hiệu ứng */
     border-radius: 9999px; /* Hình tròn khi thu gọn */
     overflow: hidden;
-    transition: width 0.3s ease, height 0.3s ease, opacity 0.2s ease;
+    transition: width 0.3s ease, max-height 0.3s ease, border-radius 0.3s ease, opacity 0.2s ease;
     display: flex;
     flex-direction: column;
 }
@@ -36,8 +37,8 @@
 #dev-menu-container.expanded {
     width: 250px;
     height: auto;
+    max-height: 500px; /* Giá trị đủ lớn để chứa nội dung */
     border-radius: 8px; /* Hình chữ nhật bo góc khi mở rộng */
-    min-height: 150px;
 }
 
 /* --- Header --- */
@@ -91,6 +92,14 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    opacity: 0; /* Ẩn đi khi thu gọn */
+    visibility: hidden;
+    transition: opacity 0.2s ease 0.1s, visibility 0.2s ease 0.1s; /* Thêm delay nhỏ */
+}
+
+#dev-menu-container.expanded .dev-menu-body {
+    opacity: 1; /* Hiện ra khi mở rộng */
+    visibility: visible;
 }
 
 .dev-menu-button {
