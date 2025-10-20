@@ -2,26 +2,22 @@ import { db } from './firebase.js';
 import { writeBatch, doc, serverTimestamp, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 function initializeDevMenu() {
-    // 1. Create and inject CSS
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'dev-menu.css';
-    document.head.appendChild(link);
+    // CSS giờ đã được quản lý bởi Tailwind, không cần inject file riêng.
 
-    // 2. Create and inject HTML
+    // Create and inject HTML
     const menuContainer = document.createElement('div');
     menuContainer.id = 'dev-menu-container';
     menuContainer.innerHTML = `
-        <div class="dev-menu-header">
-            <span class="dev-menu-icon">DEV</span>
-            <span class="dev-menu-title">Dev Tools</span>
+        <div class="dev-menu-header flex items-center p-2.5 bg-slate-50 border-b border-slate-200 cursor-grab select-none h-[60px] box-border flex-shrink-0 active:cursor-grabbing">
+            <span class="dev-menu-icon bg-emerald-500 text-white font-bold text-sm rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0">DEV</span>
+            <span class="dev-menu-title ml-3 font-semibold text-slate-800 whitespace-nowrap opacity-0 transition-opacity">Dev Tools</span>
         </div>
-        <div class="dev-menu-body">
-            <button id="seed-all-data-btn" class="dev-menu-button">
+        <div class="dev-menu-body p-3 flex flex-col gap-2 opacity-0 invisible transition-opacity delay-100">
+            <button id="seed-all-data-btn" class="dev-menu-button flex items-center gap-2.5 px-3 py-2 border border-slate-300 rounded-md bg-white cursor-pointer text-sm text-slate-700 transition-colors hover:bg-slate-50 hover:border-slate-400">
                 <i class="fas fa-database"></i>
                 <span>Nhập Dữ Liệu Mô Phỏng</span>
             </button>
-            <button id="simulate-user-btn" class="dev-menu-button" title="Tính năng sẽ được phát triển sau">
+            <button id="simulate-user-btn" class="dev-menu-button flex items-center gap-2.5 px-3 py-2 border border-slate-300 rounded-md bg-white cursor-pointer text-sm text-slate-700 transition-colors hover:bg-slate-50 hover:border-slate-400" title="Tính năng sẽ được phát triển sau">
                 <i class="fas fa-user-secret"></i>
                 <span>Người Dùng Mô Phỏng</span>
             </button>
@@ -29,7 +25,7 @@ function initializeDevMenu() {
     `;
     document.body.appendChild(menuContainer);
 
-    // 3. Add functionality
+    // Add functionality
     const header = menuContainer.querySelector('.dev-menu-header');
     const seedAllDataBtn = document.getElementById('seed-all-data-btn');
 
@@ -55,11 +51,8 @@ function initializeDevMenu() {
                 if (state.left) menuContainer.style.left = state.left;
                 if (state.top) menuContainer.style.top = state.top;
 
-                // Áp dụng trạng thái mở/đóng
-                if (state.expanded) {
-                    menuContainer.classList.add('expanded');
-                }
-
+                // Bỏ qua việc tải trạng thái mở/đóng, luôn khởi động ở trạng thái thu gọn.
+                
                 // Đảm bảo menu không bị ra ngoài màn hình khi tải lại
                 const rect = menuContainer.getBoundingClientRect();
                 menuContainer.style.left = `${Math.max(0, Math.min(rect.left, window.innerWidth - rect.width))}px`;
