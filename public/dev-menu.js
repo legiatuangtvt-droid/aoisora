@@ -46,15 +46,13 @@ function initializeDevMenu() {
     let offsetX, offsetY;
 
     header.addEventListener('mousedown', (e) => {
-        if (menuContainer.classList.contains('expanded')) {
-            isDragging = true;
-            menuContainer.dataset.isDragging = 'true';
-            header.style.cursor = 'grabbing';
-            
-            // Calculate offset from the top-left corner of the menu
-            offsetX = e.clientX - menuContainer.getBoundingClientRect().left;
-            offsetY = e.clientY - menuContainer.getBoundingClientRect().top;
-        }
+        isDragging = true;
+        menuContainer.dataset.isDragging = 'true';
+        header.style.cursor = 'grabbing';
+        
+        // Calculate offset from the top-left corner of the menu
+        offsetX = e.clientX - menuContainer.getBoundingClientRect().left;
+        offsetY = e.clientY - menuContainer.getBoundingClientRect().top;
     });
 
     document.addEventListener('mousemove', (e) => {
