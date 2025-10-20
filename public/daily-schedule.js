@@ -92,6 +92,31 @@ function getGroupColor(groupId) {
     return groupColorPalette[groupId] || groupColorPalette['DEFAULT'];
 }
 
+/**
+ * Tính toán vị trí và chiều rộng của một task trên timeline 15 giờ (900 phút).
+ * @param {string} startTime - Thời gian bắt đầu (HH:mm).
+ * @param {number} duration - Thời lượng (phút).
+ * @returns {{left: string, width: string}} - Vị trí và chiều rộng dưới dạng phần trăm.
+ */
+function calculateTaskPosition(startTime, duration) {
+    const [startHour, startMinute] = startTime.split(':').map(Number);
+    const totalTimelineMinutes = (21 - 6) * 60; // 15 giờ * 60 phút = 900 phút
+
+    // Tính số phút từ lúc bắt đầu timeline (6:00)
+    const minutesFromStart = (startHour - 6) * 60 + startMinute;
+
+    // Tính toán vị trí `left` và `width` dưới dạng phần trăm
+    // Đảm bảo không có giá trị âm
+    const leftPercent = Math.max(0, (minutesFromStart / totalTimelineMinutes) * 100);
+    const widthPercent = (duration / totalTimelineMinutes) * 100;
+
+    return {
+        left: `${leftPercent}%`,
+        width: `${widthPercent}%`
+    };
+}
+
+
 function renderSchedule() {
     const dateInput = document.getElementById('date');
     const selectedDate = dateInput.value;
@@ -133,61 +158,60 @@ function renderSchedule() {
     if (currentScheduleData.length === 0) {
         container.innerHTML += `<div class="p-10 text-center text-gray-500 col-span-full bg-white">Không có lịch làm việc cho ngày ${selectedDate}.</div>`;
     } else {
+        // Thêm các cột giờ trống làm nền cho timeline
+        const backgroundGrid = document.createElement('div');
+        backgroundGrid.className = 'col-start-3 col-span-16 grid grid-cols-16 h-full';
+        timeSlots.slice(0, -1).forEach(() => { // Chỉ cần 15 vạch kẻ
+            backgroundGrid.innerHTML += `<div class="border-r"></div>`;
+        });
+        container.appendChild(backgroundGrid);
+
         currentScheduleData.forEach(employee => {
             // Name Cell
             const nameCell = document.createElement('div');
-            nameCell.className = 'col-span-2 p-3 border-r border-b flex items-center';
+            nameCell.className = 'col-span-2 p-3 border-r border-b flex items-center sticky left-0 bg-white z-20';
             nameCell.innerHTML = `
                     <div class="flex-1">
                         <div class="employee-name text-gray-800 text-lg">${employee.name}</div>
                         <div class="text-sm text-gray-600">${employee.role}</div>
                         <div class="text-xs text-gray-500 mt-2 font-medium">${employee.shift}</div>
                     </div>
-                    <div class="w-12 h-12 flex-shrink-0 relative">
-                        <svg viewBox="0 0 36 36" class="w-full h-full transform -rotate-90">
-                            <path class="text-gray-200" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3"></path>
-                            <path class="text-green-500" stroke-dasharray="80, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path>
-                        </svg>
-                        <span class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-xs font-semibold text-gray-700">80%</span>
-                    </div>
             `;
             container.appendChild(nameCell);
 
-            // Task Cells
-            timeSlots.forEach(slot => {
-                const tasks = employee.tasks[slot] || [];
-                const tasksGridId = `task-grid-${employee.docId}-${slot.replace(':', '')}`;
-                
-                let tasksHtmlContent = '';
-                tasks.forEach(taskCode => {
-                    const task = allMainTasks[taskCode] || { id: taskCode, name: `Unknown (${taskCode})` };
-                    let estimatedTime = task.estimatedTime || 15; // Mặc định là 15 phút nếu không có
-                    // Làm tròn thời gian tới bội số gần nhất của 5 để "snap"
-                    estimatedTime = Math.max(5, Math.round(estimatedTime / 5) * 5); // Đảm bảo thời gian tối thiểu là 5 phút
-                    
-                    const widthPercent = Math.min((estimatedTime / 60) * 100, 100); 
-                    const dynamicStyle = `width: calc(${widthPercent}% - 2px); margin-left: 2px;`;
+            // Timeline container for this employee's tasks
+            const timelineContainer = document.createElement('div');
+            timelineContainer.className = 'col-span-16 border-b relative h-20'; // h-20 để có chiều cao cố định
 
-                    const color = getGroupColor(task.groupId);
-                    tasksHtmlContent += `
-                        <div class="sub-task-card relative group border ${color.bg} ${color.border} shadow-sm flex flex-col justify-between items-center p-1 h-full rounded-md" data-task-code="${task.id}" style="${dynamicStyle}">
-                            <div class="sub-task-name text-xs font-semibold ${color.text} text-center">${task.name}</div>
-                            <div class="sub-task-code text-xs">${task.id}</div>
+            // Giả định employee.tasks là một mảng các object: [{id, startTime}, ...]
+            const tasks = employee.tasks || [];
+            tasks.forEach(taskInfo => {
+                const taskData = allMainTasks[taskInfo.id];
+                if (!taskData || !taskInfo.startTime) return;
+
+                const estimatedTime = taskData.estimatedTime || 15;
+                const { left, width } = calculateTaskPosition(taskInfo.startTime, estimatedTime);
+                const color = getGroupColor(taskData.groupId);
+
+                const taskElement = document.createElement('div');
+                taskElement.className = `sub-task-card absolute top-1 bottom-1 group border ${color.bg} ${color.border} shadow-sm flex flex-col justify-center items-center p-1 rounded-md overflow-hidden`;
+                taskElement.setAttribute('data-task-code', taskData.id);
+                taskElement.style.left = left;
+                taskElement.style.width = width;
+                taskElement.innerHTML = `
+                        <div class="sub-task-name text-xs font-semibold ${color.text} text-center truncate w-full px-1">${taskData.name}</div>
+                        <div class="sub-task-code text-xxs">${taskData.id}</div>
                             <button class="delete-task-btn absolute top-0 right-0 p-1 leading-none opacity-0 group-hover:opacity-100 transition-opacity" onclick="window.dailySchedule.deleteTask(this)">
                                 <i class="fas fa-times text-xxs"></i>
                             </button>
-                        </div>`;
-                });
-
-                const taskCell = document.createElement('div');
-                taskCell.className = 'border-l border-b';
-                taskCell.innerHTML = `<div class="sub-task-grid flex h-full" id="${tasksGridId}" data-doc-id="${employee.docId}" data-slot="${slot}">${tasksHtmlContent}</div>`;
-                container.appendChild(taskCell);
+                `;
+                timelineContainer.appendChild(taskElement);
             });
+            container.appendChild(timelineContainer);
         });
     }
 
-    initializeDragAndDrop();
+    // initializeDragAndDrop(); // Kéo thả không còn tương thích với layout này
 }
 //#endregion
 
@@ -196,19 +220,21 @@ function initializeDragAndDrop() {
     sortableInstances.forEach(instance => instance.destroy());
     sortableInstances = [];
 
-    document.querySelectorAll('.sub-task-grid').forEach(container => {
-        const sortable = Sortable.create(container, {
-            group: 'shared',
-            animation: 150,
-            dataIdAttr: 'data-task-code',
-            onEnd: async function (evt) {
-                updateScheduleDataFromDOM();
-            }
-        });
-        sortableInstances.push(sortable);
-    });
+    // Logic kéo thả cần được viết lại hoàn toàn để hoạt động với position: absolute.
+    // document.querySelectorAll('.sub-task-grid').forEach(container => {
+    //     const sortable = Sortable.create(container, {
+    //         group: 'shared',
+    //         animation: 150,
+    //         dataIdAttr: 'data-task-code',
+    //         onEnd: async function (evt) {
+    //             updateScheduleDataFromDOM();
+    //         }
+    //     });
+    //     sortableInstances.push(sortable);
+    // });
 }
 
+// Hàm này không còn hợp lệ với cấu trúc timeline mới
 async function updateScheduleDataFromDOM() {
     const grids = document.querySelectorAll('.sub-task-grid');
     const updatesByDoc = {};
@@ -250,8 +276,9 @@ async function deleteTask(buttonElement) {
     const taskName = taskCard.querySelector('.sub-task-name').textContent;
 
     if (confirm(`Bạn có chắc chắn muốn xóa công việc "${taskName}"?`)) {
-        taskCard.remove();
-        await updateScheduleDataFromDOM();
+        // Logic xóa cần được cập nhật để xóa task khỏi mảng `tasks` của nhân viên trên Firestore
+        showToast('Chức năng xóa đang được cập nhật cho giao diện timeline mới.', 'info');
+        // taskCard.remove();
     }
 }
 
