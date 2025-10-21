@@ -48,15 +48,45 @@ function renderStatistics(taskGroups) {
     const statsContainer = document.getElementById('stats-container');
     if (!statsContainer) return;
 
-    const totalTasks = taskGroups.reduce((sum, group) => sum + (group.tasks?.length || 0), 0);
+    let totalTasks = 0;
+    let dailyTasks = 0;
+    let weeklyTasks = 0;
+    let monthlyTasks = 0;
+    let yearlyTasks = 0;
+    let otherTasks = 0;
+
+    taskGroups.forEach(group => {
+        if (group.tasks && Array.isArray(group.tasks)) {
+            totalTasks += group.tasks.length;
+            group.tasks.forEach(task => {
+                switch (task.frequency) {
+                    case 'Daily':
+                        dailyTasks++;
+                        break;
+                    case 'Weekly':
+                        weeklyTasks++;
+                        break;
+                    case 'Monthly':
+                        monthlyTasks++;
+                        break;
+                    case 'Yearly':
+                        yearlyTasks++;
+                        break;
+                    default:
+                        otherTasks++;
+                        break;
+                }
+            });
+        }
+    });
 
     const stats = [
         { title: 'Tổng số Task', value: totalTasks, icon: 'fa-tasks' },
-        { title: 'Daily Task', value: 'N/A', icon: 'fa-sun' },
-        { title: 'Weekly', value: 'N/A', icon: 'fa-calendar-week' },
-        { title: 'Monthly', value: 'N/A', icon: 'fa-calendar-alt' },
-        { title: 'Yearly', value: 'N/A', icon: 'fa-calendar-check' },
-        { title: 'Khác', value: 'N/A', icon: 'fa-asterisk' }
+        { title: 'Daily Task', value: dailyTasks, icon: 'fa-sun' },
+        { title: 'Weekly', value: weeklyTasks, icon: 'fa-calendar-week' },
+        { title: 'Monthly', value: monthlyTasks, icon: 'fa-calendar-alt' },
+        { title: 'Yearly', value: yearlyTasks, icon: 'fa-calendar-check' },
+        { title: 'Khác', value: otherTasks, icon: 'fa-asterisk' }
     ];
 
     statsContainer.innerHTML = stats.map(stat => `
@@ -276,6 +306,25 @@ function injectAddTaskModal() {
                             <label for="add-task-order">Thứ tự (Order) <span class="text-red-500">*</span></label>
                             <input type="number" id="add-task-order" name="order" required class="form-input" min="1" placeholder="Ví dụ: 1, 2, 3...">
                         </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="form-group">
+                                <label for="add-task-frequency">Tần suất</label>
+                                <select id="add-task-frequency" name="frequency" class="form-input">
+                                    <option value="Daily" selected>Hàng ngày (Daily)</option>
+                                    <option value="Weekly">Hàng tuần (Weekly)</option>
+                                    <option value="Monthly">Hàng tháng (Monthly)</option>
+                                    <option value="Yearly">Hàng năm (Yearly)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="add-task-manual-number">Số Manual</label>
+                                <input type="text" id="add-task-manual-number" name="manual_number" class="form-input" placeholder="Ví dụ: 12345">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="add-task-manual-link">Link Manual</label>
+                            <input type="text" id="add-task-manual-link" name="manual_link" class="form-input" placeholder="Dán link tài liệu hướng dẫn...">
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary modal-close-btn">Hủy</button>
@@ -342,6 +391,9 @@ async function handleAddTaskSubmit(e) {
     const groupCode = form.elements.groupCode.value;
     const taskName = form.elements.name.value.trim();
     const taskOrder = parseInt(form.elements.order.value, 10);
+    const frequency = form.elements.frequency.value;
+    const manualNumber = form.elements.manual_number.value.trim();
+    const manualLink = form.elements.manual_link.value.trim();
     const submitButton = form.querySelector('button[type="submit"]');
 
     if (!groupCode || !taskName || isNaN(taskOrder)) {
@@ -352,15 +404,40 @@ async function handleAddTaskSubmit(e) {
     const newTask = {
         name: taskName,
         order: taskOrder,
+        frequency: frequency,
+        manual_number: manualNumber || null,
+        manual_link: manualLink || ''
     };
 
     submitButton.disabled = true;
     submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Đang lưu...';
 
     try {
+        // Để xử lý việc chèn và cập nhật order, chúng ta cần đọc, sửa, rồi ghi lại.
         const groupDocRef = doc(db, 'task_groups', groupCode);
+        const docSnap = await getDoc(groupDocRef);
+
+        if (!docSnap.exists()) {
+            throw new Error(`Không tìm thấy nhóm với mã: ${groupCode}`);
+        }
+
+        let tasks = docSnap.data().tasks || [];
+
+        // Kiểm tra xem order đã tồn tại chưa và cập nhật các order khác nếu cần
+        const orderExists = tasks.some(task => task.order === taskOrder);
+        if (orderExists) {
+            tasks = tasks.map(task => {
+                if (task.order >= taskOrder) {
+                    return { ...task, order: task.order + 1 };
+                }
+                return task;
+            });
+        }
+
+        tasks.push(newTask);
+
         await updateDoc(groupDocRef, {
-            tasks: arrayUnion(newTask)
+            tasks: tasks
         });
         window.showToast(`Đã thêm task "${taskName}" vào nhóm ${groupCode}.`, 'success');
         hideModal('add-task-to-group-modal');
