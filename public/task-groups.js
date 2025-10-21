@@ -31,7 +31,7 @@ async function renderPage() {
 
         renderStatistics(taskGroups);
         renderGroupCards(taskGroups);
-        initializeEventListeners(); // Thêm listener sau khi render
+        initializePageListeners(); // Đổi tên để bao gồm cả listener highlight mới
 
     } catch (error) {
         console.error("Lỗi khi tải dữ liệu nhóm công việc:", error);
@@ -81,16 +81,16 @@ function renderStatistics(taskGroups) {
     });
 
     const stats = [
-        { title: 'Tổng số Task', value: totalTasks, icon: 'fa-tasks' },
-        { title: 'Daily Task', value: dailyTasks, icon: 'fa-sun' },
-        { title: 'Weekly', value: weeklyTasks, icon: 'fa-calendar-week' },
-        { title: 'Monthly', value: monthlyTasks, icon: 'fa-calendar-alt' },
-        { title: 'Yearly', value: yearlyTasks, icon: 'fa-calendar-check' },
-        { title: 'Khác', value: otherTasks, icon: 'fa-asterisk' }
+        { title: 'Tổng số Task', value: totalTasks, icon: 'fa-tasks', type: 'All' },
+        { title: 'Daily Task', value: dailyTasks, icon: 'fa-sun', type: 'Daily' },
+        { title: 'Weekly', value: weeklyTasks, icon: 'fa-calendar-week', type: 'Weekly' },
+        { title: 'Monthly', value: monthlyTasks, icon: 'fa-calendar-alt', type: 'Monthly' },
+        { title: 'Yearly', value: yearlyTasks, icon: 'fa-calendar-check', type: 'Yearly' },
+        { title: 'Khác', value: otherTasks, icon: 'fa-asterisk', type: 'Other' }
     ];
 
     statsContainer.innerHTML = stats.map(stat => `
-        <div class="stat-card flex items-baseline gap-3 border border-gray-200 p-4">
+        <div class="stat-card flex items-baseline gap-3 border border-gray-200 p-4 bg-white rounded-lg transition-all duration-200 hover:shadow-md hover:border-green-300 hover:-translate-y-1 cursor-pointer" data-stat-type="${stat.type}">
             <div class="stat-icon text-gray-500"><i class="fas ${stat.icon}"></i></div>
             <p class="text-xs font-medium text-gray-600 whitespace-nowrap">${stat.title}:</p>
             <p class="text-lg font-bold text-gray-900">${stat.value}</p>
@@ -138,8 +138,10 @@ function renderGroupCards(taskGroups) {
 
             const taskRow = chunk.map(task => {
                 const generatedCode = `1${group.order}${String(task.order).padStart(2, '0')}`;
+                const frequency = task.frequency || 'Other'; // Mặc định là 'Other' nếu không có
                 return `
-                    <div class="task-card ${defaultTaskColor.bg} rounded ${defaultTaskColor.border} flex flex-col items-center justify-between text-center w-[70px] h-[100px] flex-shrink-0 transition-all ${defaultTaskColor.hover} hover:shadow-md cursor-pointer" data-task-order="${task.order}">
+                    <div class="task-card ${defaultTaskColor.bg} rounded ${defaultTaskColor.border} flex flex-col items-center justify-between text-center w-[70px] h-[100px] flex-shrink-0 transition-all ${defaultTaskColor.hover} hover:shadow-md cursor-pointer" 
+                         data-task-order="${task.order}" data-task-frequency="${frequency}">
                         <div class="flex-1 flex flex-col justify-center items-center px-1 pt-2 pb-1">
                             <p class="text-sm font-medium text-slate-800 leading-tight">${task.name}</p>
                         </div>
@@ -187,10 +189,10 @@ function renderGroupCards(taskGroups) {
  * Thêm các event listener cho các thẻ code của nhóm để đổi màu và các tương tác khác.
  * Đồng thời khởi tạo chức năng kéo-thả.
  */
-function initializeEventListeners() {
+function initializePageListeners() {
     // Sử dụng event delegation trên container để xử lý click
     const container = document.getElementById('task-groups-container');
-    if (!container) return;
+    if (!container) return; // Thoát nếu container chưa sẵn sàng
 
     container.addEventListener('click', (e) => {
         const groupCodeCard = e.target.closest('.group-code-card');
@@ -235,6 +237,51 @@ function initializeEventListeners() {
             });
         });
     });
+
+    // Thêm listener cho việc highlight task từ thẻ thống kê
+    initializeHighlightListeners();
+}
+
+/**
+ * Khởi tạo listener cho việc highlight các task khi hover vào thẻ thống kê.
+ */
+function initializeHighlightListeners() {
+    const statsContainer = document.getElementById('stats-container');
+    if (!statsContainer) return;
+    const mainContent = document.querySelector('.flex-1.flex.flex-col.overflow-hidden');
+
+    const clearAllHighlights = () => {
+        document.querySelectorAll('.stat-card.stat-active').forEach(card => card.classList.remove('stat-active'));
+        document.querySelectorAll('.task-card.highlight-task').forEach(task => task.classList.remove('highlight-task'));
+    };
+
+    statsContainer.addEventListener('click', (e) => {
+        const statCard = e.target.closest('.stat-card');
+        if (!statCard) return;
+
+        e.stopPropagation(); // Ngăn sự kiện click lan ra ngoài
+
+        const statType = statCard.dataset.statType;
+        const isAlreadyActive = statCard.classList.contains('stat-active');
+
+        // Xóa tất cả highlight cũ trước
+        clearAllHighlights();
+
+        // Nếu thẻ chưa active, thì bật highlight lên
+        if (!isAlreadyActive) {
+            statCard.classList.add('stat-active');
+            const allTasks = document.querySelectorAll('.task-card');
+            allTasks.forEach(task => {
+                const taskFrequency = task.dataset.taskFrequency;
+                if (statType === 'All' || statType === taskFrequency) {
+                    task.classList.add('highlight-task');
+                }
+            });
+        }
+    });
+
+    // Nếu click ra ngoài vùng thống kê, xóa highlight
+    if (mainContent) mainContent.addEventListener('click', clearAllHighlights);
 }
 
 /**
@@ -858,6 +905,6 @@ export function cleanup() {
 export function init() {
     injectEditTaskModal();
     injectEditGroupModal();
-    injectAddTaskModal();
     renderPage();
+    injectAddTaskModal(); // Chuyển xuống cuối để đảm bảo DOM sẵn sàng
 }

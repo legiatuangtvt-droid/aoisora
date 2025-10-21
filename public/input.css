@@ -413,6 +413,18 @@ html, body {
         @apply opacity-100 w-auto;
     }
 }
+
+/* --- TASK GROUP PAGE STYLES --- */
+@layer components {
+    .task-card.highlight-task {
+        @apply ring-2 ring-offset-1 ring-green-500 scale-105;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .stat-card.stat-active {
+        @apply ring-2 ring-green-500 shadow-lg border-green-400;
+        transform: translateY(-4px);
+    }
+}
 /* --- TOAST STYLES (Chuyển từ toast.css) --- */
 #toast-container {
     position: fixed;
