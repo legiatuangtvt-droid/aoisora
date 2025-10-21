@@ -20,17 +20,17 @@
         <div id="header-placeholder"></div>
 
         <!-- Content Area -->
-        <main class="flex-1 overflow-auto p-6 bg-gray-50">
-            <div class="mx-auto">
-                <!-- Section 1: Statistics -->
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8" id="stats-container">
-                    <!-- Stat cards will be rendered here by JS -->
+        <main class="flex-1 flex flex-col overflow-hidden bg-gray-50">
+            <!-- Section 1: Statistics (Fixed, non-scrolling) -->
+            <div class="p-6 lg:p-8 flex-shrink-0">
+                <div id="stats-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                    <!-- Nội dung thống kê sẽ được JS chèn vào đây -->
                 </div>
+            </div>
 
-                <!-- Section 2: Group Task Cards -->
-                <div class="space-y-6" id="task-groups-container">
-                    <!-- Task group cards will be rendered here by JS -->
-                </div>
+            <!-- Section 2: Group Task Cards (Scrollable) -->
+            <div id="task-groups-container" class="flex-1 overflow-y-auto px-6 lg:px-8 pb-8 flex flex-col gap-6">
+                <!-- Nội dung các nhóm công việc sẽ được JS chèn vào đây -->
             </div>
         </main>
     </div>
