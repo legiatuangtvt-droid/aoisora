@@ -1,5 +1,5 @@
 import { db } from './firebase.js';
-import { collection, getDocs, onSnapshot, query, orderBy, doc, updateDoc, arrayUnion, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { collection, getDocs, onSnapshot, query, orderBy, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 let activeListeners = [];
 
@@ -31,7 +31,7 @@ async function renderPage() {
 
         renderStatistics(taskGroups);
         renderGroupCards(taskGroups);
-        addGroupCardEventListeners(); // Thêm listener sau khi render
+        initializeEventListeners(); // Thêm listener sau khi render
 
     } catch (error) {
         console.error("Lỗi khi tải dữ liệu nhóm công việc:", error);
@@ -158,7 +158,7 @@ function renderGroupCards(taskGroups) {
                     <div class="flex flex-nowrap bg-green-200 py-1">
                         ${orderRow}
                     </div>
-                    <div class="flex flex-nowrap gap-3 p-2">
+                    <div class="task-row-container flex flex-nowrap gap-3 p-2" data-group-code="${group.code}">
                         ${taskRow}
                     </div>
                 </div>
@@ -179,7 +179,7 @@ function renderGroupCards(taskGroups) {
         return `
             <div class="group-row flex items-start gap-4 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
                 ${headerCell}
-                <div class="tasks-scroll-container flex-1 overflow-x-auto"><div class="tasks-list-inner flex flex-nowrap">${taskCells}</div></div>
+                <div class="tasks-scroll-container flex-1 overflow-x-auto"><div class="tasks-list-inner flex flex-nowrap" data-group-code="${group.code}">${taskCells}</div></div>
                 ${actionCell}
             </div>
         `;
@@ -187,9 +187,10 @@ function renderGroupCards(taskGroups) {
 }
 
 /**
- * Thêm các event listener cho các thẻ code của nhóm để đổi màu.
+ * Thêm các event listener cho các thẻ code của nhóm để đổi màu và các tương tác khác.
+ * Đồng thời khởi tạo chức năng kéo-thả.
  */
-function addGroupCardEventListeners() {
+function initializeEventListeners() {
     // Sử dụng event delegation trên container để xử lý click
     const container = document.getElementById('task-groups-container');
     if (!container) return;
@@ -220,6 +221,73 @@ function addGroupCardEventListeners() {
             showEditGroupModal(groupCode);
         }
     });
+
+    // Khởi tạo SortableJS cho mỗi nhóm
+    document.querySelectorAll('.tasks-list-inner').forEach(groupContainer => {
+        const groupCode = groupContainer.dataset.groupCode;
+        const taskRows = groupContainer.querySelectorAll('.task-row-container');
+
+        taskRows.forEach(row => {
+            Sortable.create(row, {
+                group: `tasks-${groupCode}`, // Các hàng trong cùng một nhóm có thể kéo-thả cho nhau
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                dragClass: 'sortable-drag',
+                onEnd: handleTaskDrop,
+            });
+        });
+    });
+}
+
+/**
+ * Xử lý sau khi một task được kéo-thả xong.
+ * @param {Event} evt - Sự kiện từ SortableJS.
+ */
+async function handleTaskDrop(evt) {
+    const taskCard = evt.item;
+    const groupContainer = taskCard.closest('.tasks-list-inner');
+    const groupCode = groupContainer.dataset.groupCode;
+
+    if (!groupCode) {
+        console.error("Lỗi: Không thể xác định mã nhóm (groupCode) từ DOM sau khi kéo-thả.");
+        return;
+    }
+
+    // 1. Đọc lại toàn bộ các task card trong nhóm theo thứ tự DOM mới
+    const allTaskCardsInGroup = Array.from(groupContainer.querySelectorAll('.task-card'));
+
+    // 2. Lấy dữ liệu task hiện tại từ Firestore để giữ lại các thông tin khác
+    const groupDocRef = doc(db, 'task_groups', groupCode);
+    const docSnap = await getDoc(groupDocRef);
+    if (!docSnap.exists()) {
+        window.showToast("Lỗi: Không tìm thấy nhóm để cập nhật.", "error");
+        return;
+    }
+    const existingTasks = docSnap.data().tasks || [];
+
+    // 3. Tạo mảng task mới với thứ tự đã được cập nhật
+    const newTasksArray = allTaskCardsInGroup.map((card, index) => {
+        const originalOrder = parseInt(card.dataset.taskOrder, 10);
+        const originalTaskData = existingTasks.find(t => t.order == originalOrder); // Dùng == để linh hoạt hơn
+
+        if (!originalTaskData) {
+            console.warn(`Không tìm thấy dữ liệu gốc cho task với order: ${originalOrder}. Task này sẽ bị bỏ qua.`);
+            return null; // Sẽ được lọc ra ở bước tiếp theo
+        }
+
+        return { ...originalTaskData, order: index + 1 }; // Gán lại order mới và trả về
+    }).filter(Boolean); // Lọc ra các giá trị null (những task không tìm thấy)
+
+    // 4. Cập nhật lên Firestore
+    try {
+        await updateDoc(groupDocRef, { tasks: newTasksArray });
+        window.showToast(`Đã cập nhật thứ tự task trong nhóm ${groupCode}.`, 'success', 2000);
+        renderPage(); // Render lại để đồng bộ hoàn toàn
+    } catch (error) {
+        console.error("Lỗi khi cập nhật thứ tự task:", error);
+        window.showToast("Lỗi khi lưu thứ tự mới. Vui lòng thử lại.", "error");
+    }
 }
 
 /**
