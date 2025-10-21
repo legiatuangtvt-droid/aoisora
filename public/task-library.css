@@ -1,0 +1,236 @@
+/* --- Container --- */
+#task-library-container {
+    position: fixed;
+    bottom: 20px;
+    left: 20px; /* Đặt ở bên trái để không trùng với Dev Menu */
+    z-index: 9998; /* Thấp hơn Dev Menu một chút */
+    background-color: #fff;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+    width: 60px;
+    height: 60px;
+    max-height: 60px;
+    border-radius: 9999px; /* Hình tròn khi thu gọn */
+    overflow: hidden;
+    transition: width 0.3s ease, height 0.3s ease, max-height 0.3s ease, border-radius 0.3s ease, opacity 0.2s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Trạng thái đang kéo của menu gốc */
+#task-library-container.dragging {
+    opacity: 0.5;
+    transition: opacity 0.2s ease;
+}
+
+/* --- Ghost Element (Ảnh kéo) --- */
+#task-library-ghost {
+    position: fixed;
+    z-index: 10000; /* Luôn nổi trên cùng */
+    opacity: 0.75;
+    pointer-events: none; /* Không bắt sự kiện chuột */
+    border-radius: inherit; /* Kế thừa bo góc từ menu gốc */
+    transition: none; /* Không có hiệu ứng chuyển động để theo chuột ngay lập tức */
+}
+
+/* --- Trạng thái mở rộng --- */
+#task-library-container.expanded {
+    width: 450px; /* Tăng chiều rộng để chứa 4 cột thoải mái hơn */
+    height: 60vh; /* Chiều cao có thể thay đổi */
+    max-height: 700px;
+    border-radius: 8px; /* Hình chữ nhật bo góc khi mở rộng */
+}
+
+/* --- Header --- */
+.task-library-header {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background-color: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    cursor: grab;
+    user-select: none;
+    flex-shrink: 0;
+    height: 60px;
+    box-sizing: border-box;
+}
+
+.task-library-header:active {
+    cursor: grabbing;
+}
+
+.task-library-icon {
+    background-color: #4f46e5; /* Màu indigo */
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.task-library-title {
+    margin-left: 12px;
+    font-weight: 600;
+    color: #1e293b;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+#task-library-container.expanded .task-library-title {
+    opacity: 1;
+}
+
+/* --- Body --- */
+.task-library-body {
+    position: relative; /* Cần cho việc chuyển đổi view */
+    opacity: 0; /* Ẩn đi khi thu gọn */
+    visibility: hidden;
+    transition: opacity 0.2s ease 0.1s, visibility 0.2s ease 0.1s;
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+#task-library-container.expanded .task-library-body {
+    opacity: 1; /* Hiện ra khi mở rộng */
+    visibility: visible;
+}
+
+.task-library-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background-color: #fff;
+    cursor: grab;
+    font-size: 14px;
+    color: #334155;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.task-library-item:hover {
+    background-color: #f1f5f9;
+    border-color: #94a3b8;
+}
+
+/* --- View Containers --- */
+.task-library-view {
+    padding: 12px;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.task-library-view.hidden {
+    display: none;
+}
+
+/* --- Group Grid View --- */
+#group-view-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* Giữ nguyên 4 cột theo yêu cầu */
+    gap: 10px;
+}
+
+.group-grid-item {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    aspect-ratio: 1 / 1; /* Tạo ô vuông */
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background-color: #f8fafc;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    padding: 4px;
+}
+
+.group-grid-item:hover {
+    background-color: #f1f5f9;
+    border-color: #94a3b8;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+}
+
+.group-grid-item .code {
+    font-weight: 700;
+    font-size: 1.125rem; /* Giảm nhẹ kích thước font (từ xl xuống lg) */
+    color: #334155;
+}
+
+.group-grid-item .count {
+    font-size: 0.75rem; /* text-xs */
+    color: #64748b;
+    white-space: nowrap; /* Đảm bảo chữ "X tasks" không bị xuống dòng */
+}
+
+/* --- Task View --- */
+.task-view-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.task-view-back-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #475569;
+    font-size: 1rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+    margin-right: 8px;
+}
+.task-view-back-btn:hover {
+    background-color: #f1f5f9;
+}
+
+.task-view-title {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #1e293b;
+}
+
+#task-view-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px; /* Tăng khoảng cách cho thoáng */
+}
+
+/* Thêm style cho các task item trong view này, kế thừa từ .task-library-item */
+#task-view-content .task-library-item {
+    /* Các thuộc tính đã có trong .task-library-item */
+    /* Có thể thêm hoặc ghi đè style nếu cần */
+    text-align: center; /* Căn giữa chữ cho đẹp hơn trong ô nhỏ */
+}
+
+/* --- Hiệu ứng kéo thả cho khu vực xây dựng mẫu --- */
+#template-schedule-builder.sortable-drag-enter {
+    border-color: #6366f1; /* Màu indigo */
+    background-color: #e0e7ff; /* Nền màu xanh nhạt */
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3); /* Hiệu ứng đổ bóng nhẹ */
+}
+
+/* --- Hiệu ứng làm mờ khi kéo task --- */
+
+/* Làm mờ toàn bộ nội dung chính khi đang kéo task */
+.is-dragging-task main {
+    filter: blur(2px) grayscale(50%);
+    transition: filter 0.3s ease;
+}
+
+/* Làm cho khu vực xây dựng mẫu nổi bật trở lại */
+.is-dragging-task #template-schedule-builder {
+    position: relative; /* Cần thiết để z-index hoạt động */
+    z-index: 10; /* Đưa lên trên lớp mờ ảo */
+    filter: none; /* Bỏ hiệu ứng làm mờ */
+    transition: filter 0.3s ease, box-shadow 0.3s ease; /* Thêm transition cho mượt */
+}
+

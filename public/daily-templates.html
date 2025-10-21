@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="output.css">
+    <link rel="stylesheet" href="task-library.css"> <!-- Thêm CSS cho Task Library -->
 </head>
 <body class="flex h-screen text-gray-800">
 
@@ -59,8 +60,8 @@
                         <!-- Giao diện phân công task -->
                         <div class="form-group">
                             <label class="form-label">Phân công công việc cho mẫu</label>
-                            <div id="template-schedule-builder" class="p-4 border rounded-lg bg-slate-50 max-h-80 overflow-y-auto">
-                                <!-- Giao diện kéo-thả hoặc chọn task sẽ được JS render ở đây -->
+                            <div id="template-schedule-builder" class="p-4 border rounded-lg bg-slate-50 max-h-80 overflow-y-auto space-y-2">
+                                <!-- Các task được kéo vào đây sẽ được JS render -->
                                 <p class="text-gray-500 text-center">Chọn các nhóm công việc và kéo task vào đây để xây dựng mẫu.</p>
                             </div>
                         </div>

@@ -1,9 +1,12 @@
 import { db } from './firebase.js';
 import { collection, onSnapshot, query, orderBy, addDoc, serverTimestamp, doc, deleteDoc, updateDoc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { initializeTaskLibrary, cleanupTaskLibrary } from './task-library.js';
 
 let allTemplates = [];
 let activeListeners = [];
 let domController = null;
+let templateBuilderSortable = null; // Biến để giữ instance của SortableJS
+let allTasks = {}; // Cache lại tất cả task để tra cứu nhanh
 
 const templatesCollection = collection(db, 'daily_templates');
 
@@ -53,6 +56,27 @@ function listenForTemplates() {
 }
 
 /**
+ * Tải tất cả các task từ tất cả các nhóm để tra cứu thông tin.
+ */
+async function fetchAllTasks() {
+    if (Object.keys(allTasks).length > 0) return; // Chỉ fetch một lần
+    try {
+        const q = query(collection(db, 'task_groups'));
+        const querySnapshot = await getDocs(q);
+        querySnapshot.forEach(doc => {
+            const group = doc.data();
+            if (group.tasks && Array.isArray(group.tasks)) {
+                group.tasks.forEach(task => {
+                    if (task.code) allTasks[task.code] = { ...task, groupCode: group.code };
+                });
+            }
+        });
+    } catch (error) {
+        console.error("Lỗi khi tải danh sách tất cả task:", error);
+    }
+}
+
+/**
  * Dọn dẹp các listener khi chuyển trang.
  */
 export function cleanup() {
@@ -61,6 +85,11 @@ export function cleanup() {
     if (domController) {
         domController.abort();
     }
+    if (templateBuilderSortable) {
+        templateBuilderSortable.destroy();
+        templateBuilderSortable = null;
+    }
+    cleanupTaskLibrary(); // Dọn dẹp Task Library
 }
 
 /**
@@ -71,6 +100,7 @@ export function init() {
     const { signal } = domController;
 
     listenForTemplates();
+    initializeTaskLibrary(); // Khởi tạo Task Library
 
     const addBtn = document.getElementById('add-template-btn');
     if (addBtn) {
