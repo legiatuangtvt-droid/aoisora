@@ -1,149 +1,197 @@
 {
-  "task_areas": [
-    { "id": "POS", "name": "Khu vực Thu ngân" },
-    { "id": "MMD", "name": "Khu vực Bán hàng" },
-    { "id": "CAFE", "name": "Quầy Aeon Cafe" },
-    { "id": "KHO", "name": "Khu vực Kho" },
-    { "id": "VP", "name": "Văn phòng" }
-  ],
   "task_groups": [
-    { "id": "TBTS", "name": "Trưng Bày Tươi Sống", "description": "Các công việc liên quan đến hàng tươi sống, rau củ, thịt cá.", "area": "MMD", "taskCount": 3 },
-    { "id": "TBHK", "name": "Trưng Bày Hàng Khô", "description": "Các công việc liên quan đến hàng khô, đóng gói.", "area": "MMD", "taskCount": 1 },
-    { "id": "MKTG", "name": "Marketing & Giá", "description": "Kiểm tra, thay thế bảng giá, POP, các chương trình khuyến mãi.", "area": "MMD", "taskCount": 3 },
-    { "id": "QLTK", "name": "Quản Lý Tồn Kho", "description": "Kiểm kê, sắp xếp kho, xử lý hàng tồn.", "area": "KHO", "taskCount": 4 },
-    { "id": "VS", "name": "Vệ Sinh Chung", "description": "Các công việc vệ sinh không gian chung.", "area": "MMD", "taskCount": 3 },
-    { "id": "CAFE", "name": "Vận hành quầy Cafe", "description": "Các công việc tại quầy Aeon Cafe.", "area": "CAFE", "taskCount": 1 }
+    { "order": "1", "code": "POS", 
+      "tasks": [
+        { "order": "1", "name": "Mở POS" },
+        { "order": "2", "name": "EOD POS" },
+        { "order": "3", "name": "Chuẩn bị POS" },
+        { "order": "4", "name": "Đổi tiền lẻ" },
+        { "order": "5", "name": "Thế cơm POS Staff" },
+        { "order": "6", "name": "Hỗ trợ POS" },
+        { "order": "7", "name": "Kết ca" },
+        { "order": "8", "name": "Giao ca" },
+        { "order": "9", "name": "POS 1" },
+        { "order": "10", "name": "POS 2" },
+        { "order": "11", "name": "POS 3" },
+        { "order": "12", "name": "Thế cơm Leader" }
+      ]},
+    { "order": "2", "code": "PERI", 
+      "tasks": [
+        { "order": "1", "name": "Lên hàng thịt cá" },
+        { "order": "2", "name": "Lên hàng rau củ" },
+        { "order": "3", "name": "Lên hàng tươi sống" },
+        { "order": "4", "name": "Repack Peri" },
+        { "order": "5", "name": "Cắt gọt" },
+        { "order": "6", "name": "Hủy hàng Staff" },
+        { "order": "7", "name": "Kiểm tra HSD Tươi sống (Staff)" },
+        { "order": "8", "name": "Đặt hàng tươi sống" },
+        { "order": "9", "name": "Làm POP Peri" },
+        { "order": "10", "name": "Giảm giá Perish" }
+      ]},
+    { "order": "3", "code": "DRY",
+      "tasks": [
+        { "order": "1", "name": "Lên hàng khô" },
+        { "order": "2", "name": "Kéo mặt hàng khô" },
+        { "order": "3", "name": "Kiểm tra HSD hàng khô" },
+        { "order": "4", "name": "Bắn OOS" },
+        { "order": "5", "name": "Kéo mặt COC" },
+        { "order": "6", "name": "Làm PC/POP Dry" },
+        { "order": "7", "name": "Check tồn WH nóc kệ châm hàng" },
+        { "order": "8", "name": "Kéo mặt Grocery" },
+        { "order": "9", "name": "Kéo mặt NF-HBC HL-SL" },
+        { "order": "10", "name": "Key Auto ORD" },
+        { "order": "11", "name": "Check Auto ORD" },
+        { "order": "12", "name": "Thay POG" },
+        { "order": "13", "name": "Chuẩn bị kiểm kê năm" }
+      ]},
+    { "order": "4", "code": "MMD",
+      "tasks": [
+        { "order": "1", "name": "Nhận hàng Peri" },
+        { "order": "2", "name": "Nhận hàng Delica" },
+        { "order": "3", "name": "Nhận hàng RDC Dry" },
+        { "order": "4", "name": "Nhận hàng RDC D&D" },
+        { "order": "5", "name": "Nhận hàng D&D từ NCC" },
+        { "order": "6", "name": "Làm báo cáo hóa đơn MMD" },
+        { "order": "7", "name": "Xử lý và update GTN/GRN" }
+      ]},
+    { "order": "5", "code": "LEADER",
+      "tasks": [
+        { "order": "1", "name": "Mở kho" },
+        { "order": "2", "name": "Đóng kho" },
+        { "order": "3", "name": "Hủy hàng và update hệ thống" },
+        { "order": "4", "name": "Đặt văn phòng phẩm" },
+        { "order": "5", "name": "Balancing" },
+        { "order": "6", "name": "Kiểm tra HSD Tươi sống-Quản lý" },
+        { "order": "7", "name": "Kiểm tra PC-POP" },
+        { "order": "8", "name": "Kiểm tra hàng đổi trả" },
+        { "order": "9", "name": "Tạo và chỉnh sửa DWS" },
+        { "order": "10", "name": "Bàn giao tiền cho ngân hàng" },
+        { "order": "11", "name": "Giảm giá Peri/Dry" },
+        { "order": "12", "name": "Kiểm tra DWS" },
+        { "order": "13", "name": "Xử lý công việc quản lý" }
+      ]},
+    { "order": "6", "code": "QC-FSH",
+      "tasks": [
+        { "order": "1", "name": "5S khu vực POS" },
+        { "order": "2", "name": "5S khu vực văn phòng" },
+        { "order": "3", "name": "5S khu vực tươi sống" },
+        { "order": "4", "name": "5S khu vực MMD" },
+        { "order": "5", "name": "5S khu vực khách ngồi" },
+        { "order": "6", "name": "5S Kho hàng hóa" },
+        { "order": "7", "name": "Tổng vệ sinh Chiller với ADV" },
+        { "order": "8", "name": "Cleaning Time 09:00" },
+        { "order": "9", "name": "Cleaning Time 15:00" },
+        { "order": "10", "name": "Cleaning Time 20:00" },
+        { "order": "11", "name": "Vệ sinh máy Trà Chanh, Milo" },
+        { "order": "12", "name": "Vệ sinh máy Cafe" },
+        { "order": "13", "name": "Check nhiệt độ" },
+        { "order": "14", "name": "Vệ sinh bể tách mỡ" },
+        { "order": "15", "name": "5S Aeon Cafe" },
+        { "order": "16", "name": "5S Khu vực bếp" },
+        { "order": "17", "name": "Vệ sinh tủ lạnh cuối ngày" },
+        { "order": "18", "name": "Vệ sinh quầy kệ hàng khô" },
+        { "order": "19", "name": "Quét lau sàn" }
+      ]},
+    { "order": "7", "code": "DELICA AEON CF",
+      "tasks": [
+        { "order": "1", "name": "Pha chế Cafe" },
+        { "order": "2", "name": "Chuẩn bị Aeon Cafe đầu ngày" },
+        { "order": "3", "name": "Lên hàng Delica" },
+        { "order": "4", "name": "Kéo mặt Delica" },
+        { "order": "5", "name": "Kiểm tra HSD Delica" },
+        { "order": "6", "name": "Giảm giá Delica" },
+        { "order": "7", "name": "Kiểm tra POP Delica" },
+        { "order": "8", "name": "Đặt nguyên liệu Delica" },
+        { "order": "9", "name": "Đặt hàng Delica" },
+        { "order": "10", "name": "Chuẩn bị Aeon Cafe cho ngày hôm sau" },
+        { "order": "11", "name": "Bổ sung vật tư Aeon Cafe" },
+        { "order": "12", "name": "Kiểm kê Delica" }
+      ]},
+    { "order": "8", "code": "D&D",
+      "tasks": [
+        { "order": "1", "name": "Lên hàng D&D" },
+        { "order": "2", "name": "Kéo mặt D&D" },
+        { "order": "3", "name": "Kiểm tra HSD D&D" },
+        { "order": "4", "name": "Đặt hàng D&D" },
+        { "order": "5", "name": "Làm PC/POP D&D" }
+      ]},
+    { "order": "9", "code": "Task khác",
+      "tasks": [
+        { "order": "1", "name": "Đổi PC" },
+        { "order": "2", "name": "Đổi POP" },
+        { "order": "3", "name": "BRF Đầu ca" },
+        { "order": "4", "name": "Kiểm kê tháng Leader" },
+        { "order": "5", "name": "Kiểm kê tháng Staff" },
+        { "order": "6", "name": "Kiểm kê năm" },
+        { "order": "7", "name": "Tạo GE cho focus Item" },
+        { "order": "8", "name": "Chuẩn bị Tasting" },
+        { "order": "9", "name": "Chuẩn bị tem phụ" },
+        { "order": "10", "name": "Break Time" },
+        { "order": "11", "name": "Kiểm tra DWS" },
+        { "order": "12", "name": "Sampling" },
+        { "order": "13", "name": "Trưng POP Member Day" },
+        { "order": "14", "name": "Thu POP Member Day" },
+        { "order": "15", "name": "Giao hàng" },
+        { "order": "16", "name": "Họp hành Đào tạo Kiểm tra" }
+      ]
+    }
   ],
-  "main_tasks": [
-    { "id": "1101", "name": "Sơ chế rau củ quả", "description": "Sơ chế và đóng gói rau củ quả để trưng bày.", "groupId": "TBTS", "estimatedTime": 60 },
-    { "id": "1102", "name": "Trưng bày thịt/cá tươi", "description": "Bổ sung và sắp xếp quầy thịt, cá tươi sống.", "groupId": "TBTS", "estimatedTime": 45 },
-    { "id": "1103", "name": "Kiểm tra date hàng sữa chua", "description": "Kiểm tra hạn sử dụng của các sản phẩm sữa chua, sữa tươi.", "groupId": "TBTS", "estimatedTime": 20 },
-    { "id": "1201", "name": "Châm hàng mì gói, gia vị", "description": "Bổ sung hàng hóa cho quầy mì gói và gia vị.", "groupId": "TBHK", "estimatedTime": 40 },
-    { "id": "1202", "name": "Sắp xếp quầy bánh kẹo", "description": "Sắp xếp lại quầy bánh kẹo, đảm bảo gọn gàng, đẹp mắt.", "groupId": "TBHK", "estimatedTime": 30 },
-    { "id": "1301", "name": "Dán tem giá khuyến mãi mới", "description": "Cập nhật tem giá cho các sản phẩm trong chương trình khuyến mãi tuần.", "groupId": "MKTG", "estimatedTime": 50 },
-    { "id": "1302", "name": "Set up booth sampling", "description": "Chuẩn bị và trưng bày sản phẩm tại booth dùng thử.", "groupId": "MKTG", "estimatedTime": 30 },
-    { "id": "1401", "name": "Nhận hàng từ nhà cung cấp", "description": "Kiểm đếm và nhận hàng hóa từ nhà cung cấp tại kho.", "groupId": "QLTK", "estimatedTime": 90 },
-    { "id": "1402", "name": "Dọn dẹp, sắp xếp kho lạnh", "description": "Sắp xếp hàng hóa trong kho lạnh theo nguyên tắc FIFO.", "groupId": "QLTK", "estimatedTime": 75 },
-    { "id": "1403", "name": "In và dán tem phụ", "description": "In và dán tem phụ tiếng Việt cho các sản phẩm nhập khẩu.", "groupId": "QLTK", "estimatedTime": 120 },
-    { "id": "1501", "name": "Vệ sinh cửa kính ra vào", "description": "Lau chùi cửa kính chính và các cửa phụ.", "groupId": "VS", "estimatedTime": 20 },
-    { "id": "1502", "name": "Thu gom xe đẩy hàng", "description": "Thu gom và sắp xếp các xe đẩy hàng trong và ngoài siêu thị.", "groupId": "VS", "estimatedTime": 30 },
-    { "id": "1601", "name": "Kiểm tra nguyên liệu Cafe", "description": "Kiểm tra và châm thêm nguyên liệu (đường, sữa, syrup) tại quầy Cafe.", "groupId": "CAFE", "estimatedTime": 15 },
-    { "id": "1602", "name": "Vệ sinh máy pha cà phê", "description": "Thực hiện quy trình vệ sinh máy pha cà phê cuối ca.", "groupId": "CAFE", "estimatedTime": 25 },
-    { "id": "1603", "name": "Phục vụ khách hàng Cafe", "description": "Nhận order, pha chế và phục vụ đồ uống cho khách.", "groupId": "CAFE", "estimatedTime": 45 }
-  ],
-  "stores": [
-    { "id": "MXV-TD", "name": "Maxivelu Thủ Đức", "address": "1 Võ Văn Ngân, Thủ Đức, TP.HCM", "phone": "090 123 4567", "status": "ACTIVE" },
-    { "id": "CK-Q1", "name": "Maxivelu Quận 1", "address": "2 Nguyễn Du, Bến Nghé, Quận 1, TP.HCM", "phone": "098 765 4321", "status": "ACTIVE" },
-    { "id": "VM-BT", "name": "Maxivelu Bình Thạnh", "address": "208 Nguyễn Hữu Cảnh, Bình Thạnh, TP.HCM", "phone": "091 234 5678", "status": "PAUSED" },
-    { "id": "MXV-GV", "name": "Maxivelu Gò Vấp", "address": "19 Quang Trung, Gò Vấp, TP.HCM", "phone": "093 987 6543", "status": "ACTIVE" }
-  ],
-  "store_statuses": [
-    { "id": "ACTIVE", "name": "Hoạt động", "color": "green" },
-    { "id": "PAUSED", "name": "Tạm dừng", "color": "orange" },
-    { "id": "CLOSED", "name": "Đã đóng cửa", "color": "red" }
+  "staff": [
+    { "id": "TUNG_01", "name": "Nguyễn Văn Tùng", "roleId": "LEADER", "storeId": "AMPM_SALA", "phone": "0901234567", "status": "ACTIVE" },
+    { "id": "AN_02", "name": "Trần Thị An", "roleId": "POS", "storeId": "AMPM_SALA", "phone": "0902345678", "status": "ACTIVE" },
+    { "id": "BINH_03", "name": "Lê Văn Bình", "roleId": "MMD", "storeId": "AMPM_SALA", "phone": "0903456789", "status": "ACTIVE" },
+    { "id": "CHI_04", "name": "Phạm Thị Chi", "roleId": "CAFE", "storeId": "AMPM_SALA", "phone": "0904567890", "status": "INACTIVE" }
   ],
   "roles": [
+    { "id": "LEADER", "name": "Trưởng nhóm" },
     { "id": "POS", "name": "Thu ngân" },
     { "id": "MMD", "name": "Trưng bày hàng hóa" },
     { "id": "CAFE", "name": "Pha chế Cafe" },
-    { "id": "SUPPORT", "name": "Hỗ trợ chung" }
+    { "id": "STAFF", "name": "Nhân viên" }
   ],
-  "staff": [
-    { "id": "YSHNG_01", "name": "YOSHINAGA", "roleId": "POS", "storeId": "MXV-TD", "phone": "090 111 2222", "status": "ACTIVE" },
-    { "id": "TUNG_02", "name": "TÙNG", "roleId": "MMD", "storeId": "MXV-TD", "phone": "090 333 4444", "status": "ACTIVE" },
-    { "id": "THAO_03", "name": "THẢO", "roleId": "CAFE", "storeId": "CK-Q1", "phone": "091 555 6666", "status": "INACTIVE" },
-    { "id": "KNGOC_04", "name": "KIM NGỌC", "roleId": "POS", "storeId": "VM-BT", "phone": "093 777 8888", "status": "ACTIVE" }
+  "stores": [
+    { "id": "AMPM_SALA", "name": "AEON MaxValu Sala", "address": "Quận 2, TP.HCM", "status": "ACTIVE" },
+    { "id": "AMPM_PVH", "name": "AEON MaxValu Phạm Văn Hai", "address": "Quận Tân Bình, TP.HCM", "status": "ACTIVE" },
+    { "id": "AMPM_NVT", "name": "AEON MaxValu Nguyễn Văn Trỗi", "address": "Quận Phú Nhuận, TP.HCM", "status": "INACTIVE" }
   ],
   "staff_statuses": [
-    { "id": "ACTIVE", "name": "Đang làm việc", "color": "green" },
-    { "id": "INACTIVE", "name": "Đã nghỉ việc", "color": "red" }
+    { "id": "ACTIVE", "name": "Đang hoạt động", "color": "green" },
+    { "id": "INACTIVE", "name": "Ngừng hoạt động", "color": "red" }
   ],
-  "shifts": [
-    { "id": "V0612", "name": "Ca Sáng 1 (6h-12h)", "startTime": "06:00", "endTime": "12:00" },
-    { "id": "V0713", "name": "Ca Sáng 2 (7h-13h)", "startTime": "07:00", "endTime": "13:00" },
-    { "id": "V0814", "name": "Ca Sáng 3 (8h-14h)", "startTime": "08:00", "endTime": "14:00" },
-    { "id": "V0915", "name": "Ca Hành chính (9h-15h)", "startTime": "09:00", "endTime": "15:00" },
-    { "id": "C1420", "name": "Ca Chiều 1 (14h-20h)", "startTime": "14:00", "endTime": "20:00" },
-    { "id": "C1521", "name": "Ca Chiều 2 (15h-21h)", "startTime": "15:00", "endTime": "21:00" }
+  "store_statuses": [
+    { "id": "ACTIVE", "name": "Đang hoạt động", "color": "green" },
+    { "id": "INACTIVE", "name": "Tạm đóng cửa", "color": "gray" }
   ],
   "schedules": [
     {
-      "date": "2025-10-20",
-      "staffId": "YSHNG_01",
-      "tasks": [
-        { "id": "1301", "startAt": "09:00", "endAt": "09:50" },
-        { "id": "1502", "startAt": "10:00", "endAt": "10:30" },
-        { "id": "1501", "startAt": "11:00", "endAt": "11:20" },
-        { "id": "1302", "startAt": "13:00", "endAt": "13:30" }
-      ]
+      "date": "2024-07-28",
+      "staffId": "AN_02",
+      "shift": "Ca Sáng (06:00 - 14:00)",
+      "tasks": {
+        "06:00": [{ "id": "10101", "name": "Mở POS" }],
+        "07:00": [{ "id": "10104", "name": "Đổi tiền lẻ" }],
+        "12:00": [{ "id": "10105", "name": "Thế cơm POS Staff" }]
+      }
     },
     {
-      "date": "2025-10-20",
-      "staffId": "TUNG_02",
-      "tasks": [
-        { "id": "1101", "startAt": "09:00", "endAt": "10:00" },
-        { "id": "1201", "startAt": "10:00", "endAt": "10:40" },
-        { "id": "1102", "startAt": "10:40", "endAt": "11:25" },
-        { "id": "1202", "startAt": "14:00", "endAt": "14:30" }
-      ]
+      "date": "2024-07-28",
+      "staffId": "BINH_03",
+      "shift": "Ca Sáng (06:00 - 14:00)",
+      "tasks": {
+        "07:00": [{ "id": "10201", "name": "Lên hàng thịt cá" }],
+        "08:00": [{ "id": "10202", "name": "Lên hàng rau củ" }]
+      }
     },
     {
-      "date": "2025-10-21",
-      "staffId": "KNGOC_04",
-      "tasks": [
-        { "id": "1601", "startAt": "15:00", "endAt": "15:15" },
-        { "id": "1602", "startAt": "15:15", "endAt": "15:40" },
-        { "id": "1603", "startAt": "16:00", "endAt": "16:45" },
-        { "id": "1501", "startAt": "18:00", "endAt": "18:20" }
-      ]
-    },
-    {
-      "date": "2025-10-22",
-      "staffId": "YSHNG_01",
-      "tasks": [
-        { "id": "1301", "startAt": "09:00", "endAt": "09:50" },
-        { "id": "1502", "startAt": "11:00", "endAt": "11:30" },
-        { "id": "1302", "startAt": "14:00", "endAt": "14:30" }
-      ]
-    },
-    {
-      "date": "2025-10-23",
-      "staffId": "TUNG_02",
-      "tasks": [
-        { "id": "1401", "startAt": "10:00", "endAt": "11:30" },
-        { "id": "1402", "startAt": "13:00", "endAt": "14:15" },
-        { "id": "1103", "startAt": "15:00", "endAt": "15:20" }
-      ]
-    },
-    {
-      "date": "2025-10-24",
-      "staffId": "KNGOC_04",
-      "tasks": [
-        { "id": "1603", "startAt": "16:00", "endAt": "16:45" },
-        { "id": "1601", "startAt": "16:45", "endAt": "17:00" },
-        { "id": "1602", "startAt": "18:00", "endAt": "18:25" },
-        { "id": "1501", "startAt": "20:00", "endAt": "20:20" }
-      ]
-    },
-    {
-      "date": "2025-10-25",
-      "staffId": "YSHNG_01",
-      "tasks": [
-        { "id": "1301", "startAt": "10:00", "endAt": "10:50" },
-        { "id": "1502", "startAt": "10:50", "endAt": "11:20" },
-        { "id": "1302", "startAt": "11:20", "endAt": "11:50" }
-      ]
-    },
-    {
-      "date": "2025-10-27",
-      "staffId": "TUNG_02",
-      "tasks": [
-        { "id": "1101", "startAt": "09:00", "endAt": "10:00" },
-        { "id": "1102", "startAt": "10:00", "endAt": "10:45" },
-        { "id": "1103", "startAt": "10:45", "endAt": "11:05" },
-        { "id": "1201", "startAt": "13:00", "endAt": "13:40" },
-        { "id": "1202", "startAt": "13:40", "endAt": "14:10" }
-      ]
+      "date": "2024-07-29",
+      "staffId": "TUNG_01",
+      "shift": "Ca Hành chính (08:00 - 17:00)",
+      "tasks": {
+        "08:00": [{ "id": "10501", "name": "Mở kho" }],
+        "09:00": [{ "id": "10509", "name": "Tạo và chỉnh sửa DWS" }]
+      }
     }
   ]
 }
+    
+  

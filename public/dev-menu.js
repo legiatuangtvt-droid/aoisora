@@ -223,7 +223,7 @@ function initializeDevMenu() {
 
             // --- Bước 1: Xóa dữ liệu cũ ---
             window.showToast('Bước 1/2: Đang xóa dữ liệu cũ...', 'info');
-            const collectionsToDelete = ['task_areas', 'task_groups', 'main_tasks', 'stores', 'store_statuses', 'roles', 'staff', 'staff_statuses', 'schedules'];
+            const collectionsToDelete = ['task_groups', 'staff', 'roles', 'stores', 'staff_statuses', 'store_statuses', 'schedules'];
             
             const deleteBatch = writeBatch(db);
             for (const collName of collectionsToDelete) {
@@ -239,73 +239,16 @@ function initializeDevMenu() {
             window.showToast('Bước 2/2: Đang nhập dữ liệu mới...', 'info');
             const addBatch = writeBatch(db);
 
-            // Seed Task Areas
-            data.task_areas?.forEach(area => {
-                if (area.id && area.name) {
-                    const docRef = doc(db, 'task_areas', area.id);
-                    addBatch.set(docRef, { name: area.name });
-                }
-            });
-
             // Seed Task Groups
             data.task_groups?.forEach(group => {
-                if (group.id && group.name) {
-                    const docRef = doc(db, 'task_groups', group.id);
+                // Sử dụng 'code' làm ID document để đảm bảo tính duy nhất
+                if (group.code && group.tasks) {
+                    const docRef = doc(db, 'task_groups', group.code);
                     addBatch.set(docRef, {
-                        name: group.name,
-                        description: group.description || '',
-                        area: group.area || '',
-                        taskCount: group.taskCount || 0,
+                        order: group.order,
+                        code: group.code,
+                        tasks: group.tasks, // Lưu toàn bộ mảng tasks vào document
                         createdAt: serverTimestamp()
-                    });
-                }
-            });
-
-            // Seed Main Tasks
-            data.main_tasks?.forEach(task => {
-                if (task.id && task.name) {
-                    const docRef = doc(db, 'main_tasks', task.id);
-                    addBatch.set(docRef, {
-                        name: task.name,
-                        description: task.description || '',
-                        groupId: task.groupId || '',
-                        estimatedTime: task.estimatedTime || 15,
-                        createdAt: serverTimestamp()
-                    });
-                }
-            });
-
-            // Seed Stores
-            data.stores?.forEach(store => {
-                if (store.id && store.name) {
-                    const docRef = doc(db, 'stores', store.id);
-                    addBatch.set(docRef, {
-                        name: store.name,
-                        address: store.address || '',
-                        phone: store.phone || '',
-                        status: store.status || 'ACTIVE',
-                        createdAt: serverTimestamp()
-                    });
-                }
-            });
-
-            // Seed Store Statuses
-            data.store_statuses?.forEach(status => {
-                if (status.id && status.name) {
-                    const docRef = doc(db, 'store_statuses', status.id);
-                    addBatch.set(docRef, {
-                        name: status.name,
-                        color: status.color || 'gray'
-                    });
-                }
-            });
-
-            // Seed Roles
-            data.roles?.forEach(role => {
-                if (role.id && role.name) {
-                    const docRef = doc(db, 'roles', role.id);
-                    addBatch.set(docRef, {
-                        name: role.name
                     });
                 }
             });
@@ -325,27 +268,48 @@ function initializeDevMenu() {
                 }
             });
 
-            // Seed Staff Statuses
-            data.staff_statuses?.forEach(status => {
-                if (status.id && status.name) {
-                    const docRef = doc(db, 'staff_statuses', status.id);
+            // Seed Roles
+            data.roles?.forEach(role => {
+                if (role.id && role.name) {
+                    const docRef = doc(db, 'roles', role.id);
+                    addBatch.set(docRef, { name: role.name });
+                }
+            });
+
+            // Seed Stores
+            data.stores?.forEach(store => {
+                if (store.id && store.name) {
+                    const docRef = doc(db, 'stores', store.id);
                     addBatch.set(docRef, {
-                        name: status.name,
-                        color: status.color || 'gray'
+                        name: store.name,
+                        address: store.address || '',
+                        status: store.status || 'ACTIVE'
                     });
                 }
             });
 
+            // Seed Staff Statuses
+            data.staff_statuses?.forEach(status => {
+                if (status.id && status.name) {
+                    const docRef = doc(db, 'staff_statuses', status.id);
+                    addBatch.set(docRef, { name: status.name, color: status.color || 'gray' });
+                }
+            });
+
+            // Seed Store Statuses
+            data.store_statuses?.forEach(status => {
+                if (status.id && status.name) {
+                    const docRef = doc(db, 'store_statuses', status.id);
+                    addBatch.set(docRef, { name: status.name, color: status.color || 'gray' });
+                }
+            });
+
             // Seed Schedules
-            data.schedules?.forEach((schedule, index) => {
+            data.schedules?.forEach(schedule => {
                 if (schedule.date && schedule.staffId) {
-                    // Tạo ID tự động cho document để tránh trùng lặp
+                    // Tạo ID tự động cho lịch làm việc để tránh trùng lặp
                     const docRef = doc(collection(db, 'schedules'));
-                    addBatch.set(docRef, {
-                        date: schedule.date,
-                        staffId: schedule.staffId,
-                        tasks: schedule.tasks || {}
-                    });
+                    addBatch.set(docRef, schedule);
                 }
             });
 
