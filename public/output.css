@@ -2740,6 +2740,16 @@ html, body {
     padding-left: 2rem;
     padding-right: 2rem;
   }
+
+  .lg\:py-4 {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  .lg\:px-6 {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
 }
 
 @media (min-width: 1280px) {

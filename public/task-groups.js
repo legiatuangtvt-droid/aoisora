@@ -91,9 +91,9 @@ function renderStatistics(taskGroups) {
 
     statsContainer.innerHTML = stats.map(stat => `
         <div class="stat-card flex items-baseline gap-3 border border-gray-200 p-4">
-            <div class="stat-icon text-gray-500"><i class="fas fa-lg ${stat.icon}"></i></div>
-            <p class="text-sm font-medium text-gray-600 whitespace-nowrap">${stat.title}:</p>
-            <p class="text-xl font-bold text-gray-900">${stat.value}</p>
+            <div class="stat-icon text-gray-500"><i class="fas ${stat.icon}"></i></div>
+            <p class="text-xs font-medium text-gray-600 whitespace-nowrap">${stat.title}:</p>
+            <p class="text-lg font-bold text-gray-900">${stat.value}</p>
         </div>
     `).join('');
 }
