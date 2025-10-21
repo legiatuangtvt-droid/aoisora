@@ -1,6 +1,6 @@
 {
   "task_groups": [
-    { "order": "1", "code": "POS", "color": "gray",
+    { "order": "1", "code": "POS", "color": "slate",
       "tasks": [
         { "order": "1", "name": "Mở POS" },
         { "order": "2", "name": "EOD POS" },
@@ -15,7 +15,7 @@
         { "order": "11", "name": "POS 3" },
         { "order": "12", "name": "Thế cơm Leader" }
       ]},
-    { "order": "2", "code": "PERI", 
+    { "order": "2", "code": "PERI", "color": "green",
       "tasks": [
         { "order": "1", "name": "Lên hàng thịt cá" },
         { "order": "2", "name": "Lên hàng rau củ" },
@@ -28,7 +28,7 @@
         { "order": "9", "name": "Làm POP Peri" },
         { "order": "10", "name": "Giảm giá Perish" }
       ]},
-    { "order": "3", "code": "DRY",
+    { "order": "3", "code": "DRY", "color": "blue",
       "tasks": [
         { "order": "1", "name": "Lên hàng khô" },
         { "order": "2", "name": "Kéo mặt hàng khô" },
@@ -44,7 +44,7 @@
         { "order": "12", "name": "Thay POG" },
         { "order": "13", "name": "Chuẩn bị kiểm kê năm" }
       ]},
-    { "order": "4", "code": "MMD",
+    { "order": "4", "code": "MMD", "color": "amber",
       "tasks": [
         { "order": "1", "name": "Nhận hàng Peri" },
         { "order": "2", "name": "Nhận hàng Delica" },
@@ -54,7 +54,7 @@
         { "order": "6", "name": "Làm báo cáo hóa đơn MMD" },
         { "order": "7", "name": "Xử lý và update GTN/GRN" }
       ]},
-    { "order": "5", "code": "LEADER",
+    { "order": "5", "code": "LEADER", "color": "teal",
       "tasks": [
         { "order": "1", "name": "Mở kho" },
         { "order": "2", "name": "Đóng kho" },
@@ -70,7 +70,7 @@
         { "order": "12", "name": "Kiểm tra DWS" },
         { "order": "13", "name": "Xử lý công việc quản lý" }
       ]},
-    { "order": "6", "code": "QC-FSH",
+    { "order": "6", "code": "QC-FSH", "color": "purple",
       "tasks": [
         { "order": "1", "name": "5S khu vực POS" },
         { "order": "2", "name": "5S khu vực văn phòng" },
@@ -92,7 +92,7 @@
         { "order": "18", "name": "Vệ sinh quầy kệ hàng khô" },
         { "order": "19", "name": "Quét lau sàn" }
       ]},
-    { "order": "7", "code": "DELICA AEON CF",
+    { "order": "7", "code": "DELICA AEON CF", "color": "indigo",
       "tasks": [
         { "order": "1", "name": "Pha chế Cafe" },
         { "order": "2", "name": "Chuẩn bị Aeon Cafe đầu ngày" },
@@ -107,7 +107,7 @@
         { "order": "11", "name": "Bổ sung vật tư Aeon Cafe" },
         { "order": "12", "name": "Kiểm kê Delica" }
       ]},
-    { "order": "8", "code": "D&D",
+    { "order": "8", "code": "D&D", "color": "red",
       "tasks": [
         { "order": "1", "name": "Lên hàng D&D" },
         { "order": "2", "name": "Kéo mặt D&D" },
@@ -115,7 +115,7 @@
         { "order": "4", "name": "Đặt hàng D&D" },
         { "order": "5", "name": "Làm PC/POP D&D" }
       ]},
-    { "order": "9", "code": "Task khác",
+    { "order": "9", "code": "Task khác", "color": "pink",
       "tasks": [
         { "order": "1", "name": "Đổi PC" },
         { "order": "2", "name": "Đổi POP" },

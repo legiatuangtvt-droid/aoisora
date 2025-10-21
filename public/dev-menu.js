@@ -247,6 +247,7 @@ function initializeDevMenu() {
                     addBatch.set(docRef, {
                         order: group.order,
                         code: group.code,
+                        color: group.color || 'slate', // Thêm trường color
                         tasks: group.tasks, // Lưu toàn bộ mảng tasks vào document
                         createdAt: serverTimestamp()
                     });

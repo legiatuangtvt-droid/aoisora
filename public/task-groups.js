@@ -82,7 +82,7 @@ function renderGroupCards(taskGroups) {
     const defaultTaskColor = colorPalette.find(c => c.name === 'slate') || colorPalette[0];
 
     groupsContainer.innerHTML = taskGroups.map(group => {
-        const currentColorName = savedColors[group.code] || 'slate';
+        const currentColorName = savedColors[group.code] || group.color || 'slate';
         const color = colorPalette.find(c => c.name === currentColorName) || colorPalette[0];
 
         const headerCell = `
