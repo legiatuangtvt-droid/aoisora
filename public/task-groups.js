@@ -130,22 +130,38 @@ function renderGroupCards(taskGroups) {
             </div>
         `;
 
-        const taskCells = (group.tasks || []).map(task => {
-            // Tạo mã code theo công thức: 1<group.order><task.order (2 chữ số)>
-            const generatedCode = `1${group.order}${String(task.order).padStart(2, '0')}`;
+        const sortedTasks = (group.tasks || []).sort((a, b) => a.order - b.order);
+        let taskCells = '';
+        for (let i = 0; i < sortedTasks.length; i += 4) {
+            const chunk = sortedTasks.slice(i, i + 4);
+            
+            const orderRow = chunk.map(task => `
+                <div class="w-[70px] text-center text-sm font-semibold text-slate-600">${task.order}</div>
+            `).join('<div class="w-3"></div>'); // Spacer
 
-            return `
-                <div class="task-card ${defaultTaskColor.bg} rounded ${defaultTaskColor.border} flex flex-col items-center justify-between text-center aspect-square w-28 h-28 flex-shrink-0 transition-all ${defaultTaskColor.hover} hover:shadow-md cursor-pointer" data-task-order="${task.order}">
-                    <div class="w-full text-xs font-semibold py-0.5 bg-black/10 rounded-t">
-                        Order: ${task.order}
+            const taskRow = chunk.map(task => {
+                const generatedCode = `1${group.order}${String(task.order).padStart(2, '0')}`;
+                return `
+                    <div class="task-card ${defaultTaskColor.bg} rounded ${defaultTaskColor.border} flex flex-col items-center justify-between text-center w-[70px] h-[100px] flex-shrink-0 transition-all ${defaultTaskColor.hover} hover:shadow-md cursor-pointer" data-task-order="${task.order}">
+                        <div class="flex-1 flex flex-col justify-center items-center px-1 pt-2 pb-1">
+                            <p class="text-sm font-medium text-slate-800 leading-tight">${task.name}</p>
+                        </div>
+                        <p class="text-xs font-semibold text-slate-500 pb-1.5">${generatedCode}</p>
                     </div>
-                    <p class="text-sm font-medium text-slate-800 leading-tight px-2">${task.name}</p>
-                    <div class="w-full text-xs font-semibold py-0.5 bg-black/10 rounded-b">
-                        ${generatedCode}
+                `;
+            }).join('');
+
+            taskCells += `
+                <div class="task-chunk flex flex-col flex-shrink-0 border-y border-r border-gray-200 bg-white">
+                    <div class="flex flex-nowrap bg-green-100 py-1">
+                        ${orderRow}
+                    </div>
+                    <div class="flex flex-nowrap gap-3 p-2">
+                        ${taskRow}
                     </div>
                 </div>
             `;
-        }).join('');
+        }
 
         const actionCell = `
             <div class="action-card flex flex-col items-center justify-center gap-4 text-center aspect-square w-28 h-28 flex-shrink-0 bg-slate-50 border border-slate-200 rounded-lg">
@@ -161,7 +177,7 @@ function renderGroupCards(taskGroups) {
         return `
             <div class="group-row flex items-start gap-4 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
                 ${headerCell}
-                <div class="tasks-scroll-container flex-1 overflow-x-auto"><div class="tasks-list-inner flex flex-nowrap gap-3">${taskCells}</div></div>
+                <div class="tasks-scroll-container flex-1 overflow-x-auto"><div class="tasks-list-inner flex flex-nowrap">${taskCells}</div></div>
                 ${actionCell}
             </div>
         `;
