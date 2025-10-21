@@ -116,12 +116,9 @@ function renderGroupCards(taskGroups) {
         const color = colorPalette.find(c => c.name === currentColorName) || colorPalette[0];
 
         const headerCell = `
-            <div class="group-order-card bg-slate-100 text-slate-800 p-2 rounded border border-slate-200 flex flex-col items-center justify-center text-center w-24 h-[146px] flex-shrink-0">
-                <p class="font-bold text-3xl">${group.order}</p>
-            </div>
             <div class="group-code-card ${color.bg} text-slate-800 rounded ${color.border} flex flex-col items-center justify-between text-center w-28 h-[146px] flex-shrink-0 cursor-pointer transition-colors ${color.hover}" data-group-code="${group.code}">
                 <div class="w-full text-xs font-semibold py-0.5 bg-black/10 rounded-t">
-                    Group Task
+                    Group Task ${group.order}
                 </div>
                 <h3 class="font-bold text-2xl">${group.code}</h3>
                 <div class="w-full text-xs font-semibold py-0.5 bg-black/10 rounded-b">
