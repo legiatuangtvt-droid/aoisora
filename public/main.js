@@ -8,6 +8,7 @@ const pageModules = {
     'main-tasks.html': './main-tasks.js',
     'store.html': './store.js',
     'staff.html': './staff.js',
+    'daily-templates.html': './daily-templates.js',
     'daily-schedule.html': './daily-schedule.js',
 };
 

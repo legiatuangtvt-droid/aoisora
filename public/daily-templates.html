@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="logo.png" type="image/png">
+    <title>Quản Lý Mẫu Ngày - AoiSora</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="output.css">
+</head>
+<body class="flex h-screen text-gray-800">
+
+    <!-- Sidebar Placeholder -->
+    <div id="sidebar-placeholder"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Header Placeholder -->
+        <div id="header-placeholder"></div>
+
+        <!-- Content Area -->
+        <main class="flex-1 overflow-auto p-6">
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <!-- Toolbar -->
+                <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+                    <h2 class="text-lg font-semibold text-gray-700">Danh Sách Mẫu Phân Công Ngày</h2>
+                    <button id="add-template-btn" class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
+                        <i class="fas fa-plus mr-2"></i> Tạo Mẫu Mới
+                    </button>
+                </div>
+
+                <!-- Template List Container -->
+                <div id="templates-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Các thẻ mẫu sẽ được JS render vào đây -->
+                </div>
+            </div>
+
+            <!-- MODAL: Thêm/Sửa Mẫu Ngày -->
+            <div id="template-modal" class="modal-overlay hidden">
+                <div class="modal-content max-w-5xl">
+                    <div class="modal-header">
+                        <h3 id="template-modal-title" class="modal-title"><i class="fas fa-file-alt mr-2 text-indigo-500"></i> Tạo Mẫu Mới</h3>
+                        <button class="modal-close-btn"><i class="fas fa-times text-lg"></i></button>
+                    </div>
+                    <form class="modal-form" id="template-form">
+                        <input type="hidden" id="template-id">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div class="form-group p-0 m-0">
+                                <label for="template-name" class="form-label">Tên Mẫu (*)</label>
+                                <input type="text" id="template-name" required class="form-input" placeholder="Ví dụ: Ngày thường, Cuối tuần, Ngày lễ...">
+                            </div>
+                            <div class="form-group p-0 m-0">
+                                <label for="template-description" class="form-label">Mô tả</label>
+                                <input type="text" id="template-description" class="form-input" placeholder="Mô tả ngắn về mẫu này">
+                            </div>
+                        </div>
+
+                        <!-- Giao diện phân công task -->
+                        <div class="form-group">
+                            <label class="form-label">Phân công công việc cho mẫu</label>
+                            <div id="template-schedule-builder" class="p-4 border rounded-lg bg-slate-50 max-h-80 overflow-y-auto">
+                                <!-- Giao diện kéo-thả hoặc chọn task sẽ được JS render ở đây -->
+                                <p class="text-gray-500 text-center">Chọn các nhóm công việc và kéo task vào đây để xây dựng mẫu.</p>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn-secondary modal-close-btn">Hủy</button>
+                            <button type="submit" id="template-form-submit-btn" class="btn btn-indigo">
+                                <i class="fas fa-save mr-1"></i> Lưu Mẫu
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <script type="module" src="layout.js"></script>
+    <script type="module" src="main.js"></script>
+</body>
+</html>

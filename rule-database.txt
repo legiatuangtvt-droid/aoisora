@@ -44,5 +44,10 @@ service cloud.firestore {
     match /schedules/{scheduleId} {
       allow read, write: if true;
     }
+
+    // Cho phép đọc/ghi vào collection mẫu lịch hàng ngày
+    match /daily_templates/{templateId} {
+      allow read, write: if true;
+    }
   }
 }
