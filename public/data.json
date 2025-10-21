@@ -1,6 +1,6 @@
 {
   "task_groups": [
-    { "order": "1", "code": "POS", 
+    { "order": "1", "code": "POS", "color": "gray",
       "tasks": [
         { "order": "1", "name": "Mở POS" },
         { "order": "2", "name": "EOD POS" },

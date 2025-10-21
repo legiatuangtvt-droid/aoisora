@@ -51,18 +51,18 @@ function renderStatistics(taskGroups) {
     const totalTasks = taskGroups.reduce((sum, group) => sum + (group.tasks?.length || 0), 0);
 
     const stats = [
-        { title: 'Tổng số Task', value: totalTasks, icon: 'fa-tasks', color: 'bg-blue-500' },
-        { title: 'Daily Task', value: 'N/A', icon: 'fa-sun', color: 'bg-yellow-500' },
-        { title: 'Weekly', value: 'N/A', icon: 'fa-calendar-week', color: 'bg-green-500' },
-        { title: 'Monthly', value: 'N/A', icon: 'fa-calendar-alt', color: 'bg-purple-500' },
-        { title: 'Yearly', value: 'N/A', icon: 'fa-calendar-check', color: 'bg-red-500' },
-        { title: 'Khác', value: 'N/A', icon: 'fa-asterisk', color: 'bg-gray-500' }
+        { title: 'Tổng số Task', value: totalTasks, icon: 'fa-tasks' },
+        { title: 'Daily Task', value: 'N/A', icon: 'fa-sun' },
+        { title: 'Weekly', value: 'N/A', icon: 'fa-calendar-week' },
+        { title: 'Monthly', value: 'N/A', icon: 'fa-calendar-alt' },
+        { title: 'Yearly', value: 'N/A', icon: 'fa-calendar-check' },
+        { title: 'Khác', value: 'N/A', icon: 'fa-asterisk' }
     ];
 
     statsContainer.innerHTML = stats.map(stat => `
         <div class="stat-card flex items-baseline gap-3 border border-gray-200 p-4">
-            <div class="stat-icon ${stat.color}"><i class="fas ${stat.icon}"></i></div>
-            <p class="text-sm font-medium text-gray-600">${stat.title}:</p>
+            <div class="stat-icon text-gray-500"><i class="fas fa-lg ${stat.icon}"></i></div>
+            <p class="text-sm font-medium text-gray-600 whitespace-nowrap">${stat.title}:</p>
             <p class="text-xl font-bold text-gray-900">${stat.value}</p>
         </div>
     `).join('');
@@ -86,10 +86,10 @@ function renderGroupCards(taskGroups) {
         const color = colorPalette.find(c => c.name === currentColorName) || colorPalette[0];
 
         const headerCell = `
-            <div class="group-order-card bg-slate-100 text-slate-800 p-2 rounded border border-slate-200 flex flex-col items-center justify-center text-center aspect-square w-24 h-24 flex-shrink-0">
+            <div class="group-order-card bg-slate-100 text-slate-800 p-2 rounded border border-slate-200 flex flex-col items-center justify-center text-center aspect-square w-28 h-28 flex-shrink-0">
                 <p class="font-bold text-4xl">${group.order}</p>
             </div>
-            <div class="group-code-card ${color.bg} text-slate-800 rounded ${color.border} flex flex-col items-center justify-between text-center aspect-square w-24 h-24 flex-shrink-0 cursor-pointer transition-colors ${color.hover}" data-group-code="${group.code}">
+            <div class="group-code-card ${color.bg} text-slate-800 rounded ${color.border} flex flex-col items-center justify-between text-center aspect-square w-28 h-28 flex-shrink-0 cursor-pointer transition-colors ${color.hover}" data-group-code="${group.code}">
                 <div class="w-full text-xs font-semibold py-0.5 bg-black/10 rounded-t">
                     Group Task
                 </div>
@@ -105,7 +105,7 @@ function renderGroupCards(taskGroups) {
             const generatedCode = `1${group.order}${String(task.order).padStart(2, '0')}`;
 
             return `
-                <div class="task-card ${defaultTaskColor.bg} rounded ${defaultTaskColor.border} flex flex-col items-center justify-between text-center aspect-square w-24 h-24 flex-shrink-0 transition-all ${defaultTaskColor.hover} hover:shadow-md">
+                <div class="task-card ${defaultTaskColor.bg} rounded ${defaultTaskColor.border} flex flex-col items-center justify-between text-center aspect-square w-28 h-28 flex-shrink-0 transition-all ${defaultTaskColor.hover} hover:shadow-md">
                     <div class="w-full text-xs font-semibold py-0.5 bg-black/10 rounded-t">
                         Order: ${task.order}
                     </div>
@@ -118,7 +118,7 @@ function renderGroupCards(taskGroups) {
         }).join('');
 
         const actionCell = `
-            <div class="action-card flex flex-col items-center justify-center gap-4 text-center aspect-square w-24 h-24 flex-shrink-0 bg-slate-50 border border-slate-200 rounded-lg">
+            <div class="action-card flex flex-col items-center justify-center gap-4 text-center aspect-square w-28 h-28 flex-shrink-0 bg-slate-50 border border-slate-200 rounded-lg">
                 <button class="add-task-to-group-btn text-slate-500 hover:text-blue-600 transition-colors" data-group-code="${group.code}" title="Thêm Task vào nhóm ${group.code}">
                     <i class="fas fa-plus fa-2x"></i>
                 </button>
