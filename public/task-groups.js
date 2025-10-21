@@ -116,10 +116,10 @@ function renderGroupCards(taskGroups) {
         const color = colorPalette.find(c => c.name === currentColorName) || colorPalette[0];
 
         const headerCell = `
-            <div class="group-order-card bg-slate-100 text-slate-800 p-2 rounded border border-slate-200 flex flex-col items-center justify-center text-center aspect-square w-28 h-28 flex-shrink-0">
+            <div class="group-order-card bg-slate-100 text-slate-800 p-2 rounded border border-slate-200 flex flex-col items-center justify-center text-center w-28 h-[161px] flex-shrink-0">
                 <p class="font-bold text-4xl">${group.order}</p>
             </div>
-            <div class="group-code-card ${color.bg} text-slate-800 rounded ${color.border} flex flex-col items-center justify-between text-center aspect-square w-28 h-28 flex-shrink-0 cursor-pointer transition-colors ${color.hover}" data-group-code="${group.code}">
+            <div class="group-code-card ${color.bg} text-slate-800 rounded ${color.border} flex flex-col items-center justify-between text-center w-28 h-[161px] flex-shrink-0 cursor-pointer transition-colors ${color.hover}" data-group-code="${group.code}">
                 <div class="w-full text-xs font-semibold py-0.5 bg-black/10 rounded-t">
                     Group Task
                 </div>
@@ -136,7 +136,7 @@ function renderGroupCards(taskGroups) {
             const chunk = sortedTasks.slice(i, i + 4);
             
             const orderRow = chunk.map(task => `
-                <div class="w-[70px] text-center text-sm font-semibold text-slate-600">${task.order}</div>
+                <div class="w-[70px] text-center text-sm font-semibold text-green-800">${task.order}</div>
             `).join('<div class="w-3"></div>'); // Spacer
 
             const taskRow = chunk.map(task => {
@@ -153,7 +153,7 @@ function renderGroupCards(taskGroups) {
 
             taskCells += `
                 <div class="task-chunk flex flex-col flex-shrink-0 border-y border-r border-gray-200 bg-white">
-                    <div class="flex flex-nowrap bg-green-100 py-1">
+                    <div class="flex flex-nowrap bg-green-200 py-1">
                         ${orderRow}
                     </div>
                     <div class="flex flex-nowrap gap-3 p-2">
@@ -164,7 +164,7 @@ function renderGroupCards(taskGroups) {
         }
 
         const actionCell = `
-            <div class="action-card flex flex-col items-center justify-center gap-4 text-center aspect-square w-28 h-28 flex-shrink-0 bg-slate-50 border border-slate-200 rounded-lg">
+            <div class="action-card flex flex-col items-center justify-center gap-4 text-center w-28 h-[161px] flex-shrink-0 bg-slate-50 border border-slate-200 rounded-lg">
                 <button class="add-task-to-group-btn text-slate-500 hover:text-blue-600 transition-colors" data-group-code="${group.code}" title="Thêm Task vào nhóm ${group.code}">
                     <i class="fas fa-plus fa-2x"></i>
                 </button>

@@ -873,6 +873,14 @@ video {
   height: 100px;
 }
 
+.h-\[195px\] {
+  height: 195px;
+}
+
+.h-\[161px\] {
+  height: 161px;
+}
+
 .max-h-80 {
   max-height: 20rem;
 }
@@ -1466,6 +1474,11 @@ video {
 .bg-yellow-100 {
   --tw-bg-opacity: 1;
   background-color: rgb(254 249 195 / var(--tw-bg-opacity, 1));
+}
+
+.bg-green-200 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(187 247 208 / var(--tw-bg-opacity, 1));
 }
 
 .bg-opacity-50 {
