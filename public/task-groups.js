@@ -151,8 +151,10 @@ function renderGroupCards(taskGroups) {
                 `;
             }).join('');
 
+            const borderClass = (i === 0) ? 'border-l' : ''; // Thêm border trái cho cụm đầu tiên
+
             taskCells += `
-                <div class="task-chunk flex flex-col flex-shrink-0 border-y border-r border-gray-200 bg-white">
+                <div class="task-chunk flex flex-col flex-shrink-0 border-y border-r border-gray-200 bg-white ${borderClass}">
                     <div class="flex flex-nowrap bg-green-200 py-1">
                         ${orderRow}
                     </div>
