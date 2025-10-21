@@ -881,6 +881,10 @@ video {
   height: 161px;
 }
 
+.h-\[146px\] {
+  height: 146px;
+}
+
 .max-h-80 {
   max-height: 20rem;
 }
@@ -923,6 +927,10 @@ video {
 
 .w-3 {
   width: 0.75rem;
+}
+
+.w-24 {
+  width: 6rem;
 }
 
 .min-w-\[250px\] {
@@ -1679,6 +1687,11 @@ video {
 .text-xs {
   font-size: 0.75rem;
   line-height: 1rem;
+}
+
+.text-3xl {
+  font-size: 1.875rem;
+  line-height: 2.25rem;
 }
 
 .font-bold {
