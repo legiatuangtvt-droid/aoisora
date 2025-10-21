@@ -560,6 +560,29 @@ video {
   display: none;
 }
 
+#sidebar {
+  width: 5rem;
+  /* Chiều rộng mặc định khi thu gọn */
+}
+
+#sidebar .sidebar-text {
+  width: 0px;
+  opacity: 0;
+  transition-property: opacity;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+body.sidebar-expanded #sidebar {
+  width: 16rem;
+  /* Chiều rộng khi mở rộng */
+}
+
+body.sidebar-expanded #sidebar .sidebar-text {
+  width: auto;
+  opacity: 1;
+}
+
 .\!container {
   width: 100% !important;
 }
@@ -616,6 +639,21 @@ video {
   .container {
     max-width: 1536px;
   }
+}
+
+#sidebar-pin-btn.pinned {
+  --tw-bg-opacity: 1;
+  background-color: rgb(51 65 85 / var(--tw-bg-opacity, 1));
+  --tw-text-opacity: 1;
+  color: rgb(74 222 128 / var(--tw-text-opacity, 1));
+}
+
+#sidebar-pin-btn.pinned i {
+  --tw-rotate: 45deg;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+  transition-property: transform;
+  transition-duration: 300ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sr-only {
@@ -757,6 +795,10 @@ video {
   margin-left: 0.75rem;
 }
 
+.ml-auto {
+  margin-left: auto;
+}
+
 .mr-1 {
   margin-right: 0.25rem;
 }
@@ -845,6 +887,10 @@ video {
   height: 1.5rem;
 }
 
+.h-8 {
+  height: 2rem;
+}
+
 .h-9 {
   height: 2.25rem;
 }
@@ -881,10 +927,6 @@ video {
   width: 3rem;
 }
 
-.w-24 {
-  width: 6rem;
-}
-
 .w-28 {
   width: 7rem;
 }
@@ -901,8 +943,8 @@ video {
   width: 1.5rem;
 }
 
-.w-64 {
-  width: 16rem;
+.w-8 {
+  width: 2rem;
 }
 
 .w-9 {
@@ -1635,11 +1677,6 @@ video {
   line-height: 2rem;
 }
 
-.text-3xl {
-  font-size: 1.875rem;
-  line-height: 2.25rem;
-}
-
 .text-base {
   font-size: 1rem;
   line-height: 1.5rem;
@@ -1934,8 +1971,16 @@ video {
   transition-delay: 100ms;
 }
 
+.duration-300 {
+  transition-duration: 300ms;
+}
+
 .ease-in {
   transition-timing-function: cubic-bezier(0.4, 0, 1, 1);
+}
+
+.ease-in-out {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .ease-out {
@@ -2406,6 +2451,14 @@ html, body {
 
 /* --- TOAST STYLES (Chuyển từ toast.css) --- */
 
+/* ... (các style toast đã có) ... */
+
+/* Thêm style cho nút ghim sidebar */
+
+/* --- SIDEBAR COLLAPSE/EXPAND STYLES --- */
+
+/* --- TOAST STYLES (Chuyển từ toast.css) --- */
+
 #toast-container {
   position: fixed;
   top: 20px;
@@ -2736,19 +2789,14 @@ html, body {
     padding: 2rem;
   }
 
-  .lg\:px-8 {
-    padding-left: 2rem;
-    padding-right: 2rem;
+  .lg\:px-6 {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
   }
 
   .lg\:py-4 {
     padding-top: 1rem;
     padding-bottom: 1rem;
-  }
-
-  .lg\:px-6 {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
   }
 }
 

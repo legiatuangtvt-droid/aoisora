@@ -385,6 +385,35 @@ html, body {
 .btn-indigo:hover { background-color: #4338ca; }
 
 /* --- TOAST STYLES (Chuyển từ toast.css) --- */
+/* ... (các style toast đã có) ... */
+
+/* Thêm style cho nút ghim sidebar */
+@layer components {
+    #sidebar-pin-btn.pinned {
+        @apply bg-slate-700 text-green-400;
+    }
+    #sidebar-pin-btn.pinned i {
+        @apply rotate-45 transition-transform duration-300 ease-in-out;
+    }
+}
+
+/* --- SIDEBAR COLLAPSE/EXPAND STYLES --- */
+@layer base {
+    #sidebar {
+        @apply w-20; /* Chiều rộng mặc định khi thu gọn */
+    }
+    #sidebar .sidebar-text {
+        @apply opacity-0 w-0 transition-opacity duration-200;
+    }
+
+    body.sidebar-expanded #sidebar {
+        @apply w-64; /* Chiều rộng khi mở rộng */
+    }
+    body.sidebar-expanded #sidebar .sidebar-text {
+        @apply opacity-100 w-auto;
+    }
+}
+/* --- TOAST STYLES (Chuyển từ toast.css) --- */
 #toast-container {
     position: fixed;
     top: 20px;

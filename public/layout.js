@@ -29,6 +29,8 @@ function initializeLayout() {
                         window.showToast('Chức năng Thông báo đang được hoàn thiện.', 'info');
                     });
                 }
+
+                initializeSidebarHover(); // Thêm hàm khởi tạo cho sidebar
             });
     };
     const setActiveSidebarLink = (pathname) => {
@@ -59,6 +61,77 @@ function initializeLayout() {
             // Lấy title của trang và loại bỏ phần " - AoiSora"
             const cleanTitle = documentTitle.replace(' - AoiSora', '').trim();
             headerTitle.textContent = cleanTitle;
+        }
+    };
+
+    /**
+     * Khởi tạo chức năng hover để mở rộng/thu gọn sidebar.
+     */
+    const initializeSidebarHover = () => {
+        const sidebar = document.getElementById('sidebar-placeholder');
+        const mainContent = document.querySelector('.flex-1.flex.flex-col.overflow-hidden');
+        const pinBtn = document.getElementById('sidebar-pin-btn');
+        let collapseTimeout; // Biến để lưu trữ ID của setTimeout
+
+        if (sidebar && pinBtn) {
+            const SIDEBAR_PINNED_KEY = 'sidebarPinned';
+
+            // Hàm để thu gọn sidebar
+            const collapseSidebar = () => {
+                // Chỉ thu gọn nếu không bị ghim
+                if (localStorage.getItem(SIDEBAR_PINNED_KEY) !== 'true') {
+                    document.body.classList.remove('sidebar-expanded');
+                }
+            };
+
+            // Hàm để mở rộng sidebar
+            const expandSidebar = () => {
+                document.body.classList.add('sidebar-expanded');
+            };
+
+            // Xử lý sự kiện click nút ghim
+            pinBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Ngăn sự kiện click lan ra các phần tử khác
+                const isPinned = localStorage.getItem(SIDEBAR_PINNED_KEY) === 'true';
+                if (isPinned) {
+                    localStorage.setItem(SIDEBAR_PINNED_KEY, 'false');
+                    pinBtn.classList.remove('pinned');
+                    pinBtn.setAttribute('title', 'Ghim sidebar');
+                    // Khi bỏ ghim, có thể thu gọn lại ngay
+                    collapseSidebar();
+                } else {
+                    localStorage.setItem(SIDEBAR_PINNED_KEY, 'true');
+                    pinBtn.classList.add('pinned');
+                    pinBtn.setAttribute('title', 'Bỏ ghim sidebar');
+                    // Khi ghim, luôn mở rộng
+                    expandSidebar();
+                }
+            });
+
+            // Khởi tạo trạng thái ban đầu
+            if (localStorage.getItem(SIDEBAR_PINNED_KEY) === 'true') {
+                expandSidebar();
+                pinBtn.classList.add('pinned');
+                pinBtn.setAttribute('title', 'Bỏ ghim sidebar');
+            } else {
+                // Nếu không ghim, chạy logic mở rộng tạm thời
+                expandSidebar();
+                collapseTimeout = setTimeout(collapseSidebar, 5000);
+            }
+
+            // Khi di chuột vào, hủy bộ đếm thời gian và giữ sidebar mở rộng
+            sidebar.addEventListener('mouseenter', () => {
+                clearTimeout(collapseTimeout); // Hủy tự động thu gọn
+                expandSidebar();
+            });
+
+            // Khi di chuột ra, thu gọn lại (nếu không được ghim)
+            sidebar.addEventListener('mouseleave', collapseSidebar);
+
+            // Khi click vào vùng nội dung chính, thu gọn sidebar (nếu không được ghim)
+            if (mainContent) {
+                mainContent.addEventListener('click', collapseSidebar);
+            }
         }
     };
 
