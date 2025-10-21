@@ -27,7 +27,7 @@ async function renderPage() {
         // Sử dụng getDocs thay vì onSnapshot vì trang này chủ yếu để hiển thị, không cần real-time phức tạp
         const q = query(collection(db, 'task_groups'), orderBy("order"));
         const querySnapshot = await getDocs(q);
-        const taskGroups = querySnapshot.docs.map(doc => doc.data());
+        const taskGroups = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
         renderStatistics(taskGroups);
         renderGroupCards(taskGroups);
@@ -135,7 +135,7 @@ function renderGroupCards(taskGroups) {
             const generatedCode = `1${group.order}${String(task.order).padStart(2, '0')}`;
 
             return `
-                <div class="task-card ${defaultTaskColor.bg} rounded ${defaultTaskColor.border} flex flex-col items-center justify-between text-center aspect-square w-28 h-28 flex-shrink-0 transition-all ${defaultTaskColor.hover} hover:shadow-md">
+                <div class="task-card ${defaultTaskColor.bg} rounded ${defaultTaskColor.border} flex flex-col items-center justify-between text-center aspect-square w-28 h-28 flex-shrink-0 transition-all ${defaultTaskColor.hover} hover:shadow-md cursor-pointer" data-task-order="${task.order}">
                     <div class="w-full text-xs font-semibold py-0.5 bg-black/10 rounded-t">
                         Order: ${task.order}
                     </div>
@@ -180,6 +180,14 @@ function addGroupCardEventListeners() {
         const groupCodeCard = e.target.closest('.group-code-card');
         if (groupCodeCard) {
             showColorPalette(groupCodeCard);
+        }
+
+        const taskCard = e.target.closest('.task-card');
+        if (taskCard) {
+            const groupRow = taskCard.closest('.group-row');
+            const groupCode = groupRow.querySelector('.group-code-card').dataset.groupCode;
+            const taskOrder = taskCard.dataset.taskOrder;
+            showEditTaskModal(groupCode, parseInt(taskOrder, 10));
         }
 
         const addTaskBtn = e.target.closest('.add-task-to-group-btn');
@@ -278,6 +286,25 @@ function updateGroupColor(groupCode, newColorName) {
     window.showToast(`Nhóm ${groupCode} đã đổi sang màu '${newColor.name}'`, 'info', 2000);
 }
 
+/**
+ * Ẩn modal được chỉ định.
+ * @param {string} modalId ID của modal cần ẩn.
+ */
+function hideModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+
+    modal.classList.remove('show');
+    const onTransitionEnd = () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        const form = modal.querySelector('form');
+        if (form) form.reset();
+        modal.removeEventListener('transitionend', onTransitionEnd);
+    };
+    modal.addEventListener('transitionend', onTransitionEnd);
+}
+
 //#region ADD TASK MODAL
 /**
  * Tạo và chèn modal thêm task vào DOM nếu chưa tồn tại.
@@ -360,25 +387,6 @@ function showAddTaskModal(groupCode) {
     modal.classList.remove('hidden');
     modal.classList.add('flex');
     setTimeout(() => modal.classList.add('show'), 10);
-}
-
-/**
- * Ẩn modal được chỉ định.
- * @param {string} modalId ID của modal cần ẩn.
- */
-function hideModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (!modal) return;
-
-    modal.classList.remove('show');
-    const onTransitionEnd = () => {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        const form = modal.querySelector('form');
-        if (form) form.reset();
-        modal.removeEventListener('transitionend', onTransitionEnd);
-    };
-    modal.addEventListener('transitionend', onTransitionEnd);
 }
 
 /**
@@ -571,6 +579,186 @@ async function handleEditGroupSubmit(e) {
 }
 //#endregion
 
+//#region EDIT TASK MODAL
+/**
+ * Tạo và chèn modal chỉnh sửa task vào DOM nếu chưa tồn tại.
+ */
+function injectEditTaskModal() {
+    if (document.getElementById('edit-task-modal')) return;
+
+    const modalHTML = `
+        <div id="edit-task-modal" class="modal-overlay hidden">
+            <div class="modal-content max-w-md w-full">
+                <form id="edit-task-form">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Chỉnh Sửa Task</h3>
+                        <button type="button" class="modal-close-btn">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="edit-task-group-code" name="groupCode">
+                        <input type="hidden" id="edit-task-original-order" name="originalOrder">
+                        <div class="form-group">
+                            <label for="edit-task-name">Tên Task <span class="text-red-500">*</span></label>
+                            <input type="text" id="edit-task-name" name="name" required class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-task-order">Thứ tự (Order) <span class="text-red-500">*</span></label>
+                            <input type="number" id="edit-task-order" name="order" required class="form-input" min="1">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="form-group">
+                                <label for="edit-task-frequency">Tần suất</label>
+                                <select id="edit-task-frequency" name="frequency" class="form-input">
+                                    <option value="Daily">Hàng ngày (Daily)</option>
+                                    <option value="Weekly">Hàng tuần (Weekly)</option>
+                                    <option value="Monthly">Hàng tháng (Monthly)</option>
+                                    <option value="Yearly">Hàng năm (Yearly)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-task-manual-number">Số Manual</label>
+                                <input type="text" id="edit-task-manual-number" name="manual_number" class="form-input">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-task-manual-link">Link Manual</label>
+                            <input type="text" id="edit-task-manual-link" name="manual_link" class="form-input">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary modal-close-btn">Hủy</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save mr-1"></i> Lưu Thay Đổi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    const modal = document.getElementById('edit-task-modal');
+    modal.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal-overlay') || e.target.closest('.modal-close-btn')) {
+            hideModal('edit-task-modal');
+        }
+    });
+
+    document.getElementById('edit-task-form').addEventListener('submit', handleEditTaskSubmit);
+}
+
+/**
+ * Hiển thị modal chỉnh sửa task và điền dữ liệu.
+ * @param {string} groupCode Mã nhóm chứa task.
+ * @param {number} taskOrder Thứ tự của task cần sửa.
+ */
+async function showEditTaskModal(groupCode, taskOrder) {
+    try {
+        const groupDocRef = doc(db, 'task_groups', groupCode);
+        const docSnap = await getDoc(groupDocRef);
+
+        if (docSnap.exists()) {
+            const tasks = docSnap.data().tasks || [];
+            // Sử dụng so sánh lỏng (==) để bỏ qua sự khác biệt giữa number và string.
+            // Ví dụ: 1 == "1" là true, trong khi 1 === "1" là false.
+            // Điều này giúp tìm thấy task ngay cả khi 'order' trong Firestore được lưu dưới dạng string.
+            const taskToEdit = tasks.find(t => t.order == taskOrder);
+
+            if (taskToEdit) {
+                document.getElementById('edit-task-group-code').value = groupCode;
+                document.getElementById('edit-task-original-order').value = taskToEdit.order;
+                document.getElementById('edit-task-name').value = taskToEdit.name;
+                document.getElementById('edit-task-order').value = taskToEdit.order;
+                document.getElementById('edit-task-frequency').value = taskToEdit.frequency || 'Daily';
+                document.getElementById('edit-task-manual-number').value = taskToEdit.manual_number || '';
+                document.getElementById('edit-task-manual-link').value = taskToEdit.manual_link || '';
+                const modal = document.getElementById('edit-task-modal');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                setTimeout(() => modal.classList.add('show'), 10);
+            } else {
+                console.error(`Không tìm thấy task với order ${taskOrder} trong nhóm ${groupCode}.`);
+                window.showToast(`Không tìm thấy task với order ${taskOrder} trong nhóm ${groupCode}.`, 'error');
+            }
+        }
+    } catch (error) {
+        console.error("Lỗi khi tải dữ liệu task để sửa:", error);
+        window.showToast("Đã xảy ra lỗi khi tải dữ liệu task.", "error");
+    }
+}
+
+/**
+ * Xử lý việc submit form chỉnh sửa task.
+ * @param {Event} e 
+ */
+async function handleEditTaskSubmit(e) {
+    e.preventDefault();
+    const form = e.target;
+    const groupCode = form.elements.groupCode.value;
+    const originalOrder = parseInt(form.elements.originalOrder.value, 10);
+    const newName = form.elements.name.value.trim();
+    const newOrder = parseInt(form.elements.order.value, 10);
+    const newFrequency = form.elements.frequency.value;
+    const newManualNumber = form.elements.manual_number.value.trim();
+    const newManualLink = form.elements.manual_link.value.trim();
+
+    if (!groupCode || !newName || isNaN(newOrder)) {
+        window.showToast("Vui lòng điền đầy đủ thông tin hợp lệ.", "warning");
+        return;
+    }
+
+    const submitButton = form.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Đang lưu...';
+
+    try {
+        const groupDocRef = doc(db, 'task_groups', groupCode);
+        const docSnap = await getDoc(groupDocRef);
+        let tasks = docSnap.data().tasks || [];
+
+        // Tìm task gốc và lọc ra các task khác
+        const taskToUpdate = tasks.find(t => t.order === originalOrder);
+        const otherTasks = tasks.filter(t => t.order !== originalOrder);
+
+        if (!taskToUpdate) {
+            throw new Error(`Không tìm thấy task gốc với order ${originalOrder} để cập nhật.`);
+        }
+
+        // Nếu order mới đã tồn tại, đẩy các order khác lên
+        // Chỉ thực hiện nếu order thực sự thay đổi
+        if (originalOrder !== newOrder && otherTasks.some(t => t.order === newOrder)) {
+            otherTasks.forEach(t => {
+                if (t.order >= newOrder) t.order++;
+            });
+        }
+
+        // Tạo task đã cập nhật và thêm lại vào mảng
+        // Kế thừa các thuộc tính cũ và ghi đè những thuộc tính mới
+        const updatedTask = {
+            ...taskToUpdate, // Kế thừa tất cả thuộc tính của task gốc
+            name: newName,
+            order: newOrder,
+            frequency: newFrequency,
+            manual_number: newManualNumber || null,
+            manual_link: newManualLink || ''
+        };
+        const finalTasks = [...otherTasks, updatedTask];
+
+        await updateDoc(groupDocRef, { tasks: finalTasks });
+
+        window.showToast(`Đã cập nhật task "${newName}".`, 'success');
+        hideModal('edit-task-modal');
+        renderPage();
+    } catch (error) {
+        console.error("Lỗi khi cập nhật task:", error);
+        window.showToast("Đã xảy ra lỗi khi cập nhật. Vui lòng thử lại.", "error");
+    } finally {
+        submitButton.disabled = false;
+        submitButton.innerHTML = '<i class="fas fa-save mr-1"></i> Lưu Thay Đổi';
+    }
+}
+//#endregion
+
 /**
  * Dọn dẹp tất cả các listener (sự kiện DOM, Firestore) của module này.
  * Được gọi bởi main.js trước khi chuyển sang trang khác.
@@ -585,6 +773,7 @@ export function cleanup() {
  * Hàm khởi tạo, được gọi bởi main.js khi trang này được tải.
  */
 export function init() {
+    injectEditTaskModal();
     injectEditGroupModal();
     injectAddTaskModal();
     renderPage();
