@@ -1,5 +1,5 @@
 import { db } from './firebase.js';
-import { collection, getDocs, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { collection, getDocs, onSnapshot, query, orderBy, doc, updateDoc, arrayUnion, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 let activeListeners = [];
 
@@ -151,6 +151,18 @@ function addGroupCardEventListeners() {
         if (groupCodeCard) {
             showColorPalette(groupCodeCard);
         }
+
+        const addTaskBtn = e.target.closest('.add-task-to-group-btn');
+        if (addTaskBtn) {
+            const groupCode = addTaskBtn.dataset.groupCode;
+            showAddTaskModal(groupCode);
+        }
+
+        const editGroupBtn = e.target.closest('.edit-group-btn');
+        if (editGroupBtn) {
+            const groupCode = editGroupBtn.dataset.groupCode;
+            showEditGroupModal(groupCode);
+        }
     });
 }
 
@@ -236,6 +248,252 @@ function updateGroupColor(groupCode, newColorName) {
     window.showToast(`Nhóm ${groupCode} đã đổi sang màu '${newColor.name}'`, 'info', 2000);
 }
 
+//#region ADD TASK MODAL
+/**
+ * Tạo và chèn modal thêm task vào DOM nếu chưa tồn tại.
+ */
+function injectAddTaskModal() {
+    if (document.getElementById('add-task-to-group-modal')) return;
+
+    const modalHTML = `
+        <div id="add-task-to-group-modal" class="modal-overlay hidden">
+            <div class="modal-content max-w-md w-full">
+                <form id="add-task-to-group-form">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Thêm Task Mới vào Nhóm</h3>
+                        <button type="button" class="modal-close-btn">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="add-task-group-code">Nhóm</label>
+                            <input type="text" id="add-task-group-code" name="groupCode" readonly class="form-input bg-gray-100 cursor-not-allowed">
+                        </div>
+                        <div class="form-group">
+                            <label for="add-task-name">Tên Task <span class="text-red-500">*</span></label>
+                            <input type="text" id="add-task-name" name="name" required class="form-input" placeholder="Ví dụ: Lau sàn khu vực A">
+                        </div>
+                        <div class="form-group">
+                            <label for="add-task-order">Thứ tự (Order) <span class="text-red-500">*</span></label>
+                            <input type="number" id="add-task-order" name="order" required class="form-input" min="1" placeholder="Ví dụ: 1, 2, 3...">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary modal-close-btn">Hủy</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save mr-1"></i> Lưu Task
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    // Gắn listener cho modal vừa tạo
+    const modal = document.getElementById('add-task-to-group-modal');
+    modal.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal-overlay') || e.target.closest('.modal-close-btn')) {
+            hideModal('add-task-to-group-modal');
+        }
+    });
+
+    document.getElementById('add-task-to-group-form').addEventListener('submit', handleAddTaskSubmit);
+}
+
+/**
+ * Hiển thị modal thêm task.
+ * @param {string} groupCode Mã nhóm để thêm task vào.
+ */
+function showAddTaskModal(groupCode) {
+    document.getElementById('add-task-group-code').value = groupCode;
+    
+    const modal = document.getElementById('add-task-to-group-modal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    setTimeout(() => modal.classList.add('show'), 10);
+}
+
+/**
+ * Ẩn modal được chỉ định.
+ * @param {string} modalId ID của modal cần ẩn.
+ */
+function hideModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+
+    modal.classList.remove('show');
+    const onTransitionEnd = () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        const form = modal.querySelector('form');
+        if (form) form.reset();
+        modal.removeEventListener('transitionend', onTransitionEnd);
+    };
+    modal.addEventListener('transitionend', onTransitionEnd);
+}
+
+/**
+ * Xử lý việc submit form thêm task mới.
+ * @param {Event} e 
+ */
+async function handleAddTaskSubmit(e) {
+    e.preventDefault();
+    const form = e.target;
+    const groupCode = form.elements.groupCode.value;
+    const taskName = form.elements.name.value.trim();
+    const taskOrder = parseInt(form.elements.order.value, 10);
+    const submitButton = form.querySelector('button[type="submit"]');
+
+    if (!groupCode || !taskName || isNaN(taskOrder)) {
+        window.showToast("Vui lòng điền đầy đủ thông tin hợp lệ.", "warning");
+        return;
+    }
+
+    const newTask = {
+        name: taskName,
+        order: taskOrder,
+    };
+
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Đang lưu...';
+
+    try {
+        const groupDocRef = doc(db, 'task_groups', groupCode);
+        await updateDoc(groupDocRef, {
+            tasks: arrayUnion(newTask)
+        });
+        window.showToast(`Đã thêm task "${taskName}" vào nhóm ${groupCode}.`, 'success');
+        hideModal('add-task-to-group-modal');
+        renderPage(); // Render lại trang để cập nhật
+    } catch (error) {
+        console.error("Lỗi khi thêm task vào nhóm:", error);
+        window.showToast("Đã xảy ra lỗi. Vui lòng thử lại.", "error");
+    } finally {
+        submitButton.disabled = false;
+        submitButton.innerHTML = '<i class="fas fa-save mr-1"></i> Lưu Task';
+    }
+}
+//#endregion
+
+//#region EDIT GROUP MODAL
+/**
+ * Tạo và chèn modal chỉnh sửa nhóm vào DOM nếu chưa tồn tại.
+ */
+function injectEditGroupModal() {
+    if (document.getElementById('edit-group-modal')) return;
+
+    const modalHTML = `
+        <div id="edit-group-modal" class="modal-overlay hidden">
+            <div class="modal-content max-w-md w-full">
+                <form id="edit-group-form">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Chỉnh Sửa Nhóm Công Việc</h3>
+                        <button type="button" class="modal-close-btn">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="edit-group-code">Mã Nhóm</label>
+                            <input type="text" id="edit-group-code" name="groupCode" readonly class="form-input bg-gray-100 cursor-not-allowed">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-group-name">Tên Nhóm <span class="text-red-500">*</span></label>
+                            <input type="text" id="edit-group-name" name="groupName" required class="form-input" placeholder="Ví dụ: Vệ Sinh Chung">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-group-order">Thứ tự (Order) <span class="text-red-500">*</span></label>
+                            <input type="number" id="edit-group-order" name="groupOrder" required class="form-input" min="1" placeholder="Ví dụ: 1, 2, 3...">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary modal-close-btn">Hủy</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save mr-1"></i> Cập Nhật Nhóm
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    // Gắn listener cho modal vừa tạo
+    const modal = document.getElementById('edit-group-modal');
+    modal.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal-overlay') || e.target.closest('.modal-close-btn')) {
+            hideModal('edit-group-modal');
+        }
+    });
+
+    document.getElementById('edit-group-form').addEventListener('submit', handleEditGroupSubmit);
+}
+
+/**
+ * Hiển thị modal chỉnh sửa nhóm và điền dữ liệu hiện có.
+ * @param {string} groupCode Mã nhóm cần chỉnh sửa.
+ */
+async function showEditGroupModal(groupCode) {
+    try {
+        const groupDocRef = doc(db, 'task_groups', groupCode);
+        const docSnap = await getDoc(groupDocRef);
+
+        if (docSnap.exists()) {
+            const groupData = docSnap.data();
+            document.getElementById('edit-group-code').value = groupCode;
+            document.getElementById('edit-group-name').value = groupData.name || '';
+            document.getElementById('edit-group-order').value = groupData.order || 1;
+            
+            const modal = document.getElementById('edit-group-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => modal.classList.add('show'), 10);
+        } else {
+            window.showToast(`Không tìm thấy nhóm "${groupCode}" để chỉnh sửa.`, 'error');
+        }
+    } catch (error) {
+        console.error("Lỗi khi tải dữ liệu nhóm để chỉnh sửa:", error);
+        window.showToast("Đã xảy ra lỗi khi tải dữ liệu nhóm.", "error");
+    }
+}
+
+/**
+ * Xử lý việc submit form chỉnh sửa nhóm.
+ * @param {Event} e 
+ */
+async function handleEditGroupSubmit(e) {
+    e.preventDefault();
+    const form = e.target;
+    const groupCode = form.elements.groupCode.value;
+    const groupName = form.elements.groupName.value.trim();
+    const groupOrder = parseInt(form.elements.groupOrder.value, 10);
+
+    if (!groupCode || !groupName || isNaN(groupOrder)) {
+        window.showToast("Vui lòng điền đầy đủ thông tin hợp lệ.", "warning");
+        return;
+    }
+
+    const submitButton = form.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Đang cập nhật...';
+
+    try {
+        const groupDocRef = doc(db, 'task_groups', groupCode);
+        await updateDoc(groupDocRef, {
+            name: groupName,
+            order: groupOrder
+        });
+        window.showToast(`Đã cập nhật nhóm "${groupName}" (${groupCode}).`, 'success');
+        hideModal('edit-group-modal');
+        renderPage(); // Render lại trang để cập nhật
+    } catch (error) {
+        console.error("Lỗi khi cập nhật nhóm:", error);
+        window.showToast("Đã xảy ra lỗi khi cập nhật nhóm. Vui lòng thử lại.", "error");
+    } finally {
+        submitButton.disabled = false;
+        submitButton.innerHTML = '<i class="fas fa-save mr-1"></i> Cập Nhật Nhóm';
+    }
+}
+//#endregion
+
 /**
  * Dọn dẹp tất cả các listener (sự kiện DOM, Firestore) của module này.
  * Được gọi bởi main.js trước khi chuyển sang trang khác.
@@ -250,5 +508,7 @@ export function cleanup() {
  * Hàm khởi tạo, được gọi bởi main.js khi trang này được tải.
  */
 export function init() {
+    injectEditGroupModal();
+    injectAddTaskModal();
     renderPage();
 }
