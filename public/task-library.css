@@ -23,16 +23,15 @@
     transition: opacity 0.2s ease;
 }
 
-/* --- Ghost Element (Ảnh kéo) --- */
-#task-library-ghost {
+/* --- Ghost Element (Ảnh kéo) cho toàn bộ cửa sổ thư viện --- */
+#task-library-window-ghost {
     position: fixed;
     z-index: 10000; /* Luôn nổi trên cùng */    
     pointer-events: none; /* Không bắt sự kiện chuột */
     border-radius: inherit; /* Kế thừa bo góc từ menu gốc */
     transition: none; /* Không có hiệu ứng chuyển động để theo chuột ngay lập tức */
-    /* Hiệu ứng mới cho ghost element */
-    opacity: 0.85; /* Hơi trong suốt */
-    transform: rotate(2deg); /* Hơi nghiêng một chút */
+    opacity: 1; /* Làm cho ghost element hoàn toàn hiển thị */
+    transform: none; /* Loại bỏ hiệu ứng xoay */
     box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.25); /* Đổ bóng rõ hơn */
 }
 
@@ -104,24 +103,15 @@
     visibility: visible;
 }
 
+/*
+ * Style cho các ô task trong thư viện.
+ * Bỏ selector #task-view-content để đảm bảo ghost element khi kéo cũng có kích thước đúng.
+ */
 .task-library-item {
-    box-sizing: border-box; /* Đảm bảo padding không làm tăng kích thước tổng thể */
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 12px;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    background-color: #fff;
-    cursor: grab;
-    font-size: 14px;
-    color: #334155;
-    transition: background-color 0.2s ease, border-color 0.2s ease;
-}
-
-.task-library-item:hover {
-    background-color: #f1f5f9;
-    border-color: #94a3b8;
+    box-sizing: border-box;
+    width: 70px;
+    height: 100px;
+    /* Các style khác như màu sắc, flexbox được áp dụng trực tiếp bằng class của Tailwind */
 }
 
 /* --- View Containers --- */
@@ -218,23 +208,6 @@
     /* Cho phép tự động điền các cột, mỗi cột có kích thước tối thiểu 70px */
     grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
     gap: 10px; /* Tăng khoảng cách cho thoáng */
-}
-
-/* 
- * Style cho các ô task trong thư viện.
- * Bỏ selector #task-view-content để đảm bảo ghost element khi kéo cũng có kích thước đúng.
- */
-.task-library-item {
-    width: 70px; /* Kích thước cố định 70x70px */
-    height: 100px; /* Đồng bộ kích thước với ô trong lưới lịch trình */
-    text-align: center; /* Căn giữa chữ */
-    font-size: 0.75rem; /* Kích thước font cho tên task (12px) */
-    line-height: 1.2; /* Tối ưu hiển thị trên nhiều dòng */
-    overflow: hidden; /* Ẩn phần văn bản thừa */
-    text-overflow: ellipsis; /* Hiển thị dấu ba chấm cho văn bản bị cắt */
-    display: -webkit-box; /* Cần cho -webkit-line-clamp */
-    -webkit-line-clamp: 5; /* Tăng giới hạn dòng để vừa với chiều cao mới */
-    -webkit-box-orient: vertical; /* Cần cho -webkit-line-clamp */
 }
 
 /* --- Hiệu ứng kéo thả cho khu vực xây dựng mẫu (daily-templates.js) --- */
