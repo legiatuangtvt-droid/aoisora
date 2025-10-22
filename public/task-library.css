@@ -35,7 +35,7 @@
 
 /* --- Trạng thái mở rộng --- */
 #task-library-container.expanded {
-    width: 410px; /* Chiều rộng để hiển thị 4 cột (70px/cột + 10px gap + 12px padding) */
+    width: 420px; /* Chiều rộng để hiển thị 5 cột (70px/cột + 10px gap + 12px padding) */
     height: 50vh; /* Chiều cao có thể thay đổi */
     max-height: 700px;
     border-radius: 8px; /* Hình chữ nhật bo góc khi mở rộng */
@@ -220,14 +220,14 @@
 /* Thêm style cho các task item trong view này, kế thừa từ .task-library-item */
 #task-view-content .task-library-item {
     width: 70px; /* Kích thước cố định 70x70px */
-    height: 70px;
+    height: 100px; /* Đồng bộ kích thước với ô trong lưới lịch trình */
     text-align: center; /* Căn giữa chữ */
     font-size: 0.75rem; /* Kích thước font cho tên task (12px) */
     line-height: 1.2; /* Tối ưu hiển thị trên nhiều dòng */
     overflow: hidden; /* Ẩn phần văn bản thừa */
     text-overflow: ellipsis; /* Hiển thị dấu ba chấm cho văn bản bị cắt */
     display: -webkit-box; /* Cần cho -webkit-line-clamp */
-    -webkit-line-clamp: 3; /* Giới hạn 3 dòng */
+    -webkit-line-clamp: 5; /* Tăng giới hạn dòng để vừa với chiều cao mới */
     -webkit-box-orient: vertical; /* Cần cho -webkit-line-clamp */
 }
 
