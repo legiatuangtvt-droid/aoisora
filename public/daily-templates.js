@@ -84,7 +84,7 @@ function renderGrid() {
             // Mỗi ô lớn chứa 4 ô 15 phút
             bodyRowHtml += `
                 <td class="p-0 border border-slate-200 align-top">
-                    <div class="grid grid-cols-4 h-[104px] gap-1">
+                    <div class="grid grid-cols-4 h-[104px]">
                         <div class="quarter-hour-slot border-r border-dashed border-slate-200 flex justify-center items-center" data-staff-id="${staff.id}" data-time="${time}" data-quarter="00"></div>
                         <div class="quarter-hour-slot border-r border-dashed border-slate-200 flex justify-center items-center" data-staff-id="${staff.id}" data-time="${time}" data-quarter="15"></div>
                         <div class="quarter-hour-slot border-r border-dashed border-slate-200 flex justify-center items-center" data-staff-id="${staff.id}" data-time="${time}" data-quarter="30"></div>
