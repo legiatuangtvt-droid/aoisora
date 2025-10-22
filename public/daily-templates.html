@@ -26,6 +26,19 @@
                 <div class="p-4 border-b">
                     <h2 class="text-xl font-semibold text-gray-800">Xây Dựng Lịch Trình Mẫu</h2>
                     <p class="text-sm text-gray-500 mt-1">Kéo và thả công việc từ thư viện vào lịch trình của nhân viên.</p>
+                    <!-- Toolbar Quản lý Mẫu -->
+                    <div class="mt-4 flex items-center gap-4 flex-wrap">
+                        <div class="flex-grow">
+                            <label for="template-selector" class="block text-sm font-medium text-gray-700 mb-1">Chọn Mẫu</label>
+                            <select id="template-selector" class="form-input w-full md:w-1/2">
+                                <!-- Các mẫu sẽ được JS render vào đây -->
+                            </select>
+                        </div>
+                        <div class="flex-shrink-0 flex items-center gap-2">
+                             <button id="new-template-btn" class="btn btn-secondary"><i class="fas fa-plus mr-2"></i>Tạo Mẫu Mới</button>
+                             <button id="delete-template-btn" class="btn btn-danger hidden"><i class="fas fa-trash mr-2"></i>Xóa Mẫu</button>
+                        </div>
+                    </div>
                 </div>
                 <!-- Container cho toàn bộ lưới lịch trình -->
                 <div id="template-builder-grid-container" class="overflow-x-auto">

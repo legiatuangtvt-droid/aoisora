@@ -7,6 +7,18 @@ let allGroupedTasks = [];
 let groupView, taskView;
 let taskLibraryController = null;
 
+// Bảng màu để tô màu cho các nhóm công việc
+const colorPalette = [
+    { name: 'slate', bg: 'bg-slate-50', border: 'border-slate-200', hover: 'hover:bg-slate-100' },
+    { name: 'green', bg: 'bg-green-50', border: 'border-green-200', hover: 'hover:bg-green-100' },
+    { name: 'blue', bg: 'bg-blue-50', border: 'border-blue-200', hover: 'hover:bg-blue-100' },
+    { name: 'amber', bg: 'bg-amber-50', border: 'border-amber-200', hover: 'hover:bg-amber-100' },
+    { name: 'teal', bg: 'bg-teal-50', border: 'border-teal-200', hover: 'hover:bg-teal-100' },
+    { name: 'purple', bg: 'bg-purple-50', border: 'border-purple-200', hover: 'hover:bg-purple-100' },
+    { name: 'indigo', bg: 'bg-indigo-50', border: 'border-indigo-200', hover: 'hover:bg-indigo-100' },
+    { name: 'red', bg: 'bg-red-50', border: 'border-red-200', hover: 'hover:bg-red-100' },
+    { name: 'pink', bg: 'bg-pink-50', border: 'border-pink-200', hover: 'hover:bg-pink-100' },
+];
 /**
  * Lấy dữ liệu công việc từ Firestore và nhóm chúng lại.
  */
@@ -52,8 +64,12 @@ function renderGroupGridView() {
     }
 
     allGroupedTasks.forEach(group => {
+        const colorName = group.color || 'slate';
+        const color = colorPalette.find(c => c.name === colorName) || colorPalette[0];
+
         const groupItem = document.createElement('div');
-        groupItem.className = 'group-grid-item';
+        // Thêm các lớp màu sắc vào className
+        groupItem.className = `group-grid-item ${color.bg} ${color.border} ${color.hover}`;
         groupItem.dataset.groupId = group.id;
         groupItem.innerHTML = `
             <span class="code">${group.code}</span>
@@ -87,11 +103,14 @@ function renderTaskGridView(groupId) {
 
     const taskContent = taskView.querySelector('#task-view-content');
     if (group.tasks.length > 0) {
-        group.tasks.forEach(task => {
+        // Sắp xếp task theo 'order' trước khi render
+        const sortedTasks = [...group.tasks].sort((a, b) => (a.order || 0) - (b.order || 0));
+        sortedTasks.forEach(task => {
             const taskItem = document.createElement('div');
+            const generatedCode = `1${group.order}${String(task.order).padStart(2, '0')}`;
             // Sử dụng lại class 'task-library-item' để có thể kéo thả
             taskItem.className = 'task-library-item';
-            taskItem.dataset.taskCode = task.code;
+            taskItem.dataset.taskCode = generatedCode; // Gán mã task đã tạo vào dataset
             taskItem.textContent = task.name;
             taskContent.appendChild(taskItem);
         });
