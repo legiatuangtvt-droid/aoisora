@@ -1,5 +1,6 @@
 // Import các tiện ích toàn cục. Chúng sẽ chỉ được tải một lần.
 import './toast.js';
+import { initializeTaskLibrary, cleanupTaskLibrary } from './task-library.js';
 import { initializeDevMenu } from './dev-menu.js';
 
 // Ánh xạ từ tên file HTML đến module JS tương ứng của nó.
@@ -39,6 +40,10 @@ function loadPageModule(pageName) {
                 // Nếu module có hàm init(), gọi nó.
                 if (pageModule && typeof pageModule.init === 'function') {
                     pageModule.init();
+                    // Khởi tạo thư viện task cho các trang cần nó
+                    if (pageName === 'daily-templates.html') {
+                        initializeTaskLibrary();
+                    }
                 }
             } catch (error) {
                 console.error(`Lỗi khi tải module cho trang ${pageName}:`, error);
