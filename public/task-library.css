@@ -102,6 +102,7 @@
 }
 
 .task-library-item {
+    box-sizing: border-box; /* Đảm bảo padding không làm tăng kích thước tổng thể */
     display: flex;
     align-items: center;
     gap: 10px;
@@ -126,7 +127,6 @@
     top: 0;
     left: 0;
     width: 100%;
-    height: 100%;
     padding: 12px;
     transition: opacity 0.2s ease, transform 0.2s ease;
     box-sizing: border-box; /* Đảm bảo padding không làm thay đổi kích thước */
@@ -139,8 +139,9 @@
 
 /* --- Group Grid View --- */
 #group-view-container {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr); /* Giữ nguyên 4 cột theo yêu cầu */
+    display: grid; /* Sử dụng grid để sắp xếp các item */
+    /* Cho phép tự động điền các cột, mỗi cột có kích thước tối thiểu 70px */
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
     gap: 10px;
 }
 
@@ -149,7 +150,9 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    aspect-ratio: 1 / 1; /* Tạo ô vuông */
+    box-sizing: border-box; /* Đảm bảo padding không làm tăng kích thước tổng thể */
+    width: 70px; /* Kích thước cố định 70x70px */
+    height: 70px;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
     background-color: #f8fafc;
@@ -167,13 +170,15 @@
 }
 
 .group-grid-item .code {
-    font-weight: 700;
-    font-size: 1.125rem; /* Giảm nhẹ kích thước font (từ xl xuống lg) */
+    font-weight: 700; /* In đậm */
+    font-size: 1rem; /* Kích thước font cho mã nhóm (16px) */
     color: #334155;
+    line-height: 1.2; /* Tối ưu hiển thị trên 2 dòng nếu cần */
 }
 
 .group-grid-item .count {
-    font-size: 0.75rem; /* text-xs */
+    font-size: 0.625rem; /* Kích thước font cho số lượng task (10px) */
+    line-height: 1.2;
     color: #64748b;
     white-space: nowrap; /* Đảm bảo chữ "X tasks" không bị xuống dòng */
 }
@@ -207,15 +212,23 @@
 
 #task-view-content {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    /* Cho phép tự động điền các cột, mỗi cột có kích thước tối thiểu 70px */
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
     gap: 10px; /* Tăng khoảng cách cho thoáng */
 }
 
 /* Thêm style cho các task item trong view này, kế thừa từ .task-library-item */
 #task-view-content .task-library-item {
-    /* Các thuộc tính đã có trong .task-library-item */
-    /* Có thể thêm hoặc ghi đè style nếu cần */
-    text-align: center; /* Căn giữa chữ cho đẹp hơn trong ô nhỏ */
+    width: 70px; /* Kích thước cố định 70x70px */
+    height: 70px;
+    text-align: center; /* Căn giữa chữ */
+    font-size: 0.75rem; /* Kích thước font cho tên task (12px) */
+    line-height: 1.2; /* Tối ưu hiển thị trên nhiều dòng */
+    overflow: hidden; /* Ẩn phần văn bản thừa */
+    text-overflow: ellipsis; /* Hiển thị dấu ba chấm cho văn bản bị cắt */
+    display: -webkit-box; /* Cần cho -webkit-line-clamp */
+    -webkit-line-clamp: 3; /* Giới hạn 3 dòng */
+    -webkit-box-orient: vertical; /* Cần cho -webkit-line-clamp */
 }
 
 /* --- Hiệu ứng kéo thả cho khu vực xây dựng mẫu --- */
