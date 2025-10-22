@@ -223,6 +223,31 @@ export async function initializeTaskLibrary() {
         // Tạo ghost element
         if (menuContainer.classList.contains('expanded')) {
             ghostElement = menuContainer.cloneNode(true);
+            // Khi menuContainer ở trạng thái mở rộng, ghostElement cần có kích thước và bo góc tương ứng
+            // vì CSS rule #task-library-container.expanded không áp dụng cho #task-library-ghost.
+            ghostElement.style.width = `${rect.width}px`;
+            ghostElement.style.height = `${rect.height}px`;
+            ghostElement.style.borderRadius = '8px'; // Bo góc khi mở rộng
+
+            // Đảm bảo tiêu đề của ghost cũng hiển thị
+            const ghostTitle = ghostElement.querySelector('.task-library-title');
+            if (ghostTitle) {
+                ghostTitle.classList.remove('opacity-0');
+            }
+
+            console.log('[DEBUG] Ghost element (trước khi sửa):', ghostElement.cloneNode(true));
+
+            // Quan trọng: Sau khi clone, chúng ta cần đảm bảo phần body của ghost
+            // được hiển thị, vì nó có thể đã bị ẩn bởi các lớp CSS.
+            const ghostBody = ghostElement.querySelector('.task-library-body');
+            if (ghostBody) {
+                console.log('[DEBUG] Ghost body (trước khi sửa):', ghostBody.cloneNode(true));
+                console.log('[DEBUG] Class list của ghost body (trước khi sửa):', ghostBody.classList.toString());
+                // Xóa các lớp tiện ích của Tailwind đang ẩn phần thân đi.
+                ghostBody.classList.remove('opacity-0', 'invisible');
+                console.log('[DEBUG] Class list của ghost body (sau khi sửa):', ghostBody.classList.toString());
+                console.log('[DEBUG] Ghost body (sau khi sửa):', ghostBody.cloneNode(true));
+            }
         } else {
             ghostElement = header.cloneNode(true);
             ghostElement.style.width = `${rect.width}px`;
@@ -252,24 +277,31 @@ export async function initializeTaskLibrary() {
     };
 
     const onDragEnd = () => {
-        if (!isDragging) return;
-        const ghostRect = ghostElement.getBoundingClientRect();
-        menuContainer.style.left = `${ghostRect.left}px`;
-        menuContainer.style.top = `${ghostRect.top}px`;
-        saveMenuState();
+        if (!isDragging) return; // Nếu không phải đang kéo thì thôi
+
+        // Nếu ghostElement đã được tạo, nghĩa là người dùng đã kéo thực sự
         if (ghostElement) {
+            const ghostRect = ghostElement.getBoundingClientRect();
+            menuContainer.style.left = `${ghostRect.left}px`;
+            menuContainer.style.top = `${ghostRect.top}px`;
+            saveMenuState();
+
             document.body.removeChild(ghostElement);
             ghostElement = null;
             menuContainer.classList.remove('dragging');
-            isDragging = false;
-            setTimeout(() => { menuContainer.dataset.isDragging = 'false'; }, 50);
+        } else {
+            // Nếu không có ghost, đó là một cú click
+            toggleMenu();
         }
+
+        isDragging = false;
+        menuContainer.dataset.isDragging = 'false';
     };
 
     // Đăng ký các listener một lần duy nhất
-    document.addEventListener('mousedown', onDragStart, true);
-    document.addEventListener('mousemove', onDragMove, true);
-    document.addEventListener('mouseup', onDragEnd, true);
+    header.addEventListener('mousedown', onDragStart);
+    document.addEventListener('mousemove', onDragMove);
+    document.addEventListener('mouseup', onDragEnd);
 
     loadMenuState();
 
@@ -277,9 +309,9 @@ export async function initializeTaskLibrary() {
         destroy: () => {
             document.body.removeChild(menuContainer);
             // Hủy các listener đã đăng ký để dọn dẹp bộ nhớ
-            document.removeEventListener('mousedown', onDragStart, true);
-            document.removeEventListener('mousemove', onDragMove, true);
-            document.removeEventListener('mouseup', onDragEnd, true);
+            header.removeEventListener('mousedown', onDragStart);
+            document.removeEventListener('mousemove', onDragMove);
+            document.removeEventListener('mouseup', onDragEnd);
         }
     };
 }
