@@ -59,16 +59,17 @@ function renderGroupGridView() {
     allGroupedTasks.forEach(group => {
         // Đọc trực tiếp object màu từ group, nếu không có thì dùng màu mặc định
         const color = (group.color && group.color.bg) ? group.color : defaultColor;
-
         const groupItem = document.createElement('div');
         // Sử dụng các lớp màu đã được đồng bộ
         groupItem.className = `group-grid-item ${color.bg} ${color.border} ${color.hover}`;
         groupItem.dataset.groupId = group.id;
         groupItem.innerHTML = `
+            <div></div>
             <span class="code">${group.code}</span>
             <span class="count">${group.tasks.length} tasks</span>
         `;
         groupItem.addEventListener('click', () => renderTaskGridView(group.id));
+        console.log('groupItem:',groupItem)
         groupView.appendChild(groupItem);
     });
 }

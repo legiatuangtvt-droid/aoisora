@@ -141,7 +141,7 @@
 .group-grid-item {
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: space-between; /* Thay đổi ở đây */
     align-items: center;
     box-sizing: border-box; /* Đảm bảo padding không làm tăng kích thước tổng thể */
     width: 70px; /* Kích thước cố định 70x70px */
