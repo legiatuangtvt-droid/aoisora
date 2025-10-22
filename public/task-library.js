@@ -235,18 +235,14 @@ export async function initializeTaskLibrary() {
                 ghostTitle.classList.remove('opacity-0');
             }
 
-            console.log('[DEBUG] Ghost element (trước khi sửa):', ghostElement.cloneNode(true));
-
             // Quan trọng: Sau khi clone, chúng ta cần đảm bảo phần body của ghost
             // được hiển thị, vì nó có thể đã bị ẩn bởi các lớp CSS.
             const ghostBody = ghostElement.querySelector('.task-library-body');
             if (ghostBody) {
-                console.log('[DEBUG] Ghost body (trước khi sửa):', ghostBody.cloneNode(true));
-                console.log('[DEBUG] Class list của ghost body (trước khi sửa):', ghostBody.classList.toString());
-                // Xóa các lớp tiện ích của Tailwind đang ẩn phần thân đi.
-                ghostBody.classList.remove('opacity-0', 'invisible');
-                console.log('[DEBUG] Class list của ghost body (sau khi sửa):', ghostBody.classList.toString());
-                console.log('[DEBUG] Ghost body (sau khi sửa):', ghostBody.cloneNode(true));
+                // Giải pháp triệt để: Ghi đè trực tiếp style để đảm bảo phần thân của ghost được hiển thị.
+                // Việc này sẽ ghi đè cả class của Tailwind và rule CSS gốc trong file .css.
+                ghostBody.style.opacity = '1';
+                ghostBody.style.visibility = 'visible';
             }
         } else {
             ghostElement = header.cloneNode(true);
