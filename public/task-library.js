@@ -111,6 +111,7 @@ function renderTaskGridView(groupId) {
             // Sử dụng lại class 'task-library-item' để có thể kéo thả
             taskItem.className = 'task-library-item';
             taskItem.dataset.taskCode = generatedCode; // Gán mã task đã tạo vào dataset
+            taskItem.dataset.groupId = group.id; // Thêm groupId để xác định màu sắc
             taskItem.textContent = task.name;
             taskContent.appendChild(taskItem);
         });

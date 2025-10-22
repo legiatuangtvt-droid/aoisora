@@ -26,11 +26,14 @@
 /* --- Ghost Element (Ảnh kéo) --- */
 #task-library-ghost {
     position: fixed;
-    z-index: 10000; /* Luôn nổi trên cùng */
-    opacity: 0.75;
+    z-index: 10000; /* Luôn nổi trên cùng */    
     pointer-events: none; /* Không bắt sự kiện chuột */
     border-radius: inherit; /* Kế thừa bo góc từ menu gốc */
     transition: none; /* Không có hiệu ứng chuyển động để theo chuột ngay lập tức */
+    /* Hiệu ứng mới cho ghost element */
+    opacity: 0.85; /* Hơi trong suốt */
+    transform: rotate(2deg); /* Hơi nghiêng một chút */
+    box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.25); /* Đổ bóng rõ hơn */
 }
 
 /* --- Trạng thái mở rộng --- */
@@ -234,25 +237,22 @@
     -webkit-box-orient: vertical; /* Cần cho -webkit-line-clamp */
 }
 
-/* --- Hiệu ứng kéo thả cho khu vực xây dựng mẫu --- */
-#template-schedule-builder.sortable-drag-enter {
-    border-color: #6366f1; /* Màu indigo */
-    background-color: #e0e7ff; /* Nền màu xanh nhạt */
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3); /* Hiệu ứng đổ bóng nhẹ */
+/* --- Hiệu ứng kéo thả cho khu vực xây dựng mẫu (daily-templates.js) --- */
+
+/* 
+ * Class cho "bóng ma" khi kéo task.
+ * Thay vì chiếm không gian và đẩy các item khác, nó sẽ ẩn đi.
+ * Điều này tạo ra hiệu ứng "đổi chỗ" thay vì "chèn".
+ */
+.swap-ghost {
+    opacity: 0;
 }
 
-/* --- Hiệu ứng làm mờ khi kéo task --- */
-
-/* Làm mờ toàn bộ nội dung chính khi đang kéo task (Đã tắt) */
-.is-dragging-task main {
-    /* filter: blur(2px) grayscale(50%); */
-    /* transition: filter 0.3s ease; */
-}
-
-/* Làm cho khu vực xây dựng mẫu nổi bật trở lại (Đã tắt) */
-.is-dragging-task #template-schedule-builder {
-    /* position: relative; */ /* Cần thiết để z-index hoạt động */
-    /* z-index: 10; */ /* Đưa lên trên lớp mờ ảo */
-    /* filter: none; */ /* Bỏ hiệu ứng làm mờ */
-    /* transition: filter 0.3s ease, box-shadow 0.3s ease; */ /* Thêm transition cho mượt */
+/* 
+ * Khi một task được kéo qua một ô (.quarter-hour-slot),
+ * ô đó sẽ có hiệu ứng nền và viền để báo hiệu đây là vùng có thể thả.
+ */
+.quarter-hour-slot.sortable-drag-over {
+    background-color: #eef2ff; /* Màu nền indigo-50 */
+    border: 1px dashed #6366f1 !important; /* Viền đứt màu indigo */
 }
