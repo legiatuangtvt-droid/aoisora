@@ -224,7 +224,7 @@ export async function initializeTaskLibrary() {
         if (menuContainer.classList.contains('expanded')) {
             ghostElement = menuContainer.cloneNode(true);
             // Khi menuContainer ở trạng thái mở rộng, ghostElement cần có kích thước và bo góc tương ứng
-            // vì CSS rule #task-library-container.expanded không áp dụng cho #task-library-ghost.
+            // vì CSS rule #task-library-container.expanded không áp dụng cho #task-library-ghost. Sử dụng giá trị cố định từ CSS.
             ghostElement.style.width = `${rect.width}px`;
             ghostElement.style.height = `${rect.height}px`;
             ghostElement.style.borderRadius = '8px'; // Bo góc khi mở rộng

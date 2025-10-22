@@ -35,7 +35,7 @@
 
 /* --- Trạng thái mở rộng --- */
 #task-library-container.expanded {
-    width: 420px; /* Chiều rộng để hiển thị 5 cột (70px/cột + 10px gap + 12px padding) */
+    width: 435px; /* Tăng chiều rộng để bù cho không gian của thanh cuộn dọc */
     height: 50vh; /* Chiều cao có thể thay đổi */
     max-height: 700px;
     border-radius: 8px; /* Hình chữ nhật bo góc khi mở rộng */
@@ -213,7 +213,7 @@
 #task-view-content {
     display: grid;
     /* Cho phép tự động điền các cột, mỗi cột có kích thước tối thiểu 70px */
-    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
     gap: 10px; /* Tăng khoảng cách cho thoáng */
 }
 
