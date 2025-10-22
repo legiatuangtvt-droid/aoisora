@@ -1,5 +1,6 @@
 import { db } from './firebase.js';
 import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
 import "https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js";
 
 // Biến để lưu trữ dữ liệu và các view
@@ -234,57 +235,40 @@ export async function initializeTaskLibrary() {
     let startX, startY, initialLeft, initialTop;
     let ghostElement = null;
 
-    const onDragStart = (e) => {
+    const onDragStart = async (e) => {
         // Chỉ kéo bằng chuột trái và khi target là header
         if (e.button !== 0) return;
         if (!e.target.closest('.task-library-header')) return;
 
         isDragging = true;
-        menuContainer.dataset.isDragging = 'true';
 
         const rect = menuContainer.getBoundingClientRect();
         startX = e.clientX;
         startY = e.clientY;
         initialLeft = rect.left;
         initialTop = rect.top;
+        
+        e.preventDefault();
+        menuContainer.classList.add('dragging');
 
-        // Tạo ghost element
-        if (menuContainer.classList.contains('expanded')) {
-            ghostElement = menuContainer.cloneNode(true);
-            // Khi menuContainer ở trạng thái mở rộng, ghostElement cần có kích thước và bo góc tương ứng
-            // vì CSS rule #task-library-container.expanded không áp dụng cho #task-library-ghost. Sử dụng giá trị cố định từ CSS.
-            ghostElement.style.width = `${rect.width}px`;
-            ghostElement.style.height = `${rect.height}px`;
-            ghostElement.style.borderRadius = '8px'; // Bo góc khi mở rộng
+        // --- Logic mới: Sử dụng html2canvas để tạo ảnh chụp của menu ---
+        const canvas = await html2canvas(menuContainer, {
+            useCORS: true,
+            backgroundColor: null, // Nền trong suốt
+            // Bỏ qua chính ghost element nếu nó vô tình được vẽ
+            ignoreElements: (element) => element.id === 'task-library-window-ghost'
+        });
 
-            // Đảm bảo tiêu đề của ghost cũng hiển thị
-            const ghostTitle = ghostElement.querySelector('.task-library-title');
-            if (ghostTitle) {
-                ghostTitle.classList.remove('opacity-0');
-            }
+        // Nếu người dùng đã thả chuột trong lúc đang vẽ canvas, không làm gì cả
+        if (!isDragging) return;
 
-            // Quan trọng: Sau khi clone, chúng ta cần đảm bảo phần body của ghost
-            // được hiển thị, vì nó có thể đã bị ẩn bởi các lớp CSS.
-            const ghostBody = ghostElement.querySelector('.task-library-body');
-            if (ghostBody) {
-                // Giải pháp triệt để: Ghi đè trực tiếp style để đảm bảo phần thân của ghost được hiển thị.
-                // Việc này sẽ ghi đè cả class của Tailwind và rule CSS gốc trong file .css.
-                ghostBody.style.opacity = '1';
-                ghostBody.style.visibility = 'visible';
-            }
-        } else {
-            ghostElement = header.cloneNode(true);
-            ghostElement.style.width = `${rect.width}px`;
-            ghostElement.style.height = `${rect.height}px`;
-            ghostElement.style.borderRadius = '9999px';
-        }
+        ghostElement = document.createElement('div');
         ghostElement.id = 'task-library-window-ghost'; // Đổi tên ID để tránh xung đột
+        ghostElement.appendChild(canvas); // Thêm canvas vào ghost
+        // Áp dụng style cho ghost
         ghostElement.style.left = `${initialLeft}px`;
         ghostElement.style.top = `${initialTop}px`;
         document.body.appendChild(ghostElement);
-
-        menuContainer.classList.add('dragging');
-        e.preventDefault();
     };
 
     const onDragMove = (e) => {
@@ -303,23 +287,17 @@ export async function initializeTaskLibrary() {
     const onDragEnd = () => {
         if (!isDragging) return; // Nếu không phải đang kéo thì thôi
 
-        // Nếu ghostElement đã được tạo, nghĩa là người dùng đã kéo thực sự
+        isDragging = false; // Đặt lại cờ isDragging ngay lập tức
+
         if (ghostElement) {
             const ghostRect = ghostElement.getBoundingClientRect();
             menuContainer.style.left = `${ghostRect.left}px`;
             menuContainer.style.top = `${ghostRect.top}px`;
             saveMenuState();
-
             document.body.removeChild(ghostElement);
             ghostElement = null;
-            menuContainer.classList.remove('dragging');
-        } else {
-            // Nếu không có ghost, đó là một cú click
-            toggleMenu();
         }
-
-        isDragging = false;
-        menuContainer.dataset.isDragging = 'false';
+        menuContainer.classList.remove('dragging');
     };
 
     // Đăng ký các listener một lần duy nhất
