@@ -36,7 +36,7 @@
 /* --- Trạng thái mở rộng --- */
 #task-library-container.expanded {
     width: 410px; /* Chiều rộng để hiển thị 4 cột (70px/cột + 10px gap + 12px padding) */
-    height: 60vh; /* Chiều cao có thể thay đổi */
+    height: 50vh; /* Chiều cao có thể thay đổi */
     max-height: 700px;
     border-radius: 8px; /* Hình chữ nhật bo góc khi mở rộng */
 }
