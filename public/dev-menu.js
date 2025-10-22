@@ -245,7 +245,8 @@ function initializeDevMenu() {
                 if (group.code && group.tasks) {
                     // Chuẩn bị object màu mặc định nếu trong data.json không có
                     const defaultColorObject = {
-                        name: 'slate', bg: 'bg-slate-200', text: 'text-slate-800', border: 'border-slate-400', hover: 'hover:bg-slate-300'
+                        name: 'slate', bg: '#e2e8f0', text: '#1e293b', border: '#94a3b8', hover: '#cbd5e1',
+                        tailwind_bg: 'bg-slate-200', tailwind_text: 'text-slate-800', tailwind_border: 'border-slate-400'
                     };
 
                     const docRef = doc(db, 'task_groups', group.code);

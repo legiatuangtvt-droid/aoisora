@@ -2,20 +2,35 @@ import { db } from './firebase.js';
 import { collection, getDocs, onSnapshot, query, orderBy, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 let activeListeners = [];
- 
+
 // Bảng màu để người dùng có thể chọn cho mỗi nhóm.
-// Sử dụng màu đậm hơn (200/400) để nổi bật.
+// Lưu trữ giá trị màu HEX thực tế thay vì class Tailwind.
 const colorPalette = {
-    'slate': { name: 'slate', bg: 'bg-slate-200', text: 'text-slate-800', border: 'border-slate-400', hover: 'hover:bg-slate-300' },
-    'green': { name: 'green', bg: 'bg-green-200', text: 'text-green-800', border: 'border-green-400', hover: 'hover:bg-green-300' },
-    'blue': { name: 'blue', bg: 'bg-blue-200', text: 'text-blue-800', border: 'border-blue-400', hover: 'hover:bg-blue-300' },
-    'amber': { name: 'amber', bg: 'bg-amber-200', text: 'text-amber-800', border: 'border-amber-400', hover: 'hover:bg-amber-300' },
-    'teal': { name: 'teal', bg: 'bg-teal-200', text: 'text-teal-800', border: 'border-teal-400', hover: 'hover:bg-teal-300' },
-    'purple': { name: 'purple', bg: 'bg-purple-200', text: 'text-purple-800', border: 'border-purple-400', hover: 'hover:bg-purple-300' },
-    'indigo': { name: 'indigo', bg: 'bg-indigo-200', text: 'text-indigo-800', border: 'border-indigo-400', hover: 'hover:bg-indigo-300' },
-    'red': { name: 'red', bg: 'bg-red-200', text: 'text-red-800', border: 'border-red-400', hover: 'hover:bg-red-300' },
-    'pink': { name: 'pink', bg: 'bg-pink-200', text: 'text-pink-800', border: 'border-pink-400', hover: 'hover:bg-pink-300' },
+    'slate': { name: 'slate', bg: '#e2e8f0', text: '#1e293b', border: '#94a3b8', hover: '#cbd5e1', tailwind_bg: 'bg-slate-200', tailwind_text: 'text-slate-800', tailwind_border: 'border-slate-400' },
+    'green': { name: 'green', bg: '#bbf7d0', text: '#166534', border: '#4ade80', hover: '#86efac', tailwind_bg: 'bg-green-200', tailwind_text: 'text-green-800', tailwind_border: 'border-green-400' },
+    'blue': { name: 'blue', bg: '#bfdbfe', text: '#1e40af', border: '#60a5fa', hover: '#93c5fd', tailwind_bg: 'bg-blue-200', tailwind_text: 'text-blue-800', tailwind_border: 'border-blue-400' },
+    'amber': { name: 'amber', bg: '#fde68a', text: '#92400e', border: '#facc15', hover: '#fcd34d', tailwind_bg: 'bg-amber-200', tailwind_text: 'text-amber-800', tailwind_border: 'border-amber-400' },
+    'teal': { name: 'teal', bg: '#99f6e4', text: '#134e4a', border: '#2dd4bf', hover: '#5eead4', tailwind_bg: 'bg-teal-200', tailwind_text: 'text-teal-800', tailwind_border: 'border-teal-400' },
+    'purple': { name: 'purple', bg: '#e9d5ff', text: '#6b21a8', border: '#c084fc', hover: '#d8b4fe', tailwind_bg: 'bg-purple-200', tailwind_text: 'text-purple-800', tailwind_border: 'border-purple-400' },
+    'indigo': { name: 'indigo', bg: '#c7d2fe', text: '#3730a3', border: '#818cf8', hover: '#a5b4fc', tailwind_bg: 'bg-indigo-200', tailwind_text: 'text-indigo-800', tailwind_border: 'border-indigo-400' },
+    'red': { name: 'red', bg: '#fecaca', text: '#991b1b', border: '#f87171', hover: '#fca5a5', tailwind_bg: 'bg-red-200', tailwind_text: 'text-red-800', tailwind_border: 'border-red-400' },
+    'pink': { name: 'pink', bg: '#fbcfe8', text: '#9d174d', border: '#f472b6', hover: '#f9a8d4', tailwind_bg: 'bg-pink-200', tailwind_text: 'text-pink-800', tailwind_border: 'border-pink-400' },
 };
+
+/**
+ * Safelist cho Tailwind CSS JIT Compiler.
+ * Vẫn cần safelist cho các task item được kéo vào daily-templates,
+ * vì chúng vẫn sử dụng class Tailwind để tô màu.
+ * bg-slate-200 text-slate-800 border-slate-400
+ * bg-green-200 text-green-800 border-green-400
+ * bg-blue-200 text-blue-800 border-blue-400
+ * bg-amber-200 text-amber-800 border-amber-400
+ * bg-teal-200 text-teal-800 border-teal-400
+ * bg-purple-200 text-purple-800 border-purple-400
+ * bg-indigo-200 text-indigo-800 border-indigo-400
+ * bg-red-200 text-red-800 border-red-400
+ * bg-pink-200 text-pink-800 border-pink-400
+ */
 
 /**
  * Render toàn bộ nội dung trang, bao gồm thống kê và các thẻ nhóm công việc.
@@ -107,10 +122,10 @@ function renderGroupCards(taskGroups) {
     const defaultTaskColor = colorPalette['slate'];
 
     groupsContainer.innerHTML = taskGroups.map(group => {
-        const color = (group.color && group.color.bg) ? group.color : colorPalette['slate'];
+        const color = (group.color && group.color.tailwind_bg) ? group.color : colorPalette['slate'];
 
         const headerCell = `
-            <div class="group-code-card ${color.bg} text-slate-800 rounded ${color.border} flex flex-col items-center justify-between text-center w-28 h-[146px] flex-shrink-0 cursor-pointer transition-colors ${color.hover}" data-group-code="${group.code}">
+            <div class="group-code-card ${color.tailwind_bg} text-slate-800 rounded ${color.tailwind_border} flex flex-col items-center justify-between text-center w-28 h-[146px] flex-shrink-0 cursor-pointer transition-colors hover:bg-slate-300" data-group-code="${group.code}">
                 <div class="w-full text-xs font-semibold py-0.5 bg-black/10 rounded-t">
                     Group Task ${group.order}
                 </div>
@@ -134,7 +149,7 @@ function renderGroupCards(taskGroups) {
                 const generatedCode = `1${group.order}${String(task.order).padStart(2, '0')}`;
                 const frequency = task.frequency || 'Other'; // Mặc định là 'Other' nếu không có
                 return `
-                    <div class="task-card ${defaultTaskColor.bg} rounded ${defaultTaskColor.border} flex flex-col items-center justify-between text-center w-[70px] h-[100px] flex-shrink-0 transition-all ${defaultTaskColor.hover} hover:shadow-md cursor-pointer" 
+                    <div class="task-card ${defaultTaskColor.tailwind_bg} rounded ${defaultTaskColor.tailwind_border} flex flex-col items-center justify-between text-center w-[70px] h-[100px] flex-shrink-0 transition-all hover:bg-slate-300 hover:shadow-md cursor-pointer" 
                          data-task-order="${task.order}" data-task-frequency="${frequency}">
                         <div class="flex-1 flex flex-col justify-center items-center px-1 pt-2 pb-1">
                             <p class="text-sm font-medium text-slate-800 leading-tight">${task.name}</p>
@@ -349,7 +364,7 @@ function showColorPalette(targetCard) {
 
     // Điền các ô màu vào bảng màu
     palettePopup.innerHTML = Object.values(colorPalette).map(color => `
-        <div class="w-6 h-6 rounded-full cursor-pointer ${color.bg} border-2 ${color.border} hover:scale-110 transition-transform" 
+        <div class="w-6 h-6 rounded-full cursor-pointer border-2 hover:scale-110 transition-transform" style="background-color: ${color.bg}; border-color: ${color.border};"
              data-color-name="${color.name}" 
              title="${color.name}">
         </div>
@@ -402,9 +417,9 @@ async function updateGroupColor(groupCode, newColorName) {
 
         // Cập nhật màu cho ô code trong DOM để phản hồi ngay lập tức
         Object.values(colorPalette).forEach(color => {
-            groupCodeCard.classList.remove(color.bg, color.border, color.hover);
+            groupCodeCard.classList.remove(color.tailwind_bg, color.tailwind_border);
         });
-        groupCodeCard.classList.add(newColorObject.bg, newColorObject.border, newColorObject.hover);
+        groupCodeCard.classList.add(newColorObject.tailwind_bg, newColorObject.tailwind_border);
 
         window.showToast(`Nhóm ${groupCode} đã đổi sang màu '${newColorObject.name}'`, 'success', 2000);
     } catch (error) {

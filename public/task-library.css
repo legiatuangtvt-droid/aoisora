@@ -145,14 +145,15 @@
     align-items: center;
     box-sizing: border-box; /* Đảm bảo padding không làm tăng kích thước tổng thể */
     width: 70px; /* Kích thước cố định 70x70px */
-    height: 100px; /* Đồng bộ kích thước với ô task */
-    border: 1px solid #e2e8f0;
+    height: 100px;
     border-radius: 8px;
-    background-color: #f8fafc;
     cursor: pointer;
     transition: all 0.2s ease;
     text-align: center;
     padding: 4px;
+    /* Sử dụng biến CSS cho màu sắc */
+    background-color: var(--group-bg-color, #f8fafc);
+    border: 1px solid var(--group-border-color, #e2e8f0);
 }
 
 .group-grid-item:hover {
@@ -160,6 +161,7 @@
     border-color: #94a3b8;
     transform: translateY(-2px);
     box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+    background-color: var(--group-hover-bg-color, #f1f5f9);
 }
 
 .group-grid-item .code {

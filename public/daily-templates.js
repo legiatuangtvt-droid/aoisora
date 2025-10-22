@@ -10,7 +10,7 @@ let currentTemplateId = null;
 
 // Bảng màu mặc định nếu group không có màu
 const defaultColor = {
-    bg: 'bg-slate-200', text: 'text-slate-800', border: 'border-slate-400'
+    tailwind_bg: 'bg-slate-200', tailwind_text: 'text-slate-800', tailwind_border: 'border-slate-400'
 };
 let allTaskGroups = {};
 
@@ -164,11 +164,11 @@ function initializeDragAndDrop() {
                     // Khi kéo từ thư viện, item.textContent chính là tên task
                     const taskName = item.textContent;
                     const group = allTaskGroups[groupId];
-                    const color = (group && group.color) ? group.color : defaultColor;
+                    const color = (group && group.color && group.color.tailwind_bg) ? group.color : defaultColor;
 
                     // Ghi đè class để định dạng lại task trong lưới lịch trình
                     // Sử dụng justify-between để đẩy taskCode xuống dưới
-                    item.className = `scheduled-task-item relative group w-[70px] h-[100px] ${color.bg} ${color.text} ${color.border} text-xs p-1 rounded-md shadow-sm cursor-pointer flex flex-col justify-between items-center text-center mb-1`;
+                    item.className = `scheduled-task-item relative group w-[70px] h-[100px] ${color.tailwind_bg} ${color.tailwind_text} ${color.tailwind_border} text-xs p-1 rounded-md shadow-sm cursor-pointer flex flex-col justify-between items-center text-center mb-1`;
                     item.dataset.taskCode = taskCode; // Gán lại mã task vào item mới
                     item.dataset.groupId = groupId; // Lưu lại groupId để dùng khi tải lại mẫu
 
@@ -375,13 +375,13 @@ async function loadTemplate(templateId) {
 
                     const slot = document.querySelector(`.quarter-hour-slot[data-staff-id="${staffId}"][data-time="${time}"][data-quarter="${quarter}"]`);
                     if (slot) {
-                        const group = allTaskGroups[groupId];
-                        const color = (group && group.color) ? group.color : defaultColor;
+                        const group = allTaskGroups[groupId] || {};
+                        const color = (group.color && group.color.tailwind_bg) ? group.color : defaultColor;
                         // Giả lập một item task để thêm vào
                         const taskName = taskInfo.taskName || '...'; // Lấy taskName từ dữ liệu mẫu
                         const taskItem = document.createElement('div');
                         // Sử dụng justify-between để đẩy taskCode xuống dưới
-                        taskItem.className = `scheduled-task-item relative group w-[70px] h-[100px] ${color.bg} ${color.text} ${color.border} text-xs p-1 rounded-md shadow-sm cursor-pointer flex flex-col justify-between items-center text-center mb-1`;
+                        taskItem.className = `scheduled-task-item relative group w-[70px] h-[100px] ${color.tailwind_bg} ${color.tailwind_text} ${color.tailwind_border} text-xs p-1 rounded-md shadow-sm cursor-pointer flex flex-col justify-between items-center text-center mb-1`;
                         taskItem.dataset.taskCode = taskCode;
                         taskItem.dataset.groupId = groupId;
                         taskItem.innerHTML = `

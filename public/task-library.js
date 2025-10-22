@@ -10,7 +10,7 @@ let taskLibraryController = null;
 
 // Bảng màu mặc định nếu group không có màu
 const defaultColor = {
-    bg: 'bg-slate-200', text: 'text-slate-800', border: 'border-slate-400', hover: 'hover:bg-slate-300'
+    bg: '#e2e8f0', text: '#1e293b', border: '#94a3b8', hover: '#cbd5e1', tailwind_bg: 'bg-slate-200', tailwind_text: 'text-slate-800', tailwind_border: 'border-slate-400'
 };
 /**
  * Lấy dữ liệu công việc từ Firestore và nhóm chúng lại.
@@ -58,11 +58,14 @@ function renderGroupGridView() {
 
     allGroupedTasks.forEach(group => {
         // Đọc trực tiếp object màu từ group, nếu không có thì dùng màu mặc định
-        const color = (group.color && group.color.bg) ? group.color : defaultColor;
+        const color = (group.color && group.color.bg) ? group.color : defaultColor; // Giờ đây color chứa giá trị HEX
         const groupItem = document.createElement('div');
-        // Sử dụng các lớp màu đã được đồng bộ
-        groupItem.className = `group-grid-item ${color.bg} ${color.border} ${color.hover}`;
+        groupItem.className = `group-grid-item`; // Class cơ bản
         groupItem.dataset.groupId = group.id;
+        // Gán giá trị màu vào biến CSS
+        groupItem.style.setProperty('--group-bg-color', color.bg);
+        groupItem.style.setProperty('--group-border-color', color.border);
+        groupItem.style.setProperty('--group-hover-bg-color', color.hover);
         groupItem.innerHTML = `
             <div></div>
             <span class="code">${group.code}</span>
@@ -100,11 +103,11 @@ function renderTaskGridView(groupId) {
         // Sắp xếp task theo 'order' trước khi render
         const sortedTasks = [...group.tasks].sort((a, b) => (a.order || 0) - (b.order || 0));
         sortedTasks.forEach(task => {
-            const color = (group.color && group.color.bg) ? group.color : defaultColor;
+            const color = (group.color && group.color.tailwind_bg) ? group.color : defaultColor;
             const taskItem = document.createElement('div');
             const generatedCode = `1${group.order}${String(task.order).padStart(2, '0')}`;
             
-            taskItem.className = `task-library-item relative group ${color.bg} ${color.text} ${color.border} text-xs p-1 rounded-md shadow-sm cursor-grab flex flex-col justify-between items-center text-center mb-1`;
+            taskItem.className = `task-library-item relative group ${color.tailwind_bg} ${color.tailwind_text} ${color.tailwind_border} text-xs p-1 rounded-md shadow-sm cursor-grab flex flex-col justify-between items-center text-center mb-1`;
             taskItem.dataset.taskCode = generatedCode; // Gán mã task đã tạo vào dataset
             taskItem.dataset.groupId = group.id; // Thêm groupId để xác định màu sắc
             taskItem.innerHTML = `
