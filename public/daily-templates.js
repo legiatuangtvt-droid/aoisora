@@ -8,26 +8,11 @@ let sortableInstances = [];
 let allTemplates = [];
 let currentTemplateId = null;
 
-// Bảng màu định nghĩa các lớp CSS cho từng tên màu.
-const colorDefinitions = {
-    'green': { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-300', hover: 'hover:bg-green-200' },
-    'blue': { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-300', hover: 'hover:bg-blue-200' },
-    'indigo': { bg: 'bg-indigo-100', text: 'text-indigo-800', border: 'border-indigo-300', hover: 'hover:bg-indigo-200' },
-    'amber': { bg: 'bg-amber-100', text: 'text-amber-700', border: 'border-amber-300', hover: 'hover:bg-amber-200' },
-    'teal': { bg: 'bg-teal-100', text: 'text-teal-800', border: 'border-teal-300', hover: 'hover:bg-teal-200' },
-    'purple': { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-300', hover: 'hover:bg-purple-200' },
-    'red': { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-300', hover: 'hover:bg-red-200' },
-    'pink': { bg: 'bg-pink-100', text: 'text-pink-800', border: 'border-pink-300', hover: 'hover:bg-pink-200' },
-    'slate': { bg: 'bg-slate-100', text: 'text-slate-800', border: 'border-slate-300', hover: 'hover:bg-slate-200' },
+// Bảng màu mặc định nếu group không có màu
+const defaultColor = {
+    bg: 'bg-slate-200', text: 'text-slate-800', border: 'border-slate-400'
 };
-
-// Bảng màu cho các nhóm, sẽ được xây dựng động từ Firestore.
-let groupColorPalette = {
-    'DEFAULT': colorDefinitions['slate']
-};
-
-// Hàm tiện ích để lấy màu dựa trên groupId
-const getGroupColor = (groupId) => groupColorPalette[groupId] || groupColorPalette.DEFAULT;
+let allTaskGroups = {};
 
 /**
  * Tải tất cả dữ liệu nền cần thiết một lần.
@@ -46,17 +31,13 @@ async function fetchInitialData() {
             return acc;
         }, {});
 
-        // Tải nhóm công việc và xây dựng bảng màu động
+        // Tải nhóm công việc để lấy thông tin màu
         const taskGroupsQuery = query(collection(db, 'task_groups'));
         const taskGroupsSnapshot = await getDocs(taskGroupsQuery);
-        taskGroupsSnapshot.forEach(doc => {
-            const group = doc.data();
-            const groupCode = doc.id; // groupCode là ID của document
-            const colorName = group.color || 'slate'; // Mặc định là 'slate' nếu không có màu
-            if (colorDefinitions[colorName]) {
-                groupColorPalette[groupCode] = colorDefinitions[colorName];
-            }
-        });
+        allTaskGroups = taskGroupsSnapshot.docs.reduce((acc, doc) => {
+            acc[doc.id] = { id: doc.id, ...doc.data() };
+            return acc;
+        }, {});
     } catch (error) {
         console.error("Lỗi nghiêm trọng khi tải dữ liệu nền:", error);
         const container = document.getElementById('template-builder-grid-container');
@@ -182,7 +163,8 @@ function initializeDragAndDrop() {
                 if (evt.pullMode === 'clone') {
                     // Khi kéo từ thư viện, item.textContent chính là tên task
                     const taskName = item.textContent;
-                    const color = getGroupColor(groupId); // Lấy bộ màu tương ứng
+                    const group = allTaskGroups[groupId];
+                    const color = (group && group.color) ? group.color : defaultColor;
 
                     // Ghi đè class để định dạng lại task trong lưới lịch trình
                     // Sử dụng justify-between để đẩy taskCode xuống dưới
@@ -393,7 +375,8 @@ async function loadTemplate(templateId) {
 
                     const slot = document.querySelector(`.quarter-hour-slot[data-staff-id="${staffId}"][data-time="${time}"][data-quarter="${quarter}"]`);
                     if (slot) {
-                        const color = getGroupColor(groupId);
+                        const group = allTaskGroups[groupId];
+                        const color = (group && group.color) ? group.color : defaultColor;
                         // Giả lập một item task để thêm vào
                         const taskName = taskInfo.taskName || '...'; // Lấy taskName từ dữ liệu mẫu
                         const taskItem = document.createElement('div');

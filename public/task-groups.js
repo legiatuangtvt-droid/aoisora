@@ -2,22 +2,20 @@ import { db } from './firebase.js';
 import { collection, getDocs, onSnapshot, query, orderBy, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 let activeListeners = [];
-
-// Bảng màu để người dùng có thể chọn cho mỗi nhóm
-const colorPalette = [
-    { name: 'slate', bg: 'bg-slate-50', border: 'border-slate-200', hover: 'hover:bg-slate-100' },
-    { name: 'green', bg: 'bg-green-50', border: 'border-green-200', hover: 'hover:bg-green-100' },
-    { name: 'blue', bg: 'bg-blue-50', border: 'border-blue-200', hover: 'hover:bg-blue-100' },
-    { name: 'amber', bg: 'bg-amber-50', border: 'border-amber-200', hover: 'hover:bg-amber-100' },
-    { name: 'teal', bg: 'bg-teal-50', border: 'border-teal-200', hover: 'hover:bg-teal-100' },
-    { name: 'purple', bg: 'bg-purple-50', border: 'border-purple-200', hover: 'hover:bg-purple-100' },
-    { name: 'indigo', bg: 'bg-indigo-50', border: 'border-indigo-200', hover: 'hover:bg-indigo-100' },
-    { name: 'red', bg: 'bg-red-50', border: 'border-red-200', hover: 'hover:bg-red-100' },
-    { name: 'pink', bg: 'bg-pink-50', border: 'border-pink-200', hover: 'hover:bg-pink-100' },
-];
-
-// Key để lưu trạng thái màu vào localStorage
-const GROUP_COLORS_STORAGE_KEY = 'taskGroupColors';
+ 
+// Bảng màu để người dùng có thể chọn cho mỗi nhóm.
+// Sử dụng màu đậm hơn (200/400) để nổi bật.
+const colorPalette = {
+    'slate': { name: 'slate', bg: 'bg-slate-200', text: 'text-slate-800', border: 'border-slate-400', hover: 'hover:bg-slate-300' },
+    'green': { name: 'green', bg: 'bg-green-200', text: 'text-green-800', border: 'border-green-400', hover: 'hover:bg-green-300' },
+    'blue': { name: 'blue', bg: 'bg-blue-200', text: 'text-blue-800', border: 'border-blue-400', hover: 'hover:bg-blue-300' },
+    'amber': { name: 'amber', bg: 'bg-amber-200', text: 'text-amber-800', border: 'border-amber-400', hover: 'hover:bg-amber-300' },
+    'teal': { name: 'teal', bg: 'bg-teal-200', text: 'text-teal-800', border: 'border-teal-400', hover: 'hover:bg-teal-300' },
+    'purple': { name: 'purple', bg: 'bg-purple-200', text: 'text-purple-800', border: 'border-purple-400', hover: 'hover:bg-purple-300' },
+    'indigo': { name: 'indigo', bg: 'bg-indigo-200', text: 'text-indigo-800', border: 'border-indigo-400', hover: 'hover:bg-indigo-300' },
+    'red': { name: 'red', bg: 'bg-red-200', text: 'text-red-800', border: 'border-red-400', hover: 'hover:bg-red-300' },
+    'pink': { name: 'pink', bg: 'bg-pink-200', text: 'text-pink-800', border: 'border-pink-400', hover: 'hover:bg-pink-300' },
+};
 
 /**
  * Render toàn bộ nội dung trang, bao gồm thống kê và các thẻ nhóm công việc.
@@ -106,14 +104,10 @@ function renderGroupCards(taskGroups) {
     const groupsContainer = document.getElementById('task-groups-container');
     if (!groupsContainer) return;
 
-    // Lấy màu đã lưu từ localStorage
-    const savedColors = JSON.parse(localStorage.getItem(GROUP_COLORS_STORAGE_KEY) || '{}');
-
-    const defaultTaskColor = colorPalette.find(c => c.name === 'slate') || colorPalette[0];
+    const defaultTaskColor = colorPalette['slate'];
 
     groupsContainer.innerHTML = taskGroups.map(group => {
-        const currentColorName = savedColors[group.code] || group.color || 'slate';
-        const color = colorPalette.find(c => c.name === currentColorName) || colorPalette[0];
+        const color = (group.color && group.color.bg) ? group.color : colorPalette['slate'];
 
         const headerCell = `
             <div class="group-code-card ${color.bg} text-slate-800 rounded ${color.border} flex flex-col items-center justify-between text-center w-28 h-[146px] flex-shrink-0 cursor-pointer transition-colors ${color.hover}" data-group-code="${group.code}">
@@ -354,7 +348,7 @@ function showColorPalette(targetCard) {
     palettePopup.className = 'absolute z-20 bg-white border border-gray-300 rounded-lg shadow-xl p-2 grid grid-cols-5 gap-2';
 
     // Điền các ô màu vào bảng màu
-    palettePopup.innerHTML = colorPalette.map(color => `
+    palettePopup.innerHTML = Object.values(colorPalette).map(color => `
         <div class="w-6 h-6 rounded-full cursor-pointer ${color.bg} border-2 ${color.border} hover:scale-110 transition-transform" 
              data-color-name="${color.name}" 
              title="${color.name}">
@@ -393,27 +387,30 @@ function showColorPalette(targetCard) {
  * @param {string} groupCode - Mã của nhóm.
  * @param {string} newColorName - Tên màu mới từ bảng màu.
  */
-function updateGroupColor(groupCode, newColorName) {
+async function updateGroupColor(groupCode, newColorName) {
     const groupCodeCard = document.querySelector(`.group-code-card[data-group-code="${groupCode}"]`);
     if (!groupCodeCard) return;
 
-    const newColor = colorPalette.find(c => c.name === newColorName) || colorPalette[0];
+    const newColorObject = colorPalette[newColorName] || colorPalette['slate'];
 
-    // Cập nhật localStorage
-    const savedColors = JSON.parse(localStorage.getItem(GROUP_COLORS_STORAGE_KEY) || '{}');
-    savedColors[groupCode] = newColor.name;
-    localStorage.setItem(GROUP_COLORS_STORAGE_KEY, JSON.stringify(savedColors));
+    try {
+        // Cập nhật trực tiếp vào Firestore
+        const groupDocRef = doc(db, 'task_groups', groupCode);
+        await updateDoc(groupDocRef, {
+            color: newColorObject // Lưu toàn bộ object màu
+        });
 
-    // Cập nhật màu cho ô code trong DOM
-    // Xóa các class màu cũ
-    colorPalette.forEach(color => {
-        groupCodeCard.classList.remove(color.bg, color.border, color.hover);
-    });
-    // Thêm class màu mới
-    groupCodeCard.classList.add(newColor.bg, newColor.border, newColor.hover);
+        // Cập nhật màu cho ô code trong DOM để phản hồi ngay lập tức
+        Object.values(colorPalette).forEach(color => {
+            groupCodeCard.classList.remove(color.bg, color.border, color.hover);
+        });
+        groupCodeCard.classList.add(newColorObject.bg, newColorObject.border, newColorObject.hover);
 
-    // Hiển thị thông báo nhỏ
-    window.showToast(`Nhóm ${groupCode} đã đổi sang màu '${newColor.name}'`, 'info', 2000);
+        window.showToast(`Nhóm ${groupCode} đã đổi sang màu '${newColorObject.name}'`, 'success', 2000);
+    } catch (error) {
+        console.error("Lỗi khi cập nhật màu nhóm:", error);
+        window.showToast("Không thể lưu thay đổi màu. Vui lòng thử lại.", "error");
+    }
 }
 
 /**

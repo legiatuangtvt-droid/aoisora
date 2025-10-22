@@ -243,13 +243,20 @@ function initializeDevMenu() {
             data.task_groups?.forEach(group => {
                 // Sử dụng 'code' làm ID document để đảm bảo tính duy nhất
                 if (group.code && group.tasks) {
+                    // Chuẩn bị object màu mặc định nếu trong data.json không có
+                    const defaultColorObject = {
+                        name: 'slate', bg: 'bg-slate-200', text: 'text-slate-800', border: 'border-slate-400', hover: 'hover:bg-slate-300'
+                    };
+
                     const docRef = doc(db, 'task_groups', group.code);
                     addBatch.set(docRef, {
                         order: group.order,
                         code: group.code,
-                        color: group.color || 'slate', // Thêm trường color
+                        // Đảm bảo trường color là một object hợp lệ
+                        color: (group.color && typeof group.color === 'object') ? group.color : defaultColorObject,
                         tasks: group.tasks, // Lưu toàn bộ mảng tasks vào document
-                        createdAt: serverTimestamp()
+                        createdAt: serverTimestamp(),
+                        name: group.name || group.code // Thêm trường name nếu có
                     });
                 }
             });

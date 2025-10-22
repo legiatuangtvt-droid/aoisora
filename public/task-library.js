@@ -8,17 +8,9 @@ let allGroupedTasks = [];
 let groupView, taskView;
 let taskLibraryController = null;
 
-// Bảng màu định nghĩa các lớp CSS cho từng tên màu.
-const colorDefinitions = {
-    'green': { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-300', hover: 'hover:bg-green-200' },
-    'blue': { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-300', hover: 'hover:bg-blue-200' },
-    'indigo': { bg: 'bg-indigo-100', text: 'text-indigo-800', border: 'border-indigo-300', hover: 'hover:bg-indigo-200' },
-    'amber': { bg: 'bg-amber-100', text: 'text-amber-700', border: 'border-amber-300', hover: 'hover:bg-amber-200' },
-    'teal': { bg: 'bg-teal-100', text: 'text-teal-800', border: 'border-teal-300', hover: 'hover:bg-teal-200' },
-    'purple': { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-300', hover: 'hover:bg-purple-200' },
-    'red': { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-300', hover: 'hover:bg-red-200' },
-    'pink': { bg: 'bg-pink-100', text: 'text-pink-800', border: 'border-pink-300', hover: 'hover:bg-pink-200' },
-    'slate': { bg: 'bg-slate-100', text: 'text-slate-800', border: 'border-slate-300', hover: 'hover:bg-slate-200' },
+// Bảng màu mặc định nếu group không có màu
+const defaultColor = {
+    bg: 'bg-slate-200', text: 'text-slate-800', border: 'border-slate-400', hover: 'hover:bg-slate-300'
 };
 /**
  * Lấy dữ liệu công việc từ Firestore và nhóm chúng lại.
@@ -65,11 +57,11 @@ function renderGroupGridView() {
     }
 
     allGroupedTasks.forEach(group => {
-        const colorName = group.color || 'slate'; // Lấy màu từ group data
-        const color = colorDefinitions[colorName] || colorDefinitions['slate'];
+        // Đọc trực tiếp object màu từ group, nếu không có thì dùng màu mặc định
+        const color = (group.color && group.color.bg) ? group.color : defaultColor;
 
         const groupItem = document.createElement('div');
-        // Sử dụng màu nhạt hơn cho thẻ group
+        // Sử dụng các lớp màu đã được đồng bộ
         groupItem.className = `group-grid-item ${color.bg} ${color.border} ${color.hover}`;
         groupItem.dataset.groupId = group.id;
         groupItem.innerHTML = `
@@ -107,12 +99,10 @@ function renderTaskGridView(groupId) {
         // Sắp xếp task theo 'order' trước khi render
         const sortedTasks = [...group.tasks].sort((a, b) => (a.order || 0) - (b.order || 0));
         sortedTasks.forEach(task => {
-            const colorName = group.color || 'slate';
-            const color = colorDefinitions[colorName] || colorDefinitions['slate'];
+            const color = (group.color && group.color.bg) ? group.color : defaultColor;
             const taskItem = document.createElement('div');
             const generatedCode = `1${group.order}${String(task.order).padStart(2, '0')}`;
             
-            // Áp dụng layout và màu sắc tương tự như task trong lưới lịch trình
             taskItem.className = `task-library-item relative group ${color.bg} ${color.text} ${color.border} text-xs p-1 rounded-md shadow-sm cursor-grab flex flex-col justify-between items-center text-center mb-1`;
             taskItem.dataset.taskCode = generatedCode; // Gán mã task đã tạo vào dataset
             taskItem.dataset.groupId = group.id; // Thêm groupId để xác định màu sắc
