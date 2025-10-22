@@ -272,7 +272,8 @@ export async function initializeTaskLibrary() {
     };
 
     const onDragMove = (e) => {
-        if (!isDragging) return;
+        // Chỉ thực thi khi đang kéo VÀ ghost element đã được tạo
+        if (!isDragging || !ghostElement) return;
         const dx = e.clientX - startX;
         const dy = e.clientY - startY;
         let newX = initialLeft + dx;
