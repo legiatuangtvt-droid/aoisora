@@ -267,19 +267,28 @@ function initializeResizeListeners(container) {
         if (targetIndex >= originalIndex) {
             // Kéo sang phải
             left = originalRect.left;
-            // Nếu chuột ở gần cạnh phải của ô target, bám dính vào cạnh đó. Nếu không, kéo mượt.
+            // Bám dính vào cạnh phải của ô target
             if (mouseX >= targetRect.right - snapThreshold) {
                 width = targetRect.right - originalRect.left;
+            // Bám dính vào cạnh trái của ô target (khi kéo lùi lại)
+            } else if (mouseX <= targetRect.left + snapThreshold) {
+                width = targetRect.left - originalRect.left;
             } else {
+                // Kéo mượt ở giữa
                 width = mouseX - originalRect.left;
             }
         } else {
             // Kéo sang trái
-            // Nếu chuột ở gần cạnh trái của ô target, bám dính vào cạnh đó. Nếu không, kéo mượt.
+            // Bám dính vào cạnh trái của ô target
             if (mouseX <= targetRect.left + snapThreshold) {
                 left = targetRect.left;
                 width = originalRect.right - targetRect.left;
+            // Bám dính vào cạnh phải của ô target (khi kéo lùi lại)
+            } else if (mouseX >= targetRect.right - snapThreshold) {
+                left = targetRect.right;
+                width = originalRect.right - targetRect.right;
             } else {
+                // Kéo mượt ở giữa
                 left = mouseX;
                 width = originalRect.right - mouseX;
             }
