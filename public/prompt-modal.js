@@ -19,7 +19,7 @@
  * @param {string} [cancelText='Hủy'] - Chữ trên nút hủy.
  * @returns {Promise<string|null>} - Resolve với giá trị input nếu người dùng xác nhận, `null` nếu hủy.
  */
-function showPrompt(message, title = 'Nhập thông tin', defaultValue = '', okText = 'OK', cancelText = 'Hủy') {
+function showPrompt(message, title = 'Nhập thông tin', placeholder = '', okText = 'OK', cancelText = 'Hủy') {
     return new Promise(resolve => {
         // Xóa modal cũ nếu có
         const existingModal = document.getElementById('global-prompt-modal');
@@ -40,7 +40,7 @@ function showPrompt(message, title = 'Nhập thông tin', defaultValue = '', okT
                     </div>
                     <div class="modal-body py-4">
                         <label for="prompt-input" class="block text-sm font-medium text-gray-700 mb-2">${message}</label>
-                        <input type="text" id="prompt-input" class="form-input w-full" value="${defaultValue}">
+                        <input type="text" id="prompt-input" class="form-input w-full" placeholder="${placeholder}">
                     </div>
                     <div class="modal-footer">
                         <button type="button" id="prompt-cancel-btn" class="btn btn-secondary">${cancelText}</button>

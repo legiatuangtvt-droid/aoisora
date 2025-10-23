@@ -1,7 +1,5 @@
 import { db } from './firebase.js';
 import { collection, getDocs, query, orderBy, doc, setDoc, serverTimestamp, addDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
-
-let allStaff = [];
 let allMainTasks = {}; // Dùng object để tra cứu nhanh bằng ID
 let sortableInstances = [];
 
@@ -19,11 +17,6 @@ let allTaskGroups = {};
  */
 async function fetchInitialData() {
     try {
-        // Tải danh sách nhân viên
-        const staffQuery = query(collection(db, 'staff'), orderBy('name'));
-        const staffSnapshot = await getDocs(staffQuery);
-        allStaff = staffSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
         // Tải danh sách công việc chính
         const tasksSnapshot = await getDocs(collection(db, 'main_tasks'));
         allMainTasks = tasksSnapshot.docs.reduce((acc, doc) => {
@@ -41,7 +34,7 @@ async function fetchInitialData() {
     } catch (error) {
         console.error("Lỗi nghiêm trọng khi tải dữ liệu nền:", error);
         const container = document.getElementById('template-builder-grid-container');
-        if(container) container.innerHTML = `<div class="p-10 text-center text-red-500">Không thể tải danh sách nhân viên. Vui lòng thử lại.</div>`;
+        if(container) container.innerHTML = `<div class="p-10 text-center text-red-500">Không thể tải dữ liệu nền. Vui lòng thử lại.</div>`;
     }
 }
 
@@ -61,7 +54,7 @@ function renderGrid() {
     // --- Tạo Header (Tên nhân viên) ---
     const thead = document.createElement('thead');
     thead.className = 'bg-slate-100 sticky top-0 z-20'; // Tăng z-index để header nổi trên các ô sticky
-    let headerRowHtml = `<th class="p-2 border border-slate-200 w-48 sticky left-0 bg-slate-100 z-30">Nhân viên</th>`; // Cột Nhân viên, sticky
+    let headerRowHtml = `<th class="p-2 border border-slate-200 w-20 min-w-20 sticky left-0 bg-slate-100 z-30">Ca</th>`; // Cột Ca, sticky
     timeSlots.forEach(time => {
         headerRowHtml += `
             <th class="p-2 border border-slate-200 min-w-[308px] text-center font-semibold text-slate-700">${time}</th>
@@ -72,29 +65,29 @@ function renderGrid() {
 
     // --- Tạo Body (Các hàng thời gian và ô kéo thả) ---
     const tbody = document.createElement('tbody');
-    allStaff.forEach(staff => {
+    for (let i = 1; i <= 10; i++) {
+        const shiftId = `shift-${i}`;
         let bodyRowHtml = `
-            <td class="p-2 border border-slate-200 align-top sticky left-0 bg-white z-10">
-                <div class="font-semibold text-slate-700">${staff.name}</div>
-                <div class="text-xs text-slate-500 font-normal">${staff.roleId || ''}</div>
+            <td class="p-2 border border-slate-200 align-top sticky left-0 bg-white z-10 w-20 min-w-20 font-semibold text-center">
+                Ca ${i}
             </td>
-        `; // Ô thông tin nhân viên, sticky
+        `; // Ô thông tin ca, sticky
 
         timeSlots.forEach(time => {
             // Mỗi ô lớn chứa 4 ô 15 phút
             bodyRowHtml += `
                 <td class="p-0 border border-slate-200 align-top">
                     <div class="grid grid-cols-4 h-[104px]">
-                        <div class="quarter-hour-slot border-r border-dashed border-slate-200 flex justify-center items-center" data-staff-id="${staff.id}" data-time="${time}" data-quarter="00"></div>
-                        <div class="quarter-hour-slot border-r border-dashed border-slate-200 flex justify-center items-center" data-staff-id="${staff.id}" data-time="${time}" data-quarter="15"></div>
-                        <div class="quarter-hour-slot border-r border-dashed border-slate-200 flex justify-center items-center" data-staff-id="${staff.id}" data-time="${time}" data-quarter="30"></div>
-                        <div class="quarter-hour-slot flex justify-center items-center" data-staff-id="${staff.id}" data-time="${time}" data-quarter="45"></div>
+                        <div class="quarter-hour-slot border-r border-dashed border-slate-200 flex justify-center items-center" data-shift-id="${shiftId}" data-time="${time}" data-quarter="00"></div>
+                        <div class="quarter-hour-slot border-r border-dashed border-slate-200 flex justify-center items-center" data-shift-id="${shiftId}" data-time="${time}" data-quarter="15"></div>
+                        <div class="quarter-hour-slot border-r border-dashed border-slate-200 flex justify-center items-center" data-shift-id="${shiftId}" data-time="${time}" data-quarter="30"></div>
+                        <div class="quarter-hour-slot flex justify-center items-center" data-shift-id="${shiftId}" data-time="${time}" data-quarter="45"></div>
                     </div>
                 </td>
             `;
         });
-        tbody.innerHTML += `<tr>${bodyRowHtml}</tr>`;
-    });
+        tbody.innerHTML += `<tr data-shift-id="${shiftId}">${bodyRowHtml}</tr>`;
+    }
     table.appendChild(tbody);
 
     container.innerHTML = ''; // Xóa nội dung "đang tải"
@@ -240,8 +233,8 @@ function initializeResizeListeners(container) {
         }
 
         // Chỉ cho phép nhân bản trong cùng một hàng (cùng nhân viên)
-        const originalStaffId = originalTask.closest('.quarter-hour-slot').dataset.staffId;
-        if (targetSlot.dataset.staffId !== originalStaffId) {
+        const originalShiftId = originalTask.closest('.quarter-hour-slot').dataset.shiftId;
+        if (targetSlot.dataset.shiftId !== originalShiftId) {
             return;
         }
 
@@ -343,7 +336,7 @@ async function saveTemplate() {
         const slot = taskItem.closest('.quarter-hour-slot');
         if (!slot) return;
 
-        const staffId = slot.dataset.staffId;
+        const shiftId = slot.dataset.shiftId;
         const taskName = taskItem.querySelector('span.overflow-hidden').textContent; // Lấy tên task từ DOM
         const taskCode = taskItem.dataset.taskCode;
         const groupId = taskItem.dataset.groupId; // Lấy groupId từ DOM
@@ -351,11 +344,11 @@ async function saveTemplate() {
         const quarter = slot.dataset.quarter;
         const startTime = `${time.split(':')[0].padStart(2, '0')}:${quarter}`;
 
-        if (!scheduleData[staffId]) {
-            scheduleData[staffId] = [];
+        if (!scheduleData[shiftId]) {
+            scheduleData[shiftId] = [];
         }
 
-        scheduleData[staffId].push({ taskCode, taskName, startTime, groupId });
+        scheduleData[shiftId].push({ taskCode, taskName, startTime, groupId });
     });
 
     // 2. Lưu vào Firestore
@@ -405,7 +398,7 @@ async function updateTemplateFromDOM() {
         const slot = taskItem.closest('.quarter-hour-slot');
         if (!slot) return;
 
-        const staffId = slot.dataset.staffId;
+        const shiftId = slot.dataset.shiftId;
         const taskName = taskItem.querySelector('span.overflow-hidden').textContent;
         const taskCode = taskItem.dataset.taskCode;
         const groupId = taskItem.dataset.groupId; // Lấy groupId
@@ -413,10 +406,10 @@ async function updateTemplateFromDOM() {
         const quarter = slot.dataset.quarter;
         const startTime = `${time.split(':')[0].padStart(2, '0')}:${quarter}`;
 
-        if (!scheduleData[staffId]) {
-            scheduleData[staffId] = [];
+        if (!scheduleData[shiftId]) {
+            scheduleData[shiftId] = [];
         }
-        scheduleData[staffId].push({ taskCode, taskName, startTime, groupId });
+        scheduleData[shiftId].push({ taskCode, taskName, startTime, groupId });
     });
 
     // 2. Cập nhật vào Firestore
@@ -483,13 +476,13 @@ async function loadTemplate(templateId) {
             if (!schedule) return;
             
             // Điền các task vào lưới
-            Object.keys(schedule).forEach(staffId => {
-                schedule[staffId].forEach(taskInfo => { // taskInfo giờ đây có cả taskName
+            Object.keys(schedule).forEach(shiftId => {
+                (schedule[shiftId] || []).forEach(taskInfo => { // taskInfo giờ đây có cả taskName
                     const { taskCode, startTime, groupId } = taskInfo;
                     const [hour, quarter] = startTime.split(':');
                     const time = `${parseInt(hour, 10)}:00`;
 
-                    const slot = document.querySelector(`.quarter-hour-slot[data-staff-id="${staffId}"][data-time="${time}"][data-quarter="${quarter}"]`);
+                    const slot = document.querySelector(`.quarter-hour-slot[data-shift-id="${shiftId}"][data-time="${time}"][data-quarter="${quarter}"]`);
                     if (slot) {
                         const group = allTaskGroups[groupId] || {};
                         const color = (group.color && group.color.tailwind_bg) ? group.color : defaultColor;
@@ -591,8 +584,8 @@ function createRealClones(finalTarget, originalTask) {
     const endSlot = finalTarget.closest('.quarter-hour-slot');
     if (!endSlot || !originalTask) return 0;
 
-    const originalStaffId = originalTask.closest('.quarter-hour-slot').dataset.staffId;
-    if (endSlot.dataset.staffId !== originalStaffId) {
+    const originalShiftId = originalTask.closest('.quarter-hour-slot').dataset.shiftId;
+    if (endSlot.dataset.shiftId !== originalShiftId) {
         return 0;
     }
 
