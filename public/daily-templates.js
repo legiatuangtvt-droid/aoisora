@@ -211,6 +211,7 @@ function initializeResizeListeners(container) {
     let isResizing = false;
     let originalTask = null;
     let processedSlots = new Set();
+    let previewContainer = null;
 
     container.addEventListener('mousedown', function(e) {
         const handle = e.target.closest('.resize-handle');
@@ -225,6 +226,11 @@ function initializeResizeListeners(container) {
         processedSlots.add(originalTask.parentElement); // Thêm slot gốc vào danh sách đã xử lý
 
         document.body.style.cursor = 'col-resize';
+
+        // Tạo container cho các preview ghost
+        previewContainer = document.createElement('div');
+        previewContainer.id = 'resize-preview-container';
+        document.body.appendChild(previewContainer);
     });
 
     document.addEventListener('mousemove', function(e) {
@@ -232,66 +238,80 @@ function initializeResizeListeners(container) {
 
         const targetSlot = e.target.closest('.quarter-hour-slot');
         if (!targetSlot || processedSlots.has(targetSlot)) {
+            // Nếu không có target slot hợp lệ, vẫn có thể xóa preview nếu chuột ra ngoài
+            if (previewContainer) previewContainer.innerHTML = '';
             return;
         }
 
         // Chỉ cho phép nhân bản trong cùng một hàng (cùng nhân viên)
         const originalStaffId = originalTask.closest('.quarter-hour-slot').dataset.staffId;
         if (targetSlot.dataset.staffId !== originalStaffId) {
+            previewContainer.innerHTML = '';
             return;
         }
 
-        // Chỉ cho phép nhân bản vào ô trống
-        if (targetSlot.querySelector('.scheduled-task-item')) {
-            return;
-        }
-
-        // Kiểm tra xem slot có liền kề không
+        // --- Logic hiển thị preview ---
+        previewContainer.innerHTML = ''; // Xóa preview cũ
         const allSlotsInRow = Array.from(targetSlot.closest('tr').querySelectorAll('.quarter-hour-slot'));
         const originalIndex = allSlotsInRow.indexOf(originalTask.parentElement);
         const targetIndex = allSlotsInRow.indexOf(targetSlot);
 
-        // Tìm tất cả các slot đã được điền bởi thao tác này
-        const filledSlots = Array.from(container.querySelectorAll('.cloned-by-resize'));
-        const filledIndices = [originalIndex, ...filledSlots.map(s => allSlotsInRow.indexOf(s.parentElement))];
+        const start = Math.min(originalIndex, targetIndex);
+        const end = Math.max(originalIndex, targetIndex);
+        let cloneCount = 0;
 
-        const isAdjacent = filledIndices.some(index => Math.abs(targetIndex - index) === 1);
+        for (let i = start; i <= end; i++) {
+            const slot = allSlotsInRow[i];
+            // Bỏ qua ô gốc và các ô đã có task
+            if (i === originalIndex || slot.querySelector('.scheduled-task-item')) {
+                continue;
+            }
 
-        if (isAdjacent) {
-            processedSlots.add(targetSlot);
-            const clone = originalTask.cloneNode(true);
-            clone.classList.add('cloned-by-resize'); // Đánh dấu là clone để xử lý
-            // Xóa các listener không cần thiết trên clone
-            const newHandleLeft = clone.querySelector('.left-handle');
-            const newHandleRight = clone.querySelector('.right-handle');
-            if(newHandleLeft) newHandleLeft.remove();
-            if(newHandleRight) newHandleRight.remove();
+            cloneCount++;
+            const rect = slot.getBoundingClientRect();
+            const ghost = document.createElement('div');
+            ghost.className = 'resize-ghost';
+            ghost.style.left = `${rect.left + window.scrollX}px`;
+            ghost.style.top = `${rect.top + window.scrollY}px`;
+            ghost.style.width = `${rect.width}px`;
+            ghost.style.height = `${rect.height}px`;
+            // Lấy màu từ task gốc
+            const originalColorClass = Array.from(originalTask.classList).find(c => c.startsWith('bg-'));
+            if (originalColorClass) {
+                ghost.classList.add(originalColorClass);
+            }
+            previewContainer.appendChild(ghost);
+        }
 
-            targetSlot.appendChild(clone);
+        // Hiển thị bộ đếm
+        if (cloneCount > 0) {
+            const counter = document.createElement('div');
+            counter.className = 'resize-ghost-counter';
+            counter.textContent = `+${cloneCount}`;
+            const lastGhost = previewContainer.lastChild;
+            if (lastGhost) {
+                const lastRect = lastGhost.getBoundingClientRect();
+                counter.style.left = `${lastRect.right + window.scrollX + 5}px`;
+                counter.style.top = `${lastRect.top + window.scrollY + lastRect.height / 2 - 12}px`;
+            }
+            previewContainer.appendChild(counter);
         }
     });
 
     document.addEventListener('mouseup', function(e) {
         if (isResizing) {
             isResizing = false;
-            originalTask = null;
             document.body.style.cursor = 'default';
 
-            // Xóa class đánh dấu và cập nhật DOM
-            const clones = container.querySelectorAll('.cloned-by-resize');
-            if (clones.length > 0) {
-                clones.forEach(clone => {
-                    clone.classList.remove('cloned-by-resize');
-                    // Gắn lại handle cho các task mới để chúng cũng có thể được nhân bản
-                    const leftHandle = document.createElement('div');
-                    leftHandle.className = 'resize-handle left-handle';
-                    leftHandle.title = 'Kéo để nhân bản';
-                    const rightHandle = document.createElement('div');
-                    rightHandle.className = 'resize-handle right-handle';
-                    rightHandle.title = 'Kéo để nhân bản';
-                    clone.prepend(rightHandle);
-                    clone.prepend(leftHandle);
-                });
+            // Xóa container preview
+            if (previewContainer) {
+                previewContainer.remove();
+                previewContainer = null;
+            }
+
+            // Thực hiện nhân bản thật
+            const finalClones = createRealClones(e.target, originalTask);
+            if (finalClones > 0) {
                 updateTemplateFromDOM();
             }
         }
@@ -557,4 +577,51 @@ export function cleanup() {
             el.parentNode.replaceChild(newEl, el);
         }
     });
+}
+
+/**
+ * Tạo các bản sao thực sự khi người dùng nhả chuột.
+ * @param {HTMLElement} finalTarget - Phần tử cuối cùng mà chuột trỏ tới.
+ * @param {HTMLElement} originalTask - Task gốc được kéo.
+ * @returns {number} Số lượng clone đã được tạo.
+ */
+function createRealClones(finalTarget, originalTask) {
+    const endSlot = finalTarget.closest('.quarter-hour-slot');
+    if (!endSlot || !originalTask) return 0;
+
+    const originalStaffId = originalTask.closest('.quarter-hour-slot').dataset.staffId;
+    if (endSlot.dataset.staffId !== originalStaffId) {
+        return 0;
+    }
+
+    const allSlotsInRow = Array.from(endSlot.closest('tr').querySelectorAll('.quarter-hour-slot'));
+    const originalIndex = allSlotsInRow.indexOf(originalTask.parentElement);
+    const targetIndex = allSlotsInRow.indexOf(endSlot);
+
+    const start = Math.min(originalIndex, targetIndex);
+    const end = Math.max(originalIndex, targetIndex);
+    let clonesCreated = 0;
+
+    for (let i = start; i <= end; i++) {
+        const slot = allSlotsInRow[i];
+        // Bỏ qua ô gốc và các ô đã có task
+        if (i === originalIndex || slot.querySelector('.scheduled-task-item')) {
+            continue;
+        }
+
+        const clone = originalTask.cloneNode(true);
+        // Gắn lại handle cho các task mới để chúng cũng có thể được nhân bản
+        const leftHandle = document.createElement('div');
+        leftHandle.className = 'resize-handle left-handle';
+        leftHandle.title = 'Kéo để nhân bản';
+        const rightHandle = document.createElement('div');
+        rightHandle.className = 'resize-handle right-handle';
+        rightHandle.title = 'Kéo để nhân bản';
+        clone.prepend(rightHandle);
+        clone.prepend(leftHandle);
+
+        slot.appendChild(clone);
+        clonesCreated++;
+    }
+    return clonesCreated;
 }
