@@ -161,7 +161,7 @@ function initializeDragAndDrop() {
                 // Chỉ định dạng lại nếu task đến từ thư viện (pullMode === 'clone')
                 // Nếu là di chuyển nội bộ, item đã có định dạng đúng.
                 if (evt.pullMode === 'clone') {
-                    // Khi kéo từ thư viện, item.textContent chính là tên task
+                    // Khi kéo từ thư viện, item.textContent chứa cả tên và mã, ta cần lấy lại tên gốc
                     const taskName = item.textContent;
                     const group = allTaskGroups[groupId];
                     const color = (group && group.color && group.color.tailwind_bg) ? group.color : defaultColor;
@@ -178,7 +178,7 @@ function initializeDragAndDrop() {
                         <div class="resize-handle right-handle" title="Kéo để nhân bản"></div>
                         <button class="delete-task-btn absolute top-0 right-0 p-1 leading-none font-bold text-current opacity-50 hover:opacity-100 group-hover:opacity-100">×</button>
                         <div class="flex-grow flex flex-col justify-center">
-                            <span class="overflow-hidden text-ellipsis">${taskName}</span>
+                            <span class="overflow-hidden text-ellipsis">${item.querySelector('.text-ellipsis')?.textContent || taskName}</span>
                         </div>
                         <span class="font-semibold mt-auto">${taskCode}</span>
                     `;
@@ -330,7 +330,7 @@ async function saveTemplate() {
 
     // Nếu đang ở chế độ tạo mới, yêu cầu nhập tên
     if (!templateIdToSave) {
-        templateName = prompt("Nhập tên cho mẫu mới (ví dụ: Ngày cuối tuần):");
+        templateName = await showPrompt("Nhập tên cho mẫu mới:", "Tạo Lịch Trình Mẫu", "Ví dụ: Ngày cuối tuần", "Lưu", "Hủy");
         if (!templateName || templateName.trim() === '') {
             window.showToast('Tên mẫu không được để trống.', 'warning');
             return;
@@ -498,7 +498,7 @@ async function loadTemplate(templateId) {
                     if (slot) {
                         const group = allTaskGroups[groupId] || {};
                         const color = (group.color && group.color.tailwind_bg) ? group.color : defaultColor;
-                        // Giả lập một item task để thêm vào
+                        // Lấy tên task từ dữ liệu mẫu, nếu không có thì dùng mã task
                         const taskName = taskInfo.taskName || '...'; // Lấy taskName từ dữ liệu mẫu
                         const taskItem = document.createElement('div'); 
                         // Sử dụng justify-between để đẩy taskCode xuống dưới
@@ -510,7 +510,7 @@ async function loadTemplate(templateId) {
                             <div class="resize-handle right-handle" title="Kéo để nhân bản"></div>
                             <button class="delete-task-btn absolute top-0 right-0 p-1 leading-none font-bold text-current opacity-50 hover:opacity-100 group-hover:opacity-100">×</button>
                             <div class="flex-grow flex flex-col justify-center">
-                                <span class="overflow-hidden text-ellipsis">${taskName}</span>
+                                <span class="overflow-hidden text-ellipsis">${taskInfo.taskName || taskCode}</span>
                             </div>
                             <span class="font-semibold mt-auto">${taskCode}</span>
                         `;
@@ -545,7 +545,8 @@ async function deleteCurrentTemplate() {
     if (!currentTemplateId) return;
 
     const currentTemplate = allTemplates.find(t => t.id === currentTemplateId);
-    if (confirm(`Bạn có chắc chắn muốn xóa mẫu "${currentTemplate.name}" không? Hành động này không thể hoàn tác.`)) {
+    const confirmed = await showConfirmation(`Bạn có chắc chắn muốn xóa mẫu "${currentTemplate.name}" không? Hành động này không thể hoàn tác.`, 'Xác nhận xóa', 'Xóa', 'Hủy');
+    if (confirmed) {
         try {
             await deleteDoc(doc(db, 'daily_templates', currentTemplateId));
             window.showToast(`Đã xóa mẫu "${currentTemplate.name}".`, 'success');

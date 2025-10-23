@@ -384,6 +384,9 @@ html, body {
 .btn-indigo { background-color: #4f46e5; color: #fff; }
 .btn-indigo:hover { background-color: #4338ca; }
 
+.btn-danger { background-color: #dc2626; color: #fff; } /* red-600 */
+.btn-danger:hover { background-color: #b91c1c; } /* red-700 */
+
 /* --- TOAST STYLES (Chuyển từ toast.css) --- */
 /* ... (các style toast đã có) ... */
 

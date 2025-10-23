@@ -149,8 +149,8 @@ function hideModal() {
  * @returns {Promise<boolean>}
  */
 function showConfirmation(message) {
-    // Tạm thời dùng confirm của trình duyệt, sẽ nâng cấp sau nếu cần modal đẹp hơn
-    return Promise.resolve(window.confirm(message));
+    // Sử dụng modal tùy chỉnh toàn cục
+    return window.showConfirmation(message, 'Xác nhận', 'Xóa', 'Hủy');
 }
 //#endregion
 

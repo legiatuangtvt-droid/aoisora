@@ -166,13 +166,13 @@ document.getElementById('submit-task').addEventListener('click', function () {
     })
     .then(response => response.json())
     .then(data => {
-        console.log('Task updated:', data);
-        alert('Task updated successfully!');
+        console.log('Task updated:', data);;
+        window.showToast('Task updated successfully!', 'success');
         closePopup(); // Close the popup after successful submission
     })
     .catch(error => {
         console.error('Error updating task:', error);
-       // alert('Failed to update task.');
+        window.showToast('Failed to update task.', 'error');
     });
     //
                 registerTaskPopupParent.style.display = 'none'; // Close the popup after submission

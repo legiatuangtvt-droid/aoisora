@@ -1,5 +1,7 @@
 // Import các tiện ích toàn cục. Chúng sẽ chỉ được tải một lần.
 import './toast.js';
+import './confirmation-modal.js';
+import './prompt-modal.js';
 import { initializeTaskLibrary, cleanupTaskLibrary } from './task-library.js';
 import { initializeDevMenu } from './dev-menu.js';
 
