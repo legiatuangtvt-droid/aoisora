@@ -6,15 +6,15 @@ let activeListeners = [];
 // Bảng màu để người dùng có thể chọn cho mỗi nhóm.
 // Lưu trữ giá trị màu HEX thực tế thay vì class Tailwind.
 const colorPalette = {
-    'slate': { name: 'slate', bg: '#e2e8f0', text: '#1e293b', border: '#94a3b8', hover: '#cbd5e1', tailwind_bg: 'bg-slate-200', tailwind_text: 'text-slate-800', tailwind_border: 'border-slate-400' },
-    'green': { name: 'green', bg: '#bbf7d0', text: '#166534', border: '#4ade80', hover: '#86efac', tailwind_bg: 'bg-green-200', tailwind_text: 'text-green-800', tailwind_border: 'border-green-400' },
-    'blue': { name: 'blue', bg: '#bfdbfe', text: '#1e40af', border: '#60a5fa', hover: '#93c5fd', tailwind_bg: 'bg-blue-200', tailwind_text: 'text-blue-800', tailwind_border: 'border-blue-400' },
-    'amber': { name: 'amber', bg: '#fde68a', text: '#92400e', border: '#facc15', hover: '#fcd34d', tailwind_bg: 'bg-amber-200', tailwind_text: 'text-amber-800', tailwind_border: 'border-amber-400' },
-    'teal': { name: 'teal', bg: '#99f6e4', text: '#134e4a', border: '#2dd4bf', hover: '#5eead4', tailwind_bg: 'bg-teal-200', tailwind_text: 'text-teal-800', tailwind_border: 'border-teal-400' },
-    'purple': { name: 'purple', bg: '#e9d5ff', text: '#6b21a8', border: '#c084fc', hover: '#d8b4fe', tailwind_bg: 'bg-purple-200', tailwind_text: 'text-purple-800', tailwind_border: 'border-purple-400' },
-    'indigo': { name: 'indigo', bg: '#c7d2fe', text: '#3730a3', border: '#818cf8', hover: '#a5b4fc', tailwind_bg: 'bg-indigo-200', tailwind_text: 'text-indigo-800', tailwind_border: 'border-indigo-400' },
-    'red': { name: 'red', bg: '#fecaca', text: '#991b1b', border: '#f87171', hover: '#fca5a5', tailwind_bg: 'bg-red-200', tailwind_text: 'text-red-800', tailwind_border: 'border-red-400' },
-    'pink': { name: 'pink', bg: '#fbcfe8', text: '#9d174d', border: '#f472b6', hover: '#f9a8d4', tailwind_bg: 'bg-pink-200', tailwind_text: 'text-pink-800', tailwind_border: 'border-pink-400' },
+    'slate': { name: 'slate', bg: '#e2e8f0', text: '#1e293b', border: '#94a3b8', hover: '#cbd5e1', tailwind_bg: 'bg-slate-200', tailwind_text: 'text-slate-800', tailwind_border: 'border-slate-500' },
+    'green': { name: 'green', bg: '#bbf7d0', text: '#166534', border: '#4ade80', hover: '#86efac', tailwind_bg: 'bg-green-200', tailwind_text: 'text-green-800', tailwind_border: 'border-green-500' },
+    'blue': { name: 'blue', bg: '#bfdbfe', text: '#1e40af', border: '#60a5fa', hover: '#93c5fd', tailwind_bg: 'bg-blue-200', tailwind_text: 'text-blue-800', tailwind_border: 'border-blue-500' },
+    'amber': { name: 'amber', bg: '#fde68a', text: '#92400e', border: '#facc15', hover: '#fcd34d', tailwind_bg: 'bg-amber-200', tailwind_text: 'text-amber-800', tailwind_border: 'border-amber-500' },
+    'teal': { name: 'teal', bg: '#99f6e4', text: '#134e4a', border: '#2dd4bf', hover: '#5eead4', tailwind_bg: 'bg-teal-200', tailwind_text: 'text-teal-800', tailwind_border: 'border-teal-500' },
+    'purple': { name: 'purple', bg: '#e9d5ff', text: '#6b21a8', border: '#c084fc', hover: '#d8b4fe', tailwind_bg: 'bg-purple-200', tailwind_text: 'text-purple-800', tailwind_border: 'border-purple-500' },
+    'indigo': { name: 'indigo', bg: '#c7d2fe', text: '#3730a3', border: '#818cf8', hover: '#a5b4fc', tailwind_bg: 'bg-indigo-200', tailwind_text: 'text-indigo-800', tailwind_border: 'border-indigo-500' },
+    'red': { name: 'red', bg: '#fecaca', text: '#991b1b', border: '#f87171', hover: '#fca5a5', tailwind_bg: 'bg-red-200', tailwind_text: 'text-red-800', tailwind_border: 'border-red-500' },
+    'pink': { name: 'pink', bg: '#fbcfe8', text: '#9d174d', border: '#f472b6', hover: '#f9a8d4', tailwind_bg: 'bg-pink-200', tailwind_text: 'text-pink-800', tailwind_border: 'border-pink-500' },
 };
 
 /**
@@ -22,14 +22,14 @@ const colorPalette = {
  * Vẫn cần safelist cho các task item được kéo vào daily-templates,
  * vì chúng vẫn sử dụng class Tailwind để tô màu.
  * bg-slate-200 text-slate-800 border-slate-400
- * bg-green-200 text-green-800 border-green-400
- * bg-blue-200 text-blue-800 border-blue-400
- * bg-amber-200 text-amber-800 border-amber-400
- * bg-teal-200 text-teal-800 border-teal-400
- * bg-purple-200 text-purple-800 border-purple-400
- * bg-indigo-200 text-indigo-800 border-indigo-400
- * bg-red-200 text-red-800 border-red-400
- * bg-pink-200 text-pink-800 border-pink-400
+ * bg-green-200 text-green-800 border-green-500
+ * bg-blue-200 text-blue-800 border-blue-500
+ * bg-amber-200 text-amber-800 border-amber-500
+ * bg-teal-200 text-teal-800 border-teal-500
+ * bg-purple-200 text-purple-800 border-purple-500
+ * bg-indigo-200 text-indigo-800 border-indigo-500
+ * bg-red-200 text-red-800 border-red-500
+ * bg-pink-200 text-pink-800 border-pink-500
  */
 
 /**

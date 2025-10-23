@@ -107,7 +107,7 @@ function renderTaskGridView(groupId) {
             const taskItem = document.createElement('div');
             const generatedCode = `1${group.order}${String(task.order).padStart(2, '0')}`;
             
-            taskItem.className = `task-library-item relative group ${color.tailwind_bg} ${color.tailwind_text} ${color.tailwind_border} text-xs p-1 rounded-md shadow-sm cursor-grab flex flex-col justify-between items-center text-center mb-1`;
+            taskItem.className = `task-library-item relative group ${color.tailwind_bg} ${color.tailwind_text} ${color.tailwind_border} border-2 text-xs p-1 rounded-md shadow-sm cursor-grab flex flex-col justify-between items-center text-center mb-1`;
             taskItem.dataset.taskCode = generatedCode; // Gán mã task đã tạo vào dataset
             taskItem.dataset.groupId = group.id; // Thêm groupId để xác định màu sắc
             taskItem.innerHTML = `
