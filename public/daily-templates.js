@@ -258,18 +258,31 @@ function initializeResizeListeners(container) {
         const originalIndex = allSlotsInRow.indexOf(originalSlot);
         const targetIndex = allSlotsInRow.indexOf(targetSlot);
 
+        const snapThreshold = 15; // Khoảng cách (px) từ cạnh để bắt đầu bám dính
         const originalRect = originalSlot.getBoundingClientRect();
         const targetRect = targetSlot.getBoundingClientRect();
+        const mouseX = e.clientX;
 
         let left, width;
         if (targetIndex >= originalIndex) {
             // Kéo sang phải
             left = originalRect.left;
-            width = targetRect.right - originalRect.left;
+            // Nếu chuột ở gần cạnh phải của ô target, bám dính vào cạnh đó. Nếu không, kéo mượt.
+            if (mouseX >= targetRect.right - snapThreshold) {
+                width = targetRect.right - originalRect.left;
+            } else {
+                width = mouseX - originalRect.left;
+            }
         } else {
             // Kéo sang trái
-            left = targetRect.left;
-            width = originalRect.right - targetRect.left;
+            // Nếu chuột ở gần cạnh trái của ô target, bám dính vào cạnh đó. Nếu không, kéo mượt.
+            if (mouseX <= targetRect.left + snapThreshold) {
+                left = targetRect.left;
+                width = originalRect.right - targetRect.left;
+            } else {
+                left = mouseX;
+                width = originalRect.right - mouseX;
+            }
         }
 
         previewContainer.style.left = `${left + window.scrollX}px`;
