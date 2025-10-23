@@ -124,6 +124,7 @@ function initializeDragAndDrop() {
                 // Khi một task được kéo thả xong (thêm, di chuyển, xóa khỏi slot)
                 // Cần cập nhật lại dữ liệu mẫu.
                 updateTemplateFromDOM();
+                updateTemplateStats(); // Cập nhật thống kê
             },
             onAdd: function (evt) {
                 const item = evt.item;
@@ -183,6 +184,7 @@ function initializeDragAndDrop() {
             if (e.target.classList.contains('delete-task-btn')) {
                 e.target.closest('.scheduled-task-item').remove(); // Xóa toàn bộ thẻ task
                 updateTemplateFromDOM(); // Cập nhật lại dữ liệu sau khi xóa
+                updateTemplateStats(); // Cập nhật thống kê
             }
         });
 
@@ -302,6 +304,7 @@ function initializeResizeListeners(container) {
             const finalClones = createRealClones(e.target, originalTask);
             if (finalClones > 0) {
                 updateTemplateFromDOM();
+                updateTemplateStats();
             }
         }
     })
@@ -464,6 +467,7 @@ async function loadTemplate(templateId) {
     document.getElementById('new-template-btn').classList.remove('hidden');
     document.getElementById('delete-template-btn').classList.remove('hidden');
 
+    updateTemplateStats(); // Xóa thống kê cũ
     if (!templateId) return; // Thoát nếu không có ID
 
     try {
@@ -505,6 +509,8 @@ async function loadTemplate(templateId) {
                     }
                 });
             });
+            // Cập nhật thống kê sau khi tải xong
+            updateTemplateStats();
         }
     } catch (error) {
         console.error("Lỗi khi tải chi tiết mẫu:", error);
@@ -523,6 +529,7 @@ function switchToCreateNewMode() {
     // Ẩn các nút không cần thiết
     document.getElementById('new-template-btn').classList.add('hidden');
     document.getElementById('delete-template-btn').classList.add('hidden');
+    updateTemplateStats(); // Xóa thống kê
 }
 
 /**
@@ -538,6 +545,7 @@ async function deleteCurrentTemplate() {
             await deleteDoc(doc(db, 'daily_templates', currentTemplateId));
             window.showToast(`Đã xóa mẫu "${currentTemplate.name}".`, 'success');
             await fetchAndRenderTemplates(); // Tải lại danh sách và chọn mẫu đầu tiên
+            switchToCreateNewMode(); // Chuyển về chế độ tạo mới
         } catch (error) {
             console.error("Lỗi khi xóa mẫu:", error);
             window.showToast('Đã có lỗi xảy ra khi xóa mẫu.', 'error');
@@ -614,4 +622,105 @@ function createRealClones(finalTarget, originalTask) {
         clonesCreated++;
     }
     return clonesCreated;
+}
+
+/**
+ * Kích hoạt hiệu ứng animation cho một ô trong bảng thống kê.
+ * @param {HTMLElement} cell - Ô (td) cần tạo hiệu ứng.
+ * @param {string} text - Nội dung của hiệu ứng (ví dụ: '+1').
+ */
+function triggerStatAnimation(cell, text) {
+    if (!cell || !text) return;
+
+    const animationEl = document.createElement('span');
+    animationEl.className = 'stat-change-animation';
+    animationEl.textContent = text;
+
+    // Thêm vào cell và xóa sau khi animation kết thúc
+    cell.style.position = 'relative'; // Cần thiết để định vị absolute cho animation
+    cell.appendChild(animationEl);
+
+    // Tự động xóa element sau khi animation hoàn tất
+    setTimeout(() => animationEl.remove(), 500); // 500ms khớp với thời gian animation
+}
+
+/**
+ * Cập nhật bảng thống kê group task dựa trên các task đang có trên lưới.
+ */
+function updateTemplateStats() {
+    const statsContainer = document.getElementById('template-stats-container');
+    if (!statsContainer) return;
+
+    const scheduledTasks = document.querySelectorAll('.scheduled-task-item');
+    if (scheduledTasks.length === 0) {
+        statsContainer.innerHTML = `<p class="text-sm text-gray-500 text-center py-4">Chưa có task nào được thêm vào lịch trình.</p>`;
+        return;
+    }
+
+    const newStats = {}; // { groupId: { count: number, name: string, color: object } }
+
+    scheduledTasks.forEach(taskItem => {
+        const groupId = taskItem.dataset.groupId;
+        if (!groupId) return;
+
+        if (!newStats[groupId]) {
+            const groupInfo = allTaskGroups[groupId] || { name: `Nhóm ${groupId}`, color: defaultColor };
+            newStats[groupId] = {
+                count: 0,
+                name: groupInfo.name,
+                color: groupInfo.color || defaultColor
+            };
+        }
+        newStats[groupId].count++;
+    });
+
+    // Nếu bảng chưa tồn tại, tạo mới hoàn toàn
+    const table = document.createElement('table');
+    table.id = 'stats-table'; // Thêm ID để dễ dàng truy vấn
+    table.className = 'w-full text-sm border-collapse'; // Thêm ID để dễ dàng truy vấn
+    table.innerHTML = `
+        <thead class="bg-slate-50 sticky top-0 z-10">
+            <tr>
+                <th class="p-2 text-center font-semibold text-slate-600">Group Task</th>
+                <th class="p-2 text-center font-semibold text-slate-600">SL</th>
+                <th class="p-2 text-center font-semibold text-slate-600">Giờ</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+        <tfoot class="bg-slate-100 font-bold sticky bottom-0">
+             <tr>
+                <td class="p-2">Tổng cộng</td>
+                <td id="stats-total-count" class="p-2 text-center">0</td>
+                <td id="stats-total-time" class="p-2 text-center">0.00</td>
+            </tr>
+        </tfoot>
+    `;
+
+    const tbody = table.querySelector('tbody');
+    let index = 1;
+    let newTotalCount = 0;
+    for (const groupId in newStats) {
+        const data = newStats[groupId];
+        const time = (data.count * 0.25).toFixed(2);
+        newTotalCount += data.count;
+        tbody.innerHTML += `
+            <tr class="border-b border-slate-100" data-group-id="${groupId}">
+                <td class="p-2 text-center font-medium ${data.color.tailwind_text}">${data.name}</td>
+                <td class="stat-count p-2 text-center font-semibold text-slate-700">${data.count}</td>
+                <td class="stat-time p-2 text-center text-slate-500">${time}</td>
+            </tr>
+        `;
+    }
+    
+    // Cập nhật dòng tổng kết
+    table.querySelector('#stats-total-count').textContent = newTotalCount;
+    table.querySelector('#stats-total-time').textContent = (newTotalCount * 0.25).toFixed(2);
+
+    statsContainer.innerHTML = '';
+    // Thêm một div wrapper để xử lý sticky header/footer bên trong container cuộn
+    const tableWrapper = document.createElement('div');
+    tableWrapper.className = "relative h-full";
+    tableWrapper.appendChild(table);
+    statsContainer.appendChild(tableWrapper);
 }

@@ -241,3 +241,20 @@
     background-color: #eef2ff; /* Màu nền indigo-50 */
     border: 1px dashed #6366f1 !important; /* Viền đứt màu indigo */
 }
+
+/* --- Hiệu ứng cho bảng thống kê (daily-templates.js) --- */
+.stat-change-animation {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    font-weight: bold;
+    color: #22c55e; /* text-green-500 */
+    animation: slide-up-fade-out 0.5s ease-out forwards;
+    pointer-events: none; /* Không bắt sự kiện chuột */
+}
+
+@keyframes slide-up-fade-out {
+    from { opacity: 1; transform: translate(-50%, 0); }
+    to { opacity: 0; transform: translate(-50%, -20px); }
+}
