@@ -72,7 +72,6 @@ function renderGroupGridView() {
             <span class="count">${group.tasks.length} tasks</span>
         `;
         groupItem.addEventListener('click', () => renderTaskGridView(group.id));
-        console.log('groupItem:',groupItem)
         groupView.appendChild(groupItem);
     });
 }

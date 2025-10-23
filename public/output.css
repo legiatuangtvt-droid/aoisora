@@ -814,6 +814,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
   margin-bottom: 0.25rem;
 }
 
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+
 .mb-4 {
   margin-bottom: 1rem;
 }
@@ -868,10 +872,6 @@ body.sidebar-expanded #sidebar .sidebar-text {
 
 .mt-auto {
   margin-top: auto;
-}
-
-.mb-2 {
-  margin-bottom: 0.5rem;
 }
 
 .box-border {

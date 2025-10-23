@@ -125,36 +125,23 @@ function initializeDragAndDrop() {
                 // Cần cập nhật lại dữ liệu mẫu.
                 updateTemplateFromDOM();
             },
-            onEnd: function (evt) {
-                const draggedItem = evt.item; // Phần tử task được kéo
-                const originalSlot = evt.from; // Ô lịch trình gốc mà task được kéo ra
-                const targetSlot = evt.to;     // Ô lịch trình đích mà task được thả vào
-
-                // Chỉ áp dụng logic đổi chỗ cho các thao tác kéo-thả nội bộ (không phải từ thư viện)
-                // và khi task được di chuyển giữa các ô khác nhau.
-                if (originalSlot !== targetSlot && evt.pullMode !== 'clone') {
-                    // Kiểm tra xem ô đích có nhiều hơn một phần tử con hay không.
-                    // Nếu có, điều đó có nghĩa là đã có một task tồn tại ở đó trước khi task mới được thả vào.
-                    if (targetSlot.children.length > 1) {
-                        let existingItemInTarget = null;
-                        // Tìm phần tử task đã có sẵn trong ô đích (phần tử không phải là draggedItem)
-                        for (let i = 0; i < targetSlot.children.length; i++) {
-                            if (targetSlot.children[i] !== draggedItem) {
-                                existingItemInTarget = targetSlot.children[i];
-                                break;
-                            }
-                        }
-                        if (existingItemInTarget) {
-                            // Di chuyển task đã có sẵn từ ô đích trở lại ô gốc
-                            originalSlot.appendChild(existingItemInTarget);
-                        }
-                    }
-                }
-                // Luôn cập nhật dữ liệu mẫu sau bất kỳ thao tác kéo-thả nào
-                updateTemplateFromDOM();
-            },
             onAdd: function (evt) {
                 const item = evt.item;
+                const toSlot = evt.to;
+
+                // --- LOGIC HOÁN ĐỔI NÂNG CAO ---
+                // Nếu đây là thao tác di chuyển nội bộ (không phải clone từ thư viện)
+                // và ô đích đã có sẵn một task khác.
+                if (evt.pullMode !== 'clone' && toSlot.children.length > 1) {
+                    // Tìm task đã có sẵn trong ô đích (phần tử không phải là task đang kéo)
+                    const existingItem = Array.from(toSlot.children).find(child => child !== item);
+                    if (existingItem) {
+                        // Di chuyển task có sẵn đó về lại ô gốc của task đang kéo
+                        evt.from.appendChild(existingItem);
+                    }
+                }
+                // --- KẾT THÚC LOGIC HOÁN ĐỔI ---
+
                 const taskCode = item.dataset.taskCode;
                 const groupId = item.dataset.groupId; // Lấy groupId từ task được kéo
 

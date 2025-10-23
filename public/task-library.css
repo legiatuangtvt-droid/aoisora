@@ -223,6 +223,16 @@
     opacity: 0;
 }
 
+/*
+ * Class cho item đang bị "swap" (hoán đổi vị trí).
+ * Khi kéo một task đè lên, task bị đè sẽ có hiệu ứng này.
+ * Thay vì co lại, ta làm nó mờ đi và hơi thu nhỏ để tạo cảm giác "sắp bị đẩy đi".
+ */
+.swap-highlight {
+    opacity: 0.4;
+    transform: scale(0.9);
+}
+
 /* 
  * Khi một task được kéo qua một ô (.quarter-hour-slot),
  * ô đó sẽ có hiệu ứng nền và viền để báo hiệu đây là vùng có thể thả.
