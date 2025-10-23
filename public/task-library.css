@@ -250,7 +250,7 @@
     transform: translateX(-50%);
     font-weight: bold;
     color: #22c55e; /* text-green-500 */
-    animation: slide-up-fade-out 0.5s ease-out forwards;
+    animation: slide-up-fade-out 1.5s ease-out forwards;
     pointer-events: none; /* Không bắt sự kiện chuột */
 }
 

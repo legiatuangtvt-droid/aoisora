@@ -685,7 +685,7 @@ function updateTemplateStats() {
         table.innerHTML = `
             <thead class="bg-slate-50 sticky top-0 z-10">
                 <tr>
-                    <th class="p-2 text-left font-semibold text-slate-600">Group Task</th>
+                    <th class="p-2 text-center font-semibold text-slate-600">Group Task</th>
                     <th class="p-2 text-center font-semibold text-slate-600 w-16">SL</th>
                     <th class="p-2 text-center font-semibold text-slate-600 w-20">Giờ</th>
                 </tr>
@@ -703,8 +703,19 @@ function updateTemplateStats() {
         statsContainer.appendChild(tableWrapper);
     }
 
+    // --- Lấy dữ liệu cũ từ các dòng trong bảng ---
+    const oldRowStats = {};
+    table.querySelectorAll('tbody tr[data-group-id]').forEach(row => {
+        const groupId = row.dataset.groupId;
+        const countCell = row.querySelector('.stat-count');
+        if (groupId && countCell) {
+            oldRowStats[groupId] = {
+                count: parseInt(countCell.textContent, 10) || 0
+            };
+        }
+    });
+
     const tbody = table.querySelector('tbody');
-    tbody.innerHTML = ''; // Xóa toàn bộ nội dung cũ của tbody để render lại từ đầu
     let totalCount = 0;
 
     // Sắp xếp các nhóm theo 'order' để hiển thị nhất quán
@@ -717,21 +728,38 @@ function updateTemplateStats() {
     // --- Cập nhật hoặc thêm các dòng cho từng group ---
     for (const groupId of sortedGroupIds) {
         const groupInfo = allTaskGroups[groupId];
+        const oldGroupCount = oldRowStats[groupId] ? oldRowStats[groupId].count : 0;
         const currentCount = newStats[groupId] ? newStats[groupId].count : 0;
         const currentTime = (currentCount * 0.25).toFixed(2);
         totalCount += currentCount;
 
-        // Tạo dòng mới cho mỗi group trong mỗi lần cập nhật
-        const color = (groupInfo.color && groupInfo.color.tailwind_text) ? groupInfo.color : defaultColor;
-        const row = document.createElement('tr');
-        row.className = 'border-b border-slate-100';
-        row.dataset.groupId = groupId;
-        row.innerHTML = `
-            <td class="p-2 text-left font-medium ${color.tailwind_text}">${groupInfo.name}</td>
-            <td class="stat-count p-2 text-center font-semibold text-slate-700">${currentCount}</td>
-            <td class="stat-time p-2 text-center text-slate-500">${currentTime}</td>
-        `;
-        tbody.appendChild(row);
+        let row = tbody.querySelector(`tr[data-group-id="${groupId}"]`);
+
+        if (!row) { // Nếu dòng chưa tồn tại, tạo mới
+            const color = (groupInfo.color && groupInfo.color.tailwind_text) ? groupInfo.color : defaultColor;
+            row = document.createElement('tr');
+            row.className = 'border-b border-slate-100';
+            row.dataset.groupId = groupId;
+            row.innerHTML = `
+                <td class="p-2 text-center font-medium ${color.tailwind_text}">${groupInfo.name}</td>
+                <td class="stat-count p-2 text-center font-semibold text-slate-700">0</td>
+                <td class="stat-time p-2 text-center text-slate-500">0.00</td>
+            `;
+            tbody.appendChild(row);
+        }
+
+        // Cập nhật giá trị và kích hoạt animation nếu có thay đổi
+        const countCell = row.querySelector('.stat-count');
+        const timeCell = row.querySelector('.stat-time');
+        const countChange = currentCount - oldGroupCount;
+
+        if (countChange !== 0) {
+            countCell.textContent = currentCount;
+            timeCell.textContent = currentTime;
+            // Kích hoạt animation cho từng dòng
+            triggerStatAnimation(countCell, `${countChange > 0 ? '+' : ''}${countChange}`);
+            triggerStatAnimation(timeCell, `${countChange > 0 ? '+' : ''}${(countChange * 0.25).toFixed(2)}`);
+        }
     }
 
     // --- Cập nhật dòng tổng kết ---
