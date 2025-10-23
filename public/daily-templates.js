@@ -228,8 +228,13 @@ function initializeResizeListeners(container) {
         document.body.style.cursor = 'col-resize';
 
         // Tạo container cho các preview ghost
-        previewContainer = document.createElement('div');
-        previewContainer.id = 'resize-preview-container';
+        // Thay vì container, ta tạo một ghost element duy nhất
+        previewContainer = originalTask.cloneNode(true);
+        previewContainer.id = 'resize-ghost-stretched'; // Đặt ID để dễ dàng truy vấn và xóa
+        // Xóa các thành phần không cần thiết trên ghost
+        previewContainer.querySelector('.left-handle')?.remove();
+        previewContainer.querySelector('.right-handle')?.remove();
+        previewContainer.querySelector('.delete-task-btn')?.remove();
         document.body.appendChild(previewContainer);
     });
 
@@ -238,64 +243,39 @@ function initializeResizeListeners(container) {
 
         const targetSlot = e.target.closest('.quarter-hour-slot');
         if (!targetSlot || processedSlots.has(targetSlot)) {
-            // Nếu không có target slot hợp lệ, vẫn có thể xóa preview nếu chuột ra ngoài
-            if (previewContainer) previewContainer.innerHTML = '';
             return;
         }
 
         // Chỉ cho phép nhân bản trong cùng một hàng (cùng nhân viên)
         const originalStaffId = originalTask.closest('.quarter-hour-slot').dataset.staffId;
         if (targetSlot.dataset.staffId !== originalStaffId) {
-            previewContainer.innerHTML = '';
             return;
         }
 
-        // --- Logic hiển thị preview ---
-        previewContainer.innerHTML = ''; // Xóa preview cũ
+        // --- Logic hiển thị preview kéo giãn ---
         const allSlotsInRow = Array.from(targetSlot.closest('tr').querySelectorAll('.quarter-hour-slot'));
-        const originalIndex = allSlotsInRow.indexOf(originalTask.parentElement);
+        const originalSlot = originalTask.parentElement;
+        const originalIndex = allSlotsInRow.indexOf(originalSlot);
         const targetIndex = allSlotsInRow.indexOf(targetSlot);
 
-        const start = Math.min(originalIndex, targetIndex);
-        const end = Math.max(originalIndex, targetIndex);
-        let cloneCount = 0;
+        const originalRect = originalSlot.getBoundingClientRect();
+        const targetRect = targetSlot.getBoundingClientRect();
 
-        for (let i = start; i <= end; i++) {
-            const slot = allSlotsInRow[i];
-            // Bỏ qua ô gốc và các ô đã có task
-            if (i === originalIndex || slot.querySelector('.scheduled-task-item')) {
-                continue;
-            }
-
-            cloneCount++;
-            const rect = slot.getBoundingClientRect();
-            const ghost = document.createElement('div');
-            ghost.className = 'resize-ghost';
-            ghost.style.left = `${rect.left + window.scrollX}px`;
-            ghost.style.top = `${rect.top + window.scrollY}px`;
-            ghost.style.width = `${rect.width}px`;
-            ghost.style.height = `${rect.height}px`;
-            // Lấy màu từ task gốc
-            const originalColorClass = Array.from(originalTask.classList).find(c => c.startsWith('bg-'));
-            if (originalColorClass) {
-                ghost.classList.add(originalColorClass);
-            }
-            previewContainer.appendChild(ghost);
+        let left, width;
+        if (targetIndex >= originalIndex) {
+            // Kéo sang phải
+            left = originalRect.left;
+            width = targetRect.right - originalRect.left;
+        } else {
+            // Kéo sang trái
+            left = targetRect.left;
+            width = originalRect.right - targetRect.left;
         }
 
-        // Hiển thị bộ đếm
-        if (cloneCount > 0) {
-            const counter = document.createElement('div');
-            counter.className = 'resize-ghost-counter';
-            counter.textContent = `+${cloneCount}`;
-            const lastGhost = previewContainer.lastChild;
-            if (lastGhost) {
-                const lastRect = lastGhost.getBoundingClientRect();
-                counter.style.left = `${lastRect.right + window.scrollX + 5}px`;
-                counter.style.top = `${lastRect.top + window.scrollY + lastRect.height / 2 - 12}px`;
-            }
-            previewContainer.appendChild(counter);
-        }
+        previewContainer.style.left = `${left + window.scrollX}px`;
+        previewContainer.style.top = `${originalRect.top + window.scrollY}px`;
+        previewContainer.style.width = `${width}px`;
+        previewContainer.style.height = `${originalRect.height}px`;
     });
 
     document.addEventListener('mouseup', function(e) {
