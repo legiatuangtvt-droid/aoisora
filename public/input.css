@@ -472,3 +472,38 @@ html, body {
 .toast-notification.error { background-color: #d32f2f; }
 .toast-notification.warning { background-color: #ff9800; color: #000; }
 .toast-notification.info { background-color: #2196f3; }
+
+.scheduled-task-item .resize-handle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 8px; /* Tăng độ rộng để dễ bấm hơn */
+    cursor: col-resize;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.scheduled-task-item:hover .resize-handle {
+    opacity: 1;
+}
+
+.scheduled-task-item .resize-handle::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 4px;
+    height: 20px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 2px;
+}
+
+.scheduled-task-item .left-handle {
+    left: -4px; /* Đặt một nửa ra ngoài để dễ thấy */
+}
+
+.scheduled-task-item .right-handle {
+    right: -4px; /* Đặt một nửa ra ngoài để dễ thấy */
+}

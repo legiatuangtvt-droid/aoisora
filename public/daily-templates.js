@@ -174,6 +174,8 @@ function initializeDragAndDrop() {
 
                     // Xây dựng lại nội dung một lần duy nhất, sử dụng các biến đã lưu
                     item.innerHTML = `
+                        <div class="resize-handle left-handle" title="Kéo để nhân bản"></div>
+                        <div class="resize-handle right-handle" title="Kéo để nhân bản"></div>
                         <button class="delete-task-btn absolute top-0 right-0 p-1 leading-none font-bold text-current opacity-50 hover:opacity-100 group-hover:opacity-100">×</button>
                         <div class="flex-grow flex flex-col justify-center">
                             <span class="overflow-hidden text-ellipsis">${taskName}</span>
@@ -196,7 +198,104 @@ function initializeDragAndDrop() {
                 updateTemplateFromDOM(); // Cập nhật lại dữ liệu sau khi xóa
             }
         });
+
+        initializeResizeListeners(gridContainer);
     }
+}
+
+/**
+ * Khởi tạo listener cho việc kéo-thả nhân bản task.
+ * @param {HTMLElement} container - Container chính của lưới.
+ */
+function initializeResizeListeners(container) {
+    let isResizing = false;
+    let originalTask = null;
+    let processedSlots = new Set();
+
+    container.addEventListener('mousedown', function(e) {
+        const handle = e.target.closest('.resize-handle');
+        if (!handle) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        isResizing = true;
+        originalTask = handle.closest('.scheduled-task-item');
+        processedSlots.clear();
+        processedSlots.add(originalTask.parentElement); // Thêm slot gốc vào danh sách đã xử lý
+
+        document.body.style.cursor = 'col-resize';
+    });
+
+    document.addEventListener('mousemove', function(e) {
+        if (!isResizing) return;
+
+        const targetSlot = e.target.closest('.quarter-hour-slot');
+        if (!targetSlot || processedSlots.has(targetSlot)) {
+            return;
+        }
+
+        // Chỉ cho phép nhân bản trong cùng một hàng (cùng nhân viên)
+        const originalStaffId = originalTask.closest('.quarter-hour-slot').dataset.staffId;
+        if (targetSlot.dataset.staffId !== originalStaffId) {
+            return;
+        }
+
+        // Chỉ cho phép nhân bản vào ô trống
+        if (targetSlot.querySelector('.scheduled-task-item')) {
+            return;
+        }
+
+        // Kiểm tra xem slot có liền kề không
+        const allSlotsInRow = Array.from(targetSlot.closest('tr').querySelectorAll('.quarter-hour-slot'));
+        const originalIndex = allSlotsInRow.indexOf(originalTask.parentElement);
+        const targetIndex = allSlotsInRow.indexOf(targetSlot);
+
+        // Tìm tất cả các slot đã được điền bởi thao tác này
+        const filledSlots = Array.from(container.querySelectorAll('.cloned-by-resize'));
+        const filledIndices = [originalIndex, ...filledSlots.map(s => allSlotsInRow.indexOf(s.parentElement))];
+
+        const isAdjacent = filledIndices.some(index => Math.abs(targetIndex - index) === 1);
+
+        if (isAdjacent) {
+            processedSlots.add(targetSlot);
+            const clone = originalTask.cloneNode(true);
+            clone.classList.add('cloned-by-resize'); // Đánh dấu là clone để xử lý
+            // Xóa các listener không cần thiết trên clone
+            const newHandleLeft = clone.querySelector('.left-handle');
+            const newHandleRight = clone.querySelector('.right-handle');
+            if(newHandleLeft) newHandleLeft.remove();
+            if(newHandleRight) newHandleRight.remove();
+
+            targetSlot.appendChild(clone);
+        }
+    });
+
+    document.addEventListener('mouseup', function(e) {
+        if (isResizing) {
+            isResizing = false;
+            originalTask = null;
+            document.body.style.cursor = 'default';
+
+            // Xóa class đánh dấu và cập nhật DOM
+            const clones = container.querySelectorAll('.cloned-by-resize');
+            if (clones.length > 0) {
+                clones.forEach(clone => {
+                    clone.classList.remove('cloned-by-resize');
+                    // Gắn lại handle cho các task mới để chúng cũng có thể được nhân bản
+                    const leftHandle = document.createElement('div');
+                    leftHandle.className = 'resize-handle left-handle';
+                    leftHandle.title = 'Kéo để nhân bản';
+                    const rightHandle = document.createElement('div');
+                    rightHandle.className = 'resize-handle right-handle';
+                    rightHandle.title = 'Kéo để nhân bản';
+                    clone.prepend(rightHandle);
+                    clone.prepend(leftHandle);
+                });
+                updateTemplateFromDOM();
+            }
+        }
+    })
 }
 
 /**
@@ -379,12 +478,14 @@ async function loadTemplate(templateId) {
                         const color = (group.color && group.color.tailwind_bg) ? group.color : defaultColor;
                         // Giả lập một item task để thêm vào
                         const taskName = taskInfo.taskName || '...'; // Lấy taskName từ dữ liệu mẫu
-                        const taskItem = document.createElement('div');
+                        const taskItem = document.createElement('div'); 
                         // Sử dụng justify-between để đẩy taskCode xuống dưới
-                        taskItem.className = `scheduled-task-item relative group w-[70px] h-[100px] ${color.tailwind_bg} ${color.tailwind_text} ${color.tailwind_border} text-xs p-1 rounded-md shadow-sm cursor-pointer flex flex-col justify-between items-center text-center mb-1`;
+                        taskItem.className = `scheduled-task-item relative group w-[70px] h-[100px] ${color.tailwind_bg} ${color.tailwind_text} ${color.tailwind_border} text-xs p-1 rounded-md shadow-sm cursor-grab flex flex-col justify-between items-center text-center mb-1`;
                         taskItem.dataset.taskCode = taskCode;
                         taskItem.dataset.groupId = groupId;
                         taskItem.innerHTML = `
+                            <div class="resize-handle left-handle" title="Kéo để nhân bản"></div>
+                            <div class="resize-handle right-handle" title="Kéo để nhân bản"></div>
                             <button class="delete-task-btn absolute top-0 right-0 p-1 leading-none font-bold text-current opacity-50 hover:opacity-100 group-hover:opacity-100">×</button>
                             <div class="flex-grow flex flex-col justify-center">
                                 <span class="overflow-hidden text-ellipsis">${taskName}</span>
