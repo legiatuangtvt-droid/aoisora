@@ -1,4 +1,5 @@
 import { db } from './firebase.js';
+import { initializeTaskLibrary, cleanupTaskLibrary } from './task-library.js';
 import { collection, getDocs, query, orderBy, doc, setDoc, serverTimestamp, addDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 let allMainTasks = {}; // Dùng object để tra cứu nhanh bằng ID
 let sortableInstances = [];
@@ -551,6 +552,7 @@ async function deleteCurrentTemplate() {
 }
 
 export async function init() {
+    initializeTaskLibrary(); // Khởi tạo thư viện task
     await fetchInitialData();
     await fetchAndRenderTemplates(); // Tải danh sách mẫu vào dropdown
     switchToCreateNewMode(); // Đặt trạng thái mặc định là tạo mới
@@ -562,6 +564,7 @@ export async function init() {
 }
 
 export function cleanup() {
+    cleanupTaskLibrary(); // Dọn dẹp thư viện task
     sortableInstances.forEach(s => s.destroy());
     sortableInstances = [];
     // Dọn dẹp các listener bằng cách clone và thay thế node
