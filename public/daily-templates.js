@@ -652,8 +652,12 @@ function updateTemplateStats() {
     const oldTotalCountEl = document.getElementById('stats-total-count');
     const oldTotalCount = oldTotalCountEl ? parseInt(oldTotalCountEl.textContent, 10) : 0;
 
-    const statsContainer = document.getElementById('template-stats-container');
-    if (!statsContainer) return;
+    const statsContentWrapper = document.getElementById('stats-content-wrapper');
+    if (!statsContentWrapper) return;
+    
+    // Xóa các lớp CSS có thể đang set độ rộng cố định (w-72, w-96, etc.)
+    // để aside có thể tự co lại theo nội dung của bảng thống kê.
+    document.getElementById('template-stats-container')?.className.replace(/\bw-\S+/g, '');
     const scheduledTasks = document.querySelectorAll('.scheduled-task-item');
 
     // --- Tính toán số liệu mới từ các task trên lưới ---
@@ -672,31 +676,30 @@ function updateTemplateStats() {
     let table = document.getElementById('stats-table');
     // Nếu bảng chưa tồn tại, tạo mới và chèn vào DOM
     if (!table) {
-        statsContainer.innerHTML = ''; // Xóa thông báo "chưa có task"
+        statsContentWrapper.innerHTML = ''; // Xóa thông báo "chưa có task"
         const tableWrapper = document.createElement('div');
         tableWrapper.className = "relative h-full";
         table = document.createElement('table');
         table.id = 'stats-table';
-        table.className = 'w-full text-sm border-collapse';
+        table.className = 'text-sm border-collapse';
         table.innerHTML = `
             <thead class="bg-slate-50 sticky top-0 z-10">
                 <tr>
+                    <th class="p-2 text-center font-semibold text-slate-600 w-12">STT</th>
                     <th class="p-2 text-center font-semibold text-slate-600">Group Task</th>
-                    <th class="p-2 text-center font-semibold text-slate-600 w-16">SL</th>
                     <th class="p-2 text-center font-semibold text-slate-600 w-20">Giờ</th>
                 </tr>
             </thead>
             <tbody></tbody>
             <tfoot class="bg-slate-100 font-bold sticky bottom-0">
                  <tr>
-                    <td class="p-2 font-semibold">Tổng cộng</td>
-                    <td id="stats-total-count" class="p-2 text-center">0</td>
+                    <td colspan="2" class="p-2 font-semibold text-left">Tổng cộng</td>
                     <td id="stats-total-time" class="p-2 text-center">0.00</td>
                 </tr>
             </tfoot>
         `;
-        tableWrapper.appendChild(table);
-        statsContainer.appendChild(tableWrapper);
+        // tableWrapper.appendChild(table); // Không cần wrapper này nữa
+        statsContentWrapper.appendChild(table);
     }
 
     // --- Lấy dữ liệu cũ từ các dòng trong bảng ---
@@ -721,6 +724,8 @@ function updateTemplateStats() {
         return (groupA.order || 999) - (groupB.order || 999);
     });
 
+    let rowIndex = 1;
+
     // --- Cập nhật hoặc thêm các dòng cho từng group ---
     for (const groupId of sortedGroupIds) {
         const groupInfo = allTaskGroups[groupId];
@@ -737,38 +742,32 @@ function updateTemplateStats() {
             row.className = 'border-b border-slate-100';
             row.dataset.groupId = groupId;
             row.innerHTML = `
+                <td class="p-2 text-center text-slate-500">${rowIndex}</td>
                 <td class="p-2 text-center font-medium ${color.tailwind_text}">${groupInfo.name}</td>
-                <td class="stat-count p-2 text-center font-semibold text-slate-700">0</td>
                 <td class="stat-time p-2 text-center text-slate-500">0.00</td>
             `;
             tbody.appendChild(row);
+            rowIndex++;
         }
 
         // Cập nhật giá trị và kích hoạt animation nếu có thay đổi
-        const countCell = row.querySelector('.stat-count');
         const timeCell = row.querySelector('.stat-time');
-        const countChange = currentCount - oldGroupCount;
 
-        if (countChange !== 0) {
-            countCell.textContent = currentCount;
+        // Chỉ cập nhật và chạy animation nếu có thay đổi
+        if (timeCell.textContent !== currentTime) {
             timeCell.textContent = currentTime;
-            // Kích hoạt animation cho từng dòng
-            triggerStatAnimation(countCell, `${countChange > 0 ? '+' : ''}${countChange}`);
+            const countChange = currentCount - oldGroupCount;
             triggerStatAnimation(timeCell, `${countChange > 0 ? '+' : ''}${(countChange * 0.25).toFixed(2)}`);
         }
     }
 
     // --- Cập nhật dòng tổng kết ---
-    const totalCountCell = table.querySelector('#stats-total-count');
     const totalTimeCell = table.querySelector('#stats-total-time');
-    const countChange = totalCount - oldTotalCount;
+    const totalTime = (totalCount * 0.25).toFixed(2);
 
-    if (countChange !== 0) {
-        totalCountCell.textContent = totalCount;
-        totalTimeCell.textContent = (totalCount * 0.25).toFixed(2);
-        if (oldTotalCount > 0) { // Chỉ trigger animation nếu đây không phải lần đầu
-            triggerStatAnimation(totalCountCell, `${countChange > 0 ? '+' : ''}${countChange}`);
-            triggerStatAnimation(totalTimeCell, `${countChange > 0 ? '+' : ''}${(countChange * 0.25).toFixed(2)}`);
-        }
+    if (totalTimeCell.textContent !== totalTime) {
+        totalTimeCell.textContent = totalTime;
+        const countChange = totalCount - oldTotalCount;
+        triggerStatAnimation(totalTimeCell, `${countChange > 0 ? '+' : ''}${(countChange * 0.25).toFixed(2)}`);
     }
 }

@@ -179,11 +179,10 @@
     { "id": "CHI_04", "name": "Phạm Thị Chi", "roleId": "CAFE", "storeId": "AMPM_SALA", "phone": "0904567890", "status": "INACTIVE" }
   ],
   "roles": [
-    { "id": "LEADER", "name": "Trưởng nhóm" },
-    { "id": "POS", "name": "Thu ngân" },
-    { "id": "MMD", "name": "Trưng bày hàng hóa" },
-    { "id": "CAFE", "name": "Pha chế Cafe" },
-    { "id": "STAFF", "name": "Nhân viên" }
+    { "id": "STAFF", "name": "Nhân viên" },
+    { "id": "STORE_LEADER", "name": "Trưởng cửa hàng" },
+    { "id": "AREA_MANAGER", "name": "Quản lý khu vực" },
+    { "id": "REGIONAL_MANAGER", "name": "Quản lý miền" }
   ],
   "stores": [
     { "id": "AMPM_SALA", "name": "AEON MaxValu Sala", "address": "Quận 2, TP.HCM", "status": "ACTIVE" },
