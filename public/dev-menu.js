@@ -1,5 +1,11 @@
 import { db } from './firebase.js';
-import { writeBatch, doc, serverTimestamp, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { writeBatch, doc, serverTimestamp, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+
+let allRoles = [];
+let allEmployees = [];
+let allAreaManagers = [];
+let allRegionalManagers = [];
+let allPersonnel = []; // Mảng tổng hợp tất cả các cấp nhân viên
 
 function initializeDevMenu() {
     // Create and inject HTML
@@ -15,10 +21,16 @@ function initializeDevMenu() {
                 <i class="fas fa-database"></i>
                 <span>Nhập Dữ Liệu Mô Phỏng</span>
             </button>
-            <button id="simulate-user-btn" class="dev-menu-button flex items-center gap-2.5 px-3 py-2 border border-slate-300 rounded-md bg-white cursor-pointer text-sm text-slate-700 transition-colors hover:bg-slate-50 hover:border-slate-400" title="Tính năng sẽ được phát triển sau">
-                <i class="fas fa-user-secret"></i>
-                <span>Người Dùng Mô Phỏng</span>
-            </button>
+            <div class="border-t border-slate-200 my-2"></div>
+            <div class="dev-menu-title-section">Mô phỏng người dùng</div>
+            <div class="dev-menu-section">
+                <label for="dev-role-select" class="dev-menu-label"><i class="fas fa-user-tag mr-2 text-slate-500"></i>Chức vụ</label>
+                <select id="dev-role-select" class="dev-menu-select"></select>
+            </div>
+            <div class="dev-menu-section">
+                <label for="dev-employee-select" class="dev-menu-label"><i class="fas fa-user mr-2 text-slate-500"></i>Nhân viên</label>
+                <select id="dev-employee-select" class="dev-menu-select"></select>
+            </div>
         </div>
     `;
     document.body.appendChild(menuContainer);
@@ -28,6 +40,9 @@ function initializeDevMenu() {
     const seedAllDataBtn = document.getElementById('seed-all-data-btn');
     const menuBody = menuContainer.querySelector('.dev-menu-body');
     const menuTitle = menuContainer.querySelector('.dev-menu-title');
+    const roleSelect = document.getElementById('dev-role-select');
+    const employeeSelect = document.getElementById('dev-employee-select');
+
 
     // --- Logic lưu/tải trạng thái từ localStorage ---
     const DEV_MENU_STORAGE_KEY = 'devMenuState';
@@ -194,6 +209,73 @@ function initializeDevMenu() {
 
     // Tải trạng thái đã lưu khi khởi tạo
     loadMenuState();
+
+    // --- Logic mô phỏng người dùng ---
+    async function fetchPersonnelData() {
+        try {
+            const rolesQuery = query(collection(db, 'roles'), orderBy('name'));
+            const [rolesSnap, employeesSnap, areaManagersSnap, regionalManagersSnap] = await Promise.all([
+                getDocs(rolesQuery),
+                getDocs(collection(db, 'employee')),
+                getDocs(collection(db, 'area_managers')),
+                getDocs(collection(db, 'regional_managers'))
+            ]);
+
+            allRoles = rolesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            allEmployees = employeesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            allAreaManagers = areaManagersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            allRegionalManagers = regionalManagersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            allPersonnel = [...allEmployees, ...allAreaManagers, ...allRegionalManagers];
+
+            populateRoleSelect();
+            populateEmployeeSelect();
+
+        } catch (error) {
+            console.error("Lỗi khi tải dữ liệu nhân sự cho Dev Menu:", error);
+            roleSelect.innerHTML = `<option>Lỗi tải</option>`;
+            employeeSelect.innerHTML = `<option>Lỗi tải</option>`;
+        }
+    }
+
+    function populateRoleSelect() {
+        roleSelect.innerHTML = `<option value="all">-- Tất cả chức vụ --</option>`;
+        allRoles.forEach(role => {
+            roleSelect.innerHTML += `<option value="${role.id}">${role.name}</option>`;
+        });
+    }
+
+    function populateEmployeeSelect(selectedRoleId = 'all') {
+        employeeSelect.innerHTML = `<option value="">-- Chọn nhân viên --</option>`;
+        let filteredPersonnel = allPersonnel;
+
+        if (selectedRoleId !== 'all') {
+            filteredPersonnel = allPersonnel.filter(p => p.roleId === selectedRoleId);
+        }
+
+        filteredPersonnel.sort((a, b) => a.name.localeCompare(b.name));
+
+        filteredPersonnel.forEach(person => {
+            const roleName = allRoles.find(r => r.id === person.roleId)?.name || person.roleId;
+            employeeSelect.innerHTML += `<option value="${person.id}">${person.name} (${roleName})</option>`;
+        });
+    }
+
+    roleSelect.addEventListener('change', () => {
+        populateEmployeeSelect(roleSelect.value);
+    });
+
+    employeeSelect.addEventListener('change', () => {
+        const selectedEmployeeId = employeeSelect.value;
+        if (selectedEmployeeId) {
+            window.showToast(`Đang mô phỏng người dùng: ${employeeSelect.options[employeeSelect.selectedIndex].text}`, 'info');
+            // Logic mô phỏng sẽ được thêm ở đây (ví dụ: lưu vào localStorage và tải lại trang)
+            // localStorage.setItem('simulatedUserId', selectedEmployeeId);
+            // window.location.reload();
+        }
+    });
+
+    fetchPersonnelData();
 
     // --- Seed data logic ---
     seedAllDataBtn.addEventListener('click', async () => {

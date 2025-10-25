@@ -5,7 +5,7 @@ let domController = null;
 let activeModal = null;
 
 // Biến toàn cục để lưu trữ dữ liệu
-let allStaff = [];
+let allEmployees = [];
 let allMainTasks = {}; // Dùng object để tra cứu nhanh bằng ID
 let currentScheduleData = []; // Lịch làm việc cho ngày đang chọn
 let sortableInstances = [];
@@ -19,8 +19,8 @@ const timeSlots = ["6:00", "7:00", "8:00", "9:00", "10:00", "11:00", "12:00", "1
 async function fetchInitialData() {
     try {
         // Tải danh sách nhân viên
-        const staffSnapshot = await getDocs(collection(db, 'staff'));
-        allStaff = staffSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const employeeSnapshot = await getDocs(collection(db, 'employee'));
+        allEmployees = employeeSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
         // Tải danh sách công việc chính
         const tasksSnapshot = await getDocs(collection(db, 'main_tasks'));
@@ -45,11 +45,11 @@ function listenForScheduleChanges(dateString) {
     const unsubscribe = onSnapshot(q, (snapshot) => {
         currentScheduleData = snapshot.docs.map(doc => {
             const data = doc.data();
-            const staffInfo = allStaff.find(s => s.id === data.staffId) || { name: data.staffId, role: 'N/A' };
+            const employeeInfo = allEmployees.find(s => s.id === data.employeeId) || { name: data.employeeId, role: 'N/A' };
             return {
                 docId: doc.id, // Lưu ID của document để cập nhật/xóa
                 ...data,
-                name: staffInfo.name,
+                name: employeeInfo.name,
                 role: staffInfo.roleId, // Sẽ cần tra cứu tên Role sau
                 shift: "Ca làm việc", // Cần bổ sung thông tin ca làm
             };
@@ -321,10 +321,10 @@ function hideModal() {
 }
 
 function openScheduleModal() {
-    const staffSelect = document.getElementById('schedule-staff');
-    if (staffSelect) {
-        staffSelect.innerHTML = '<option value="">-- Chọn Nhân Viên --</option>' + 
-            allStaff.map(s => `<option value="${s.id}">${s.name} (${s.roleId || 'N/A'})</option>`).join('');
+    const employeeSelect = document.getElementById('schedule-employee');
+    if (employeeSelect) {
+        employeeSelect.innerHTML = '<option value="">-- Chọn Nhân Viên --</option>' + 
+            allEmployees.map(s => `<option value="${s.id}">${s.name} (${s.roleId || 'N/A'})</option>`).join('');
     }
     document.getElementById('schedule-date').value = document.getElementById('date').value;
     showModal('schedule-modal');
@@ -332,7 +332,7 @@ function openScheduleModal() {
 
 async function handleAddSchedule(e) {
     e.preventDefault();
-    const staffId = document.getElementById('schedule-staff').value;
+    const employeeId = document.getElementById('schedule-employee').value;
     const date = document.getElementById('schedule-date').value;
     // Logic thêm lịch mới vào Firestore
     showToast('Chức năng thêm lịch đang được phát triển.', 'info');

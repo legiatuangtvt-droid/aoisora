@@ -32,11 +32,25 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
-    // Cho phép đọc/ghi vào collection nhân viên và trạng thái nhân viên
-    match /staff/{staffId} {
+    // Cho phép đọc/ghi vào các collection nhân viên và trạng thái nhân viên
+    match /employee/{employeeId} {
       allow read, write: if true;
     }
-    match /staff_statuses/{statusId} {
+    match /area_managers/{managerId} {
+      allow read, write: if true;
+    }
+    match /regional_managers/{managerId} {
+      allow read, write: if true;
+    }
+    match /employee_statuses/{statusId} {
+      allow read, write: if true;
+    }
+
+    // Cho phép đọc/ghi vào các collection khu vực và miền
+    match /areas/{areaId} {
+      allow read, write: if true;
+    }
+    match /regions/{regionId} {
       allow read, write: if true;
     }
 
