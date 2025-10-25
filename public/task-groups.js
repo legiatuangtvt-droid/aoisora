@@ -149,8 +149,11 @@ function renderGroupCards(taskGroups) {
                 const generatedCode = `1${group.order}${String(task.order).padStart(2, '0')}`;
                 const frequency = task.frequency || 'Other'; // Mặc định là 'Other' nếu không có
                 return `
-                    <div class="task-card ${defaultTaskColor.tailwind_bg} rounded ${defaultTaskColor.tailwind_border} flex flex-col items-center justify-between text-center w-[70px] h-[100px] flex-shrink-0 transition-all hover:bg-slate-300 hover:shadow-md cursor-pointer" 
+                    <div class="task-card relative group ${defaultTaskColor.tailwind_bg} rounded ${defaultTaskColor.tailwind_border} flex flex-col items-center justify-between text-center w-[70px] h-[100px] flex-shrink-0 transition-all hover:bg-slate-300 hover:shadow-md cursor-pointer" 
                          data-task-order="${task.order}" data-task-frequency="${frequency}">
+                        <button class="delete-task-btn absolute top-0 right-0 p-1 leading-none text-red-600 opacity-0 group-hover:opacity-100 transition-opacity" title="Xóa task này">
+                            <i class="fas fa-times-circle"></i>
+                        </button>
                         <div class="flex-1 flex flex-col justify-center items-center px-1 pt-2 pb-1">
                             <p class="text-sm font-medium text-slate-800 leading-tight">${task.name}</p>
                         </div>
@@ -205,11 +208,25 @@ function initializePageListeners() {
 
     container.addEventListener('click', (e) => {
         const groupCodeCard = e.target.closest('.group-code-card');
-        if (groupCodeCard) {
+        const taskCard = e.target.closest('.task-card');
+        const addTaskBtn = e.target.closest('.add-task-to-group-btn');
+        const editGroupBtn = e.target.closest('.edit-group-btn');
+        const deleteTaskBtn = e.target.closest('.delete-task-btn');
+
+        if (deleteTaskBtn) {
+            e.stopPropagation(); // Ngăn không cho modal sửa task hiện ra
+            const taskToDelete = deleteTaskBtn.closest('.task-card');
+            const groupRow = taskToDelete.closest('.group-row');
+            const groupCode = groupRow.querySelector('.group-code-card').dataset.groupCode;
+            const taskOrder = parseInt(taskToDelete.dataset.taskOrder, 10);
+            handleDeleteTask(groupCode, taskOrder);
+            return; // Dừng xử lý để tránh các sự kiện khác
+        }
+
+        if (groupCodeCard) { // Click vào thẻ group
             showColorPalette(groupCodeCard);
         }
 
-        const taskCard = e.target.closest('.task-card');
         if (taskCard) {
             const groupRow = taskCard.closest('.group-row');
             const groupCode = groupRow.querySelector('.group-code-card').dataset.groupCode;
@@ -217,13 +234,11 @@ function initializePageListeners() {
             showEditTaskModal(groupCode, parseInt(taskOrder, 10));
         }
 
-        const addTaskBtn = e.target.closest('.add-task-to-group-btn');
         if (addTaskBtn) {
             const groupCode = addTaskBtn.dataset.groupCode;
             showAddTaskModal(groupCode);
         }
 
-        const editGroupBtn = e.target.closest('.edit-group-btn');
         if (editGroupBtn) {
             const groupCode = editGroupBtn.dataset.groupCode;
             showEditGroupModal(groupCode);
@@ -425,6 +440,55 @@ async function updateGroupColor(groupCode, newColorName) {
     } catch (error) {
         console.error("Lỗi khi cập nhật màu nhóm:", error);
         window.showToast("Không thể lưu thay đổi màu. Vui lòng thử lại.", "error");
+    }
+}
+
+/**
+ * Xử lý việc xóa một task khỏi nhóm.
+ * @param {string} groupCode Mã nhóm chứa task.
+ * @param {number} taskOrder Thứ tự của task cần xóa.
+ */
+async function handleDeleteTask(groupCode, taskOrder) {
+    try {
+        // Bước 1: Lấy dữ liệu nhóm và tên task trước khi hỏi xác nhận
+        const groupDocRef = doc(db, 'task_groups', groupCode);
+        const docSnap = await getDoc(groupDocRef);
+
+        if (!docSnap.exists()) {
+            throw new Error(`Không tìm thấy nhóm với mã: ${groupCode}`);
+        }
+        
+        let tasks = docSnap.data().tasks || [];
+        const taskToDelete = tasks.find(t => t.order === taskOrder);
+        
+        if (!taskToDelete) {
+            throw new Error(`Không tìm thấy task với order ${taskOrder} trong nhóm ${groupCode}.`);
+        }
+        const taskName = taskToDelete.name;
+
+        // Bước 2: Hiển thị hộp thoại xác nhận với tên task
+        const confirmed = await window.showConfirmation(
+            `Bạn có chắc chắn muốn xóa task <strong>${taskName}</strong> khỏi nhóm <strong>${groupCode}</strong> không?`,
+            'Xác nhận xóa Task',
+            'Xóa',
+            'Hủy'
+        );
+
+        if (!confirmed) return;
+
+        // Bước 3: Nếu xác nhận, tiến hành xóa và cập nhật
+        const updatedTasks = tasks
+            .filter(task => task.order !== taskOrder)
+            .sort((a, b) => a.order - b.order) // Sắp xếp lại để đảm bảo thứ tự đúng
+            .map((task, index) => ({ ...task, order: index + 1 })); // Gán lại order mới
+
+        await updateDoc(groupDocRef, { tasks: updatedTasks });
+
+        window.showToast(`Đã xóa task "${taskName}" khỏi nhóm ${groupCode}.`, 'success');
+        renderPage(); // Render lại toàn bộ trang để cập nhật giao diện
+    } catch (error) {
+        console.error("Lỗi khi xóa task:", error);
+        window.showToast("Đã xảy ra lỗi khi xóa task. Vui lòng thử lại.", "error");
     }
 }
 
