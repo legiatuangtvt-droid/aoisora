@@ -674,41 +674,32 @@ html, body {
     height: 70px;
     padding: 4px;
     border-radius: 8px;
-    border: 1px solid transparent;
-    background-color: #fff;
+    border: 2px solid transparent; /* Tăng độ dày border để dễ thấy hơn khi active */
     box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     cursor: pointer;
-    transition: background-color 0.2s ease, border-color 0.2s ease;
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
     position: relative;
 }
 
 .group-tab:hover {
-    background-color: #f1f5f9; /* bg-slate-100 */
+    background-color: var(--hover-bg-color) !important; /* Sử dụng biến CSS, !important để ghi đè style inline */
+    transform: translateY(-2px);
 }
 
 .group-tab.active {
-    background-color: #eef2ff; /* bg-indigo-50 */
-    border-color: #818cf8; /* border-indigo-400 */
-}
-
-.group-tab-color-indicator {
-    position: absolute;
-    left: 4px;
-    top: 4px;
-    bottom: 4px;
-    width: 4px;
-    border-radius: 99px;
+    border-color: var(--active-border-color) !important; /* Sử dụng biến CSS */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .group-tab-code {
     font-weight: 700;
-    font-size: 1rem; /* text-lg */
-    color: #334155;
+    font-size: 1.125rem; /* text-lg */
+    /* Màu chữ sẽ được JS gán trực tiếp */
 }
 
 .group-tab-count {
     font-size: 0.75rem; /* text-xs */
-    color: #64748b;
+    opacity: 0.8; /* Giảm độ trong suốt để làm nổi bật mã nhóm */
 }
 
 /* --- Lưới Task (Bên phải) --- */

@@ -49,9 +49,13 @@ function renderGroupTabs() {
         const tab = document.createElement('button');
         tab.className = 'group-tab';
         tab.dataset.groupId = group.id;
+        // Gán màu trực tiếp vào style của tab
+        tab.style.backgroundColor = color.bg;
+        tab.style.color = color.text;
+        tab.style.setProperty('--hover-bg-color', color.hover); // Lưu màu hover vào biến CSS
+        tab.style.setProperty('--active-border-color', color.border); // Lưu màu border active vào biến CSS
         tab.title = group.name || group.code;
         tab.innerHTML = `
-            <span class="group-tab-color-indicator" style="background-color: ${color.border};"></span>
             <span class="group-tab-code">${group.code}</span>
             <span class="group-tab-count">${group.tasks.length}</span>
         `;
