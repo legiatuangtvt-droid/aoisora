@@ -7,6 +7,7 @@ let sortableInstances = [];
 let allTemplates = [];
 let currentTemplateId = null;
 
+let allShiftCodes = []; // Biến để lưu danh sách mã ca
 // Bảng màu mặc định nếu group không có màu
 const defaultColor = {
     tailwind_bg: 'bg-slate-200', tailwind_text: 'text-slate-800', tailwind_border: 'border-slate-400'
@@ -62,6 +63,23 @@ function handleTaskAdd(evt) {
 }
 
 /**
+ * Tải danh sách mã ca từ localStorage.
+ */
+function loadShiftCodes() {
+    const SHIFT_CODES_STORAGE_KEY = 'aoisora_shiftCodes';
+    const storedData = localStorage.getItem(SHIFT_CODES_STORAGE_KEY);
+    if (storedData) {
+        try {
+            const parsedData = JSON.parse(storedData);
+            if (Array.isArray(parsedData)) {
+                allShiftCodes = parsedData;
+            }
+        } catch (e) {
+            console.error("Lỗi khi đọc dữ liệu mã ca từ localStorage", e);
+        }
+    }
+}
+/**
  * Tải tất cả dữ liệu nền cần thiết một lần.
  */
 async function fetchInitialData() {
@@ -85,6 +103,8 @@ async function fetchInitialData() {
         const container = document.getElementById('template-builder-grid-container');
         if(container) container.innerHTML = `<div class="p-10 text-center text-red-500">Không thể tải dữ liệu nền. Vui lòng thử lại.</div>`;
     }
+
+    loadShiftCodes(); // Tải mã ca từ localStorage
 }
 
 /**
@@ -98,9 +118,15 @@ function addShiftRow(tbody, shiftNumber) {
     const newRow = document.createElement('tr');
     newRow.dataset.shiftId = shiftId;
 
+    // Tạo dropdown cho việc chọn mã ca
+    const shiftCodeOptions = allShiftCodes.map(sc => `<option value="${sc.shiftCode}">${sc.shiftCode} (${sc.timeRange})</option>`).join('');
+
     let bodyRowHtml = `
-        <td class="group relative p-2 border border-slate-200 align-top sticky left-0 bg-white z-10 w-20 min-w-20 font-semibold text-center">
-            <span>Ca ${shiftNumber}</span>
+        <td class="group relative p-1 border border-slate-200 align-top sticky left-0 bg-white z-10 w-48 min-w-48 font-semibold text-center">
+            <select class="shift-code-selector form-input w-full text-sm p-1">
+                <option value="">-- Chọn Ca --</option>
+                ${shiftCodeOptions}
+            </select>
             <button class="delete-shift-row-btn absolute top-1 right-1 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity" title="Xóa dòng ca này">
                 <i class="fas fa-times"></i>
             </button>
@@ -122,6 +148,12 @@ function addShiftRow(tbody, shiftNumber) {
 
     newRow.innerHTML = bodyRowHtml;
     tbody.appendChild(newRow);
+
+    // Gắn sự kiện onchange cho dropdown vừa tạo
+    const newSelector = newRow.querySelector('.shift-code-selector');
+    if (newSelector) {
+        newSelector.addEventListener('change', updateTemplateFromDOM);
+    }
 
     // Kích hoạt lại chức năng kéo-thả cho các ô mới trong dòng vừa thêm
     newRow.querySelectorAll('.quarter-hour-slot').forEach(slot => {
@@ -147,12 +179,12 @@ function renderGrid() {
 
     // Tạo bảng
     const table = document.createElement('table');
-    table.className = 'min-w-full border-collapse border border-slate-200';
+    table.className = 'min-w-full border-collapse border border-slate-200 table-fixed';
 
     // --- Tạo Header (Tên nhân viên) ---
     const thead = document.createElement('thead');
     thead.className = 'bg-slate-100 sticky top-0 z-20'; // Tăng z-index để header nổi trên các ô sticky
-    let headerRowHtml = `<th class="p-2 border border-slate-200 w-20 min-w-20 sticky left-0 bg-slate-100 z-30">Ca</th>`; // Cột Ca, sticky
+    let headerRowHtml = `<th class="p-2 border border-slate-200 w-28 sticky left-0 bg-slate-100 z-30">Ca</th>`; // Cột Ca, sticky
     timeSlots.forEach(time => {
         headerRowHtml += `
             <th class="p-2 border border-slate-200 min-w-[308px] text-center font-semibold text-slate-700">${time}</th>
@@ -224,7 +256,7 @@ function initializeDragAndDrop() {
             if (e.target.closest('.delete-shift-row-btn')) {
                 const row = e.target.closest('tr');
                 const shiftId = row.dataset.shiftId;
-                const shiftName = row.querySelector('td:first-child span').textContent;
+                const shiftName = row.querySelector('.shift-code-selector option:checked')?.textContent || 'Ca chưa chọn';
 
                 window.showConfirmation(`Bạn có chắc chắn muốn xóa toàn bộ dòng "${shiftName}" không?`, 'Xác nhận xóa dòng', 'Xóa', 'Hủy').then(confirmed => {
                     if (confirmed) {
@@ -382,6 +414,7 @@ async function saveTemplate() {
     saveButton.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Đang lưu...`;
 
     const scheduleData = {};
+    const shiftMappings = {}; // Lưu map giữa shiftId và shiftCode
 
     // 1. Thu thập dữ liệu từ DOM
     document.querySelectorAll('.scheduled-task-item').forEach(taskItem => {
@@ -403,17 +436,25 @@ async function saveTemplate() {
         scheduleData[shiftId].push({ taskCode, taskName, startTime, groupId });
     });
 
+    // Thu thập dữ liệu từ các dropdown chọn ca
+    document.querySelectorAll('#template-builder-grid-container tbody tr').forEach(row => {
+        const shiftId = row.dataset.shiftId;
+        const selectedShiftCode = row.querySelector('.shift-code-selector')?.value;
+        if (shiftId && selectedShiftCode) {
+            shiftMappings[shiftId] = selectedShiftCode;
+        }
+    });
+
     // 2. Lưu vào Firestore
     try {
         if (templateIdToSave) {
             // Cập nhật mẫu đã có
             const templateRef = doc(db, 'daily_templates', templateIdToSave);
-            await setDoc(templateRef, { schedule: scheduleData, totalManhour: totalManhour, updatedAt: serverTimestamp() }, { merge: true });
+            await setDoc(templateRef, { schedule: scheduleData, shiftMappings: shiftMappings, totalManhour: totalManhour, updatedAt: serverTimestamp() }, { merge: true });
         } else {
             // Tạo mẫu mới
             const newDocRef = await addDoc(collection(db, 'daily_templates'), {
                 name: templateName.trim(),
-                totalManhour: totalManhour,
                 schedule: scheduleData,
                 createdAt: serverTimestamp()
             });
@@ -445,6 +486,7 @@ async function updateTemplateFromDOM() {
     }
 
     const scheduleData = {};
+    const shiftMappings = {};
     const totalManhour = parseFloat(document.getElementById('template-manhour-input').value) || 0;
 
     // 1. Thu thập dữ liệu từ DOM
@@ -466,10 +508,19 @@ async function updateTemplateFromDOM() {
         scheduleData[shiftId].push({ taskCode, taskName, startTime, groupId });
     });
 
+    // Thu thập dữ liệu từ các dropdown chọn ca
+    document.querySelectorAll('#template-builder-grid-container tbody tr').forEach(row => {
+        const shiftId = row.dataset.shiftId;
+        const selectedShiftCode = row.querySelector('.shift-code-selector')?.value;
+        if (shiftId && selectedShiftCode) {
+            shiftMappings[shiftId] = selectedShiftCode;
+        }
+    });
+
     // 2. Cập nhật vào Firestore
     try {
         const templateRef = doc(db, 'daily_templates', currentTemplateId);
-        await setDoc(templateRef, { schedule: scheduleData, totalManhour: totalManhour, updatedAt: serverTimestamp() }, { merge: true });
+        await setDoc(templateRef, { schedule: scheduleData, shiftMappings: shiftMappings, totalManhour: totalManhour, updatedAt: serverTimestamp() }, { merge: true });
         // showToast('Đã tự động lưu thay đổi!', 'success', 1000); // Có thể thêm toast nhỏ
     } catch (error) {
         console.error("Lỗi khi tự động cập nhật lịch trình mẫu:", error);
@@ -526,7 +577,7 @@ async function loadTemplate(templateId) {
         const docSnap = await getDoc(templateRef);
 
         if (docSnap.exists()) {
-            const { schedule, totalManhour } = docSnap.data();
+            const { schedule, totalManhour, shiftMappings } = docSnap.data();
 
             // Cập nhật giá trị Manhour từ Firestore
             const manhourInput = document.getElementById('template-manhour-input');
@@ -552,6 +603,15 @@ async function loadTemplate(templateId) {
                         addShiftRow(tbody, i);
                     }
                 }
+            }
+
+            // --- FIX: Chọn lại mã ca đã lưu trong dropdown ---
+            if (shiftMappings) {
+                Object.keys(shiftMappings).forEach(shiftId => {
+                    const row = document.querySelector(`tr[data-shift-id="${shiftId}"]`);
+                    const selector = row?.querySelector('.shift-code-selector');
+                    if (selector) selector.value = shiftMappings[shiftId];
+                });
             }
             
             // Điền các task vào lưới
