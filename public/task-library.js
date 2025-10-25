@@ -5,8 +5,8 @@ import "https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js";
 
 // Biến để lưu trữ dữ liệu và các view
 let allGroupedTasks = [];
-let groupView, taskView;
 let menuContainer = null; // Biến toàn cục cho container chính
+let groupTabsContainer, taskGridContainer;
 let isStateLoaded = false; // Cờ để kiểm tra xem state từ localStorage đã được tải chưa
 let taskLibraryController = null;
 
@@ -33,73 +33,63 @@ async function fetchAndGroupTasks() {
 }
 
 /**
- * Chuyển đổi giữa các view (group và task).
- * @param {'group' | 'task'} viewName - Tên view cần hiển thị.
+ * Render các tab nhóm công việc ở cột bên trái.
  */
-function switchToView(viewName) {
-    if (viewName === 'task') {
-        groupView.classList.add('hidden');
-        taskView.classList.remove('hidden');
-    } else {
-        taskView.classList.add('hidden');
-        groupView.classList.remove('hidden');
-    }
-}
-
-/**
- * Render view lưới các nhóm công việc.
- */
-function renderGroupGridView() {
-    if (!groupView) return;
-    groupView.innerHTML = '';
+function renderGroupTabs() {
+    if (!groupTabsContainer) return;
+    groupTabsContainer.innerHTML = '';
 
     if (allGroupedTasks.length === 0) {
-        groupView.innerHTML = '<p class="text-center text-gray-500">Không tìm thấy nhóm công việc.</p>';
+        groupTabsContainer.innerHTML = '<p class="p-2 text-center text-xs text-slate-500">Không có nhóm nào.</p>';
         return;
     }
 
     allGroupedTasks.forEach(group => {
-        // Đọc trực tiếp object màu từ group, nếu không có thì dùng màu mặc định
         const color = (group.color && group.color.bg) ? group.color : defaultColor; // Giờ đây color chứa giá trị HEX
-        const groupItem = document.createElement('div');
-        groupItem.className = `group-grid-item`; // Class cơ bản
-        groupItem.dataset.groupId = group.id;
-        // Gán giá trị màu vào biến CSS
-        groupItem.style.setProperty('--group-bg-color', color.bg);
-        groupItem.style.setProperty('--group-border-color', color.border);
-        groupItem.style.setProperty('--group-hover-bg-color', color.hover);
-        groupItem.innerHTML = `
-            <div></div>
-            <span class="code">${group.code}</span>
-            <span class="count">${group.tasks.length} tasks</span>
+        const tab = document.createElement('button');
+        tab.className = 'group-tab';
+        tab.dataset.groupId = group.id;
+        tab.title = group.name || group.code;
+        tab.innerHTML = `
+            <span class="group-tab-color-indicator" style="background-color: ${color.border};"></span>
+            <span class="group-tab-code">${group.code}</span>
+            <span class="group-tab-count">${group.tasks.length}</span>
         `;
-        groupItem.addEventListener('click', () => renderTaskGridView(group.id));
-        groupView.appendChild(groupItem);
+        tab.addEventListener('click', () => {
+            // Xóa active class khỏi tab hiện tại
+            const currentActive = groupTabsContainer.querySelector('.active');
+            if (currentActive) {
+                currentActive.classList.remove('active');
+            }
+            // Thêm active class cho tab được click
+            tab.classList.add('active');
+            renderTaskGridForGroup(group.id);
+        });
+        groupTabsContainer.appendChild(tab);
     });
+
+    // Tự động click vào tab đầu tiên để hiển thị task
+    if (groupTabsContainer.firstChild) {
+        groupTabsContainer.firstChild.click();
+    }
 }
 
 /**
- * Render view lưới các task của một nhóm cụ thể.
+ * Render lưới các task cho một nhóm cụ thể ở khu vực bên phải.
  * @param {string} groupId - ID của nhóm cần hiển thị task.
  */
-function renderTaskGridView(groupId) {
-    if (!taskView) return;
+function renderTaskGridForGroup(groupId) {
+    if (!taskGridContainer) return;
 
     const group = allGroupedTasks.find(g => g.id === groupId);
     if (!group) {
         console.error(`Không tìm thấy nhóm với ID: ${groupId}`);
+        taskGridContainer.innerHTML = '<p class="text-center text-red-500">Lỗi: Không tìm thấy nhóm.</p>';
         return;
     }
 
-    taskView.innerHTML = `
-        <div class="task-view-header">
-            <button class="task-view-back-btn" title="Quay lại"><i class="fas fa-arrow-left"></i></button>
-            <h3 class="task-view-title">${group.name || group.code}</h3>
-        </div>
-        <div id="task-view-content"></div>
-    `;
+    taskGridContainer.innerHTML = ''; // Xóa nội dung cũ
 
-    const taskContent = taskView.querySelector('#task-view-content');
     if (group.tasks.length > 0) {
         // Sắp xếp task theo 'order' trước khi render
         const sortedTasks = [...group.tasks].sort((a, b) => (a.order || 0) - (b.order || 0));
@@ -107,7 +97,7 @@ function renderTaskGridView(groupId) {
             const color = (group.color && group.color.tailwind_bg) ? group.color : defaultColor;
             const taskItem = document.createElement('div');
             const generatedCode = `1${group.order}${String(task.order).padStart(2, '0')}`;
-            
+
             taskItem.className = `task-library-item relative group ${color.tailwind_bg} ${color.tailwind_text} ${color.tailwind_border} border-2 text-xs p-1 rounded-md shadow-sm cursor-grab flex flex-col justify-between items-center text-center mb-1`;
             taskItem.dataset.taskCode = generatedCode; // Gán mã task đã tạo vào dataset
             taskItem.dataset.groupId = group.id; // Thêm groupId để xác định màu sắc
@@ -117,11 +107,11 @@ function renderTaskGridView(groupId) {
                 </div>
                 <span class="font-semibold mt-auto">${generatedCode}</span>
             `;
-            taskContent.appendChild(taskItem);
+            taskGridContainer.appendChild(taskItem);
         });
 
         // Khởi tạo SortableJS cho danh sách task để có thể kéo đi
-        Sortable.create(taskContent, {
+        Sortable.create(taskGridContainer, {
             group: {
                 name: 'template-tasks',
                 pull: 'clone', // Quan trọng: Sao chép task khi kéo, không di chuyển
@@ -137,12 +127,8 @@ function renderTaskGridView(groupId) {
             }
         });
     } else {
-        taskContent.innerHTML = '<p class="text-sm text-gray-500">Không có công việc trong nhóm này.</p>';
+        taskGridContainer.innerHTML = '<p class="text-sm text-gray-500 text-center mt-4">Không có công việc trong nhóm này.</p>';
     }
-
-    taskView.querySelector('.task-view-back-btn').addEventListener('click', () => switchToView('group'));
-
-    switchToView('task');
 }
 
 /**
@@ -224,13 +210,9 @@ export async function initializeTaskLibrary() {
             <span class="task-library-icon bg-indigo-600 text-white font-bold text-sm rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0"><i class="fas fa-book"></i></span>
             <span class="task-library-title ml-3 font-semibold text-slate-800 whitespace-nowrap opacity-0 transition-opacity ease-in">Thư Viện Task</span>
         </div>
-        <div class="task-library-body opacity-0 invisible">
-            <div id="group-view-container" class="task-library-view">
-                <p class="text-center text-gray-500">Đang tải thư viện...</p>
-            </div>
-            <div id="task-view-container" class="task-library-view hidden">
-                <!-- Nội dung các task của một group sẽ được render ở đây -->
-            </div>
+        <div class="task-library-body opacity-0 invisible flex">
+            <div id="group-tabs-container" class="flex-shrink-0"></div>
+            <div id="task-grid-container" class="flex-grow"></div>
         </div>
     `;
     document.body.appendChild(menuContainer);
@@ -238,8 +220,8 @@ export async function initializeTaskLibrary() {
     const header = menuContainer.querySelector('.task-library-header');
     const menuBody = menuContainer.querySelector('.task-library-body');
     const menuTitle = menuContainer.querySelector('.task-library-title');
-    groupView = menuContainer.querySelector('#group-view-container');
-    taskView = menuContainer.querySelector('#task-view-container');
+    groupTabsContainer = menuContainer.querySelector('#group-tabs-container');
+    taskGridContainer = menuContainer.querySelector('#task-grid-container');
 
     // Đặt vị trí mặc định ngay khi khởi tạo
     setDefaultPosition();
@@ -247,10 +229,10 @@ export async function initializeTaskLibrary() {
     // --- Tải và render nội dung ---
     try {
         allGroupedTasks = await fetchAndGroupTasks();
-        renderGroupGridView();
+        renderGroupTabs();
     } catch (error) {
         console.error("Lỗi khi tải thư viện công việc:", error);
-        groupView.innerHTML = '<p class="text-center text-red-500">Lỗi tải dữ liệu.</p>';
+        groupTabsContainer.innerHTML = '<p class="p-2 text-center text-xs text-red-500">Lỗi tải.</p>';
     }
 
     // --- Toggle expand/collapse ---
@@ -259,7 +241,6 @@ export async function initializeTaskLibrary() {
         // Chỉ cần toggle class 'expanded' trên container chính.
         // CSS sẽ tự động xử lý việc hiển thị/ẩn các phần tử con.
         menuContainer.classList.toggle('expanded');
-        switchToView('group'); // Luôn quay về view group khi thu/mở, dù là mở hay đóng
         saveMenuState();
     });
 

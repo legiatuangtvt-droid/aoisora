@@ -577,8 +577,8 @@ html, body {
 
 /* --- Trạng thái mở rộng --- */
 #task-library-container.expanded {
-    width: 435px; /* Tăng chiều rộng để bù cho không gian của thanh cuộn dọc */
-    height: 50vh; /* Chiều cao có thể thay đổi */
+    width: 515px; /* Tăng chiều rộng để bù cho không gian của thanh cuộn dọc */
+    height: 60vh; /* Chiều cao có thể thay đổi */
     max-height: 700px;
     border-radius: 8px; /* Hình chữ nhật bo góc khi mở rộng */
 }
@@ -630,12 +630,11 @@ html, body {
 
 /* --- Body --- */
 .task-library-body {
-    position: relative; /* Đảm bảo các view con position: absolute được định vị đúng */
     opacity: 0; /* Ẩn đi khi thu gọn */
     visibility: hidden;
     transition: opacity 0.2s ease 0.1s, visibility 0.2s ease 0.1s;
-    overflow-y: auto;
     flex-grow: 1;
+    overflow: hidden; /* Ngăn cuộn ở body, để cuộn ở các cột con */
 }
 
 #task-library-container.expanded .task-library-body {
@@ -654,102 +653,73 @@ html, body {
     /* Các style khác như màu sắc, flexbox được áp dụng trực tiếp bằng class của Tailwind */
 }
 
-/* --- View Containers --- */
-.task-library-view {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    padding: 12px;
-    transition: opacity 0.2s ease, transform 0.2s ease;
-    box-sizing: border-box; /* Đảm bảo padding không làm thay đổi kích thước */
-}
-
-.task-library-view.hidden {
-    /* Sử dụng !important để đảm bảo quy tắc này luôn thắng các quy tắc display khác (ví dụ: display: grid của #group-view-container) */
-    display: none !important;
-}
-
-/* --- Group Grid View --- */
-#group-view-container {
-    display: grid; /* Sử dụng grid để sắp xếp các item */
-    /* Cho phép tự động điền các cột, mỗi cột có kích thước tối thiểu 70px */
-    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-    gap: 10px;
-}
-
-.group-grid-item {
+/* --- Cột Tab Nhóm (Bên trái) --- */
+#group-tabs-container {
+    width: 110px;
+    background-color: #f8fafc; /* bg-slate-50 */
+    border-right: 1px solid #e2e8f0; /* border-slate-200 */
+    padding: 8px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between; /* Thay đổi ở đây */
-    align-items: center;
-    box-sizing: border-box; /* Đảm bảo padding không làm tăng kích thước tổng thể */
-    width: 70px; /* Kích thước cố định 70x70px */
-    height: 100px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-align: center;
-    padding: 4px;
-    /* Sử dụng biến CSS cho màu sắc */
-    background-color: var(--group-bg-color, #f8fafc);
-    border: 1px solid var(--group-border-color, #e2e8f0);
+    gap: 8px;
+    overflow-y: auto;
 }
 
-.group-grid-item:hover {
-    background-color: #f1f5f9;
-    border-color: #94a3b8;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
-    background-color: var(--group-hover-bg-color, #f1f5f9);
-}
-
-.group-grid-item .code {
-    font-weight: 700; /* In đậm */
-    font-size: 1rem; /* Kích thước font cho mã nhóm (16px) */
-    color: #334155;
-    line-height: 1.2; /* Tối ưu hiển thị trên 2 dòng nếu cần */
-}
-
-.group-grid-item .count {
-    font-size: 0.625rem; /* Kích thước font cho số lượng task (10px) */
-    line-height: 1.2;
-    color: #64748b;
-    white-space: nowrap; /* Đảm bảo chữ "X tasks" không bị xuống dòng */
-}
-
-/* --- Task View --- */
-.task-view-header {
+.group-tab {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    margin-bottom: 12px;
-}
-
-.task-view-back-btn {
-    background: none;
-    border: none;
+    justify-content: center;
+    width: 100%;
+    height: 70px;
+    padding: 4px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background-color: #fff;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     cursor: pointer;
-    color: #475569;
-    font-size: 1rem;
-    padding: 4px 8px;
-    border-radius: 6px;
-    margin-right: 8px;
-}
-.task-view-back-btn:hover {
-    background-color: #f1f5f9;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    position: relative;
 }
 
-.task-view-title {
-    font-weight: 600;
-    font-size: 1rem;
-    color: #1e293b;
+.group-tab:hover {
+    background-color: #f1f5f9; /* bg-slate-100 */
 }
 
-#task-view-content {
+.group-tab.active {
+    background-color: #eef2ff; /* bg-indigo-50 */
+    border-color: #818cf8; /* border-indigo-400 */
+}
+
+.group-tab-color-indicator {
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    bottom: 4px;
+    width: 4px;
+    border-radius: 99px;
+}
+
+.group-tab-code {
+    font-weight: 700;
+    font-size: 1rem; /* text-lg */
+    color: #334155;
+}
+
+.group-tab-count {
+    font-size: 0.75rem; /* text-xs */
+    color: #64748b;
+}
+
+/* --- Lưới Task (Bên phải) --- */
+#task-grid-container {
+    padding: 12px;
+    overflow-y: auto;
     display: grid;
     /* Cho phép tự động điền các cột, mỗi cột có kích thước tối thiểu 70px */
-    grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+    grid-template-columns: repeat(auto-fill, 70px);
     gap: 10px; /* Tăng khoảng cách cho thoáng */
+    align-content: start; /* Ngăn các hàng tự động giãn ra theo chiều dọc */
 }
 
 /* --- Hiệu ứng kéo thả cho khu vực xây dựng mẫu (daily-templates.js) --- */
