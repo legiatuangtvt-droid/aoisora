@@ -1,5 +1,5 @@
 rules_version = '2';
-service cloud.firestore {
+service cloud.firestore { // Cấu hình cho Firestore
   match /databases/{database}/documents {
 
     // Cho phép bất kỳ ai cũng có thể đọc và ghi vào collection 'task_groups'
@@ -7,17 +7,12 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
-    // Cho phép bất kỳ ai cũng có thể đọc và ghi vào collection 'main_tasks'
-    match /main_tasks/{taskId} {
+    // Cho phép đọc/ghi vào collection chức vụ
+    match /roles/{roleId} {
       allow read, write: if true;
     }
 
-    // Cho phép bất kỳ ai cũng có thể đọc và ghi vào collection 'task_areas'
-    match /task_areas/{areaId} {
-      allow read, write: if true;
-    }
-
-    // Cho phép bất kỳ ai cũng có thể đọc và ghi vào collection 'stores'
+    // Cho phép đọc/ghi vào collection cửa hàng
     match /stores/{storeId} {
       allow read, write: if true;
     }
@@ -27,12 +22,10 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
-    // Cho phép đọc/ghi vào collection chức vụ
-    match /roles/{roleId} {
+    // Cho phép đọc/ghi vào các collection liên quan đến nhân viên
+    match /staff/{staffId} {
       allow read, write: if true;
     }
-
-    // Cho phép đọc/ghi vào các collection nhân viên và trạng thái nhân viên
     match /employee/{employeeId} {
       allow read, write: if true;
     }
@@ -45,6 +38,9 @@ service cloud.firestore {
     match /employee_statuses/{statusId} {
       allow read, write: if true;
     }
+    match /staff_statuses/{statusId} {
+      allow read, write: if true;
+    }
 
     // Cho phép đọc/ghi vào các collection khu vực và miền
     match /areas/{areaId} {
@@ -54,13 +50,22 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
-    // Cho phép đọc/ghi vào collection lịch làm việc
+    // Cho phép đọc/ghi vào collection lịch làm việc và mẫu
+    match /schedules/{scheduleId} {
+      allow read, write: if true;
+    }
+
     match /schedules/{scheduleId} {
       allow read, write: if true;
     }
 
     // Cho phép đọc/ghi vào collection mẫu lịch hàng ngày
     match /daily_templates/{templateId} {
+      allow read, write: if true;
+    }
+
+    // Cho phép đọc/ghi vào collection công việc chính
+    match /main_tasks/{taskId} {
       allow read, write: if true;
     }
   }

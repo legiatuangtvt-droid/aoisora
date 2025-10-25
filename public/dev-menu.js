@@ -212,6 +212,10 @@ function initializeDevMenu() {
 
     // --- Logic mô phỏng người dùng ---
     async function fetchPersonnelData() {
+        // Vô hiệu hóa select để tránh người dùng tương tác khi đang tải
+        roleSelect.disabled = true;
+        employeeSelect.disabled = true;
+
         try {
             const rolesQuery = query(collection(db, 'roles'), orderBy('name'));
             const [rolesSnap, employeesSnap, areaManagersSnap, regionalManagersSnap] = await Promise.all([
@@ -235,33 +239,66 @@ function initializeDevMenu() {
             console.error("Lỗi khi tải dữ liệu nhân sự cho Dev Menu:", error);
             roleSelect.innerHTML = `<option>Lỗi tải</option>`;
             employeeSelect.innerHTML = `<option>Lỗi tải</option>`;
+        } finally {
+            // Kích hoạt lại select sau khi tải xong (dù thành công hay thất bại)
+            roleSelect.disabled = false;
+            employeeSelect.disabled = false;
         }
     }
 
     function populateRoleSelect() {
+        // Định nghĩa thứ tự sắp xếp mong muốn
+        const roleOrder = ['REGIONAL_MANAGER', 'AREA_MANAGER', 'STORE_LEADER', 'STAFF'];
+
+        // Sắp xếp mảng allRoles dựa trên thứ tự đã định nghĩa
+        const sortedRoles = [...allRoles].sort((a, b) => {
+            const indexA = roleOrder.indexOf(a.id);
+            const indexB = roleOrder.indexOf(b.id);
+
+            // Nếu cả hai đều có trong mảng thứ tự, sắp xếp theo chỉ số
+            if (indexA !== -1 && indexB !== -1) {
+                return indexA - indexB;
+            }
+            // Nếu chỉ có A, A đứng trước
+            if (indexA !== -1) return -1;
+            // Nếu chỉ có B, B đứng trước
+            if (indexB !== -1) return 1;
+            // Nếu không có trong mảng, sắp xếp theo tên
+            return a.name.localeCompare(b.name);
+        });
+
         roleSelect.innerHTML = `<option value="all">-- Tất cả chức vụ --</option>`;
-        allRoles.forEach(role => {
+        sortedRoles.forEach(role => {
             roleSelect.innerHTML += `<option value="${role.id}">${role.name}</option>`;
         });
     }
 
     function populateEmployeeSelect(selectedRoleId = 'all') {
-        employeeSelect.innerHTML = `<option value="">-- Chọn nhân viên --</option>`;
-        let filteredPersonnel = allPersonnel;
+        console.log('[DevMenu] Bắt đầu lọc nhân viên với roleId:', selectedRoleId);
+        console.log('[DevMenu] Dữ liệu `allPersonnel` hiện tại:', allPersonnel);
 
-        if (selectedRoleId !== 'all') {
-            filteredPersonnel = allPersonnel.filter(p => p.roleId === selectedRoleId);
-        }
+        const filteredPersonnel = (selectedRoleId === 'all')
+            ? [...allPersonnel] // Nếu là 'all', lấy tất cả nhân viên
+            : allPersonnel.filter(p => p.roleId === selectedRoleId); // Lọc theo roleId
+    
+        console.log(`[DevMenu] Tìm thấy ${filteredPersonnel.length} nhân viên sau khi lọc.`);
 
-        filteredPersonnel.sort((a, b) => a.name.localeCompare(b.name));
-
-        filteredPersonnel.forEach(person => {
+        // Sắp xếp danh sách đã lọc theo tên
+        filteredPersonnel.sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+    
+        // Tạo HTML cho các option và cập nhật một lần để tối ưu hiệu năng
+        const optionsHtml = filteredPersonnel.map(person => {
             const roleName = allRoles.find(r => r.id === person.roleId)?.name || person.roleId;
-            employeeSelect.innerHTML += `<option value="${person.id}">${person.name} (${roleName})</option>`;
-        });
+            return `<option value="${person.id}">${person.name} (${roleName})</option>`;
+        }).join('');
+
+        console.log('[DevMenu] HTML được tạo cho select nhân viên:', optionsHtml.substring(0, 300) + '...');
+    
+        employeeSelect.innerHTML = `<option value="">-- Chọn nhân viên --</option>${optionsHtml}`;
     }
 
     roleSelect.addEventListener('change', () => {
+        console.log('[DevMenu] Đã chọn chức vụ mới:', roleSelect.value);
         populateEmployeeSelect(roleSelect.value);
     });
 
@@ -291,10 +328,21 @@ function initializeDevMenu() {
 
             // --- Bước 1: Xóa dữ liệu cũ ---
             window.showToast('Bước 1/2: Đang xóa dữ liệu cũ...', 'info');
-            const collectionsToDelete = ['task_groups', 'staff', 'roles', 'stores', 'staff_statuses', 'store_statuses', 'schedules'];
+            const collectionsToDelete = [
+                // Dữ liệu cũ
+                'staff', 
+                'staff_statuses',
+                // Dữ liệu mới
+                'task_groups', 'roles', 'stores', 'store_statuses', 'schedules',
+                'employee', 'area_managers', 'regional_managers',
+                'areas', 'regions', 'employee_statuses'
+            ];
             
             const deleteBatch = writeBatch(db);
             for (const collName of collectionsToDelete) {
+                // Bỏ qua nếu collection không tồn tại trong data.json để tránh lỗi không cần thiết
+                if (data[collName] === undefined && !['staff', 'staff_statuses'].includes(collName)) continue;
+
                 const collRef = collection(db, collName);
                 const snapshot = await getDocs(collRef);
                 snapshot.forEach(doc => {
@@ -307,51 +355,17 @@ function initializeDevMenu() {
             window.showToast('Bước 2/2: Đang nhập dữ liệu mới...', 'info');
             const addBatch = writeBatch(db);
 
-            // Seed Task Groups
-            data.task_groups?.forEach(group => {
-                // Sử dụng 'code' làm ID document để đảm bảo tính duy nhất
-                if (group.code && group.tasks) {
-                    // Chuẩn bị object màu mặc định nếu trong data.json không có
-                    const defaultColorObject = {
-                        name: 'slate', bg: '#e2e8f0', text: '#1e293b', border: '#94a3b8', hover: '#cbd5e1',
-                        tailwind_bg: 'bg-slate-200', tailwind_text: 'text-slate-800', tailwind_border: 'border-slate-400'
-                    };
-
-                    const docRef = doc(db, 'task_groups', group.code);
-                    addBatch.set(docRef, {
-                        order: group.order,
-                        code: group.code,
-                        // Đảm bảo trường color là một object hợp lệ
-                        color: (group.color && typeof group.color === 'object') ? group.color : defaultColorObject,
-                        tasks: group.tasks, // Lưu toàn bộ mảng tasks vào document
-                        createdAt: serverTimestamp(),
-                        name: group.name || group.code // Thêm trường name nếu có
-                    });
+            // Hàm trợ giúp để seed một collection
+            const seedCollection = (collectionName, items) => {
+                items?.forEach(item => {
+                    if (item.id) {
+                        const docRef = doc(db, collectionName, item.id);
+                        const dataToSet = { ...item };
+                        delete dataToSet.id; // Xóa trường id khỏi dữ liệu lưu trữ
+                        addBatch.set(docRef, { ...dataToSet, createdAt: serverTimestamp() });
+                    }
                 }
-            });
-
-            // Seed Staff
-            data.staff?.forEach(staff => {
-                if (staff.id && staff.name) {
-                    const docRef = doc(db, 'staff', staff.id);
-                    addBatch.set(docRef, {
-                        name: staff.name,
-                        roleId: staff.roleId || '',
-                        storeId: staff.storeId || '',
-                        phone: staff.phone || '',
-                        status: staff.status || 'ACTIVE',
-                        createdAt: serverTimestamp()
-                    });
-                }
-            });
-
-            // Seed Roles
-            data.roles?.forEach(role => {
-                if (role.id && role.name) {
-                    const docRef = doc(db, 'roles', role.id);
-                    addBatch.set(docRef, { name: role.name });
-                }
-            });
+            )};
 
             // Seed Stores
             data.stores?.forEach(store => {
@@ -359,27 +373,25 @@ function initializeDevMenu() {
                     const docRef = doc(db, 'stores', store.id);
                     addBatch.set(docRef, {
                         name: store.name,
+                        areaId: store.areaId || '',
                         address: store.address || '',
                         status: store.status || 'ACTIVE'
                     });
                 }
             });
 
-            // Seed Staff Statuses
-            data.staff_statuses?.forEach(status => {
-                if (status.id && status.name) {
-                    const docRef = doc(db, 'staff_statuses', status.id);
-                    addBatch.set(docRef, { name: status.name, color: status.color || 'gray' });
-                }
-            });
-
-            // Seed Store Statuses
-            data.store_statuses?.forEach(status => {
-                if (status.id && status.name) {
-                    const docRef = doc(db, 'store_statuses', status.id);
-                    addBatch.set(docRef, { name: status.name, color: status.color || 'gray' });
-                }
-            });
+            // Seed các collection còn lại
+            seedCollection('roles', data.roles);
+            seedCollection('employee', data.employee);
+            seedCollection('area_managers', data.area_managers);
+            seedCollection('regional_managers', data.regional_managers);
+            seedCollection('areas', data.areas);
+            seedCollection('regions', data.regions);
+            seedCollection('employee_statuses', data.employee_statuses);
+            seedCollection('store_statuses', data.store_statuses);
+            
+            // task_groups có cấu trúc khác một chút
+            seedCollection('task_groups', data.task_groups);
 
             // Seed Schedules
             data.schedules?.forEach(schedule => {
