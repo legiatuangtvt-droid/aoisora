@@ -1,24 +1,21 @@
-// Import các tiện ích toàn cục. Chúng sẽ chỉ được tải một lần.
+// Import các tiện ích toàn cục.
 import './toast.js';
 import './confirmation-modal.js';
 import { initializeTaskLibrary, showTaskLibrary, hideTaskLibrary } from './task-library.js';
 import './prompt-modal.js';
 import { initializeDevMenu } from './dev-menu.js';
+import { initializeLayoutController } from './layout-controller.js';
 
-// Import all page modules
+// Import các module trang thuộc nhóm Store Leader
 import * as dailySchedule from './daily-schedule.js';
-import * as mainTasks from './main-tasks.js';
-import * as taskGroups from './task-groups.js';
 import * as staff from './staff.js';
 import * as store from './store.js';
 import * as dailyTemplates from './daily-templates.js';
 import * as shiftCodes from './shift-codes.js';
 
-// Map page filenames to their corresponding modules and titles
-const pages = {
+// Map các trang của Store Leader App với module tương ứng
+const storeLeaderPages = {
     'daily-schedule.html': { module: dailySchedule, title: 'Lịch Hàng Ngày' },
-    'task-groups.html': { module: taskGroups, title: 'Quản Lý Nhóm Công Việc' },
-    'main-tasks.html': { module: mainTasks, title: 'Quản Lý Công Việc Chính' },
     'staff.html': { module: staff, title: 'Quản Lý Nhân Viên' },
     'store.html': { module: store, title: 'Quản Lý Cửa Hàng' },
     'daily-templates.html': { module: dailyTemplates, title: 'Quản Lý Mẫu Ngày' },
@@ -28,30 +25,24 @@ const pages = {
 
 let currentPageModule = null;
 
-/**
- * Loads and initializes the JavaScript module for a specific page.
- * @param {string} pageName - The filename of the page (e.g., 'task-groups.html').
- */
 function loadPageModule(pageName) {
-    // 1. Cleanup the old page's module before loading the new one
+    // Dọn dẹp module cũ
     if (currentPageModule && typeof currentPageModule.cleanup === 'function') {
         currentPageModule.cleanup();
     }
 
-    // 2. Find the new module from the `pages` map
-    const page = pages[pageName];
+    // Tải module mới
+    const page = storeLeaderPages[pageName];
     if (page && page.module) {
-        // 3. Store the new module and initialize it
         currentPageModule = page.module;
         if (typeof currentPageModule.init === 'function') {
             currentPageModule.init();
         }
     } else {
-        // 4. If the new page has no module, reset the current module
         currentPageModule = null;
     }
 
-    // Logic hiển thị Task Library (được di chuyển ra ngoài để áp dụng cho tất cả các trang)
+    // Logic hiển thị Task Library
     if (pageName === 'daily-templates.html') {
         showTaskLibrary();
     } else {
@@ -59,26 +50,14 @@ function loadPageModule(pageName) {
     }
 }
 
-/**
- * Main initialization function for the application.
- * Listens for page content changes from layout.js.
- */
-async function initializeApp() {
-    // 1. Khởi tạo các component toàn cục TRƯỚC TIÊN và chờ chúng hoàn tất.
+async function initializeStoreLeaderApp() {
     await initializeTaskLibrary();
     initializeDevMenu();
+    initializeLayoutController();
 
-    // 2. Sau khi các component toàn cục đã sẵn sàng, tải module cho trang ban đầu.
     const initialPageName = window.location.pathname.split('/').pop() || 'daily-schedule.html';
     loadPageModule(initialPageName);
 
-    // 3. Lắng nghe các sự kiện điều hướng trang trong tương lai.
     document.addEventListener('page-content-loaded', (event) => loadPageModule(event.detail.pageName));
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-    // Khởi tạo layout trước
-    if (window.initializeLayout) {
-        window.initializeLayout().then(initializeApp); // Sau khi layout sẵn sàng, gọi hàm initializeApp
-    }
-});
+initializeStoreLeaderApp();

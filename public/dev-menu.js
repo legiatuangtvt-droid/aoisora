@@ -7,6 +7,9 @@ let allAreaManagers = [];
 let allRegionalManagers = [];
 let allPersonnel = []; // Mảng tổng hợp tất cả các cấp nhân viên
 
+let simulatedUser = null;
+const SIMULATED_USER_STORAGE_KEY = 'simulatedUser';
+
 function initializeDevMenu() {
     // Create and inject HTML
     const menuContainer = document.createElement('div');
@@ -31,6 +34,10 @@ function initializeDevMenu() {
                 <label for="dev-employee-select" class="dev-menu-label"><i class="fas fa-user mr-2 text-slate-500"></i>Nhân viên</label>
                 <select id="dev-employee-select" class="dev-menu-select"></select>
             </div>
+            <button id="clear-simulation-btn" class="dev-menu-button flex items-center gap-2.5 px-3 py-2 border border-slate-300 rounded-md bg-white cursor-pointer text-sm text-slate-700 transition-colors hover:bg-slate-50 hover:border-slate-400">
+                <i class="fas fa-times-circle"></i>
+                <span>Xóa Mô Phỏng</span>
+            </button>
         </div>
     `;
     document.body.appendChild(menuContainer);
@@ -41,6 +48,7 @@ function initializeDevMenu() {
     const menuBody = menuContainer.querySelector('.dev-menu-body');
     const menuTitle = menuContainer.querySelector('.dev-menu-title');
     const roleSelect = document.getElementById('dev-role-select');
+    const clearSimulationBtn = document.getElementById('clear-simulation-btn');
     const employeeSelect = document.getElementById('dev-employee-select');
 
 
@@ -235,6 +243,21 @@ function initializeDevMenu() {
             populateRoleSelect();
             populateEmployeeSelect();
 
+            // Kiểm tra nếu có người dùng đang được mô phỏng và pre-select dropdowns
+            const storedSimulatedUser = localStorage.getItem(SIMULATED_USER_STORAGE_KEY);
+            if (storedSimulatedUser) {
+                simulatedUser = JSON.parse(storedSimulatedUser);
+                if (simulatedUser && simulatedUser.id && simulatedUser.roleId) {
+                    roleSelect.value = simulatedUser.roleId;
+                    populateEmployeeSelect(simulatedUser.roleId); // Cập nhật danh sách nhân viên đã lọc
+                    employeeSelect.value = simulatedUser.id;
+                    window.showToast(`Đang mô phỏng: ${simulatedUser.name} (${simulatedUser.roleId})`, 'info');
+                }
+            } else { // Nếu không có người dùng mô phỏng, mặc định là Admin
+                roleSelect.value = 'ADMIN'; // Đặt giá trị mặc định là 'ADMIN'
+                employeeSelect.value = '';
+                window.showToast('Đang ở chế độ Admin (toàn quyền).', 'info');
+            }
         } catch (error) {
             console.error("Lỗi khi tải dữ liệu nhân sự cho Dev Menu:", error);
             roleSelect.innerHTML = `<option>Lỗi tải</option>`;
@@ -267,48 +290,70 @@ function initializeDevMenu() {
             return a.name.localeCompare(b.name);
         });
 
-        roleSelect.innerHTML = `<option value="all">-- Tất cả chức vụ --</option>`;
+        roleSelect.innerHTML = `<option value="ADMIN">Admin (Toàn quyền)</option>`;
         sortedRoles.forEach(role => {
             roleSelect.innerHTML += `<option value="${role.id}">${role.name}</option>`;
         });
     }
 
     function populateEmployeeSelect(selectedRoleId = 'all') {
-        console.log('[DevMenu] Bắt đầu lọc nhân viên với roleId:', selectedRoleId);
-        console.log('[DevMenu] Dữ liệu `allPersonnel` hiện tại:', allPersonnel);
-
         const filteredPersonnel = (selectedRoleId === 'all')
             ? [...allPersonnel] // Nếu là 'all', lấy tất cả nhân viên
             : allPersonnel.filter(p => p.roleId === selectedRoleId); // Lọc theo roleId
-    
-        console.log(`[DevMenu] Tìm thấy ${filteredPersonnel.length} nhân viên sau khi lọc.`);
 
         // Sắp xếp danh sách đã lọc theo tên
         filteredPersonnel.sort((a, b) => a.name.localeCompare(b.name, 'vi'));
     
         // Tạo HTML cho các option và cập nhật một lần để tối ưu hiệu năng
         const optionsHtml = filteredPersonnel.map(person => {
-            const roleName = allRoles.find(r => r.id === person.roleId)?.name || person.roleId;
-            return `<option value="${person.id}">${person.name} (${roleName})</option>`;
+            return `<option value="${person.id}">${person.name}</option>`;
         }).join('');
-
-        console.log('[DevMenu] HTML được tạo cho select nhân viên:', optionsHtml.substring(0, 300) + '...');
     
         employeeSelect.innerHTML = `<option value="">-- Chọn nhân viên --</option>${optionsHtml}`;
     }
 
     roleSelect.addEventListener('change', () => {
-        console.log('[DevMenu] Đã chọn chức vụ mới:', roleSelect.value);
-        populateEmployeeSelect(roleSelect.value);
+        const selectedRole = roleSelect.value;
+        if (selectedRole === 'ADMIN') {
+            // Nếu chọn Admin, xóa mô phỏng và tải lại trang
+            if (localStorage.getItem(SIMULATED_USER_STORAGE_KEY)) {
+                localStorage.removeItem(SIMULATED_USER_STORAGE_KEY);
+                window.location.reload();
+            }
+        } else {
+            populateEmployeeSelect(selectedRole);
+        }
     });
 
     employeeSelect.addEventListener('change', () => {
         const selectedEmployeeId = employeeSelect.value;
         if (selectedEmployeeId) {
-            window.showToast(`Đang mô phỏng người dùng: ${employeeSelect.options[employeeSelect.selectedIndex].text}`, 'info');
-            // Logic mô phỏng sẽ được thêm ở đây (ví dụ: lưu vào localStorage và tải lại trang)
-            // localStorage.setItem('simulatedUserId', selectedEmployeeId);
-            // window.location.reload();
+            const selectedPerson = allPersonnel.find(p => p.id === selectedEmployeeId);
+            if (selectedPerson) { // Lưu toàn bộ thông tin cần thiết của người dùng mô phỏng
+                simulatedUser = {
+                    id: selectedPerson.id,
+                    name: selectedPerson.name,
+                    roleId: selectedPerson.roleId,
+                    storeId: selectedPerson.storeId || null,
+                    managedAreaIds: selectedPerson.managedAreaIds || null,
+                    managedRegionId: selectedPerson.managedRegionId || null
+                };
+                localStorage.setItem(SIMULATED_USER_STORAGE_KEY, JSON.stringify(simulatedUser));
+                window.showToast(`Đang mô phỏng người dùng: ${selectedPerson.name} (${selectedPerson.roleId})`, 'info');
+                window.location.reload(); // Tải lại trang để áp dụng mô phỏng
+            }
+        }
+    });
+
+    // Xử lý nút "Xóa Mô Phỏng"
+    clearSimulationBtn.addEventListener('click', () => {
+        if (localStorage.getItem(SIMULATED_USER_STORAGE_KEY)) {
+            localStorage.removeItem(SIMULATED_USER_STORAGE_KEY);
+            simulatedUser = null;
+            window.showToast('Đã xóa mô phỏng người dùng.', 'info');
+            window.location.reload(); // Tải lại trang để xóa trạng thái mô phỏng
+        } else {
+            window.showToast('Không có người dùng nào đang được mô phỏng.', 'warning');
         }
     });
 

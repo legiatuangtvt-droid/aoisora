@@ -6,6 +6,9 @@ let activeModal = null;
 
 // Biến toàn cục để lưu trữ dữ liệu
 let allEmployees = [];
+let allStores = [];
+let allAreas = [];
+let allRegions = [];
 let allMainTasks = {}; // Dùng object để tra cứu nhanh bằng ID
 let currentScheduleData = []; // Lịch làm việc cho ngày đang chọn
 let sortableInstances = [];
@@ -18,12 +21,46 @@ const timeSlots = ["6:00", "7:00", "8:00", "9:00", "10:00", "11:00", "12:00", "1
  */
 async function fetchInitialData() {
     try {
-        // Tải danh sách nhân viên
-        const employeeSnapshot = await getDocs(collection(db, 'employee'));
-        allEmployees = employeeSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const [employeesSnap, storesSnap, areasSnap, regionsSnap, tasksSnapshot] = await Promise.all([
+            getDocs(collection(db, 'employee')),
+            getDocs(collection(db, 'stores')),
+            getDocs(collection(db, 'areas')),
+            getDocs(collection(db, 'regions')),
+            getDocs(collection(db, 'main_tasks'))
+        ]);
 
-        // Tải danh sách công việc chính
-        const tasksSnapshot = await getDocs(collection(db, 'main_tasks'));
+        let fetchedEmployees = employeesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        allStores = storesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        allAreas = areasSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        allRegions = regionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // Lọc nhân viên dựa trên vai trò của người dùng hiện tại
+        const currentUser = window.currentUser;
+        if (currentUser) {
+            switch (currentUser.roleId) {
+                case 'STAFF':
+                    fetchedEmployees = fetchedEmployees.filter(emp => emp.id === currentUser.id);
+                    break;
+                case 'STORE_LEADER':
+                    fetchedEmployees = fetchedEmployees.filter(emp => emp.storeId === currentUser.storeId);
+                    break;
+                case 'AREA_MANAGER':
+                    if (currentUser.managedAreaIds && currentUser.managedAreaIds.length > 0) {
+                        const managedStoreIds = allStores.filter(s => currentUser.managedAreaIds.includes(s.areaId)).map(s => s.id);
+                        fetchedEmployees = fetchedEmployees.filter(emp => managedStoreIds.includes(emp.storeId));
+                    }
+                    break;
+                case 'REGIONAL_MANAGER':
+                    if (currentUser.managedRegionId) {
+                        const managedAreaIds = allAreas.filter(a => a.regionId === currentUser.managedRegionId).map(a => a.id);
+                        const managedStoreIds = allStores.filter(s => managedAreaIds.includes(s.areaId)).map(s => s.id);
+                        fetchedEmployees = fetchedEmployees.filter(emp => managedStoreIds.includes(emp.storeId));
+                    }
+                    break;
+            }
+        }
+        allEmployees = fetchedEmployees;
+
         allMainTasks = tasksSnapshot.docs.reduce((acc, doc) => {
             acc[doc.id] = { id: doc.id, ...doc.data() };
             return acc;
@@ -40,17 +77,23 @@ async function fetchInitialData() {
  * @param {string} dateString - Ngày cần lấy dữ liệu (YYYY-MM-DD).
  */
 function listenForScheduleChanges(dateString) {
-    const q = query(collection(db, 'schedules'), where("date", "==", dateString));
+    const employeeIds = allEmployees.map(emp => emp.id);
+    if (employeeIds.length === 0) {
+        currentScheduleData = [];
+        renderSchedule();
+        return;
+    }
+    const q = query(collection(db, 'schedules'), where("date", "==", dateString), where("employeeId", "in", employeeIds));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
         currentScheduleData = snapshot.docs.map(doc => {
             const data = doc.data();
             const employeeInfo = allEmployees.find(s => s.id === data.employeeId) || { name: data.employeeId, role: 'N/A' };
             return {
-                docId: doc.id, // Lưu ID của document để cập nhật/xóa
+                docId: doc.id,
                 ...data,
                 name: employeeInfo.name,
-                role: staffInfo.roleId, // Sẽ cần tra cứu tên Role sau
+                role: employeeInfo.roleId,
                 shift: "Ca làm việc", // Cần bổ sung thông tin ca làm
             };
         });

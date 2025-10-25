@@ -80,8 +80,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <!-- Tải script layout trước để định nghĩa hàm initializeLayout() -->
-    <script src="layout.js" defer></script>
-    <!-- Script entry point chính của ứng dụng, sẽ gọi hàm từ layout.js -->
-    <script type="module" src="main.js" defer></script>
+    <!-- Script entry point, sẽ tự động chọn app phù hợp -->
+    <script type="module" src="bootstrapper.js" defer></script>
 </body>
 </html>
