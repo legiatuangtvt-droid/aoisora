@@ -317,6 +317,7 @@ async function saveTemplate() {
     let templateName = '';
 
     // Nếu đang ở chế độ tạo mới, yêu cầu nhập tên
+    const totalManhour = parseFloat(document.getElementById('template-manhour-input').value) || 0;
     if (!templateIdToSave) {
         templateName = await showPrompt("Nhập tên cho mẫu mới:", "Tạo Lịch Trình Mẫu", "Ví dụ: Ngày cuối tuần", "Lưu", "Hủy");
         if (!templateName || templateName.trim() === '') {
@@ -357,11 +358,12 @@ async function saveTemplate() {
         if (templateIdToSave) {
             // Cập nhật mẫu đã có
             const templateRef = doc(db, 'daily_templates', templateIdToSave);
-            await setDoc(templateRef, { schedule: scheduleData, updatedAt: serverTimestamp() }, { merge: true });
+            await setDoc(templateRef, { schedule: scheduleData, totalManhour: totalManhour, updatedAt: serverTimestamp() }, { merge: true });
         } else {
             // Tạo mẫu mới
             const newDocRef = await addDoc(collection(db, 'daily_templates'), {
                 name: templateName.trim(),
+                totalManhour: totalManhour,
                 schedule: scheduleData,
                 createdAt: serverTimestamp()
             });
@@ -393,6 +395,7 @@ async function updateTemplateFromDOM() {
     }
 
     const scheduleData = {};
+    const totalManhour = parseFloat(document.getElementById('template-manhour-input').value) || 0;
 
     // 1. Thu thập dữ liệu từ DOM
     document.querySelectorAll('.scheduled-task-item').forEach(taskItem => {
@@ -416,7 +419,7 @@ async function updateTemplateFromDOM() {
     // 2. Cập nhật vào Firestore
     try {
         const templateRef = doc(db, 'daily_templates', currentTemplateId);
-        await setDoc(templateRef, { schedule: scheduleData, updatedAt: serverTimestamp() }, { merge: true });
+        await setDoc(templateRef, { schedule: scheduleData, totalManhour: totalManhour, updatedAt: serverTimestamp() }, { merge: true });
         // showToast('Đã tự động lưu thay đổi!', 'success', 1000); // Có thể thêm toast nhỏ
     } catch (error) {
         console.error("Lỗi khi tự động cập nhật lịch trình mẫu:", error);
@@ -473,8 +476,18 @@ async function loadTemplate(templateId) {
         const docSnap = await getDoc(templateRef);
 
         if (docSnap.exists()) {
-            const { schedule } = docSnap.data();
-            if (!schedule) return;
+            const { schedule, totalManhour } = docSnap.data();
+
+            // Cập nhật giá trị Manhour từ Firestore
+            const manhourInput = document.getElementById('template-manhour-input');
+            const manhourDisplay = document.getElementById('total-manhour-display');
+            if (manhourInput) {
+                manhourInput.value = totalManhour || '';
+            }
+            if (manhourDisplay) {
+                manhourDisplay.textContent = totalManhour || '0';
+            }
+            if (!schedule) { updateTemplateStats(); return; };
             
             // Điền các task vào lưới
             Object.keys(schedule).forEach(shiftId => {
@@ -527,6 +540,16 @@ function switchToCreateNewMode() {
     // Ẩn các nút không cần thiết
     document.getElementById('new-template-btn').classList.add('hidden');
     document.getElementById('delete-template-btn').classList.add('hidden');
+
+    // Reset giá trị Manhour
+    const manhourInput = document.getElementById('template-manhour-input');
+    const manhourDisplay = document.getElementById('total-manhour-display');
+    if (manhourInput) {
+        manhourInput.value = '';
+    }
+    if (manhourDisplay) {
+        manhourDisplay.textContent = '0';
+    }
     updateTemplateStats(); // Xóa thống kê
 }
 
@@ -560,6 +583,22 @@ export async function init() {
     document.getElementById('new-template-btn')?.addEventListener('click', switchToCreateNewMode);
     document.getElementById('delete-template-btn')?.addEventListener('click', deleteCurrentTemplate);
     document.getElementById('template-selector')?.addEventListener('change', (e) => loadTemplate(e.target.value));
+
+    // Thêm listener để cập nhật tiêu đề khi nhập manhour
+    const manhourInput = document.getElementById('template-manhour-input');
+    const manhourDisplay = document.getElementById('total-manhour-display');
+    if (manhourInput && manhourDisplay) {
+        manhourInput.addEventListener('input', () => {
+            manhourDisplay.textContent = manhourInput.value || '0';
+            updateTemplateFromDOM(); // Tự động lưu khi thay đổi manhour
+        });
+        // Thêm listener để đồng bộ ngược lại khi giá trị được load từ template
+        // (Mặc dù đã có trong loadTemplate, việc này đảm bảo tính nhất quán nếu có thay đổi trong tương lai)
+        manhourInput.addEventListener('change', () => {
+            manhourDisplay.textContent = manhourInput.value || '0';
+            // Không cần gọi updateTemplateFromDOM() ở đây vì listener 'input' đã xử lý
+        });
+    }
 }
 
 export function cleanup() {
@@ -764,4 +803,8 @@ function updateTemplateStats() {
         totalTimeCell.textContent = (totalCount * 0.25).toFixed(2);
         triggerStatAnimation(totalTimeCell, `${totalTimeChange > 0 ? '+' : ''}${totalTimeChange.toFixed(2)}`);
     }
+
+    // Đồng bộ giá trị "Đã sắp xếp" ở trên với tổng số giờ vừa tính toán
+    const scheduledHoursValueEl = document.getElementById('scheduled-hours-value');
+    if (scheduledHoursValueEl) scheduledHoursValueEl.textContent = newTotalTime.toFixed(2);
 }
