@@ -1,6 +1,6 @@
 import { db } from './firebase.js';
-import { initializeTaskLibrary, cleanupTaskLibrary } from './task-library.js';
 import { collection, getDocs, query, orderBy, doc, setDoc, serverTimestamp, addDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+
 let allMainTasks = {}; // Dùng object để tra cứu nhanh bằng ID
 let sortableInstances = [];
 
@@ -331,7 +331,6 @@ async function saveTemplate() {
     saveButton.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Đang lưu...`;
 
     const scheduleData = {};
-    const manhour = parseFloat(document.getElementById('template-manhour-input').value) || 0;
 
     // 1. Thu thập dữ liệu từ DOM
     document.querySelectorAll('.scheduled-task-item').forEach(taskItem => {
@@ -358,12 +357,11 @@ async function saveTemplate() {
         if (templateIdToSave) {
             // Cập nhật mẫu đã có
             const templateRef = doc(db, 'daily_templates', templateIdToSave);
-            await setDoc(templateRef, { schedule: scheduleData, manhour: manhour, updatedAt: serverTimestamp() }, { merge: true });
+            await setDoc(templateRef, { schedule: scheduleData, updatedAt: serverTimestamp() }, { merge: true });
         } else {
             // Tạo mẫu mới
             const newDocRef = await addDoc(collection(db, 'daily_templates'), {
                 name: templateName.trim(),
-                manhour: manhour,
                 schedule: scheduleData,
                 createdAt: serverTimestamp()
             });
@@ -395,7 +393,6 @@ async function updateTemplateFromDOM() {
     }
 
     const scheduleData = {};
-    const manhour = parseFloat(document.getElementById('template-manhour-input').value) || 0;
 
     // 1. Thu thập dữ liệu từ DOM
     document.querySelectorAll('.scheduled-task-item').forEach(taskItem => {
@@ -419,7 +416,7 @@ async function updateTemplateFromDOM() {
     // 2. Cập nhật vào Firestore
     try {
         const templateRef = doc(db, 'daily_templates', currentTemplateId);
-        await setDoc(templateRef, { schedule: scheduleData, manhour: manhour, updatedAt: serverTimestamp() }, { merge: true });
+        await setDoc(templateRef, { schedule: scheduleData, updatedAt: serverTimestamp() }, { merge: true });
         // showToast('Đã tự động lưu thay đổi!', 'success', 1000); // Có thể thêm toast nhỏ
     } catch (error) {
         console.error("Lỗi khi tự động cập nhật lịch trình mẫu:", error);
@@ -476,16 +473,11 @@ async function loadTemplate(templateId) {
         const docSnap = await getDoc(templateRef);
 
         if (docSnap.exists()) {
-            const templateData = docSnap.data();
-            const { schedule, manhour } = templateData;
-
-            // Cập nhật Manhour và tiêu đề
-            document.getElementById('template-manhour-input').value = manhour || 0;
-            document.getElementById('stats-title').textContent = `DWS Model - ${manhour || 0} Manhour`;
+            const { schedule } = docSnap.data();
+            if (!schedule) return;
             
             // Điền các task vào lưới
-            if (schedule) {
-                Object.keys(schedule).forEach(shiftId => {
+            Object.keys(schedule).forEach(shiftId => {
                 (schedule[shiftId] || []).forEach(taskInfo => { // taskInfo giờ đây có cả taskName
                     const { taskCode, startTime, groupId } = taskInfo;
                     const [hour, quarter] = startTime.split(':');
@@ -515,7 +507,6 @@ async function loadTemplate(templateId) {
                     }
                 });
             });
-            }
             // Cập nhật thống kê sau khi tải xong
             updateTemplateStats();
         }
@@ -532,10 +523,6 @@ function switchToCreateNewMode() {
     currentTemplateId = null;
     document.getElementById('template-selector').value = 'new';
     renderGrid(); // Vẽ lại lưới trống
-
-    // Reset Manhour và tiêu đề
-    document.getElementById('template-manhour-input').value = '';
-    document.getElementById('stats-title').textContent = 'DWS Model - 0 Manhour';
 
     // Ẩn các nút không cần thiết
     document.getElementById('new-template-btn').classList.add('hidden');
@@ -565,7 +552,6 @@ async function deleteCurrentTemplate() {
 }
 
 export async function init() {
-    initializeTaskLibrary(); // Khởi tạo thư viện task
     await fetchInitialData();
     await fetchAndRenderTemplates(); // Tải danh sách mẫu vào dropdown
     switchToCreateNewMode(); // Đặt trạng thái mặc định là tạo mới
@@ -574,17 +560,9 @@ export async function init() {
     document.getElementById('new-template-btn')?.addEventListener('click', switchToCreateNewMode);
     document.getElementById('delete-template-btn')?.addEventListener('click', deleteCurrentTemplate);
     document.getElementById('template-selector')?.addEventListener('change', (e) => loadTemplate(e.target.value));
-
-    // Thêm listener cho input manhour để tự động lưu và cập nhật tiêu đề
-    document.getElementById('template-manhour-input')?.addEventListener('input', (e) => {
-        const manhour = parseFloat(e.target.value) || 0;
-        document.getElementById('stats-title').textContent = `DWS Model - ${manhour} Manhour`;
-        updateTemplateFromDOM(); // Tự động lưu khi thay đổi
-    });
 }
 
 export function cleanup() {
-    cleanupTaskLibrary(); // Dọn dẹp thư viện task
     sortableInstances.forEach(s => s.destroy());
     sortableInstances = [];
     // Dọn dẹp các listener bằng cách clone và thay thế node
@@ -595,11 +573,6 @@ export function cleanup() {
             el.parentNode.replaceChild(newEl, el);
         }
     });
-    const manhourInput = document.getElementById('template-manhour-input');
-    if (manhourInput) {
-        const newEl = manhourInput.cloneNode(true);
-        manhourInput.parentNode.replaceChild(newEl, manhourInput);
-    }
 }
 
 /**
@@ -679,10 +652,6 @@ function updateTemplateStats() {
 
     const statsContentWrapper = document.getElementById('stats-content-wrapper');
     if (!statsContentWrapper) return;
-    
-    // Xóa các lớp CSS có thể đang set độ rộng cố định (w-72, w-96, etc.)
-    // để aside có thể tự co lại theo nội dung của bảng thống kê.
-    document.getElementById('template-stats-container')?.className.replace(/\bw-\S+/g, '');
     const scheduledTasks = document.querySelectorAll('.scheduled-task-item');
 
     // --- Tính toán số liệu mới từ các task trên lưới ---
@@ -698,32 +667,29 @@ function updateTemplateStats() {
         newStats[groupId].count++;
     });
 
-    let table = document.getElementById('stats-table');
+    let table = statsContentWrapper.querySelector('#stats-table');
     // Nếu bảng chưa tồn tại, tạo mới và chèn vào DOM
     if (!table) {
-        statsContentWrapper.innerHTML = ''; // Xóa thông báo "chưa có task"
-        const tableWrapper = document.createElement('div');
-        tableWrapper.className = "relative h-full";
+        statsContentWrapper.innerHTML = ''; // Chỉ xóa nội dung bên trong wrapper
         table = document.createElement('table');
         table.id = 'stats-table';
-        table.className = 'text-sm border-collapse';
+        table.className = 'w-full text-sm border-collapse';
         table.innerHTML = `
             <thead class="bg-slate-50 sticky top-0 z-10">
                 <tr>
                     <th class="p-2 text-center font-semibold text-slate-600 w-12">STT</th>
-                    <th class="p-2 text-center font-semibold text-slate-600">Group Task</th>
-                    <th class="p-2 text-center font-semibold text-slate-600 w-20">Giờ</th>
+                    <th class="text-center font-semibold text-slate-600">Group Task</th>
+                    <th class="p-2 text-center font-semibold text-slate-600 w-24">Giờ</th>
                 </tr>
             </thead>
             <tbody></tbody>
             <tfoot class="bg-slate-100 font-bold sticky bottom-0">
                  <tr>
-                    <td colspan="2" class="p-2 font-semibold text-left">Tổng cộng</td>
+                    <td class="p-2 font-semibold text-center" colspan="2">Tổng cộng</td>
                     <td id="stats-total-time" class="p-2 text-center">0.00</td>
                 </tr>
             </tfoot>
         `;
-        // tableWrapper.appendChild(table); // Không cần wrapper này nữa
         statsContentWrapper.appendChild(table);
     }
 
@@ -741,6 +707,7 @@ function updateTemplateStats() {
 
     const tbody = table.querySelector('tbody');
     let totalCount = 0;
+    let rowIndex = 1;
 
     // Sắp xếp các nhóm theo 'order' để hiển thị nhất quán
     const sortedGroupIds = Object.keys(allTaskGroups).sort((a, b) => {
@@ -748,8 +715,6 @@ function updateTemplateStats() {
         const groupB = allTaskGroups[b];
         return (groupA.order || 999) - (groupB.order || 999);
     });
-
-    let rowIndex = 1;
 
     // --- Cập nhật hoặc thêm các dòng cho từng group ---
     for (const groupId of sortedGroupIds) {
@@ -763,40 +728,40 @@ function updateTemplateStats() {
 
         if (!row) { // Nếu dòng chưa tồn tại, tạo mới
             const color = (groupInfo.color && groupInfo.color.tailwind_text) ? groupInfo.color : defaultColor;
+            const stt = tbody.children.length + 1;
             row = document.createElement('tr');
             row.className = 'border-b border-slate-100';
             row.dataset.groupId = groupId;
             row.innerHTML = `
-                <td class="p-2 text-center text-slate-500">${rowIndex}</td>
-                <td class="p-2 text-center font-medium ${color.tailwind_text}">${groupInfo.name}</td>
+                <td class="p-2 text-center text-slate-500">${stt}</td>
+                <td class="text-center font-medium ${color.tailwind_text}">${groupInfo.name}</td>
                 <td class="stat-time p-2 text-center text-slate-500">0.00</td>
             `;
             tbody.appendChild(row);
-            rowIndex++;
         }
 
         // Cập nhật giá trị và kích hoạt animation nếu có thay đổi
         const timeCell = row.querySelector('.stat-time');
 
-        // Chỉ cập nhật và chạy animation nếu có thay đổi
-        if (timeCell.textContent !== currentTime) {
+        // Tính toán sự thay đổi về thời gian để tạo hiệu ứng
+        const oldTime = parseFloat(timeCell.textContent) || 0;
+        const timeChange = currentTime - oldTime;
+
+        if (timeChange !== 0) {
             timeCell.textContent = currentTime;
-            const countChange = currentCount - oldGroupCount;
-            triggerStatAnimation(timeCell, `${countChange > 0 ? '+' : ''}${(countChange * 0.25).toFixed(2)}`);
+            triggerStatAnimation(timeCell, `${timeChange > 0 ? '+' : ''}${timeChange.toFixed(2)}`);
         }
     }
 
     // --- Cập nhật dòng tổng kết ---
     const totalTimeCell = table.querySelector('#stats-total-time');
-    const scheduledHoursDisplay = document.querySelector('#scheduled-hours-value');
-    const totalTime = (totalCount * 0.25).toFixed(2);
 
-    if (totalTimeCell.textContent !== totalTime) {
-        totalTimeCell.textContent = totalTime;
-        const countChange = totalCount - oldTotalCount;
-        triggerStatAnimation(totalTimeCell, `${countChange > 0 ? '+' : ''}${(countChange * 0.25).toFixed(2)}`);
-        if (scheduledHoursDisplay) {
-            scheduledHoursDisplay.textContent = totalTime;
-        }
+    const oldTotalTime = parseFloat(totalTimeCell.textContent) || 0;
+    const newTotalTime = totalCount * 0.25;
+    const totalTimeChange = newTotalTime - oldTotalTime;
+
+    if (totalTimeChange !== 0) {
+        totalTimeCell.textContent = (totalCount * 0.25).toFixed(2);
+        triggerStatAnimation(totalTimeCell, `${totalTimeChange > 0 ? '+' : ''}${totalTimeChange.toFixed(2)}`);
     }
 }

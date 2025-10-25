@@ -1,6 +1,7 @@
 // Import các tiện ích toàn cục. Chúng sẽ chỉ được tải một lần.
 import './toast.js';
 import './confirmation-modal.js';
+import { initializeTaskLibrary, showTaskLibrary, hideTaskLibrary } from './task-library.js';
 import './prompt-modal.js';
 import { initializeDevMenu } from './dev-menu.js';
 
@@ -49,26 +50,35 @@ function loadPageModule(pageName) {
         // 4. If the new page has no module, reset the current module
         currentPageModule = null;
     }
+
+    // Logic hiển thị Task Library (được di chuyển ra ngoài để áp dụng cho tất cả các trang)
+    if (pageName === 'daily-templates.html') {
+        showTaskLibrary();
+    } else {
+        hideTaskLibrary();
+    }
 }
 
 /**
  * Main initialization function for the application.
  * Listens for page content changes from layout.js.
  */
-function initializeApp() {
+async function initializeApp() {
+    // 1. Khởi tạo các component toàn cục TRƯỚC TIÊN và chờ chúng hoàn tất.
+    await initializeTaskLibrary();
+    initializeDevMenu();
+
+    // 2. Sau khi các component toàn cục đã sẵn sàng, tải module cho trang ban đầu.
     const initialPageName = window.location.pathname.split('/').pop() || 'daily-schedule.html';
     loadPageModule(initialPageName);
+
+    // 3. Lắng nghe các sự kiện điều hướng trang trong tương lai.
     document.addEventListener('page-content-loaded', (event) => loadPageModule(event.detail.pageName));
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     // Khởi tạo layout trước
     if (window.initializeLayout) {
-        window.initializeLayout().then(() => {
-            // Sau khi layout sẵn sàng, khởi tạo logic của ứng dụng
-            initializeApp();
-            // Khởi tạo Dev Menu để nó hiển thị trên tất cả các trang
-            initializeDevMenu();
-        });
+        window.initializeLayout().then(initializeApp); // Sau khi layout sẵn sàng, gọi hàm initializeApp
     }
 });

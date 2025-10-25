@@ -6,6 +6,8 @@ import "https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js";
 // Biến để lưu trữ dữ liệu và các view
 let allGroupedTasks = [];
 let groupView, taskView;
+let menuContainer = null; // Biến toàn cục cho container chính
+let isStateLoaded = false; // Cờ để kiểm tra xem state từ localStorage đã được tải chưa
 let taskLibraryController = null;
 
 // Bảng màu mặc định nếu group không có màu
@@ -143,14 +145,82 @@ function renderTaskGridView(groupId) {
     switchToView('task');
 }
 
+/**
+ * Đặt vị trí mặc định cho menu.
+ * Được gọi khi khởi tạo và khi không có trạng thái nào được lưu.
+ */
+function setDefaultPosition() {
+    if (!menuContainer) return;
+    // Reset các style cũ để đảm bảo CSS có thể áp dụng
+    menuContainer.style.left = '';
+    menuContainer.style.top = '';
+    // Áp dụng vị trí mặc định
+    menuContainer.style.bottom = '20px';
+    menuContainer.style.left = '20px';
+}
+
+/**
+ * Xóa các thuộc tính vị trí mặc định (bottom, right)
+ * để cho phép định vị bằng left/top khi kéo thả.
+ */
+function clearDefaultPosition() {
+    if (!menuContainer) return;
+    menuContainer.style.bottom = '';
+    menuContainer.style.right = '';
+}
+
+/**
+ * Hàm này sẽ được gọi khi người dùng bắt đầu kéo menu.
+ * Nó đảm bảo menu sẽ được định vị bằng `left` và `top`.
+ */
+
+/**
+ * Lưu trạng thái của menu (vị trí, trạng thái mở rộng) vào localStorage.
+ */
+function saveMenuState() {
+    if (!menuContainer) return;
+    const state = {
+        left: menuContainer.style.left,
+        top: menuContainer.style.top,
+        expanded: menuContainer.classList.contains('expanded')
+    };
+    localStorage.setItem('taskLibraryState', JSON.stringify(state));
+}
+
+/**
+ * Tải trạng thái từ localStorage và áp dụng cho menu.
+ * Chỉ được gọi một lần khi menu hiển thị lần đầu.
+ */
+function loadMenuState() {
+    const savedState = localStorage.getItem('taskLibraryState');
+    if (savedState) {
+        try {
+            const state = JSON.parse(savedState);
+            if (state.left && state.top) { // Chỉ áp dụng nếu cả hai đều có giá trị
+                // Quan trọng: Xóa vị trí mặc định trước khi áp dụng vị trí đã lưu
+                clearDefaultPosition();
+                menuContainer.style.left = state.left;
+                menuContainer.style.top = state.top;
+            }
+            if (state.expanded) {
+                menuContainer.classList.add('expanded');
+            }
+        } catch (e) {
+            console.error("Lỗi khi đọc trạng thái Task Library từ localStorage", e);
+        }
+    }
+    isStateLoaded = true; // Đánh dấu là đã tải xong
+}
+
 export async function initializeTaskLibrary() {
     if (document.getElementById('task-library-container')) return; // Đã khởi tạo
 
     // Create and inject HTML
-    const menuContainer = document.createElement('div');
+    menuContainer = document.createElement('div');
     menuContainer.id = 'task-library-container';
+    menuContainer.classList.add('hidden'); // Ẩn component ngay từ khi khởi tạo
     menuContainer.innerHTML = `
-        <div class="task-library-header flex items-center p-2.5 bg-slate-50 border-b border-slate-200 cursor-grab select-none h-[60px] box-border flex-shrink-0 active:cursor-grabbing">
+        <div class="task-library-header">
             <span class="task-library-icon bg-indigo-600 text-white font-bold text-sm rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0"><i class="fas fa-book"></i></span>
             <span class="task-library-title ml-3 font-semibold text-slate-800 whitespace-nowrap opacity-0 transition-opacity ease-in">Thư Viện Task</span>
         </div>
@@ -171,6 +241,9 @@ export async function initializeTaskLibrary() {
     groupView = menuContainer.querySelector('#group-view-container');
     taskView = menuContainer.querySelector('#task-view-container');
 
+    // Đặt vị trí mặc định ngay khi khởi tạo
+    setDefaultPosition();
+
     // --- Tải và render nội dung ---
     try {
         allGroupedTasks = await fetchAndGroupTasks();
@@ -178,39 +251,6 @@ export async function initializeTaskLibrary() {
     } catch (error) {
         console.error("Lỗi khi tải thư viện công việc:", error);
         groupView.innerHTML = '<p class="text-center text-red-500">Lỗi tải dữ liệu.</p>';
-    }
-
-    // --- Logic lưu/tải trạng thái từ localStorage ---
-    const TASK_LIBRARY_STORAGE_KEY = 'taskLibraryState';
-
-    function saveMenuState() {
-        if (!menuContainer) return;
-        const state = {
-            left: menuContainer.style.left,
-            top: menuContainer.style.top,
-            expanded: menuContainer.classList.contains('expanded')
-        };
-        localStorage.setItem(TASK_LIBRARY_STORAGE_KEY, JSON.stringify(state));
-    }
-
-    function loadMenuState() {
-        const savedState = localStorage.getItem(TASK_LIBRARY_STORAGE_KEY);
-        if (savedState) {
-            try {
-                const state = JSON.parse(savedState);
-                if (state.left) menuContainer.style.left = state.left;
-                if (state.top) menuContainer.style.top = state.top;
-                if (state.expanded) {
-                    // Dùng setTimeout để đảm bảo transition chạy đúng
-                    setTimeout(() => header.click(), 50);
-                }
-                const rect = menuContainer.getBoundingClientRect();
-                menuContainer.style.left = `${Math.max(0, Math.min(rect.left, window.innerWidth - rect.width))}px`;
-                menuContainer.style.top = `${Math.max(0, Math.min(rect.top, window.innerHeight - rect.height))}px`;
-            } catch (e) {
-                console.error("Lỗi khi đọc trạng thái Task Library từ localStorage", e);
-            }
-        }
     }
 
     // --- Toggle expand/collapse ---
@@ -232,6 +272,9 @@ export async function initializeTaskLibrary() {
         // Chỉ kéo bằng chuột trái và khi target là header
         if (e.button !== 0) return;
         if (!e.target.closest('.task-library-header')) return;
+
+        // Xóa vị trí mặc định (bottom, left) để bắt đầu kéo bằng top/left
+        clearDefaultPosition();
 
         isDragging = true;
 
@@ -287,6 +330,8 @@ export async function initializeTaskLibrary() {
             const ghostRect = ghostElement.getBoundingClientRect();
             menuContainer.style.left = `${ghostRect.left}px`;
             menuContainer.style.top = `${ghostRect.top}px`;
+            // Xóa vị trí bottom/right để không bị xung đột
+            clearDefaultPosition();
             saveMenuState();
             document.body.removeChild(ghostElement);
             ghostElement = null;
@@ -298,8 +343,6 @@ export async function initializeTaskLibrary() {
     header.addEventListener('mousedown', onDragStart);
     document.addEventListener('mousemove', onDragMove);
     document.addEventListener('mouseup', onDragEnd);
-
-    loadMenuState();
 
     taskLibraryController = {
         destroy: () => {
@@ -316,5 +359,28 @@ export function cleanupTaskLibrary() {
     if (taskLibraryController) {
         taskLibraryController.destroy();
         taskLibraryController = null;
+    }
+}
+
+/**
+ * Hiển thị Task Library.
+ */
+export function showTaskLibrary() {
+    if (menuContainer) {
+        // Chỉ tải trạng thái từ localStorage một lần duy nhất,
+        // khi component được hiển thị lần đầu tiên.
+        if (!isStateLoaded) {
+            loadMenuState();
+        }
+        menuContainer.classList.remove('hidden');
+    }
+}
+
+/**
+ * Ẩn Task Library.
+ */
+export function hideTaskLibrary() {
+    if (menuContainer) {
+        menuContainer.classList.add('hidden');
     }
 }
