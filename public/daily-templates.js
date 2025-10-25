@@ -108,6 +108,60 @@ async function fetchInitialData() {
 }
 
 /**
+ * Chuyển đổi chuỗi thời gian "HH:mm" thành số phút trong ngày.
+ * @param {string} timeStr - Chuỗi thời gian (e.g., "08:30").
+ * @returns {number} - Tổng số phút từ 00:00.
+ */
+function timeToMinutes(timeStr) {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + minutes;
+}
+
+/**
+ * Cập nhật giao diện của một dòng ca dựa trên mã ca được chọn.
+ * @param {HTMLTableRowElement} row - Phần tử <tr> của dòng ca.
+ */
+function updateRowAppearance(row) {
+    const selector = row.querySelector('.shift-code-selector');
+    const selectedShiftCode = selector.value;
+    const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === selectedShiftCode);
+
+    const slots = row.querySelectorAll('.quarter-hour-slot');
+
+    if (!shiftInfo || !shiftInfo.timeRange) {
+        // Nếu không có ca nào được chọn, reset tất cả các ô về trạng thái mặc định
+        slots.forEach(slot => {
+            slot.classList.remove('bg-slate-50', 'non-work-slot');
+            slot.classList.add('bg-white');
+        });
+        return;
+    }
+
+    const [startStr, endStr] = shiftInfo.timeRange.split('~').map(s => s.trim());
+    const shiftStartMinutes = timeToMinutes(startStr);
+    const shiftEndMinutes = timeToMinutes(endStr);
+
+    slots.forEach(slot => {
+        const time = slot.dataset.time;
+        const quarter = parseInt(slot.dataset.quarter, 10);
+        const slotDuration = 15; // Mỗi ô là 15 phút
+        const slotStartMinutes = timeToMinutes(time) + quarter;
+        const slotEndMinutes = slotStartMinutes + slotDuration;
+
+        // Kiểm tra xem slot có nằm trong khoảng thời gian làm việc không
+        // Điều kiện mới: Thời gian bắt đầu của ô phải nhỏ hơn thời gian kết thúc ca,
+        // và thời gian kết thúc của ô phải nhỏ hơn hoặc bằng thời gian kết thúc ca.
+        if (slotStartMinutes >= shiftStartMinutes && slotEndMinutes <= shiftEndMinutes) {
+            slot.classList.remove('bg-slate-50', 'non-work-slot');
+            slot.classList.add('bg-green-50'); // Ô trong giờ làm việc, cho phép kéo thả
+        } else {
+            slot.classList.remove('bg-green-50');
+            slot.classList.add('bg-slate-50', 'non-work-slot'); // Ô ngoài giờ làm việc
+        }
+    });
+}
+
+/**
  * Thêm một dòng ca mới vào bảng.
  * @param {HTMLTableSectionElement} tbody - Phần tử tbody của bảng.
  * @param {number} shiftNumber - Số thứ tự của ca (ví dụ: 2 cho "Ca 2").
@@ -122,7 +176,7 @@ function addShiftRow(tbody, shiftNumber) {
     const shiftCodeOptions = allShiftCodes.map(sc => `<option value="${sc.shiftCode}">${sc.shiftCode} (${sc.timeRange})</option>`).join('');
 
     let bodyRowHtml = `
-        <td class="group relative p-1 border border-slate-200 align-top sticky left-0 bg-white z-10 w-48 min-w-48 font-semibold text-center">
+        <td class="group relative p-1 border border-slate-200 align-center sticky left-0 bg-white z-10 w-56 min-w-56 font-semibold text-center">
             <select class="shift-code-selector form-input w-full text-sm p-1">
                 <option value="">-- Chọn Ca --</option>
                 ${shiftCodeOptions}
@@ -152,7 +206,10 @@ function addShiftRow(tbody, shiftNumber) {
     // Gắn sự kiện onchange cho dropdown vừa tạo
     const newSelector = newRow.querySelector('.shift-code-selector');
     if (newSelector) {
-        newSelector.addEventListener('change', updateTemplateFromDOM);
+        newSelector.addEventListener('change', () => {
+            updateRowAppearance(newRow);
+            updateTemplateFromDOM();
+        });
     }
 
     // Kích hoạt lại chức năng kéo-thả cho các ô mới trong dòng vừa thêm
@@ -184,7 +241,7 @@ function renderGrid() {
     // --- Tạo Header (Tên nhân viên) ---
     const thead = document.createElement('thead');
     thead.className = 'bg-slate-100 sticky top-0 z-20'; // Tăng z-index để header nổi trên các ô sticky
-    let headerRowHtml = `<th class="p-2 border border-slate-200 w-28 sticky left-0 bg-slate-100 z-30">Ca</th>`; // Cột Ca, sticky
+    let headerRowHtml = `<th class="p-2 border border-slate-200 w-56 min-w-56 sticky left-0 bg-slate-100 z-30">Ca</th>`; // Cột Ca, sticky
     timeSlots.forEach(time => {
         headerRowHtml += `
             <th class="p-2 border border-slate-200 min-w-[308px] text-center font-semibold text-slate-700">${time}</th>
@@ -203,7 +260,9 @@ function renderGrid() {
 
     // --- Tạo nút "Thêm Dòng Ca" ---
     const addRowButtonContainer = document.createElement('div');
-    addRowButtonContainer.className = 'flex justify-start p-2';
+    // Cập nhật: Thêm các lớp sticky, bottom, left và z-index để cố định nút.
+    // Nút sẽ luôn hiển thị ở góc dưới bên trái của màn hình.
+    addRowButtonContainer.className = 'sticky bottom-4 left-4 z-40 mt-4';
     const addRowButton = document.createElement('button');
     addRowButton.id = 'add-shift-row-btn';
     addRowButton.className = 'btn btn-secondary text-sm';
@@ -232,7 +291,11 @@ function initializeDragAndDrop() {
             group: {
                 name: 'template-tasks',
                 pull: true,
-                put: true // Cho phép nhận task từ thư viện
+                // Chỉ cho phép thả vào ô không phải là 'non-work-slot'
+                put: function (to) {
+                    // `to.el` là phần tử DOM của slot đang được kéo vào
+                    return !to.el.classList.contains('non-work-slot');
+                }
             },
             animation: 150,
             ghostClass: "swap-ghost", // Class cho "bóng ma" khi kéo, để tùy chỉnh hiệu ứng đổi chỗ
@@ -609,8 +672,11 @@ async function loadTemplate(templateId) {
             if (shiftMappings) {
                 Object.keys(shiftMappings).forEach(shiftId => {
                     const row = document.querySelector(`tr[data-shift-id="${shiftId}"]`);
-                    const selector = row?.querySelector('.shift-code-selector');
-                    if (selector) selector.value = shiftMappings[shiftId];
+                    if (row) {
+                        const selector = row.querySelector('.shift-code-selector');
+                        if (selector) selector.value = shiftMappings[shiftId];
+                        updateRowAppearance(row); // Tô màu cho dòng sau khi tải
+                    }
                 });
             }
             

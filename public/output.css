@@ -772,6 +772,14 @@ body.sidebar-expanded #sidebar .sidebar-text {
   top: 0.25rem;
 }
 
+.bottom-4 {
+  bottom: 1rem;
+}
+
+.left-4 {
+  left: 1rem;
+}
+
 .z-10 {
   z-index: 10;
 }
@@ -786,6 +794,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
 
 .z-50 {
   z-index: 50;
+}
+
+.z-40 {
+  z-index: 40;
 }
 
 .col-span-2 {
@@ -1042,6 +1054,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
   width: 12rem;
 }
 
+.w-56 {
+  width: 14rem;
+}
+
 .min-w-64 {
   min-width: 16rem;
 }
@@ -1072,6 +1088,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
 
 .min-w-48 {
   min-width: 12rem;
+}
+
+.min-w-56 {
+  min-width: 14rem;
 }
 
 .max-w-2xl {
@@ -1676,6 +1696,11 @@ body.sidebar-expanded #sidebar .sidebar-text {
 .bg-yellow-100 {
   --tw-bg-opacity: 1;
   background-color: rgb(254 249 195 / var(--tw-bg-opacity, 1));
+}
+
+.bg-green-50 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(240 253 244 / var(--tw-bg-opacity, 1));
 }
 
 .bg-opacity-50 {
