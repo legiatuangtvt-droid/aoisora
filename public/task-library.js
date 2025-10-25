@@ -225,8 +225,10 @@ export async function initializeTaskLibrary() {
     menuContainer.classList.add('hidden'); // Ẩn component ngay từ khi khởi tạo
     menuContainer.innerHTML = `
         <div class="task-library-header">
-            <span class="task-library-icon bg-indigo-600 text-white font-bold text-sm rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0"><i class="fas fa-book"></i></span>
-            <span class="task-library-title ml-3 font-semibold text-slate-800 whitespace-nowrap opacity-0 transition-opacity ease-in">Thư Viện Task</span>
+            <div class="task-library-toggle-area flex items-center cursor-pointer">
+                <span class="task-library-icon bg-indigo-600 text-white font-bold text-sm rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0"><i class="fas fa-book"></i></span>
+                <span class="task-library-title ml-3 font-semibold text-slate-800 whitespace-nowrap opacity-0 transition-opacity ease-in">Thư Viện Task</span>
+            </div>
             <div class="task-library-search-container">
                 <div class="search-input-wrapper">
                     <i class="fas fa-search search-icon"></i>
@@ -244,6 +246,7 @@ export async function initializeTaskLibrary() {
     const header = menuContainer.querySelector('.task-library-header');
     const menuBody = menuContainer.querySelector('.task-library-body');
     const menuTitle = menuContainer.querySelector('.task-library-title');
+    const taskLibraryToggleArea = menuContainer.querySelector('.task-library-toggle-area');
     groupTabsContainer = menuContainer.querySelector('#group-tabs-container');
     taskGridContainer = menuContainer.querySelector('#task-grid-container');
 
@@ -261,7 +264,7 @@ export async function initializeTaskLibrary() {
 
     // --- Toggle expand/collapse ---
     // Sử dụng 'dblclick' để mở/đóng, tránh xung đột với sự kiện kéo-thả (mousedown/mouseup)
-    header.addEventListener('dblclick', (e) => {
+    taskLibraryToggleArea.addEventListener('dblclick', (e) => {
         // Chỉ cần toggle class 'expanded' trên container chính.
         // CSS sẽ tự động xử lý việc hiển thị/ẩn các phần tử con.
         menuContainer.classList.toggle('expanded');
@@ -286,6 +289,12 @@ export async function initializeTaskLibrary() {
     const onDragStart = async (e) => {
         // Chỉ kéo bằng chuột trái và khi target là header
         if (e.button !== 0) return;
+
+        // Nếu người dùng click vào ô tìm kiếm, không bắt đầu kéo.
+        if (e.target.closest('.task-library-search-container')) {
+            return;
+        }
+
         if (!e.target.closest('.task-library-header')) return;
 
         // Xóa vị trí mặc định (bottom, left) để bắt đầu kéo bằng top/left
