@@ -14,6 +14,54 @@ const defaultColor = {
 let allTaskGroups = {};
 
 /**
+ * Xử lý sự kiện khi một task được kéo thả xong (di chuyển, thêm, xóa).
+ * @param {Event} evt - Sự kiện từ SortableJS.
+ */
+function handleDragEnd(evt) {
+    updateTemplateFromDOM();
+    updateTemplateStats();
+}
+
+/**
+ * Xử lý sự kiện khi một task mới được thêm vào một slot từ thư viện.
+ * @param {Event} evt - Sự kiện từ SortableJS.
+ */
+function handleTaskAdd(evt) {
+    const item = evt.item;
+    const toSlot = evt.to;
+
+    // --- LOGIC HOÁN ĐỔI NÂNG CAO ---
+    if (evt.pullMode !== 'clone' && toSlot.children.length > 1) {
+        const existingItem = Array.from(toSlot.children).find(child => child !== item);
+        if (existingItem) {
+            evt.from.appendChild(existingItem);
+        }
+    }
+
+    if (evt.pullMode === 'clone') {
+        const taskCode = item.dataset.taskCode;
+        const groupId = item.dataset.groupId;
+        const taskName = item.textContent;
+        const group = allTaskGroups[groupId];
+        const color = (group && group.color && group.color.tailwind_bg) ? group.color : defaultColor;
+
+        item.className = `scheduled-task-item relative group w-[70px] h-[100px] ${color.tailwind_bg} ${color.tailwind_text} ${color.tailwind_border} border-2 text-xs p-1 rounded-md shadow-sm cursor-grab flex flex-col justify-between items-center text-center mb-1`;
+        item.dataset.taskCode = taskCode;
+        item.dataset.groupId = groupId;
+        item.innerHTML = `
+            <div class="resize-handle left-handle" title="Kéo để nhân bản"></div>
+            <div class="resize-handle right-handle" title="Kéo để nhân bản"></div>
+            <button class="delete-task-btn absolute top-0 right-0 p-1 leading-none font-bold text-current opacity-50 hover:opacity-100 group-hover:opacity-100">×</button>
+            <div class="flex-grow flex flex-col justify-center"><span class="overflow-hidden text-ellipsis">${item.querySelector('.text-ellipsis')?.textContent || taskName}</span></div>
+            <span class="font-semibold mt-auto">${taskCode}</span>
+        `;
+    }
+
+    updateTemplateFromDOM();
+    updateTemplateStats();
+}
+
+/**
  * Tải tất cả dữ liệu nền cần thiết một lần.
  */
 async function fetchInitialData() {
@@ -37,6 +85,55 @@ async function fetchInitialData() {
         const container = document.getElementById('template-builder-grid-container');
         if(container) container.innerHTML = `<div class="p-10 text-center text-red-500">Không thể tải dữ liệu nền. Vui lòng thử lại.</div>`;
     }
+}
+
+/**
+ * Thêm một dòng ca mới vào bảng.
+ * @param {HTMLTableSectionElement} tbody - Phần tử tbody của bảng.
+ * @param {number} shiftNumber - Số thứ tự của ca (ví dụ: 2 cho "Ca 2").
+ */
+function addShiftRow(tbody, shiftNumber) {
+    const timeSlots = Array.from({ length: 16 }, (_, i) => `${i + 6}:00`);
+    const shiftId = `shift-${shiftNumber}`;
+    const newRow = document.createElement('tr');
+    newRow.dataset.shiftId = shiftId;
+
+    let bodyRowHtml = `
+        <td class="group relative p-2 border border-slate-200 align-top sticky left-0 bg-white z-10 w-20 min-w-20 font-semibold text-center">
+            <span>Ca ${shiftNumber}</span>
+            <button class="delete-shift-row-btn absolute top-1 right-1 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity" title="Xóa dòng ca này">
+                <i class="fas fa-times"></i>
+            </button>
+        </td>
+    `;
+
+    timeSlots.forEach(time => {
+        bodyRowHtml += `
+            <td class="p-0 border border-slate-200 align-top">
+                <div class="grid grid-cols-4 h-[104px]">
+                    <div class="quarter-hour-slot border-r border-dashed border-slate-200 flex justify-center items-center" data-shift-id="${shiftId}" data-time="${time}" data-quarter="00"></div>
+                    <div class="quarter-hour-slot border-r border-dashed border-slate-200 flex justify-center items-center" data-shift-id="${shiftId}" data-time="${time}" data-quarter="15"></div>
+                    <div class="quarter-hour-slot border-r border-dashed border-slate-200 flex justify-center items-center" data-shift-id="${shiftId}" data-time="${time}" data-quarter="30"></div>
+                    <div class="quarter-hour-slot flex justify-center items-center" data-shift-id="${shiftId}" data-time="${time}" data-quarter="45"></div>
+                </div>
+            </td>
+        `;
+    });
+
+    newRow.innerHTML = bodyRowHtml;
+    tbody.appendChild(newRow);
+
+    // Kích hoạt lại chức năng kéo-thả cho các ô mới trong dòng vừa thêm
+    newRow.querySelectorAll('.quarter-hour-slot').forEach(slot => {
+        const sortable = Sortable.create(slot, {
+            group: { name: 'template-tasks', pull: true, put: true },
+            animation: 150,
+            ghostClass: "swap-ghost",
+            onEnd: handleDragEnd,
+            onAdd: handleTaskAdd
+        });
+        sortableInstances.push(sortable);
+    });
 }
 
 /**
@@ -66,36 +163,29 @@ function renderGrid() {
 
     // --- Tạo Body (Các hàng thời gian và ô kéo thả) ---
     const tbody = document.createElement('tbody');
-    for (let i = 1; i <= 10; i++) {
-        const shiftId = `shift-${i}`;
-        let bodyRowHtml = `
-            <td class="p-2 border border-slate-200 align-top sticky left-0 bg-white z-10 w-20 min-w-20 font-semibold text-center">
-                Ca ${i}
-            </td>
-        `; // Ô thông tin ca, sticky
-
-        timeSlots.forEach(time => {
-            // Mỗi ô lớn chứa 4 ô 15 phút
-            bodyRowHtml += `
-                <td class="p-0 border border-slate-200 align-top">
-                    <div class="grid grid-cols-4 h-[104px]">
-                        <div class="quarter-hour-slot border-r border-dashed border-slate-200 flex justify-center items-center" data-shift-id="${shiftId}" data-time="${time}" data-quarter="00"></div>
-                        <div class="quarter-hour-slot border-r border-dashed border-slate-200 flex justify-center items-center" data-shift-id="${shiftId}" data-time="${time}" data-quarter="15"></div>
-                        <div class="quarter-hour-slot border-r border-dashed border-slate-200 flex justify-center items-center" data-shift-id="${shiftId}" data-time="${time}" data-quarter="30"></div>
-                        <div class="quarter-hour-slot flex justify-center items-center" data-shift-id="${shiftId}" data-time="${time}" data-quarter="45"></div>
-                    </div>
-                </td>
-            `;
-        });
-        tbody.innerHTML += `<tr data-shift-id="${shiftId}">${bodyRowHtml}</tr>`;
-    }
+    addShiftRow(tbody, 1); // Chỉ tạo 1 dòng ca ban đầu
     table.appendChild(tbody);
 
     container.innerHTML = ''; // Xóa nội dung "đang tải"
     container.appendChild(table);
 
+    // --- Tạo nút "Thêm Dòng Ca" ---
+    const addRowButtonContainer = document.createElement('div');
+    addRowButtonContainer.className = 'flex justify-start p-2';
+    const addRowButton = document.createElement('button');
+    addRowButton.id = 'add-shift-row-btn';
+    addRowButton.className = 'btn btn-secondary text-sm';
+    addRowButton.innerHTML = '<i class="fas fa-plus mr-2"></i> Thêm Ca';
+    addRowButton.addEventListener('click', () => {
+        const currentShiftCount = tbody.children.length;
+        addShiftRow(tbody, currentShiftCount + 1);
+    });
+    addRowButtonContainer.appendChild(addRowButton);
+    container.appendChild(addRowButtonContainer);
+
     initializeDragAndDrop();
 }
+
 
 /**
  * Khởi tạo chức năng kéo thả cho các ô 15 phút.
@@ -114,63 +204,8 @@ function initializeDragAndDrop() {
             },
             animation: 150,
             ghostClass: "swap-ghost", // Class cho "bóng ma" khi kéo, để tùy chỉnh hiệu ứng đổi chỗ
-            onEnd: function (evt) {
-                // Khi một task được kéo thả xong (thêm, di chuyển, xóa khỏi slot)
-                // Cần cập nhật lại dữ liệu mẫu.
-                updateTemplateFromDOM();
-                updateTemplateStats(); // Cập nhật thống kê
-            },
-            onAdd: function (evt) {
-                const item = evt.item;
-                const toSlot = evt.to;
-
-                // --- LOGIC HOÁN ĐỔI NÂNG CAO ---
-                // Nếu đây là thao tác di chuyển nội bộ (không phải clone từ thư viện)
-                // và ô đích đã có sẵn một task khác.
-                if (evt.pullMode !== 'clone' && toSlot.children.length > 1) {
-                    // Tìm task đã có sẵn trong ô đích (phần tử không phải là task đang kéo)
-                    const existingItem = Array.from(toSlot.children).find(child => child !== item);
-                    if (existingItem) {
-                        // Di chuyển task có sẵn đó về lại ô gốc của task đang kéo
-                        evt.from.appendChild(existingItem);
-                    }
-                }
-                // --- KẾT THÚC LOGIC HOÁN ĐỔI ---
-
-                const taskCode = item.dataset.taskCode;
-                const groupId = item.dataset.groupId; // Lấy groupId từ task được kéo
-
-                // Chỉ định dạng lại nếu task đến từ thư viện (pullMode === 'clone')
-                // Nếu là di chuyển nội bộ, item đã có định dạng đúng.
-                if (evt.pullMode === 'clone') {
-                    // Khi kéo từ thư viện, item.textContent chứa cả tên và mã, ta cần lấy lại tên gốc
-                    const taskName = item.textContent;
-                    const group = allTaskGroups[groupId];
-                    const color = (group && group.color && group.color.tailwind_bg) ? group.color : defaultColor;
-
-                    // Ghi đè class để định dạng lại task trong lưới lịch trình
-                    // Sử dụng justify-between để đẩy taskCode xuống dưới
-                    item.className = `scheduled-task-item relative group w-[70px] h-[100px] ${color.tailwind_bg} ${color.tailwind_text} ${color.tailwind_border} border-2 text-xs p-1 rounded-md shadow-sm cursor-pointer flex flex-col justify-between items-center text-center mb-1`;
-                    item.dataset.taskCode = taskCode; // Gán lại mã task vào item mới
-                    item.dataset.groupId = groupId; // Lưu lại groupId để dùng khi tải lại mẫu
-
-                    // Xây dựng lại nội dung một lần duy nhất, sử dụng các biến đã lưu
-                    item.innerHTML = `
-                        <div class="resize-handle left-handle" title="Kéo để nhân bản"></div>
-                        <div class="resize-handle right-handle" title="Kéo để nhân bản"></div>
-                        <button class="delete-task-btn absolute top-0 right-0 p-1 leading-none font-bold text-current opacity-50 hover:opacity-100 group-hover:opacity-100">×</button>
-                        <div class="flex-grow flex flex-col justify-center">
-                            <span class="overflow-hidden text-ellipsis">${item.querySelector('.text-ellipsis')?.textContent || taskName}</span>
-                        </div>
-                        <span class="font-semibold mt-auto">${taskCode}</span>
-                    `;
-                }
-                // Nếu không phải clone (tức là di chuyển nội bộ), không cần làm gì, item đã có định dạng đúng.
-
-                // CẬP NHẬT: Gọi hàm cập nhật sau khi thêm task mới từ thư viện
-                updateTemplateFromDOM();
-                updateTemplateStats();
-            }
+            onEnd: handleDragEnd,
+            onAdd: handleTaskAdd
         });
         sortableInstances.push(sortable);
     });
@@ -183,6 +218,21 @@ function initializeDragAndDrop() {
                 e.target.closest('.scheduled-task-item').remove(); // Xóa toàn bộ thẻ task
                 updateTemplateFromDOM(); // Cập nhật lại dữ liệu sau khi xóa
                 updateTemplateStats(); // Cập nhật thống kê
+            }
+
+            // Xử lý xóa dòng ca
+            if (e.target.closest('.delete-shift-row-btn')) {
+                const row = e.target.closest('tr');
+                const shiftId = row.dataset.shiftId;
+                const shiftName = row.querySelector('td:first-child span').textContent;
+
+                window.showConfirmation(`Bạn có chắc chắn muốn xóa toàn bộ dòng "${shiftName}" không?`, 'Xác nhận xóa dòng', 'Xóa', 'Hủy').then(confirmed => {
+                    if (confirmed) {
+                        row.remove();
+                        updateTemplateFromDOM();
+                        updateTemplateStats();
+                    }
+                });
             }
         });
 
@@ -488,6 +538,21 @@ async function loadTemplate(templateId) {
                 manhourDisplay.textContent = totalManhour || '0';
             }
             if (!schedule) { updateTemplateStats(); return; };
+
+            // --- FIX: Tự động tạo thêm dòng ca nếu mẫu có nhiều hơn 1 dòng ---
+            const shiftIds = Object.keys(schedule);
+            if (shiftIds.length > 0) {
+                // Tìm số thứ tự ca lớn nhất trong dữ liệu mẫu
+                const maxShiftNumber = Math.max(...shiftIds.map(id => parseInt(id.replace('shift-', ''), 10)));
+                
+                const tbody = document.querySelector('#template-builder-grid-container tbody');
+                if (tbody) {
+                    // Tạo thêm các dòng từ 2 đến maxShiftNumber
+                    for (let i = 2; i <= maxShiftNumber; i++) {
+                        addShiftRow(tbody, i);
+                    }
+                }
+            }
             
             // Điền các task vào lưới
             Object.keys(schedule).forEach(shiftId => {
