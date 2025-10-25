@@ -65,6 +65,11 @@ function renderGroupTabs() {
             if (currentActive) {
                 currentActive.classList.remove('active');
             }
+            // Xóa nội dung ô tìm kiếm khi chuyển tab
+            const searchInput = document.getElementById('task-library-search');
+            if (searchInput) {
+                searchInput.value = '';
+            }
             // Thêm active class cho tab được click
             tab.classList.add('active');
             renderTaskGridForGroup(group.id);
@@ -94,9 +99,15 @@ function renderTaskGridForGroup(groupId) {
 
     taskGridContainer.innerHTML = ''; // Xóa nội dung cũ
 
-    if (group.tasks.length > 0) {
+    const searchTerm = document.getElementById('task-library-search')?.value.toLowerCase() || '';
+
+    const filteredTasks = searchTerm
+        ? group.tasks.filter(task => task.name.toLowerCase().includes(searchTerm))
+        : group.tasks;
+
+    if (filteredTasks.length > 0) {
         // Sắp xếp task theo 'order' trước khi render
-        const sortedTasks = [...group.tasks].sort((a, b) => (a.order || 0) - (b.order || 0));
+        const sortedTasks = [...filteredTasks].sort((a, b) => (a.order || 0) - (b.order || 0));
         sortedTasks.forEach(task => {
             const color = (group.color && group.color.tailwind_bg) ? group.color : defaultColor;
             const taskItem = document.createElement('div');
@@ -131,7 +142,10 @@ function renderTaskGridForGroup(groupId) {
             }
         });
     } else {
-        taskGridContainer.innerHTML = '<p class="text-sm text-gray-500 text-center mt-4">Không có công việc trong nhóm này.</p>';
+        const message = searchTerm
+            ? `Không tìm thấy task nào với tên "${searchTerm}".`
+            : 'Không có công việc trong nhóm này.';
+        taskGridContainer.innerHTML = `<p class="text-sm text-gray-500 text-center mt-4 col-span-full">${message}</p>`;
     }
 }
 
@@ -213,6 +227,12 @@ export async function initializeTaskLibrary() {
         <div class="task-library-header">
             <span class="task-library-icon bg-indigo-600 text-white font-bold text-sm rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0"><i class="fas fa-book"></i></span>
             <span class="task-library-title ml-3 font-semibold text-slate-800 whitespace-nowrap opacity-0 transition-opacity ease-in">Thư Viện Task</span>
+            <div class="task-library-search-container">
+                <div class="search-input-wrapper">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="task-library-search" placeholder="Tìm theo tên task...">
+                </div>
+            </div>
         </div>
         <div class="task-library-body opacity-0 invisible flex">
             <div id="group-tabs-container" class="flex-shrink-0"></div>
@@ -246,6 +266,16 @@ export async function initializeTaskLibrary() {
         // CSS sẽ tự động xử lý việc hiển thị/ẩn các phần tử con.
         menuContainer.classList.toggle('expanded');
         saveMenuState();
+    });
+
+    // --- Search logic ---
+    const searchInput = document.getElementById('task-library-search');
+    searchInput.addEventListener('input', () => {
+        const activeTab = groupTabsContainer.querySelector('.group-tab.active');
+        if (activeTab) {
+            const groupId = activeTab.dataset.groupId;
+            renderTaskGridForGroup(groupId);
+        }
     });
 
     // --- Draggable logic ---

@@ -2755,6 +2755,65 @@ html, body {
   transition: width 0.05s linear, left 0.05s linear;
 }
 
+/* --- TASK LIBRARY SEARCH --- */
+
+.task-library-search-container {
+  position: relative;
+  flex-grow: 1;
+  /* Cho phép container này chiếm không gian còn lại */
+  /* justify-content: center; /* Bỏ căn giữa để input chiếm toàn bộ không gian */
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+/* Container mới để bao bọc input và icon */
+
+.search-input-wrapper {
+  position: relative;
+  width: 100%;
+  /* Cho wrapper chiếm toàn bộ chiều rộng của container */
+  align-items: center;
+}
+
+#task-library-container.expanded .task-library-search-container {
+  opacity: 1;
+  visibility: visible;
+}
+
+.search-input-wrapper .search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  /* gray-400 */
+  pointer-events: none;
+  font-size: 14px;
+}
+
+#task-library-search {
+  width: 100%;
+  /* Cho input chiếm toàn bộ chiều rộng của wrapper */
+  padding: 8px 12px 8px 38px;
+  /* Tăng padding trái cho icon */
+  border-radius: 16px;
+  border: 1px solid #d1d5db;
+  /* gray-300 */
+  background-color: #f9fafb;
+  /* gray-50 */
+  font-size: 13px;
+  transition: border-color 0.2s ease;
+}
+
+#task-library-search:focus {
+  outline: none;
+  border-color: #4f46e5;
+  /* indigo-500 */
+}
+
 /* Đảm bảo nội dung bên trong ghost không bị co lại hoặc biến dạng */
 
 #resize-ghost-stretched > div {
@@ -2823,7 +2882,7 @@ html, body {
 /* --- Trạng thái mở rộng --- */
 
 #task-library-container.expanded {
-  width: 515px;
+  width: 530px;
   /* Tăng chiều rộng để bù cho không gian của thanh cuộn dọc */
   height: 60vh;
   /* Chiều cao có thể thay đổi */
@@ -2846,6 +2905,8 @@ html, body {
           user-select: none;
   flex-shrink: 0;
   height: 60px;
+  gap: 1rem;
+  /* Thêm khoảng cách giữa các phần tử con */
   box-sizing: border-box;
 }
 
@@ -2957,7 +3018,7 @@ html, body {
 
 .group-tab-code {
   font-weight: 700;
-  font-size: 1.125rem;
+  font-size: 0.9rem;
   /* text-lg */
   /* Màu chữ sẽ được JS gán trực tiếp */
 }
