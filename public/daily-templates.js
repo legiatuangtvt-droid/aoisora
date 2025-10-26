@@ -44,11 +44,15 @@ function handleTaskAdd(evt) {
         const groupId = item.dataset.groupId;
         const taskName = item.textContent;
         const group = allTaskGroups[groupId] || {};
-        const color = (group.color && group.color.tailwind_bg) ? group.color : defaultColor;
+        // Chuyển sang dùng inline style để đảm bảo màu sắc luôn được áp dụng
+        const color = (group.color && group.color.bg) ? group.color : defaultColor;
 
-        item.className = `scheduled-task-item relative group w-[70px] h-[100px] ${color.tailwind_bg} ${color.tailwind_text} ${color.tailwind_border} border-2 text-xs p-1 rounded-md shadow-sm cursor-grab flex flex-col justify-between items-center text-center mb-1`;
+        item.className = `scheduled-task-item relative group w-[70px] h-[100px] border-2 text-xs p-1 rounded-md shadow-sm cursor-grab flex flex-col justify-between items-center text-center mb-1`;
         item.dataset.taskCode = taskCode;
         item.dataset.groupId = groupId;
+        item.style.backgroundColor = color.bg;
+        item.style.color = color.text;
+        item.style.borderColor = color.border;
         item.innerHTML = `
             <div class="resize-handle left-handle" title="Kéo để nhân bản"></div>
             <div class="resize-handle right-handle" title="Kéo để nhân bản"></div>
@@ -215,11 +219,17 @@ function addShiftRow(tbody, shiftNumber) {
     // Kích hoạt lại chức năng kéo-thả cho các ô mới trong dòng vừa thêm
     newRow.querySelectorAll('.quarter-hour-slot').forEach(slot => {
         const sortable = Sortable.create(slot, {
-            group: { name: 'template-tasks', pull: true, put: true },
+            group: {
+                name: 'template-tasks',
+                pull: true,
+                put: function (to) {
+                    // Đảm bảo logic này nhất quán với initializeDragAndDrop
+                    return !to.el.classList.contains('non-work-slot');
+                }
+            },
             animation: 150,
             ghostClass: "swap-ghost",
-            onEnd: handleDragEnd,
-            onAdd: handleTaskAdd
+            onEnd: handleDragEnd, onAdd: handleTaskAdd
         });
         sortableInstances.push(sortable);
     });
@@ -690,14 +700,18 @@ async function loadTemplate(templateId) {
                     const slot = document.querySelector(`.quarter-hour-slot[data-shift-id="${shiftId}"][data-time="${time}"][data-quarter="${quarter}"]`);
                     if (slot) {
                         const group = allTaskGroups[groupId] || {};
-                        const color = (group.color && group.color.tailwind_bg) ? group.color : defaultColor; // Sử dụng tailwind classes
+                        // Chuyển sang dùng inline style để đảm bảo màu sắc luôn được áp dụng
+                        const color = (group.color && group.color.bg) ? group.color : defaultColor;
                         // Lấy tên task từ dữ liệu mẫu, nếu không có thì dùng mã task
                         const taskName = taskInfo.taskName || '...'; // Lấy taskName từ dữ liệu mẫu
                         const taskItem = document.createElement('div'); 
                         // Sử dụng justify-between để đẩy taskCode xuống dưới
-                        taskItem.className = `scheduled-task-item relative group w-[70px] h-[100px] ${color.tailwind_bg} ${color.tailwind_text} ${color.tailwind_border} border-2 text-xs p-1 rounded-md shadow-sm cursor-grab flex flex-col justify-between items-center text-center mb-1`;
+                        taskItem.className = `scheduled-task-item relative group w-[70px] h-[100px] border-2 text-xs p-1 rounded-md shadow-sm cursor-grab flex flex-col justify-between items-center text-center mb-1`;
                         taskItem.dataset.taskCode = taskCode;
                         taskItem.dataset.groupId = groupId;
+                        taskItem.style.backgroundColor = color.bg;
+                        taskItem.style.color = color.text;
+                        taskItem.style.borderColor = color.border;
                         taskItem.innerHTML = `
                             <div class="resize-handle left-handle" title="Kéo để nhân bản"></div>
                             <div class="resize-handle right-handle" title="Kéo để nhân bản"></div>
