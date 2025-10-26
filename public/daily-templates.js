@@ -978,7 +978,7 @@ function updateTemplateStats() {
             row.dataset.groupId = groupId;
             row.innerHTML = `
                 <td class="p-2 text-center text-slate-500">${stt}</td>
-                <td class="text-center font-medium ${color.tailwind_text}">${groupInfo.name}</td>
+                <td class="text-center font-medium ${color.tailwind_text}">${groupInfo.code}</td>
                 <td class="stat-time p-2 text-center text-slate-500">0.00</td>
             `;
             tbody.appendChild(row);
