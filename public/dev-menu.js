@@ -339,8 +339,13 @@ function initializeDevMenu() {
                     managedRegionId: selectedPerson.managedRegionId || null
                 };
                 localStorage.setItem(SIMULATED_USER_STORAGE_KEY, JSON.stringify(simulatedUser));
-                window.showToast(`Đang mô phỏng người dùng: ${selectedPerson.name} (${selectedPerson.roleId})`, 'info');
-                window.location.reload(); // Tải lại trang để áp dụng mô phỏng
+                window.showToast(`Chuyển sang người dùng: ${selectedPerson.name} (${selectedPerson.roleId})`, 'info');
+
+                if (selectedPerson.roleId === 'STAFF') {
+                    window.location.href = 'staff-schedule.html'; // Điều hướng đến trang lịch làm việc của nhân viên
+                } else {
+                    window.location.href = 'daily-schedule.html'; // Điều hướng đến trang mặc định cho các vai trò khác
+                }
             }
         }
     });
@@ -350,8 +355,8 @@ function initializeDevMenu() {
         if (localStorage.getItem(SIMULATED_USER_STORAGE_KEY)) {
             localStorage.removeItem(SIMULATED_USER_STORAGE_KEY);
             simulatedUser = null;
-            window.showToast('Đã xóa mô phỏng người dùng.', 'info');
-            window.location.reload(); // Tải lại trang để xóa trạng thái mô phỏng
+            window.showToast('Đã quay lại chế độ Admin.', 'info');
+            window.location.href = 'daily-schedule.html'; // Quay về trang lịch ngày mặc định
         } else {
             window.showToast('Không có người dùng nào đang được mô phỏng.', 'warning');
         }

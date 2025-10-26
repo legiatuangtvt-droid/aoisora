@@ -11,7 +11,6 @@
 import { loadLayoutComponents } from './layout-loader.js';
 
 async function bootstrapApp() {
-    await loadLayoutComponents();
     // Khởi tạo biến toàn cục để lưu thông tin người dùng hiện tại
     window.currentUser = null;
     const SIMULATED_USER_STORAGE_KEY = 'simulatedUser';
@@ -27,6 +26,9 @@ async function bootstrapApp() {
             localStorage.removeItem(SIMULATED_USER_STORAGE_KEY);
         }
     }
+
+    // Tải các thành phần layout SAU KHI đã xác định được currentUser
+    await loadLayoutComponents();
     
     // Map vai trò với file app tương ứng
     const roleToAppMap = {

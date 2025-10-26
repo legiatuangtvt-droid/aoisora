@@ -1,0 +1,153 @@
+let domController = null;
+let currentDate = new Date(); // Bắt đầu với tháng hiện tại
+
+// Dữ liệu giả lập (mock data) cho lịch làm việc
+const mockScheduleData = {
+    '2025-10-01': { store: 'Meat World Thủ Đức', shift: '06:00 - 14:00' },
+    '2025-10-02': { store: 'Meat World Thủ Đức', shift: '06:00 - 14:00' },
+    '2025-10-04': { store: 'Cook-kit Q1', shift: '14:00 - 22:00' },
+    '2025-10-05': { store: 'Cook-kit Q1', shift: '14:00 - 22:00' },
+    '2025-10-06': { store: 'Meat World Thủ Đức', shift: '08:00 - 17:00' },
+    '2025-10-08': { store: 'Meat World Gò Vấp', shift: '09:00 - 15:00' },
+    '2025-10-11': { store: 'Meat World Thủ Đức', shift: '06:00 - 14:00' },
+    '2025-10-12': { store: 'Meat World Thủ Đức', shift: '06:00 - 14:00' },
+    '2025-10-13': { store: 'Cook-kit Q1', shift: '14:00 - 22:00' },
+    '2025-10-15': { store: 'Meat World Gò Vấp', shift: '08:00 - 17:00' },
+    '2025-10-18': { store: 'Meat World Thủ Đức', shift: '09:00 - 15:00' },
+    '2025-10-19': { store: 'Meat World Thủ Đức', shift: '09:00 - 15:00' },
+    '2025-10-22': { store: 'Cook-kit Q1', shift: '14:00 - 22:00' },
+    '2025-10-25': { store: 'Meat World Gò Vấp', shift: '06:00 - 14:00' },
+    '2025-10-26': { store: 'Meat World Gò Vấp', shift: '06:00 - 14:00' },
+    '2025-10-29': { store: 'Meat World Thủ Đức', shift: '08:00 - 17:00' },
+    '2025-10-31': { store: 'Cook-kit Q1', shift: '14:00 - 22:00' },
+};
+
+/**
+ * Render toàn bộ giao diện lịch.
+ */
+function renderCalendar() {
+    const headerEl = document.getElementById('calendar-header');
+    const weekdaysEl = document.getElementById('calendar-weekdays');
+    const bodyEl = document.getElementById('calendar-body');
+
+    if (!headerEl || !weekdaysEl || !bodyEl) return;
+
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const monthName = currentDate.toLocaleString('vi-VN', { month: 'long' });
+    
+    const today = new Date();
+    const isCurrentMonthView = today.getFullYear() === year && today.getMonth() === month;
+
+    // 1. Render Header
+    headerEl.innerHTML = `
+        <h2 class="text-xl font-bold text-gray-800">${monthName} ${year}</h2>
+        <div class="flex items-center gap-2">
+            <button id="prev-month-btn" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors" title="Tháng trước">
+                <i class="fas fa-chevron-left text-sm text-gray-600"></i>
+            </button>
+            <button id="next-month-btn" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors" title="Tháng sau">
+                <i class="fas fa-chevron-right text-sm text-gray-600"></i>
+            </button>
+        </div>
+    `;
+
+    // 2. Render Weekday Headers
+    const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    weekdaysEl.innerHTML = weekdays.map(day => `
+        <div class="p-3 text-center font-semibold text-sm text-gray-500">${day}</div>
+    `).join('');
+
+    // 3. Render Calendar Body
+    bodyEl.innerHTML = ''; // Xóa các ô cũ
+
+    const firstDayOfMonth = new Date(year, month, 1);
+    const lastDayOfMonth = new Date(year, month + 1, 0);
+    const daysInMonth = lastDayOfMonth.getDate();
+    
+    // Lấy ngày bắt đầu của tuần (0=Sun, 1=Mon, ..., 6=Sat)
+    let startDayIndex = firstDayOfMonth.getDay();
+    if (startDayIndex === 0) startDayIndex = 7; // Chuyển Chủ Nhật về cuối (7)
+    const paddingDays = startDayIndex - 1;
+
+    // Render các ngày trống của tháng trước
+    // Thêm border-b cho hàng cuối cùng của các ngày trống nếu cần
+    for (let i = 0; i < paddingDays; i++) {
+        bodyEl.innerHTML += `<div class="border-t border-l border-gray-200 bg-gray-50 [&:nth-child(7n)]:border-r"></div>`;
+    }
+
+    // Render các ngày trong tháng
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const schedule = mockScheduleData[dateStr];
+        const isToday = isCurrentMonthView && today.getDate() === day;
+
+        // Thêm lớp để kẻ viền phải cho cột cuối cùng và viền dưới cho hàng cuối cùng
+        let dayCellClasses = "relative p-2 border-t border-l border-gray-200 flex flex-col [&:nth-child(7n)]:border-r";
+        let daySpanClasses = "self-end text-sm font-medium text-gray-500";
+
+        // Nếu là ngày hôm nay, áp dụng style đặc biệt
+        if (isToday) {
+            dayCellClasses += " bg-green-50"; // Nền xanh nhạt cho cả ô
+            daySpanClasses = "self-end text-sm font-bold w-6 h-6 flex items-center justify-center rounded-full bg-green-600 text-white"; // Vòng tròn màu xanh cho số ngày
+        }
+
+        let contentHTML = '';
+        if (schedule) {
+            contentHTML = `
+                <div class="text-center mt-2">
+                    <p class="font-bold text-sm text-indigo-700 truncate">${schedule.store}</p>
+                    <p class="text-xs text-gray-600 mt-1">${schedule.shift}</p>
+                </div>
+            `;
+        }
+
+        bodyEl.innerHTML += `
+            <div class="${dayCellClasses}">
+                <span class="${daySpanClasses}">${day}</span>
+                <div class="flex-1 flex items-center justify-center">
+                    ${contentHTML}
+                </div>
+            </div>
+        `;
+    }
+
+    // Render các ngày trống của tháng sau để lấp đầy lưới
+    const totalCells = paddingDays + daysInMonth;
+    const remainingCells = (totalCells % 7 === 0) ? 0 : 7 - (totalCells % 7);
+    
+    for (let i = 0; i < remainingCells; i++) {
+        bodyEl.innerHTML += `<div class="border-t border-l border-gray-200 bg-gray-50 [&:nth-child(7n)]:border-r"></div>`;
+    }
+
+    // Thêm border-b cho tất cả các ô trong hàng cuối cùng
+    const allCells = bodyEl.children;
+    for (let i = allCells.length - 7; i < allCells.length; i++) {
+        if (allCells[i]) allCells[i].classList.add('border-b');
+    }
+    // Gắn lại sự kiện cho các nút điều hướng
+    document.getElementById('prev-month-btn')?.addEventListener('click', () => changeMonth(-1), { signal: domController.signal });
+    document.getElementById('next-month-btn')?.addEventListener('click', () => changeMonth(1), { signal: domController.signal });
+}
+
+function changeDate(delta) {
+    currentDate.setMonth(currentDate.getMonth() + delta);
+    renderCalendar();
+}
+
+function changeMonth(delta) {
+    currentDate.setMonth(currentDate.getMonth() + delta);
+    renderCalendar();
+}
+
+export function cleanup() {
+    if (domController) {
+        domController.abort();
+        domController = null;
+    }
+}
+
+export function init() {
+    domController = new AbortController();
+    renderCalendar();
+}

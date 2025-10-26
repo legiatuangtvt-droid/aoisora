@@ -14,8 +14,19 @@ export function loadLayoutComponents() {
         .then(html => {
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
+            const currentUser = window.currentUser;
 
-            const sidebarTemplate = doc.getElementById('template-sidebar');
+            let sidebarTemplate;
+            // Kiểm tra vai trò của người dùng để chọn sidebar tương ứng
+            if (currentUser && currentUser.roleId === 'STAFF') {
+                sidebarTemplate = doc.getElementById('template-sidebar-staff');
+            }
+            
+            // Nếu không tìm thấy sidebar cho staff hoặc vai trò khác, dùng sidebar mặc định
+            if (!sidebarTemplate) {
+                sidebarTemplate = doc.getElementById('template-sidebar');
+            }
+
             const headerTemplate = doc.getElementById('template-header');
             
             document.getElementById('sidebar-placeholder').innerHTML = sidebarTemplate.innerHTML;
