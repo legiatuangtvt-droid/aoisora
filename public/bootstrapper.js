@@ -8,7 +8,49 @@
  * 
  * Điều này giúp các file HTML không cần phải hardcode tên file app, làm cho hệ thống linh hoạt và dễ quản lý.
  */
+import { db } from './firebase.js';
+import { collection, getDocs } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 import { loadLayoutComponents } from './layout-loader.js';
+
+let allStores = [];
+
+/**
+ * Tải danh sách tất cả cửa hàng từ Firestore.
+ */
+async function fetchStores() {
+    try {
+        const storesSnapshot = await getDocs(collection(db, 'stores'));
+        allStores = storesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+        console.error("Bootstrapper: Lỗi khi tải dữ liệu cửa hàng.", error);
+    }
+}
+
+/**
+ * Cập nhật thông tin người dùng trên header.
+ * @param {object} user - Đối tượng người dùng hiện tại.
+ */
+function updateHeaderUserInfo(user) {
+    const userNameEl = document.getElementById('user-name');
+    const userStoreEl = document.getElementById('user-store');
+    const userAvatarEl = document.getElementById('user-avatar');
+
+    if (user) {
+        if (userNameEl) userNameEl.textContent = user.name;
+        if (userStoreEl) {
+            const store = allStores.find(s => s.id === user.storeId);
+            userStoreEl.textContent = store ? store.name : (user.roleId || '');
+        }
+        if (userAvatarEl) {
+            // Tạo avatar từ 2 chữ cái đầu của tên
+            const initials = user.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() || 'AV';
+            userAvatarEl.src = `https://placehold.co/40x40/E2E8F0/4A5568?text=${initials}`;
+        }
+    } else { // Chế độ Admin mặc định
+        if (userNameEl) userNameEl.textContent = 'Admin';
+        if (userStoreEl) userStoreEl.textContent = 'Toàn quyền truy cập';
+    }
+}
 
 async function bootstrapApp() {
     // Khởi tạo biến toàn cục để lưu thông tin người dùng hiện tại
@@ -26,8 +68,14 @@ async function bootstrapApp() {
         }
     }
 
+    // Tải dữ liệu cửa hàng
+    await fetchStores();
+
     // Tải các thành phần layout SAU KHI đã xác định được currentUser
     await loadLayoutComponents();
+
+    // Cập nhật thông tin người dùng trên header
+    updateHeaderUserInfo(window.currentUser);
     
     // Map vai trò với file app tương ứng
     const roleToAppMap = {
