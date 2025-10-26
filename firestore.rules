@@ -68,5 +68,10 @@ service cloud.firestore { // Cấu hình cho Firestore
     match /main_tasks/{taskId} {
       allow read, write: if true;
     }
+
+    // Cho phép đọc/ghi vào collection đăng ký ca làm việc của nhân viên
+    match /staff_availability/{availabilityId} {
+      allow read, write: if true;
+    }
   }
 }

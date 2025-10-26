@@ -20,7 +20,6 @@ async function bootstrapApp() {
     if (simulatedUserString) {
         try {
             window.currentUser = JSON.parse(simulatedUserString);
-            console.log("Bootstrapper: Đang mô phỏng người dùng ->", window.currentUser);
         } catch (e) {
             console.error("Bootstrapper: Lỗi khi phân tích dữ liệu người dùng mô phỏng.", e);
             localStorage.removeItem(SIMULATED_USER_STORAGE_KEY);
@@ -42,8 +41,6 @@ async function bootstrapApp() {
     // Mặc định là app của Admin nếu không có người dùng mô phỏng
     const userRole = window.currentUser ? window.currentUser.roleId : 'ADMIN';
     const appFile = roleToAppMap[userRole] || 'admin-app.js';
-
-    console.log(`Bootstrapper: Tải file ứng dụng cho vai trò '${userRole}' -> ${appFile}`);
 
     // Tự động tạo và chèn thẻ script vào cuối thẻ <body>
     const script = document.createElement('script');

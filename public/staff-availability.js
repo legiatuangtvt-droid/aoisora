@@ -1,118 +1,364 @@
 import { db } from './firebase.js';
-import { doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { doc, setDoc, getDoc, serverTimestamp, writeBatch, collection, query, where, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 let domController = null;
-const timeSlots = ["06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00"];
+let viewStartDate = new Date(); // Sẽ được đặt lại thành ngày mai
+let shiftCodes = [];
+const SHIFT_CODES_STORAGE_KEY = 'aoisora_shiftCodes';
 
 /**
- * Render các ô chọn khung giờ.
+ * Định dạng một đối tượng Date thành chuỗi YYYY-MM-DD.
+ * @param {Date} date - Đối tượng Date.
+ * @returns {string} Chuỗi ngày tháng.
  */
-function renderTimeSlots() {
-    const grid = document.getElementById('time-slots-grid');
-    if (!grid) return;
+function formatDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
 
-    grid.innerHTML = timeSlots.map(slot => `
-        <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors has-[:checked]:bg-green-50 has-[:checked]:border-green-400">
-            <input type="checkbox" value="${slot}" class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-            <span class="ml-3 font-medium text-gray-700">${slot}</span>
-        </label>
-    `).join('');
+function getTomorrow() {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow;
 }
 
 /**
- * Tải dữ liệu đăng ký đã có cho ngày được chọn và cập nhật UI.
- * @param {string} dateString - Ngày định dạng YYYY-MM-DD.
+ * Tải danh sách mã ca từ localStorage.
  */
-async function loadAvailabilityForDate(dateString) {
+function loadShiftCodes() {
+    const storedData = localStorage.getItem(SHIFT_CODES_STORAGE_KEY);
+    if (storedData) {
+        try {
+            const parsedData = JSON.parse(storedData);
+            if (Array.isArray(parsedData)) {
+                shiftCodes = parsedData;
+            }
+        } catch (e) {
+            console.error("Lỗi khi đọc dữ liệu mã ca từ localStorage", e);
+            shiftCodes = [];
+        }
+    } else {
+        console.warn("Không tìm thấy dữ liệu mã ca trong localStorage.");
+    }
+}
+
+/**
+ * Render toàn bộ bảng đăng ký cho tuần hiện tại.
+ */
+async function renderWeekView() {
+    const weekHeaderRow = document.getElementById('week-header-row');    
+    const registrationRow = document.getElementById('registration-row');
+    const currentDateDisplay = document.getElementById('current-date-display');
+
+    if (!weekHeaderRow || !registrationRow || !currentDateDisplay) return;
+
+    // Xóa nội dung cũ
+    weekHeaderRow.innerHTML = '';
+    registrationRow.innerHTML = '';
+
+    const weekDates = [];
+    for (let i = 0; i < 7; i++) {
+        const date = new Date(viewStartDate);
+        date.setDate(date.getDate() + i);
+        weekDates.push(date);
+    }
+
+    const firstDay = weekDates[0];
+    const lastDay = weekDates[6];
+    currentDateDisplay.textContent = `Tuần từ ${firstDay.toLocaleDateString('vi-VN')} - ${lastDay.toLocaleDateString('vi-VN')}`;
+
+    // Vô hiệu hóa nút lùi nếu tuần hiện tại chứa ngày mai
+    const prevWeekBtn = document.getElementById('prev-week-btn');
+    if (prevWeekBtn) {
+        const tomorrow = getTomorrow();
+        prevWeekBtn.disabled = firstDay <= tomorrow;
+    }
+
+    // Lấy template
+    const dayHeaderTemplate = document.getElementById('day-header-template');
+    const shiftCellTemplate = document.getElementById('shift-cell-template');
+
+    const todayString = formatDate(new Date());
+    // Tạo các ô
+    weekDates.forEach(date => {
+        // Dòng 2: Header ngày
+        const headerCell = dayHeaderTemplate.content.cloneNode(true);
+        const dayName = headerCell.querySelector('.day-name');
+        const dateNumber = headerCell.querySelector('.date-number');
+        
+        dayName.textContent = date.toLocaleDateString('en-US', { weekday: 'short' });
+        dateNumber.textContent = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+        if (formatDate(date) === todayString) {
+            headerCell.querySelector('th').classList.add('bg-indigo-50', 'text-indigo-700');
+        }
+        weekHeaderRow.appendChild(headerCell);
+
+        // Dòng 3: Ô đăng ký (chứa 2 ca)
+        const shiftCell = shiftCellTemplate.content.cloneNode(true);
+        const td = shiftCell.querySelector('td');
+        const dateStr = formatDate(date);
+        td.dataset.date = dateStr;
+
+        // Lặp qua 2 khối đăng ký trong template
+        td.querySelectorAll('.shift-registration-block').forEach(block => {
+            const select = block.querySelector('.shift-select');
+            const priorityBtns = block.querySelectorAll('.priority-btn');
+            const shiftIndex = block.dataset.shiftIndex;
+
+            // Điền các ca vào select
+            const defaultOptionText = shiftIndex === '0' ? '-- Ca 1 --' : '-- Ca 2 --';
+            select.innerHTML = `<option value="">${defaultOptionText}</option>`;
+            shiftCodes.forEach(sc => {
+                select.innerHTML += `<option value="${sc.shiftCode}">${sc.shiftCode} (${sc.timeRange})</option>`;
+            });
+
+            // Vô hiệu hóa nút ưu tiên mặc định
+            priorityBtns.forEach(btn => btn.disabled = true);
+
+            // Vô hiệu hóa hoàn toàn nếu ngày là hôm nay hoặc trong quá khứ
+            if (dateStr <= todayString) {
+                block.classList.add('opacity-50');
+                select.disabled = true;
+                priorityBtns.forEach(btn => btn.disabled = true);
+                select.innerHTML = '<option value="">-- Đã khóa --</option>';
+            }
+        });
+        if (dateStr <= todayString) {
+            td.classList.add('bg-slate-50');
+        }
+        registrationRow.appendChild(shiftCell);
+    });
+
+    await loadAvailabilityForWeek(weekDates);
+    addCellEventListeners();
+}
+
+/**
+ * Tải dữ liệu đăng ký đã có cho tuần đang hiển thị.
+ * @param {Date[]} weekDates - Mảng các đối tượng Date trong tuần.
+ */
+async function loadAvailabilityForWeek(weekDates) {
     const currentUser = window.currentUser;
     if (!currentUser || !currentUser.id) {
-        window.showToast("Không thể xác định người dùng.", "error");
         return;
     }
 
-    const docId = `${dateString}_${currentUser.id}`;
-    const docRef = doc(db, 'staff_availability', docId);
-
+    const dateStrings = weekDates.map(formatDate);
+    const docIds = dateStrings.map(d => `${d}_${currentUser.id}`);
+    
+    if (docIds.length === 0) return;
+    
+    const availabilityRef = collection(db, 'staff_availability');
+    const q = query(availabilityRef, where('__name__', 'in', docIds));
+    
     try {
-        const docSnap = await getDoc(docRef);
-        // Bỏ chọn tất cả các ô trước khi tải
-        document.querySelectorAll('#time-slots-grid input[type="checkbox"]').forEach(checkbox => {
-            checkbox.checked = false;
-        });
+        const querySnapshot = await getDocs(q);
+        querySnapshot.forEach(docSnap => {
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                const date = data.date;
+                const registrations = data.registrations || []; // [{shiftCode: 'V8', priority: 1}, {shiftCode: 'V4.5', priority: 2}]
 
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            const availableSlots = data.availableSlots || [];
-            availableSlots.forEach(slot => {
-                const checkbox = document.querySelector(`#time-slots-grid input[value="${slot}"]`);
-                if (checkbox) {
-                    checkbox.checked = true;
-                }
-            });
-            window.showToast(`Đã tải lại đăng ký của bạn cho ngày ${dateString.split('-').reverse().join('/')}.`, 'info');
-        } else {
-             window.showToast(`Bạn chưa có đăng ký nào cho ngày này.`, 'info');
-        }
+                registrations.forEach((reg, index) => {
+                    const block = document.querySelector(`td[data-date="${date}"] .shift-registration-block[data-shift-index="${index}"]`);
+                    if (block) {
+                        const select = block.querySelector('.shift-select');
+                        const priorityBtns = block.querySelectorAll('.priority-btn');
+
+                        // Cập nhật select
+                        if (reg.shiftCode) {
+                            select.value = reg.shiftCode;
+                            // Kích hoạt nút ưu tiên vì đã có ca được chọn
+                            priorityBtns.forEach(btn => btn.disabled = false);
+                        } else {
+                            // Vô hiệu hóa nếu không có ca
+                            priorityBtns.forEach(btn => btn.disabled = true);
+                        }
+
+                        // Cập nhật priority
+                        if (reg.priority) {
+                            updatePriorityUI(block, reg.priority);
+                        }
+                    }
+                });
+            }
+        });
     } catch (error) {
-        console.error("Lỗi khi tải dữ liệu đăng ký:", error);
+        console.error("Lỗi khi tải dữ liệu đăng ký tuần:", error);
         window.showToast("Không thể tải dữ liệu đã đăng ký.", "error");
     }
 }
 
 /**
- * Xử lý sự kiện khi người dùng thay đổi ngày.
+ * Cập nhật giao diện của các nút ưu tiên.
+ * @param {HTMLElement} block - Khối div.shift-registration-block chứa các nút.
+ * @param {number} selectedPriority - Mức ưu tiên được chọn (1 hoặc 2).
  */
-function handleDateChange() {
-    const dateInput = document.getElementById('availability-date');
-    const loadingState = document.getElementById('loading-state');
-    const wrapper = document.getElementById('time-slots-wrapper');
+function updatePriorityUI(block, selectedPriority) {
+    const priorityBtns = block.querySelectorAll('.priority-btn');
+    priorityBtns.forEach(btn => {
+        const icon = btn.querySelector('i');
+        const priority = parseInt(btn.dataset.priority, 10);
 
-    if (dateInput.value) {
-        loadingState.classList.add('hidden');
-        wrapper.classList.remove('hidden');
-        loadAvailabilityForDate(dateInput.value);
-    } else {
-        loadingState.classList.remove('hidden');
-        wrapper.classList.add('hidden');
+        // Reset màu
+        icon.classList.remove('text-green-500', 'text-amber-500');
+        icon.classList.add('text-gray-300');
+
+        if (priority === selectedPriority) {
+            if (priority === 1) {
+                icon.classList.add('text-green-500');
+            } else if (priority === 2) {
+                icon.classList.add('text-amber-500');
+            }
+            icon.classList.remove('text-gray-300');
+        }
+    });
+}
+
+/**
+ * Xử lý sự kiện khi người dùng tương tác với các ô đăng ký.
+ */
+function handleCellInteraction(event) {
+    const target = event.target;
+    const block = target.closest('.shift-registration-block');
+    if (!block) return;
+
+    const td = block.closest('td');
+    if (!td) return;
+
+    // Xử lý khi thay đổi lựa chọn ca
+    if (target.classList.contains('shift-select')) {
+        const priorityBtns = block.querySelectorAll('.priority-btn');
+        if (target.value) {
+            // Kích hoạt các nút ưu tiên nếu một ca được chọn
+            priorityBtns.forEach(btn => btn.disabled = false);
+        } else {
+            // Vô hiệu hóa và reset ưu tiên nếu không có ca nào được chọn
+            priorityBtns.forEach(btn => btn.disabled = true);
+            updatePriorityUI(block, 0); // Reset màu của icon
+        }
+    }
+
+    // Xử lý chọn priority
+    const priorityBtn = target.closest('.priority-btn');
+    if (priorityBtn) {
+        const currentPriority = parseInt(priorityBtn.dataset.priority, 10);
+        const icon = priorityBtn.querySelector('i');
+        
+        // Nếu icon đã được chọn, bỏ chọn nó
+        if (!icon.classList.contains('text-gray-300')) {
+            updatePriorityUI(block, 0); // 0 để bỏ chọn tất cả
+        } else {
+            updatePriorityUI(block, currentPriority);
+        }
+    }
+
+    // Không lưu tự động nữa
+    // saveAvailabilityForDate(date);
+}
+
+/**
+ * Gửi dữ liệu đăng ký của cả tuần hiển thị lên Firestore.
+ */
+async function saveWeekAvailability() {
+    const currentUser = window.currentUser;
+    if (!currentUser || !currentUser.id) {
+        return;
+    }
+
+    const saveButton = document.getElementById('save-week-availability-btn');
+    if (!saveButton) return;
+
+    saveButton.disabled = true;
+    saveButton.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Đang lưu...`;
+
+    const batch = writeBatch(db);
+    const allCells = document.querySelectorAll('.min-w-full tbody td[data-date]');
+    const dataByDate = {};
+
+    // 1. Gom nhóm dữ liệu theo ngày từ DOM
+    allCells.forEach(td => {
+        const date = td.dataset.date;
+        td.querySelectorAll('.shift-registration-block').forEach(block => {
+            const shiftIndex = parseInt(block.dataset.shiftIndex, 10);
+            const shiftCode = block.querySelector('.shift-select').value;
+            const selectedPriorityBtn = block.querySelector('.priority-btn i:not(.text-gray-300)');
+        const priority = selectedPriorityBtn ? parseInt(selectedPriorityBtn.closest('.priority-btn').dataset.priority, 10) : 0;
+
+        if (!dataByDate[date]) {
+            dataByDate[date] = [];
+        }
+        dataByDate[date][shiftIndex] = { shiftCode, priority };
+    });
+    });
+
+    // 2. Chuẩn bị ghi hàng loạt (batch write)
+    for (const date in dataByDate) {
+        let registrations = dataByDate[date];
+
+        // Lọc bỏ các đăng ký rỗng ở cuối để tiết kiệm dung lượng
+        while (registrations.length > 0) {
+            const lastReg = registrations[registrations.length - 1];
+            if (!lastReg || (!lastReg.shiftCode && lastReg.priority === 0)) {
+                registrations.pop();
+            } else {
+                break;
+            }
+        }
+
+        const docId = `${date}_${currentUser.id}`;
+        const docRef = doc(db, 'staff_availability', docId);
+
+        if (registrations.length === 0) {
+            // Nếu không có đăng ký nào cho ngày này, xóa document khỏi Firestore
+            batch.delete(docRef);
+        } else {
+            // Nếu có, cập nhật hoặc tạo mới document
+            const dataToSave = {
+                employeeId: currentUser.id,
+                employeeName: currentUser.name,
+                date: date,
+                registrations: registrations,
+                updatedAt: serverTimestamp()
+            };
+            batch.set(docRef, dataToSave);
+        }
+    }
+
+    // 3. Thực thi ghi hàng loạt
+    try {
+        await batch.commit();
+        window.showToast('Đã lưu đăng ký tuần thành công!', 'success');
+    } catch (error) {
+        console.error("Lỗi khi lưu đăng ký tuần:", error);
+        window.showToast("Đã xảy ra lỗi khi lưu đăng ký.", "error");
+    } finally {
+        saveButton.disabled = false;
+        saveButton.innerHTML = `<i class="fas fa-save mr-2"></i> Lưu Đăng Ký Tuần`;
     }
 }
 
 /**
- * Gửi dữ liệu đăng ký lên Firestore.
+ * Gắn các event listener cho các ô trong bảng.
  */
-async function submitAvailability() {
-    const currentUser = window.currentUser;
-    const date = document.getElementById('availability-date').value;
-
-    if (!currentUser || !currentUser.id) {
-        window.showToast("Không thể xác định người dùng. Vui lòng đăng nhập lại.", "error");
-        return;
+function addCellEventListeners() {
+    const tableBody = document.querySelector('.min-w-full tbody');
+    if (tableBody) {
+        // Sử dụng event delegation
+        tableBody.addEventListener('click', handleCellInteraction);
+        tableBody.addEventListener('change', handleCellInteraction);
     }
-    if (!date) {
-        window.showToast("Vui lòng chọn ngày để đăng ký.", "warning");
-        return;
-    }
+}
 
-    const selectedSlots = Array.from(document.querySelectorAll('#time-slots-grid input:checked')).map(cb => cb.value);
-
-    const docId = `${date}_${currentUser.id}`;
-    const docRef = doc(db, 'staff_availability', docId);
-
-    const dataToSave = {
-        employeeId: currentUser.id,
-        employeeName: currentUser.name,
-        date: date,
-        availableSlots: selectedSlots,
-        updatedAt: serverTimestamp()
-    };
-
-    try {
-        await setDoc(docRef, dataToSave, { merge: true });
-        window.showToast("Đã lưu đăng ký của bạn thành công!", "success");
-    } catch (error) {
-        console.error("Lỗi khi lưu đăng ký:", error);
-        window.showToast("Đã xảy ra lỗi khi lưu. Vui lòng thử lại.", "error");
-    }
+/**
+ * Chuyển sang tuần khác.
+ * @param {number} direction - 1 cho tuần tới, -1 cho tuần trước.
+ */
+function changeWeek(direction) {
+    viewStartDate.setDate(viewStartDate.getDate() + (direction * 7));
+    renderWeekView();
 }
 
 export function cleanup() {
@@ -120,28 +366,34 @@ export function cleanup() {
         domController.abort();
         domController = null;
     }
+    // Xóa event listener đã delegate
+    const tableBody = document.querySelector('.min-w-full tbody');
+    if (tableBody) {
+        tableBody.removeEventListener('click', handleCellInteraction);
+        tableBody.removeEventListener('change', handleCellInteraction);
+    }
 }
 
 export function init() {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', runInit);
+    } else {
+        runInit();
+    }
+}
+
+function runInit() {
     domController = new AbortController();
     const { signal } = domController;
 
-    renderTimeSlots();
+    // Đặt ngày bắt đầu là ngày mai
+    viewStartDate = getTomorrow();
+    viewStartDate.setHours(0, 0, 0, 0);
 
-    const dateInput = document.getElementById('availability-date');
-    dateInput.addEventListener('change', handleDateChange, { signal });
+    loadShiftCodes();
+    renderWeekView();
 
-    document.getElementById('submit-availability-btn')?.addEventListener('click', submitAvailability, { signal });
-
-    document.getElementById('select-all-btn')?.addEventListener('click', () => {
-        document.querySelectorAll('#time-slots-grid input[type="checkbox"]').forEach(checkbox => {
-            checkbox.checked = true;
-        });
-    }, { signal });
-
-    document.getElementById('clear-all-btn')?.addEventListener('click', () => {
-        document.querySelectorAll('#time-slots-grid input[type="checkbox"]').forEach(checkbox => {
-            checkbox.checked = false;
-        });
-    }, { signal });
+    document.getElementById('prev-week-btn')?.addEventListener('click', () => changeWeek(-1), { signal });
+    document.getElementById('next-week-btn')?.addEventListener('click', () => changeWeek(1), { signal });
+    document.getElementById('save-week-availability-btn')?.addEventListener('click', saveWeekAvailability, { signal });
 }

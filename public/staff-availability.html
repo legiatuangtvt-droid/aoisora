@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="logo.png" type="image/png">
     <title>Đăng Ký Giờ Làm - AoiSora</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="output.css">
@@ -22,44 +21,94 @@
 
         <!-- Content Area -->
         <main class="flex-1 overflow-auto p-6 lg:p-8 bg-white">
-            <div class="max-w-4xl mx-auto">
-                <!-- Date Selector -->
-                <div class="bg-white p-6 rounded-lg shadow-md mb-6">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4">Chọn ngày bạn muốn đăng ký</h2>
-                    <div class="flex items-center gap-4">
-                        <label for="availability-date" class="font-semibold">Ngày:</label>
-                        <input type="date" id="availability-date" class="form-input w-full max-w-xs">
+            <div class="mx-auto">
+                <!-- Dòng 1: Điều hướng ngày -->
+                <div class="flex justify-center items-center gap-8 my-4">
+                    <button id="prev-week-btn" class="text-2xl text-gray-500 hover:text-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" title="Tuần trước">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <div class="text-center">
+                        <h2 id="current-date-display" class="text-xl font-bold text-gray-800">Đang tải...</h2>
+                        <p class="text-sm text-gray-500">Tuần đăng ký</p>
+                    </div>
+                    <button id="next-week-btn" class="text-2xl text-gray-500 hover:text-indigo-600 transition-colors" title="Tuần tới">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <!-- Bảng đăng ký -->
+                <div class="bg-white p-4 rounded-lg shadow-md border border-gray-200">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full border-collapse">
+                            <thead>
+                                <!-- Dòng 2: Tên các ngày trong tuần -->
+                                <tr id="week-header-row" class="text-center border-y border-gray-200">
+                                    <!-- JS sẽ chèn 7 cụm ngày vào đây -->
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Dòng 3: Đăng ký ca -->
+                                <tr id="registration-row" class="border-b border-gray-200">
+                                    <!-- JS sẽ chèn 7 cụm ô đăng ký vào đây -->
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Ghi chú -->
+                    <div class="mt-4 p-4 bg-gray-50 rounded-lg flex items-center justify-center gap-8 text-sm text-gray-600">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-circle text-green-500"></i>
+                            <span>: Chắc chắn vào ca (Ưu tiên 1)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-triangle-exclamation text-amber-500"></i>
+                            <span>: Có thể vào ca (Ưu tiên 2)</span>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Time Slot Selector -->
-                <div id="availability-container" class="bg-white p-6 rounded-lg shadow-md">
-                    <div id="loading-state" class="text-center py-10 text-gray-500">
-                        <i class="fas fa-spinner fa-spin text-2xl mb-3"></i>
-                        <p>Vui lòng chọn một ngày để bắt đầu...</p>
-                    </div>
-                    <div id="time-slots-wrapper" class="hidden">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-lg font-semibold text-gray-700">Chọn các khung giờ có thể làm việc</h3>
-                            <div>
-                                <button id="select-all-btn" class="btn btn-sm btn-secondary">Chọn tất cả</button>
-                                <button id="clear-all-btn" class="btn btn-sm btn-secondary">Bỏ chọn tất cả</button>
-                            </div>
-                        </div>
-                        <div id="time-slots-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                            <!-- Time slots will be injected here by JS -->
-                        </div>
-                        <div class="mt-6 border-t pt-6 flex justify-end">
-                            <button id="submit-availability-btn" class="btn btn-indigo">
-                                <i class="fas fa-paper-plane mr-2"></i>
-                                Gửi Đăng Ký
-                            </button>
-                        </div>
-                    </div>
+                <!-- Nút lưu -->
+                <div class="mt-6 flex justify-end">
+                    <button id="save-week-availability-btn" class="btn btn-indigo">
+                        <i class="fas fa-save mr-2"></i>
+                        Lưu Đăng Ký Tuần
+                    </button>
                 </div>
             </div>
         </main>
     </div>
+    
+    <!-- Template cho các ô trong bảng -->
+    <template id="day-header-template">
+        <th class="p-2 border-x border-gray-200 min-w-[420px]">
+            <div class="day-name font-semibold text-gray-700"></div>
+            <div class="date-number text-xs text-gray-500"></div>
+        </th>
+    </template>
+
+    <template id="shift-cell-template">
+        <td class="p-2 border-x border-gray-200 align-top">
+            <div class="flex items-start gap-2">
+                <!-- Ca 1 -->
+                <div class="shift-registration-block flex-1" data-shift-index="0">
+                    <select class="shift-select text-center form-input form-input-sm w-full mb-1"><option value="">-- Ca 1 --</option></select>
+                    <div class="priority-selector flex justify-center items-center gap-4">
+                        <button class="priority-btn disabled:opacity-50 disabled:cursor-not-allowed" data-priority="1" title="Chắc chắn vào ca" disabled><i class="fas fa-circle text-gray-300 text-xl"></i></button>
+                        <button class="priority-btn disabled:opacity-50 disabled:cursor-not-allowed" data-priority="2" title="Có thể vào ca" disabled><i class="fas fa-triangle-exclamation text-gray-300 text-xl"></i></button>
+                    </div>
+                </div>
+                <!-- Ca 2 -->
+                <div class="shift-registration-block flex-1" data-shift-index="1">
+                    <select class="shift-select text-center form-input form-input-sm w-full mb-1"><option value="">-- Ca 2 --</option></select>
+                    <div class="priority-selector flex justify-center items-center gap-4">
+                        <button class="priority-btn disabled:opacity-50 disabled:cursor-not-allowed" data-priority="1" title="Chắc chắn vào ca" disabled><i class="fas fa-circle text-gray-300 text-xl"></i></button>
+                        <button class="priority-btn disabled:opacity-50 disabled:cursor-not-allowed" data-priority="2" title="Có thể vào ca" disabled><i class="fas fa-triangle-exclamation text-gray-300 text-xl"></i></button>
+                    </div>
+                </div>
+            </div>
+        </td>
+    </template>
 
     <script type="module" src="bootstrapper.js" defer></script>
 </body>
