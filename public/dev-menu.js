@@ -403,10 +403,12 @@ function initializeDevMenu() {
             // Hàm trợ giúp để seed một collection
             const seedCollection = (collectionName, items) => {
                 items?.forEach(item => {
+                    // Ưu tiên sử dụng trường 'id' làm document ID.
                     if (item.id) {
                         const docRef = doc(db, collectionName, item.id);
                         const dataToSet = { ...item };
-                        delete dataToSet.id; // Xóa trường id khỏi dữ liệu lưu trữ
+                        delete dataToSet.id; // Xóa trường id khỏi dữ liệu lưu trữ vì nó đã được dùng làm key
+                        // Các trường khác như 'code', 'name' được giữ lại bên trong document
                         addBatch.set(docRef, { ...dataToSet, createdAt: serverTimestamp() });
                     }
                 }

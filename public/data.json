@@ -1,6 +1,6 @@
 {
   "task_groups": [
-    { "order": "1", "code": "POS", 
+    { "id": "POS", "order": "1", "code": "POS", 
       "color": {
         "name": "slate", "bg": "#e2e8f0", "text": "#1e293b", "border": "#94a3b8", "hover": "#cbd5e1",
         "tailwind_bg": "bg-slate-200", "tailwind_text": "text-slate-800", "tailwind_border": "border-slate-500"
@@ -19,7 +19,7 @@
         { "order": "11", "name": "POS 3", "frequency": "Daily", "manual_number": null, "manual_link": "" },
         { "order": "12", "name": "Thế cơm Leader", "frequency": "Daily", "manual_number": null, "manual_link": "" }
       ]},
-    { "order": "2", "code": "PERI", 
+    { "id": "PERI", "order": "2", "code": "PERI", 
       "color": {
         "name": "green", "bg": "#bbf7d0", "text": "#166534", "border": "#4ade80", "hover": "#86efac",
         "tailwind_bg": "bg-green-200", "tailwind_text": "text-green-800", "tailwind_border": "border-green-500"
@@ -36,7 +36,7 @@
         { "order": "9", "name": "Làm POP Peri", "frequency": "Daily", "manual_number": null, "manual_link": "" },
         { "order": "10", "name": "Giảm giá Perish", "frequency": "Daily", "manual_number": null, "manual_link": "" }
       ]},
-    { "order": "3", "code": "DRY", 
+    { "id": "DRY", "order": "3", "code": "DRY", 
       "color": {
         "name": "blue", "bg": "#bfdbfe", "text": "#1e40af", "border": "#60a5fa", "hover": "#93c5fd",
         "tailwind_bg": "bg-blue-200", "tailwind_text": "text-blue-800", "tailwind_border": "border-blue-500"
@@ -56,7 +56,7 @@
         { "order": "12", "name": "Thay POG", "frequency": "Weekly", "manual_number": null, "manual_link": "" },
         { "order": "13", "name": "Chuẩn bị kiểm kê năm", "frequency": "Yearly", "manual_number": null, "manual_link": "" }
       ]},
-    { "order": "4", "code": "MMD", 
+    { "id": "MMD", "order": "4", "code": "MMD", 
       "color": {
         "name": "amber", "bg": "#fde68a", "text": "#92400e", "border": "#facc15", "hover": "#fcd34d",
         "tailwind_bg": "bg-amber-200", "tailwind_text": "text-amber-800", "tailwind_border": "border-amber-500"
@@ -70,7 +70,7 @@
         { "order": "6", "name": "Làm báo cáo hóa đơn MMD", "frequency": "Daily", "manual_number": null, "manual_link": "" },
         { "order": "7", "name": "Xử lý và update GTN/GRN", "frequency": "Daily", "manual_number": null, "manual_link": "" }
       ]},
-    { "order": "5", "code": "LEADER", 
+    { "id": "LEADER", "order": "5", "code": "LEADER", 
       "color": {
         "name": "teal", "bg": "#99f6e4", "text": "#134e4a", "border": "#2dd4bf", "hover": "#5eead4",
         "tailwind_bg": "bg-teal-200", "tailwind_text": "text-teal-800", "tailwind_border": "border-teal-500"
@@ -90,7 +90,7 @@
         { "order": "12", "name": "Kiểm tra DWS", "frequency": "Daily", "manual_number": null, "manual_link": "" },
         { "order": "13", "name": "Xử lý công việc quản lý", "frequency": "Daily", "manual_number": null, "manual_link": "" }
       ]},
-    { "order": "6", "code": "QC-FSH", 
+    { "id": "QC-FSH", "order": "6", "code": "QC-FSH", 
       "color": {
         "name": "purple", "bg": "#e9d5ff", "text": "#6b21a8", "border": "#c084fc", "hover": "#d8b4fe",
         "tailwind_bg": "bg-purple-200", "tailwind_text": "text-purple-800", "tailwind_border": "border-purple-500"
@@ -116,7 +116,7 @@
         { "order": "18", "name": "Vệ sinh quầy kệ hàng khô", "frequency": "Weekly", "manual_number": null, "manual_link": "" },
         { "order": "19", "name": "Quét lau sàn", "frequency": "Daily", "manual_number": null, "manual_link": "" }
       ]},
-    { "order": "7", "code": "DELICA AEON CF", 
+    { "id": "DELICA", "order": "7", "code": "DELICA", 
       "color": {
         "name": "indigo", "bg": "#c7d2fe", "text": "#3730a3", "border": "#818cf8", "hover": "#a5b4fc",
         "tailwind_bg": "bg-indigo-200", "tailwind_text": "text-indigo-800", "tailwind_border": "border-indigo-500"
@@ -135,7 +135,7 @@
         { "order": "11", "name": "Bổ sung vật tư Aeon Cafe", "frequency": "Daily", "manual_number": null, "manual_link": "" },
         { "order": "12", "name": "Kiểm kê Delica", "frequency": "Monthly", "manual_number": null, "manual_link": "" }
       ]},
-    { "order": "8", "code": "D&D", 
+    { "id": "DND", "order": "8", "code": "D&D", 
       "color": {
         "name": "red", "bg": "#fecaca", "text": "#991b1b", "border": "#f87171", "hover": "#fca5a5",
         "tailwind_bg": "bg-red-200", "tailwind_text": "text-red-800", "tailwind_border": "border-red-500"
@@ -147,7 +147,7 @@
         { "order": "4", "name": "Đặt hàng D&D", "frequency": "Daily", "manual_number": null, "manual_link": "" },
         { "order": "5", "name": "Làm PC/POP D&D", "frequency": "Daily", "manual_number": null, "manual_link": "" }
       ]},
-    { "order": "9", "code": "Task khác", 
+    { "id": "OTHER", "order": "9", "code": "OTHER", 
       "color": {
         "name": "pink", "bg": "#fbcfe8", "text": "#9d174d", "border": "#f472b6", "hover": "#f9a8d4",
         "tailwind_bg": "bg-pink-200", "tailwind_text": "text-pink-800", "tailwind_border": "border-pink-500"
@@ -178,7 +178,7 @@
     { "id": "AREA_MANAGER", "name": "Quản lý khu vực" },
     { "id": "REGIONAL_MANAGER", "name": "Quản lý miền" }
   ],
-"employee": [
+ "employee": [
   
     { "id": "NVT_LEAD_01", "name": "Trần Văn An", "roleId": "STORE_LEADER", "storeId": "AMPM_NVT", "phone": "0911000001", "status": "ACTIVE" },
     { "id": "NVT_STAFF_02", "name": "Nguyễn Thị Bình", "roleId": "STAFF", "storeId": "AMPM_NVT", "phone": "0911000002", "status": "ACTIVE" },

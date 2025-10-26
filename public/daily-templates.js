@@ -43,8 +43,8 @@ function handleTaskAdd(evt) {
         const taskCode = item.dataset.taskCode;
         const groupId = item.dataset.groupId;
         const taskName = item.textContent;
-        const group = allTaskGroups[groupId];
-        const color = (group && group.color && group.color.tailwind_bg) ? group.color : defaultColor;
+        const group = allTaskGroups[groupId] || {};
+        const color = (group.color && group.color.tailwind_bg) ? group.color : defaultColor;
 
         item.className = `scheduled-task-item relative group w-[70px] h-[100px] ${color.tailwind_bg} ${color.tailwind_text} ${color.tailwind_border} border-2 text-xs p-1 rounded-md shadow-sm cursor-grab flex flex-col justify-between items-center text-center mb-1`;
         item.dataset.taskCode = taskCode;
@@ -690,7 +690,7 @@ async function loadTemplate(templateId) {
                     const slot = document.querySelector(`.quarter-hour-slot[data-shift-id="${shiftId}"][data-time="${time}"][data-quarter="${quarter}"]`);
                     if (slot) {
                         const group = allTaskGroups[groupId] || {};
-                        const color = (group.color && group.color.tailwind_bg) ? group.color : defaultColor;
+                        const color = (group.color && group.color.tailwind_bg) ? group.color : defaultColor; // Sử dụng tailwind classes
                         // Lấy tên task từ dữ liệu mẫu, nếu không có thì dùng mã task
                         const taskName = taskInfo.taskName || '...'; // Lấy taskName từ dữ liệu mẫu
                         const taskItem = document.createElement('div'); 

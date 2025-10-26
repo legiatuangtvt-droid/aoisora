@@ -109,13 +109,18 @@ function renderTaskGridForGroup(groupId) {
         // Sắp xếp task theo 'order' trước khi render
         const sortedTasks = [...filteredTasks].sort((a, b) => (a.order || 0) - (b.order || 0));
         sortedTasks.forEach(task => {
-            const color = (group.color && group.color.tailwind_bg) ? group.color : defaultColor;
+            const color = (group.color && group.color.bg) ? group.color : defaultColor;
             const taskItem = document.createElement('div');
             const generatedCode = `1${group.order}${String(task.order).padStart(2, '0')}`;
 
-            taskItem.className = `task-library-item relative group ${color.tailwind_bg} ${color.tailwind_text} ${color.tailwind_border} border-2 text-xs p-1 rounded-md shadow-sm cursor-grab flex flex-col justify-between items-center text-center mb-1`;
+            // Áp dụng class Tailwind tĩnh và màu sắc qua inline style
+            taskItem.className = `task-library-item relative group border-2 text-xs p-1 rounded-md shadow-sm cursor-grab flex flex-col justify-between items-center text-center mb-1`;
             taskItem.dataset.taskCode = generatedCode; // Gán mã task đã tạo vào dataset
             taskItem.dataset.groupId = group.id; // Thêm groupId để xác định màu sắc
+            taskItem.style.backgroundColor = color.bg;
+            taskItem.style.color = color.text;
+            taskItem.style.borderColor = color.border;
+
             taskItem.innerHTML = `
                 <div class="flex-grow flex flex-col justify-center">
                     <span class="overflow-hidden text-ellipsis">${task.name}</span>

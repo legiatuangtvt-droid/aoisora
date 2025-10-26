@@ -18,10 +18,10 @@ const colorPalette = {
 };
 
 /**
- * Safelist cho Tailwind CSS JIT Compiler.
- * Vẫn cần safelist cho các task item được kéo vào daily-templates,
- * vì chúng vẫn sử dụng class Tailwind để tô màu.
- * bg-slate-200 text-slate-800 border-slate-400
+ * Safelist cho Tailwind CSS JIT Compiler. Các class này vẫn cần thiết cho các
+ * task item được tạo động trong daily-templates.js.
+ * tailwind.config.js cần được cấu hình để quét các class này.
+ * bg-slate-200 text-slate-800 border-slate-500
  * bg-green-200 text-green-800 border-green-500
  * bg-blue-200 text-blue-800 border-blue-500
  * bg-amber-200 text-amber-800 border-amber-500
@@ -125,7 +125,7 @@ function renderGroupCards(taskGroups) {
         const color = (group.color && group.color.tailwind_bg) ? group.color : colorPalette['slate'];
 
         const headerCell = `
-            <div class="group-code-card ${color.tailwind_bg} text-slate-800 rounded ${color.tailwind_border} flex flex-col items-center justify-between text-center w-28 h-[146px] flex-shrink-0 cursor-pointer transition-colors hover:bg-slate-300" data-group-code="${group.code}">
+            <div class="group-code-card ${color.tailwind_bg} text-slate-800 rounded ${color.tailwind_border} flex flex-col items-center justify-between text-center w-28 h-[146px] flex-shrink-0 cursor-pointer transition-colors hover:bg-slate-300" data-group-id="${group.id}">
                 <div class="w-full text-xs font-semibold py-0.5 bg-black/10 rounded-t">
                     Group Task ${group.order}
                 </div>
@@ -170,7 +170,7 @@ function renderGroupCards(taskGroups) {
                         ${orderRow}
                     </div>
                     <div class="task-row-container flex flex-nowrap gap-3 p-2" data-group-code="${group.code}">
-                        ${taskRow}
+                    ${taskRow}
                     </div>
                 </div>
             `;
@@ -178,17 +178,17 @@ function renderGroupCards(taskGroups) {
 
         const actionCell = `
             <div class="action-card flex flex-col items-center justify-center gap-4 text-center w-28 h-[146px] flex-shrink-0 bg-slate-50 border border-slate-200 rounded-lg">
-                <button class="add-task-to-group-btn text-slate-500 hover:text-blue-600 transition-colors" data-group-code="${group.code}" title="Thêm Task vào nhóm ${group.code}">
+                <button class="add-task-to-group-btn text-slate-500 hover:text-blue-600 transition-colors" data-group-id="${group.id}" title="Thêm Task vào nhóm ${group.code}">
                     <i class="fas fa-plus fa-2x"></i>
                 </button>
-                <button class="edit-group-btn text-slate-500 hover:text-indigo-600 transition-colors" data-group-code="${group.code}" title="Sửa thông tin nhóm ${group.code}">
+                <button class="edit-group-btn text-slate-500 hover:text-indigo-600 transition-colors" data-group-id="${group.id}" title="Sửa thông tin nhóm ${group.code}">
                     <i class="fas fa-pencil-alt fa-2x"></i>
                 </button>
             </div>
         `;
 
         return `
-            <div class="group-row flex items-start gap-4 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+            <div class="group-row flex items-start gap-4 border border-gray-200 rounded-lg p-4 bg-white shadow-sm" data-group-id="${group.id}">
                 ${headerCell}
                 <div class="tasks-scroll-container flex-1 overflow-x-auto"><div class="tasks-list-inner flex flex-nowrap" data-group-code="${group.code}">${taskCells}</div></div>
                 ${actionCell}
@@ -216,32 +216,33 @@ function initializePageListeners() {
         if (deleteTaskBtn) {
             e.stopPropagation(); // Ngăn không cho modal sửa task hiện ra
             const taskToDelete = deleteTaskBtn.closest('.task-card');
-            const groupRow = taskToDelete.closest('.group-row');
-            const groupCode = groupRow.querySelector('.group-code-card').dataset.groupCode;
+            const groupRow = taskToDelete.closest('.group-row[data-group-id]'); // Tìm group-row gần nhất
+            const groupId = groupRow.dataset.groupId; // Lấy groupId từ group-row
             const taskOrder = parseInt(taskToDelete.dataset.taskOrder, 10);
-            handleDeleteTask(groupCode, taskOrder);
+            handleDeleteTask(groupId, taskOrder);
             return; // Dừng xử lý để tránh các sự kiện khác
         }
 
         if (groupCodeCard) { // Click vào thẻ group
-            showColorPalette(groupCodeCard);
+            const groupId = groupCodeCard.dataset.groupId;
+            showColorPalette(groupCodeCard, groupId);
         }
 
         if (taskCard) {
-            const groupRow = taskCard.closest('.group-row');
-            const groupCode = groupRow.querySelector('.group-code-card').dataset.groupCode;
+            const groupRow = taskCard.closest('.group-row[data-group-id]');
+            const groupId = groupRow.dataset.groupId;
             const taskOrder = taskCard.dataset.taskOrder;
-            showEditTaskModal(groupCode, parseInt(taskOrder, 10));
+            showEditTaskModal(groupId, parseInt(taskOrder, 10));
         }
 
         if (addTaskBtn) {
-            const groupCode = addTaskBtn.dataset.groupCode;
-            showAddTaskModal(groupCode);
+            const groupId = addTaskBtn.dataset.groupId;
+            showAddTaskModal(groupId);
         }
 
         if (editGroupBtn) {
-            const groupCode = editGroupBtn.dataset.groupCode;
-            showEditGroupModal(groupCode);
+            const groupId = editGroupBtn.dataset.groupId;
+            showEditGroupModal(groupId);
         }
     });
 
@@ -362,15 +363,14 @@ async function handleTaskDrop(evt) {
  * Hiển thị một popup bảng màu bên cạnh thẻ được nhấp.
  * @param {HTMLElement} targetCard - Thẻ code của nhóm được nhấp vào.
  */
-function showColorPalette(targetCard) {
+function showColorPalette(targetCard, groupId) {
     // Xóa bất kỳ bảng màu nào đang tồn tại
     const existingPalette = document.getElementById('color-palette-popup');
     if (existingPalette) {
         existingPalette.remove();
     }
 
-    const groupCode = targetCard.dataset.groupCode;
-    if (!groupCode) return;
+    if (!groupId) return;
 
     // Tạo container cho bảng màu
     const palettePopup = document.createElement('div');
@@ -397,7 +397,7 @@ function showColorPalette(targetCard) {
         const colorSwatch = e.target.closest('[data-color-name]');
         if (colorSwatch) {
             const newColorName = colorSwatch.dataset.colorName;
-            updateGroupColor(groupCode, newColorName);
+            updateGroupColor(groupId, newColorName);
             palettePopup.remove(); // Đóng popup sau khi chọn
         }
     });
@@ -414,18 +414,18 @@ function showColorPalette(targetCard) {
 
 /**
  * Cập nhật màu cho một nhóm công việc cụ thể.
- * @param {string} groupCode - Mã của nhóm.
+ * @param {string} groupId - ID của nhóm.
  * @param {string} newColorName - Tên màu mới từ bảng màu.
  */
-async function updateGroupColor(groupCode, newColorName) {
-    const groupCodeCard = document.querySelector(`.group-code-card[data-group-code="${groupCode}"]`);
+async function updateGroupColor(groupId, newColorName) {
+    const groupCodeCard = document.querySelector(`.group-code-card[data-group-id="${groupId}"]`);
     if (!groupCodeCard) return;
 
     const newColorObject = colorPalette[newColorName] || colorPalette['slate'];
 
     try {
         // Cập nhật trực tiếp vào Firestore
-        const groupDocRef = doc(db, 'task_groups', groupCode);
+        const groupDocRef = doc(db, 'task_groups', groupId);
         await updateDoc(groupDocRef, {
             color: newColorObject // Lưu toàn bộ object màu
         });
@@ -436,7 +436,7 @@ async function updateGroupColor(groupCode, newColorName) {
         });
         groupCodeCard.classList.add(newColorObject.tailwind_bg, newColorObject.tailwind_border);
 
-        window.showToast(`Nhóm ${groupCode} đã đổi sang màu '${newColorObject.name}'`, 'success', 2000);
+        window.showToast(`Đã đổi màu nhóm sang '${newColorObject.name}'`, 'success', 2000);
     } catch (error) {
         console.error("Lỗi khi cập nhật màu nhóm:", error);
         window.showToast("Không thể lưu thay đổi màu. Vui lòng thử lại.", "error");
