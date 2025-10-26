@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="logo.png" type="image/png">
+    <title>Phân Công Ca Làm Việc - AoiSora</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="output.css">
+</head>
+<body class="flex h-screen text-gray-800">
+
+    <!-- Sidebar Placeholder -->
+    <div id="sidebar-placeholder"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Header Placeholder -->
+        <div id="header-placeholder"></div>
+
+        <!-- Content Area -->
+        <main class="flex-1 overflow-auto p-6 lg:p-8 bg-white">
+            <div class="mx-auto">
+                <!-- Điều hướng tuần -->
+                <div class="flex justify-center items-center gap-8 my-4">
+                    <button id="prev-week-btn" class="text-2xl text-gray-500 hover:text-indigo-600 transition-colors" title="Tuần trước">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <div class="text-center">
+                        <h2 id="current-date-display" class="text-xl font-bold text-gray-800">Đang tải...</h2>
+                        <p class="text-sm text-gray-500">Tuần xem xét</p>
+                    </div>
+                    <button id="next-week-btn" class="text-2xl text-gray-500 hover:text-indigo-600 transition-colors" title="Tuần tới">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <!-- Bảng phân công -->
+                <div class="bg-white p-4 rounded-lg shadow-md border border-gray-200">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full border-collapse">
+                            <thead id="assignment-table-header">
+                                <!-- JS sẽ render header ở đây -->
+                            </thead>
+                            <tbody id="assignment-table-body" class="divide-y divide-gray-200">
+                                <!-- JS sẽ render các dòng nhân viên ở đây -->
+                            </tbody>
+                        </table>
+                    </div>
+                     <!-- Ghi chú -->
+                     <div class="mt-4 p-4 bg-gray-50 rounded-lg flex items-center justify-center gap-8 text-sm text-gray-600">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-circle text-green-500"></i>
+                            <span>: Chắc chắn vào ca (Ưu tiên 1)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-triangle-exclamation text-amber-500"></i>
+                            <span>: Có thể vào ca (Ưu tiên 2)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="bootstrapper.js" defer></script>
+</body>
+</html>

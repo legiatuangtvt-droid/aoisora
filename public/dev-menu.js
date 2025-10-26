@@ -6,6 +6,9 @@ let allEmployees = [];
 let allAreaManagers = [];
 let allRegionalManagers = [];
 let allPersonnel = []; // Mảng tổng hợp tất cả các cấp nhân viên
+let allStores = [];
+let allAreas = [];
+let allRegions = [];
 
 let simulatedUser = null;
 const SIMULATED_USER_STORAGE_KEY = 'simulatedUser';
@@ -226,17 +229,23 @@ function initializeDevMenu() {
 
         try {
             const rolesQuery = query(collection(db, 'roles'), orderBy('name'));
-            const [rolesSnap, employeesSnap, areaManagersSnap, regionalManagersSnap] = await Promise.all([
+        const [rolesSnap, employeesSnap, areaManagersSnap, regionalManagersSnap, storesSnap, areasSnap, regionsSnap] = await Promise.all([
                 getDocs(rolesQuery),
                 getDocs(collection(db, 'employee')),
                 getDocs(collection(db, 'area_managers')),
-                getDocs(collection(db, 'regional_managers'))
+            getDocs(collection(db, 'regional_managers')),
+            getDocs(collection(db, 'stores')),
+            getDocs(collection(db, 'areas')),
+            getDocs(collection(db, 'regions')),
             ]);
 
             allRoles = rolesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             allEmployees = employeesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             allAreaManagers = areaManagersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             allRegionalManagers = regionalManagersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        allStores = storesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        allAreas = areasSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        allRegions = regionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
             allPersonnel = [...allEmployees, ...allAreaManagers, ...allRegionalManagers];
 
@@ -301,12 +310,40 @@ function initializeDevMenu() {
             ? [...allPersonnel] // Nếu là 'all', lấy tất cả nhân viên
             : allPersonnel.filter(p => p.roleId === selectedRoleId); // Lọc theo roleId
 
-        // Sắp xếp danh sách đã lọc theo tên
-        filteredPersonnel.sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+        // Sắp xếp danh sách: ưu tiên nhóm theo cửa hàng, sau đó sắp xếp theo tên
+        filteredPersonnel.sort((a, b) => {
+            // Xử lý trường hợp nhân viên không có cửa hàng (ví dụ: quản lý cấp cao)
+            const storeA = a.storeId || 'ZZZ'; // Đẩy những người không có cửa hàng xuống cuối
+            const storeB = b.storeId || 'ZZZ';
+
+            if (storeA < storeB) return -1;
+            if (storeA > storeB) return 1;
+
+            // Nếu cùng cửa hàng, sắp xếp theo tên
+            return a.name.localeCompare(b.name, 'vi');
+        });
     
         // Tạo HTML cho các option và cập nhật một lần để tối ưu hiệu năng
         const optionsHtml = filteredPersonnel.map(person => {
-            return `<option value="${person.id}">${person.name}</option>`;
+            let contextInfo = '';
+            switch (person.roleId) {
+                case 'STAFF':
+                case 'STORE_LEADER':
+                    const store = allStores.find(s => s.id === person.storeId);
+                    if (store) contextInfo = ` - ${store.name}`;
+                    break;
+                case 'AREA_MANAGER':
+                    if (person.managedAreaIds && person.managedAreaIds.length > 0) {
+                        const area = allAreas.find(a => a.id === person.managedAreaIds[0]);
+                        if (area) contextInfo = ` - ${area.name}`;
+                    }
+                    break;
+                case 'REGIONAL_MANAGER':
+                    const region = allRegions.find(r => r.id === person.managedRegionId);
+                    if (region) contextInfo = ` - ${region.name}`;
+                    break;
+            }
+            return `<option value="${person.id}">${person.name}${contextInfo}</option>`;
         }).join('');
     
         employeeSelect.innerHTML = `<option value="">-- Chọn nhân viên --</option>${optionsHtml}`;

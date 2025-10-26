@@ -8,19 +8,15 @@ import { initializeLayoutController } from './layout-controller.js';
 
 // Import các module trang thuộc nhóm Store Leader
 import * as dailySchedule from './daily-schedule.js';
-import * as staff from './staff.js';
-import * as store from './store.js';
-import * as dailyTemplates from './daily-templates.js';
-import * as shiftCodes from './shift-codes.js';
+import * as storeSchedule from './store-schedule.js';
+import * as storeAvailabilityAssignment from './store-availability-assignment.js';
 
 // Map các trang của Store Leader App với module tương ứng
 const storeLeaderPages = {
     'daily-schedule.html': { module: dailySchedule, title: 'Lịch Hàng Ngày' },
-    'staff.html': { module: staff, title: 'Quản Lý Nhân Viên' },
-    'store.html': { module: store, title: 'Quản Lý Cửa Hàng' },
-    'daily-templates.html': { module: dailyTemplates, title: 'Quản Lý Mẫu Ngày' },
+    'store-schedule.html': { module: storeSchedule, title: 'Lịch Làm Việc Cửa Hàng' },
+    'store-availability-assignment.html': { module: storeAvailabilityAssignment, title: 'Phân Công Ca Làm Việc' },
     'intro.html': { module: null, title: 'Giới Thiệu Dự Án' },
-    'shift-codes.html': { module: shiftCodes, title: 'Quản Lý Mã Ca Làm Việc' }
 };
 
 let currentPageModule = null;
@@ -42,12 +38,6 @@ function loadPageModule(pageName) {
         currentPageModule = null;
     }
 
-    // Logic hiển thị Task Library
-    if (pageName === 'daily-templates.html') {
-        showTaskLibrary();
-    } else {
-        hideTaskLibrary();
-    }
 }
 
 async function initializeStoreLeaderApp() {
