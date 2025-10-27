@@ -5,6 +5,7 @@ let domController = null;
 let viewStartDate = new Date();
 let allEmployeesInStore = [];
 let allAvailabilities = [];
+let workPositions = []; // To store all possible work positions from datalist
 let shiftCodes = [];
 const SHIFT_CODES_STORAGE_KEY = 'aoisora_shiftCodes';
 
@@ -13,6 +14,12 @@ function formatDate(date) {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+}
+
+function getTomorrow() {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow;
 }
 
 /**
@@ -37,6 +44,16 @@ function loadShiftCodes() {
         } catch (e) {
             console.error("Lỗi khi đọc dữ liệu mã ca từ localStorage", e);
         }
+    }
+}
+
+/**
+ * Tải danh sách các vị trí công việc từ datalist.
+ */
+function loadWorkPositions() {
+    const datalist = document.getElementById('work-positions-datalist');
+    if (datalist) {
+        workPositions = Array.from(datalist.options).map(option => option.value);
     }
 }
 
@@ -98,47 +115,65 @@ function renderAssignmentTable() {
     dateDisplay.textContent = `Tuần từ ${weekDates[0].toLocaleDateString('vi-VN')} - ${weekDates[6].toLocaleDateString('vi-VN')}`;
 
     // Render Header
-    let headerHTML = `<tr class="border-y border-gray-200"><th class="p-2 border-x border-gray-200 bg-slate-50 text-center sticky left-0 z-10">Nhân viên</th>`;
+    let headerHTML = `<tr class="border-y border-gray-200">
+        <th class="p-2 border-x border-gray-200 text-center sticky left-0 z-10 bg-slate-50">Nhân viên</th>`;
     weekDates.forEach(date => {
-        headerHTML += `<th class="p-2 border-x border-gray-200 min-w-[150px] text-center">
+        headerHTML += `<th class="p-1 border-x border-gray-200 min-w-[130px] text-center">
             <div class="day-name font-semibold text-gray-700">${date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
             <div class="date-number text-xs text-gray-500">${date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}</div>
         </th>`;
+    });
+    // Thêm các cột header cho từng vị trí công việc
+    workPositions.forEach((pos, index) => {
+        // Cột cuối cùng sẽ là sticky
+        const stickyClass = index === workPositions.length - 1 ? 'sticky right-0 z-10' : '';
+        headerHTML += `<th class="p-1 border-x border-gray-200 bg-slate-50 text-center text-xs ${stickyClass} w-10 ">${pos}</th>`;
     });
     headerHTML += `</tr>`;
     header.innerHTML = headerHTML;
 
     // Render Footer with Assign Buttons
-    let footerHTML = `<tr><td class="p-2 border-x border-gray-200 sticky left-0 z-10"></td>`;
+    let footerHTML = `<tr><td class="p-1 border-x border-gray-200 sticky left-0 z-10 bg-slate-50"></td>`;
     weekDates.forEach(date => {
         const dateStr = formatDate(date);
-        footerHTML += `<td class="p-2 border-x border-gray-200 text-center">
-            <button class="assign-day-btn btn btn-indigo btn-sm" data-date="${dateStr}">Phân công</button>
+        footerHTML += `<td class="p-1 border-x border-gray-200 text-center">
+            <div class="flex items-center justify-center gap-1">
+                <button class="suggest-day-btn btn btn-outline-amber btn-sm text-xs" data-date="${dateStr}">Đề xuất</button>
+                <button class="assign-day-btn btn btn-indigo btn-sm text-xs" data-date="${dateStr}">Phân công</button>
+            </div>
         </td>`;
+    });
+    // Thêm các ô footer trống để căn chỉnh
+    workPositions.forEach((pos, index) => {
+        const stickyClass = index === workPositions.length - 1 ? 'sticky right-0 z-10' : '';
+        footerHTML += `<td class="p-1 border-x border-gray-200 ${stickyClass} bg-slate-50"></td>`;
     });
     footerHTML += `</tr>`;
     footer.innerHTML = footerHTML;
 
     // Render Body
     if (allEmployeesInStore.length === 0) {
-        body.innerHTML = `<tr><td colspan="8" class="text-center p-10 text-gray-500">Cửa hàng này chưa có nhân viên.</td></tr>`;
+        body.innerHTML = `<tr><td colspan="${8 + workPositions.length}" class="text-center p-10 text-gray-500">Cửa hàng này chưa có nhân viên.</td></tr>`;
         return;
     }
 
     allEmployeesInStore.forEach(employee => {
         const row = document.createElement('tr');
         row.dataset.employeeId = employee.id;
-        let rowHTML = `<td class="p-2 border-x border-gray-200 bg-white text-center sticky left-0 z-10 font-semibold">${employee.name}</td>`;
+        let rowHTML = `<td class="p-1 border-x border-gray-200 bg-white text-center sticky left-0 z-10 font-semibold text-sm">${employee.name}</td>`;
 
         weekDates.forEach(date => {
-            let cellContent = '';
-            if (employee.id === window.currentUser.id) {
-                cellContent = renderEditableCellForLeader(employee, date);
-            } else {
-                cellContent = renderReadOnlyCellForStaff(employee, date);
-            }
-            rowHTML += cellContent;
+            rowHTML += renderCellContent(employee, date);
         });
+
+        // Thêm ô thống kê vào cuối mỗi hàng
+        workPositions.forEach((pos, index) => {
+            const stickyClass = index === workPositions.length - 1 ? 'sticky right-0 z-10' : '';
+            rowHTML += `<td class="p-1 border-x border-gray-200 align-middle text-center relative bg-white ${stickyClass}" data-position="${pos}">
+                            <span class="stat-percentage text-sm font-semibold text-gray-700">0.0%</span>
+                        </td>`;
+        });
+
         row.innerHTML = rowHTML;
         body.appendChild(row);
     });
@@ -147,6 +182,20 @@ function renderAssignmentTable() {
     document.getElementById('next-week-btn')?.addEventListener('click', () => changeWeek(1), { signal: domController.signal });
 }
 
+
+
+/**
+ * Helper function to render cell content based on user role.
+ * @param {object} employee 
+ * @param {Date} date 
+ * @returns {string}
+ */
+function renderCellContent(employee, date) {
+    if (employee.id === window.currentUser.id) {
+        return renderEditableCellForLeader(employee, date);
+    }
+    return renderReadOnlyCellForStaff(employee, date);
+}
 /**
  * Render ô có thể chỉnh sửa cho trưởng cửa hàng.
  * @param {object} employee - Đối tượng nhân viên (trưởng cửa hàng).
@@ -167,17 +216,17 @@ function renderEditableCellForLeader(employee, date) {
 
         blocksHTML += `
             <div class="shift-registration-block flex-1" data-shift-index="${i}">
-                <div class="flex-grow">
-                    <input list="shift-codes-datalist" class="shift-input text-center form-input form-input-sm w-full" 
+                <div class="flex-grow space-y-1">
+                    <input list="shift-codes-datalist" class="shift-input text-center form-input form-input-sm w-full text-xs" 
                            placeholder="-- Ca ${i + 1} --" value="${reg.shiftCode || ''}">
-                    <div class="shift-time-display text-xs text-center text-gray-500 h-4 mt-1">${(shiftCodes.find(sc => sc.shiftCode === reg.shiftCode)?.timeRange) || ''}</div>
+                    <div class="shift-time-display text-xs text-center text-gray-500 h-4">${(shiftCodes.find(sc => sc.shiftCode === reg.shiftCode)?.timeRange) || ''}</div>
                 </div>
-                <div class="priority-selector flex justify-center items-center gap-4 mt-2">
+                <div class="priority-selector flex justify-center items-center gap-2 mt-1">
                     <button class="priority-btn" data-priority="1" title="Chắc chắn vào ca" ${!hasShift ? 'disabled' : ''}>
-                        <i class="fas fa-circle text-lg ${priority1Selected ? 'text-green-500' : 'text-gray-300'}"></i>
+                        <i class="fas fa-circle text-base ${priority1Selected ? 'text-green-500' : 'text-gray-300'}"></i>
                     </button>
                     <button class="priority-btn" data-priority="2" title="Có thể vào ca" ${!hasShift ? 'disabled' : ''}>
-                        <i class="fas fa-triangle-exclamation text-lg ${priority2Selected ? 'text-amber-500' : 'text-gray-300'}"></i>
+                        <i class="fas fa-triangle-exclamation text-base ${priority2Selected ? 'text-amber-500' : 'text-gray-300'}"></i>
                     </button>
                 </div>
             </div>
@@ -185,7 +234,7 @@ function renderEditableCellForLeader(employee, date) {
     }
 
     return `<td class="p-2 border-x border-gray-200 align-top" data-date="${dateStr}" data-is-editable="true">
-                <div class="flex items-start gap-1">${blocksHTML}</div>
+                <div class="flex items-start gap-0.5">${blocksHTML}</div>
             </td>`;
 }
 
@@ -203,39 +252,40 @@ function renderReadOnlyCellForStaff(employee, date) {
     const reg1 = registrations[0] || {};
     const reg2 = registrations[1] || {};
 
-    const shiftCodeLine = `
-        <div class="flex justify-around items-center text-sm font-medium">
-            <span class="px-1 ${reg1.shiftCode ? 'text-gray-800' : 'text-gray-400'}">${reg1.shiftCode || '---'}</span>
-            <span class="px-1 ${reg2.shiftCode ? 'text-gray-800' : 'text-gray-400'}">${reg2.shiftCode || '---'}</span>
-        </div>`;
-
-    // Dòng 1.5: Thời gian ca
     const timeRange1 = shiftCodes.find(sc => sc.shiftCode === reg1.shiftCode)?.timeRange || '&nbsp;';
     const timeRange2 = shiftCodes.find(sc => sc.shiftCode === reg2.shiftCode)?.timeRange || '&nbsp;';
-    const shiftTimeLine = `
-        <div class="flex justify-around items-center text-xs text-gray-500 h-4">
-            <span class="px-1">${timeRange1}</span>
-            <span class="px-1">${timeRange2}</span>
-        </div>`;
-
     const priorityIcon1 = reg1.priority === 1 ? '<i class="fas fa-circle text-green-500" title="Chắc chắn"></i>' : (reg1.priority === 2 ? '<i class="fas fa-triangle-exclamation text-amber-500" title="Có thể"></i>' : '<i class="fas fa-circle text-transparent"></i>');
     const priorityIcon2 = reg2.priority === 1 ? '<i class="fas fa-circle text-green-500" title="Chắc chắn"></i>' : (reg2.priority === 2 ? '<i class="fas fa-triangle-exclamation text-amber-500" title="Có thể"></i>' : '<i class="fas fa-circle text-transparent"></i>');
-    const priorityLine = `
-        <div class="flex justify-around items-center text-xs h-4 mt-1">
-            <span>${priorityIcon1}</span>
-            <span>${priorityIcon2}</span>
-        </div>`;
+    
+    const shiftInfoHTML = `
+        <div class="flex flex-col gap-0.5">
+            <div class="flex justify-around items-center text-xs font-medium">
+                <span class="px-0.5 ${reg1.shiftCode ? 'text-gray-800' : 'text-gray-400'}">${reg1.shiftCode || '---'}</span>
+                <span class="px-0.5 ${reg2.shiftCode ? 'text-gray-800' : 'text-gray-400'}">${reg2.shiftCode || '---'}</span>
+            </div>
+            <div class="flex justify-around items-center text-xs text-gray-500 h-4">
+                <span class="px-0.5 whitespace-nowrap text-[10px]">${timeRange1}</span>
+                <span class="px-0.5 whitespace-nowrap text-[10px]">${timeRange2}</span>
+            </div>
+            <div class="flex justify-around items-center text-xs h-4">
+                <span>${priorityIcon1}</span>
+                <span>${priorityIcon2}</span>
+            </div>
+        </div>
+    `;
 
     const positionInputLine = `
-        <div class="mt-2 flex gap-1">
+        <div class="mt-1 flex gap-1">
             <input list="work-positions-datalist" class="position-input form-input form-input-sm w-full text-center text-xs ${!reg1.shiftCode ? 'bg-slate-50' : ''}" data-shift-index="0" placeholder="Vị trí 1..." ${!reg1.shiftCode ? 'disabled' : ''}>
             <input list="work-positions-datalist" class="position-input form-input form-input-sm w-full text-center text-xs ${!reg2.shiftCode ? 'bg-slate-50' : ''}" data-shift-index="1" placeholder="Vị trí 2..." ${!reg2.shiftCode ? 'disabled' : ''}>
         </div>`;
 
-    return `<td class="p-2 border-x border-gray-200 align-top" data-date="${dateStr}">
-                <div class="flex flex-col gap-1">${shiftCodeLine}${shiftTimeLine}${priorityLine}${positionInputLine}</div>
+    return `<td class="p-1 border-x border-gray-200 align-top" data-date="${dateStr}">
+                <div class="flex flex-col gap-1">${shiftInfoHTML}${positionInputLine}</div>
             </td>`;
 }
+
+
 
 /**
  * Xử lý việc lưu phân công cho một ngày cụ thể.
@@ -314,6 +364,128 @@ async function handleSaveAssignmentForDay(event) {
         button.disabled = false;
         button.textContent = 'Phân công';
     }
+}
+
+/**
+ * Lấy model công việc cho một ngày cụ thể.
+ * @param {string} date - Ngày cần lấy model (YYYY-MM-DD).
+ * @returns {Promise<string[]>} - Mảng các vị trí công việc cần thiết.
+ */
+async function getWorkModelForDate(date) {
+    // TODO: Thay thế bằng logic lấy model thật từ Firestore hoặc nguồn khác.
+    // Model giả lập: trả về một danh sách các vị trí cần được lấp đầy.
+    console.log(`Đang sử dụng model giả lập cho ngày ${date}`);
+    const mockModel = [
+        'Thu ngân', 'Thu ngân',
+        'Pha chế', 'Pha chế', 'Pha chế',
+        'Kho',
+        'Sơ chế'
+    ];
+    return mockModel;
+}
+
+/**
+ * Tính toán tổng số ca đã đăng ký của mỗi nhân viên trong tuần hiện tại.
+ * @returns {Map<string, number>} - Một Map với key là employeeId và value là tổng số ca.
+ */
+function calculateWeeklyWorkload() {
+    const workload = new Map();
+    // Khởi tạo tất cả nhân viên trong cửa hàng với 0 ca
+    allEmployeesInStore.forEach(emp => workload.set(emp.id, 0));
+
+    // Lặp qua tất cả các đăng ký trong tuần và đếm số ca
+    allAvailabilities.forEach(avail => {
+        if (avail.registrations) {
+            const shiftCount = avail.registrations.filter(reg => reg && reg.shiftCode).length;
+            if (shiftCount > 0) {
+                workload.set(avail.employeeId, (workload.get(avail.employeeId) || 0) + shiftCount);
+            }
+        }
+    });
+    return workload;
+}
+
+/**
+ * Xử lý đề xuất phân công cho một ngày.
+ * @param {Event} event 
+ */
+async function handleSuggestAssignmentForDay(event) {
+    const button = event.target.closest('button');
+    const date = button.dataset.date;
+    if (!date) return;
+
+    // 1. Lấy model công việc cho ngày
+    const neededPositions = await getWorkModelForDate(date);
+    if (neededPositions.length === 0) {
+        window.showToast('Không có model công việc cho ngày này.', 'info');
+        return;
+    }
+
+    // 2. Tính toán khối lượng công việc trong tuần của mỗi nhân viên
+    const weeklyWorkload = calculateWeeklyWorkload();
+
+    // 3. Thu thập và làm giàu dữ liệu nhân viên có đăng ký ca trong ngày
+    const availableStaffSlots = [];
+    allEmployeesInStore.forEach(employee => {
+        const availability = allAvailabilities.find(a => a.employeeId === employee.id && a.date === date);
+        if (availability && availability.registrations) {
+            availability.registrations.forEach((reg, index) => {
+                if (reg.shiftCode) {
+                    const weeklyShiftCount = weeklyWorkload.get(employee.id) || 0;
+                    availableStaffSlots.push({
+                        employeeId: employee.id,
+                        shiftIndex: index,
+                        priority: reg.priority || 3, // Ưu tiên thấp nếu không có
+                        weeklyShiftCount: weeklyShiftCount
+                    });
+                }
+            });
+        }
+    });
+
+    // 4. Sắp xếp nhân viên theo tiêu chí mới:
+    // - Ưu tiên người có ít ca hơn trong tuần.
+    // - Nếu số ca bằng nhau, ưu tiên người có priority 1 (chắc chắn).
+    availableStaffSlots.sort((a, b) => {
+        if (a.weeklyShiftCount !== b.weeklyShiftCount) {
+            return a.weeklyShiftCount - b.weeklyShiftCount; // Ít ca hơn lên trước
+        }
+        return a.priority - b.priority; // Priority 1 lên trước
+    });
+
+    // 5. Thực hiện thuật toán phân công
+    const suggestions = [];
+    const positionsToFill = [...neededPositions]; // Clone mảng để có thể thay đổi
+
+    for (const slot of availableStaffSlots) {
+        if (positionsToFill.length === 0) break; // Dừng nếu đã hết vị trí cần điền
+
+        // Kiểm tra xem slot này đã được phân công chưa (để tránh ghi đè)
+        const existingAssignment = suggestions.find(s => s.employeeId === slot.employeeId && s.shiftIndex === slot.shiftIndex);
+        if (existingAssignment) continue;
+
+        const position = positionsToFill.shift(); // Lấy và xóa vị trí đầu tiên
+        suggestions.push({
+            employeeId: slot.employeeId,
+            shiftIndex: slot.shiftIndex,
+            position: position
+        });
+    }
+
+    // 6. Cập nhật giao diện
+    // Xóa các giá trị cũ trước khi điền đề xuất mới
+    document.querySelectorAll(`td[data-date="${date}"] .position-input`).forEach(input => {
+        input.value = '';
+    });
+
+    suggestions.forEach(suggestion => {
+        const input = document.querySelector(`tr[data-employee-id="${suggestion.employeeId}"] td[data-date="${date}"] .position-input[data-shift-index="${suggestion.shiftIndex}"]`);
+        if (input && !input.disabled) {
+            input.value = suggestion.position;
+        }
+    });
+
+    window.showToast(`Đã đề xuất ${suggestions.length} vị trí.`, 'success');
 }
 
 /**
@@ -426,10 +598,11 @@ export function cleanup() {
 
 export async function init() {
     domController = new AbortController();
-    viewStartDate.setDate(viewStartDate.getDate() - viewStartDate.getDay() + 1); // Bắt đầu từ thứ 2 của tuần hiện tại
+    viewStartDate = getTomorrow(); // Bắt đầu từ ngày mai
     viewStartDate.setHours(0, 0, 0, 0);
 
     loadShiftCodes();
+    loadWorkPositions(); // Load work positions at initialization
     await fetchInitialData();
     renderAssignmentTable();
     loadWorkAssignmentsForWeek(); // Tải dữ liệu phân công vị trí
@@ -440,6 +613,9 @@ export async function init() {
         footer.addEventListener('click', (event) => {
             if (event.target.classList.contains('assign-day-btn')) {
                 handleSaveAssignmentForDay(event);
+            } else if (event.target.closest('.suggest-day-btn')) {
+                handleSuggestAssignmentForDay(event);
+                handleSaveAssignmentForDay(event);
             }
         }, { signal: domController.signal });
     }
@@ -449,6 +625,12 @@ export async function init() {
     if (body) {
         body.addEventListener('change', handleLeaderCellInteraction, { signal: domController.signal });
         body.addEventListener('click', handleLeaderCellInteraction, { signal: domController.signal });
+        // Thêm listener để cập nhật thống kê khi vị trí thay đổi
+        body.addEventListener('change', (event) => {
+            if (event.target.classList.contains('position-input')) {
+                updateEmployeeStats();
+            }
+        }, { signal: domController.signal });
     }
 }
 
@@ -473,7 +655,84 @@ async function loadWorkAssignmentsForWeek() {
         const data = docSnap.data();
         data.assignments?.forEach(empAssignment => {
             const row = document.querySelector(`tr[data-employee-id="${empAssignment.employeeId}"]`);
-            // Logic điền vị trí vào các ô input sẽ được thêm ở đây
+            if (!row) return;
+
+            empAssignment.assignments.forEach((as, index) => {
+                // Tìm input tương ứng với ca (shiftIndex)
+                const input = row.querySelector(`.position-input[data-shift-index="${index}"]`);
+                if (input && as.position) {
+                    input.value = as.position;
+                }
+            });
         });
     });
+
+    // Cập nhật thống kê sau khi tải xong
+    updateEmployeeStats();
+}
+
+/**
+ * Cập nhật bảng thống kê cho từng nhân viên.
+ */
+function updateEmployeeStats() {
+    const employeeRows = document.querySelectorAll('#assignment-table-body tr[data-employee-id]');
+
+    employeeRows.forEach(row => {
+        const employeeId = row.dataset.employeeId;
+        if (!employeeId) return;
+
+        // 1. Đếm số ca đã phân công cho từng vị trí
+        const positionCounts = {};
+        workPositions.forEach(pos => positionCounts[pos] = 0);
+        let totalAssignedShifts = 0;
+
+        const assignedInputs = row.querySelectorAll('.position-input:not([disabled])');
+        assignedInputs.forEach(input => {
+            const position = input.value.trim();
+            if (position && workPositions.includes(position)) {
+                positionCounts[position]++;
+                totalAssignedShifts++;
+            }
+        });
+
+        // 2. Cập nhật từng ô thống kê
+        workPositions.forEach(pos => {
+            const statsCell = row.querySelector(`td[data-position="${pos}"]`);
+            if (!statsCell) return;
+
+            const percentageEl = statsCell.querySelector('.stat-percentage');
+            const oldPercentage = parseFloat(percentageEl.textContent);
+            const newPercentage = totalAssignedShifts > 0 ? (positionCounts[pos] / totalAssignedShifts) * 100 : 0;
+            const percentageChange = newPercentage - oldPercentage;
+
+            percentageEl.textContent = `${newPercentage.toFixed(1)}%`;
+
+            if (Math.abs(percentageChange) > 0.01) {
+                triggerStatAnimation(statsCell, percentageChange, '%', 1);
+            }
+        });
+    });
+}
+
+/**
+ * Kích hoạt hiệu ứng animation cho một ô trong bảng thống kê.
+ * @param {HTMLElement} cell - Ô (td) cần tạo hiệu ứng.
+ * @param {number} change - Giá trị thay đổi (+ hoặc -).
+ * @param {string} suffix - Hậu tố hiển thị (ví dụ: '%', ' ca').
+ * @param {number} decimalPlaces - Số chữ số thập phân.
+ */
+function triggerStatAnimation(cell, change, suffix = '%', decimalPlaces = 1) {
+    if (!cell) return;
+
+    const animationEl = document.createElement('span');
+    const isPositive = change > 0;
+    animationEl.textContent = `${isPositive ? '+' : ''}${change.toFixed(decimalPlaces)}${suffix}`;
+
+    // Sử dụng class animation đã có và thêm class màu sắc động
+    animationEl.className = `stat-change-animation ${isPositive ? 'text-green-500' : 'text-red-500'}`;
+
+    cell.appendChild(animationEl);
+
+    // Tự động xóa element sau khi animation hoàn tất
+    setTimeout(() => animationEl.remove(), 2000);
 }
