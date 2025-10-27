@@ -328,9 +328,12 @@ async function handleSaveAssignmentForDay(event) {
 
             if (reg.shiftCode) {
                 if (!position) {
-                    isValid = false;
-                    input.classList.add('border-red-500', 'ring-red-500');
-                    window.showToast(`Vui lòng phân công vị trí cho ${employee.name} (Ca ${i + 1})`, 'warning');
+                    // Only validate if the input field exists (i.e., for non-leader rows)
+                    if (input) {
+                        isValid = false;
+                        input.classList.add('border-red-500', 'ring-red-500');
+                        window.showToast(`Vui lòng phân công vị trí cho ${employee.name} (Ca ${i + 1})`, 'warning');
+                    }
                 } else {
                     input.classList.remove('border-red-500', 'ring-red-500');
                     employeeAssignments.push({
