@@ -66,15 +66,13 @@ service cloud.firestore { // Cấu hình cho Firestore
     }
 
     // Cho phép đọc/ghi vào collection đăng ký ca làm việc của nhân viên
-    // Chỉ người dùng đã đăng nhập mới có thể đọc
-    // Chỉ chủ sở hữu mới có thể ghi/xóa dữ liệu của chính mình
     match /staff_availability/{availabilityId} {
       allow read, write, delete: if true;
     }
 
-    // Cho phép người dùng đã đăng nhập đọc/ghi vào collection phân công công việc
+    // Cho phép đọc/ghi vào collection phân công công việc
     match /work_assignments/{assignmentId} {
-      allow read, write: if request.auth != null;
+      allow read, write: if true;
     }
   }
 }

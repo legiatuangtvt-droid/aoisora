@@ -209,6 +209,15 @@ function renderReadOnlyCellForStaff(employee, date) {
             <span class="px-1 ${reg2.shiftCode ? 'text-gray-800' : 'text-gray-400'}">${reg2.shiftCode || '---'}</span>
         </div>`;
 
+    // Dòng 1.5: Thời gian ca
+    const timeRange1 = shiftCodes.find(sc => sc.shiftCode === reg1.shiftCode)?.timeRange || '&nbsp;';
+    const timeRange2 = shiftCodes.find(sc => sc.shiftCode === reg2.shiftCode)?.timeRange || '&nbsp;';
+    const shiftTimeLine = `
+        <div class="flex justify-around items-center text-xs text-gray-500 h-4">
+            <span class="px-1">${timeRange1}</span>
+            <span class="px-1">${timeRange2}</span>
+        </div>`;
+
     const priorityIcon1 = reg1.priority === 1 ? '<i class="fas fa-circle text-green-500" title="Chắc chắn"></i>' : (reg1.priority === 2 ? '<i class="fas fa-triangle-exclamation text-amber-500" title="Có thể"></i>' : '<i class="fas fa-circle text-transparent"></i>');
     const priorityIcon2 = reg2.priority === 1 ? '<i class="fas fa-circle text-green-500" title="Chắc chắn"></i>' : (reg2.priority === 2 ? '<i class="fas fa-triangle-exclamation text-amber-500" title="Có thể"></i>' : '<i class="fas fa-circle text-transparent"></i>');
     const priorityLine = `
@@ -224,7 +233,7 @@ function renderReadOnlyCellForStaff(employee, date) {
         </div>`;
 
     return `<td class="p-2 border-x border-gray-200 align-top" data-date="${dateStr}">
-                <div class="flex flex-col gap-1">${shiftCodeLine}${priorityLine}${positionInputLine}</div>
+                <div class="flex flex-col gap-1">${shiftCodeLine}${shiftTimeLine}${priorityLine}${positionInputLine}</div>
             </td>`;
 }
 
