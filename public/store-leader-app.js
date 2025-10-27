@@ -45,7 +45,7 @@ async function initializeStoreLeaderApp() {
     initializeDevMenu();
     initializeLayoutController();
 
-    const initialPageName = window.location.pathname.split('/').pop() || 'daily-schedule.html';
+    const initialPageName = window.location.pathname.split('/').pop() || 'store-schedule.html';
     loadPageModule(initialPageName);
 
     document.addEventListener('page-content-loaded', (event) => loadPageModule(event.detail.pageName));

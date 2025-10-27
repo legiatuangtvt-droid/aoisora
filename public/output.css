@@ -861,12 +861,12 @@ body.sidebar-expanded #sidebar .sidebar-text {
   grid-column: span 2 / span 2;
 }
 
-.col-span-full {
-  grid-column: 1 / -1;
-}
-
 .col-span-7 {
   grid-column: span 7 / span 7;
+}
+
+.col-span-full {
+  grid-column: 1 / -1;
 }
 
 .col-start-3 {
@@ -915,6 +915,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
 
 .mb-6 {
   margin-bottom: 1.5rem;
+}
+
+.ml-2 {
+  margin-left: 0.5rem;
 }
 
 .ml-3 {
@@ -969,20 +973,16 @@ body.sidebar-expanded #sidebar .sidebar-text {
   margin-top: auto;
 }
 
-.ml-2 {
-  margin-left: 0.5rem;
-}
-
 .box-border {
   box-sizing: border-box;
 }
 
-.block {
-  display: block;
-}
-
 .\!block {
   display: block !important;
+}
+
+.block {
+  display: block;
 }
 
 .inline {
@@ -1029,6 +1029,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
   height: 5rem;
 }
 
+.h-32 {
+  height: 8rem;
+}
+
 .h-4 {
   height: 1rem;
 }
@@ -1067,10 +1071,6 @@ body.sidebar-expanded #sidebar .sidebar-text {
 
 .h-screen {
   height: 100vh;
-}
-
-.h-32 {
-  height: 8rem;
 }
 
 .max-h-80 {
@@ -1141,6 +1141,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
   min-width: 120px;
 }
 
+.min-w-\[150px\] {
+  min-width: 150px;
+}
+
 .min-w-\[200px\] {
   min-width: 200px;
 }
@@ -1157,20 +1161,12 @@ body.sidebar-expanded #sidebar .sidebar-text {
   min-width: 4000px;
 }
 
-.min-w-full {
-  min-width: 100%;
-}
-
-.min-w-\[400px\] {
-  min-width: 400px;
-}
-
 .min-w-\[420px\] {
   min-width: 420px;
 }
 
-.min-w-\[150px\] {
-  min-width: 150px;
+.min-w-full {
+  min-width: 100%;
 }
 
 .max-w-2xl {
@@ -1303,6 +1299,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
   justify-content: space-between;
 }
 
+.justify-around {
+  justify-content: space-around;
+}
+
 .gap-1 {
   gap: 0.25rem;
 }
@@ -1368,12 +1368,6 @@ body.sidebar-expanded #sidebar .sidebar-text {
   --tw-space-y-reverse: 0;
   margin-top: calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));
   margin-bottom: calc(0.5rem * var(--tw-space-y-reverse));
-}
-
-.space-y-3 > :not([hidden]) ~ :not([hidden]) {
-  --tw-space-y-reverse: 0;
-  margin-top: calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));
-  margin-bottom: calc(0.75rem * var(--tw-space-y-reverse));
 }
 
 .divide-y > :not([hidden]) ~ :not([hidden]) {
@@ -2233,10 +2227,6 @@ body.sidebar-expanded #sidebar .sidebar-text {
 
 .opacity-50 {
   opacity: 0.5;
-}
-
-.opacity-70 {
-  opacity: 0.7;
 }
 
 .shadow-md {
