@@ -29,11 +29,19 @@ function getTomorrow() {
  */
 function loadShiftCodes() {
     const storedData = localStorage.getItem(SHIFT_CODES_STORAGE_KEY);
+    const datalist = document.getElementById('shift-codes-datalist');
+    if (!datalist) return;
+
+    datalist.innerHTML = ''; // Clear old options
+
     if (storedData) {
         try {
             const parsedData = JSON.parse(storedData);
             if (Array.isArray(parsedData)) {
                 shiftCodes = parsedData;
+                shiftCodes.forEach(sc => {
+                    datalist.innerHTML += `<option value="${sc.shiftCode}">${sc.timeRange}</option>`;
+                });
             }
         } catch (e) {
             console.error("Lỗi khi đọc dữ liệu mã ca từ localStorage", e);
@@ -103,26 +111,23 @@ async function renderWeekView() {
 
         // Lặp qua 2 khối đăng ký trong template
         td.querySelectorAll('.shift-registration-block').forEach(block => {
-            const select = block.querySelector('.shift-select');
+            const input = block.querySelector('.shift-input');
             const priorityBtns = block.querySelectorAll('.priority-btn');
             const shiftIndex = block.dataset.shiftIndex;
 
-            // Điền các ca vào select
+            // Đặt placeholder
             const defaultOptionText = shiftIndex === '0' ? '-- Ca 1 --' : '-- Ca 2 --';
-            select.innerHTML = `<option value="">${defaultOptionText}</option>`;
-            shiftCodes.forEach(sc => {
-                select.innerHTML += `<option value="${sc.shiftCode}">${sc.shiftCode} (${sc.timeRange})</option>`;
-            });
+            input.placeholder = defaultOptionText;
 
             // Vô hiệu hóa nút ưu tiên mặc định
             priorityBtns.forEach(btn => btn.disabled = true);
 
             // Vô hiệu hóa hoàn toàn nếu ngày là hôm nay hoặc trong quá khứ
             if (dateStr <= todayString) {
-                block.classList.add('opacity-50');
-                select.disabled = true;
+                block.classList.add('opacity-50', 'pointer-events-none');
+                input.disabled = true;
+                input.placeholder = '-- Đã khóa --';
                 priorityBtns.forEach(btn => btn.disabled = true);
-                select.innerHTML = '<option value="">-- Đã khóa --</option>';
             }
         });
         if (dateStr <= todayString) {
@@ -164,12 +169,12 @@ async function loadAvailabilityForWeek(weekDates) {
                 registrations.forEach((reg, index) => {
                     const block = document.querySelector(`td[data-date="${date}"] .shift-registration-block[data-shift-index="${index}"]`);
                     if (block) {
-                        const select = block.querySelector('.shift-select');
+                        const input = block.querySelector('.shift-input');
                         const priorityBtns = block.querySelectorAll('.priority-btn');
 
-                        // Cập nhật select
+                        // Cập nhật input
                         if (reg.shiftCode) {
-                            select.value = reg.shiftCode;
+                            input.value = reg.shiftCode;
                             // Kích hoạt nút ưu tiên vì đã có ca được chọn
                             priorityBtns.forEach(btn => btn.disabled = false);
                         } else {
@@ -181,6 +186,7 @@ async function loadAvailabilityForWeek(weekDates) {
                         if (reg.priority) {
                             updatePriorityUI(block, reg.priority);
                         }
+                        updateShiftTimeDisplay(block); // Hiển thị khung giờ cho ca đã lưu
                     }
                 });
             }
@@ -191,6 +197,24 @@ async function loadAvailabilityForWeek(weekDates) {
     }
 }
 
+/**
+ * Cập nhật hiển thị khung giờ làm việc dựa trên mã ca đã nhập.
+ * @param {HTMLElement} block - Khối div.shift-registration-block chứa input.
+ */
+function updateShiftTimeDisplay(block) {
+    const input = block.querySelector('.shift-input');
+    const timeDisplay = block.querySelector('.shift-time-display');
+    if (!input || !timeDisplay) return;
+
+    const shiftCodeValue = input.value;
+    const shift = shiftCodes.find(sc => sc.shiftCode === shiftCodeValue);
+
+    if (shift) {
+        timeDisplay.textContent = shift.timeRange;
+    } else {
+        timeDisplay.textContent = '';
+    }
+}
 /**
  * Cập nhật giao diện của các nút ưu tiên.
  * @param {HTMLElement} block - Khối div.shift-registration-block chứa các nút.
@@ -229,7 +253,7 @@ function handleCellInteraction(event) {
     if (!td) return;
 
     // Xử lý khi thay đổi lựa chọn ca
-    if (target.classList.contains('shift-select')) {
+    if (target.classList.contains('shift-input')) {
         const priorityBtns = block.querySelectorAll('.priority-btn');
         if (target.value) {
             // Kích hoạt các nút ưu tiên nếu một ca được chọn
@@ -239,6 +263,7 @@ function handleCellInteraction(event) {
             priorityBtns.forEach(btn => btn.disabled = true);
             updatePriorityUI(block, 0); // Reset màu của icon
         }
+        updateShiftTimeDisplay(block); // Cập nhật hiển thị khung giờ
     }
 
     // Xử lý chọn priority
@@ -283,7 +308,7 @@ async function saveWeekAvailability() {
         const date = td.dataset.date;
         td.querySelectorAll('.shift-registration-block').forEach(block => {
             const shiftIndex = parseInt(block.dataset.shiftIndex, 10);
-            const shiftCode = block.querySelector('.shift-select').value;
+            const shiftCode = block.querySelector('.shift-input').value;
             const selectedPriorityBtn = block.querySelector('.priority-btn i:not(.text-gray-300)');
         const priority = selectedPriorityBtn ? parseInt(selectedPriorityBtn.closest('.priority-btn').dataset.priority, 10) : 0;
 
