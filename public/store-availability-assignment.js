@@ -51,10 +51,12 @@ function loadShiftCodes() {
  * Tải danh sách các vị trí công việc từ datalist.
  */
 function loadWorkPositions() {
-    const datalist = document.getElementById('work-positions-datalist');
-    if (datalist) {
-        workPositions = Array.from(datalist.options).map(option => option.value);
-    }
+    // Cập nhật dữ liệu mock cho vị trí làm việc, bao gồm cả tỷ lệ balance
+    workPositions = [
+        { name: 'Thu ngân', balance: 50 },
+        { name: 'Sắp hàng', balance: 30 },
+        { name: 'Khác', balance: 20 }
+    ];
 }
 
 async function fetchInitialData() {
@@ -118,17 +120,22 @@ function renderAssignmentTable() {
     let headerHTML = `<tr class="border-y border-gray-200">
         <th class="p-2 border-x border-gray-200 text-center sticky left-0 z-10 bg-slate-50">Nhân viên</th>`;
     weekDates.forEach(date => {
-        headerHTML += `<th class="p-1 border-x border-gray-200 min-w-[130px] text-center">
+        headerHTML += `<th class="p-1 border-x border-gray-200 min-w-[110px] text-center">
             <div class="day-name font-semibold text-gray-700">${date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
             <div class="date-number text-xs text-gray-500">${date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}</div>
         </th>`;
     });
     // Thêm các cột header cho từng vị trí công việc
-    workPositions.forEach((pos, index) => {
-        // Cột cuối cùng sẽ là sticky
-        const stickyClass = index === workPositions.length - 1 ? 'sticky right-0 z-10' : '';
-        headerHTML += `<th class="p-1 border-x border-gray-200 bg-slate-50 text-center text-xs ${stickyClass} w-10 ">${pos}</th>`;
-    });
+    const positionHeaders = workPositions.map(pos => `
+        <div class="flex flex-col items-center justify-center p-1">
+            <div class="text-xs font-semibold">${pos.name}</div>
+            <div class="text-[10px] text-slate-500">(${pos.balance}%)</div>
+        </div>
+    `).join('');
+
+    headerHTML += `<th class="p-0 border-x border-gray-200 bg-slate-50 sticky right-0 z-10 min-w-[150px]">
+                        <div class="grid grid-cols-3 divide-x divide-gray-200 h-full">${positionHeaders}</div>
+                   </th>`;
     headerHTML += `</tr>`;
     header.innerHTML = headerHTML;
 
@@ -144,10 +151,7 @@ function renderAssignmentTable() {
         </td>`;
     });
     // Thêm các ô footer trống để căn chỉnh
-    workPositions.forEach((pos, index) => {
-        const stickyClass = index === workPositions.length - 1 ? 'sticky right-0 z-10' : '';
-        footerHTML += `<td class="p-1 border-x border-gray-200 ${stickyClass} bg-slate-50"></td>`;
-    });
+    footerHTML += `<td class="p-1 border-x border-gray-200 bg-slate-50 sticky right-0 z-10 min-w-[150px]"></td>`;
     footerHTML += `</tr>`;
     footer.innerHTML = footerHTML;
 
@@ -162,17 +166,17 @@ function renderAssignmentTable() {
         row.dataset.employeeId = employee.id;
         let rowHTML = `<td class="p-1 border-x border-gray-200 bg-white text-center sticky left-0 z-10 font-semibold text-sm">${employee.name}</td>`;
 
-        weekDates.forEach(date => {
-            rowHTML += renderCellContent(employee, date);
-        });
+        weekDates.forEach(date => { rowHTML += renderCellContent(employee, date); });
 
         // Thêm ô thống kê vào cuối mỗi hàng
-        workPositions.forEach((pos, index) => {
-            const stickyClass = index === workPositions.length - 1 ? 'sticky right-0 z-10' : '';
-            rowHTML += `<td class="p-1 border-x border-gray-200 align-middle text-center relative bg-white ${stickyClass}" data-position="${pos}">
+        const statCells = workPositions.map(pos => `
+            <div class="p-1 align-middle text-center relative bg-white h-full flex flex-col justify-center" data-position="${pos.name}">
                             <span class="stat-percentage text-sm font-semibold text-gray-700">0.0%</span>
-                        </td>`;
-        });
+            </div>
+        `).join('');
+        rowHTML += `<td class="p-0 border-x border-gray-200 sticky right-0 z-10 bg-white min-w-[150px]">
+                        <div class="grid grid-cols-3 divide-x divide-gray-200 h-full">${statCells}</div>
+                    </td>`;
 
         row.innerHTML = rowHTML;
         body.appendChild(row);
@@ -367,24 +371,6 @@ async function handleSaveAssignmentForDay(event) {
 }
 
 /**
- * Lấy model công việc cho một ngày cụ thể.
- * @param {string} date - Ngày cần lấy model (YYYY-MM-DD).
- * @returns {Promise<string[]>} - Mảng các vị trí công việc cần thiết.
- */
-async function getWorkModelForDate(date) {
-    // TODO: Thay thế bằng logic lấy model thật từ Firestore hoặc nguồn khác.
-    // Model giả lập: trả về một danh sách các vị trí cần được lấp đầy.
-    console.log(`Đang sử dụng model giả lập cho ngày ${date}`);
-    const mockModel = [
-        'Thu ngân', 'Thu ngân',
-        'Pha chế', 'Pha chế', 'Pha chế',
-        'Kho',
-        'Sơ chế'
-    ];
-    return mockModel;
-}
-
-/**
  * Tính toán tổng số ca đã đăng ký của mỗi nhân viên trong tuần hiện tại.
  * @returns {Map<string, number>} - Một Map với key là employeeId và value là tổng số ca.
  */
@@ -413,14 +399,6 @@ async function handleSuggestAssignmentForDay(event) {
     const button = event.target.closest('button');
     const date = button.dataset.date;
     if (!date) return;
-
-    // 1. Lấy model công việc cho ngày
-    const neededPositions = await getWorkModelForDate(date);
-    if (neededPositions.length === 0) {
-        window.showToast('Không có model công việc cho ngày này.', 'info');
-        return;
-    }
-
     // 2. Tính toán khối lượng công việc trong tuần của mỗi nhân viên
     const weeklyWorkload = calculateWeeklyWorkload();
 
@@ -441,6 +419,40 @@ async function handleSuggestAssignmentForDay(event) {
                 }
             });
         }
+    });
+
+    // 1. Tạo model công việc dựa trên tỷ lệ balance và tổng số ca có sẵn
+    const totalAvailableShifts = availableStaffSlots.length;
+    if (totalAvailableShifts === 0) {
+        window.showToast('Không có nhân viên nào đăng ký ca trong ngày này.', 'info');
+        return;
+    }
+
+    const neededPositions = [];
+    const percentages = workPositions.map(p => p.balance / 100);
+    const counts = percentages.map(p => Math.floor(totalAvailableShifts * p));
+    let remainder = totalAvailableShifts - counts.reduce((a, b) => a + b, 0);
+
+    // Phân bổ phần dư cho các vị trí có phần thập phân lớn nhất để đảm bảo tổng số vị trí khớp với tổng số ca
+    const remainders = percentages.map((p, i) => (totalAvailableShifts * p) - counts[i]);
+    while (remainder > 0) {
+        let maxIdx = -1;
+        let maxRem = -1;
+        for (let i = 0; i < remainders.length; i++) {
+            if (remainders[i] > maxRem) {
+                maxRem = remainders[i];
+                maxIdx = i;
+            }
+        }
+        if (maxIdx !== -1) {
+            counts[maxIdx]++;
+            remainders[maxIdx] = -1; // Đánh dấu đã sử dụng
+            remainder--;
+        } else break; // Không tìm thấy, thoát vòng lặp
+    }
+
+    counts.forEach((count, index) => {
+        for (let i = 0; i < count; i++) neededPositions.push(workPositions[index].name);
     });
 
     // 4. Sắp xếp nhân viên theo tiêu chí mới:

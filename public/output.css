@@ -1227,6 +1227,14 @@ body.sidebar-expanded #sidebar .sidebar-text {
   min-width: 130px;
 }
 
+.min-w-\[180px\] {
+  min-width: 180px;
+}
+
+.min-w-\[110px\] {
+  min-width: 110px;
+}
+
 .max-w-2xl {
   max-width: 42rem;
 }
@@ -1315,6 +1323,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
 
 .grid-cols-7 {
   grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.grid-cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .grid-rows-6 {
@@ -1449,6 +1461,12 @@ body.sidebar-expanded #sidebar .sidebar-text {
   --tw-divide-y-reverse: 0;
   border-top-width: calc(1px * calc(1 - var(--tw-divide-y-reverse)));
   border-bottom-width: calc(1px * var(--tw-divide-y-reverse));
+}
+
+.divide-x > :not([hidden]) ~ :not([hidden]) {
+  --tw-divide-x-reverse: 0;
+  border-right-width: calc(1px * var(--tw-divide-x-reverse));
+  border-left-width: calc(1px * calc(1 - var(--tw-divide-x-reverse)));
 }
 
 .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
@@ -2097,6 +2115,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
 
 .font-semibold {
   font-weight: 600;
+}
+
+.font-normal {
+  font-weight: 400;
 }
 
 .uppercase {
