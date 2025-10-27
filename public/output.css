@@ -2232,6 +2232,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
   color: rgb(133 77 14 / var(--tw-text-opacity, 1));
 }
 
+.text-transparent {
+  color: transparent;
+}
+
 .placeholder-gray-500::-moz-placeholder {
   --tw-placeholder-opacity: 1;
   color: rgb(107 114 128 / var(--tw-placeholder-opacity, 1));
@@ -2266,6 +2270,11 @@ body.sidebar-expanded #sidebar .sidebar-text {
   --tw-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
   --tw-shadow-colored: 0 20px 25px -5px var(--tw-shadow-color), 0 8px 10px -6px var(--tw-shadow-color);
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+.ring-red-500 {
+  --tw-ring-opacity: 1;
+  --tw-ring-color: rgb(239 68 68 / var(--tw-ring-opacity, 1));
 }
 
 .filter {
@@ -3277,6 +3286,10 @@ html, body {
     opacity: 0;
     transform: translate(-50%, -20px);
   }
+}
+
+.first\:border-l-0:first-child {
+  border-left-width: 0px;
 }
 
 .hover\:-translate-y-1:hover {

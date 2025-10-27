@@ -38,7 +38,7 @@
 
                 <!-- Bảng đăng ký -->
                 <div class="bg-white p-4 rounded-lg shadow-md border border-gray-200">
-                    <div class="overflow-x-auto">
+                    <div>
                         <table class="min-w-full border-collapse">
                             <thead>
                                 <!-- Dòng 2: Tên các ngày trong tuần -->
@@ -86,14 +86,14 @@
 
     <!-- Template cho các ô trong bảng -->
     <template id="day-header-template">
-        <th class="p-2 border-x border-gray-200">
+        <th class="p-2 border-l border-gray-200 first:border-l-0">
             <div class="day-name font-semibold text-gray-700"></div>
             <div class="date-number text-xs text-gray-500"></div>
         </th>
     </template>
  
     <template id="shift-cell-template">
-        <td class="p-2 border-x border-gray-200 align-top ">
+        <td class="p-2 border-l border-gray-200 align-top first:border-l-0">
             <div class="flex items-start gap-1">
                 <!-- Ca 1 -->
                 <div class="shift-registration-block flex-1" data-shift-index="0">
