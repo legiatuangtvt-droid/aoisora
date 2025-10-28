@@ -508,6 +508,12 @@
   "schedules": [
     {
       "date": "2024-07-28",
+      "employeeId": "TUNG_01",
+      "shift": "Ca Hành chính (08:00 - 17:00)",
+      "tasks": []
+    },
+    {
+      "date": "2024-07-28",
       "employeeId": "AN_02",
       "shift": "Ca Sáng (06:00 - 14:00)",
       "tasks": {
@@ -525,16 +531,16 @@
         "08:00": [{ "id": "10202", "name": "Lên hàng rau củ" }]
       }
     },
-    {
-      "date": "2024-07-29",
-      "employeeId": "TUNG_01",
-      "shift": "Ca Hành chính (08:00 - 17:00)",
-      "tasks": {
-        "08:00": [{ "id": "10501", "name": "Mở kho" }],
-        "09:00": [{ "id": "10509", "name": "Tạo và chỉnh sửa DWS" }]
-      }
-    }
+    { "date": "2024-07-29", "employeeId": "TUNG_01", "shift": "Ca Hành chính (08:00 - 17:00)", "tasks": { "08:00": [{ "id": "10501", "name": "Mở kho" }], "09:00": [{ "id": "10509", "name": "Tạo và chỉnh sửa DWS" }] } }
+  ],
+  "work_positions": [
+    { "id": "LEADER", "name": "Leader", "balance": 10 },
+    { "id": "MMD", "name": "MMD", "balance": 15 },
+    { "id": "POS", "name": "POS", "balance": 25 },
+    { "id": "MERCHANDISE", "name": "Ngành hàng", "balance": 35 },
+    { "id": "CAFE", "name": "Aeon Cafe", "balance": 15 }
   ]
 }
+
     
   

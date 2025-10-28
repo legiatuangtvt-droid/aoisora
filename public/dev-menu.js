@@ -422,7 +422,9 @@ function initializeDevMenu() {
                 // Dữ liệu mới
                 'task_groups', 'roles', 'stores', 'store_statuses', 'schedules',
                 'employee', 'area_managers', 'regional_managers',
-                'areas', 'regions', 'employee_statuses'
+                'areas', 'regions', 'employee_statuses',
+                // Thêm các collection mới cần xóa
+                'main_tasks', 'daily_templates', 'staff_availability', 'work_assignments', 'work_positions'
             ];
             
             const deleteBatch = writeBatch(db);
@@ -481,6 +483,11 @@ function initializeDevMenu() {
             
             // task_groups có cấu trúc khác một chút
             seedCollection('task_groups', data.task_groups);
+            
+            // Seed các collection mới
+            seedCollection('main_tasks', data.main_tasks);
+            seedCollection('daily_templates', data.daily_templates);
+            seedCollection('work_positions', data.work_positions);
 
             // Seed Schedules
             data.schedules?.forEach(schedule => {

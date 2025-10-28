@@ -48,15 +48,26 @@ function loadShiftCodes() {
 }
 
 /**
- * Tải danh sách các vị trí công việc từ datalist.
+ * Tải danh sách các vị trí công việc từ Firestore.
  */
-function loadWorkPositions() {
-    // Cập nhật dữ liệu mock cho vị trí làm việc, bao gồm cả tỷ lệ balance
-    workPositions = [
-        { name: 'Thu ngân', balance: 50 },
-        { name: 'Sắp hàng', balance: 30 },
-        { name: 'Khác', balance: 20 }
-    ];
+async function loadWorkPositions() {
+    try {
+        const querySnapshot = await getDocs(collection(db, 'work_positions'));        
+        workPositions = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // Cập nhật datalist để người dùng có thể nhập liệu
+        const datalist = document.getElementById('work-positions-datalist');
+        if (datalist) {
+            datalist.innerHTML = ''; // Xóa các lựa chọn cũ
+            workPositions.forEach(pos => {
+                datalist.innerHTML += `<option value="${pos.name}"></option>`;
+            });
+        }
+    } catch (error) {
+        console.error("Lỗi khi tải danh sách vị trí công việc:", error);
+        window.showToast("Không thể tải danh sách vị trí công việc.", "error");
+        workPositions = []; // Đặt lại thành mảng rỗng nếu có lỗi
+    }
 }
 
 async function fetchInitialData() {
@@ -131,12 +142,14 @@ function renderAssignmentTable() {
             <div class="text-xs font-semibold">${pos.name}</div>
             <div class="text-[10px] text-slate-500">(${pos.balance}%)</div>
         </div>
-    `).join('');
-
-    headerHTML += `<th class="p-0 border-x border-gray-200 bg-slate-50 sticky right-0 z-10 min-w-[150px]">
-                        <div class="grid grid-cols-3 divide-x divide-gray-200 h-full">${positionHeaders}</div>
+    `).join('');    
+    
+    const gridStyle = `grid-template-columns: repeat(${workPositions.length || 1}, minmax(0, 1fr));`; // Dùng || 1 để tránh lỗi repeat(0)
+    
+    headerHTML += `<th class="p-0 border-x border-gray-200 bg-slate-50 sticky right-0 z-10 min-w-[300px]">
+                        <div class="grid divide-x divide-gray-200 h-full" style="${gridStyle}">${positionHeaders}</div>
                    </th>`;
-    headerHTML += `</tr>`;
+    headerHTML += `</tr>`;    
     header.innerHTML = headerHTML;
 
     // Render Footer with Assign Buttons
@@ -151,7 +164,7 @@ function renderAssignmentTable() {
         </td>`;
     });
     // Thêm các ô footer trống để căn chỉnh
-    footerHTML += `<td class="p-1 border-x border-gray-200 bg-slate-50 sticky right-0 z-10 min-w-[150px]"></td>`;
+    footerHTML += `<td class="p-1 border-x border-gray-200 bg-slate-50 sticky right-0 z-10 min-w-[300px]"></td>`;
     footerHTML += `</tr>`;
     footer.innerHTML = footerHTML;
 
@@ -170,12 +183,12 @@ function renderAssignmentTable() {
 
         // Thêm ô thống kê vào cuối mỗi hàng
         const statCells = workPositions.map(pos => `
-            <div class="p-1 align-middle text-center relative bg-white h-full flex flex-col justify-center" data-position="${pos.name}">
+            <div class="p-1 align-middle text-center relative bg-white h-full flex flex-col justify-center" data-position-name="${pos.name}">
                             <span class="stat-percentage text-sm font-semibold text-gray-700">0.0%</span>
             </div>
         `).join('');
-        rowHTML += `<td class="p-0 border-x border-gray-200 sticky right-0 z-10 bg-white min-w-[150px]">
-                        <div class="grid grid-cols-3 divide-x divide-gray-200 h-full">${statCells}</div>
+        rowHTML += `<td class="p-0 border-x border-gray-200 sticky right-0 z-10 bg-white min-w-[300px]">
+                        <div class="grid divide-x divide-gray-200 h-full" style="${gridStyle}">${statCells}</div>
                     </td>`;
 
         row.innerHTML = rowHTML;
@@ -617,7 +630,7 @@ export async function init() {
     viewStartDate.setHours(0, 0, 0, 0);
 
     loadShiftCodes();
-    loadWorkPositions(); // Load work positions at initialization
+    await loadWorkPositions(); // Load work positions at initialization
     await fetchInitialData();
     renderAssignmentTable();
     loadWorkAssignmentsForWeek(); // Tải dữ liệu phân công vị trí
@@ -633,7 +646,6 @@ export async function init() {
                 handleSaveAssignmentForDay(event);
             }
         }, { signal: domController.signal });
-    }
 
     // Event delegation for leader's editable cells
     const body = document.getElementById('assignment-table-body');
@@ -646,6 +658,7 @@ export async function init() {
                 updateEmployeeStats();
             }
         }, { signal: domController.signal });
+    }
     }
 }
 
@@ -698,7 +711,7 @@ function updateEmployeeStats() {
 
         // 1. Đếm số ca đã phân công cho từng vị trí
         const positionCounts = {};
-        workPositions.forEach(pos => positionCounts[pos] = 0);
+        workPositions.forEach(pos => positionCounts[pos.name] = 0);
         let totalAssignedShifts = 0;
 
         const assignedInputs = row.querySelectorAll('.position-input:not([disabled])');
@@ -712,11 +725,11 @@ function updateEmployeeStats() {
 
         // 2. Cập nhật từng ô thống kê
         workPositions.forEach(pos => {
-            const statsCell = row.querySelector(`td[data-position="${pos}"]`);
+            const statsCell = row.querySelector(`div[data-position-name="${pos.name}"]`);
             if (!statsCell) return;
 
             const percentageEl = statsCell.querySelector('.stat-percentage');
-            const oldPercentage = parseFloat(percentageEl.textContent);
+            const oldPercentage = parseFloat(percentageEl.textContent) || 0;
             const newPercentage = totalAssignedShifts > 0 ? (positionCounts[pos] / totalAssignedShifts) * 100 : 0;
             const percentageChange = newPercentage - oldPercentage;
 
