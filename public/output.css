@@ -969,6 +969,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
   margin-top: auto;
 }
 
+.mt-8 {
+  margin-top: 2rem;
+}
+
 .box-border {
   box-sizing: border-box;
 }
@@ -1129,6 +1133,18 @@ body.sidebar-expanded #sidebar .sidebar-text {
   width: 100%;
 }
 
+.w-36 {
+  width: 9rem;
+}
+
+.w-48 {
+  width: 12rem;
+}
+
+.w-40 {
+  width: 10rem;
+}
+
 .min-w-56 {
   min-width: 14rem;
 }
@@ -1167,6 +1183,22 @@ body.sidebar-expanded #sidebar .sidebar-text {
 
 .min-w-\[300px\] {
   min-width: 300px;
+}
+
+.min-w-48 {
+  min-width: 12rem;
+}
+
+.min-w-44 {
+  min-width: 11rem;
+}
+
+.min-w-36 {
+  min-width: 9rem;
+}
+
+.min-w-40 {
+  min-width: 10rem;
 }
 
 .max-w-2xl {
