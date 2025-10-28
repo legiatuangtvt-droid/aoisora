@@ -416,15 +416,23 @@ function initializeDevMenu() {
             // --- Bước 1: Xóa dữ liệu cũ ---
             window.showToast('Bước 1/2: Đang xóa dữ liệu cũ...', 'info');
             const collectionsToDelete = [
-                // Dữ liệu cũ
+                'daily_templates',
                 'staff', 
-                'staff_statuses',
-                // Dữ liệu mới
-                'task_groups', 'roles', 'stores', 'store_statuses', 'schedules',
-                'employee', 'area_managers', 'regional_managers',
-                'areas', 'regions', 'employee_statuses',
-                // Thêm các collection mới cần xóa
-                'main_tasks', 'daily_templates', 'staff_availability', 'work_assignments', 'work_positions'
+                'staff_statuses', 
+                'task_groups', 
+                'roles', 
+                'stores', 
+                'store_statuses', 
+                'schedules',
+                'employee', 
+                'area_managers', 
+                'regional_managers', 
+                'areas', 
+                'regions', 
+                'employee_statuses',
+                'staff_availability', 
+                'work_assignments', 
+                'work_positions'
             ];
             
             const deleteBatch = writeBatch(db);
@@ -446,17 +454,27 @@ function initializeDevMenu() {
 
             // Hàm trợ giúp để seed một collection
             const seedCollection = (collectionName, items) => {
-                items?.forEach(item => {
-                    // Ưu tiên sử dụng trường 'id' làm document ID.
-                    if (item.id) {
-                        const docRef = doc(db, collectionName, item.id);
-                        const dataToSet = { ...item };
-                        delete dataToSet.id; // Xóa trường id khỏi dữ liệu lưu trữ vì nó đã được dùng làm key
-                        // Các trường khác như 'code', 'name' được giữ lại bên trong document
+                items?.forEach(item => { // Ưu tiên sử dụng trường 'id' làm document ID.
+                    if (!item.id) return;
+
+                    const docRef = doc(db, collectionName, item.id);
+                    const dataToSet = { ...item };
+                    delete dataToSet.id; // Xóa trường id khỏi dữ liệu lưu trữ vì nó đã được dùng làm key
+
+                    // Xử lý đặc biệt cho daily_templates để sử dụng serverTimestamp
+                    if (collectionName === 'daily_templates') {
+                        delete dataToSet.createdAt; // Xóa chuỗi timestamp từ JSON
+                        delete dataToSet.updatedAt; // Xóa chuỗi timestamp từ JSON
+                        addBatch.set(docRef, {
+                            ...dataToSet,
+                            createdAt: serverTimestamp(),
+                            updatedAt: serverTimestamp()
+                        });
+                    } else {
                         addBatch.set(docRef, { ...dataToSet, createdAt: serverTimestamp() });
                     }
-                }
-            )};
+                });
+            };
 
             // Seed Stores
             data.stores?.forEach(store => {
@@ -479,13 +497,8 @@ function initializeDevMenu() {
             seedCollection('areas', data.areas);
             seedCollection('regions', data.regions);
             seedCollection('employee_statuses', data.employee_statuses);
-            seedCollection('store_statuses', data.store_statuses);
-            
-            // task_groups có cấu trúc khác một chút
+            seedCollection('store_statuses', data.store_statuses);            
             seedCollection('task_groups', data.task_groups);
-            
-            // Seed các collection mới
-            seedCollection('main_tasks', data.main_tasks);
             seedCollection('daily_templates', data.daily_templates);
             seedCollection('work_positions', data.work_positions);
 

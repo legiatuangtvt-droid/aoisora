@@ -8,8 +8,8 @@ let activeModal = null;
 let allEmployees = [];
 let allStores = [];
 let allAreas = [];
-let allRegions = [];
-let allMainTasks = {}; // Dùng object để tra cứu nhanh bằng ID
+let allRegions = []; // Dùng object để tra cứu nhanh bằng ID
+let allMainTasks = {};
 let currentScheduleData = []; // Lịch làm việc cho ngày đang chọn
 let sortableInstances = [];
 
@@ -21,12 +21,11 @@ const timeSlots = ["6:00", "7:00", "8:00", "9:00", "10:00", "11:00", "12:00", "1
  */
 async function fetchInitialData() {
     try {
-        const [employeesSnap, storesSnap, areasSnap, regionsSnap, tasksSnapshot] = await Promise.all([
+        const [employeesSnap, storesSnap, areasSnap, regionsSnap] = await Promise.all([
             getDocs(collection(db, 'employee')),
             getDocs(collection(db, 'stores')),
             getDocs(collection(db, 'areas')),
             getDocs(collection(db, 'regions')),
-            getDocs(collection(db, 'main_tasks'))
         ]);
 
         let fetchedEmployees = employeesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -60,11 +59,6 @@ async function fetchInitialData() {
             }
         }
         allEmployees = fetchedEmployees;
-
-        allMainTasks = tasksSnapshot.docs.reduce((acc, doc) => {
-            acc[doc.id] = { id: doc.id, ...doc.data() };
-            return acc;
-        }, {});
 
     } catch (error) {
         console.error("Lỗi nghiêm trọng khi tải dữ liệu nền:", error);
@@ -228,10 +222,11 @@ function renderSchedule() {
 
             // Giả định employee.tasks là một mảng các object: [{id, startTime}, ...]
             const tasks = employee.tasks || [];
+            const allTaskGroups = window.allTaskGroups || {}; // Lấy từ thư viện task
             tasks.forEach(taskInfo => {
-                const taskData = allMainTasks[taskInfo.id];
-                if (!taskData || !taskInfo.startTime) return;
-
+                if (!taskInfo.id || !taskInfo.startTime) return;
+                const taskData = { id: taskInfo.id, name: taskInfo.name, groupId: taskInfo.groupId, estimatedTime: 15 }; // Tạo task data tạm
+                
                 const estimatedTime = taskData.estimatedTime || 15;
                 const { left, width } = calculateTaskPosition(taskInfo.startTime, estimatedTime);
                 const color = getGroupColor(taskData.groupId);

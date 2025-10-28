@@ -6,12 +6,10 @@ import { initializeLayoutController } from './layout-controller.js';
 
 // Import các module trang thuộc nhóm Area Manager
 import * as taskGroups from './task-groups.js';
-import * as mainTasks from './main-tasks.js';
 
 // Map các trang của Area Manager App với module tương ứng
 const areaManagerPages = {
     'task-groups.html': { module: taskGroups, title: 'Quản Lý Nhóm Công Việc' },
-    'main-tasks.html': { module: mainTasks, title: 'Quản Lý Công Việc Chính' },
     // Thêm các trang báo cáo, quản lý khu vực ở đây
 };
 

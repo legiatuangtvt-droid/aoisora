@@ -1,7 +1,6 @@
 import { db } from './firebase.js';
 import { collection, getDocs, query, orderBy, doc, setDoc, serverTimestamp, addDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
-let allMainTasks = {}; // Dùng object để tra cứu nhanh bằng ID
 let sortableInstances = [];
 
 let allTemplates = [];
@@ -89,13 +88,6 @@ function loadShiftCodes() {
  */
 async function fetchInitialData() {
     try {
-        // Tải danh sách công việc chính
-        const tasksSnapshot = await getDocs(collection(db, 'main_tasks'));
-        allMainTasks = tasksSnapshot.docs.reduce((acc, doc) => {
-            acc[doc.id] = { id: doc.id, ...doc.data() };
-            return acc;
-        }, {});
-
         // Tải nhóm công việc để lấy thông tin màu
         const taskGroupsQuery = query(collection(db, 'task_groups'));
         const taskGroupsSnapshot = await getDocs(taskGroupsQuery);
