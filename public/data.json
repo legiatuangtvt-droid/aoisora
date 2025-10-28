@@ -178,8 +178,7 @@
     { "id": "AREA_MANAGER", "name": "Quản lý khu vực" },
     { "id": "REGIONAL_MANAGER", "name": "Quản lý miền" }
   ],
- "employee": [
-  
+ "employee": [  
     { "id": "NVT_LEAD_01", "name": "Trần Văn An", "roleId": "STORE_LEADER", "storeId": "AMPM_NVT", "phone": "0911000001", "status": "ACTIVE" },
     { "id": "NVT_STAFF_02", "name": "Nguyễn Thị Bình", "roleId": "STAFF", "storeId": "AMPM_NVT", "phone": "0911000002", "status": "ACTIVE" },
     { "id": "NVT_STAFF_03", "name": "Lê Hoàng Cường", "roleId": "STAFF", "storeId": "AMPM_NVT", "phone": "0911000003", "status": "ACTIVE" },

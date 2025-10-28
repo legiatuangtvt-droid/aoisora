@@ -523,6 +523,8 @@ async function saveTemplate() {
         if (!slot) return;
 
         const shiftId = slot.dataset.shiftId;
+        if (!shiftId) return;
+
         const taskName = taskItem.querySelector('span.overflow-hidden').textContent; // Lấy tên task từ DOM
         const taskCode = taskItem.dataset.taskCode;
         const groupId = taskItem.dataset.groupId; // Lấy groupId từ DOM
@@ -542,17 +544,18 @@ async function saveTemplate() {
         const shiftId = row.dataset.shiftId;
         const selectedShiftCode = row.querySelector('.shift-code-selector')?.value;
         const selectedPositionId = row.querySelector('.work-position-selector')?.value;
-        if (shiftId) {
-            shiftMappings[shiftId] = selectedShiftCode;
+        if (shiftId && (selectedShiftCode || selectedPositionId)) {
+            shiftMappings[shiftId] = { shiftCode: selectedShiftCode, positionId: selectedPositionId };
         }
     });
 
     // 2. Lưu vào Firestore
     try {
+        const dataToSave = { schedule: scheduleData, shiftMappings: shiftMappings, totalManhour: totalManhour };
         if (templateIdToSave) {
             // Cập nhật mẫu đã có
             const templateRef = doc(db, 'daily_templates', templateIdToSave);
-            await setDoc(templateRef, { schedule: scheduleData, shiftMappings: shiftMappings, totalManhour: totalManhour, updatedAt: serverTimestamp() }, { merge: true }); // Giữ nguyên shiftMappings
+            await setDoc(templateRef, { ...dataToSave, updatedAt: serverTimestamp() }, { merge: true });
         } else {
             // Tạo mẫu mới
             const newDocRef = await addDoc(collection(db, 'daily_templates'), {
@@ -560,7 +563,7 @@ async function saveTemplate() {
                 schedule: scheduleData,
                 shiftMappings: shiftMappings, // Lưu cả khi tạo mới
                 createdAt: serverTimestamp()
-            });
+            , totalManhour: totalManhour});
             // Sau khi tạo thành công, tải lại danh sách và tự động chọn mẫu vừa tạo
             await fetchAndRenderTemplates();
             document.getElementById('template-selector').value = newDocRef.id;

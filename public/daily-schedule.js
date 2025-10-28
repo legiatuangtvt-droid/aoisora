@@ -1,4 +1,4 @@
-import { db } from './firebase.js';
+﻿import { db } from './firebase.js';
 import { collection, onSnapshot, query, where, getDocs, doc, setDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 let domController = null;
