@@ -246,13 +246,19 @@ function renderScheduleGrid() {
         }
     } else { 
         currentScheduleData.forEach(schedule => {
+            // Tìm khung giờ tương ứng với mã ca
+            const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === schedule.shift);
+            const timeRange = shiftInfo ? shiftInfo.timeRange : '';
+
             const row = document.createElement('tr');
             row.className = 'border-b border-slate-200';
             row.dataset.employeeId = schedule.employeeId; // Thêm ID để dễ dàng truy vấn
             let rowHtml = `
-                <td class="group p-2 border border-slate-200 align-top sticky left-0 bg-white z-10 w-40 min-w-40 font-semibold text-left">
+                <td class="group p-2 border border-slate-200 align-middle sticky left-0 bg-white z-10 w-40 min-w-40 font-semibold text-center">
                     <div class="text-sm text-slate-800">${schedule.name}</div>
+                    <div class="text-xs text-slate-600 font-medium mt-1">${schedule.positionId || ''}</div>
                     <div class="text-xs text-slate-500 font-normal">${schedule.shift}</div>
+                    <div class="text-xs text-slate-500 font-normal">${timeRange}</div>
                 </td>`;
 
             timeSlots.forEach(time => {
