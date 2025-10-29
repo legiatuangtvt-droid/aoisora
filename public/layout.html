@@ -89,15 +89,8 @@
 <template id="template-header">
     <header class="h-16 bg-white border-b border-gray-200 flex-shrink-0 flex items-center justify-between px-6">
         <!-- Tiêu đề trang (sẽ được cập nhật bằng JS) -->
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-4 flex-1">
             <h1 id="page-title" class="text-xl font-semibold text-gray-800">Dashboard</h1>
-            
-            <!-- Date controls for daily schedule page, hidden by default -->
-            <div id="daily-schedule-controls" class="hidden items-center space-x-2 bg-slate-50 p-1 rounded-lg">
-                <button class="px-2 py-1 rounded-md text-gray-500 hover:bg-slate-200 hover:text-gray-800 transition-colors" onclick="window.dailySchedule.changeDate(-1)"><i class="fas fa-chevron-left text-sm"></i></button>
-                <input type="date" id="date" class="bg-white border-slate-300 rounded-md p-1 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
-                <button class="px-2 py-1 rounded-md text-gray-500 hover:bg-slate-200 hover:text-gray-800 transition-colors" onclick="window.dailySchedule.changeDate(1)"><i class="fas fa-chevron-right text-sm"></i></button>
-            </div>
         </div>
 
         <!-- Thông tin người dùng và các nút hành động -->

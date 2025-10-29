@@ -1,19 +1,16 @@
-﻿import { db } from './firebase.js';
-import { collection, onSnapshot, query, where, getDocs, doc, setDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+﻿﻿import { db } from './firebase.js';
+import { collection, onSnapshot, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 let domController = null;
-let activeModal = null;
 
 // Biến toàn cục để lưu trữ dữ liệu
 let allEmployees = [];
 let allStores = [];
 let allAreas = [];
-let allRegions = []; // Dùng object để tra cứu nhanh bằng ID
-let allMainTasks = {};
+let allRegions = [];
+let allTaskGroups = {};
 let currentScheduleData = []; // Lịch làm việc cho ngày đang chọn
-let sortableInstances = [];
-
-const timeSlots = ["6:00", "7:00", "8:00", "9:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"];
+let filteredEmployees = []; // Nhân viên sau khi đã lọc theo cửa hàng
 
 //#region DATA_FETCHING
 /**
@@ -21,17 +18,21 @@ const timeSlots = ["6:00", "7:00", "8:00", "9:00", "10:00", "11:00", "12:00", "1
  */
 async function fetchInitialData() {
     try {
-        const [employeesSnap, storesSnap, areasSnap, regionsSnap] = await Promise.all([
+        const [employeesSnap, storesSnap, areasSnap, regionsSnap, taskGroupsSnap] = await Promise.all([
             getDocs(collection(db, 'employee')),
             getDocs(collection(db, 'stores')),
             getDocs(collection(db, 'areas')),
             getDocs(collection(db, 'regions')),
+            getDocs(collection(db, 'task_groups')),
         ]);
 
         let fetchedEmployees = employeesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         allStores = storesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         allAreas = areasSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         allRegions = regionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        taskGroupsSnap.docs.forEach(doc => {
+            allTaskGroups[doc.id] = { id: doc.id, ...doc.data() };
+        });
 
         // Lọc nhân viên dựa trên vai trò của người dùng hiện tại
         const currentUser = window.currentUser;
@@ -71,27 +72,43 @@ async function fetchInitialData() {
  * @param {string} dateString - Ngày cần lấy dữ liệu (YYYY-MM-DD).
  */
 function listenForScheduleChanges(dateString) {
-    const employeeIds = allEmployees.map(emp => emp.id);
+    // Hủy listener cũ trước khi tạo listener mới
+    if (window.currentScheduleUnsubscribe) {
+        window.currentScheduleUnsubscribe();
+        window.currentScheduleUnsubscribe = null;
+    }
+
+    const storeFilter = document.getElementById('store-filter');
+    const selectedStoreId = storeFilter ? storeFilter.value : 'all';
+
+    if (selectedStoreId === 'all') {
+        filteredEmployees = [];
+    } else {
+        filteredEmployees = allEmployees.filter(emp => emp.storeId === selectedStoreId);
+    }
+
+    const employeeIds = filteredEmployees.map(emp => emp.id);
+
     if (employeeIds.length === 0) {
         currentScheduleData = [];
-        renderSchedule();
+        renderScheduleGrid();
         return;
     }
     const q = query(collection(db, 'schedules'), where("date", "==", dateString), where("employeeId", "in", employeeIds));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
         currentScheduleData = snapshot.docs.map(doc => {
-            const data = doc.data();
-            const employeeInfo = allEmployees.find(s => s.id === data.employeeId) || { name: data.employeeId, role: 'N/A' };
+            const data = doc.data(); // Dữ liệu từ Firestore
+            const employeeInfo = filteredEmployees.find(emp => emp.id === data.employeeId) || { name: 'Không rõ', roleId: 'N/A' };
             return {
                 docId: doc.id,
                 ...data,
-                name: employeeInfo.name,
+                name: employeeInfo.name, // Sửa lỗi: employeeInfo chưa được định nghĩa
                 role: employeeInfo.roleId,
                 shift: "Ca làm việc", // Cần bổ sung thông tin ca làm
             };
         });
-        renderSchedule();
+        renderScheduleGrid();
     }, (error) => {
         console.error(`Lỗi khi lắng nghe lịch ngày ${dateString}:`, error);
         showToast("Mất kết nối tới dữ liệu lịch làm việc.", "error");
@@ -106,220 +123,122 @@ function listenForScheduleChanges(dateString) {
 //#endregion
 
 //#region RENDERING
-/**
- * Bảng màu cho các nhóm công việc.
- * Mỗi nhóm được gán một bộ màu nền, chữ và viền.
- */
-const groupColorPalette = {
-    'TBTS': { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-300' }, // Trưng Bày Tươi Sống
-    'TBHK': { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-300' },   // Trưng Bày Hàng Khô
-    'MKTG': { bg: 'bg-indigo-100', text: 'text-indigo-800', border: 'border-indigo-300' }, // Marketing & Giá
-    'QLTK': { bg: 'bg-amber-100', text: 'text-amber-700', border: 'border-amber-300' }, // Quản Lý Tồn Kho
-    'VS':   { bg: 'bg-teal-100', text: 'text-teal-800', border: 'border-teal-300' },     // Vệ Sinh
-    'CAFE': { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-300' }, // Cafe
-    'DEFAULT': { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-300' } // Mặc định
+const defaultColor = {
+    bg: '#e2e8f0', text: '#1e293b', border: '#94a3b8'
 };
 
-/**
- * Lấy bộ màu cho một công việc dựa trên groupId của nó.
- * @param {string} groupId - ID của nhóm công việc.
- * @returns {object} - Object chứa các class màu {bg, text, border}.
- */
-function getGroupColor(groupId) {
-    return groupColorPalette[groupId] || groupColorPalette['DEFAULT'];
-}
-
-/**
- * Tính toán vị trí và chiều rộng của một task trên timeline 15 giờ (900 phút).
- * @param {string} startTime - Thời gian bắt đầu (HH:mm).
- * @param {number} duration - Thời lượng (phút).
- * @returns {{left: string, width: string}} - Vị trí và chiều rộng dưới dạng phần trăm.
- */
-function calculateTaskPosition(startTime, duration) {
-    const [startHour, startMinute] = startTime.split(':').map(Number);
-    const totalTimelineMinutes = (23 - 6) * 60; // 17 giờ * 60 phút = 1020 phút
-
-    // Tính số phút từ lúc bắt đầu timeline (6:00)
-    const minutesFromStart = (startHour - 6) * 60 + startMinute;
-
-    // Tính toán vị trí `left` và `width` dưới dạng phần trăm
-    // Đảm bảo không có giá trị âm
-    const leftPercent = Math.max(0, (minutesFromStart / totalTimelineMinutes) * 100);
-    const widthPercent = (duration / totalTimelineMinutes) * 100;
-
-    return {
-        left: `${leftPercent}%`,
-        width: `${widthPercent}%`
-    };
-}
-
-
-function renderSchedule() {
-    const dateInput = document.getElementById('date');
-    const selectedDate = dateInput.value;
-    const container = document.getElementById('schedule-container');
+function renderScheduleGrid() {
+    const container = document.getElementById('schedule-grid-container');
     if (!container) return;
-    container.innerHTML = '';
-    
-    // Thiết lập cấu trúc grid 18 cột cho container
-    container.style.display = 'grid'; // 2 cột cho tên + 18 cột cho giờ
-    container.style.gridTemplateColumns = 'repeat(20, minmax(0, 1fr))';
 
-    // Tính toán man hours
-    const manHours = {};
-    timeSlots.forEach(slot => {
-        let total = 0;
-        currentScheduleData.forEach(employee => {
-            if (employee.tasks[slot] && employee.tasks[slot].length > 0) {
-                total++;
-            }
-        });
-        manHours[slot] = { total, display: `${total} Man Hour` };
+    const timeSlots = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
+
+    const table = document.createElement('table');
+    table.className = 'min-w-full border-collapse border border-slate-200 table-fixed';
+
+    // --- Tạo Header ---
+    const thead = document.createElement('thead');
+    thead.className = 'bg-slate-100 sticky top-0 z-20';
+    let headerRowHtml = `<th class="p-2 border border-slate-200 w-40 min-w-40 sticky left-0 bg-slate-100 z-30">Nhân viên</th>`;
+    timeSlots.forEach(time => {
+        headerRowHtml += `<th class="p-2 border border-slate-200 min-w-[308px] text-center font-semibold text-slate-700" data-hour="${time.split(':')[0]}">${time}</th>`;
     });
+    thead.innerHTML = `<tr>${headerRowHtml}</tr>`;
+    table.appendChild(thead);
 
-    // Build Header
-    const headerHTML = `
-        <div class="col-span-2 p-3 text-sm font-semibold text-gray-700 border-r flex items-center justify-center sticky top-0 bg-gray-100 z-10 border-b-2 border-gray-300">
-            <div class="text-lg">${selectedDate.split('-').reverse().join('-')}</div>
-        </div>
-        ${timeSlots.map(slot => `
-            <div class="text-center border-l sticky top-0 z-10 border-b-2 border-gray-300 flex flex-col">
-                <div class="man-hour-header bg-green-100 text-green-800 text-xs font-semibold py-1">${manHours[slot].display}</div>
-                <div class="time-slot-header bg-green-700 text-white font-bold flex-grow flex items-center justify-center">${slot}</div>
-            </div>
-        `).join('')}
-    `;
-    container.innerHTML += headerHTML;
+    // --- Tạo Body ---
+    const tbody = document.createElement('tbody');
+    if (filteredEmployees.length === 0) {
+        const selectedDate = document.getElementById('date').value;
+        const storeFilter = document.getElementById('store-filter');
+        const selectedStoreId = storeFilter ? storeFilter.value : 'all';
 
-    // Build Body Rows
-    if (currentScheduleData.length === 0) {
-        container.innerHTML += `<div class="p-10 text-center text-gray-500 col-span-full bg-white">Không có lịch làm việc cho ngày ${selectedDate}.</div>`;
-    } else {
-        // Thêm các cột giờ trống làm nền cho timeline
-        const backgroundGrid = document.createElement('div');
-        backgroundGrid.className = 'col-start-3 col-span-18 grid grid-cols-18 h-full';
-        timeSlots.slice(0, -1).forEach(() => { // Chỉ cần 17 vạch kẻ
-            backgroundGrid.innerHTML += `<div class="border-r"></div>`;
-        });
-        container.appendChild(backgroundGrid);
+        if (selectedStoreId === 'all') {
+            tbody.innerHTML = `<tr><td colspan="${25}" class="text-center p-10 text-gray-500">Vui lòng chọn cửa hàng để xem lịch làm việc.</td></tr>`;
+        } else {
+            tbody.innerHTML = `<tr><td colspan="${25}" class="text-center p-10 text-gray-500">Không có lịch làm việc cho ngày ${selectedDate}.</td></tr>`;
+        }
+    } else { 
+        filteredEmployees.forEach(employee => {
+            const row = document.createElement('tr');
+            row.className = 'border-b border-slate-200';
+            let rowHtml = `
+                <td class="group relative p-2 border border-slate-200 align-top sticky left-0 bg-white z-10 w-40 min-w-40 font-semibold text-left">
+                    <div class="text-sm text-slate-800">${employee.name}</div>
+                    <div class="text-xs text-slate-500 font-normal">${employee.shift}</div>
+                </td>`;
 
-        currentScheduleData.forEach(employee => {
-            // Name Cell
-            const nameCell = document.createElement('div');
-            nameCell.className = 'col-span-2 p-3 border-r border-b flex items-center sticky left-0 bg-white z-20';
-            nameCell.innerHTML = `
-                    <div class="flex-1">
-                        <div class="employee-name text-gray-800 text-lg">${employee.name}</div>
-                        <div class="text-sm text-gray-600">${employee.role}</div>
-                        <div class="text-xs text-gray-500 mt-2 font-medium">${employee.shift}</div>
-                    </div>
-            `;
-            container.appendChild(nameCell);
-
-            // Timeline container for this employee's tasks
-            const timelineContainer = document.createElement('div');
-            timelineContainer.className = 'col-span-18 border-b relative h-20'; // h-20 để có chiều cao cố định
-
-            // Giả định employee.tasks là một mảng các object: [{id, startTime}, ...]
-            const tasks = employee.tasks || [];
-            const allTaskGroups = window.allTaskGroups || {}; // Lấy từ thư viện task
-            tasks.forEach(taskInfo => {
-                if (!taskInfo.id || !taskInfo.startTime) return;
-                const taskData = { id: taskInfo.id, name: taskInfo.name, groupId: taskInfo.groupId, estimatedTime: 15 }; // Tạo task data tạm
-                
-                const estimatedTime = taskData.estimatedTime || 15;
-                const { left, width } = calculateTaskPosition(taskInfo.startTime, estimatedTime);
-                const color = getGroupColor(taskData.groupId);
-
-                const taskElement = document.createElement('div');
-                taskElement.className = `sub-task-card absolute top-1 bottom-1 group border ${color.bg} ${color.border} shadow-sm flex flex-col justify-center items-center p-1 rounded-md overflow-hidden`;
-                taskElement.setAttribute('data-task-code', taskData.id);
-                taskElement.style.left = left;
-                taskElement.style.width = width;
-                taskElement.innerHTML = `
-                        <div class="sub-task-name text-xs font-semibold ${color.text} text-center truncate w-full px-1">${taskData.name}</div>
-                        <div class="sub-task-code text-xxs">${taskData.id}</div>
-                            <button class="delete-task-btn absolute top-0 right-0 p-1 leading-none opacity-0 group-hover:opacity-100 transition-opacity" onclick="window.dailySchedule.deleteTask(this)">
-                                <i class="fas fa-times text-xxs"></i>
-                            </button>
-                `;
-                timelineContainer.appendChild(taskElement);
+            timeSlots.forEach(time => {
+                rowHtml += `
+                    <td class="p-0 border border-slate-200 align-top">
+                        <div class="grid grid-cols-4 h-[104px]">
+                            <div class="quarter-hour-slot border-r border-dashed border-slate-200 flex justify-center items-center" data-time="${time}" data-quarter="00"></div>
+                            <div class="quarter-hour-slot border-r border-dashed border-slate-200 flex justify-center items-center" data-time="${time}" data-quarter="15"></div>
+                            <div class="quarter-hour-slot border-r border-dashed border-slate-200 flex justify-center items-center" data-time="${time}" data-quarter="30"></div>
+                            <div class="quarter-hour-slot flex justify-center items-center" data-time="${time}" data-quarter="45"></div>
+                        </div>
+                    </td>`;
             });
-            container.appendChild(timelineContainer);
+            row.innerHTML = rowHtml;
+
+            // Điền các task vào các ô
+            const employeeSchedule = currentScheduleData.find(sch => sch.employeeId === employee.id);
+            (employeeSchedule?.tasks || []).forEach(task => {
+                const [hour, quarter] = task.startTime.split(':');
+                const time = `${hour}:00`;
+                const slot = row.querySelector(`.quarter-hour-slot[data-time="${time}"][data-quarter="${quarter}"]`);
+                if (slot) {
+                    const group = allTaskGroups[task.groupId] || {};
+                    const color = (group.color && group.color.bg) ? group.color : defaultColor;
+                    const taskItem = document.createElement('div');
+                    // Áp dụng style giống trang daily-templates
+                    taskItem.className = `scheduled-task-item relative group w-[70px] h-[100px] border-2 text-xs p-1 rounded-md shadow-sm flex flex-col justify-between items-center text-center mb-1`;
+                    taskItem.style.backgroundColor = color.bg;
+                    taskItem.style.color = color.text;
+                    taskItem.style.borderColor = color.border;
+                    taskItem.title = `${task.name} (${task.taskCode})`;
+                    taskItem.innerHTML = `
+                        <div class="flex-grow flex flex-col justify-center"><span class="overflow-hidden text-ellipsis">${task.name}</span></div>
+                        <span class="font-semibold mt-auto">${task.taskCode}</span>
+                    `;
+                    slot.appendChild(taskItem);
+                }
+            });
+            tbody.appendChild(row);
         });
     }
+    table.appendChild(tbody);
 
-    // initializeDragAndDrop(); // Kéo thả không còn tương thích với layout này
+    container.innerHTML = '';
+    container.appendChild(table);
+
+    scrollToCurrentTime();
+}
+
+/**
+ * Tự động cuộn ngang đến cột giờ hiện tại.
+ */
+function scrollToCurrentTime() {
+    const currentHour = new Date().getHours();
+    const container = document.getElementById('schedule-grid-container');
+    const headerCell = container.querySelector(`th[data-hour="${currentHour}"]`);
+
+    if (headerCell && container) {
+        const containerRect = container.getBoundingClientRect();
+        const cellRect = headerCell.getBoundingClientRect();
+        
+        // Tính toán vị trí cuộn: vị trí của ô so với container + vị trí cuộn hiện tại
+        const scrollLeft = cellRect.left - containerRect.left + container.scrollLeft;
+        
+        container.scrollTo({
+            left: scrollLeft,
+            behavior: 'smooth'
+        });
+    }
 }
 //#endregion
 
 //#region INTERACTIONS
-function initializeDragAndDrop() {
-    sortableInstances.forEach(instance => instance.destroy());
-    sortableInstances = [];
-
-    // Logic kéo thả cần được viết lại hoàn toàn để hoạt động với position: absolute.
-    // document.querySelectorAll('.sub-task-grid').forEach(container => {
-    //     const sortable = Sortable.create(container, {
-    //         group: 'shared',
-    //         animation: 150,
-    //         dataIdAttr: 'data-task-code',
-    //         onEnd: async function (evt) {
-    //             updateScheduleDataFromDOM();
-    //         }
-    //     });
-    //     sortableInstances.push(sortable);
-    // });
-}
-
-// Hàm này không còn hợp lệ với cấu trúc timeline mới
-async function updateScheduleDataFromDOM() {
-    const grids = document.querySelectorAll('.sub-task-grid');
-    const updatesByDoc = {};
-
-    // 1. Gom tất cả các thay đổi theo từng document (từng nhân viên)
-    grids.forEach(grid => {
-        const docId = grid.dataset.docId;
-        const slot = grid.dataset.slot;
-        if (!docId || !slot) return;
-
-        if (!updatesByDoc[docId]) {
-            // Lấy lại tasks cũ từ `currentScheduleData` để không làm mất các slot không có trên DOM
-            const originalData = currentScheduleData.find(d => d.docId === docId);
-            updatesByDoc[docId] = originalData ? { ...originalData.tasks } : {};
-        }
-
-        const taskElements = grid.querySelectorAll('.sub-task-card');
-        updatesByDoc[docId][slot] = Array.from(taskElements).map(el => el.dataset.taskCode);
-    });
-
-    // 2. Gửi các lệnh cập nhật lên Firestore
-    const updatePromises = Object.keys(updatesByDoc).map(docId => {
-        const docRef = doc(db, 'schedules', docId);
-        return updateDoc(docRef, { tasks: updatesByDoc[docId] });
-    });
-
-    try {
-        await Promise.all(updatePromises);
-        showToast("Đã cập nhật lịch làm việc!", "success", 1500);
-        // onSnapshot sẽ tự động render lại
-    } catch (error) {
-        console.error("Lỗi khi cập nhật lịch làm việc:", error);
-        showToast("Lỗi khi cập nhật lịch. Dữ liệu có thể không đồng bộ.", "error");
-    }
-}
-
-async function deleteTask(buttonElement) {
-    const taskCard = buttonElement.closest('.sub-task-card');
-    const taskName = taskCard.querySelector('.sub-task-name').textContent;
-
-    if (confirm(`Bạn có chắc chắn muốn xóa công việc "${taskName}"?`)) {
-        // Logic xóa cần được cập nhật để xóa task khỏi mảng `tasks` của nhân viên trên Firestore
-        showToast('Chức năng xóa đang được cập nhật cho giao diện timeline mới.', 'info');
-        // taskCard.remove();
-    }
-}
-
 function changeDate(delta) {
     const dateInput = document.getElementById('date');
     let currentDate = new Date(dateInput.value);
@@ -333,48 +252,60 @@ function changeDate(delta) {
     // Lắng nghe dữ liệu cho ngày mới
     listenForScheduleChanges(dateInput.value);
 }
+
+/**
+ * Chuyển về ngày hiện tại.
+ */
+function jumpToToday() {
+    const dateInput = document.getElementById('date');
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const todayString = `${year}-${month}-${day}`;
+
+    dateInput.value = todayString;
+    listenForScheduleChanges(todayString);
+}
 //#endregion
+//#region FILTERS
+/**
+ * Tạo và điền dữ liệu cho bộ lọc cửa hàng.
+ */
+function createStoreFilter() {
+    const container = document.getElementById('store-filter-container');
+    if (!container) return;
 
-//#region MODAL_MANAGEMENT
-function showModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (!modal) return;
-    activeModal = modal;
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-    setTimeout(() => modal.classList.add('show'), 10);
-}
+    // Lấy danh sách cửa hàng mà người dùng hiện tại có quyền xem
+    const accessibleStoreIds = [...new Set(allEmployees.map(emp => emp.storeId).filter(Boolean))];
+    const accessibleStores = allStores
+        .filter(store => accessibleStoreIds.includes(store.id))
+        .sort((a, b) => a.name.localeCompare(b.name));
 
-function hideModal() {
-    if (!activeModal) return;
-    const modal = activeModal;
-    modal.classList.remove('show');
-    modal.addEventListener('transitionend', () => {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        const form = modal.querySelector('form');
-        if (form) form.reset();
-    }, { once: true });
-    activeModal = null;
-}
+    let optionsHTML = '<option value="all">-- Tất cả cửa hàng --</option>';
+    accessibleStores.forEach(store => {
+        optionsHTML += `<option value="${store.id}">${store.name}</option>`;
+    });
 
-function openScheduleModal() {
-    const employeeSelect = document.getElementById('schedule-employee');
-    if (employeeSelect) {
-        employeeSelect.innerHTML = '<option value="">-- Chọn Nhân Viên --</option>' + 
-            allEmployees.map(s => `<option value="${s.id}">${s.name} (${s.roleId || 'N/A'})</option>`).join('');
-    }
-    document.getElementById('schedule-date').value = document.getElementById('date').value;
-    showModal('schedule-modal');
-}
+    container.innerHTML = `
+        <div class="flex-1 max-w-xs">
+            <label for="store-filter" class="sr-only">Lọc theo cửa hàng</label>
+            <select id="store-filter" class="form-select w-full">${optionsHTML}</select>
+        </div>
+    `;
 
-async function handleAddSchedule(e) {
-    e.preventDefault();
-    const employeeId = document.getElementById('schedule-employee').value;
-    const date = document.getElementById('schedule-date').value;
-    // Logic thêm lịch mới vào Firestore
-    showToast('Chức năng thêm lịch đang được phát triển.', 'info');
-    hideModal();
+    document.getElementById('store-filter')?.addEventListener('change', () => {
+        const dateInput = document.getElementById('date');
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const todayString = `${year}-${month}-${day}`;
+
+        // Tự động đặt lại ngày về hôm nay và tải lịch
+        if (dateInput) dateInput.value = todayString;
+        listenForScheduleChanges(todayString);
+    });
 }
 //#endregion
 
@@ -387,23 +318,14 @@ export function cleanup() {
         window.currentScheduleUnsubscribe();
         window.currentScheduleUnsubscribe = null;
     }
-    sortableInstances.forEach(instance => instance.destroy());
-    sortableInstances = [];
 }
 
 export async function init() {
     domController = new AbortController();
     const { signal } = domController;
 
-    // Gán các hàm vào window để HTML có thể gọi
-    window.dailySchedule = { changeDate, deleteTask, openScheduleModal, hideModal };
-
-    // Hiển thị các nút điều khiển ngày trên header
-    const dateControls = document.getElementById('daily-schedule-controls');
-    if (dateControls) {
-        dateControls.classList.remove('hidden');
-        dateControls.classList.add('flex');
-    }
+    // Gán hàm changeDate vào window để HTML có thể gọi
+    window.dailySchedule = { changeDate, jumpToToday };
 
     await fetchInitialData();
 
@@ -418,22 +340,8 @@ export async function init() {
     }
     listenForScheduleChanges(dateInput.value);
 
+    createStoreFilter();
+
     // Gán listener cho sự kiện thay đổi ngày
     dateInput.addEventListener('change', () => listenForScheduleChanges(dateInput.value), { signal });
-
-    document.getElementById('main-add-schedule-btn')?.addEventListener('click', openScheduleModal, { signal });
-    document.getElementById('sidebar-add-schedule-btn')?.addEventListener('click', openScheduleModal, { signal });
-    document.getElementById('add-schedule-form')?.addEventListener('submit', handleAddSchedule, { signal });
-
-    // Listener đóng modal
-    document.body.addEventListener('click', (e) => {
-        if (e.target.closest('.modal-close-btn') || e.target.id === 'schedule-modal') {
-            hideModal();
-        }
-    }, { signal });
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && activeModal) {
-            hideModal();
-        }
-    }, { signal });
 }

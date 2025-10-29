@@ -486,8 +486,8 @@ function initializeDevMenu() {
 
             // Seed Schedules
             data.schedules?.forEach(schedule => {
-                if (schedule.date && schedule.staffId) {
-                    // Tạo ID tự động cho lịch làm việc để tránh trùng lặp
+                // Sửa lại điều kiện để kiểm tra 'employeeId' thay vì 'staffId'
+                if (schedule.date && schedule.employeeId) {
                     const docRef = doc(collection(db, 'schedules'));
                     addBatch.set(docRef, schedule);
                 }
