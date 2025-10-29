@@ -69,12 +69,13 @@ function renderEmployeeList(employeeList) {
     listElement.innerHTML = ''; // Xóa nội dung cũ
 
     if (employeeList.length === 0) {
-        listElement.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-gray-500">Không có nhân viên nào.</td></tr>`;
+        listElement.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-gray-500">Không có nhân viên nào.</td></tr>`;
         renderPagination(0); // Xóa các nút phân trang
         return;
     }
 
-    employeeList.forEach(employee => {
+    employeeList.forEach((employee, index) => {
+        const serialNumber = (currentPage - 1) * itemsPerPage + index + 1;
         const roleInfo = allRoles.find(r => r.id === employee.roleId) || { name: employee.roleId || 'N/A' };
         
         let storeInfoText = '';
@@ -113,6 +114,7 @@ function renderEmployeeList(employeeList) {
         row.className = 'hover:bg-gray-50';
         row.dataset.id = employee.id;
         row.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">${serialNumber}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-medium text-gray-900">${employee.id}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-700">${employee.name}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500" title="${roleInfo.name}">${employee.roleId}</td>
@@ -270,7 +272,7 @@ function getProcessedEmployees() {
 async function fetchAndRenderEmployees(direction = 'first') {
     const listElement = document.getElementById('employee-list');
     if (!listElement) return;
-    listElement.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i> Đang tải...</td></tr>`;
+    listElement.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i> Đang tải...</td></tr>`;
 
     // Thay vì truy vấn một collection, chúng ta sẽ thực hiện 3 truy vấn song song
     const employeeQuery = getDocs(collection(db, 'employee'));
@@ -331,7 +333,7 @@ async function fetchAndRenderEmployees(direction = 'first') {
     } catch (error) {
         console.error("Lỗi khi tải dữ liệu nhân viên:", error);
         window.showToast("Lỗi khi tải dữ liệu. Firestore index có thể bị thiếu.", "error");
-        listElement.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-red-500">Lỗi tải dữ liệu.</td></tr>`;
+        listElement.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-red-500">Lỗi tải dữ liệu.</td></tr>`;
     }
 }
 
