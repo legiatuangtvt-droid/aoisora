@@ -293,9 +293,8 @@ function renderGrid() {
 
     // --- Tạo nút "Thêm Dòng Ca" ---
     const addRowButtonContainer = document.createElement('div');
-    // Cập nhật: Thêm các lớp sticky, bottom, left và z-index để cố định nút.
-    // Nút sẽ luôn hiển thị ở góc dưới bên trái của màn hình.
-    addRowButtonContainer.className = 'sticky bottom-4 left-4 z-40 mt-8';
+    // Nút này sẽ nằm dưới bảng
+    addRowButtonContainer.className = 'mt-4';
     const addRowButton = document.createElement('button');
     addRowButton.id = 'add-shift-row-btn';
     addRowButton.className = 'btn btn-secondary text-sm';
