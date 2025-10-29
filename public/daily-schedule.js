@@ -9,21 +9,40 @@ let allStores = [];
 let allAreas = [];
 let allRegions = [];
 let allTaskGroups = {};
+let dailyTemplate = null; // Biến để lưu mẫu lịch trình ngày
 let currentScheduleData = []; // Lịch làm việc cho ngày đang chọn
-let filteredEmployees = []; // Nhân viên sau khi đã lọc theo cửa hàng
+let allShiftCodes = []; // Biến để lưu danh sách mã ca
+const SHIFT_CODES_STORAGE_KEY = 'aoisora_shiftCodes';
 
 //#region DATA_FETCHING
+/**
+ * Tải danh sách mã ca từ localStorage.
+ */
+function loadShiftCodes() {
+    const storedData = localStorage.getItem(SHIFT_CODES_STORAGE_KEY);
+    if (storedData) {
+        try {
+            const parsedData = JSON.parse(storedData);
+            if (Array.isArray(parsedData)) {
+                allShiftCodes = parsedData;
+            }
+        } catch (e) {
+            console.error("Lỗi khi đọc dữ liệu mã ca từ localStorage", e);
+        }
+    }
+}
 /**
  * Tải tất cả dữ liệu nền cần thiết một lần.
  */
 async function fetchInitialData() {
     try {
-        const [employeesSnap, storesSnap, areasSnap, regionsSnap, taskGroupsSnap] = await Promise.all([
+        const [employeesSnap, storesSnap, areasSnap, regionsSnap, taskGroupsSnap, templateSnap] = await Promise.all([
             getDocs(collection(db, 'employee')),
             getDocs(collection(db, 'stores')),
             getDocs(collection(db, 'areas')),
             getDocs(collection(db, 'regions')),
             getDocs(collection(db, 'task_groups')),
+            getDocs(query(collection(db, 'daily_templates'), where('name', '==', 'Test'))), // Tải mẫu "Test"
         ]);
 
         let fetchedEmployees = employeesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -33,6 +52,11 @@ async function fetchInitialData() {
         taskGroupsSnap.docs.forEach(doc => {
             allTaskGroups[doc.id] = { id: doc.id, ...doc.data() };
         });
+        // Lưu mẫu đã tải
+        if (!templateSnap.empty) {
+            dailyTemplate = templateSnap.docs[0].data();
+        }
+
 
         // Lọc nhân viên dựa trên vai trò của người dùng hiện tại
         const currentUser = window.currentUser;
@@ -71,8 +95,8 @@ async function fetchInitialData() {
  * Lắng nghe thay đổi lịch làm việc cho một ngày cụ thể.
  * @param {string} dateString - Ngày cần lấy dữ liệu (YYYY-MM-DD).
  */
-function listenForScheduleChanges(dateString) {
-    // Hủy listener cũ trước khi tạo listener mới
+function listenForScheduleChanges(dateString) {    
+    // Hủy listener cũ nếu có để tránh rò rỉ bộ nhớ
     if (window.currentScheduleUnsubscribe) {
         window.currentScheduleUnsubscribe();
         window.currentScheduleUnsubscribe = null;
@@ -82,43 +106,67 @@ function listenForScheduleChanges(dateString) {
     const selectedStoreId = storeFilter ? storeFilter.value : 'all';
 
     if (selectedStoreId === 'all') {
-        filteredEmployees = [];
-    } else {
-        filteredEmployees = allEmployees.filter(emp => emp.storeId === selectedStoreId);
-    }
-
-    const employeeIds = filteredEmployees.map(emp => emp.id);
-
-    if (employeeIds.length === 0) {
         currentScheduleData = [];
         renderScheduleGrid();
         return;
     }
-    const q = query(collection(db, 'schedules'), where("date", "==", dateString), where("employeeId", "in", employeeIds));
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-        currentScheduleData = snapshot.docs.map(doc => {
-            const data = doc.data(); // Dữ liệu từ Firestore
-            const employeeInfo = filteredEmployees.find(emp => emp.id === data.employeeId) || { name: 'Không rõ', roleId: 'N/A' };
-            return {
-                docId: doc.id,
-                ...data,
-                name: employeeInfo.name, // Sửa lỗi: employeeInfo chưa được định nghĩa
-                role: employeeInfo.roleId,
-                shift: "Ca làm việc", // Cần bổ sung thông tin ca làm
-            };
+    // --- LOGIC MỚI: Tải dữ liệu thật từ collection 'schedules' ---
+    const scheduleQuery = query(
+        collection(db, 'schedules'),
+        where('date', '==', dateString),
+        where('storeId', '==', selectedStoreId)
+    );
+
+    // Sử dụng onSnapshot để lắng nghe thay đổi theo thời gian thực
+    window.currentScheduleUnsubscribe = onSnapshot(scheduleQuery, (querySnapshot) => {
+        const schedules = [];
+        querySnapshot.forEach((doc) => {
+            const scheduleData = doc.data();
+            const employeeInfo = allEmployees.find(emp => emp.id === scheduleData.employeeId);
+
+            if (employeeInfo) {
+                schedules.push({
+                    ...scheduleData,
+                    name: employeeInfo.name, // Làm giàu dữ liệu với tên nhân viên
+                    role: employeeInfo.roleId
+                });
+            }
         });
+        currentScheduleData = schedules;
+
+        // --- LOGIC SẮP XẾP MỚI ---
+        if (dailyTemplate && dailyTemplate.shiftMappings) {
+            currentScheduleData.sort((a, b) => {
+                // Helper function to get start time string (e.g., "06:00")
+                const getStartTime = (shiftCode) => {
+                    const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === shiftCode);
+                    return shiftInfo ? shiftInfo.timeRange.split('~')[0].trim() : '99:99'; // Default to a late time if not found
+                };
+
+                const startTimeA = getStartTime(a.shift);
+                const startTimeB = getStartTime(b.shift);
+
+                // 1. Sắp xếp theo giờ bắt đầu ca
+                if (startTimeA !== startTimeB) {
+                    return startTimeA.localeCompare(startTimeB);
+                }
+
+                // 2. Nếu cùng giờ bắt đầu, ưu tiên "LEADER"
+                if (a.positionId === 'LEADER') return -1;
+                if (b.positionId === 'LEADER') return 1;
+
+                // 3. Nếu không phải LEADER, sắp xếp theo thứ tự trong template
+                const orderA = Object.keys(dailyTemplate.shiftMappings).findIndex(key => dailyTemplate.shiftMappings[key].positionId === a.positionId);
+                const orderB = Object.keys(dailyTemplate.shiftMappings).findIndex(key => dailyTemplate.shiftMappings[key].positionId === b.positionId);
+                return orderA - orderB;
+            });
+        }
         renderScheduleGrid();
     }, (error) => {
-        console.error(`Lỗi khi lắng nghe lịch ngày ${dateString}:`, error);
-        showToast("Mất kết nối tới dữ liệu lịch làm việc.", "error");
+        console.error("Lỗi khi lắng nghe thay đổi lịch làm việc: ", error);
+        window.showToast("Không thể tải lịch làm việc.", "error");
     });
-
-    // Đảm bảo listener cũ được hủy khi có listener mới
-    if (window.currentScheduleUnsubscribe) {
-        window.currentScheduleUnsubscribe();
-    }
-    window.currentScheduleUnsubscribe = unsubscribe;
 }
 //#endregion
 
@@ -148,7 +196,7 @@ function renderScheduleGrid() {
 
     // --- Tạo Body ---
     const tbody = document.createElement('tbody');
-    if (filteredEmployees.length === 0) {
+    if (currentScheduleData.length === 0) {
         const selectedDate = document.getElementById('date').value;
         const storeFilter = document.getElementById('store-filter');
         const selectedStoreId = storeFilter ? storeFilter.value : 'all';
@@ -159,13 +207,13 @@ function renderScheduleGrid() {
             tbody.innerHTML = `<tr><td colspan="${25}" class="text-center p-10 text-gray-500">Không có lịch làm việc cho ngày ${selectedDate}.</td></tr>`;
         }
     } else { 
-        filteredEmployees.forEach(employee => {
+        currentScheduleData.forEach(schedule => {
             const row = document.createElement('tr');
             row.className = 'border-b border-slate-200';
             let rowHtml = `
                 <td class="group relative p-2 border border-slate-200 align-top sticky left-0 bg-white z-10 w-40 min-w-40 font-semibold text-left">
-                    <div class="text-sm text-slate-800">${employee.name}</div>
-                    <div class="text-xs text-slate-500 font-normal">${employee.shift}</div>
+                    <div class="text-sm text-slate-800">${schedule.name}</div>
+                    <div class="text-xs text-slate-500 font-normal">${schedule.shift}</div>
                 </td>`;
 
             timeSlots.forEach(time => {
@@ -182,8 +230,7 @@ function renderScheduleGrid() {
             row.innerHTML = rowHtml;
 
             // Điền các task vào các ô
-            const employeeSchedule = currentScheduleData.find(sch => sch.employeeId === employee.id);
-            (employeeSchedule?.tasks || []).forEach(task => {
+            (schedule.tasks || []).forEach(task => {
                 const [hour, quarter] = task.startTime.split(':');
                 const time = `${hour}:00`;
                 const slot = row.querySelector(`.quarter-hour-slot[data-time="${time}"][data-quarter="${quarter}"]`);
@@ -327,6 +374,7 @@ export async function init() {
     // Gán hàm changeDate vào window để HTML có thể gọi
     window.dailySchedule = { changeDate, jumpToToday };
 
+    loadShiftCodes(); // Tải mã ca để sử dụng cho việc sắp xếp
     await fetchInitialData();
 
     const dateInput = document.getElementById('date');
