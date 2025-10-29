@@ -4,6 +4,8 @@ import { collection, onSnapshot, query, orderBy, doc, setDoc, deleteDoc, getDocs
 // Dữ liệu chức vụ sẽ được lấy từ Firestore
 let allRoles = [];
 let allStores = [];
+let allAreas = [];
+let allRegions = [];
 let allEmployeeStatuses = [];
 let domController = null;
 let currentPage = 1;
@@ -12,10 +14,7 @@ let pageSnapshots = [null]; // Lưu snapshot đầu tiên của mỗi trang, pag
 let totalEmployees = 0; // Tổng số nhân viên sau khi lọc
 
 // State for sorting and filtering
-let sortCriteria = [
-    { column: 'storeId', direction: 'asc' },
-    { column: 'roleId', direction: 'asc' }
-];
+let sortCriteria = []; // Sẽ được đặt lại trong init()
 let filters = {};
 let activeModal = null;
 
@@ -26,6 +25,12 @@ let activeModal = null;
 async function fetchInitialData() {
     const storesSnapshot = await getDocs(collection(db, 'stores'));
     allStores = storesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    const areasSnapshot = await getDocs(collection(db, 'areas'));
+    allAreas = areasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    const regionsSnapshot = await getDocs(collection(db, 'regions'));
+    allRegions = regionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
     const statusesSnapshot = await getDocs(collection(db, 'employee_statuses'));
     allEmployeeStatuses = statusesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -72,16 +77,32 @@ function renderEmployeeList(employeeList) {
     employeeList.forEach(employee => {
         const roleInfo = allRoles.find(r => r.id === employee.roleId) || { name: employee.roleId || 'N/A' };
         
-        let storeInfoText = 'N/A';
-        if (employee.storeId) {
-            const storeInfo = allStores.find(s => s.id === employee.storeId);
-            storeInfoText = storeInfo ? storeInfo.name : employee.storeId;
-        } else if (Array.isArray(employee.managedStoreIds) && employee.managedStoreIds.length > 0) {
-            storeInfoText = employee.managedStoreIds
-                .map(id => allStores.find(s => s.id === id)?.name || id)
-                .join(', ');
-        }
+        let storeInfoText = '';
+        let storeInfoTitle = '';
 
+        switch (employee.roleId) {
+            case 'AREA_MANAGER':
+                const managedArea = allAreas.find(a => employee.managedAreaIds?.includes(a.id));
+                storeInfoText = managedArea ? managedArea.name : 'Khu vực không xác định';
+                const managedStoresInArea = allStores.filter(s => s.areaId === managedArea?.id);
+                storeInfoTitle = managedStoresInArea.length > 0 ? `Quản lý các cửa hàng:\n${managedStoresInArea.map(s => `• ${s.name}`).join('\n')}` : 'Chưa có cửa hàng trong khu vực';
+                break;
+            case 'REGIONAL_MANAGER':
+                const managedRegion = allRegions.find(r => r.id === employee.managedRegionId);
+                storeInfoText = managedRegion ? managedRegion.name : 'Miền không xác định';
+                const managedAreasInRegion = allAreas.filter(a => a.regionId === managedRegion?.id);
+                storeInfoTitle = managedAreasInRegion.length > 0 ? `Quản lý các khu vực:\n${managedAreasInRegion.map(a => `• ${a.name}`).join('\n')}` : 'Chưa có khu vực trong miền';
+                break;
+            case 'HQ_STAFF':
+                storeInfoText = 'Head Quarter';
+                storeInfoTitle = 'Nhân viên văn phòng';
+                break;
+            default: // STAFF, STORE_LEADER, etc.
+                const storeInfo = allStores.find(s => s.id === employee.storeId);
+                storeInfoText = storeInfo ? storeInfo.name : (employee.storeId || 'N/A');
+                storeInfoTitle = storeInfoText;
+                break;
+        }
 
         const statusInfo = allEmployeeStatuses.find(s => s.id === employee.status) || { name: employee.status, color: 'gray' };
 
@@ -95,7 +116,7 @@ function renderEmployeeList(employeeList) {
             <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-medium text-gray-900">${employee.id}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-700">${employee.name}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500" title="${roleInfo.name}">${employee.roleId}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500" title="${storeInfoText}">${storeInfoText}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500" title="${storeInfoTitle}">${storeInfoText}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">${employee.phone}</td>
             <td class="px-6 py-4 whitespace-nowrap  text-center">${statusBadge}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-medium space-x-4">
@@ -263,10 +284,16 @@ async function fetchAndRenderEmployees(direction = 'first') {
     ]);
 
     let allPersonnel = [
-        ...employeeSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })),
-        ...areaManagerSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })),
-        ...regionalManagerSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-    ];
+        ...employeeSnap.docs.map(doc => ({ id: doc.id, ...doc.data()})),
+        ...areaManagerSnap.docs.map(doc => ({ id: doc.id, ...doc.data()})),
+        ...regionalManagerSnap.docs.map(doc => ({ id: doc.id, ...doc.data()})),
+    ].map(person => {
+        // Gắn level vào mỗi nhân viên để sắp xếp
+        const role = allRoles.find(r => r.id === person.roleId);
+        return { ...person, level: role ? (role.level || 0) : 0 };
+    });
+
+
 
     // 1. Áp dụng Filters (where)
     if (Object.keys(filters).length > 0) {
@@ -522,6 +549,12 @@ export function cleanup() {
 export async function init() {
     domController = new AbortController();
     const { signal } = domController;
+
+    // Đặt lại tiêu chí sắp xếp mặc định
+    sortCriteria = [
+        { column: 'level', direction: 'desc' }, // Sắp xếp theo level giảm dần
+        { column: 'name', direction: 'asc' }   // Nếu level bằng nhau, sắp xếp theo tên
+    ];
 
     // Gắn listener cho các hành động chung của modal
     document.body.addEventListener('click', (e) => {
