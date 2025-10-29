@@ -170,6 +170,44 @@ function listenForScheduleChanges(dateString) {
 }
 //#endregion
 
+//#region SCROLLING
+/**
+ * Chuyển đổi chuỗi thời gian "HH:mm" thành số phút trong ngày.
+ * @param {string} timeStr - Chuỗi thời gian (e.g., "08:30").
+ * @returns {number|null} - Tổng số phút từ 00:00, hoặc null nếu định dạng không hợp lệ.
+ */
+function timeToMinutes(timeStr) {
+    if (!timeStr || !timeStr.includes(':')) return null;
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    if (isNaN(hours) || isNaN(minutes)) return null;
+    return hours * 60 + minutes;
+}
+
+/**
+ * Tự động cuộn đến nhân viên đang trong ca làm việc tại thời điểm hiện tại.
+ */
+function scrollToCurrentEmployee() {
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+    // Tìm nhân viên đầu tiên có ca làm việc chứa giờ hiện tại
+    const activeEmployee = currentScheduleData.find(schedule => {
+        const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === schedule.shift);
+        if (!shiftInfo || !shiftInfo.timeRange) return false;
+
+        const [startStr, endStr] = shiftInfo.timeRange.split('~').map(s => s.trim());
+        const startMinutes = timeToMinutes(startStr);
+        const endMinutes = timeToMinutes(endStr);
+
+        return startMinutes !== null && endMinutes !== null && currentMinutes >= startMinutes && currentMinutes < endMinutes;
+    });
+
+    if (activeEmployee) {
+        const employeeRow = document.querySelector(`tr[data-employee-id="${activeEmployee.employeeId}"]`);
+        employeeRow?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
 //#region RENDERING
 const defaultColor = {
     bg: '#e2e8f0', text: '#1e293b', border: '#94a3b8'
@@ -210,8 +248,9 @@ function renderScheduleGrid() {
         currentScheduleData.forEach(schedule => {
             const row = document.createElement('tr');
             row.className = 'border-b border-slate-200';
+            row.dataset.employeeId = schedule.employeeId; // Thêm ID để dễ dàng truy vấn
             let rowHtml = `
-                <td class="group relative p-2 border border-slate-200 align-top sticky left-0 bg-white z-10 w-40 min-w-40 font-semibold text-left">
+                <td class="group p-2 border border-slate-200 align-top sticky left-0 bg-white z-10 w-40 min-w-40 font-semibold text-left">
                     <div class="text-sm text-slate-800">${schedule.name}</div>
                     <div class="text-xs text-slate-500 font-normal">${schedule.shift}</div>
                 </td>`;
@@ -259,30 +298,42 @@ function renderScheduleGrid() {
     container.innerHTML = '';
     container.appendChild(table);
 
-    scrollToCurrentTime();
+    updateTimeIndicator(); // Thay thế hàm cũ
+    scrollToCurrentEmployee(); // Thêm chức năng cuộn dọc
 }
 
 /**
- * Tự động cuộn ngang đến cột giờ hiện tại.
+ * Tự động cuộn ngang đến cột giờ hiện tại và tô màu cột 15 phút hiện tại.
  */
-function scrollToCurrentTime() {
-    const currentHour = new Date().getHours();
+function updateTimeIndicator() {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
     const container = document.getElementById('schedule-grid-container');
-    const headerCell = container.querySelector(`th[data-hour="${currentHour}"]`);
+    if (!container) return;
 
-    if (headerCell && container) {
+    // --- 1. Cuộn ngang đến cột giờ hiện tại ---
+    const headerCell = container.querySelector(`th[data-hour="${currentHour}"]`);
+    if (headerCell) {
         const containerRect = container.getBoundingClientRect();
         const cellRect = headerCell.getBoundingClientRect();
-        
-        // Tính toán vị trí cuộn: vị trí của ô so với container + vị trí cuộn hiện tại
         const scrollLeft = cellRect.left - containerRect.left + container.scrollLeft;
-        
-        container.scrollTo({
-            left: scrollLeft,
-            behavior: 'smooth'
-        });
+        container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
     }
+
+    // --- 2. Tô màu cột 15 phút hiện tại ---
+    // Xóa highlight cũ trên toàn bộ bảng
+    document.querySelectorAll('.current-time-slot').forEach(el => el.classList.remove('current-time-slot', 'bg-amber-100'));
+
+    // Xác định quarter hiện tại
+    const quarter = currentMinute < 15 ? '00' : currentMinute < 30 ? '15' : currentMinute < 45 ? '30' : '45';
+    const timeString = `${String(currentHour).padStart(2, '0')}:00`;
+
+    // Tìm và tô màu các ô trong cột quarter hiện tại
+    const slotsToHighlight = container.querySelectorAll(`.quarter-hour-slot[data-time="${timeString}"][data-quarter="${quarter}"]`);
+    slotsToHighlight.forEach(slot => slot.classList.add('current-time-slot', 'bg-amber-100'));
 }
+//#endregion
 //#endregion
 
 //#region INTERACTIONS
