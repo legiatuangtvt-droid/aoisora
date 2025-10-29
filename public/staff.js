@@ -1,14 +1,22 @@
 import { db } from './firebase.js';
-import { collection, onSnapshot, query, orderBy, doc, setDoc, deleteDoc, getDocs, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { collection, onSnapshot, query, orderBy, doc, setDoc, deleteDoc, getDocs, updateDoc, serverTimestamp, where, limit, startAfter, endBefore, getCountFromServer } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 // Dữ liệu chức vụ sẽ được lấy từ Firestore
-let allEmployees = [];
 let allRoles = [];
 let allStores = [];
 let allEmployeeStatuses = [];
 let domController = null;
 let currentPage = 1;
 const itemsPerPage = 10; // Số nhân viên trên mỗi trang
+let pageSnapshots = [null]; // Lưu snapshot đầu tiên của mỗi trang, pageSnapshots[0] luôn là null cho trang 1
+let totalEmployees = 0; // Tổng số nhân viên sau khi lọc
+
+// State for sorting and filtering
+let sortCriteria = [
+    { column: 'storeId', direction: 'asc' },
+    { column: 'roleId', direction: 'asc' }
+];
+let filters = {};
 let activeModal = null;
 
 
@@ -33,8 +41,8 @@ function listenForRoleChanges() {
     const unsubscribe = onSnapshot(q, (snapshot) => {
         allRoles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderManagedRoles(allRoles);
-        // Render lại danh sách nhân viên để cập nhật tên chức vụ nếu có thay đổi
-        renderEmployeeList(allEmployees);
+        // Tải lại dữ liệu trang hiện tại để cập nhật tên chức vụ nếu có thay đổi
+        fetchAndRenderEmployees('current');
     }, (error) => {
         console.error("Lỗi khi lắng nghe thay đổi chức vụ:", error);
         showToast("Mất kết nối tới dữ liệu chức vụ.", "error");
@@ -46,42 +54,13 @@ function listenForRoleChanges() {
 }
 
 /**
- * Lắng nghe các thay đổi từ collection `employee` và render lại.
- */
-function listenForEmployeeChanges() {
-    const employeeCollection = collection(db, 'employee');
-    const q = query(employeeCollection, orderBy("name"));
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-        allEmployees = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        // Khi dữ liệu thay đổi, kiểm tra xem trang hiện tại có còn hợp lệ không
-        const totalPages = Math.ceil(allEmployees.length / itemsPerPage);
-        if (currentPage > totalPages) {
-            currentPage = totalPages > 0 ? totalPages : 1;
-        }
-        renderEmployeeList(allEmployees);
-    }, (error) => {
-        console.error("Lỗi khi lắng nghe thay đổi nhân viên:", error);
-        showToast("Mất kết nối tới dữ liệu nhân viên.", "error");
-    });
-
-    if (domController && !domController.signal.aborted) {
-        domController.signal.addEventListener('abort', unsubscribe);
-    }
-}
-/**
  * Render danh sách nhân viên ra bảng.
  * @param {Array} employeeList - Danh sách nhân viên cần hiển thị.
  */
 function renderEmployeeList(employeeList) {
+    const processedEmployees = getProcessedEmployees();
     const listElement = document.getElementById('employee-list');
     if (!listElement) return;
-
-    // Tính toán các mục cho trang hiện tại
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const paginatedEmployees = employeeList.slice(startIndex, endIndex);
-
     listElement.innerHTML = ''; // Xóa nội dung cũ
 
     if (employeeList.length === 0) {
@@ -90,9 +69,20 @@ function renderEmployeeList(employeeList) {
         return;
     }
 
-    paginatedEmployees.forEach(employee => {
+    employeeList.forEach(employee => {
         const roleInfo = allRoles.find(r => r.id === employee.roleId) || { name: employee.roleId || 'N/A' };
-        const storeInfo = allStores.find(s => s.id === employee.storeId) || { name: employee.storeId || 'N/A' };
+        
+        let storeInfoText = 'N/A';
+        if (employee.storeId) {
+            const storeInfo = allStores.find(s => s.id === employee.storeId);
+            storeInfoText = storeInfo ? storeInfo.name : employee.storeId;
+        } else if (Array.isArray(employee.managedStoreIds) && employee.managedStoreIds.length > 0) {
+            storeInfoText = employee.managedStoreIds
+                .map(id => allStores.find(s => s.id === id)?.name || id)
+                .join(', ');
+        }
+
+
         const statusInfo = allEmployeeStatuses.find(s => s.id === employee.status) || { name: employee.status, color: 'gray' };
 
         const statusColor = statusInfo.color || 'gray';
@@ -105,7 +95,7 @@ function renderEmployeeList(employeeList) {
             <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-medium text-gray-900">${employee.id}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-700">${employee.name}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500" title="${roleInfo.name}">${employee.roleId}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">${storeInfo.name}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500" title="${storeInfoText}">${storeInfoText}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">${employee.phone}</td>
             <td class="px-6 py-4 whitespace-nowrap  text-center">${statusBadge}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-medium space-x-4">
@@ -116,7 +106,7 @@ function renderEmployeeList(employeeList) {
         listElement.appendChild(row);
     });
 
-    renderPagination(employeeList.length);
+    renderPagination(totalEmployees);
 }
 
 /**
@@ -127,7 +117,7 @@ function renderPagination(totalItems) {
     const paginationContainer = document.getElementById('pagination-controls');
     if (!paginationContainer) return;
 
-    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
 
     if (totalPages <= 1) {
         paginationContainer.innerHTML = '';
@@ -214,11 +204,18 @@ function openEmployeeModal(employeeId = null) {
         idInput.value = employeeId;
         idInput.readOnly = true;
 
-        const employee = allEmployees.find(s => s.id === employeeId);
-        if (employee) {
-            document.getElementById('employee-name').value = employee.name;
-            document.getElementById('employee-phone').value = employee.phone || '';
-            roleSelect.value = employee.roleId || '';
+        // Tạm thời lấy thông tin từ DOM vì allEmployees không còn tồn tại
+        const row = document.querySelector(`tr[data-id="${employeeId}"]`);
+        if (row) {
+            const employeeName = row.cells[1].textContent;
+            const roleId = row.cells[2].textContent;
+            const phone = row.cells[4].textContent;
+            const statusText = row.querySelector('span').textContent;
+            const status = allEmployeeStatuses.find(s => s.name === statusText)?.id || 'ACTIVE';
+
+            document.getElementById('employee-name').value = employeeName;
+            document.getElementById('employee-phone').value = phone || '';
+            roleSelect.value = roleId || '';
             storeSelect.value = employee.storeId || '';
             statusSelect.value = employee.status || 'ACTIVE';
         }
@@ -232,6 +229,174 @@ function openEmployeeModal(employeeId = null) {
     }
 
     showModal('employee-modal');
+}
+
+/**
+ * Lấy danh sách nhân viên đã được lọc và sắp xếp.
+ * @returns {Array}
+ */
+function getProcessedEmployees() {
+    // This function is now deprecated as filtering and sorting are done server-side.
+    // It's kept for compatibility with parts of the code that might still call it,
+    // but it no longer performs any processing.
+    return [];
+}
+
+/**
+ * Xây dựng và thực thi truy vấn Firestore để lấy dữ liệu nhân viên.
+ * @param {string} direction - 'next', 'prev', hoặc 'first' để điều hướng trang.
+ */
+async function fetchAndRenderEmployees(direction = 'first') {
+    const listElement = document.getElementById('employee-list');
+    if (!listElement) return;
+    listElement.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i> Đang tải...</td></tr>`;
+
+    // Thay vì truy vấn một collection, chúng ta sẽ thực hiện 3 truy vấn song song
+    const employeeQuery = getDocs(collection(db, 'employee'));
+    const areaManagerQuery = getDocs(collection(db, 'area_managers'));
+    const regionalManagerQuery = getDocs(collection(db, 'regional_managers'));
+
+    const [employeeSnap, areaManagerSnap, regionalManagerSnap] = await Promise.all([
+        employeeQuery,
+        areaManagerQuery,
+        regionalManagerQuery
+    ]);
+
+    let allPersonnel = [
+        ...employeeSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+        ...areaManagerSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+        ...regionalManagerSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    ];
+
+    // 1. Áp dụng Filters (where)
+    if (Object.keys(filters).length > 0) {
+        allPersonnel = allPersonnel.filter(person => {
+            return Object.keys(filters).every(column => {
+                return person[column] === filters[column];
+            });
+        });
+    }
+
+    // 2. Áp dụng Sorting (orderBy)
+    allPersonnel.sort((a, b) => {
+        for (const criterion of sortCriteria) {
+            const { column, direction } = criterion;
+            const valA = a[column] || '';
+            const valB = b[column] || '';
+            const comparison = String(valA).localeCompare(String(valB), 'vi', { sensitivity: 'base' });
+            if (comparison !== 0) {
+                return direction === 'asc' ? comparison : -comparison;
+            }
+        }
+        return 0;
+    });
+
+    totalEmployees = allPersonnel.length;
+
+    // 3. Áp dụng Pagination
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const employeesForPage = allPersonnel.slice(startIndex, endIndex);
+
+    try {
+        renderEmployeeList(employeesForPage);
+        updateSortFilterIndicators();
+    } catch (error) {
+        console.error("Lỗi khi tải dữ liệu nhân viên:", error);
+        window.showToast("Lỗi khi tải dữ liệu. Firestore index có thể bị thiếu.", "error");
+        listElement.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-red-500">Lỗi tải dữ liệu.</td></tr>`;
+    }
+}
+
+/**
+ * Hiển thị popup để sắp xếp và lọc.
+ * @param {Event} e - Sự kiện click.
+ */
+function showSortFilterPopup(e) {
+    const th = e.currentTarget;
+    const column = th.dataset.column;
+    const isFilterable = th.dataset.filterable === 'true';
+
+    const popup = document.getElementById('sort-filter-popup');
+    const filterOptions = document.getElementById('filter-options');
+    const filterList = document.getElementById('filter-list');
+    const filterSearch = document.getElementById('filter-search');
+
+    // Hiển thị/ẩn phần lọc
+    filterOptions.style.display = isFilterable ? 'block' : 'none';
+    filterList.innerHTML = '';
+    filterSearch.value = '';
+
+    if (isFilterable) {
+        let options = [];
+        if (column === 'roleId') {
+            options = allRoles.map(r => ({ value: r.id, text: r.name }));
+        } else if (column === 'storeId') {
+            options = allStores.map(s => ({ value: s.id, text: s.name }));
+        } else if (column === 'status') {
+            options = allEmployeeStatuses.map(s => ({ value: s.id, text: s.name }));
+        }
+
+        const renderFilterItems = (searchTerm = '') => {
+            filterList.innerHTML = '';
+            const filteredOptions = options.filter(opt => opt.text.toLowerCase().includes(searchTerm.toLowerCase()));
+            filteredOptions.forEach(opt => {
+                const item = document.createElement('a');
+                item.href = '#';
+                item.className = 'filter-item block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100';
+                item.dataset.value = opt.value;
+                item.textContent = opt.text;
+                item.onclick = (event) => {
+                    event.preventDefault();
+                    filters[column] = opt.value;
+                    currentPage = 1; // Reset về trang đầu khi lọc
+                    fetchAndRenderEmployees('first');
+                    updateSortFilterIndicators();
+                    popup.classList.add('hidden');
+                };
+                filterList.appendChild(item);
+            });
+        };
+
+        renderFilterItems();
+        filterSearch.oninput = () => renderFilterItems(filterSearch.value);
+    }
+
+    // Gán sự kiện cho các nút
+    popup.querySelectorAll('.sort-btn').forEach(btn => {
+        btn.onclick = (event) => {
+            event.preventDefault();
+            sortCriteria = [{ column, direction: btn.dataset.direction }];
+            currentPage = 1; // Reset về trang đầu khi sắp xếp
+            fetchAndRenderEmployees('first');
+            updateSortFilterIndicators();
+            popup.classList.add('hidden');
+        };
+    });
+
+    document.getElementById('clear-filter-btn').onclick = () => {
+        delete filters[column];
+        currentPage = 1; // Reset về trang đầu khi xóa lọc
+        fetchAndRenderEmployees('first');
+        updateSortFilterIndicators();
+        popup.classList.add('hidden');
+    };
+
+    // Định vị và hiển thị popup
+    const rect = th.getBoundingClientRect();
+    popup.style.left = `${rect.left}px`;
+    popup.style.top = `${rect.bottom}px`;
+    popup.classList.remove('hidden');
+
+    // Đóng popup khi click ra ngoài
+    setTimeout(() => {
+        document.addEventListener('click', function hide(event) {
+            if (!popup.contains(event.target) && event.target !== th) {
+                popup.classList.add('hidden');
+                document.removeEventListener('click', hide);
+            }
+        }, { once: true });
+    }, 0);
 }
 
 /**
@@ -267,6 +432,33 @@ function renderManagedRoles(roles) {
             </td>
         </tr>`).join('');
     list.closest('table').innerHTML = header + `<tbody>${rowsHtml}</tbody>`;
+}
+
+/**
+ * Cập nhật các chỉ báo sắp xếp/lọc trên tiêu đề bảng.
+ */
+function updateSortFilterIndicators() {
+    const headers = document.querySelectorAll('#staff-table-header .th-sortable');
+    headers.forEach(th => {
+        const column = th.dataset.column;
+        const indicator = th.querySelector('.sort-indicator');
+        indicator.innerHTML = ''; // Clear old indicators
+
+        // Sort indicator
+        const sortCriterion = sortCriteria.find(c => c.column === column);
+        if (sortCriterion) {
+            const icon = document.createElement('i');
+            icon.className = `fas ${sortCriterion.direction === 'asc' ? 'fa-arrow-up' : 'fa-arrow-down'} ml-2 text-indigo-500`;
+            indicator.appendChild(icon);
+        }
+
+        // Filter indicator
+        if (filters[column]) {
+            const icon = document.createElement('i');
+            icon.className = 'fas fa-filter ml-2 text-amber-500';
+            indicator.appendChild(icon);
+        }
+    });
 }
 
 //#region MODAL_MANAGEMENT
@@ -348,7 +540,7 @@ export async function init() {
 
     // Lắng nghe các thay đổi từ Firestore và render
     listenForRoleChanges();
-    listenForEmployeeChanges();
+    fetchAndRenderEmployees('first'); // Tải trang đầu tiên khi khởi tạo
 
     const addEmployeeBtn = document.getElementById('add-employee-btn');
     const manageRolesBtn = document.getElementById('manage-roles-btn');
@@ -495,21 +687,26 @@ export async function init() {
         const prev5PageBtn = e.target.closest('.prev-5-page-btn');
         const next5PageBtn = e.target.closest('.next-5-page-btn');
 
-        const totalPages = Math.ceil(allEmployees.length / itemsPerPage);
+        const totalPages = Math.ceil(totalEmployees / itemsPerPage);
         let pageChanged = false;
+        let direction = 'first';
 
         if (prevBtn && currentPage > 1) {
             currentPage--;
             pageChanged = true;
+            direction = 'prev';
         } else if (nextBtn && currentPage < totalPages) {
             currentPage++;
             pageChanged = true;
+            direction = 'next';
         } else if (firstPageBtn && currentPage > 1) {
             currentPage = 1;
             pageChanged = true;
+            direction = 'first';
         } else if (lastPageBtn && currentPage < totalPages) {
             currentPage = totalPages;
             pageChanged = true;
+            direction = 'last'; // Cần xử lý đặc biệt
         } else if (prev5PageBtn && currentPage > 1) {
             currentPage = Math.max(1, currentPage - 5);
             pageChanged = true;
@@ -519,9 +716,14 @@ export async function init() {
         }
 
         if (pageChanged) {
-            renderEmployeeList(allEmployees);
+            fetchAndRenderEmployees(direction);
         }
     }, { signal });
+
+    // Event listener cho các tiêu đề cột có thể sắp xếp/lọc
+    document.querySelectorAll('#staff-table-header .th-sortable').forEach(th => {
+        th.addEventListener('click', showSortFilterPopup, { signal });
+    });
 
     // TODO: Thêm logic cho tìm kiếm, sửa, xóa
 }

@@ -51,8 +51,14 @@ function updateHeaderUserInfo(user) {
     if (user) {
         if (userNameEl) userNameEl.textContent = user.name;
         if (userStoreEl) {
-            const store = allStores.find(s => s.id === user.storeId);
-            userStoreEl.textContent = store ? store.name : (user.roleId || '');
+            if (user.storeId) {
+                const store = allStores.find(s => s.id === user.storeId);
+                userStoreEl.textContent = store ? store.name : (user.roleId || '');
+            } else if (Array.isArray(user.managedStoreIds) && user.managedStoreIds.length > 0) {
+                userStoreEl.textContent = user.managedStoreIds.join(', ');
+            } else {
+                userStoreEl.textContent = user.roleId || '';
+            }
         }
         if (userAvatarEl) {
             // Tạo avatar từ 2 chữ cái đầu của tên
