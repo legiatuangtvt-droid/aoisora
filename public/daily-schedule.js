@@ -190,21 +190,23 @@ function scrollToCurrentEmployee() {
     const now = new Date();
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
-    // Tìm nhân viên đầu tiên có ca làm việc chứa giờ hiện tại
-    const activeEmployee = currentScheduleData.find(schedule => {
+    // Tìm TẤT CẢ nhân viên có ca làm việc chứa giờ hiện tại
+    const activeEmployees = currentScheduleData.filter(schedule => {
         const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === schedule.shift);
         if (!shiftInfo || !shiftInfo.timeRange) return false;
 
         const [startStr, endStr] = shiftInfo.timeRange.split('~').map(s => s.trim());
         const startMinutes = timeToMinutes(startStr);
         const endMinutes = timeToMinutes(endStr);
-
+        
         return startMinutes !== null && endMinutes !== null && currentMinutes >= startMinutes && currentMinutes < endMinutes;
     });
 
-    if (activeEmployee) {
-        const employeeRow = document.querySelector(`tr[data-employee-id="${activeEmployee.employeeId}"]`);
-        employeeRow?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Nếu có nhân viên đang làm việc, cuộn đến người cuối cùng trong danh sách
+    if (activeEmployees.length > 0) {
+        const lastActiveEmployee = activeEmployees[activeEmployees.length - 1];
+        const employeeRow = document.querySelector(`tr[data-employee-id="${lastActiveEmployee.employeeId}"]`);
+        employeeRow?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 }
 
