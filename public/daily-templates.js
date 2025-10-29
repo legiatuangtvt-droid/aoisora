@@ -175,18 +175,15 @@ function addShiftRow(tbody, shiftNumber) {
     newRow.dataset.shiftId = shiftId;
 
     // Tạo dropdown cho việc chọn mã ca
-    // Cập nhật: Thêm data-attributes để xử lý UI động
-    const shiftCodeOptions = allShiftCodes.map(sc => `<option value="${sc.shiftCode}" data-shift-code="${sc.shiftCode}" data-time-range="${sc.timeRange}">${sc.shiftCode} (${sc.timeRange})</option>`).join('');
     // Tạo dropdown cho việc chọn vị trí công việc
     const workPositionOptions = allWorkPositions.map(pos => `<option value="${pos.id}">${pos.name}</option>`).join('');
 
     let bodyRowHtml = `
         <td class="group relative p-1 border border-slate-200 align-top sticky left-0 bg-white z-10 w-40 min-w-40 font-semibold text-center">
             <div class="space-y-1">
-                <select class="shift-code-selector form-input w-full text-xs text-center p-1 font-semibold">
-                    <option value="">-- Chọn Ca --</option>
-                    ${shiftCodeOptions}
-                </select>
+                <input list="shift-codes-datalist" 
+                       class="shift-code-selector form-input w-full text-xs text-center p-1 font-semibold" 
+                       placeholder="-- Nhập/Chọn Ca --">
                 <!-- Thêm div để hiển thị khung giờ -->
                 <div class="shift-time-display text-xs text-slate-500 h-4"></div>
                 <select class="work-position-selector form-input w-full text-xs text-center p-1">
@@ -219,21 +216,19 @@ function addShiftRow(tbody, shiftNumber) {
     // Gắn sự kiện onchange cho dropdown vừa tạo
     const newSelector = newRow.querySelector('.shift-code-selector');
     if (newSelector) {
-        newSelector.addEventListener('change', () => {
-            // --- Logic hiển thị động cho select ---
-            // 1. Khôi phục text đầy đủ cho tất cả các option
-            newSelector.querySelectorAll('option[data-shift-code]').forEach(opt => {
-                opt.textContent = `${opt.dataset.shiftCode} (${opt.dataset.timeRange})`;
-            });
-
-            // 2. Cập nhật option được chọn và div hiển thị giờ
-            const selectedOption = newSelector.options[newSelector.selectedIndex];
+        // Sử dụng sự kiện 'input' để bắt cả việc gõ và chọn từ datalist
+        newSelector.addEventListener('input', () => {
+            const shiftCodeValue = newSelector.value;
+            const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === shiftCodeValue);
             const timeDisplay = newRow.querySelector('.shift-time-display');
-            if (selectedOption && selectedOption.value) {
-                selectedOption.textContent = selectedOption.dataset.shiftCode; // Chỉ hiển thị mã ca
-                if (timeDisplay) timeDisplay.textContent = selectedOption.dataset.timeRange;
-            } else if (timeDisplay) timeDisplay.textContent = ''; // Xóa giờ nếu không chọn ca nào
 
+            if (shiftInfo) {
+                if (timeDisplay) timeDisplay.textContent = shiftInfo.timeRange;
+            } else {
+                if (timeDisplay) timeDisplay.textContent = ''; // Xóa giờ nếu mã ca không hợp lệ
+            }
+
+            // Cập nhật giao diện và lưu thay đổi
             updateRowAppearance(newRow);
             updateTemplateFromDOM();
         });
@@ -720,22 +715,18 @@ async function loadTemplate(templateId) {
                     if (row) {
                         const selector = row.querySelector('.shift-code-selector');
                         const positionSelector = row.querySelector('.work-position-selector');
-                        const mappingData = shiftMappings[shiftId]; // mappingData giờ là object { shiftCode, positionId }
-                        if (selector && mappingData?.shiftCode) selector.value = mappingData.shiftCode;
+                        const mappingData = shiftMappings[shiftId];
+                        if (selector && mappingData?.shiftCode) selector.value = mappingData.shiftCode; // Gán giá trị cho input
                         if (positionSelector && mappingData?.positionId) positionSelector.value = mappingData.positionId;
                         updateRowAppearance(row); // Tô màu cho dòng sau khi tải
 
-                        // --- Cập nhật UI động khi tải mẫu ---
-                        if (selector.value) {
-                            // 1. Khôi phục text đầy đủ cho tất cả các option
-                            selector.querySelectorAll('option[data-shift-code]').forEach(opt => {
-                                opt.textContent = `${opt.dataset.shiftCode} (${opt.dataset.timeRange})`;
-                            });
-                            // 2. Cập nhật option được chọn và div hiển thị giờ
-                            const selectedOption = selector.options[selector.selectedIndex];
+                        // Cập nhật hiển thị khung giờ cho input
+                        if (selector.value && mappingData?.shiftCode) {
+                            const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === mappingData.shiftCode);
                             const timeDisplay = row.querySelector('.shift-time-display');
-                            selectedOption.textContent = selectedOption.dataset.shiftCode;
-                            if (timeDisplay) timeDisplay.textContent = selectedOption.dataset.timeRange;
+                            if (shiftInfo && timeDisplay) {
+                                timeDisplay.textContent = shiftInfo.timeRange;
+                            }
                         }
 
                     }
@@ -840,6 +831,15 @@ export async function init() {
     document.getElementById('new-template-btn')?.addEventListener('click', switchToCreateNewMode);
     document.getElementById('delete-template-btn')?.addEventListener('click', deleteCurrentTemplate);
     document.getElementById('template-selector')?.addEventListener('change', (e) => loadTemplate(e.target.value));
+
+    // Tạo datalist cho mã ca nếu chưa có
+    if (!document.getElementById('shift-codes-datalist')) {
+        const datalist = document.createElement('datalist');
+        datalist.id = 'shift-codes-datalist';
+        datalist.innerHTML = allShiftCodes.map(sc => `<option value="${sc.shiftCode}">${sc.timeRange}</option>`).join('');
+        document.body.appendChild(datalist);
+    }
+
 
     // Thêm listener để cập nhật tiêu đề khi nhập manhour
     const manhourInput = document.getElementById('template-manhour-input');
