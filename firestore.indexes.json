@@ -16,6 +16,19 @@
     }
     ,
     {
+      "collectionGroup": "stores",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "areaId", "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "id", "order": "ASCENDING"
+        }
+      ]
+    }
+    ,
+    {
       "collectionGroup": "employee",
       "queryScope": "COLLECTION",
       "fields": [

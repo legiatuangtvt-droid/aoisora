@@ -27,7 +27,10 @@ async function fetchStoreStatuses() {
  * Lắng nghe các thay đổi từ collection `stores` và render lại bảng.
  */
 function listenForStoreChanges() {
-    const q = query(storesCollection, orderBy("createdAt", "desc"));
+    // Sửa lại query: Sắp xếp theo khu vực, sau đó theo mã cửa hàng.
+    // Điều này giúp nhóm các cửa hàng cùng khu vực lại với nhau và tránh lỗi
+    // khi trường 'createdAt' không tồn tại ở tất cả các document.
+    const q = query(storesCollection, orderBy("areaId"), orderBy("id"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
         allStores = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderStoreList(allStores);
@@ -66,7 +69,7 @@ function renderStoreList(storeList) {
         row.innerHTML = `
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">${store.id}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-center">${store.name}</td>
-            <td class="px-6 py-4 text-sm text-right text-gray-500">${store.address}</td>
+            <td class="px-6 py-4 text-sm text-left text-gray-500">${store.address || ''}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">${store.phone}</td>
             <td class="px-6 py-4 whitespace-nowrap text-center">${statusBadge}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-4">
