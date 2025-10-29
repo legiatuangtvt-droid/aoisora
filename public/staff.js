@@ -146,27 +146,27 @@ function renderPagination(totalItems) {
                 <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
                     <button class="first-page-btn relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" ${currentPage === 1 ? 'disabled' : ''} title="Trang đầu">
                         <span class="sr-only">First</span>
-                        <i class="fas fa-backward-step h-5 w-5"></i>
+                        <i class="fas fa-backward-step h-5 w-5 flex items-center justify-center"></i>
                     </button>
                     <button class="prev-5-page-btn relative inline-flex items-center px-2 py-2 border-y border-l border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" ${currentPage <= 5 ? 'disabled' : ''} title="Lùi 5 trang">
                         <span class="sr-only">Previous 5 pages</span>
-                        <i class="fas fa-angles-left h-5 w-5"></i>
+                        <i class="fas fa-angles-left h-5 w-5 flex items-center justify-center"></i>
                     </button>
                     <button class="prev-page-btn relative inline-flex items-center px-2 py-2 border-y border-l border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" ${currentPage === 1 ? 'disabled' : ''} title="Trang trước">
                         <span class="sr-only">Previous</span>
-                        <i class="fas fa-chevron-left h-5 w-5"></i>
+                        <i class="fas fa-chevron-left h-5 w-5 flex items-center justify-center"></i>
                     </button>
                     <button class="next-page-btn relative inline-flex items-center px-2 py-2 border-y border-l border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" ${currentPage === totalPages ? 'disabled' : ''} title="Trang sau">
                         <span class="sr-only">Next</span>
-                        <i class="fas fa-chevron-right h-5 w-5"></i>
+                        <i class="fas fa-chevron-right h-5 w-5 flex items-center justify-center"></i>
                     </button>
                     <button class="next-5-page-btn relative inline-flex items-center px-2 py-2 border-y border-l border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" ${currentPage > totalPages - 5 ? 'disabled' : ''} title="Tới 5 trang">
                         <span class="sr-only">Next 5 pages</span>
-                        <i class="fas fa-angles-right h-5 w-5"></i>
+                        <i class="fas fa-angles-right h-5 w-5 flex items-center justify-center"></i>
                     </button>
                     <button class="last-page-btn relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" ${currentPage === totalPages ? 'disabled' : ''} title="Trang cuối">
                         <span class="sr-only">Last</span>
-                        <i class="fas fa-forward-step h-5 w-5"></i>
+                        <i class="fas fa-forward-step h-5 w-5 flex items-center justify-center"></i>
                     </button>
                 </nav>
             </div>
