@@ -13,7 +13,7 @@ let allMainTasks = {};
 let currentScheduleData = []; // Lịch làm việc cho ngày đang chọn
 let sortableInstances = [];
 
-const timeSlots = ["6:00", "7:00", "8:00", "9:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00"];
+const timeSlots = ["6:00", "7:00", "8:00", "9:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"];
 
 //#region DATA_FETCHING
 /**
@@ -137,7 +137,7 @@ function getGroupColor(groupId) {
  */
 function calculateTaskPosition(startTime, duration) {
     const [startHour, startMinute] = startTime.split(':').map(Number);
-    const totalTimelineMinutes = (21 - 6) * 60; // 15 giờ * 60 phút = 900 phút
+    const totalTimelineMinutes = (23 - 6) * 60; // 17 giờ * 60 phút = 1020 phút
 
     // Tính số phút từ lúc bắt đầu timeline (6:00)
     const minutesFromStart = (startHour - 6) * 60 + startMinute;
@@ -162,8 +162,8 @@ function renderSchedule() {
     container.innerHTML = '';
     
     // Thiết lập cấu trúc grid 18 cột cho container
-    container.style.display = 'grid';
-    container.style.gridTemplateColumns = 'repeat(18, minmax(0, 1fr))';
+    container.style.display = 'grid'; // 2 cột cho tên + 18 cột cho giờ
+    container.style.gridTemplateColumns = 'repeat(20, minmax(0, 1fr))';
 
     // Tính toán man hours
     const manHours = {};
@@ -197,8 +197,8 @@ function renderSchedule() {
     } else {
         // Thêm các cột giờ trống làm nền cho timeline
         const backgroundGrid = document.createElement('div');
-        backgroundGrid.className = 'col-start-3 col-span-16 grid grid-cols-16 h-full';
-        timeSlots.slice(0, -1).forEach(() => { // Chỉ cần 15 vạch kẻ
+        backgroundGrid.className = 'col-start-3 col-span-18 grid grid-cols-18 h-full';
+        timeSlots.slice(0, -1).forEach(() => { // Chỉ cần 17 vạch kẻ
             backgroundGrid.innerHTML += `<div class="border-r"></div>`;
         });
         container.appendChild(backgroundGrid);
@@ -218,7 +218,7 @@ function renderSchedule() {
 
             // Timeline container for this employee's tasks
             const timelineContainer = document.createElement('div');
-            timelineContainer.className = 'col-span-16 border-b relative h-20'; // h-20 để có chiều cao cố định
+            timelineContainer.className = 'col-span-18 border-b relative h-20'; // h-20 để có chiều cao cố định
 
             // Giả định employee.tasks là một mảng các object: [{id, startTime}, ...]
             const tasks = employee.tasks || [];

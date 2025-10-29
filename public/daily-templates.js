@@ -169,7 +169,7 @@ function updateRowAppearance(row) {
  * @param {number} shiftNumber - Số thứ tự của ca (ví dụ: 2 cho "Ca 2").
  */
 function addShiftRow(tbody, shiftNumber) {
-    const timeSlots = Array.from({ length: 16 }, (_, i) => `${i + 6}:00`);
+    const timeSlots = Array.from({ length: 18 }, (_, i) => `${i + 6}:00`);
     const shiftId = `shift-${shiftNumber}`;
     const newRow = document.createElement('tr');
     newRow.dataset.shiftId = shiftId;
@@ -265,7 +265,7 @@ function renderGrid() {
     const container = document.getElementById('template-builder-grid-container');
     if (!container) return;
 
-    const timeSlots = Array.from({ length: 16 }, (_, i) => `${i + 6}:00`); // 6:00 -> 21:00
+    const timeSlots = Array.from({ length: 18 }, (_, i) => `${i + 6}:00`); // 6:00 -> 23:00
 
     // Tạo bảng
     const table = document.createElement('table');
