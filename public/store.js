@@ -1,9 +1,13 @@
 import { db } from './firebase.js';
-import { collection, onSnapshot, query, orderBy, doc, setDoc, getDoc, updateDoc, deleteDoc, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { collection, onSnapshot, query, orderBy, doc, setDoc, getDoc, updateDoc, deleteDoc, serverTimestamp, getDocs, documentId } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 let allStores = [];
 let allStoreStatuses = [];
 let domController = null;
+let currentPage = 1;
+const itemsPerPage = 10; // Số cửa hàng trên mỗi trang
+let totalStores = 0;
+
 let activeModal = null;
 
 // Tham chiếu đến collection 'stores' trên Firestore
@@ -16,7 +20,6 @@ async function fetchStoreStatuses() {
     const statusesSnapshot = await getDocs(collection(db, 'store_statuses'));
     allStoreStatuses = statusesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     
-    // Điền các lựa chọn vào dropdown trong modal
     const statusSelect = document.getElementById('store-status');
     if (statusSelect) {
         statusSelect.innerHTML = allStoreStatuses.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
@@ -28,14 +31,15 @@ async function fetchStoreStatuses() {
  */
 function listenForStoreChanges() {
     // Sửa lại query: Sắp xếp theo khu vực, sau đó theo mã cửa hàng.
-    // Điều này giúp nhóm các cửa hàng cùng khu vực lại với nhau và tránh lỗi
-    // khi trường 'createdAt' không tồn tại ở tất cả các document.
-    const q = query(storesCollection, orderBy("areaId"), orderBy("id"));
+    // Sắp xếp theo 'areaId' trước, sau đó theo mã tài liệu (document ID).
+    // Sử dụng documentId() để sắp xếp theo mã cửa hàng (là ID của document).
+    const q = query(storesCollection, orderBy("areaId"), orderBy(documentId()));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-        allStores = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const fetchedStores = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        allStores = fetchedStores; // Lưu lại toàn bộ danh sách
         renderStoreList(allStores);
     }, (error) => {
-        console.error("Lỗi khi lắng nghe thay đổi cửa hàng:", error);
+        console.error("[Store] Lỗi khi lắng nghe thay đổi cửa hàng (onSnapshot):", error);
         showToast("Mất kết nối tới dữ liệu cửa hàng.", "error");
     });
     // Lưu lại hàm hủy listener để dọn dẹp khi chuyển trang
@@ -49,28 +53,37 @@ function listenForStoreChanges() {
  * @param {Array} storeList - Danh sách cửa hàng cần hiển thị.
  */
 function renderStoreList(storeList) {
+    totalStores = storeList.length;
+
+    // 1. Áp dụng Pagination
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const storesForPage = storeList.slice(startIndex, endIndex);
+
     const listElement = document.getElementById('store-list');
     if (!listElement) return;
 
     listElement.innerHTML = ''; // Xóa nội dung cũ
 
-    if (storeList.length === 0) {
+    if (storesForPage.length === 0) {
         listElement.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-gray-500">Chưa có cửa hàng nào. Hãy thêm một cửa hàng mới!</td></tr>`;
+        renderPagination(0); // Xóa các nút phân trang
         return;
     }
 
-    storeList.forEach(store => {
+    storesForPage.forEach((store, index) => {
         const statusInfo = allStoreStatuses.find(s => s.id === store.status) || { name: store.status, color: 'gray' };
         const statusColor = statusInfo.color || 'gray';
         const statusBadge = `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-${statusColor}-100 text-${statusColor}-800">${statusInfo.name}</span>`;
+        const serialNumber = startIndex + index + 1;
 
         const row = document.createElement('tr');
         row.className = 'hover:bg-gray-50';
         row.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">${serialNumber}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">${store.id}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-center">${store.name}</td>
             <td class="px-6 py-4 text-sm text-left text-gray-500">${store.address || ''}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">${store.phone}</td>
             <td class="px-6 py-4 whitespace-nowrap text-center">${statusBadge}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-4">
                 <button data-id="${store.id}" class="edit-store-btn text-indigo-600 hover:text-indigo-900" title="Chỉnh sửa"><i class="fas fa-pencil-alt"></i></button>
@@ -79,6 +92,73 @@ function renderStoreList(storeList) {
         `;
         listElement.appendChild(row);
     });
+
+    renderPagination(totalStores);
+}
+
+/**
+ * Render các nút điều khiển phân trang.
+ * @param {number} totalItems - Tổng số cửa hàng.
+ */
+function renderPagination(totalItems) {
+    const paginationContainer = document.getElementById('pagination-controls');
+    if (!paginationContainer) return;
+
+    const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+
+    if (totalPages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
+
+    const startIndex = (currentPage - 1) * itemsPerPage + 1;
+    const endIndex = Math.min(startIndex + itemsPerPage - 1, totalItems);
+
+    paginationContainer.innerHTML = `
+        <div class="flex-1 flex justify-between sm:hidden">
+            <button class="prev-page-btn relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" ${currentPage === 1 ? 'disabled' : ''}>
+                Trước
+            </button>
+            <button class="next-page-btn relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" ${currentPage === totalPages ? 'disabled' : ''}>
+                Sau
+            </button>
+        </div>
+        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+            <div>
+                <p class="text-sm text-gray-700">
+                    Hiển thị từ <span class="font-medium">${startIndex}</span> đến <span class="font-medium">${endIndex}</span> trong tổng số <span class="font-medium">${totalItems}</span> cửa hàng
+                </p>
+            </div>
+            <div>
+                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    <button class="first-page-btn relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" ${currentPage === 1 ? 'disabled' : ''} title="Trang đầu">
+                        <span class="sr-only">First</span>
+                        <i class="fas fa-backward-step h-5 w-5 flex items-center justify-center"></i>
+                    </button>
+                    <button class="prev-5-page-btn relative inline-flex items-center px-2 py-2 border-y border-l border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" ${currentPage <= 5 ? 'disabled' : ''} title="Lùi 5 trang">
+                        <span class="sr-only">Previous 5 pages</span>
+                        <i class="fas fa-angles-left h-5 w-5 flex items-center justify-center"></i>
+                    </button>
+                    <button class="prev-page-btn relative inline-flex items-center px-2 py-2 border-y border-l border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" ${currentPage === 1 ? 'disabled' : ''} title="Trang trước">
+                        <span class="sr-only">Previous</span>
+                        <i class="fas fa-chevron-left h-5 w-5 flex items-center justify-center"></i>
+                    </button>
+                    <button class="next-page-btn relative inline-flex items-center px-2 py-2 border-y border-l border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" ${currentPage === totalPages ? 'disabled' : ''} title="Trang sau">
+                        <span class="sr-only">Next</span>
+                        <i class="fas fa-chevron-right h-5 w-5 flex items-center justify-center"></i>
+                    </button>
+                    <button class="next-5-page-btn relative inline-flex items-center px-2 py-2 border-y border-l border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" ${currentPage > totalPages - 5 ? 'disabled' : ''} title="Tới 5 trang">
+                        <span class="sr-only">Next 5 pages</span>
+                        <i class="fas fa-angles-right h-5 w-5 flex items-center justify-center"></i>
+                    </button>
+                    <button class="last-page-btn relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" ${currentPage === totalPages ? 'disabled' : ''} title="Trang cuối">
+                        <span class="sr-only">Last</span>
+                        <i class="fas fa-forward-step h-5 w-5 flex items-center justify-center"></i>
+                    </button>
+                </nav>
+            </div>
+        </div>
+    `;
 }
 
 /**
@@ -101,7 +181,6 @@ async function openStoreModal(storeId = null) {
         if (store) {
             document.getElementById('store-name').value = store.name;
             document.getElementById('store-address').value = store.address || '';
-            document.getElementById('store-phone').value = store.phone || '';
             document.getElementById('store-status').value = store.status;
         }
     } else { // Chế độ Thêm
@@ -193,6 +272,43 @@ export async function init() {
     const storeForm = document.getElementById('store-form');
     const storeListTable = document.getElementById('store-list');
 
+    // Event delegation cho các nút phân trang
+    document.getElementById('pagination-controls')?.addEventListener('click', (e) => {
+        const prevBtn = e.target.closest('.prev-page-btn');
+        const nextBtn = e.target.closest('.next-page-btn');
+        const firstPageBtn = e.target.closest('.first-page-btn');
+        const lastPageBtn = e.target.closest('.last-page-btn');
+        const prev5PageBtn = e.target.closest('.prev-5-page-btn');
+        const next5PageBtn = e.target.closest('.next-5-page-btn');
+
+        const totalPages = Math.ceil(totalStores / itemsPerPage);
+        let pageChanged = false;
+
+        if (prevBtn && currentPage > 1) {
+            currentPage--;
+            pageChanged = true;
+        } else if (nextBtn && currentPage < totalPages) {
+            currentPage++;
+            pageChanged = true;
+        } else if (firstPageBtn && currentPage > 1) {
+            currentPage = 1;
+            pageChanged = true;
+        } else if (lastPageBtn && currentPage < totalPages) {
+            currentPage = totalPages;
+            pageChanged = true;
+        } else if (prev5PageBtn && currentPage > 1) {
+            currentPage = Math.max(1, currentPage - 5);
+            pageChanged = true;
+        } else if (next5PageBtn && currentPage < totalPages) {
+            currentPage = Math.min(totalPages, currentPage + 5);
+            pageChanged = true;
+        }
+
+        if (pageChanged) {
+            renderStoreList(allStores); // Render lại danh sách cho trang mới
+        }
+    }, { signal });
+
     // Sự kiện mở modal thêm mới
     if (addStoreBtn) {
         addStoreBtn.addEventListener('click', () => openStoreModal(), { signal });
@@ -213,7 +329,6 @@ export async function init() {
             const storeData = {
                 name: document.getElementById('store-name').value.trim(),
                 address: document.getElementById('store-address').value.trim(),
-                phone: document.getElementById('store-phone').value.trim(),
                 status: document.getElementById('store-status').value,
             };
 
