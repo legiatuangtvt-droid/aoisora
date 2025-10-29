@@ -48,11 +48,17 @@
                                 <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Hành Động</th>
                             </tr>
                         </thead>
-                        <tbody id="staff-list" class="divide-y divide-gray-200">
+                        <tbody id="employee-list" class="divide-y divide-gray-200">
                             <!-- Dữ liệu nhân viên sẽ được JS render vào đây -->
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Pagination Controls -->
+                <div id="pagination-controls" class="flex items-center justify-between mt-4 px-4 py-3 sm:px-6">
+                    <!-- Nội dung phân trang sẽ được JS render vào đây -->
+                </div>
+
 
                 <!-- MODAL: Thêm/Sửa Nhân Viên -->
                 <div id="staff-modal" class="modal-overlay hidden">
@@ -142,7 +148,6 @@
         </main>
     </div>
 
-    <script src="layout.js" defer></script>
     <script type="module" src="bootstrapper.js" defer></script>
 </body>
 </html>

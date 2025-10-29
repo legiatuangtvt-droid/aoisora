@@ -7,6 +7,8 @@ let allRoles = [];
 let allStores = [];
 let allEmployeeStatuses = [];
 let domController = null;
+let currentPage = 1;
+const itemsPerPage = 10; // Số nhân viên trên mỗi trang
 let activeModal = null;
 
 
@@ -52,6 +54,11 @@ function listenForEmployeeChanges() {
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
         allEmployees = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Khi dữ liệu thay đổi, kiểm tra xem trang hiện tại có còn hợp lệ không
+        const totalPages = Math.ceil(allEmployees.length / itemsPerPage);
+        if (currentPage > totalPages) {
+            currentPage = totalPages > 0 ? totalPages : 1;
+        }
         renderEmployeeList(allEmployees);
     }, (error) => {
         console.error("Lỗi khi lắng nghe thay đổi nhân viên:", error);
@@ -70,14 +77,20 @@ function renderEmployeeList(employeeList) {
     const listElement = document.getElementById('employee-list');
     if (!listElement) return;
 
+    // Tính toán các mục cho trang hiện tại
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedEmployees = employeeList.slice(startIndex, endIndex);
+
     listElement.innerHTML = ''; // Xóa nội dung cũ
 
     if (employeeList.length === 0) {
         listElement.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-gray-500">Không có nhân viên nào.</td></tr>`;
+        renderPagination(0); // Xóa các nút phân trang
         return;
     }
 
-    employeeList.forEach(employee => {
+    paginatedEmployees.forEach(employee => {
         const roleInfo = allRoles.find(r => r.id === employee.roleId) || { name: employee.roleId || 'N/A' };
         const storeInfo = allStores.find(s => s.id === employee.storeId) || { name: employee.storeId || 'N/A' };
         const statusInfo = allEmployeeStatuses.find(s => s.id === employee.status) || { name: employee.status, color: 'gray' };
@@ -102,6 +115,73 @@ function renderEmployeeList(employeeList) {
         `;
         listElement.appendChild(row);
     });
+
+    renderPagination(employeeList.length);
+}
+
+/**
+ * Render các nút điều khiển phân trang.
+ * @param {number} totalItems - Tổng số nhân viên.
+ */
+function renderPagination(totalItems) {
+    const paginationContainer = document.getElementById('pagination-controls');
+    if (!paginationContainer) return;
+
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+    if (totalPages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
+
+    const startIndex = (currentPage - 1) * itemsPerPage + 1;
+    const endIndex = Math.min(startIndex + itemsPerPage - 1, totalItems);
+
+    paginationContainer.innerHTML = `
+        <div class="flex-1 flex justify-between sm:hidden">
+            <button class="prev-page-btn relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" ${currentPage === 1 ? 'disabled' : ''}>
+                Trước
+            </button>
+            <button class="next-page-btn relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" ${currentPage === totalPages ? 'disabled' : ''}>
+                Sau
+            </button>
+        </div>
+        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+            <div>
+                <p class="text-sm text-gray-700">
+                    Hiển thị từ <span class="font-medium">${startIndex}</span> đến <span class="font-medium">${endIndex}</span> trong tổng số <span class="font-medium">${totalItems}</span> nhân viên
+                </p>
+            </div>
+            <div>
+                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    <button class="first-page-btn relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" ${currentPage === 1 ? 'disabled' : ''} title="Trang đầu">
+                        <span class="sr-only">First</span>
+                        <i class="fas fa-backward-step h-5 w-5"></i>
+                    </button>
+                    <button class="prev-5-page-btn relative inline-flex items-center px-2 py-2 border-y border-l border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" ${currentPage <= 5 ? 'disabled' : ''} title="Lùi 5 trang">
+                        <span class="sr-only">Previous 5 pages</span>
+                        <i class="fas fa-angles-left h-5 w-5"></i>
+                    </button>
+                    <button class="prev-page-btn relative inline-flex items-center px-2 py-2 border-y border-l border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" ${currentPage === 1 ? 'disabled' : ''} title="Trang trước">
+                        <span class="sr-only">Previous</span>
+                        <i class="fas fa-chevron-left h-5 w-5"></i>
+                    </button>
+                    <button class="next-page-btn relative inline-flex items-center px-2 py-2 border-y border-l border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" ${currentPage === totalPages ? 'disabled' : ''} title="Trang sau">
+                        <span class="sr-only">Next</span>
+                        <i class="fas fa-chevron-right h-5 w-5"></i>
+                    </button>
+                    <button class="next-5-page-btn relative inline-flex items-center px-2 py-2 border-y border-l border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" ${currentPage > totalPages - 5 ? 'disabled' : ''} title="Tới 5 trang">
+                        <span class="sr-only">Next 5 pages</span>
+                        <i class="fas fa-angles-right h-5 w-5"></i>
+                    </button>
+                    <button class="last-page-btn relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" ${currentPage === totalPages ? 'disabled' : ''} title="Trang cuối">
+                        <span class="sr-only">Last</span>
+                        <i class="fas fa-forward-step h-5 w-5"></i>
+                    </button>
+                </nav>
+            </div>
+        </div>
+    `;
 }
 
 /**
@@ -404,6 +484,43 @@ export async function init() {
                 }
             }
         });
+    }, { signal });
+
+    // Event delegation cho các nút phân trang
+    document.getElementById('pagination-controls')?.addEventListener('click', (e) => {
+        const prevBtn = e.target.closest('.prev-page-btn');
+        const nextBtn = e.target.closest('.next-page-btn');
+        const firstPageBtn = e.target.closest('.first-page-btn');
+        const lastPageBtn = e.target.closest('.last-page-btn');
+        const prev5PageBtn = e.target.closest('.prev-5-page-btn');
+        const next5PageBtn = e.target.closest('.next-5-page-btn');
+
+        const totalPages = Math.ceil(allEmployees.length / itemsPerPage);
+        let pageChanged = false;
+
+        if (prevBtn && currentPage > 1) {
+            currentPage--;
+            pageChanged = true;
+        } else if (nextBtn && currentPage < totalPages) {
+            currentPage++;
+            pageChanged = true;
+        } else if (firstPageBtn && currentPage > 1) {
+            currentPage = 1;
+            pageChanged = true;
+        } else if (lastPageBtn && currentPage < totalPages) {
+            currentPage = totalPages;
+            pageChanged = true;
+        } else if (prev5PageBtn && currentPage > 1) {
+            currentPage = Math.max(1, currentPage - 5);
+            pageChanged = true;
+        } else if (next5PageBtn && currentPage < totalPages) {
+            currentPage = Math.min(totalPages, currentPage + 5);
+            pageChanged = true;
+        }
+
+        if (pageChanged) {
+            renderEmployeeList(allEmployees);
+        }
     }, { signal });
 
     // TODO: Thêm logic cho tìm kiếm, sửa, xóa

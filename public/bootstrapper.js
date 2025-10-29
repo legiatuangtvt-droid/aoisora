@@ -13,6 +13,7 @@ import { collection, getDocs } from "https://www.gstatic.com/firebasejs/9.22.1/f
 import { loadLayoutComponents } from './layout-loader.js';
 
 let allStores = [];
+let allRoles = [];
 
 /**
  * Tải danh sách tất cả cửa hàng từ Firestore.
@@ -23,6 +24,18 @@ async function fetchStores() {
         allStores = storesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (error) {
         console.error("Bootstrapper: Lỗi khi tải dữ liệu cửa hàng.", error);
+    }
+}
+
+/**
+ * Tải danh sách tất cả các vai trò từ Firestore để lấy thông tin `level`.
+ */
+async function fetchRoles() {
+    try {
+        const rolesSnapshot = await getDocs(collection(db, 'roles'));
+        allRoles = rolesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+        console.error("Bootstrapper: Lỗi khi tải dữ liệu vai trò.", error);
     }
 }
 
@@ -68,8 +81,19 @@ async function bootstrapApp() {
         }
     }
 
-    // Tải dữ liệu cửa hàng
-    await fetchStores();
+    // Tải song song dữ liệu cửa hàng và vai trò để tăng tốc độ
+    await Promise.all([
+        fetchStores(),
+        fetchRoles()
+    ]);
+
+    // Gắn thông tin `level` vào currentUser nếu có
+    if (window.currentUser && window.currentUser.roleId) {
+        const userRoleData = allRoles.find(role => role.id === window.currentUser.roleId);
+        window.currentUser.level = userRoleData ? userRoleData.level : 0; // Mặc định level 0 nếu không tìm thấy
+    } else if (!window.currentUser) { // Gán level cho Admin
+        window.currentUser = { roleId: 'ADMIN', name: 'Admin', level: 99 };
+    }
 
     // Tải các thành phần layout SAU KHI đã xác định được currentUser
     await loadLayoutComponents();
@@ -80,10 +104,15 @@ async function bootstrapApp() {
     // Map vai trò với file app tương ứng
     const roleToAppMap = {
         'ADMIN': 'admin-app.js',
+        'HQ_STAFF': 'admin-app.js', // HQ Staff dùng chung app với Admin
         'STAFF': 'staff-app.js',
-        'STORE_LEADER': 'store-leader-app.js',
+        'STORE_LEADER_G2': 'store-leader-app.js',
+        'STORE_LEADER_G3': 'store-leader-app.js',
+        'STORE_INCHARGE': 'store-leader-app.js',
         'AREA_MANAGER': 'area-manager-app.js',
         'REGIONAL_MANAGER': 'regional-manager-app.js',
+        // Các vai trò cũ có thể vẫn được giữ lại để tương thích ngược
+        'STORE_LEADER': 'store-leader-app.js'
     };
 
     // Mặc định là app của Admin nếu không có người dùng mô phỏng

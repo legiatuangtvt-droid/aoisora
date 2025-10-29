@@ -279,26 +279,8 @@ function initializeDevMenu() {
     }
 
     function populateRoleSelect() {
-        // Định nghĩa thứ tự sắp xếp mong muốn
-        const roleOrder = ['REGIONAL_MANAGER', 'AREA_MANAGER', 'STORE_LEADER', 'STAFF'];
-
-        // Sắp xếp mảng allRoles dựa trên thứ tự đã định nghĩa
-        const sortedRoles = [...allRoles].sort((a, b) => {
-            const indexA = roleOrder.indexOf(a.id);
-            const indexB = roleOrder.indexOf(b.id);
-
-            // Nếu cả hai đều có trong mảng thứ tự, sắp xếp theo chỉ số
-            if (indexA !== -1 && indexB !== -1) {
-                return indexA - indexB;
-            }
-            // Nếu chỉ có A, A đứng trước
-            if (indexA !== -1) return -1;
-            // Nếu chỉ có B, B đứng trước
-            if (indexB !== -1) return 1;
-            // Nếu không có trong mảng, sắp xếp theo tên
-            return a.name.localeCompare(b.name);
-        });
-
+        // Sắp xếp vai trò theo 'level' giảm dần. Vai trò không có level sẽ được coi là 0.
+        const sortedRoles = [...allRoles].sort((a, b) => (b.level || 0) - (a.level || 0));
         roleSelect.innerHTML = `<option value="ADMIN">Admin (Toàn quyền)</option>`;
         sortedRoles.forEach(role => {
             roleSelect.innerHTML += `<option value="${role.id}">${role.name}</option>`;
