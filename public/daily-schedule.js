@@ -268,14 +268,14 @@ function renderScheduleGrid() {
     if (!container) return;
 
     hideLoadingSpinner(); // Ẩn spinner trước khi render lưới
-    const timeSlots = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
+    const timeSlots = Array.from({ length: 19 }, (_, i) => `${String(i + 5).padStart(2, '0')}:00`); // Từ 05:00 đến 23:00
 
     const table = document.createElement('table');
     table.className = 'min-w-full border-collapse border border-slate-200 table-fixed';
 
     // --- Tạo Header ---
     const thead = document.createElement('thead');
-    thead.className = 'bg-slate-100 sticky top-0 z-20';
+    thead.className = 'bg-slate-100 sticky top-0 z-20'; // Tăng z-index để header nổi trên các ô sticky
     let headerRowHtml = `<th class="p-2 border border-slate-200 w-40 min-w-40 sticky left-0 bg-slate-100 z-30">Nhân viên</th>`;
     timeSlots.forEach(time => {
         headerRowHtml += `<th class="p-2 border border-slate-200 min-w-[308px] text-center font-semibold text-slate-700" data-hour="${time.split(':')[0]}">${time}</th>`;
@@ -287,14 +287,14 @@ function renderScheduleGrid() {
     const tbody = document.createElement('tbody');
     if (currentScheduleData.length === 0) {
         const selectedDate = document.querySelector('.day-selector-btn.active')?.dataset.date || formatDate(new Date());
-        const storeFilter = document.getElementById('store-filter');
-        const selectedStoreId = storeFilter ? storeFilter.value : 'all';
+        const storeFilter = document.getElementById('store-filter'); // Lấy phần tử select
+        const selectedStoreId = storeFilter ? storeFilter.value : 'all'; // Lấy giá trị được chọn
 
         if (selectedStoreId === 'all') {
-            tbody.innerHTML = `<tr><td colspan="${25}" class="text-center p-10 text-gray-500">Vui lòng chọn cửa hàng để xem lịch làm việc.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="${timeSlots.length + 1}" class="text-center p-10 text-gray-500">Vui lòng chọn cửa hàng để xem lịch làm việc.</td></tr>`;
         } else {
-            const selectedStore = allStores.find(s => s.id === selectedStoreId);
-            const storeName = selectedStore ? selectedStore.name : 'Cửa hàng đã chọn';
+            const selectedStore = allStores.find(s => s.id === selectedStoreId); // Tìm cửa hàng trong danh sách đã tải
+            const storeName = selectedStore ? selectedStore.name : 'Cửa hàng này';
             const formattedDate = new Date(selectedDate).toLocaleDateString('vi-VN');
             tbody.innerHTML = `<tr>
                 <td colspan="${25}" class="text-center p-10">
@@ -363,6 +363,13 @@ function renderScheduleGrid() {
                 }
             });
             tbody.appendChild(row);
+
+            // Ẩn các ô không thuộc khung giờ 05:30 - 23:00
+            const firstHourSlots = row.querySelectorAll('.quarter-hour-slot[data-time="05:00"]');
+            if (firstHourSlots.length >= 2) {
+                firstHourSlots[0].style.visibility = 'hidden';
+                firstHourSlots[1].style.visibility = 'hidden';
+            }
         });
     }
     table.appendChild(tbody);
