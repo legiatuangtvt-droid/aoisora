@@ -459,9 +459,8 @@ function changeDay(dateString) {
  * Render các nút điều khiển tuần và ngày.
  */
 function renderWeekControls() {
-    const weekDisplay = document.getElementById('current-week-display');
-    const dayContainer = document.getElementById('day-selector-container');
-    if (!weekDisplay || !dayContainer) return;
+    const dayContainer = document.querySelector('#daily-schedule-controls > div'); // The main container for buttons
+    if (!dayContainer) return;
 
     const weekDates = [];
     for (let i = 0; i < 7; i++) {
@@ -470,34 +469,36 @@ function renderWeekControls() {
         weekDates.push(date);
     }
 
-    // Hiển thị khoảng ngày của tuần
-    const firstDay = weekDates[0];
-    const lastDay = weekDates[6];
-    weekDisplay.textContent = `${firstDay.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })} - ${lastDay.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
-
     // Render các nút ngày
     const todayString = formatDate(new Date());
     const selectedDateString = document.querySelector('.day-selector-btn.active')?.dataset.date;
 
-    dayContainer.innerHTML = weekDates.map((date, index) => {
+    // Xóa các nút ngày cũ trước khi render lại
+    dayContainer.querySelectorAll('.day-selector-btn').forEach(btn => btn.remove());
+
+    const dayButtonsHTML = weekDates.map((date, index) => {
         const dateString = formatDate(date);
         const dayName = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'][index];
+        const dayAndMonth = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
         const isToday = dateString === todayString;
         const isActive = dateString === selectedDateString;
 
-        let classes = 'day-selector-btn btn-base px-3 h-9 text-sm font-semibold text-gray-700 hover:bg-gray-50 relative';
-        if (index > 0) classes += ' border-l border-gray-300';
-        if (index === 0) classes += ' rounded-l-md';
-        if (index === 6) classes += ' rounded-r-md';
+        let classes = 'day-selector-btn btn-base px-3 h-auto text-xs font-semibold text-gray-700 hover:bg-gray-50 relative leading-tight text-center';
         if (isActive) classes += ' active'; // Lớp active sẽ được định nghĩa trong CSS để có màu nền khác
 
         return `
-            <button class="${classes}" data-date="${dateString}" title="${date.toLocaleDateString('vi-VN')}">
-                ${dayName}
+            <button class="${classes}" data-date="${dateString}" title="${date.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}">
+                <span class="text-sm">${dayName}</span>
+                <br>
+                <span class="font-normal">${dayAndMonth}</span>
                 ${isToday ? '<span class="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-indigo-500 rounded-full"></span>' : ''}
             </button>
         `;
     }).join('');
+
+    // Chèn các nút ngày vào giữa hai nút điều hướng tuần
+    const prevBtn = document.getElementById('prev-week-btn');
+    prevBtn.insertAdjacentHTML('afterend', dayButtonsHTML);
 
     // Gắn lại sự kiện cho các nút ngày vừa tạo
     dayContainer.querySelectorAll('.day-selector-btn').forEach(btn => {
