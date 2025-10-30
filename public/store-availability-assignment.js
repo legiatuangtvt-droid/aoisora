@@ -98,13 +98,44 @@ async function fetchAvailabilitiesForWeek() {
         return;
     }
 
-    const availabilityQuery = query(collection(db, 'staff_availability'),
-        where("employeeId", "in", employeeIds),
-        where("date", "in", weekDates)
-    );
+    // Firestore giới hạn truy vấn 'in' với tối đa 30 giá trị.
+    // Chúng ta cần chia danh sách employeeIds thành các lô nhỏ hơn (chunks).
+    // Đồng thời, Firestore chỉ cho phép MỘT mệnh đề 'in' trên mỗi truy vấn.
+    // Do đó, chúng ta sẽ chia employeeIds và lặp qua từng ngày.
+    const CHUNK_SIZE = 30;
+    const employeeIdChunks = [];
+    for (let i = 0; i < employeeIds.length; i += CHUNK_SIZE) {
+        employeeIdChunks.push(employeeIds.slice(i, i + CHUNK_SIZE));
+    }
 
-    const availabilitySnapshot = await getDocs(availabilityQuery);
-    allAvailabilities = availabilitySnapshot.docs.map(doc => doc.data());
+    // Tạo một mảng các promise. Mỗi promise sẽ là một truy vấn.
+    const promises = [];
+
+    // Lặp qua từng lô employeeId
+    for (const chunk of employeeIdChunks) {
+        // Lặp qua từng ngày trong tuần
+        for (const date of weekDates) {
+            const availabilityQuery = query(collection(db, 'staff_availability'),
+                where("employeeId", "in", chunk),
+                where("date", "==", date) // Chỉ sử dụng MỘT mệnh đề 'in' và một mệnh đề '=='
+            );
+            promises.push(getDocs(availabilityQuery));
+        }
+    }
+
+    // Thực thi tất cả các truy vấn song song và gộp kết quả.
+    try {
+        const snapshots = await Promise.all(promises);
+        const results = [];
+        snapshots.forEach(snapshot => {
+            snapshot.docs.forEach(doc => results.push(doc.data()));
+        });
+        allAvailabilities = results;
+    } catch (error) {
+        console.error("Lỗi khi tải dữ liệu đăng ký ca làm việc:", error);
+        window.showToast("Không thể tải dữ liệu đăng ký ca.", "error");
+        allAvailabilities = [];
+    }
 }
 
 function renderAssignmentTable() {
