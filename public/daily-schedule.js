@@ -61,9 +61,7 @@ async function fetchInitialData() {
         const currentUser = window.currentUser;
         if (currentUser) {
             switch (currentUser.roleId) {
-                case 'STAFF':
-                    fetchedEmployees = fetchedEmployees.filter(emp => emp.id === currentUser.id);
-                    break;
+                case 'STAFF': // Fall-through to STORE_LEADER logic
                 case 'STORE_LEADER':
                     fetchedEmployees = fetchedEmployees.filter(emp => emp.storeId === currentUser.storeId);
                     break;
@@ -94,7 +92,8 @@ async function fetchInitialData() {
  * @param {string} dateString - Ngày cần lấy dữ liệu (YYYY-MM-DD).
  */
 function listenForScheduleChanges(dateString) {    
-    if (window.currentScheduleUnsubscribe) {
+    showLoadingSpinner(); // Hiển thị spinner khi bắt đầu tải
+    if (window.currentScheduleUnsubscribe) { // Hủy listener cũ trước khi tạo listener mới
         window.currentScheduleUnsubscribe();
         window.currentScheduleUnsubscribe = null;
     }
@@ -102,12 +101,11 @@ function listenForScheduleChanges(dateString) {
     const storeFilter = document.getElementById('store-filter');
     const selectedStoreId = storeFilter ? storeFilter.value : 'all';
 
-    if (selectedStoreId === 'all') {
+    if (!selectedStoreId || selectedStoreId === 'all') {
         currentScheduleData = [];
         renderScheduleGrid();
         return;
     }
-
     // --- LOGIC MỚI: Tải dữ liệu thật từ collection 'schedules' ---
     const scheduleQuery = query(
         collection(db, 'schedules'),
@@ -167,6 +165,35 @@ function listenForScheduleChanges(dateString) {
 }
 //#endregion
 
+//#region LOADING_SPINNER
+/**
+ * Hiển thị spinner tải dữ liệu trong container chính.
+ */
+function showLoadingSpinner() {
+    const container = document.getElementById('schedule-grid-container');
+    if (container) {
+        container.innerHTML = `
+            <div class="flex items-center justify-center h-full text-gray-500">
+                <div class="text-center">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p class="mt-2 text-sm">Đang tải dữ liệu...</p>
+                </div>
+            </div>
+        `;
+    }
+}
+
+/**
+ * Ẩn spinner tải dữ liệu (bằng cách xóa nội dung container).
+ */
+function hideLoadingSpinner() {
+    const container = document.getElementById('schedule-grid-container');
+    if (container) {
+        container.innerHTML = '';
+    }
+}
+//#endregion
+
 //#region SCROLLING
 /**
  * Chuyển đổi chuỗi thời gian "HH:mm" thành số phút trong ngày.
@@ -217,6 +244,7 @@ function renderScheduleGrid() {
     const container = document.getElementById('schedule-grid-container');
     if (!container) return;
 
+    hideLoadingSpinner(); // Ẩn spinner trước khi render lưới
     const timeSlots = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
 
     const table = document.createElement('table');
@@ -273,6 +301,10 @@ function renderScheduleGrid() {
 
             const row = document.createElement('tr');
             row.className = 'border-b border-slate-200';
+            // Tô màu nền cho dòng của người dùng hiện tại
+            if (schedule.employeeId === window.currentUser?.id) {
+                row.classList.add('bg-green-50');
+            }
             row.dataset.employeeId = schedule.employeeId; // Thêm ID để dễ dàng truy vấn
             let rowHtml = `
                 <td class="group p-2 border border-slate-200 align-middle sticky left-0 bg-white z-10 w-40 min-w-40 font-semibold text-center">
@@ -409,40 +441,55 @@ function jumpToToday() {
 function createStoreFilter() {
     const container = document.getElementById('store-filter-container');
     if (!container) return;
-
-    // Lấy danh sách cửa hàng mà người dùng hiện tại có quyền xem
-    const accessibleStoreIds = [...new Set(allEmployees.map(emp => emp.storeId).filter(Boolean))];
-    const accessibleStores = allStores
-        .filter(store => accessibleStoreIds.includes(store.id))
-        .sort((a, b) => a.name.localeCompare(b.name));
     
-    if (accessibleStores.length === 0) {
-        container.innerHTML = `<div class="flex-1 max-w-xs text-sm text-gray-500">Không có cửa hàng nào được quản lý.</div>`;
-        // Nếu không có cửa hàng, xóa lịch trình hiện tại và hiển thị thông báo
-        currentScheduleData = [];
-        renderScheduleGrid();
-        return;
-    }
+    const currentUser = window.currentUser;
 
-    const optionsHTML = accessibleStores.map(store => `<option value="${store.id}">${store.name}</option>`).join('');
+    if (currentUser && currentUser.roleId === 'STAFF') {
+        // --- LOGIC CHO NHÂN VIÊN ---
+        const staffStore = allStores.find(s => s.id === currentUser.storeId);
+        if (staffStore) {
+            // Hiển thị tên cửa hàng nhưng không cho phép thay đổi
+            container.innerHTML = `
+                <div class="flex-1 max-w-xs">
+                    <label for="store-filter" class="sr-only">Cửa hàng</label>
+                    <select id="store-filter" class="form-select w-full" disabled>
+                        <option value="${staffStore.id}" selected>${staffStore.name}</option>
+                    </select>
+                </div>
+            `;
+            // Tự động tải lịch cho cửa hàng của nhân viên
+            listenForScheduleChanges(document.getElementById('date').value);
+        } else {
+            container.innerHTML = `<div class="flex-1 max-w-xs text-sm text-gray-500">Bạn chưa được gán vào cửa hàng nào.</div>`;
+        }
+    } else {
+        // --- LOGIC CHO ADMIN VÀ QUẢN LÝ (như cũ) ---
+        const accessibleStoreIds = [...new Set(allEmployees.map(emp => emp.storeId).filter(Boolean))];
+        const accessibleStores = allStores
+            .filter(store => accessibleStoreIds.includes(store.id))
+            .sort((a, b) => a.name.localeCompare(b.name));
+        
+        if (accessibleStores.length === 0) {
+            container.innerHTML = `<div class="flex-1 max-w-xs text-sm text-gray-500">Không có cửa hàng nào được quản lý.</div>`;
+            currentScheduleData = [];
+            renderScheduleGrid();
+            return;
+        }
 
-    container.innerHTML = `
-        <div class="flex-1 max-w-xs">
-            <label for="store-filter" class="sr-only">Lọc theo cửa hàng</label>
-            <select id="store-filter" class="form-select w-full">${optionsHTML}</select>
-        </div>
-    `;
-    
-    const storeFilter = document.getElementById('store-filter');
-    storeFilter?.addEventListener('change', () => {
-        const dateInput = document.getElementById('date');
-        listenForScheduleChanges(dateInput.value);
-    });
+        const optionsHTML = accessibleStores.map(store => `<option value="${store.id}">${store.name}</option>`).join('');
+        container.innerHTML = `
+            <div class="flex-1 max-w-xs">
+                <label for="store-filter" class="sr-only">Lọc theo cửa hàng</label>
+                <select id="store-filter" class="form-select w-full">${optionsHTML}</select>
+            </div>
+        `;
+        
+        const storeFilter = document.getElementById('store-filter');
+        storeFilter?.addEventListener('change', () => {
+            listenForScheduleChanges(document.getElementById('date').value);
+        });
 
-    // Tự động tải lịch cho cửa hàng đầu tiên trong danh sách
-    const firstStoreId = accessibleStores[0].id;
-    if (storeFilter) {
-        storeFilter.value = firstStoreId;
+        // Tải lịch cho cửa hàng đầu tiên trong danh sách
         listenForScheduleChanges(document.getElementById('date').value);
     }
 }
@@ -466,6 +513,9 @@ export async function init() {
     // Gán hàm changeDate vào window để HTML có thể gọi
     window.dailySchedule = { changeDate, jumpToToday };
 
+    // Hiển thị spinner ngay khi bắt đầu init
+    showLoadingSpinner();
+
     loadShiftCodes(); // Tải mã ca để sử dụng cho việc sắp xếp
     await fetchInitialData();
 
@@ -478,8 +528,9 @@ export async function init() {
         const day = String(today.getDate()).padStart(2, '0');
         dateInput.value = `${year}-${month}-${day}`;
     }
-    listenForScheduleChanges(dateInput.value);
 
+    // Thay đổi thứ tự: Tạo bộ lọc trước, sau đó mới lắng nghe thay đổi.
+    // Hàm createStoreFilter sẽ tự động gọi listenForScheduleChanges bên trong nó.
     createStoreFilter();
 
     // Gán listener cho sự kiện thay đổi ngày

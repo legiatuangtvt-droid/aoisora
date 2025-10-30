@@ -1156,10 +1156,6 @@ body.sidebar-expanded #sidebar .sidebar-text {
   min-width: 120px;
 }
 
-.min-w-\[160px\] {
-  min-width: 160px;
-}
-
 .min-w-\[200px\] {
   min-width: 200px;
 }
@@ -1604,6 +1600,11 @@ body.sidebar-expanded #sidebar .sidebar-text {
   border-color: transparent;
 }
 
+.bg-amber-100 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(254 243 199 / var(--tw-bg-opacity, 1));
+}
+
 .bg-amber-200 {
   --tw-bg-opacity: 1;
   background-color: rgb(253 230 138 / var(--tw-bg-opacity, 1));
@@ -1746,11 +1747,6 @@ body.sidebar-expanded #sidebar .sidebar-text {
 .bg-white {
   --tw-bg-opacity: 1;
   background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
-}
-
-.bg-amber-100 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(254 243 199 / var(--tw-bg-opacity, 1));
 }
 
 .object-cover {

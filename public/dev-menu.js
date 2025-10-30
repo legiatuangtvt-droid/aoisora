@@ -358,18 +358,14 @@ function initializeDevMenu() {
                     id: selectedPerson.id,
                     name: selectedPerson.name,
                     roleId: selectedPerson.roleId,
-                    storeId: selectedPerson.storeId || null,
+                    storeId: selectedPerson.storeId || null, // Thêm dòng này
                     managedAreaIds: selectedPerson.managedAreaIds || null,
                     managedRegionId: selectedPerson.managedRegionId || null
                 };
                 localStorage.setItem(SIMULATED_USER_STORAGE_KEY, JSON.stringify(simulatedUser));
                 window.showToast(`Chuyển sang người dùng: ${selectedPerson.name} (${selectedPerson.roleId})`, 'info');
 
-                if (selectedPerson.roleId === 'STAFF') {
-                    window.location.href = 'staff-schedule.html'; // Điều hướng đến trang lịch làm việc của nhân viên
-                } else {
-                    window.location.href = 'daily-schedule.html'; // Điều hướng đến trang mặc định cho các vai trò khác
-                }
+                window.location.href = 'daily-schedule.html'; // Luôn điều hướng đến trang lịch hàng ngày
             }
         }
     });

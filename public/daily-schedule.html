@@ -39,9 +39,12 @@
             <div class="bg-white rounded-lg shadow-md overflow-hidden h-full flex flex-col">
                 <!-- Container cho toàn bộ lưới lịch trình -->
                 <div id="schedule-grid-container" class="overflow-auto flex-1">
-                    <!-- Lưới sẽ được render bằng JavaScript -->
-                    <div class="p-10 text-center text-gray-500">
-                        <i class="fas fa-spinner fa-spin mr-2"></i> Đang tải lịch làm việc...
+                    <!-- Spinner sẽ được hiển thị ở đây trong khi tải dữ liệu -->
+                    <div class="flex items-center justify-center h-full text-gray-500">
+                        <div class="text-center">
+                            <i class="fas fa-spinner fa-spin fa-2x"></i>
+                            <p class="mt-2 text-sm">Đang tải dữ liệu...</p>
+                        </div>
                     </div>
                 </div>
             </div>

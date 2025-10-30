@@ -1,26 +1,68 @@
+import { db } from './firebase.js';
+import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+
 let domController = null;
 let currentDate = new Date(); // Bắt đầu với tháng hiện tại
 
-// Dữ liệu giả lập (mock data) cho lịch làm việc
-const mockScheduleData = {
-    '2025-10-01': { store: 'Meat World Thủ Đức', shift: '06:00 - 14:00' },
-    '2025-10-02': { store: 'Meat World Thủ Đức', shift: '06:00 - 14:00' },
-    '2025-10-04': { store: 'Cook-kit Q1', shift: '14:00 - 22:00' },
-    '2025-10-05': { store: 'Cook-kit Q1', shift: '14:00 - 22:00' },
-    '2025-10-06': { store: 'Meat World Thủ Đức', shift: '08:00 - 17:00' },
-    '2025-10-08': { store: 'Meat World Gò Vấp', shift: '09:00 - 15:00' },
-    '2025-10-11': { store: 'Meat World Thủ Đức', shift: '06:00 - 14:00' },
-    '2025-10-12': { store: 'Meat World Thủ Đức', shift: '06:00 - 14:00' },
-    '2025-10-13': { store: 'Cook-kit Q1', shift: '14:00 - 22:00' },
-    '2025-10-15': { store: 'Meat World Gò Vấp', shift: '08:00 - 17:00' },
-    '2025-10-18': { store: 'Meat World Thủ Đức', shift: '09:00 - 15:00' },
-    '2025-10-19': { store: 'Meat World Thủ Đức', shift: '09:00 - 15:00' },
-    '2025-10-22': { store: 'Cook-kit Q1', shift: '14:00 - 22:00' },
-    '2025-10-25': { store: 'Meat World Gò Vấp', shift: '06:00 - 14:00' },
-    '2025-10-26': { store: 'Meat World Gò Vấp', shift: '06:00 - 14:00' },
-    '2025-10-29': { store: 'Meat World Thủ Đức', shift: '08:00 - 17:00' },
-    '2025-10-31': { store: 'Cook-kit Q1', shift: '14:00 - 22:00' },
-};
+let allSchedulesForMonth = [];
+let allStores = [];
+let allShiftCodes = [];
+const SHIFT_CODES_STORAGE_KEY = 'aoisora_shiftCodes';
+
+/**
+ * Tải danh sách mã ca từ localStorage.
+ */
+function loadShiftCodes() {
+    const storedData = localStorage.getItem(SHIFT_CODES_STORAGE_KEY);
+    if (storedData) {
+        try {
+            const parsedData = JSON.parse(storedData);
+            if (Array.isArray(parsedData)) {
+                allShiftCodes = parsedData;
+            }
+        } catch (e) {
+            console.error("Lỗi khi đọc dữ liệu mã ca từ localStorage", e);
+        }
+    }
+}
+
+/**
+ * Tải dữ liệu nền cần thiết (ví dụ: danh sách cửa hàng).
+ */
+async function fetchInitialData() {
+    try {
+        const storesSnapshot = await getDocs(collection(db, 'stores'));
+        allStores = storesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+        console.error("Lỗi khi tải danh sách cửa hàng:", error);
+        window.showToast("Không thể tải dữ liệu cửa hàng.", "error");
+    }
+}
+
+/**
+ * Tải lịch làm việc của người dùng hiện tại cho tháng đang xem.
+ */
+async function fetchSchedulesForMonth() {
+    const currentUser = window.currentUser;
+    if (!currentUser || !currentUser.id) {
+        allSchedulesForMonth = [];
+        return;
+    }
+
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstDay = new Date(year, month, 1).toISOString().split('T')[0];
+    const lastDay = new Date(year, month + 1, 0).toISOString().split('T')[0];
+
+    const scheduleQuery = query(collection(db, 'schedules'),
+        where("employeeId", "==", currentUser.id),
+        where("date", ">=", firstDay),
+        where("date", "<=", lastDay)
+    );
+
+    const scheduleSnapshot = await getDocs(scheduleQuery);
+    allSchedulesForMonth = scheduleSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+}
 
 /**
  * Render toàn bộ giao diện lịch.
@@ -79,7 +121,7 @@ function renderCalendar() {
     // Render các ngày trong tháng
     for (let day = 1; day <= daysInMonth; day++) {
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        const schedule = mockScheduleData[dateStr];
+        const schedule = allSchedulesForMonth.find(s => s.date === dateStr);
         const isToday = isCurrentMonthView && today.getDate() === day;
 
         // Thêm lớp để kẻ viền phải cho cột cuối cùng và viền dưới cho hàng cuối cùng
@@ -94,10 +136,13 @@ function renderCalendar() {
 
         let contentHTML = '';
         if (schedule) {
+            const storeName = allStores.find(s => s.id === schedule.storeId)?.name || schedule.storeId;
+            const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === schedule.shift);
+            const timeRange = shiftInfo ? shiftInfo.timeRange : 'N/A';
             contentHTML = `
-                <div class="text-center mt-2">
-                    <p class="font-bold text-sm text-indigo-700 truncate">${schedule.store}</p>
-                    <p class="text-xs text-gray-600 mt-1">${schedule.shift}</p>
+                <div class="text-center mt-2 w-full">
+                    <p class="font-bold text-sm text-indigo-700 truncate" title="${storeName}">${storeName}</p>
+                    <p class="text-xs text-gray-600 mt-1" title="Mã ca: ${schedule.shift || 'N/A'}">${timeRange}</p>
                 </div>
             `;
         }
@@ -130,13 +175,9 @@ function renderCalendar() {
     document.getElementById('next-month-btn')?.addEventListener('click', () => changeMonth(1), { signal: domController.signal });
 }
 
-function changeDate(delta) {
+async function changeMonth(delta) {
     currentDate.setMonth(currentDate.getMonth() + delta);
-    renderCalendar();
-}
-
-function changeMonth(delta) {
-    currentDate.setMonth(currentDate.getMonth() + delta);
+    await fetchSchedulesForMonth();
     renderCalendar();
 }
 
@@ -147,7 +188,10 @@ export function cleanup() {
     }
 }
 
-export function init() {
+export async function init() {
     domController = new AbortController();
+    loadShiftCodes();
+    await fetchInitialData();
+    await fetchSchedulesForMonth();
     renderCalendar();
 }
