@@ -316,8 +316,16 @@ function initializeDevMenu() {
             switch (person.roleId) {
                 case 'STAFF':
                 case 'STORE_LEADER':
+                case 'STORE_LEADER_G2':
+                case 'STORE_LEADER_G3':
                     const store = allStores.find(s => s.id === person.storeId);
                     if (store) contextInfo = ` - ${store.name}`;
+                    break;
+                case 'STORE_INCHARGE':
+                    if (Array.isArray(person.managedStoreIds) && person.managedStoreIds.length > 0) {
+                        const managedStoreNames = person.managedStoreIds.map(id => allStores.find(s => s.id === id)?.name).filter(Boolean);
+                        if (managedStoreNames.length > 0) contextInfo = ` - (Quản lý: ${managedStoreNames.join(', ')})`;
+                    }
                     break;
                 case 'AREA_MANAGER':
                     if (person.managedAreaIds && person.managedAreaIds.length > 0) {
