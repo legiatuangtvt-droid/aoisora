@@ -305,16 +305,6 @@ function renderScheduleGrid() {
                     </div>
                 </td>
             </tr>`;
-            // Cuộn về đầu để người dùng thấy thông báo
-            // Dùng setTimeout để đảm bảo DOM đã được render trước khi cuộn
-            setTimeout(() => {
-                const gridContainer = document.getElementById('schedule-grid-container');
-                if (gridContainer) {
-                    // Tính toán vị trí cuộn để nội dung thông báo ở giữa màn hình
-                    const scrollLeft = (gridContainer.scrollWidth - gridContainer.clientWidth) / 2;
-                    gridContainer.scrollTo({ left: scrollLeft, behavior: 'smooth' });
-                }
-            }, 0);
         }
     } else { 
         currentScheduleData.forEach(schedule => {
@@ -383,8 +373,20 @@ function renderScheduleGrid() {
     // Thêm một khoảng trễ nhỏ để đảm bảo trình duyệt đã render xong trước khi cuộn.
     // Điều này khắc phục vấn đề không cuộn đúng vị trí khi tải lại trang (F5).
     setTimeout(() => {
-        updateTimeIndicator();
-        scrollToCurrentEmployee();
+        if (currentScheduleData.length > 0) {
+            // Nếu có dữ liệu, cuộn đến giờ và nhân viên hiện tại
+            updateTimeIndicator();
+            scrollToCurrentEmployee();
+        } else {
+            // Nếu không có dữ liệu, cuộn ra giữa để thấy thông báo
+            // Dùng setTimeout để đảm bảo DOM đã được render trước khi cuộn
+            const gridContainer = document.getElementById('schedule-grid-container');
+            if (gridContainer) {
+                // Tính toán vị trí cuộn để nội dung thông báo ở giữa màn hình
+                const scrollLeft = (gridContainer.scrollWidth - gridContainer.clientWidth) / 2;
+                gridContainer.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+            }
+        }
     }, 100);
 }
 
