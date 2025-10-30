@@ -116,9 +116,7 @@ async function bootstrapApp() {
         'STORE_LEADER_G3': 'store-leader-app.js',
         'STORE_INCHARGE': 'store-leader-app.js',
         'AREA_MANAGER': 'area-manager-app.js',
-        'REGIONAL_MANAGER': 'regional-manager-app.js',
-        // Các vai trò cũ có thể vẫn được giữ lại để tương thích ngược
-        'STORE_LEADER': 'store-leader-app.js'
+        'REGIONAL_MANAGER': 'regional-manager-app.js'
     };
 
     // Mặc định là app của Admin nếu không có người dùng mô phỏng

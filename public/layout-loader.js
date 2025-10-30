@@ -20,7 +20,14 @@ export function loadLayoutComponents() {
             // Kiểm tra vai trò của người dùng để chọn sidebar tương ứng
             if (currentUser && currentUser.roleId === 'STAFF') {
                 sidebarTemplate = doc.getElementById('template-sidebar-staff');
-            } else if (currentUser && currentUser.roleId === 'STORE_LEADER') {
+            } else if (
+                currentUser && (
+                    currentUser.roleId === 'STORE_LEADER' ||
+                    currentUser.roleId === 'STORE_LEADER_G2' ||
+                    currentUser.roleId === 'STORE_LEADER_G3' ||
+                    currentUser.roleId === 'STORE_INCHARGE'
+                )
+            ) {
                 sidebarTemplate = doc.getElementById('template-sidebar-store-leader');
             }
 

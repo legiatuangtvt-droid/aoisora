@@ -15,8 +15,7 @@ import * as storeAvailabilityAssignment from './store-availability-assignment.js
 const storeLeaderPages = {
     'daily-schedule.html': { module: dailySchedule, title: 'Lịch Hàng Ngày' },
     'store-schedule.html': { module: storeSchedule, title: 'Lịch Làm Việc Cửa Hàng' },
-    'store-availability-assignment.html': { module: storeAvailabilityAssignment, title: 'Phân Công Ca Làm Việc' },
-    'intro.html': { module: null, title: 'Giới Thiệu Dự Án' },
+    'store-availability-assignment.html': { module: storeAvailabilityAssignment, title: 'Phân Công Ca Làm Việc' }
 };
 
 let currentPageModule = null;

@@ -315,7 +315,6 @@ function initializeDevMenu() {
             let contextInfo = '';
             switch (person.roleId) {
                 case 'STAFF':
-                case 'STORE_LEADER':
                 case 'STORE_LEADER_G2':
                 case 'STORE_LEADER_G3':
                     const store = allStores.find(s => s.id === person.storeId);
