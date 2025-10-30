@@ -244,7 +244,28 @@ function renderScheduleGrid() {
         if (selectedStoreId === 'all') {
             tbody.innerHTML = `<tr><td colspan="${25}" class="text-center p-10 text-gray-500">Vui lòng chọn cửa hàng để xem lịch làm việc.</td></tr>`;
         } else {
-            tbody.innerHTML = `<tr><td colspan="${25}" class="text-center p-10 text-gray-500">Không có lịch làm việc cho ngày ${selectedDate}.</td></tr>`;
+            const selectedStore = allStores.find(s => s.id === selectedStoreId);
+            const storeName = selectedStore ? selectedStore.name : 'Cửa hàng đã chọn';
+            const formattedDate = new Date(selectedDate).toLocaleDateString('vi-VN');
+            tbody.innerHTML = `<tr>
+                <td colspan="${25}" class="text-center p-10">
+                    <div class="flex flex-col items-center justify-center text-gray-500">
+                        <i class="fas fa-calendar-times fa-3x mb-4 text-gray-400"></i>
+                        <p class="font-semibold text-lg">Chưa có dữ liệu</p>
+                        <p>Cửa hàng <span class="font-bold text-gray-600">${storeName}</span> chưa có lịch làm việc cho ngày <span class="font-bold text-gray-600">${formattedDate}</span>.</p>
+                    </div>
+                </td>
+            </tr>`;
+            // Cuộn về đầu để người dùng thấy thông báo
+            // Dùng setTimeout để đảm bảo DOM đã được render trước khi cuộn
+            setTimeout(() => {
+                const gridContainer = document.getElementById('schedule-grid-container');
+                if (gridContainer) {
+                    // Tính toán vị trí cuộn để nội dung thông báo ở giữa màn hình
+                    const scrollLeft = (gridContainer.scrollWidth - gridContainer.clientWidth) / 2;
+                    gridContainer.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+                }
+            }, 0);
         }
     } else { 
         currentScheduleData.forEach(schedule => {
@@ -387,11 +408,16 @@ function createStoreFilter() {
     const accessibleStores = allStores
         .filter(store => accessibleStoreIds.includes(store.id))
         .sort((a, b) => a.name.localeCompare(b.name));
+    
+    if (accessibleStores.length === 0) {
+        container.innerHTML = `<div class="flex-1 max-w-xs text-sm text-gray-500">Không có cửa hàng nào được quản lý.</div>`;
+        // Nếu không có cửa hàng, xóa lịch trình hiện tại và hiển thị thông báo
+        currentScheduleData = [];
+        renderScheduleGrid();
+        return;
+    }
 
-    let optionsHTML = '<option value="all">-- Tất cả cửa hàng --</option>';
-    accessibleStores.forEach(store => {
-        optionsHTML += `<option value="${store.id}">${store.name}</option>`;
-    });
+    const optionsHTML = accessibleStores.map(store => `<option value="${store.id}">${store.name}</option>`).join('');
 
     container.innerHTML = `
         <div class="flex-1 max-w-xs">
@@ -399,19 +425,19 @@ function createStoreFilter() {
             <select id="store-filter" class="form-select w-full">${optionsHTML}</select>
         </div>
     `;
-
-    document.getElementById('store-filter')?.addEventListener('change', () => {
+    
+    const storeFilter = document.getElementById('store-filter');
+    storeFilter?.addEventListener('change', () => {
         const dateInput = document.getElementById('date');
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const day = String(today.getDate()).padStart(2, '0');
-        const todayString = `${year}-${month}-${day}`;
-
-        // Tự động đặt lại ngày về hôm nay và tải lịch
-        if (dateInput) dateInput.value = todayString;
-        listenForScheduleChanges(todayString);
+        listenForScheduleChanges(dateInput.value);
     });
+
+    // Tự động tải lịch cho cửa hàng đầu tiên trong danh sách
+    const firstStoreId = accessibleStores[0].id;
+    if (storeFilter) {
+        storeFilter.value = firstStoreId;
+        listenForScheduleChanges(document.getElementById('date').value);
+    }
 }
 //#endregion
 
