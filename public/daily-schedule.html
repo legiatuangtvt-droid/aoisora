@@ -24,16 +24,22 @@
             <!-- Container cho các bộ lọc, sẽ được JS di chuyển vào header nếu cần -->
             <div id="page-filters-container" class="mb-4 flex items-center justify-between">
                 <div id="store-filter-container"></div> <!-- Container riêng cho bộ lọc cửa hàng -->
-                <!-- Bộ chọn ngày -->
-                <div id="daily-schedule-controls" class="flex items-center ml-auto rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-indigo-600 divide-x divide-gray-300">
-                    <button onclick="dailySchedule.changeDate(-1)" id="prev-day-btn" class="btn-base p-2 h-9 w-9 flex items-center justify-center rounded-l-md text-gray-600 hover:bg-gray-50" title="Ngày trước">
+                <!-- Bộ chọn tuần và ngày -->
+                <div id="daily-schedule-controls" class="flex items-center gap-4 ml-auto">
+                    <!-- Điều hướng tuần -->
+                    <div class="flex items-center gap-2">
+                        <button id="prev-week-btn" class="btn-base p-2 h-9 w-9 flex items-center justify-center rounded-md text-gray-600 hover:bg-gray-50 ring-1 ring-inset ring-gray-300 shadow-sm" title="Tuần trước">
                         <i class="fas fa-chevron-left"></i>
-                    </button>
-                    <button onclick="dailySchedule.jumpToToday()" id="today-btn" class="btn-base px-3 h-9 text-sm font-semibold text-gray-700 hover:bg-gray-50" title="Về ngày hôm nay">Hôm nay</button>
-                    <input type="date" id="date" class="form-input-base h-9 text-center text-gray-700">
-                    <button onclick="dailySchedule.changeDate(1)" id="next-day-btn" class="btn-base p-2 h-9 w-9 flex items-center justify-center rounded-r-md text-gray-600 hover:bg-gray-50" title="Ngày sau">
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
+                        </button>
+                        <div id="current-week-display" class="text-sm font-semibold text-gray-700 text-center w-48"></div>
+                        <button id="next-week-btn" class="btn-base p-2 h-9 w-9 flex items-center justify-center rounded-md text-gray-600 hover:bg-gray-50 ring-1 ring-inset ring-gray-300 shadow-sm" title="Tuần sau">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    <!-- Các nút chọn ngày trong tuần -->
+                    <div id="day-selector-container" class="flex items-center rounded-md shadow-sm ring-1 ring-inset ring-gray-300">
+                        <!-- Các nút ngày sẽ được JS render vào đây -->
+                    </div>
                 </div>
             </div>
             <div class="bg-white rounded-lg shadow-md overflow-hidden h-full flex flex-col">

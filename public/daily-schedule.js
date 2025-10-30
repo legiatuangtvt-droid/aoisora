@@ -1,6 +1,6 @@
 ﻿﻿import { db } from './firebase.js';
 import { collection, onSnapshot, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
-
+let viewStartDate = new Date(); // Ngày đầu tiên của tuần đang xem (Thứ 2)
 let domController = null;
 
 // Biến toàn cục để lưu trữ dữ liệu
@@ -13,6 +13,29 @@ let dailyTemplate = null; // Biến để lưu mẫu lịch trình ngày
 let currentScheduleData = []; // Lịch làm việc cho ngày đang chọn
 let allShiftCodes = []; // Biến để lưu danh sách mã ca
 const SHIFT_CODES_STORAGE_KEY = 'aoisora_shiftCodes';
+
+/**
+ * Định dạng một đối tượng Date thành chuỗi YYYY-MM-DD.
+ * @param {Date} date - Đối tượng Date.
+ * @returns {string} Chuỗi ngày tháng.
+ */
+function formatDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+/**
+ * Lấy ngày thứ 2 của tuần chứa ngày đã cho.
+ * @param {Date} d - Ngày bất kỳ.
+ * @returns {Date} - Ngày thứ 2 của tuần đó.
+ */
+function getMonday(d) {
+    d = new Date(d);
+    const day = d.getDay(), diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+    return new Date(d.setDate(diff));
+}
 
 //#region DATA_FETCHING
 /**
@@ -101,7 +124,7 @@ function listenForScheduleChanges(dateString) {
     const storeFilter = document.getElementById('store-filter');
     const selectedStoreId = storeFilter ? storeFilter.value : 'all';
 
-    if (!selectedStoreId || selectedStoreId === 'all') {
+    if (!selectedStoreId || selectedStoreId === 'all' || !dateString) {
         currentScheduleData = [];
         renderScheduleGrid();
         return;
@@ -263,7 +286,7 @@ function renderScheduleGrid() {
     // --- Tạo Body ---
     const tbody = document.createElement('tbody');
     if (currentScheduleData.length === 0) {
-        const selectedDate = document.getElementById('date').value;
+        const selectedDate = document.querySelector('.day-selector-btn.active')?.dataset.date || formatDate(new Date());
         const storeFilter = document.getElementById('store-filter');
         const selectedStoreId = storeFilter ? storeFilter.value : 'all';
 
@@ -405,34 +428,83 @@ function updateTimeIndicator() {
 //#endregion
 
 //#region INTERACTIONS
-function changeDate(delta) {
-    const dateInput = document.getElementById('date');
-    let currentDate = new Date(dateInput.value);
-    currentDate.setDate(currentDate.getDate() + delta);
-    
-    const year = currentDate.getFullYear();
-    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-    const day = String(currentDate.getDate()).padStart(2, '0');
-    dateInput.value = `${year}-${month}-${day}`;
-    
-    // Lắng nghe dữ liệu cho ngày mới
-    listenForScheduleChanges(dateInput.value);
+/**
+ * Chuyển sang tuần khác.
+ * @param {number} direction - 1 cho tuần tới, -1 cho tuần trước.
+ */
+function changeWeek(direction) {
+    viewStartDate.setDate(viewStartDate.getDate() + (direction * 7));
+    renderWeekControls();
+    // Tự động chọn ngày đầu tuần mới và tải lịch
+    const firstDayOfWeek = document.querySelector('.day-selector-btn');
+    if (firstDayOfWeek) {
+        changeDay(firstDayOfWeek.dataset.date);
+    }
 }
 
 /**
- * Chuyển về ngày hiện tại.
+ * Chuyển sang ngày khác trong tuần.
+ * @param {string} dateString - Ngày được chọn (YYYY-MM-DD).
  */
-function jumpToToday() {
-    const dateInput = document.getElementById('date');
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    const todayString = `${year}-${month}-${day}`;
-
-    dateInput.value = todayString;
-    listenForScheduleChanges(todayString);
+function changeDay(dateString) {
+    // Cập nhật UI để highlight nút được chọn
+    document.querySelectorAll('.day-selector-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.date === dateString);
+    });
+    // Tải lịch cho ngày mới
+    listenForScheduleChanges(dateString);
 }
+
+/**
+ * Render các nút điều khiển tuần và ngày.
+ */
+function renderWeekControls() {
+    const weekDisplay = document.getElementById('current-week-display');
+    const dayContainer = document.getElementById('day-selector-container');
+    if (!weekDisplay || !dayContainer) return;
+
+    const weekDates = [];
+    for (let i = 0; i < 7; i++) {
+        const date = new Date(viewStartDate);
+        date.setDate(date.getDate() + i);
+        weekDates.push(date);
+    }
+
+    // Hiển thị khoảng ngày của tuần
+    const firstDay = weekDates[0];
+    const lastDay = weekDates[6];
+    weekDisplay.textContent = `${firstDay.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })} - ${lastDay.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
+
+    // Render các nút ngày
+    const todayString = formatDate(new Date());
+    const selectedDateString = document.querySelector('.day-selector-btn.active')?.dataset.date;
+
+    dayContainer.innerHTML = weekDates.map((date, index) => {
+        const dateString = formatDate(date);
+        const dayName = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'][index];
+        const isToday = dateString === todayString;
+        const isActive = dateString === selectedDateString;
+
+        let classes = 'day-selector-btn btn-base px-3 h-9 text-sm font-semibold text-gray-700 hover:bg-gray-50 relative';
+        if (index > 0) classes += ' border-l border-gray-300';
+        if (index === 0) classes += ' rounded-l-md';
+        if (index === 6) classes += ' rounded-r-md';
+        if (isActive) classes += ' active'; // Lớp active sẽ được định nghĩa trong CSS để có màu nền khác
+
+        return `
+            <button class="${classes}" data-date="${dateString}" title="${date.toLocaleDateString('vi-VN')}">
+                ${dayName}
+                ${isToday ? '<span class="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-indigo-500 rounded-full"></span>' : ''}
+            </button>
+        `;
+    }).join('');
+
+    // Gắn lại sự kiện cho các nút ngày vừa tạo
+    dayContainer.querySelectorAll('.day-selector-btn').forEach(btn => {
+        btn.addEventListener('click', () => changeDay(btn.dataset.date));
+    });
+}
+
 //#endregion
 //#region FILTERS
 /**
@@ -458,7 +530,7 @@ function createStoreFilter() {
                 </div>
             `;
             // Tự động tải lịch cho cửa hàng của nhân viên
-            listenForScheduleChanges(document.getElementById('date').value);
+            listenForScheduleChanges(document.querySelector('.day-selector-btn.active')?.dataset.date);
         } else {
             container.innerHTML = `<div class="flex-1 max-w-xs text-sm text-gray-500">Bạn chưa được gán vào cửa hàng nào.</div>`;
         }
@@ -486,11 +558,12 @@ function createStoreFilter() {
         
         const storeFilter = document.getElementById('store-filter');
         storeFilter?.addEventListener('change', () => {
-            listenForScheduleChanges(document.getElementById('date').value);
+            const selectedDate = document.querySelector('.day-selector-btn.active')?.dataset.date;
+            listenForScheduleChanges(selectedDate);
         });
 
         // Tải lịch cho cửa hàng đầu tiên trong danh sách
-        listenForScheduleChanges(document.getElementById('date').value);
+        listenForScheduleChanges(document.querySelector('.day-selector-btn.active')?.dataset.date);
     }
 }
 //#endregion
@@ -510,29 +583,30 @@ export async function init() {
     domController = new AbortController();
     const { signal } = domController;
 
-    // Gán hàm changeDate vào window để HTML có thể gọi
-    window.dailySchedule = { changeDate, jumpToToday };
-
     // Hiển thị spinner ngay khi bắt đầu init
     showLoadingSpinner();
 
     loadShiftCodes(); // Tải mã ca để sử dụng cho việc sắp xếp
     await fetchInitialData();
 
-    const dateInput = document.getElementById('date');
-    // Đặt ngày mặc định là ngày hiện tại
-    if (dateInput && !dateInput.value) {
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const day = String(today.getDate()).padStart(2, '0');
-        dateInput.value = `${year}-${month}-${day}`;
+    // Khởi tạo ngày bắt đầu của tuần là thứ 2 của tuần hiện tại
+    viewStartDate = getMonday(new Date());
+    viewStartDate.setHours(0, 0, 0, 0);
+
+    // Render bộ điều khiển tuần
+    renderWeekControls();
+
+    // Tự động chọn ngày hôm nay khi khởi tạo
+    const todayString = formatDate(new Date());
+    const todayButton = document.querySelector(`.day-selector-btn[data-date="${todayString}"]`);
+    if (todayButton) {
+        todayButton.classList.add('active');
     }
 
-    // Thay đổi thứ tự: Tạo bộ lọc trước, sau đó mới lắng nghe thay đổi.
-    // Hàm createStoreFilter sẽ tự động gọi listenForScheduleChanges bên trong nó.
+    // Tạo bộ lọc cửa hàng, hàm này sẽ tự động gọi listenForScheduleChanges
     createStoreFilter();
 
-    // Gán listener cho sự kiện thay đổi ngày
-    dateInput.addEventListener('change', () => listenForScheduleChanges(dateInput.value), { signal });
+    // Gắn listener cho các nút điều khiển tuần
+    document.getElementById('prev-week-btn')?.addEventListener('click', () => changeWeek(-1), { signal });
+    document.getElementById('next-week-btn')?.addEventListener('click', () => changeWeek(1), { signal });
 }
