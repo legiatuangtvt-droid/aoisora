@@ -1,5 +1,5 @@
 import { db } from './firebase.js';
-import { collection, getDocs, query, where, doc, setDoc, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { collection, getDocs, query, where, doc, setDoc, serverTimestamp, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 let domController = null;
 let viewStartDate = new Date();
@@ -607,6 +607,9 @@ async function handleSuggestAssignmentForDay(event) {
     });
 
     window.showToast(`Đã đề xuất ${suggestions.length} vị trí.`, 'success');
+
+    // Cập nhật lại bảng thống kê dựa trên các giá trị vừa đề xuất
+    updateEmployeeStats();
 }
 
 /**
@@ -740,8 +743,7 @@ export async function init() {
             if (event.target.classList.contains('assign-day-btn')) {
                 handleSaveAssignmentForDay(event);
             } else if (event.target.closest('.suggest-day-btn')) {
-                handleSuggestAssignmentForDay(event);
-                handleSaveAssignmentForDay(event);
+                handleSuggestAssignmentForDay(event); // Chỉ đề xuất, không lưu
             }
         });
     }
@@ -818,7 +820,7 @@ async function loadWorkAssignmentsForWeek() {
 }
 
 /**
- * Tính toán và cập nhật bảng thống kê tỷ lệ vị trí công việc cho từng nhân viên.
+ * Tính toán và cập nhật bảng thống kê tỷ lệ vị trí công việc (theo giờ) cho từng nhân viên.
  * Phạm vi tính toán là 2 tháng (1 tháng trước và 1 tháng sau ngày hiện tại).
  */
 async function updateEmployeeStats() {
@@ -872,7 +874,6 @@ async function updateEmployeeStats() {
         }
     });
 
-    // 3. Cập nhật giao diện cho từng nhân viên
     const employeeRows = document.querySelectorAll('#assignment-table-body tr[data-employee-id]');
     employeeRows.forEach(row => {
         const employeeId = row.dataset.employeeId;
