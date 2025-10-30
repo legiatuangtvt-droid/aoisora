@@ -54,7 +54,7 @@ function updateHeaderUserInfo(user) {
             if (user.storeId) {
                 const store = allStores.find(s => s.id === user.storeId);
                 userStoreEl.textContent = store ? store.name : (user.roleId || '');
-            } else if (Array.isArray(user.managedStoreIds) && user.managedStoreIds.length > 0) {
+            } else if (user.roleId === 'STORE_INCHARGE' && Array.isArray(user.managedStoreIds) && user.managedStoreIds.length > 0) {
                 userStoreEl.textContent = user.managedStoreIds.join(', ');
             } else {
                 userStoreEl.textContent = user.roleId || '';
@@ -110,7 +110,7 @@ async function bootstrapApp() {
     // Map vai trò với file app tương ứng
     const roleToAppMap = {
         'ADMIN': 'admin-app.js',
-        'HQ_STAFF': 'admin-app.js', // HQ Staff dùng chung app với Admin
+        'HQ_STAFF': 'admin-app.js',
         'STAFF': 'staff-app.js',
         'STORE_LEADER_G2': 'store-leader-app.js',
         'STORE_LEADER_G3': 'store-leader-app.js',
@@ -122,6 +122,19 @@ async function bootstrapApp() {
     // Mặc định là app của Admin nếu không có người dùng mô phỏng
     const userRole = window.currentUser ? window.currentUser.roleId : 'ADMIN';
     const appFile = roleToAppMap[userRole] || 'admin-app.js';
+
+    // --- CẬP NHẬT MENU ---
+    // Tìm và thay đổi link "Lịch hàng tháng" thành "staff-schedule.html"
+    // Đây là một cách tiếp cận tạm thời vì layout được load động.
+    // Lý tưởng nhất là thay đổi trong file `layout-loader.js` hoặc các file `*-app.js`.
+    const observer = new MutationObserver((mutations, obs) => {
+        const monthlyLink = document.querySelector('a[href="month.html"]');
+        if (monthlyLink) {
+            monthlyLink.href = 'monthly-schedules.html';
+            obs.disconnect(); // Ngừng quan sát sau khi đã thay đổi
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
 
     // Tự động tạo và chèn thẻ script vào cuối thẻ <body>
     const script = document.createElement('script');

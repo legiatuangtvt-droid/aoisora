@@ -9,11 +9,13 @@ import { initializeLayoutController } from './layout-controller.js';
 // Import các module trang thuộc nhóm Store Leader
 import * as dailySchedule from './daily-schedule.js';
 import * as storeSchedule from './store-schedule.js';
+import * as monthlySchedules from './monthly-schedules.js';
 import * as storeAvailabilityAssignment from './store-availability-assignment.js';
 
 // Map các trang của Store Leader App với module tương ứng
 const storeLeaderPages = {
     'daily-schedule.html': { module: dailySchedule, title: 'Lịch Hàng Ngày' },
+    'monthly-schedules.html': { module: monthlySchedules, title: 'Lịch Làm Việc Tháng' },
     'store-schedule.html': { module: storeSchedule, title: 'Lịch Làm Việc Cửa Hàng' },
     'store-availability-assignment.html': { module: storeAvailabilityAssignment, title: 'Phân Công Ca Làm Việc' }
 };

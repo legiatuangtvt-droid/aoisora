@@ -1172,6 +1172,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
   width: 12rem;
 }
 
+.w-64 {
+  width: 16rem;
+}
+
 .min-w-36 {
   min-width: 9rem;
 }
@@ -1453,6 +1457,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
 
 .overflow-y-auto {
   overflow-y: auto;
+}
+
+.overflow-x-hidden {
+  overflow-x: hidden;
 }
 
 .truncate {

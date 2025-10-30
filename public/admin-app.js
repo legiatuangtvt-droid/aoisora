@@ -13,6 +13,7 @@ import * as store from './store.js';
 import * as dailyTemplates from './daily-templates.js';
 import * as shiftCodes from './shift-codes.js';
 import * as taskGroups from './task-groups.js';
+import * as monthlySchedules from './monthly-schedules.js';
 
 // Map tất cả các trang với module tương ứng
 const allPages = {
@@ -22,6 +23,7 @@ const allPages = {
     'daily-templates.html': { module: dailyTemplates, title: 'Quản Lý Mẫu Ngày' },
     'shift-codes.html': { module: shiftCodes, title: 'Quản Lý Mã Ca Làm Việc' },
     'task-groups.html': { module: taskGroups, title: 'Quản Lý Nhóm Công Việc' },
+    'monthly-schedules.html': { module: monthlySchedules, title: 'Lịch Làm Việc Tháng' },
     'intro.html': { module: null, title: 'Giới Thiệu Dự Án' },
 };
 
