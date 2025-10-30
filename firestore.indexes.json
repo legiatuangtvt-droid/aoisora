@@ -2,6 +2,20 @@
   "indexes": [
     {
       "collectionGroup": "schedules",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "storeId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "date",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "schedules",
       "queryScope": "COLLECTION_GROUP",
       "fields": [
         {

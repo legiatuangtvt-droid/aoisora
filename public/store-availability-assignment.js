@@ -225,9 +225,6 @@ function renderAssignmentTable() {
         row.innerHTML = rowHTML;
         body.appendChild(row);
     });
-
-    document.getElementById('prev-week-btn')?.addEventListener('click', () => changeWeek(-1), { signal: domController.signal });
-    document.getElementById('next-week-btn')?.addEventListener('click', () => changeWeek(1), { signal: domController.signal });
 }
 
 
@@ -322,14 +319,19 @@ function renderReadOnlyCellForStaff(employee, date) {
         </div>
     `;
 
-    const positionInputLine = `
+    // Vô hiệu hóa input cho các ngày trong quá khứ
+    const todayStr = formatDate(new Date());
+    const isPastDate = dateStr < todayStr;
+    const disabledAttr = isPastDate ? 'disabled' : '';
+
+    const positionInputLineWithPastCheck = `
         <div class="mt-1 flex gap-1">
-            <input list="work-positions-datalist" class="position-input form-input form-input-sm w-full text-center text-xs ${!reg1.shiftCode ? 'bg-slate-50' : ''}" data-shift-index="0" placeholder="Vị trí 1..." ${!reg1.shiftCode ? 'disabled' : ''}>
-            <input list="work-positions-datalist" class="position-input form-input form-input-sm w-full text-center text-xs ${!reg2.shiftCode ? 'bg-slate-50' : ''}" data-shift-index="1" placeholder="Vị trí 2..." ${!reg2.shiftCode ? 'disabled' : ''}>
+            <input list="work-positions-datalist" class="position-input form-input form-input-sm w-full text-center text-xs ${!reg1.shiftCode || isPastDate ? 'bg-slate-50' : ''}" data-shift-index="0" placeholder="Vị trí 1..." ${!reg1.shiftCode ? 'disabled' : ''} ${disabledAttr}>
+            <input list="work-positions-datalist" class="position-input form-input form-input-sm w-full text-center text-xs ${!reg2.shiftCode || isPastDate ? 'bg-slate-50' : ''}" data-shift-index="1" placeholder="Vị trí 2..." ${!reg2.shiftCode ? 'disabled' : ''} ${disabledAttr}>
         </div>`;
 
     return `<td class="p-1 border-x border-gray-200 align-top" data-date="${dateStr}">
-                <div class="flex flex-col gap-1">${shiftInfoHTML}${positionInputLine}</div>
+                <div class="flex flex-col gap-1">${shiftInfoHTML}${positionInputLineWithPastCheck}</div>
             </td>`;
 }
 
@@ -348,6 +350,9 @@ async function handleSaveAssignmentForDay(event) {
     button.disabled = true;
     button.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
 
+    const batch = writeBatch(db);
+    const currentUser = window.currentUser;
+
     const assignments = [];
     let isValid = true;
 
@@ -355,7 +360,7 @@ async function handleSaveAssignmentForDay(event) {
 
     for (const row of employeeRows) {
         const employeeId = row.dataset.employeeId;
-        const employee = allEmployeesInStore.find(e => e.id === employeeId);
+        const employee = allEmployeesInStore.find(e => e.id === employeeId);        
         const cell = row.querySelector(`td[data-date="${date}"]`);
         if (!cell || !employee) continue;
 
@@ -363,27 +368,35 @@ async function handleSaveAssignmentForDay(event) {
         const registrations = availability?.registrations || [];
         const positionInputs = cell.querySelectorAll('.position-input');
 
+        // Bỏ qua nếu là trưởng cửa hàng (không có input) hoặc ngày trong quá khứ
+        if (employee.id === currentUser.id || (positionInputs.length > 0 && positionInputs[0].disabled)) {
+            continue;
+        }
+
+
         const employeeAssignments = [];
 
         for (let i = 0; i < 2; i++) {
             const reg = registrations[i] || {};
             const input = Array.from(positionInputs).find(inp => inp.dataset.shiftIndex == i);
-            const position = input ? input.value.trim() : '';
+            const positionName = input ? input.value.trim() : '';
+            // Chuyển đổi tên vị trí thành ID trước khi lưu
+            const positionId = workPositions.find(p => p.name === positionName)?.id;
 
             if (reg.shiftCode) {
-                if (!position) {
-                    // Only validate if the input field exists (i.e., for non-leader rows)
-                    if (input) {
-                        isValid = false;
-                        input.classList.add('border-red-500', 'ring-red-500');
-                        window.showToast(`Vui lòng phân công vị trí cho ${employee.name} (Ca ${i + 1})`, 'warning');
-                    }
+                if (!positionName) {
+                    isValid = false;
+                    input.classList.add('border-red-500', 'ring-red-500');
+                    window.showToast(`Vui lòng phân công vị trí cho ${employee.name} (Ca ${i + 1})`, 'warning');
                 } else {
+                    // Logic lưu sẽ sử dụng positionId
                     input.classList.remove('border-red-500', 'ring-red-500');
                     employeeAssignments.push({
                         shiftCode: reg.shiftCode,
                         priority: reg.priority,
-                        position: position
+                        position: positionId,
+                        // Thêm thông tin để tìm document schedule
+                        shiftIndex: i 
                     });
                 }
             }
@@ -405,8 +418,36 @@ async function handleSaveAssignmentForDay(event) {
     }
 
     try {
-        const docRef = doc(db, 'work_assignments', date);
-        await setDoc(docRef, { assignments, updatedAt: serverTimestamp() });
+        // Lấy tất cả các lịch trình của cửa hàng trong ngày để cập nhật
+        const scheduleQuery = query(collection(db, 'schedules'), where('storeId', '==', currentUser.storeId), where('date', '==', date));
+        const scheduleSnapshot = await getDocs(scheduleQuery);
+        const existingSchedules = scheduleSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+
+        for (const empAssignment of assignments) {
+            for (const as of empAssignment.assignments) {
+                // Tìm lịch trình hiện có khớp với nhân viên và ca làm việc
+                // Logic này giả định một nhân viên chỉ có một ca trong ngày. Cần điều chỉnh nếu phức tạp hơn.
+                const scheduleDoc = existingSchedules.find(s => s.employeeId === empAssignment.employeeId && s.shift === as.shiftCode);
+
+                if (scheduleDoc) {
+                    // Nếu tìm thấy, cập nhật vị trí
+                    const scheduleRef = doc(db, 'schedules', scheduleDoc.id);
+                    batch.update(scheduleRef, { positionId: as.position });
+                } else {
+                    // Nếu không tìm thấy, tạo lịch trình mới
+                    const newScheduleRef = doc(collection(db, 'schedules'));
+                    batch.set(newScheduleRef, {
+                        date: date,
+                        employeeId: empAssignment.employeeId,
+                        storeId: currentUser.storeId,
+                        shift: as.shiftCode,
+                        positionId: as.position,
+                        tasks: [] // Mặc định không có task khi tạo từ trang này
+                    });
+                }
+            }
+        }
+        await batch.commit();
         window.showToast(`Đã lưu phân công cho ngày ${date}`, 'success');
     } catch (error) {
         console.error("Lỗi khi lưu phân công:", error);
@@ -644,8 +685,9 @@ async function saveLeaderAvailabilityForDate(date) {
 
 async function changeWeek(direction) {
     viewStartDate.setDate(viewStartDate.getDate() + (direction * 7));
-    await fetchAvailabilitiesForWeek();
+    await fetchAvailabilitiesForWeek(); // Tải dữ liệu đăng ký ca
     renderAssignmentTable();
+    await loadWorkAssignmentsForWeek(); // Tải lại dữ liệu phân công vị trí cho tuần mới
 }
 
 export function cleanup() {
@@ -664,7 +706,11 @@ export async function init() {
     await loadWorkPositions(); // Load work positions at initialization
     await fetchInitialData();
     renderAssignmentTable();
-    loadWorkAssignmentsForWeek(); // Tải dữ liệu phân công vị trí
+    await loadWorkAssignmentsForWeek(); // Tải dữ liệu phân công vị trí
+
+    // Gắn sự kiện cho nút điều hướng tuần một lần duy nhất
+    document.getElementById('prev-week-btn')?.addEventListener('click', () => changeWeek(-1), { signal: domController.signal });
+    document.getElementById('next-week-btn')?.addEventListener('click', () => changeWeek(1), { signal: domController.signal });
 
     // Event delegation for assign buttons
     const footer = document.getElementById('assignment-table-footer');
@@ -676,20 +722,20 @@ export async function init() {
                 handleSuggestAssignmentForDay(event);
                 handleSaveAssignmentForDay(event);
             }
-        }, { signal: domController.signal });
+        });
+    }
 
     // Event delegation for leader's editable cells
     const body = document.getElementById('assignment-table-body');
     if (body) {
-        body.addEventListener('change', handleLeaderCellInteraction, { signal: domController.signal });
-        body.addEventListener('click', handleLeaderCellInteraction, { signal: domController.signal });
+        body.addEventListener('change', handleLeaderCellInteraction);
+        body.addEventListener('click', handleLeaderCellInteraction);
         // Thêm listener để cập nhật thống kê khi vị trí thay đổi
         body.addEventListener('change', (event) => {
             if (event.target.classList.contains('position-input')) {
                 updateEmployeeStats();
             }
-        }, { signal: domController.signal });
-    }
+        });
     }
 }
 
@@ -697,32 +743,52 @@ export async function init() {
  * Tải và hiển thị các vị trí công việc đã được phân công.
  */
 async function loadWorkAssignmentsForWeek() {
+    const currentUser = window.currentUser;
+    if (!currentUser || !currentUser.storeId) return;
+
     const weekDates = [];
     for (let i = 0; i < 7; i++) {
         const date = new Date(viewStartDate);
         date.setDate(date.getDate() + i);
         weekDates.push(formatDate(date));
     }
-
     if (weekDates.length === 0) return;
 
-    const q = query(collection(db, 'work_assignments'), where('__name__', 'in', weekDates));
+    // Truy vấn collection 'schedules' thay vì 'work_assignments'
+    const q = query(
+        collection(db, 'schedules'),
+        where('storeId', '==', currentUser.storeId),
+        where('date', 'in', weekDates)
+    );
     const querySnapshot = await getDocs(q);
 
-    querySnapshot.forEach(docSnap => {
-        const date = docSnap.id;
-        const data = docSnap.data();
-        data.assignments?.forEach(empAssignment => {
-            const row = document.querySelector(`tr[data-employee-id="${empAssignment.employeeId}"]`);
-            if (!row) return;
+    const schedulesByEmployeeAndDate = new Map();
+    querySnapshot.forEach(doc => {
+        const schedule = doc.data();
+        const key = `${schedule.employeeId}_${schedule.date}`;
+        if (!schedulesByEmployeeAndDate.has(key)) {
+            schedulesByEmployeeAndDate.set(key, []);
+        }
+        schedulesByEmployeeAndDate.get(key).push(schedule);
+    });
 
-            empAssignment.assignments.forEach((as, index) => {
-                // Tìm input tương ứng với ca (shiftIndex)
-                const input = row.querySelector(`.position-input[data-shift-index="${index}"]`);
-                if (input && as.position) {
-                    input.value = as.position;
-                }
-            });
+    // Cập nhật giao diện
+    allEmployeesInStore.forEach(employee => {
+        const row = document.querySelector(`tr[data-employee-id="${employee.id}"]`);
+        if (!row) return;
+
+        weekDates.forEach(date => {
+            const schedules = schedulesByEmployeeAndDate.get(`${employee.id}_${date}`);
+            if (schedules) {
+                schedules.forEach((schedule, index) => {
+                    const input = row.querySelector(`td[data-date="${date}"] .position-input[data-shift-index="${index}"]`);
+                    // Tìm tên vị trí từ ID và hiển thị tên
+                    const position = workPositions.find(p => p.id === schedule.positionId);
+                    if (input && position) {
+                        input.value = position.name;
+                    }
+                })
+            }
         });
     });
 
@@ -731,44 +797,83 @@ async function loadWorkAssignmentsForWeek() {
 }
 
 /**
- * Cập nhật bảng thống kê cho từng nhân viên.
+ * Tính toán và cập nhật bảng thống kê tỷ lệ vị trí công việc cho từng nhân viên.
+ * Phạm vi tính toán là 2 tháng (1 tháng trước và 1 tháng sau ngày hiện tại).
  */
-function updateEmployeeStats() {
-    const employeeRows = document.querySelectorAll('#assignment-table-body tr[data-employee-id]');
+async function updateEmployeeStats() {
+    const currentUser = window.currentUser;
+    if (!currentUser || !currentUser.storeId) {
+        console.warn("Không thể xác định cửa hàng của người dùng để cập nhật thống kê.");
+        return;
+    }
 
+    const now = new Date();
+    const startDate = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+    const endDate = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
+
+    const startDateStr = formatDate(startDate);
+    const endDateStr = formatDate(endDate);
+
+    // 1. Lấy dữ liệu lịch trình của cửa hàng hiện tại trong khoảng thời gian 2 tháng
+    const q = query(collection(db, 'schedules'), 
+        where('storeId', '==', currentUser.storeId),
+        where('date', '>=', startDateStr), 
+        where('date', '<=', endDateStr));
+    const querySnapshot = await getDocs(q);
+
+    // 2. Xử lý dữ liệu và tính toán số lượng cho mỗi nhân viên
+    const employeePositionHours = new Map(); // Map<employeeId, Map<positionName, totalHours>>
+
+    querySnapshot.forEach(doc => {
+        const schedule = doc.data();
+        const { employeeId, positionId, shift } = schedule;
+
+        if (!employeeId || !positionId || !shift) return;
+
+        // Tìm thông tin ca làm để lấy số giờ (duration)
+        const shiftInfo = shiftCodes.find(sc => sc.shiftCode === shift);
+        if (!shiftInfo || !shiftInfo.duration) return; // Bỏ qua nếu không tìm thấy ca hoặc ca không có số giờ
+
+        // Tìm tên vị trí từ ID
+        const positionInfo = workPositions.find(p => p.id === positionId);
+        if (!positionInfo) return;
+        const positionName = positionInfo.name;
+
+        if (!employeePositionHours.has(employeeId)) {
+            const positionMap = new Map();
+            workPositions.forEach(p => positionMap.set(p.name, 0));
+            employeePositionHours.set(employeeId, positionMap);
+        }
+
+        const currentHoursMap = employeePositionHours.get(employeeId);
+        if (currentHoursMap.has(positionName)) {
+            currentHoursMap.set(positionName, currentHoursMap.get(positionName) + shiftInfo.duration);
+        }
+    });
+
+    // 3. Cập nhật giao diện cho từng nhân viên
+    const employeeRows = document.querySelectorAll('#assignment-table-body tr[data-employee-id]');
     employeeRows.forEach(row => {
         const employeeId = row.dataset.employeeId;
-        if (!employeeId) return;
+        const positionHours = employeePositionHours.get(employeeId);
 
-        // 1. Đếm số ca đã phân công cho từng vị trí
-        const positionCounts = {};
-        workPositions.forEach(pos => positionCounts[pos.name] = 0);
-        let totalAssignedShifts = 0;
+        if (!positionHours) { // Nếu nhân viên chưa có phân công nào trong 2 tháng
+            workPositions.forEach(pos => {
+                const statsCell = row.querySelector(`div[data-position-name="${pos.name}"]`);
+                if (statsCell) statsCell.querySelector('.stat-percentage').textContent = '0.0%';
+            });
+            return;
+        }
 
-        const assignedInputs = row.querySelectorAll('.position-input:not([disabled])');
-        assignedInputs.forEach(input => {
-            const position = input.value.trim();
-            if (position && workPositions.includes(position)) {
-                positionCounts[position]++;
-                totalAssignedShifts++;
-            }
-        });
+        const totalAssignedHours = Array.from(positionHours.values()).reduce((sum, hours) => sum + hours, 0);
 
-        // 2. Cập nhật từng ô thống kê
         workPositions.forEach(pos => {
             const statsCell = row.querySelector(`div[data-position-name="${pos.name}"]`);
             if (!statsCell) return;
 
-            const percentageEl = statsCell.querySelector('.stat-percentage');
-            const oldPercentage = parseFloat(percentageEl.textContent) || 0;
-            const newPercentage = totalAssignedShifts > 0 ? (positionCounts[pos] / totalAssignedShifts) * 100 : 0;
-            const percentageChange = newPercentage - oldPercentage;
-
-            percentageEl.textContent = `${newPercentage.toFixed(1)}%`;
-
-            if (Math.abs(percentageChange) > 0.01) {
-                triggerStatAnimation(statsCell, percentageChange, '%', 1);
-            }
+            const hoursForPosition = positionHours.get(pos.name) || 0;
+            const percentage = totalAssignedHours > 0 ? (hoursForPosition / totalAssignedHours) * 100 : 0;
+            statsCell.querySelector('.stat-percentage').textContent = `${percentage.toFixed(1)}%`;
         });
     });
 }
@@ -776,22 +881,16 @@ function updateEmployeeStats() {
 /**
  * Kích hoạt hiệu ứng animation cho một ô trong bảng thống kê.
  * @param {HTMLElement} cell - Ô (td) cần tạo hiệu ứng.
- * @param {number} change - Giá trị thay đổi (+ hoặc -).
- * @param {string} suffix - Hậu tố hiển thị (ví dụ: '%', ' ca').
- * @param {number} decimalPlaces - Số chữ số thập phân.
  */
-function triggerStatAnimation(cell, change, suffix = '%', decimalPlaces = 1) {
+function triggerStatAnimation(cell) {
     if (!cell) return;
 
     const animationEl = document.createElement('span');
-    const isPositive = change > 0;
-    animationEl.textContent = `${isPositive ? '+' : ''}${change.toFixed(decimalPlaces)}${suffix}`;
-
-    // Sử dụng class animation đã có và thêm class màu sắc động
-    animationEl.className = `stat-change-animation ${isPositive ? 'text-green-500' : 'text-red-500'}`;
+    animationEl.className = 'stat-change-animation';
+    animationEl.textContent = '●'; // Dùng một ký tự đơn giản để chỉ báo sự thay đổi
 
     cell.appendChild(animationEl);
 
     // Tự động xóa element sau khi animation hoàn tất
-    setTimeout(() => animationEl.remove(), 2000);
+    setTimeout(() => animationEl.remove(), 1000); // Giảm thời gian animation
 }
