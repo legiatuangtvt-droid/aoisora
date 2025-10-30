@@ -433,12 +433,21 @@ function updateTimeIndicator() {
  * @param {number} direction - 1 cho tuần tới, -1 cho tuần trước.
  */
 function changeWeek(direction) {
+    // Tìm vị trí (index) của ngày đang được chọn trong tuần (0=T2, 1=T3,...)
+    const dayButtons = Array.from(document.querySelectorAll('.day-selector-btn'));
+    const activeDayButton = document.querySelector('.day-selector-btn.active');
+    let selectedDayIndex = 0; // Mặc định là Thứ 2 nếu không tìm thấy
+    if (activeDayButton) {
+        selectedDayIndex = dayButtons.indexOf(activeDayButton);
+        if (selectedDayIndex === -1) selectedDayIndex = 0; // Fallback
+    }
+
     viewStartDate.setDate(viewStartDate.getDate() + (direction * 7));
     renderWeekControls();
-    // Tự động chọn ngày đầu tuần mới và tải lịch
-    const firstDayOfWeek = document.querySelector('.day-selector-btn');
-    if (firstDayOfWeek) {
-        changeDay(firstDayOfWeek.dataset.date);
+    // Tự động chọn ngày tương ứng ở tuần mới và tải lịch
+    const newDayToSelect = document.querySelectorAll('.day-selector-btn')[selectedDayIndex];
+    if (newDayToSelect) {
+        changeDay(newDayToSelect.dataset.date);
     }
 }
 
