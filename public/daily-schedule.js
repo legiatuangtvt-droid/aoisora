@@ -19,7 +19,6 @@ const SHIFT_CODES_STORAGE_KEY = 'aoisora_shiftCodes';
  * Tải danh sách mã ca từ localStorage.
  */
 function loadShiftCodes() {
-    console.log('[DailySchedule] Bắt đầu tải mã ca từ localStorage...');
     const storedData = localStorage.getItem(SHIFT_CODES_STORAGE_KEY);
     if (storedData) {
         try {
@@ -27,19 +26,15 @@ function loadShiftCodes() {
             if (Array.isArray(parsedData)) {
                 allShiftCodes = parsedData;
             }
-            console.log(`[DailySchedule] Đã tải thành công ${allShiftCodes.length} mã ca.`);
         } catch (e) {
             console.error("Lỗi khi đọc dữ liệu mã ca từ localStorage", e);
         }
-    } else {
-        console.warn('[DailySchedule] Không tìm thấy dữ liệu mã ca trong localStorage.');
     }
 }
 /**
  * Tải tất cả dữ liệu nền cần thiết một lần.
  */
 async function fetchInitialData() {
-    console.log('%c[DailySchedule] Bắt đầu fetchInitialData...', 'color: blue; font-weight: bold;');
     try {
         const [employeesSnap, storesSnap, areasSnap, regionsSnap, taskGroupsSnap, templateSnap] = await Promise.all([
             getDocs(collection(db, 'employee')),
@@ -49,14 +44,6 @@ async function fetchInitialData() {
             getDocs(collection(db, 'task_groups')),
             getDocs(query(collection(db, 'daily_templates'), where('name', '==', 'Test'))), // Tải mẫu "Test"
         ]);
-
-        console.groupCollapsed('[DailySchedule] Kết quả fetchInitialData');
-        console.log(`- Nhân viên: ${employeesSnap.size} records`);
-        console.log(`- Cửa hàng: ${storesSnap.size} records`);
-        console.log(`- Khu vực: ${areasSnap.size} records`);
-        console.log(`- Miền: ${regionsSnap.size} records`);
-        console.log(`- Nhóm Task: ${taskGroupsSnap.size} records`);
-        console.log(`- Template "Test": ${templateSnap.empty ? 'Không tìm thấy' : 'Đã tìm thấy'}`);
 
         let fetchedEmployees = employeesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         allStores = storesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -70,26 +57,20 @@ async function fetchInitialData() {
             dailyTemplate = templateSnap.docs[0].data();
         }
 
-        const initialEmployeeCount = fetchedEmployees.length;
-
         // Lọc nhân viên dựa trên vai trò của người dùng hiện tại
         const currentUser = window.currentUser;
         if (currentUser) {
-            console.log(`[DailySchedule] Lọc nhân viên cho người dùng: ${currentUser.name} (${currentUser.roleId})`);
             switch (currentUser.roleId) {
                 case 'STAFF':
                     fetchedEmployees = fetchedEmployees.filter(emp => emp.id === currentUser.id);
-                    console.log(`[DailySchedule] Lọc theo vai trò STAFF.`);
                     break;
                 case 'STORE_LEADER':
                     fetchedEmployees = fetchedEmployees.filter(emp => emp.storeId === currentUser.storeId);
-                    console.log(`[DailySchedule] Lọc theo vai trò STORE_LEADER tại cửa hàng ${currentUser.storeId}.`);
                     break;
                 case 'AREA_MANAGER':
                     if (currentUser.managedAreaIds && currentUser.managedAreaIds.length > 0) {
                         const managedStoreIds = allStores.filter(s => currentUser.managedAreaIds.includes(s.areaId)).map(s => s.id);
                         fetchedEmployees = fetchedEmployees.filter(emp => managedStoreIds.includes(emp.storeId));
-                        console.log(`[DailySchedule] Lọc theo vai trò AREA_MANAGER cho các khu vực: ${currentUser.managedAreaIds.join(', ')}.`);
                     }
                     break;
                 case 'REGIONAL_MANAGER':
@@ -97,17 +78,11 @@ async function fetchInitialData() {
                         const managedAreaIds = allAreas.filter(a => a.regionId === currentUser.managedRegionId).map(a => a.id);
                         const managedStoreIds = allStores.filter(s => managedAreaIds.includes(s.areaId)).map(s => s.id);
                         fetchedEmployees = fetchedEmployees.filter(emp => managedStoreIds.includes(emp.storeId));
-                        console.log(`[DailySchedule] Lọc theo vai trò REGIONAL_MANAGER cho miền: ${currentUser.managedRegionId}.`);
                     }
-                    break;
-                default:
-                     console.log(`[DailySchedule] Vai trò ADMIN hoặc không xác định, hiển thị tất cả nhân viên.`);
                     break;
             }
         }
         allEmployees = fetchedEmployees;
-        console.log(`[DailySchedule] Số lượng nhân viên sau khi lọc: ${allEmployees.length}/${initialEmployeeCount}`);
-        console.groupEnd();
     } catch (error) {
         console.error("Lỗi nghiêm trọng khi tải dữ liệu nền:", error);
         showToast("Không thể tải dữ liệu nền. Vui lòng thử lại.", "error");
@@ -119,7 +94,6 @@ async function fetchInitialData() {
  * @param {string} dateString - Ngày cần lấy dữ liệu (YYYY-MM-DD).
  */
 function listenForScheduleChanges(dateString) {    
-    console.log(`%c[DailySchedule] Bắt đầu listenForScheduleChanges cho ngày ${dateString}`, 'color: green; font-weight: bold;');
     if (window.currentScheduleUnsubscribe) {
         window.currentScheduleUnsubscribe();
         window.currentScheduleUnsubscribe = null;
@@ -129,12 +103,10 @@ function listenForScheduleChanges(dateString) {
     const selectedStoreId = storeFilter ? storeFilter.value : 'all';
 
     if (selectedStoreId === 'all') {
-        console.log('[DailySchedule] Chưa chọn cửa hàng, không tải lịch làm việc.');
         currentScheduleData = [];
         renderScheduleGrid();
         return;
     }
-    console.log(`[DailySchedule] Đang tạo query cho cửa hàng: ${selectedStoreId}, ngày: ${dateString}`);
 
     // --- LOGIC MỚI: Tải dữ liệu thật từ collection 'schedules' ---
     const scheduleQuery = query(
@@ -145,7 +117,6 @@ function listenForScheduleChanges(dateString) {
 
     // Sử dụng onSnapshot để lắng nghe thay đổi theo thời gian thực
     window.currentScheduleUnsubscribe = onSnapshot(scheduleQuery, (querySnapshot) => {
-        console.log(`[DailySchedule] onSnapshot callback được kích hoạt, tìm thấy ${querySnapshot.size} lịch làm việc.`);
         const schedules = [];
         querySnapshot.forEach((doc) => {
             const scheduleData = doc.data();
@@ -159,12 +130,10 @@ function listenForScheduleChanges(dateString) {
                 });
             }
         });
-        console.log(`[DailySchedule] Đã làm giàu dữ liệu cho ${schedules.length} lịch làm việc (có thông tin nhân viên).`);
         currentScheduleData = schedules;
 
         // --- LOGIC SẮP XẾP MỚI ---
         if (dailyTemplate && dailyTemplate.shiftMappings) {
-            console.log('[DailySchedule] Đang sắp xếp lịch làm việc dựa trên template.');
             currentScheduleData.sort((a, b) => {
                 // Helper function to get start time string (e.g., "06:00")
                 const getStartTime = (shiftCode) => {
@@ -189,8 +158,6 @@ function listenForScheduleChanges(dateString) {
                 const orderB = Object.keys(dailyTemplate.shiftMappings).findIndex(key => dailyTemplate.shiftMappings[key].positionId === b.positionId);
                 return orderA - orderB;
             });
-        } else {
-            console.log('[DailySchedule] Không có template hoặc shiftMappings, bỏ qua sắp xếp.');
         }
         renderScheduleGrid();
     }, (error) => {
@@ -217,7 +184,6 @@ function timeToMinutes(timeStr) {
  * Tự động cuộn đến nhân viên đang trong ca làm việc tại thời điểm hiện tại.
  */
 function scrollToCurrentEmployee() {
-    console.log('[DailySchedule] Đang kiểm tra để cuộn đến nhân viên hiện tại...');
     const now = new Date();
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
@@ -233,13 +199,10 @@ function scrollToCurrentEmployee() {
         return startMinutes !== null && endMinutes !== null && currentMinutes >= startMinutes && currentMinutes < endMinutes;
     });
 
-    console.log(`[DailySchedule] Tìm thấy ${activeEmployees.length} nhân viên đang trong ca.`);
-
     // Nếu có nhân viên đang làm việc, cuộn đến người cuối cùng trong danh sách
     if (activeEmployees.length > 0) {
         const lastActiveEmployee = activeEmployees[activeEmployees.length - 1];
         const employeeRow = document.querySelector(`tr[data-employee-id="${lastActiveEmployee.employeeId}"]`);
-        console.log(`[DailySchedule] Cuộn đến nhân viên: ${lastActiveEmployee.name}`);
         employeeRow?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 }
@@ -250,7 +213,6 @@ const defaultColor = {
 };
 
 function renderScheduleGrid() {
-    console.log('%c[DailySchedule] Bắt đầu renderScheduleGrid...', 'color: purple; font-weight: bold;');
     const container = document.getElementById('schedule-grid-container');
     if (!container) return;
 
@@ -273,13 +235,11 @@ function renderScheduleGrid() {
     const tbody = document.createElement('tbody');
     if (currentScheduleData.length === 0) {
         const selectedDate = document.getElementById('date').value;
-        console.log('[DailySchedule] Không có dữ liệu lịch làm việc, hiển thị thông báo.');
         const storeFilter = document.getElementById('store-filter');
         const selectedStoreId = storeFilter ? storeFilter.value : 'all';
 
         if (selectedStoreId === 'all') {
             tbody.innerHTML = `<tr><td colspan="${25}" class="text-center p-10 text-gray-500">Vui lòng chọn cửa hàng để xem lịch làm việc.</td></tr>`;
-            console.log('[DailySchedule] Thông báo: Vui lòng chọn cửa hàng.');
         } else {
             const selectedStore = allStores.find(s => s.id === selectedStoreId);
             const storeName = selectedStore ? selectedStore.name : 'Cửa hàng đã chọn';
@@ -293,7 +253,6 @@ function renderScheduleGrid() {
                     </div>
                 </td>
             </tr>`;
-            console.log(`[DailySchedule] Thông báo: Chưa có dữ liệu cho cửa hàng ${storeName} ngày ${formattedDate}.`);
             // Cuộn về đầu để người dùng thấy thông báo
             // Dùng setTimeout để đảm bảo DOM đã được render trước khi cuộn
             setTimeout(() => {
@@ -306,7 +265,6 @@ function renderScheduleGrid() {
             }, 0);
         }
     } else { 
-        console.log(`[DailySchedule] Đang render ${currentScheduleData.length} dòng lịch làm việc.`);
         currentScheduleData.forEach(schedule => {
             // Tìm khung giờ tương ứng với mã ca
             const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === schedule.shift);
@@ -368,7 +326,6 @@ function renderScheduleGrid() {
 
     updateTimeIndicator(); // Thay thế hàm cũ
     scrollToCurrentEmployee(); // Thêm chức năng cuộn dọc
-    console.log('%c[DailySchedule] Hoàn tất renderScheduleGrid.', 'color: purple; font-weight: bold;');
 }
 
 /**
@@ -376,7 +333,6 @@ function renderScheduleGrid() {
  */
 function updateTimeIndicator() {
     const now = new Date();
-    console.log(`[DailySchedule] Cập nhật chỉ báo thời gian: ${now.toLocaleTimeString()}`);
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
     const container = document.getElementById('schedule-grid-container');
@@ -387,7 +343,6 @@ function updateTimeIndicator() {
     if (headerCell) {
         const containerRect = container.getBoundingClientRect();
         const cellRect = headerCell.getBoundingClientRect();
-        console.log(`[DailySchedule] Cuộn ngang đến cột giờ ${currentHour}.`);
         const scrollLeft = cellRect.left - containerRect.left + container.scrollLeft;
         container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
     }
@@ -402,7 +357,6 @@ function updateTimeIndicator() {
 
     // Tìm và tô màu các ô trong cột quarter hiện tại
     const slotsToHighlight = container.querySelectorAll(`.quarter-hour-slot[data-time="${timeString}"][data-quarter="${quarter}"]`);
-    console.log(`[DailySchedule] Tô màu cho quarter: ${quarter} của giờ ${timeString}.`);
     slotsToHighlight.forEach(slot => slot.classList.add('current-time-slot', 'bg-amber-100'));
 }
 //#endregion
@@ -443,7 +397,6 @@ function jumpToToday() {
  * Tạo và điền dữ liệu cho bộ lọc cửa hàng.
  */
 function createStoreFilter() {
-    console.log('[DailySchedule] Đang tạo bộ lọc cửa hàng...');
     const container = document.getElementById('store-filter-container');
     if (!container) return;
 
@@ -454,7 +407,6 @@ function createStoreFilter() {
         .sort((a, b) => a.name.localeCompare(b.name));
     
     if (accessibleStores.length === 0) {
-        console.warn('[DailySchedule] Người dùng không có quyền truy cập vào cửa hàng nào.');
         container.innerHTML = `<div class="flex-1 max-w-xs text-sm text-gray-500">Không có cửa hàng nào được quản lý.</div>`;
         // Nếu không có cửa hàng, xóa lịch trình hiện tại và hiển thị thông báo
         currentScheduleData = [];
@@ -462,7 +414,6 @@ function createStoreFilter() {
         return;
     }
 
-    console.log(`[DailySchedule] Tìm thấy ${accessibleStores.length} cửa hàng có thể truy cập.`);
     const optionsHTML = accessibleStores.map(store => `<option value="${store.id}">${store.name}</option>`).join('');
 
     container.innerHTML = `
@@ -482,7 +433,6 @@ function createStoreFilter() {
     const firstStoreId = accessibleStores[0].id;
     if (storeFilter) {
         storeFilter.value = firstStoreId;
-        console.log(`[DailySchedule] Tự động tải lịch cho cửa hàng đầu tiên: ${firstStoreId}`);
         listenForScheduleChanges(document.getElementById('date').value);
     }
 }
@@ -500,7 +450,6 @@ export function cleanup() {
 }
 
 export async function init() {
-    console.log('%c[DailySchedule] Bắt đầu init()...', 'color: orange; font-weight: bold;');
     domController = new AbortController();
     const { signal } = domController;
 
@@ -509,7 +458,6 @@ export async function init() {
 
     loadShiftCodes(); // Tải mã ca để sử dụng cho việc sắp xếp
     await fetchInitialData();
-    console.log('[DailySchedule] Hoàn tất fetchInitialData.');
 
     const dateInput = document.getElementById('date');
     // Đặt ngày mặc định là ngày hiện tại
@@ -520,12 +468,10 @@ export async function init() {
         const day = String(today.getDate()).padStart(2, '0');
         dateInput.value = `${year}-${month}-${day}`;
     }
-    console.log(`[DailySchedule] Ngày được chọn ban đầu: ${dateInput.value}`);
     listenForScheduleChanges(dateInput.value);
 
     createStoreFilter();
 
     // Gán listener cho sự kiện thay đổi ngày
     dateInput.addEventListener('change', () => listenForScheduleChanges(dateInput.value), { signal });
-    console.log('%c[DailySchedule] Hoàn tất init().', 'color: orange; font-weight: bold;');
 }

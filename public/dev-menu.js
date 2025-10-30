@@ -414,7 +414,6 @@ function initializeDevMenu() {
                 'roles', 
                 'stores', 
                 'store_statuses', 
-                'schedules',
                 'employee', 
                 'area_managers', 
                 'regional_managers', 
@@ -492,15 +491,6 @@ function initializeDevMenu() {
             seedCollection('task_groups', data.task_groups);
             seedCollection('daily_templates', data.daily_templates);
             seedCollection('work_positions', data.work_positions);
-
-            // Seed Schedules
-            data.schedules?.forEach(schedule => {
-                // Sửa lại điều kiện để kiểm tra 'employeeId' thay vì 'staffId'
-                if (schedule.date && schedule.employeeId) {
-                    const docRef = doc(collection(db, 'schedules'));
-                    addBatch.set(docRef, schedule);
-                }
-            });
 
             await addBatch.commit();
             window.showToast('Hoàn tất! Đã nhập toàn bộ dữ liệu mẫu.', 'success', 4000);
@@ -590,55 +580,125 @@ async function applyTemplateToAllStores() {
         const employeesSnap = await getDocs(collection(db, 'employee'));
         const allEmployees = employeesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
+        // Tải dữ liệu đăng ký ca của nhân viên cho ngày đã chọn (Quy tắc 5)
+        const availabilityQuery = query(collection(db, 'staff_availability'), where('date', '==', dateString));
+        const availabilitySnap = await getDocs(availabilityQuery);
+        const allAvailabilities = availabilitySnap.docs.map(doc => doc.data());
+
+
         let schedulesCreatedCount = 0;
 
         // 5. Lặp qua tất cả cửa hàng và tạo lịch
-        // QUY TẮC TẠO LỊCH:
+        // QUY TẮC TẠO LỊCH (áp dụng theo thứ tự ưu tiên từ 1->5):
         // 1. Mỗi lịch làm việc phải phân công chính xác số lượng vị trí (ca làm việc) theo mẫu.
         // 2. Chỉ nhân viên có vai trò leader (level 1x) mới được phân công vào vị trí "LEADER".
         // 3. Trường hợp cửa hàng chỉ có 1 leader nhưng mẫu yêu cầu 2 ca LEADER, leader đó sẽ được phân công cả 2 ca.
+        // 4. Vị trí làm việc phải đảm bảo theo giá trị balance tại work_postitions theo mỗi nhân viên để đảm bảo sự công bằng tương đối,
+        // tránh một nhân viên bị phân công 1 vị trí quá nhiều (trừ vị trí leader).
+        // 5. Nếu có dữ liệu đăng ký ưu tiên ca của nhân viên tại collection 'staff_availability' thì ưu tiên phân công ca đó cho nhân viên đó.
 
         for (const store of allStores) {
             const storeEmployees = allEmployees.filter(emp => emp.storeId === store.id && emp.status === 'ACTIVE');
-            let assignedEmployeeIds = new Set();
+            const employeeAvailabilities = allAvailabilities.filter(a => storeEmployees.some(e => e.id === a.employeeId));
 
-            for (const shiftId in shiftMappings) {
-                const { positionId, shiftCode } = shiftMappings[shiftId];
-                if (!positionId || !shiftCode) continue;
-                
-                let employeeToAssign = null;
+            let assignedShifts = new Set(); // Theo dõi các ca đã được phân công: "shiftId"
+            let assignedEmployees = new Map(); // Theo dõi nhân viên đã được phân công và vị trí của họ: { employeeId: [positionId1, positionId2] }
+            let neededShifts = { ...shiftMappings }; // Clone các ca cần lấp đầy
 
-                // --- LOGIC PHÂN CÔNG MỚI ---
-                if (positionId === 'LEADER') {
-                    // Quy tắc 2 & 3: Chỉ tìm trong danh sách leader
-                    const leadersInStore = storeEmployees.filter(emp => emp.roleId.includes('LEADER'));
-                    // Tìm leader chưa được phân công
-                    employeeToAssign = leadersInStore.find(leader => !assignedEmployeeIds.has(leader.id));
-                    
-                    // Nếu không tìm thấy leader nào còn trống VÀ cửa hàng chỉ có 1 leader, cho phép leader đó làm ca tiếp theo
-                    if (!employeeToAssign && leadersInStore.length === 1) {
-                        employeeToAssign = leadersInStore[0]; 
-                        // Không cần kiểm tra assignedEmployeeIds nữa vì ta chấp nhận cho họ làm nhiều ca
+            // --- BƯỚC 1: ƯU TIÊN PHÂN CÔNG THEO ĐĂNG KÝ CỦA NHÂN VIÊN (QUY TẮC 5) ---
+            employeeAvailabilities.sort((a, b) => (a.registrations[0]?.priority || 3) - (b.registrations[0]?.priority || 3)); // Ưu tiên priority 1
+
+            for (const availability of employeeAvailabilities) {
+                for (const registration of availability.registrations) {
+                    if (!registration.shiftCode) continue;
+
+                    // Tìm ca trong template khớp với đăng ký của nhân viên
+                    const matchingShiftId = Object.keys(neededShifts).find(shiftId =>
+                        neededShifts[shiftId].shiftCode === registration.shiftCode && !assignedShifts.has(shiftId)
+                    );
+
+                    if (matchingShiftId && !assignedEmployees.has(availability.employeeId)) {
+                        const { positionId } = neededShifts[matchingShiftId];
+                        // Phân công và đánh dấu
+                        assignedShifts.add(matchingShiftId);
+                        assignedEmployees.set(availability.employeeId, [positionId]);
+                        delete neededShifts[matchingShiftId];
+                        break; // Mỗi nhân viên chỉ được xếp 1 ca ở bước này
                     }
-                } else {
-                    // Logic cũ cho các vị trí khác: ưu tiên đúng vai trò, sau đó lấy bất kỳ ai
-                    employeeToAssign = storeEmployees.find(emp => emp.roleId === positionId && !assignedEmployeeIds.has(emp.id))
-                                     || storeEmployees.find(emp => !assignedEmployeeIds.has(emp.id));
                 }
-                
+            }
+
+            // --- BƯỚC 2: PHÂN CÔNG CÁC VỊ TRÍ LEADER CÒN LẠI (QUY TẮC 2 & 3) ---
+            const leaderShifts = Object.keys(neededShifts).filter(id => neededShifts[id].positionId === 'LEADER');
+            if (leaderShifts.length > 0) {
+                const leadersInStore = storeEmployees.filter(emp => emp.roleId.includes('LEADER'));
+                for (const shiftId of leaderShifts) {
+                    let leaderToAssign = leadersInStore.find(l => !assignedEmployees.has(l.id));
+                    // Nếu không còn leader trống và cửa hàng chỉ có 1 leader, cho phép leader đó làm nhiều ca
+                    if (!leaderToAssign && leadersInStore.length === 1) {
+                        leaderToAssign = leadersInStore[0];
+                    }
+                    if (leaderToAssign) {
+                        assignedShifts.add(shiftId);
+                        const currentAssignments = assignedEmployees.get(leaderToAssign.id) || [];
+                        assignedEmployees.set(leaderToAssign.id, [...currentAssignments, 'LEADER']);
+                        delete neededShifts[shiftId];
+                    }
+                }
+            }
+
+            // --- BƯỚC 3: PHÂN CÔNG CÁC VỊ TRÍ CÒN LẠI THEO BALANCE (QUY TẮC 4) ---
+            const remainingShiftIds = Object.keys(neededShifts);
+            const availableEmployees = storeEmployees.filter(emp => !assignedEmployees.has(emp.id));
+
+            for (const shiftId of remainingShiftIds) {
+                const { positionId } = neededShifts[shiftId];
+                if (positionId === 'LEADER') continue; // Bỏ qua leader vì đã xử lý
+
+                // Sắp xếp nhân viên còn lại dựa trên "sự thiếu hụt" vị trí này
+                availableEmployees.sort((a, b) => {
+                    const assignmentsA = assignedEmployees.get(a.id) || [];
+                    const assignmentsB = assignedEmployees.get(b.id) || [];
+                    const shortageA = (assignmentsA.filter(p => p === positionId).length / (assignmentsA.length || 1));
+                    const shortageB = (assignmentsB.filter(p => p === positionId).length / (assignmentsB.length || 1));
+                    return shortageA - shortageB; // Ưu tiên người có tỷ lệ làm vị trí này thấp hơn
+                });
+
+                const employeeToAssign = availableEmployees.shift(); // Lấy người phù hợp nhất
                 if (employeeToAssign) {
-                    // Chỉ đánh dấu nhân viên đã được phân công nếu họ không phải là leader làm nhiều ca
-                    // Điều này cho phép leader duy nhất có thể được chọn lại
-                    assignedEmployeeIds.add(employeeToAssign.id);
+                    assignedShifts.add(shiftId);
+                    assignedEmployees.set(employeeToAssign.id, [positionId]); // Gán ca đầu tiên cho họ
+                    delete neededShifts[shiftId];
+                }
+            }
+
+            // --- BƯỚC 4: TẠO CÁC BẢN GHI LỊCH TRÌNH ---
+            for (const shiftId of assignedShifts) {
+                const mapping = shiftMappings[shiftId];
+                // Tìm nhân viên được gán cho ca này
+                const employeeId = [...assignedEmployees.entries()].find(([empId, positions]) => {
+                    // Logic này cần được xem lại nếu 1 nhân viên có thể làm nhiều ca khác nhau
+                    // Hiện tại, ta giả định 1 nhân viên được gán vào 1 ca (trừ leader)
+                    const assignedShiftForEmp = Object.keys(shiftMappings).find(sId => assignedShifts.has(sId) && empId === [...assignedEmployees.keys()][[...assignedShifts].indexOf(sId)]);
+                    return shiftId === assignedShiftForEmp;
+                })?.[0];
+
+                // Tìm nhân viên được phân công cho ca này
+                const assignedEmployeeEntry = [...assignedEmployees.entries()].find(([empId, posIds]) => {
+                    // Tìm xem nhân viên này có được gán vào ca hiện tại không
+                    // Đây là một logic đơn giản, có thể cần cải tiến nếu 1 nhân viên làm nhiều ca
+                    return posIds.includes(mapping.positionId);
+                });
+
+                if (assignedEmployeeEntry) {
+                    const [employeeId, posIds] = assignedEmployeeEntry;
+                    // Xóa vị trí đã dùng để nhân viên có thể được gán cho ca khác (nếu logic cho phép)
+                    posIds.splice(posIds.indexOf(mapping.positionId), 1);
 
                     const tasks = (templateSchedule[shiftId] || []).map(task => ({
-                        groupId: task.groupId,
-                        startTime: task.startTime,
-                        taskCode: task.taskCode,
-                        name: task.taskName
+                        groupId: task.groupId, startTime: task.startTime, taskCode: task.taskCode, name: task.taskName
                     }));
-
-                    const newScheduleDoc = { date: dateString, employeeId: employeeToAssign.id, storeId: store.id, shift: shiftCode, positionId, tasks };
+                    const newScheduleDoc = { date: dateString, employeeId, storeId: store.id, shift: mapping.shiftCode, positionId: mapping.positionId, tasks };
                     const scheduleRef = doc(collection(db, 'schedules'));
                     batch.set(scheduleRef, newScheduleDoc);
                     schedulesCreatedCount++;
