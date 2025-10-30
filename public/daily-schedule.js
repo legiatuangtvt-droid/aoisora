@@ -185,7 +185,8 @@ function timeToMinutes(timeStr) {
  */
 function scrollToCurrentEmployee() {
     const now = new Date();
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const targetTime = new Date(now.getTime() - 30 * 60 * 1000); // Lùi lại 30 phút
+    const targetMinutes = targetTime.getHours() * 60 + targetTime.getMinutes();
 
     // Tìm TẤT CẢ nhân viên có ca làm việc chứa giờ hiện tại
     const activeEmployees = currentScheduleData.filter(schedule => {
@@ -196,7 +197,7 @@ function scrollToCurrentEmployee() {
         const startMinutes = timeToMinutes(startStr);
         const endMinutes = timeToMinutes(endStr);
         
-        return startMinutes !== null && endMinutes !== null && currentMinutes >= startMinutes && currentMinutes < endMinutes;
+        return startMinutes !== null && endMinutes !== null && targetMinutes >= startMinutes && targetMinutes < endMinutes;
     });
 
     // Nếu có nhân viên đang làm việc, cuộn đến người cuối cùng trong danh sách
@@ -324,8 +325,12 @@ function renderScheduleGrid() {
     container.innerHTML = '';
     container.appendChild(table);
 
-    updateTimeIndicator(); // Thay thế hàm cũ
-    scrollToCurrentEmployee(); // Thêm chức năng cuộn dọc
+    // Thêm một khoảng trễ nhỏ để đảm bảo trình duyệt đã render xong trước khi cuộn.
+    // Điều này khắc phục vấn đề không cuộn đúng vị trí khi tải lại trang (F5).
+    setTimeout(() => {
+        updateTimeIndicator();
+        scrollToCurrentEmployee();
+    }, 100);
 }
 
 /**
@@ -333,13 +338,18 @@ function renderScheduleGrid() {
  */
 function updateTimeIndicator() {
     const now = new Date();
+    const scrollTargetTime = new Date(now.getTime() - 30 * 60 * 1000); // Thời gian để cuộn: lùi lại 30 phút
+    
+    const scrollTargetHour = scrollTargetTime.getHours();
+    
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
+
     const container = document.getElementById('schedule-grid-container');
     if (!container) return;
 
-    // --- 1. Cuộn ngang đến cột giờ hiện tại ---
-    const headerCell = container.querySelector(`th[data-hour="${currentHour}"]`);
+    // --- 1. Cuộn ngang đến cột giờ mục tiêu (30 phút trước) ---
+    const headerCell = container.querySelector(`th[data-hour="${scrollTargetHour}"]`);
     if (headerCell) {
         const containerRect = container.getBoundingClientRect();
         const cellRect = headerCell.getBoundingClientRect();
@@ -347,11 +357,11 @@ function updateTimeIndicator() {
         container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
     }
 
-    // --- 2. Tô màu cột 15 phút hiện tại ---
+    // --- 2. Tô màu cột 15 phút tại thời điểm hiện tại ---
     // Xóa highlight cũ trên toàn bộ bảng
     document.querySelectorAll('.current-time-slot').forEach(el => el.classList.remove('current-time-slot', 'bg-amber-100'));
 
-    // Xác định quarter hiện tại
+    // Xác định quarter tại thời điểm hiện tại
     const quarter = currentMinute < 15 ? '00' : currentMinute < 30 ? '15' : currentMinute < 45 ? '30' : '45';
     const timeString = `${String(currentHour).padStart(2, '0')}:00`;
 
