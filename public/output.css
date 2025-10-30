@@ -1539,6 +1539,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
   border-top-width: 1px;
 }
 
+.border-b-2 {
+  border-bottom-width: 2px;
+}
+
 .border-dashed {
   border-style: dashed;
 }
@@ -2284,6 +2288,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
 
 .duration-300 {
   transition-duration: 300ms;
+}
+
+.duration-150 {
+  transition-duration: 150ms;
 }
 
 .ease-in {

@@ -445,7 +445,8 @@ function changeWeek(direction) {
     }
 
     viewStartDate.setDate(viewStartDate.getDate() + (direction * 7));
-    renderWeekControls();
+    const selectedDateString = activeDayButton ? activeDayButton.dataset.date : null;
+    renderWeekControls(selectedDateString); // Truyền ngày đang active vào
     // Tự động chọn ngày tương ứng ở tuần mới và tải lịch
     const newDayToSelect = document.querySelectorAll('.day-selector-btn')[selectedDayIndex];
     if (newDayToSelect) {
@@ -458,9 +459,24 @@ function changeWeek(direction) {
  * @param {string} dateString - Ngày được chọn (YYYY-MM-DD).
  */
 function changeDay(dateString) {
-    // Cập nhật UI để highlight nút được chọn
+    const todayString = formatDate(new Date());
+
     document.querySelectorAll('.day-selector-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.date === dateString);
+        const btnDate = btn.dataset.date;
+        const isToday = btnDate === todayString;
+        const isActive = btnDate === dateString;
+
+        // 1. Reset tất cả các style cũ
+        btn.classList.remove('bg-indigo-600', 'text-white', 'hover:bg-indigo-700', 'border-b-2', 'border-indigo-500', 'active');
+        btn.classList.add('hover:bg-gray-100');
+
+        // 2. Áp dụng style mới dựa trên trạng thái
+        if (isActive) {
+            btn.classList.add('active', 'bg-indigo-600', 'text-white', 'hover:bg-indigo-700');
+            btn.classList.remove('hover:bg-gray-100');
+        } else if (isToday) {
+            btn.classList.add('border-b-2', 'border-indigo-500');
+        }
     });
     // Tải lịch cho ngày mới
     listenForScheduleChanges(dateString);
@@ -469,8 +485,8 @@ function changeDay(dateString) {
 /**
  * Render các nút điều khiển tuần và ngày.
  */
-function renderWeekControls() {
-    const dayContainer = document.querySelector('#daily-schedule-controls > div'); // The main container for buttons
+function renderWeekControls(activeDate) {
+    const dayContainer = document.querySelector('#daily-schedule-controls > div');
     if (!dayContainer) return;
 
     const weekDates = [];
@@ -482,7 +498,7 @@ function renderWeekControls() {
 
     // Render các nút ngày
     const todayString = formatDate(new Date());
-    const selectedDateString = document.querySelector('.day-selector-btn.active')?.dataset.date;
+    const selectedDateString = activeDate || document.querySelector('.day-selector-btn.active')?.dataset.date;
 
     // Xóa các nút ngày cũ trước khi render lại
     dayContainer.querySelectorAll('.day-selector-btn').forEach(btn => btn.remove());
@@ -494,15 +510,20 @@ function renderWeekControls() {
         const isToday = dateString === todayString;
         const isActive = dateString === selectedDateString;
 
-        let classes = 'day-selector-btn btn-base px-3 h-auto text-xs font-semibold text-gray-700 hover:bg-gray-50 relative leading-tight text-center';
-        if (isActive) classes += ' active'; // Lớp active sẽ được định nghĩa trong CSS để có màu nền khác
+        let classes = 'day-selector-btn btn-base px-3 h-auto text-xs font-semibold text-gray-700 hover:bg-gray-100 relative leading-tight text-center transition-colors duration-150';
+        
+        if (isActive) {
+            // Ngày đang được chọn sẽ có màu nổi bật nhất
+            classes += ' bg-indigo-600 text-white hover:bg-indigo-700';
+        } else if (isToday) { // Nếu là ngày hôm nay nhưng không được chọn, chỉ gạch chân
+            classes += ' border-b-2 border-indigo-500';
+        }
 
         return `
             <button class="${classes}" data-date="${dateString}" title="${date.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}">
                 <span class="text-sm">${dayName}</span>
                 <br>
                 <span class="font-normal">${dayAndMonth}</span>
-                ${isToday ? '<span class="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-indigo-500 rounded-full"></span>' : ''}
             </button>
         `;
     }).join('');
@@ -606,7 +627,7 @@ export async function init() {
     viewStartDate.setHours(0, 0, 0, 0);
 
     // Render bộ điều khiển tuần
-    renderWeekControls();
+    renderWeekControls(formatDate(new Date())); // Truyền ngày hôm nay vào để active ban đầu
 
     // Tự động chọn ngày hôm nay khi khởi tạo
     const todayString = formatDate(new Date());
