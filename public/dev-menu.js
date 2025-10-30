@@ -1,5 +1,5 @@
 import { db } from './firebase.js';
-import { writeBatch, doc, serverTimestamp, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { writeBatch, doc, serverTimestamp, collection, getDocs, query, orderBy, where } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 let allRoles = [];
 let allEmployees = [];
@@ -20,12 +20,16 @@ function initializeDevMenu() {
     menuContainer.innerHTML = `
         <div class="dev-menu-header flex items-center p-2.5 bg-slate-50 border-b border-slate-200 cursor-grab select-none h-[60px] box-border flex-shrink-0 active:cursor-grabbing">
             <span class="dev-menu-icon bg-emerald-500 text-white font-bold text-sm rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0">DEV</span>
-            <span class="dev-menu-title ml-3 font-semibold text-slate-800 whitespace-nowrap opacity-0 transition-opacity ease-in">Dev Tools</span>
+            <span class="dev-menu-title ml-3 font-semibold text-slate-800 whitespace-nowrap opacity-0 transition-opacity ease-in">Công cụ Dev</span>
         </div>
         <div class="dev-menu-body p-3 flex flex-col gap-2 opacity-0 invisible transition-opacity delay-100">
             <button id="seed-all-data-btn" class="dev-menu-button flex items-center gap-2.5 px-3 py-2 border border-slate-300 rounded-md bg-white cursor-pointer text-sm text-slate-700 transition-colors hover:bg-slate-50 hover:border-slate-400">
                 <i class="fas fa-database"></i>
                 <span>Nhập Dữ Liệu Mô Phỏng</span>
+            </button>
+            <button id="apply-template-all-stores-btn" class="dev-menu-button flex items-center gap-2.5 px-3 py-2 border border-slate-300 rounded-md bg-white cursor-pointer text-sm text-slate-700 transition-colors hover:bg-slate-50 hover:border-slate-400">
+                <i class="fas fa-store"></i>
+                <span>Áp dụng Template</span>
             </button>
             <div class="border-t border-slate-200 my-2"></div>
             <div class="dev-menu-title-section">Mô phỏng người dùng</div>
@@ -48,6 +52,7 @@ function initializeDevMenu() {
     // Add functionality
     const header = menuContainer.querySelector('.dev-menu-header');
     const seedAllDataBtn = document.getElementById('seed-all-data-btn');
+    const applyTemplateBtn = document.getElementById('apply-template-all-stores-btn');
     const menuBody = menuContainer.querySelector('.dev-menu-body');
     const menuTitle = menuContainer.querySelector('.dev-menu-title');
     const roleSelect = document.getElementById('dev-role-select');
@@ -381,6 +386,10 @@ function initializeDevMenu() {
         }
     });
 
+    if (applyTemplateBtn) {
+        applyTemplateBtn.addEventListener('click', applyTemplateToAllStores);
+    }
+
     fetchPersonnelData();
 
     // --- Seed data logic ---
@@ -500,6 +509,154 @@ function initializeDevMenu() {
             window.showToast("Lỗi khi nhập dữ liệu. Vui lòng kiểm tra console.", "error");
         }
     });
+}
+
+/**
+ * Áp dụng một template được chọn cho tất cả các cửa hàng vào một ngày cụ thể.
+ * Chức năng này được kích hoạt từ Dev Menu.
+ */
+async function applyTemplateToAllStores() {
+    const btn = document.getElementById('apply-template-all-stores-btn');
+    btn.disabled = true;
+    btn.querySelector('span').textContent = 'Đang xử lý...';
+
+    try {
+        // 1. Lấy danh sách templates
+        const templatesSnap = await getDocs(query(collection(db, 'daily_templates'), orderBy('name')));
+        const allTemplates = templatesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const templateNames = allTemplates.map(t => t.name).join(', ');
+
+        // Lấy tên mẫu đầu tiên làm giá trị mặc định
+        const defaultTemplateName = allTemplates.length > 0 ? allTemplates[0].name : '';
+
+        // 2. Yêu cầu người dùng nhập tên template
+        const templateName = await window.showPrompt(
+            `Nhập tên mẫu. Các mẫu có sẵn: ${templateNames}`,
+            'Chọn mẫu lịch trình',
+            defaultTemplateName // Mặc định là mẫu đầu tiên trong danh sách
+        );
+
+        if (!templateName) {
+            window.showToast('Hủy thao tác.', 'info');
+            return;
+        }
+
+        const template = allTemplates.find(t => t.name.toLowerCase() === templateName.toLowerCase().trim());
+        if (!template || !template.schedule || !template.shiftMappings) {
+            throw new Error(`Template "${templateName}" không hợp lệ hoặc không có dữ liệu ca làm việc.`);
+        }
+
+        // 3. Yêu cầu người dùng nhập ngày
+        const dateString = await window.showPrompt(
+            'Nhập ngày bạn muốn tạo lịch (YYYY-MM-DD):',
+            'Áp dụng Lịch trình cho tất cả cửa hàng',
+            new Date().toISOString().split('T')[0] // Gợi ý ngày hôm nay
+        );
+
+        if (!dateString || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+            window.showToast('Ngày không hợp lệ. Vui lòng nhập theo định dạng YYYY-MM-DD.', 'error');
+            return;
+        }
+
+        // Hỏi xác nhận trước khi xóa và tạo mới
+        const confirmed = await window.showConfirmation(
+            `Bạn có chắc chắn muốn XÓA TẤT CẢ lịch làm việc của ngày ${dateString} và tạo lại từ mẫu "${template.name}" không?`,
+            'Xác nhận tạo lịch hàng loạt',
+            'Xóa và Tạo mới',
+            'Hủy'
+        );
+
+        if (!confirmed) {
+            window.showToast('Đã hủy thao tác.', 'info');
+            return;
+        }
+
+        window.showToast(`Bắt đầu tạo lịch cho ngày ${dateString} từ mẫu "${template.name}"...`, 'info');
+
+        // 4. Lấy dữ liệu cần thiết
+        const { schedule: templateSchedule, shiftMappings } = template;
+        const batch = writeBatch(db);
+
+        // --- BƯỚC MỚI: Xóa tất cả lịch trình cũ trong ngày đã chọn ---
+        const oldSchedulesQuery = query(collection(db, 'schedules'), where('date', '==', dateString));
+        const oldSchedulesSnap = await getDocs(oldSchedulesQuery);
+        oldSchedulesSnap.forEach(doc => batch.delete(doc.ref));
+        if (!oldSchedulesSnap.empty) {
+            window.showToast(`Đã xóa ${oldSchedulesSnap.size} lịch làm việc cũ của ngày ${dateString}.`, 'info');
+        }
+
+        const storesSnap = await getDocs(collection(db, 'stores'));
+        const allStores = storesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const employeesSnap = await getDocs(collection(db, 'employee'));
+        const allEmployees = employeesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+        let schedulesCreatedCount = 0;
+
+        // 5. Lặp qua tất cả cửa hàng và tạo lịch
+        // QUY TẮC TẠO LỊCH:
+        // 1. Mỗi lịch làm việc phải phân công chính xác số lượng vị trí (ca làm việc) theo mẫu.
+        // 2. Chỉ nhân viên có vai trò leader (level 1x) mới được phân công vào vị trí "LEADER".
+        // 3. Trường hợp cửa hàng chỉ có 1 leader nhưng mẫu yêu cầu 2 ca LEADER, leader đó sẽ được phân công cả 2 ca.
+
+        for (const store of allStores) {
+            const storeEmployees = allEmployees.filter(emp => emp.storeId === store.id && emp.status === 'ACTIVE');
+            let assignedEmployeeIds = new Set();
+
+            for (const shiftId in shiftMappings) {
+                const { positionId, shiftCode } = shiftMappings[shiftId];
+                if (!positionId || !shiftCode) continue;
+                
+                let employeeToAssign = null;
+
+                // --- LOGIC PHÂN CÔNG MỚI ---
+                if (positionId === 'LEADER') {
+                    // Quy tắc 2 & 3: Chỉ tìm trong danh sách leader
+                    const leadersInStore = storeEmployees.filter(emp => emp.roleId.includes('LEADER'));
+                    // Tìm leader chưa được phân công
+                    employeeToAssign = leadersInStore.find(leader => !assignedEmployeeIds.has(leader.id));
+                    
+                    // Nếu không tìm thấy leader nào còn trống VÀ cửa hàng chỉ có 1 leader, cho phép leader đó làm ca tiếp theo
+                    if (!employeeToAssign && leadersInStore.length === 1) {
+                        employeeToAssign = leadersInStore[0]; 
+                        // Không cần kiểm tra assignedEmployeeIds nữa vì ta chấp nhận cho họ làm nhiều ca
+                    }
+                } else {
+                    // Logic cũ cho các vị trí khác: ưu tiên đúng vai trò, sau đó lấy bất kỳ ai
+                    employeeToAssign = storeEmployees.find(emp => emp.roleId === positionId && !assignedEmployeeIds.has(emp.id))
+                                     || storeEmployees.find(emp => !assignedEmployeeIds.has(emp.id));
+                }
+                
+                if (employeeToAssign) {
+                    // Chỉ đánh dấu nhân viên đã được phân công nếu họ không phải là leader làm nhiều ca
+                    // Điều này cho phép leader duy nhất có thể được chọn lại
+                    assignedEmployeeIds.add(employeeToAssign.id);
+
+                    const tasks = (templateSchedule[shiftId] || []).map(task => ({
+                        groupId: task.groupId,
+                        startTime: task.startTime,
+                        taskCode: task.taskCode,
+                        name: task.taskName
+                    }));
+
+                    const newScheduleDoc = { date: dateString, employeeId: employeeToAssign.id, storeId: store.id, shift: shiftCode, positionId, tasks };
+                    const scheduleRef = doc(collection(db, 'schedules'));
+                    batch.set(scheduleRef, newScheduleDoc);
+                    schedulesCreatedCount++;
+                }
+            }
+        }
+
+        // 6. Ghi dữ liệu vào Firestore
+        await batch.commit();
+        window.showToast(`Hoàn tất! Đã tạo ${schedulesCreatedCount} lịch làm việc cho ${allStores.length} cửa hàng.`, 'success', 5000);
+
+    } catch (error) {
+        console.error("Lỗi khi áp dụng template cho tất cả cửa hàng:", error);
+        window.showToast(`Đã xảy ra lỗi: ${error.message}`, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.querySelector('span').textContent = 'Áp dụng Template';
+    }
 }
 
 export { initializeDevMenu };
