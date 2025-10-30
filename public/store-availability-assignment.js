@@ -449,6 +449,8 @@ async function handleSaveAssignmentForDay(event) {
         }
         await batch.commit();
         window.showToast(`Đã lưu phân công cho ngày ${date}`, 'success');
+        updateEmployeeStats(); // Cập nhật thống kê sau khi lưu thành công
+
     } catch (error) {
         console.error("Lỗi khi lưu phân công:", error);
         window.showToast("Đã xảy ra lỗi khi lưu phân công.", "error");
@@ -456,6 +458,7 @@ async function handleSaveAssignmentForDay(event) {
         button.disabled = false;
         button.textContent = 'Phân công';
     }
+
 }
 
 /**
@@ -487,10 +490,7 @@ async function handleSuggestAssignmentForDay(event) {
     const button = event.target.closest('button');
     const date = button.dataset.date;
     if (!date) return;
-    // 2. Tính toán khối lượng công việc trong tuần của mỗi nhân viên
-    const weeklyWorkload = calculateWeeklyWorkload();
 
-    // 3. Thu thập và làm giàu dữ liệu nhân viên có đăng ký ca trong ngày
     const availableStaffSlots = [];
     allEmployeesInStore.forEach(employee => {
         const availability = allAvailabilities.find(a => a.employeeId === employee.id && a.date === date);
@@ -857,23 +857,35 @@ async function updateEmployeeStats() {
         const employeeId = row.dataset.employeeId;
         const positionHours = employeePositionHours.get(employeeId);
 
-        if (!positionHours) { // Nếu nhân viên chưa có phân công nào trong 2 tháng
-            workPositions.forEach(pos => {
-                const statsCell = row.querySelector(`div[data-position-name="${pos.name}"]`);
-                if (statsCell) statsCell.querySelector('.stat-percentage').textContent = '0.0%';
-            });
-            return;
-        }
-
-        const totalAssignedHours = Array.from(positionHours.values()).reduce((sum, hours) => sum + hours, 0);
+        // Nếu không có dữ liệu giờ làm, coi như tổng giờ là 0
+        const totalAssignedHours = positionHours ? Array.from(positionHours.values()).reduce((sum, hours) => sum + hours, 0) : 0;
 
         workPositions.forEach(pos => {
             const statsCell = row.querySelector(`div[data-position-name="${pos.name}"]`);
             if (!statsCell) return;
 
-            const hoursForPosition = positionHours.get(pos.name) || 0;
+            // Lấy giờ làm cho vị trí, nếu không có thì là 0
+            const hoursForPosition = positionHours ? (positionHours.get(pos.name) || 0) : 0;
             const percentage = totalAssignedHours > 0 ? (hoursForPosition / totalAssignedHours) * 100 : 0;
-            statsCell.querySelector('.stat-percentage').textContent = `${percentage.toFixed(1)}%`;
+            const percentageSpan = statsCell.querySelector('.stat-percentage');
+            percentageSpan.textContent = `${percentage.toFixed(1)}%`;
+
+            const balancePercentage = pos.balance || 0;
+            // Xóa các lớp màu cũ trước khi thêm lớp mới
+            percentageSpan.classList.remove('text-red-600', 'text-blue-600', 'text-green-600', 'text-gray-700');
+
+            // Sử dụng một epsilon rất nhỏ chỉ để xử lý sai số dấu phẩy động khi so sánh bằng nhau.
+            const epsilon = 0.00001;
+
+            // Logic so sánh chính xác theo yêu cầu
+            if (Math.abs(percentage - balancePercentage) < epsilon) {
+                // Coi là bằng nhau nếu chênh lệch cực nhỏ
+                percentageSpan.classList.add('text-green-600'); // Bằng -> màu xanh lá cây
+            } else if (percentage > balancePercentage) {
+                percentageSpan.classList.add('text-red-600'); // Lớn hơn -> màu đỏ
+            } else { // percentage < balancePercentage
+                percentageSpan.classList.add('text-blue-600'); // Nhỏ hơn -> màu xanh dương
+            }
         });
     });
 }
