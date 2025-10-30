@@ -6,6 +6,7 @@ let viewStartDate = new Date();
 let allEmployeesInStore = [];
 let allAvailabilities = [];
 let workPositions = []; // To store all possible work positions from datalist
+let allRoles = []; // Để lưu trữ danh sách chức vụ
 let shiftCodes = [];
 const SHIFT_CODES_STORAGE_KEY = 'aoisora_shiftCodes';
 
@@ -70,12 +71,26 @@ async function loadWorkPositions() {
     }
 }
 
+/**
+ * Tải danh sách các chức vụ từ Firestore.
+ */
+async function loadRoles() {
+    try {
+        const querySnapshot = await getDocs(collection(db, 'roles'));
+        allRoles = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+        console.error("Lỗi khi tải danh sách chức vụ:", error);
+        window.showToast("Không thể tải danh sách chức vụ.", "error");
+    }
+}
+
 async function fetchInitialData() {
     const currentUser = window.currentUser;
     if (!currentUser || !currentUser.storeId) {
         window.showToast("Không thể xác định cửa hàng của bạn.", "error");
         return;
     }
+    await loadRoles(); // Tải danh sách chức vụ
 
     const employeeQuery = query(collection(db, 'employee'), where("storeId", "==", currentUser.storeId));
     const employeeSnapshot = await getDocs(employeeQuery);
@@ -207,8 +222,14 @@ function renderAssignmentTable() {
 
     allEmployeesInStore.forEach(employee => {
         const row = document.createElement('tr');
+        const role = allRoles.find(r => r.id === employee.roleId);
         row.dataset.employeeId = employee.id;
-        let rowHTML = `<td class="p-1 border-x border-gray-200 bg-white text-center sticky left-0 z-10 font-semibold text-sm">${employee.name}</td>`;
+        let rowHTML = `
+            <td class="p-1 border-x border-gray-200 bg-white text-center sticky left-0 z-10">
+                <div class="font-semibold text-sm">${employee.name}</div>
+                <div class="text-xs text-gray-500" title="${role?.name || ''}">${role?.name || employee.roleId || ''}</div>
+            </td>
+        `;
 
         weekDates.forEach(date => { rowHTML += renderCellContent(employee, date); });
 
