@@ -14,6 +14,7 @@ import * as dailyTemplates from './daily-templates.js';
 import * as shiftCodes from './shift-codes.js';
 import * as taskGroups from './task-groups.js';
 import * as monthlySchedules from './monthly-schedules.js';
+import * as workforceDispatch from './workforce-dispatch.js';
 
 // Map tất cả các trang với module tương ứng
 const allPages = {
@@ -24,6 +25,7 @@ const allPages = {
     'shift-codes.html': { module: shiftCodes, title: 'Quản Lý Mã Ca Làm Việc' },
     'task-groups.html': { module: taskGroups, title: 'Quản Lý Nhóm Công Việc' },
     'monthly-schedules.html': { module: monthlySchedules, title: 'Lịch Làm Việc Tháng' },
+    'workforce-dispatch.html': { module: workforceDispatch, title: 'Điều Phối Nhân Lực' },
     'intro.html': { module: null, title: 'Giới Thiệu Dự Án' },
 };
 
