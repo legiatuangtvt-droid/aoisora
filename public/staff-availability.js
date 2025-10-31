@@ -25,23 +25,31 @@ function getTomorrow() {
 }
 
 /**
+ * Chuyển đổi chuỗi thời gian "HH:mm" thành số phút trong ngày.
+ * @param {string} timeStr - Chuỗi thời gian (e.g., "08:30").
+ * @returns {number|null} - Tổng số phút từ 00:00, hoặc null nếu định dạng không hợp lệ.
+ */
+function timeToMinutes(timeStr) {
+    if (!timeStr || !timeStr.includes(':')) return null;
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    if (isNaN(hours) || isNaN(minutes)) return null;
+    return hours * 60 + minutes;
+}
+
+
+
+/**
  * Tải danh sách mã ca từ localStorage.
  */
 function loadShiftCodes() {
     const storedData = localStorage.getItem(SHIFT_CODES_STORAGE_KEY);
-    const datalist = document.getElementById('shift-codes-datalist');
-    if (!datalist) return;
-
-    datalist.innerHTML = ''; // Clear old options
 
     if (storedData) {
         try {
             const parsedData = JSON.parse(storedData);
             if (Array.isArray(parsedData)) {
+                // Chỉ tải mảng shiftCodes, không còn tương tác với DOM datalist toàn cục
                 shiftCodes = parsedData;
-                shiftCodes.forEach(sc => {
-                    datalist.innerHTML += `<option value="${sc.shiftCode}">${sc.timeRange}</option>`;
-                });
             }
         } catch (e) {
             console.error("Lỗi khi đọc dữ liệu mã ca từ localStorage", e);
@@ -50,6 +58,49 @@ function loadShiftCodes() {
     } else {
         console.warn("Không tìm thấy dữ liệu mã ca trong localStorage.");
     }
+}
+
+/**
+ * Lọc các tùy chọn trong một datalist dựa trên các ca đã chọn trong cùng một ngày.
+ * @param {HTMLDataListElement} datalistElement - Datalist cần lọc.
+ * @param {string} selfShiftCode - Mã ca hiện đang được chọn trong input liên kết với datalist này.
+ * @param {string} otherShiftCode - Mã ca được chọn trong input *còn lại* của cùng một ngày.
+ */
+function filterDatalist(datalistElement, selfShiftCode, otherShiftCode) {
+    if (!datalistElement) return;
+    datalistElement.innerHTML = ''; // Xóa các tùy chọn hiện có
+
+    const otherShift = otherShiftCode ? shiftCodes.find(sc => sc.shiftCode === otherShiftCode) : null;
+    let startOther = null, endOther = null;
+    if (otherShift) {
+        const [startStr, endStr] = otherShift.timeRange.split('~').map(s => s.trim());
+        startOther = timeToMinutes(startStr);
+        endOther = timeToMinutes(endStr);
+    }
+
+    shiftCodes.forEach(potentialShift => {
+        // Luôn bao gồm mã ca hiện tại của input này (nếu có)
+        if (potentialShift.shiftCode === selfShiftCode) {
+            datalistElement.innerHTML += `<option value="${potentialShift.shiftCode}">${potentialShift.timeRange}</option>`;
+            return;
+        }
+
+        // Nếu không có ca nào khác được chọn, hoặc ca tiềm năng không trùng với ca khác, thì thêm vào.
+        if (!otherShift || !otherShiftCode) { // Không có ca khác được chọn, tất cả đều hợp lệ
+            datalistElement.innerHTML += `<option value="${potentialShift.shiftCode}">${potentialShift.timeRange}</option>`;
+        } else {
+            const [startPotentialStr, endPotentialStr] = potentialShift.timeRange.split('~').map(s => s.trim());
+            const startPotential = timeToMinutes(startPotentialStr);
+            const endPotential = timeToMinutes(endPotentialStr);
+
+            // Kiểm tra chồng chéo: (StartA < EndB) and (StartB < EndA)
+            const overlaps = (startPotential < endOther && endPotential > startOther);
+
+            if (!overlaps) {
+                datalistElement.innerHTML += `<option value="${potentialShift.shiftCode}">${potentialShift.timeRange}</option>`;
+            }
+        }
+    });
 }
 
 /**
@@ -121,8 +172,23 @@ async function renderWeekView() {
             const shiftIndex = block.dataset.shiftIndex;
 
             // Đặt placeholder
-            const defaultOptionText = shiftIndex === '0' ? '-- Ca 1 --' : '-- Ca 2 --';
+            const defaultOptionText = (shiftIndex === '0' ? '-- Ca 1 --' : '-- Ca 2 --');
             input.placeholder = defaultOptionText;
+
+            // Gán ID duy nhất cho input
+            const inputId = `shift-input-${dateStr}-${shiftIndex}`;
+            input.id = inputId;
+
+            // Tạo một datalist duy nhất cho input này
+            const datalistId = `datalist-${dateStr}-${shiftIndex}`;
+            const datalist = document.createElement('datalist');
+            datalist.id = datalistId;
+            // Ban đầu điền tất cả các mã ca vào datalist
+            shiftCodes.forEach(sc => {
+                datalist.innerHTML += `<option value="${sc.shiftCode}">${sc.timeRange}</option>`;
+            });
+            td.appendChild(datalist); // Thêm datalist vào td
+            input.setAttribute('list', datalistId); // Liên kết input với datalist của nó
 
             // Vô hiệu hóa nút ưu tiên mặc định
             priorityBtns.forEach(btn => btn.disabled = true);
@@ -174,6 +240,7 @@ async function loadAvailabilityForWeek(weekDates) {
                 registrations.forEach((reg, index) => {
                     const block = document.querySelector(`td[data-date="${date}"] .shift-registration-block[data-shift-index="${index}"]`);
                     if (block) {
+                        const td = block.closest('td'); // Định nghĩa td ở đây
                         const input = block.querySelector('.shift-input');
                         const priorityBtns = block.querySelectorAll('.priority-btn');
 
@@ -192,6 +259,21 @@ async function loadAvailabilityForWeek(weekDates) {
                             updatePriorityUI(block, reg.priority);
                         }
                         updateShiftTimeDisplay(block); // Hiển thị khung giờ cho ca đã lưu
+
+                    // Sau khi tải dữ liệu, lọc lại datalist cho cả hai input trong ngày
+                    const targetInput = input;
+                    const shiftIndex = index; // Gán giá trị index vào shiftIndex
+                    const otherInput = td.querySelector(`.shift-input[data-shift-index="${1 - shiftIndex}"]`); // Lấy input còn lại
+                    
+                    const targetDatalist = document.getElementById(targetInput.getAttribute('list'));
+                    const otherDatalist = otherInput ? document.getElementById(otherInput.getAttribute('list')) : null;
+
+                    const targetShiftCode = targetInput.value;
+                    const otherShiftCode = otherInput ? otherInput.value : null;
+
+                    if (targetDatalist) filterDatalist(targetDatalist, targetShiftCode, otherShiftCode);
+                    if (otherDatalist) filterDatalist(otherDatalist, otherShiftCode, targetShiftCode);
+
                     }
                 });
             }
@@ -247,30 +329,66 @@ function updatePriorityUI(block, selectedPriority) {
 }
 
 /**
- * Xử lý sự kiện khi người dùng tương tác với các ô đăng ký.
+ * Xử lý sự kiện khi người dùng thay đổi giá trị input hoặc click vào nút ưu tiên.
  */
-function handleCellInteraction(event) {
-    const target = event.target;
+function handleCellChange(event) {
+    const target = event.target; // Có thể là input hoặc button
     const block = target.closest('.shift-registration-block');
     if (!block) return;
 
     const td = block.closest('td');
     if (!td) return;
 
-    // Xử lý khi thay đổi lựa chọn ca
+    // Lấy cả hai input trong ô ngày hiện tại
+    // Xử lý khi thay đổi giá trị ca (sự kiện 'input')
     if (target.classList.contains('shift-input')) {
         const priorityBtns = block.querySelectorAll('.priority-btn');
-        if (target.value) {
-            // Kích hoạt các nút ưu tiên nếu một ca được chọn
-            priorityBtns.forEach(btn => btn.disabled = false);
-        } else {
-            // Vô hiệu hóa và reset ưu tiên nếu không có ca nào được chọn
-            priorityBtns.forEach(btn => btn.disabled = true);
-            updatePriorityUI(block, 0); // Reset màu của icon
-        }
-        updateShiftTimeDisplay(block); // Cập nhật hiển thị khung giờ
-    }
+            // --- LOGIC KIỂM TRA TRÙNG GIỜ ---
+            const inputs = td.querySelectorAll('.shift-input');
+            const otherInput = Array.from(inputs).find(inp => inp !== target);
 
+            if (otherInput && otherInput.value) {
+                const shift1Code = target.value;
+                const shift2Code = otherInput.value;
+
+                const shift1 = shiftCodes.find(sc => sc.shiftCode === shift1Code);
+                const shift2 = shiftCodes.find(sc => sc.shiftCode === shift2Code);
+
+                if (shift1 && shift2) {
+                    const [start1Str, end1Str] = shift1.timeRange.split('~').map(s => s.trim());
+                    const [start2Str, end2Str] = shift2.timeRange.split('~').map(s => s.trim());
+
+                    const start1 = timeToMinutes(start1Str);
+                    const end1 = timeToMinutes(end1Str);
+                    const start2 = timeToMinutes(start2Str);
+                    const end2 = timeToMinutes(end2Str);
+
+                    // Kiểm tra chồng chéo: (StartA < EndB) and (StartB < EndA)
+                    if (start1 < end2 && start2 < end1) {
+                        window.showToast('Lỗi: Khung giờ của hai ca bị trùng nhau.', 'error');
+                        target.value = ''; // Xóa lựa chọn không hợp lệ
+                        // Vô hiệu hóa và reset ưu tiên
+                        priorityBtns.forEach(btn => btn.disabled = true);
+                        updatePriorityUI(block, 0);
+                        updateShiftTimeDisplay(block);
+                        return; // Dừng xử lý thêm
+                    }
+                }
+            }
+            // --- KẾT THÚC LOGIC KIỂM TRA ---
+
+
+            if (target.value) {
+                // Kích hoạt các nút ưu tiên nếu một ca được chọn
+                priorityBtns.forEach(btn => btn.disabled = false);
+            } else {
+                // Vô hiệu hóa và reset ưu tiên nếu không có ca nào được chọn
+                priorityBtns.forEach(btn => btn.disabled = true);
+                updatePriorityUI(block, 0); // Reset màu của icon
+            }
+            updateShiftTimeDisplay(block); // Cập nhật hiển thị khung giờ
+
+        }
     // Xử lý chọn priority
     const priorityBtn = target.closest('.priority-btn');
     if (priorityBtn) {
@@ -284,9 +402,29 @@ function handleCellInteraction(event) {
             updatePriorityUI(block, currentPriority);
         }
     }
+}
 
-    // Không lưu tự động nữa
-    // saveAvailabilityForDate(date);
+/**
+ * Xử lý sự kiện khi người dùng focus vào một ô input ca.
+ * Mục đích là để lọc datalist trước khi nó được hiển thị.
+ */
+function handleCellFocus(event) {
+    const target = event.target;
+    if (!target.classList.contains('shift-input')) return;
+
+    const td = target.closest('td');
+    if (!td) return;
+
+    const inputsInDay = Array.from(td.querySelectorAll('.shift-input'));
+    const otherInput = inputsInDay.find(inp => inp !== target);
+
+    // Áp dụng lọc cho cả hai datalist trong ngày để đồng bộ
+    const targetDatalist = document.getElementById(target.getAttribute('list'));
+    const otherDatalist = otherInput ? document.getElementById(otherInput.getAttribute('list')) : null;
+    const targetShiftCode = target.value;
+    const otherShiftCode = otherInput ? otherInput.value : null;
+    if (targetDatalist) filterDatalist(targetDatalist, targetShiftCode, otherShiftCode);
+    if (otherDatalist) filterDatalist(otherDatalist, otherShiftCode, targetShiftCode);
 }
 
 /**
@@ -377,8 +515,9 @@ function addCellEventListeners() {
     const tableBody = document.querySelector('.min-w-full tbody');
     if (tableBody) {
         // Sử dụng event delegation
-        tableBody.addEventListener('click', handleCellInteraction);
-        tableBody.addEventListener('change', handleCellInteraction);
+        tableBody.addEventListener('click', handleCellChange); // Chỉ xử lý click nút ưu tiên
+        tableBody.addEventListener('input', handleCellChange); // Xử lý khi giá trị input thay đổi
+        tableBody.addEventListener('focusin', handleCellFocus); // Xử lý khi focus vào input
     }
 }
 
@@ -399,8 +538,9 @@ export function cleanup() {
     // Xóa event listener đã delegate
     const tableBody = document.querySelector('.min-w-full tbody');
     if (tableBody) {
-        tableBody.removeEventListener('click', handleCellInteraction);
-        tableBody.removeEventListener('change', handleCellInteraction);
+        tableBody.removeEventListener('click', handleCellChange);
+        tableBody.removeEventListener('input', handleCellChange);
+        tableBody.removeEventListener('focusin', handleCellFocus);
     }
 }
 
