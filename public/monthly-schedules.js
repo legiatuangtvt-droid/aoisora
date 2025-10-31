@@ -216,6 +216,28 @@ function renderCalendar(schedules, employees) {
                     </div>
                 `;
             }
+        } else if (currentUser && (currentUser.roleId === 'STORE_LEADER_G2' || currentUser.roleId === 'STORE_LEADER_G3' || currentUser.roleId === 'STORE_INCHARGE')) {
+            // Logic hiển thị cho Store Leader (G2, G3, SI)
+            if (schedulesForDay.length > 0) {
+                const storeId = schedulesForDay[0].storeId;
+                const store = allStores.find(st => st.id === storeId);
+                
+                // Tính tổng man-hour thực tế
+                const totalManHours = schedulesForDay.reduce((total, schedule) => {
+                    const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === schedule.shift);
+                    return total + (shiftInfo?.duration || 0);
+                }, 0);
+
+                contentHTML = `
+                    <div class="flex flex-col justify-center h-full text-center text-xs p-1">
+                        <div class="font-semibold text-gray-800">${store?.name || 'N/A'}</div>
+                        <div class="mt-1 flex justify-center items-baseline gap-1">
+                            <div class="text-gray-600">Tổng giờ làm:</div>
+                            <div class="font-bold text-lg text-indigo-700">${totalManHours.toFixed(1)}h</div>
+                        </div>
+                    </div>
+                `;
+            }
         } else {
             // Logic hiển thị cho quản lý (như cũ)
             contentHTML = '<ul class="text-xs space-y-1 mt-1 overflow-y-auto">';
