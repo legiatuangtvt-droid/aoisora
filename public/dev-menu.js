@@ -505,10 +505,23 @@ function initializeDevMenu() {
 }
 
 /**
+ * Định dạng một đối tượng Date thành chuỗi YYYY-MM-DD theo giờ địa phương.
+ * @param {Date} date - Đối tượng Date.
+ * @returns {string} Chuỗi ngày tháng.
+ */
+function formatLocalDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+/**
  * Áp dụng một template được chọn cho tất cả các cửa hàng vào một ngày cụ thể.
  * Chức năng này được kích hoạt từ Dev Menu.
  */
 async function applyTemplateToAllStores() {
+
     const btn = document.getElementById('apply-template-all-stores-btn');
     btn.disabled = true;
     btn.querySelector('span').textContent = 'Đang xử lý...';
@@ -543,7 +556,7 @@ async function applyTemplateToAllStores() {
         const dateString = await window.showPrompt(
             'Nhập ngày bạn muốn tạo lịch (YYYY-MM-DD):',
             'Áp dụng Lịch trình cho tất cả cửa hàng',
-            new Date().toISOString().split('T')[0] // Gợi ý ngày hôm nay
+            formatLocalDate(new Date()) // Gợi ý ngày hôm nay theo giờ địa phương
         );
 
         if (!dateString || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
