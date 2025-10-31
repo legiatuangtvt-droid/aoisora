@@ -547,15 +547,26 @@ export function cleanup() {
 export function init() {
     // Trong kiến trúc SPA này, init() được gọi sau khi nội dung trang đã được tải vào DOM.
     // Do đó, không cần chờ 'DOMContentLoaded' nữa và có thể chạy trực tiếp.
-    runInit();
+    // Logic mới: Kiểm tra tham số 'date' trên URL trước khi chạy init
+    const urlParams = new URLSearchParams(window.location.search);
+    const dateParam = urlParams.get('date');
+    let initialDate = null;
+
+    if (dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+        // Nếu có ngày hợp lệ, đặt ngày bắt đầu của tuần là ngày đó
+        const [year, month, day] = dateParam.split('-').map(Number);
+        initialDate = new Date(year, month - 1, day);
+    }
+
+    runInit(initialDate);
 }
 
-function runInit() {
+function runInit(initialDate = null) {
     domController = new AbortController();
     const { signal } = domController;
 
     // Đặt ngày bắt đầu là ngày mai
-    viewStartDate = getTomorrow();
+    viewStartDate = initialDate || getTomorrow();
     viewStartDate.setHours(0, 0, 0, 0);
 
     loadShiftCodes();

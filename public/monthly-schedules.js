@@ -5,6 +5,8 @@ let domController = null;
 let allStores = [];
 let allEmployees = [];
 let currentDate = new Date();
+let allShiftCodes = []; // Biến để lưu danh sách mã ca
+const SHIFT_CODES_STORAGE_KEY = 'aoisora_shiftCodes';
 
 /**
  * Hiển thị spinner tải dữ liệu.
@@ -20,6 +22,23 @@ function showLoadingSpinner() {
                 </div>
             </div>
         `;
+    }
+}
+
+/**
+ * Tải danh sách mã ca từ localStorage.
+ */
+function loadShiftCodes() {
+    const storedData = localStorage.getItem(SHIFT_CODES_STORAGE_KEY);
+    if (storedData) {
+        try {
+            const parsedData = JSON.parse(storedData);
+            if (Array.isArray(parsedData)) {
+                allShiftCodes = parsedData;
+            }
+        } catch (e) {
+            console.error("Lỗi khi đọc dữ liệu mã ca từ localStorage", e);
+        }
     }
 }
 
@@ -174,18 +193,51 @@ function renderCalendar(schedules, employees) {
     for (let day = 1; day <= daysInMonth; day++) {
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const schedulesForDay = schedules.filter(s => s.date === dateStr);
+        let contentHTML = '';
+        const currentUser = window.currentUser;
 
-        let contentHTML = '<ul class="text-xs space-y-1 mt-1 overflow-y-auto">';
-        schedulesForDay.forEach(schedule => {
-            const employee = employees.find(e => e.id === schedule.employeeId);
-            contentHTML += `<li class="truncate" title="${employee?.name}: ${schedule.shift}"><span class="font-semibold">${employee?.name || 'N/A'}:</span> ${schedule.shift || 'N/A'}</li>`;
-        });
-        contentHTML += '</ul>';
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const cellDate = new Date(year, month, day);
+        const isPastDate = cellDate < today;
+
+        if (currentUser && currentUser.roleId === 'STAFF') {
+            // Logic hiển thị cho nhân viên
+            const userSchedule = schedulesForDay.find(s => s.employeeId === currentUser.id);
+            if (userSchedule) {
+                const store = allStores.find(st => st.id === userSchedule.storeId);
+                const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === userSchedule.shift);
+                const timeRange = shiftInfo ? shiftInfo.timeRange : 'N/A';
+
+                contentHTML = `
+                    <div class="flex flex-col justify-center h-full text-center text-xs p-1">
+                        <div class="font-semibold text-gray-800">${store?.name || 'N/A'}</div>
+                        <div class="text-gray-600" title="Mã ca: ${userSchedule.shift || ''}">${timeRange}</div>
+                    </div>
+                `;
+            }
+        } else {
+            // Logic hiển thị cho quản lý (như cũ)
+            contentHTML = '<ul class="text-xs space-y-1 mt-1 overflow-y-auto">';
+            schedulesForDay.forEach(schedule => {
+                const employee = employees.find(e => e.id === schedule.employeeId);
+                contentHTML += `<li class="truncate" title="${employee?.name}: ${schedule.shift}"><span class="font-semibold">${employee?.name || 'N/A'}:</span> ${schedule.shift || 'N/A'}</li>`;
+            });
+            contentHTML += '</ul>';
+        }
+
+        // Thêm class và data-attribute cho nhân viên để có thể nhấp vào đăng ký
+        let cellClasses = "relative p-2 border-t border-l border-gray-200 flex flex-col [&:nth-child(7n)]:border-r h-32";
+        let cellDataAttributes = '';
+        if (currentUser && currentUser.roleId === 'STAFF' && !isPastDate) {
+            cellClasses += ' cursor-pointer hover:bg-blue-50 transition-colors duration-200';
+            cellDataAttributes = `data-date="${dateStr}"`;
+        }
 
         calendarHTML += `
-            <div class="relative p-2 border-t border-l border-gray-200 flex flex-col [&:nth-child(7n)]:border-r h-32">
+            <div class="${cellClasses} ${contentHTML ? 'bg-green-50' : ''}" ${cellDataAttributes}>
                 <span class="self-end text-sm font-medium text-gray-500">${day}</span>
-                <div class="flex-1">${contentHTML}</div>
+                <div class="flex-1 pointer-events-none">${contentHTML}</div>
             </div>`;
     }
     calendarHTML += `</div></div>`;
@@ -194,6 +246,18 @@ function renderCalendar(schedules, employees) {
     // Gắn sự kiện cho nút chuyển tháng
     document.getElementById('prev-month-btn')?.addEventListener('click', () => changeMonth(-1));
     document.getElementById('next-month-btn')?.addEventListener('click', () => changeMonth(1));
+
+    // Gắn sự kiện click cho các ô ngày (chỉ cho nhân viên)
+    if (window.currentUser && window.currentUser.roleId === 'STAFF') {
+        document.getElementById('calendar-body')?.addEventListener('click', (event) => {
+            const cell = event.target.closest('[data-date]');
+            if (cell) {
+                const date = cell.dataset.date;
+                // Chuyển hướng đến trang đăng ký với ngày đã chọn
+                window.location.href = `staff-availability.html?date=${date}`;
+            }
+        });
+    }
 }
 
 /**
@@ -213,6 +277,7 @@ export async function init() {
     domController = new AbortController();
     currentDate = new Date(); // Reset về tháng hiện tại mỗi khi init
     showLoadingSpinner();
+    loadShiftCodes(); // Tải mã ca
     await fetchInitialData();
     createStoreFilter();
 }
