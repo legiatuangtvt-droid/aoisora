@@ -86,9 +86,17 @@ async function renderWeekView() {
 
     const todayString = formatDate(new Date());
     // Tạo các ô
+    const dayHeaderTemplate = document.getElementById('day-header-template');
+    const shiftCellTemplate = document.getElementById('shift-cell-template');
+
+    if (!dayHeaderTemplate || !shiftCellTemplate) {
+        console.error("Lỗi: Không tìm thấy 'day-header-template' hoặc 'shift-cell-template' trong DOM. Vui lòng kiểm tra file HTML.");
+        registrationRow.innerHTML = `<tr><td colspan="7" class="text-center p-10 text-red-500">Lỗi giao diện: Template không tồn tại.</td></tr>`;
+        return;
+    }
+
     weekDates.forEach(date => {
         // Dòng 2: Header ngày
-        const dayHeaderTemplate = document.getElementById('day-header-template');
         const headerCell = dayHeaderTemplate.content.cloneNode(true);
         const dayName = headerCell.querySelector('.day-name');
         const dateNumber = headerCell.querySelector('.date-number');
@@ -101,7 +109,6 @@ async function renderWeekView() {
         weekHeaderRow.appendChild(headerCell);
 
         // Dòng 3: Ô đăng ký (chứa 2 ca)
-        const shiftCellTemplate = document.getElementById('shift-cell-template');
         const shiftCell = shiftCellTemplate.content.cloneNode(true);
         const td = shiftCell.querySelector('td');
         const dateStr = formatDate(date);

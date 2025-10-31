@@ -75,52 +75,52 @@
                         Lưu Đăng Ký Tuần
                     </button>
                 </div>
+
+                <!-- Datalist for shift codes -->
+                <datalist id="shift-codes-datalist">
+                    <!-- Options will be populated by JavaScript -->
+                </datalist>
+
+                <!-- Template cho các ô trong bảng -->
+                <template id="day-header-template">
+                    <th class="p-2 border-l border-gray-200 first:border-l-0">
+                        <div class="day-name font-semibold text-gray-700"></div>
+                        <div class="date-number text-xs text-gray-500"></div>
+                    </th>
+                </template>
+            
+                <template id="shift-cell-template">
+                    <td class="p-2 border-l border-gray-200 align-top first:border-l-0">
+                        <div class="flex items-start gap-1">
+                            <!-- Ca 1 -->
+                            <div class="shift-registration-block flex-1" data-shift-index="0">
+                                <div class="flex-grow">
+                                    <input list="shift-codes-datalist" class="shift-input text-center form-input form-input-sm w-full" placeholder="-- Ca 1 --">
+                                    <div class="shift-time-display text-xs text-center text-gray-500 h-4 mt-1"></div>
+                                </div>
+                                <div class="priority-selector flex justify-center items-center gap-4 mt-2">
+                                    <button class="priority-btn disabled:opacity-50 disabled:cursor-not-allowed" data-priority="1" title="Chắc chắn vào ca" disabled><i class="fas fa-circle text-gray-300 text-lg"></i></button>
+                                    <button class="priority-btn disabled:opacity-50 disabled:cursor-not-allowed" data-priority="2" title="Có thể vào ca" disabled><i class="fas fa-triangle-exclamation text-gray-300 text-lg"></i></button>
+                                </div>
+                            </div>
+                            <!-- Ca 2 -->
+                            <div class="shift-registration-block flex-1" data-shift-index="1">
+                                <div class="flex-grow">
+                                    <input list="shift-codes-datalist" class="shift-input text-center form-input form-input-sm w-full" placeholder="-- Ca 2 --">
+                                    <div class="shift-time-display text-xs text-center text-gray-500 h-4 mt-1"></div>
+                                </div>
+                                <div class="priority-selector flex justify-center items-center gap-4 mt-2">
+                                    <button class="priority-btn disabled:opacity-50 disabled:cursor-not-allowed" data-priority="1" title="Chắc chắn vào ca" disabled><i class="fas fa-circle text-gray-300 text-lg"></i></button>
+                                    <button class="priority-btn disabled:opacity-50 disabled:cursor-not-allowed" data-priority="2" title="Có thể vào ca" disabled><i class="fas fa-triangle-exclamation text-gray-300 text-lg"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </template>
             </div>
         </main>
     </div>
     
-    <!-- Datalist for shift codes -->
-    <datalist id="shift-codes-datalist">
-        <!-- Options will be populated by JavaScript -->
-    </datalist>
-
-    <!-- Template cho các ô trong bảng -->
-    <template id="day-header-template">
-        <th class="p-2 border-l border-gray-200 first:border-l-0">
-            <div class="day-name font-semibold text-gray-700"></div>
-            <div class="date-number text-xs text-gray-500"></div>
-        </th>
-    </template>
- 
-    <template id="shift-cell-template">
-        <td class="p-2 border-l border-gray-200 align-top first:border-l-0">
-            <div class="flex items-start gap-1">
-                <!-- Ca 1 -->
-                <div class="shift-registration-block flex-1" data-shift-index="0">
-                    <div class="flex-grow">
-                        <input list="shift-codes-datalist" class="shift-input text-center form-input form-input-sm w-full" placeholder="-- Ca 1 --">
-                        <div class="shift-time-display text-xs text-center text-gray-500 h-4 mt-1"></div>
-                    </div>
-                    <div class="priority-selector flex justify-center items-center gap-4 mt-2">
-                        <button class="priority-btn disabled:opacity-50 disabled:cursor-not-allowed" data-priority="1" title="Chắc chắn vào ca" disabled><i class="fas fa-circle text-gray-300 text-lg"></i></button>
-                        <button class="priority-btn disabled:opacity-50 disabled:cursor-not-allowed" data-priority="2" title="Có thể vào ca" disabled><i class="fas fa-triangle-exclamation text-gray-300 text-lg"></i></button>
-                    </div>
-                </div>
-                <!-- Ca 2 -->
-                <div class="shift-registration-block flex-1" data-shift-index="1">
-                    <div class="flex-grow">
-                        <input list="shift-codes-datalist" class="shift-input text-center form-input form-input-sm w-full" placeholder="-- Ca 2 --">
-                        <div class="shift-time-display text-xs text-center text-gray-500 h-4 mt-1"></div>
-                    </div>
-                    <div class="priority-selector flex justify-center items-center gap-4 mt-2">
-                        <button class="priority-btn disabled:opacity-50 disabled:cursor-not-allowed" data-priority="1" title="Chắc chắn vào ca" disabled><i class="fas fa-circle text-gray-300 text-lg"></i></button>
-                        <button class="priority-btn disabled:opacity-50 disabled:cursor-not-allowed" data-priority="2" title="Có thể vào ca" disabled><i class="fas fa-triangle-exclamation text-gray-300 text-lg"></i></button>
-                    </div>
-                </div>
-            </div>
-        </td>
-    </template>
-
     <script type="module" src="bootstrapper.js" defer></script>
 </body>
 </html>
