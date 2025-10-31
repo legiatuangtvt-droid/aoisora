@@ -1044,6 +1044,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
   height: 100vh;
 }
 
+.h-0 {
+  height: 0px;
+}
+
 .max-h-48 {
   max-height: 12rem;
 }
@@ -1118,6 +1122,18 @@ body.sidebar-expanded #sidebar .sidebar-text {
 
 .w-full {
   width: 100%;
+}
+
+.w-\[240px\] {
+  width: 240px;
+}
+
+.w-\[120px\] {
+  width: 120px;
+}
+
+.w-\[250px\] {
+  width: 250px;
 }
 
 .min-w-36 {
@@ -1463,6 +1479,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
 
 .border-2 {
   border-width: 2px;
+}
+
+.border-0 {
+  border-width: 0px;
 }
 
 .border-x {

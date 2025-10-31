@@ -199,16 +199,33 @@ function renderDispatchTable() {
     weekDisplay.textContent = `Tuần từ ${weekDates[0].toLocaleDateString('vi-VN')} đến ${weekDates[6].toLocaleDateString('vi-VN')}`;
 
     // Render Header
-    let headerHTML = '<tr><th class="p-2 border sticky left-0 bg-slate-100 z-30 min-w-[250px]">Nhân viên</th>';
+    // Sử dụng colgroup để định nghĩa chiều rộng cố định cho các cột
+    let colgroupHTML = '<colgroup><col style="width: 250px;">';
+    for (let i = 0; i < 14; i++) { // 7 ngày x 2 ca
+        colgroupHTML += '<col style="width: 120px;">';
+    }
+    colgroupHTML += '</colgroup>';
+
+    // Thêm một hàng "khuôn" (spacer row) để ép trình duyệt giữ đúng chiều rộng cột.
+    // Hàng này có chiều cao bằng 0 và không hiển thị.
+    let spacerRowHTML = '<tr class="h-0">';
+    spacerRowHTML += '<td class="p-0 h-0 border-0 w-[250px]"></td>'; // Cột đầu tiên
+    for (let i = 0; i < 14; i++) { // 14 cột ca làm việc
+        spacerRowHTML += '<td class="p-0 h-0 border-0 w-[120px]"></td>';
+    }
+    spacerRowHTML += '</tr>';
+
+    let headerRowHTML = '<tr><th class="p-2 border sticky left-0 bg-slate-100 z-30">Nhân viên</th>';
     weekDates.forEach(date => {
-        headerHTML += `
-            <th colspan="2" class="p-1 border text-center">
+        headerRowHTML += `
+            <th colspan="2" class="p-1 border text-center w-[240px]">
                 <div class="font-semibold">${date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
                 <div class="text-xs font-normal">${date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}</div>
             </th>`;
     });
-    headerHTML += '</tr>';
-    header.innerHTML = headerHTML;
+    headerRowHTML += '</tr>';
+    // Chèn colgroup, hàng khuôn, và hàng header
+    header.innerHTML = colgroupHTML + spacerRowHTML + headerRowHTML;
 
     // Render Body
     body.innerHTML = ''; // Xóa nội dung cũ
