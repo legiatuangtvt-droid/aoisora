@@ -701,7 +701,12 @@ async function applyTemplateToAllStores() {
                     const tasks = (templateSchedule[shiftId] || []).map(task => ({
                         groupId: task.groupId, startTime: task.startTime, taskCode: task.taskCode, name: task.taskName
                     }));
-                    const newScheduleDoc = { date: dateString, employeeId, storeId: store.id, shift: mapping.shiftCode, positionId: mapping.positionId, tasks };
+                    const newScheduleDoc = { 
+                        date: dateString, 
+                        employeeId, storeId: store.id, 
+                        shift: mapping.shiftCode, positionId: mapping.positionId, 
+                        tasks, createdAt: serverTimestamp() // Thêm timestamp của server
+                    };
                     const scheduleRef = doc(collection(db, 'schedules'));
                     batch.set(scheduleRef, newScheduleDoc);
                     schedulesCreatedCount++;
@@ -711,7 +716,7 @@ async function applyTemplateToAllStores() {
 
         // 6. Ghi dữ liệu vào Firestore
         await batch.commit();
-        window.showToast(`Hoàn tất! Đã tạo ${schedulesCreatedCount} lịch làm việc cho ${allStores.length} cửa hàng.`, 'success', 5000);
+        window.showToast(`Hoàn tất! Đã tạo ${schedulesCreatedCount} lịch làm việc cho ngày ${dateString} tại ${allStores.length} cửa hàng.`, 'success', 5000);
 
     } catch (error) {
         console.error("Lỗi khi áp dụng template cho tất cả cửa hàng:", error);

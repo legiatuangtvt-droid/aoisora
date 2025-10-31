@@ -215,11 +215,11 @@ function renderDispatchTable() {
     }
     spacerRowHTML += '</tr>';
 
-    let headerRowHTML = '<tr><th class="p-2 border sticky left-0 bg-slate-100 z-30">Nhân viên</th>';
+    let headerRowHTML = '<tr><th class="p-2 border sticky left-0 bg-slate-100 z-30 text-sm">Nhân viên</th>';
     weekDates.forEach(date => {
         headerRowHTML += `
             <th colspan="2" class="p-1 border text-center w-[240px]">
-                <div class="font-semibold">${date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
+                <div class="font-semibold text-sm">${date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
                 <div class="text-xs font-normal">${date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}</div>
             </th>`;
     });
@@ -370,7 +370,7 @@ function renderSingleRow(item, level, weekDates, isCollapsed, isHidden) {
     let firstColHTML = `
         <div class="flex items-center" style="padding-left: ${indent}px;">
             ${isCollapsible ? `<button class="toggle-btn w-6 h-6 flex-shrink-0 text-gray-500 hover:bg-gray-200 rounded-full"><i class="fas ${isCollapsed ? 'fa-chevron-right' : 'fa-chevron-down'}"></i></button>` : '<div class="w-6"></div>'}
-            <span class="ml-2 font-semibold">${item.name}</span>
+            <span class="ml-2 font-semibold text-sm">${item.name}</span>
         </div>`;
 
     let cellsHTML = '';
@@ -389,7 +389,7 @@ function renderSingleRow(item, level, weekDates, isCollapsed, isHidden) {
             const modelManHour = dailyTemplate?.totalManHour || 80;
             const diff = actualManHour - modelManHour;
             let colorClass = diff > 0 ? 'text-green-600' : diff < 0 ? 'text-red-600' : 'text-gray-500';
-            cellsHTML += `<td colspan="2" class="p-2 border text-center font-bold ${colorClass}">${diff.toFixed(1)}h</td>`;
+            cellsHTML += `<td colspan="2" class="p-2 border text-center font-bold text-sm ${colorClass}">${diff.toFixed(1)}h</td>`;
         } else {
             cellsHTML += `<td colspan="2" class="p-2 border"></td>`;
         }
