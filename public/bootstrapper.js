@@ -123,19 +123,6 @@ async function bootstrapApp() {
     const userRole = window.currentUser ? window.currentUser.roleId : 'ADMIN';
     const appFile = roleToAppMap[userRole] || 'admin-app.js';
 
-    // --- CẬP NHẬT MENU ---
-    // Tìm và thay đổi link "Lịch hàng tháng" thành "staff-schedule.html"
-    // Đây là một cách tiếp cận tạm thời vì layout được load động.
-    // Lý tưởng nhất là thay đổi trong file `layout-loader.js` hoặc các file `*-app.js`.
-    const observer = new MutationObserver((mutations, obs) => {
-        const monthlyLink = document.querySelector('a[href="month.html"]');
-        if (monthlyLink) {
-            monthlyLink.href = 'monthly-schedules.html';
-            obs.disconnect(); // Ngừng quan sát sau khi đã thay đổi
-        }
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-
     // Tự động tạo và chèn thẻ script vào cuối thẻ <body>
     const script = document.createElement('script');
     script.type = 'module';
