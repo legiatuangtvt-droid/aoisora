@@ -84,14 +84,11 @@ async function renderWeekView() {
         prevWeekBtn.disabled = firstDay <= tomorrow;
     }
 
-    // Lấy template
-    const dayHeaderTemplate = document.getElementById('day-header-template');
-    const shiftCellTemplate = document.getElementById('shift-cell-template');
-
     const todayString = formatDate(new Date());
     // Tạo các ô
     weekDates.forEach(date => {
         // Dòng 2: Header ngày
+        const dayHeaderTemplate = document.getElementById('day-header-template');
         const headerCell = dayHeaderTemplate.content.cloneNode(true);
         const dayName = headerCell.querySelector('.day-name');
         const dateNumber = headerCell.querySelector('.date-number');
@@ -104,6 +101,7 @@ async function renderWeekView() {
         weekHeaderRow.appendChild(headerCell);
 
         // Dòng 3: Ô đăng ký (chứa 2 ca)
+        const shiftCellTemplate = document.getElementById('shift-cell-template');
         const shiftCell = shiftCellTemplate.content.cloneNode(true);
         const td = shiftCell.querySelector('td');
         const dateStr = formatDate(date);
@@ -400,11 +398,9 @@ export function cleanup() {
 }
 
 export function init() {
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', runInit);
-    } else {
-        runInit();
-    }
+    // Trong kiến trúc SPA này, init() được gọi sau khi nội dung trang đã được tải vào DOM.
+    // Do đó, không cần chờ 'DOMContentLoaded' nữa và có thể chạy trực tiếp.
+    runInit();
 }
 
 function runInit() {
