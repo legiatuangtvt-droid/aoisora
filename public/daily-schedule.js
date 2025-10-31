@@ -1,4 +1,4 @@
-﻿﻿import { db } from './firebase.js';
+﻿﻿﻿﻿import { db } from './firebase.js';
 import { collection, onSnapshot, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 let viewStartDate = new Date(); // Ngày đầu tiên của tuần đang xem (Thứ 2)
 let domController = null;
@@ -623,18 +623,26 @@ export async function init() {
     domController = new AbortController();
     const { signal } = domController;
 
-    // Hiển thị spinner ngay khi bắt đầu init
-    showLoadingSpinner();
+    // Logic mới: Kiểm tra tham số 'date' trên URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const dateParam = urlParams.get('date');
+    let initialDate = new Date(); // Mặc định là hôm nay
 
+    if (dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+        const [year, month, day] = dateParam.split('-').map(Number);
+        initialDate = new Date(year, month - 1, day);
+    }
+
+    showLoadingSpinner();
     loadShiftCodes(); // Tải mã ca để sử dụng cho việc sắp xếp
     await fetchInitialData();
 
     // Khởi tạo ngày bắt đầu của tuần là thứ 2 của tuần hiện tại
-    viewStartDate = getMonday(new Date());
+    viewStartDate = getMonday(initialDate);
     viewStartDate.setHours(0, 0, 0, 0);
 
     // Render bộ điều khiển tuần
-    renderWeekControls(formatDate(new Date())); // Truyền ngày hôm nay vào để active ban đầu
+    renderWeekControls(formatDate(initialDate)); // Truyền ngày được chọn (hoặc hôm nay) để active ban đầu
 
     // Tự động chọn ngày hôm nay khi khởi tạo
     const todayString = formatDate(new Date());

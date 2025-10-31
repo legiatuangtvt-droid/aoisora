@@ -228,12 +228,19 @@ function renderCalendar(schedules, employees) {
 
         // Thêm class và data-attribute cho nhân viên để có thể nhấp vào đăng ký
         let cellClasses = "relative p-2 border-t border-l border-gray-200 flex flex-col [&:nth-child(7n)]:border-r h-32";
-        let cellDataAttributes = '';
+        let cellDataAttributes = '';        
+        const hasSchedule = schedulesForDay.length > 0;
+        const isTodayOrPast = cellDate <= today;
+
         if (currentUser && currentUser.roleId === 'STAFF' && !isPastDate) {
             cellClasses += ' cursor-pointer hover:bg-blue-50 transition-colors duration-200';
             cellDataAttributes = `data-date="${dateStr}"`;
+        } else if (isTodayOrPast && hasSchedule) {
+            // Logic mới: Nếu là ngày hôm nay hoặc quá khứ và có lịch, cho phép click để xem chi tiết
+            cellClasses += ' cursor-pointer hover:bg-blue-50 transition-colors duration-200';
+            cellDataAttributes = `data-redirect-daily="${dateStr}"`;
         }
-
+        
         calendarHTML += `
             <div class="${cellClasses} ${contentHTML ? 'bg-green-50' : ''}" ${cellDataAttributes}>
                 <span class="self-end text-sm font-medium text-gray-500">${day}</span>
@@ -247,17 +254,23 @@ function renderCalendar(schedules, employees) {
     document.getElementById('prev-month-btn')?.addEventListener('click', () => changeMonth(-1));
     document.getElementById('next-month-btn')?.addEventListener('click', () => changeMonth(1));
 
-    // Gắn sự kiện click cho các ô ngày (chỉ cho nhân viên)
-    if (window.currentUser && window.currentUser.roleId === 'STAFF') {
-        document.getElementById('calendar-body')?.addEventListener('click', (event) => {
-            const cell = event.target.closest('[data-date]');
-            if (cell) {
-                const date = cell.dataset.date;
-                // Chuyển hướng đến trang đăng ký với ngày đã chọn
-                window.location.href = `staff-availability.html?date=${date}`;
-            }
-        });
-    }
+    // Gắn sự kiện click cho các ô ngày
+    document.getElementById('calendar-body')?.addEventListener('click', (event) => {
+        const cell = event.target.closest('[data-date], [data-redirect-daily]');
+        if (!cell) return;
+
+        // Ưu tiên chuyển hướng đến trang đăng ký cho nhân viên
+        if (cell.dataset.date && window.currentUser?.roleId === 'STAFF') {
+            const date = cell.dataset.date;
+            window.location.href = `staff-availability.html?date=${date}`;
+        } 
+        // Chuyển hướng đến trang lịch hàng ngày cho các ngày trong quá khứ có lịch
+        else if (cell.dataset.redirectDaily) {
+            const date = cell.dataset.redirectDaily;
+            window.location.href = `daily-schedule.html?date=${date}`;
+        }
+    });
+    
 }
 
 /**
