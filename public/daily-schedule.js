@@ -556,7 +556,11 @@ function createStoreFilter() {
     
     const currentUser = window.currentUser;
 
-    if (currentUser && currentUser.roleId === 'STAFF') {
+    if (currentUser && (
+        currentUser.roleId === 'STAFF' || 
+        currentUser.roleId === 'STORE_LEADER_G2' || 
+        currentUser.roleId === 'STORE_LEADER_G3'
+    )) {
         // --- LOGIC CHO NHÂN VIÊN ---
         const staffStore = allStores.find(s => s.id === currentUser.storeId);
         if (staffStore) {
