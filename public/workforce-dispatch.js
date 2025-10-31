@@ -58,55 +58,81 @@ async function fetchInitialData() {
         const storedShifts = localStorage.getItem(SHIFT_CODES_STORAGE_KEY);
         if (storedShifts) allShiftCodes = JSON.parse(storedShifts);
 
-        // Tải các collection cơ bản để xây dựng cấu trúc
-        const [
-            storesSnap, areasSnap, regionsSnap, templateSnap, rolesSnap
-        ] = await Promise.all([
+        // Tối ưu hóa: Chuẩn bị các promise để chạy song song
+        const promises = [
+            // Các truy vấn này sẽ chạy đồng thời
             getDocs(collection(db, 'stores')),
             getDocs(collection(db, 'areas')),
             getDocs(collection(db, 'regions')),
             getDocs(query(collection(db, 'daily_templates'), where('name', '==', 'Test'))),
-            getDocs(collection(db, 'roles')) // Tải roles để lấy level
-        ]);
+            getDocs(collection(db, 'roles'))
+        ];
+
+        // Chuẩn bị promise để tải nhân viên dựa trên vai trò
+        let employeePromise;
+        switch (currentUser.roleId) {
+            case 'ADMIN':
+            case 'HQ_STAFF':
+                employeePromise = getDocs(collection(db, 'employee'));
+                break;
+            case 'REGIONAL_MANAGER':
+            case 'AREA_MANAGER':
+            case 'STORE_INCHARGE':
+                // Với các vai trò này, chúng ta vẫn cần tải stores/areas trước để lọc,
+                // nhưng có thể tối ưu hóa bằng cách không gộp vào Promise.all ban đầu.
+                // Logic hiện tại đã khá tốt cho các trường hợp này. Chúng ta giữ nguyên.
+                break; // Sẽ xử lý bên dưới
+            default: // STAFF
+                employeePromise = getDocs(query(collection(db, 'employee'), where('storeId', '==', currentUser.storeId || '')));
+                break;
+        }
+
+        if (employeePromise) {
+            promises.push(employeePromise);
+        }
+
+        const [
+            storesSnap, areasSnap, regionsSnap, templateSnap, rolesSnap, employeeSnap
+        ] = await Promise.all(promises);
 
         allStores = storesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         allAreas = areasSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         allRegions = regionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         const allRoles = rolesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        // Xác định các storeId thuộc phạm vi quản lý của người dùng
-        const managedStoreIds = getManagedStoreIds(currentUser, allStores, allAreas);
-
-        // Tải nhân viên chỉ thuộc các cửa hàng được quản lý
-        if (managedStoreIds.length > 0) {
-            // Firestore 'in' query giới hạn 30 item, nên ta phải chia nhỏ nếu cần
-            const CHUNK_SIZE = 30;
-            const storeIdChunks = [];
-            for (let i = 0; i < managedStoreIds.length; i += CHUNK_SIZE) {
-                storeIdChunks.push(managedStoreIds.slice(i, i + CHUNK_SIZE));
-            }
-
-            const employeePromises = storeIdChunks.map(chunk =>
-                getDocs(query(collection(db, 'employee'), where('storeId', 'in', chunk)))
-            );
-
-            const employeeSnapshots = await Promise.all(employeePromises);
-            const employees = [];
-            employeeSnapshots.forEach(snap => {
-                snap.docs.forEach(doc => {
-                    const empData = doc.data();
-                    const role = allRoles.find(r => r.id === empData.roleId);
-                    employees.push({ id: doc.id, type: 'employee', level: role?.level || 0, ...empData });
-                });
+        // Nếu employeePromise đã được thực thi, xử lý kết quả
+        if (employeeSnap) {
+             const employees = employeeSnap.docs.map(doc => {
+                const empData = doc.data();
+                const role = allRoles.find(r => r.id === empData.roleId);
+                return { id: doc.id, type: 'employee', level: role?.level || 0, ...empData };
             });
-            // Sắp xếp nhân viên theo level giảm dần, sau đó theo tên
-            employees.sort((a, b) => {
-                if (b.level !== a.level) return b.level - a.level;
-                return a.name.localeCompare(b.name);
-            });
+            employees.sort((a, b) => (b.level - a.level) || a.name.localeCompare(b.name));
             allPersonnel = employees;
         } else {
-            allPersonnel = [];
+            // Logic cũ cho các vai trò quản lý cấp trung
+            const managedStoreIds = getManagedStoreIds(currentUser, allStores, allAreas);
+            if (managedStoreIds.length > 0) {
+                const CHUNK_SIZE = 30;
+                const storeIdChunks = Array.from({ length: Math.ceil(managedStoreIds.length / CHUNK_SIZE) }, (_, i) =>
+                    managedStoreIds.slice(i * CHUNK_SIZE, i * CHUNK_SIZE + CHUNK_SIZE)
+                );
+
+                const employeePromises = storeIdChunks.map(chunk =>
+                    getDocs(query(collection(db, 'employee'), where('storeId', 'in', chunk)))
+                );
+
+                const employeeSnapshots = await Promise.all(employeePromises);
+                const employees = employeeSnapshots.flatMap(snap => snap.docs.map(doc => {
+                    const empData = doc.data();
+                    const role = allRoles.find(r => r.id === empData.roleId);
+                    return { id: doc.id, type: 'employee', level: role?.level || 0, ...empData };
+                }));
+                employees.sort((a, b) => (b.level - a.level) || a.name.localeCompare(b.name));
+                allPersonnel = employees;
+            } else {
+                allPersonnel = [];
+            }
         }
 
         if (!templateSnap.empty) {
@@ -152,11 +178,10 @@ function getManagedStoreIds(user, stores, areas) {
  * Tải lịch làm việc cho tuần đang xem.
  */
 async function fetchSchedulesForWeek() {
-    const weekDates = Array.from({ length: 7 }, (_, i) => {
-        const date = new Date(viewStartDate);
-        date.setDate(date.getDate() + i);
-        return formatDate(date);
-    });
+    const startDateStr = formatDate(viewStartDate);
+    const endDate = new Date(viewStartDate);
+    endDate.setDate(endDate.getDate() + 6); // Lấy ngày cuối cùng của tuần
+    const endDateStr = formatDate(endDate);
 
     // Chỉ tải lịch của các nhân viên thuộc phạm vi quản lý
     const employeeIds = allPersonnel.map(p => p.id);
@@ -165,15 +190,21 @@ async function fetchSchedulesForWeek() {
         return;
     }
 
-    // Chia nhỏ truy vấn nếu cần
+    // Tối ưu hóa: Thay vì lặp qua từng ngày, chúng ta sẽ truy vấn một khoảng thời gian cho mỗi lô nhân viên.
+    // Điều này giảm số lượng truy vấn từ (số lô * 7 ngày) xuống chỉ còn (số lô).
     const CHUNK_SIZE = 30;
     const employeeIdChunks = [];
     for (let i = 0; i < employeeIds.length; i += CHUNK_SIZE) {
         employeeIdChunks.push(employeeIds.slice(i, i + CHUNK_SIZE));
     }
 
-    const schedulePromises = employeeIdChunks.flatMap(chunk =>
-        weekDates.map(date => getDocs(query(collection(db, 'schedules'), where('employeeId', 'in', chunk), where('date', '==', date))))
+    const schedulePromises = employeeIdChunks.map(chunk =>
+        getDocs(query(
+            collection(db, 'schedules'),
+            where('employeeId', 'in', chunk),
+            where('date', '>=', startDateStr),
+            where('date', '<=', endDateStr)
+        ))
     );
 
     const scheduleSnapshots = await Promise.all(schedulePromises);
@@ -229,12 +260,18 @@ function renderDispatchTable() {
 
     // Render Body
     body.innerHTML = ''; // Xóa nội dung cũ
+    const bodyFragment = document.createDocumentFragment(); // *** TẠO FRAGMENT ***
     const currentUser = window.currentUser;
     const hierarchy = buildHierarchy(currentUser);
 
     hierarchy.forEach(item => {
-        body.innerHTML += renderRowRecursive(item, 0, weekDates);
+        // Thay vì nối chuỗi, chúng ta tạo các node và thêm vào fragment
+        const rowsHTML = renderRowRecursive(item, 0, weekDates);
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = `<table><tbody>${rowsHTML}</tbody></table>`;
+        Array.from(tempDiv.querySelector('tbody').children).forEach(row => bodyFragment.appendChild(row));
     });
+    body.appendChild(bodyFragment); // *** CHÈN VÀO DOM 1 LẦN DUY NHẤT ***
 
     // Gắn sự kiện sau khi render
     attachRowEvents();
@@ -472,9 +509,6 @@ export function cleanup() {
  * Hàm khởi tạo chính.
  */
 export async function init() {
-    const startTime = performance.now();
-    console.log("Bắt đầu tải trang Điều phối nhân lực...");
-
     domController = new AbortController();
     const { signal } = domController;
 
@@ -486,9 +520,6 @@ export async function init() {
     await fetchSchedulesForWeek();
 
     renderDispatchTable();
-
-    const endTime = performance.now();
-    console.log(`%cHoàn tất tải và render trang trong ${(endTime - startTime).toFixed(2)} ms.`, 'color: green; font-weight: bold;');
 
     document.getElementById('prev-week-btn')?.addEventListener('click', () => changeWeek(-1), { signal });
     document.getElementById('next-week-btn')?.addEventListener('click', () => changeWeek(1), { signal });
