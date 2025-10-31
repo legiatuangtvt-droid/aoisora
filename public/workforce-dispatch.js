@@ -422,14 +422,25 @@ function renderSingleRow(item, level, weekDates, isCollapsed, isHidden) {
             cellsHTML += renderEmployeeShiftCell(shifts[1] || {}, allStores, date);
         } else if (item.type === 'store') {
             const schedulesInStoreOnDate = allSchedules.filter(s => s.storeId === item.id && s.date === dateStr);
-            const actualManHour = schedulesInStoreOnDate.reduce((total, schedule) => {
-                const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === schedule.shift);
-                return total + (shiftInfo?.duration || 0);
-            }, 0);
-            const modelManHour = dailyTemplate?.totalManHour || 80;
-            const diff = actualManHour - modelManHour;
-            let colorClass = diff > 0 ? 'text-green-600' : diff < 0 ? 'text-red-600' : 'text-gray-500';
-            cellsHTML += `<td colspan="2" class="p-2 border text-center font-bold text-sm ${colorClass}">${diff.toFixed(1)}h</td>`;
+
+            if (schedulesInStoreOnDate.length === 0) {
+                // Nếu không có lịch, hiển thị thông báo
+                cellsHTML += `<td colspan="2" class="p-2 border text-center text-xs text-gray-400 italic">Chưa phân công lịch làm việc</td>`;
+            } else {
+                // Nếu có lịch, tính toán chênh lệch
+                const actualManHour = schedulesInStoreOnDate.reduce((total, schedule) => {
+                    const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === schedule.shift);
+                    return total + (shiftInfo?.duration || 0);
+                }, 0);
+                const modelManHour = dailyTemplate?.totalManHour || 80;
+                const diff = actualManHour - modelManHour;
+                if (Math.abs(diff) > 0.01) { // Chỉ hiển thị nếu có chênh lệch
+                    let colorClass = diff > 0 ? 'text-green-600' : 'text-red-600';
+                    cellsHTML += `<td colspan="2" class="p-2 border text-center font-bold text-sm ${colorClass}">${diff.toFixed(1)}h</td>`;
+                } else {
+                    cellsHTML += `<td colspan="2" class="p-2 border"></td>`; // Để trống nếu không có chênh lệch
+                }
+            }
         } else {
             cellsHTML += `<td colspan="2" class="p-2 border"></td>`;
         }

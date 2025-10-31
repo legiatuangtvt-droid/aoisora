@@ -941,10 +941,6 @@ function triggerStatAnimation(cell, text) {
  * Cập nhật bảng thống kê group task dựa trên các task đang có trên lưới.
  */
 function updateTemplateStats() {
-    // --- Lấy dữ liệu cũ từ bảng đang hiển thị (nếu có) ---
-    const oldTotalCountEl = document.getElementById('stats-total-count');
-    const oldTotalCount = oldTotalCountEl ? parseInt(oldTotalCountEl.textContent, 10) : 0;
-
     const statsContentWrapper = document.getElementById('stats-content-wrapper');
     if (!statsContentWrapper) return;
     const scheduledTasks = document.querySelectorAll('.scheduled-task-item');
@@ -988,18 +984,6 @@ function updateTemplateStats() {
         statsContentWrapper.appendChild(table);
     }
 
-    // --- Lấy dữ liệu cũ từ các dòng trong bảng ---
-    const oldRowStats = {};
-    table.querySelectorAll('tbody tr[data-group-id]').forEach(row => {
-        const groupId = row.dataset.groupId;
-        const countCell = row.querySelector('.stat-count');
-        if (groupId && countCell) {
-            oldRowStats[groupId] = {
-                count: parseInt(countCell.textContent, 10) || 0
-            };
-        }
-    });
-
     const tbody = table.querySelector('tbody');
     let totalCount = 0;
     let rowIndex = 1;
@@ -1014,7 +998,6 @@ function updateTemplateStats() {
     // --- Cập nhật hoặc thêm các dòng cho từng group ---
     for (const groupId of sortedGroupIds) {
         const groupInfo = allTaskGroups[groupId];
-        const oldGroupCount = oldRowStats[groupId] ? oldRowStats[groupId].count : 0;
         const currentCount = newStats[groupId] ? newStats[groupId].count : 0;
         const currentTime = (currentCount * 0.25).toFixed(2);
         totalCount += currentCount;
@@ -1037,28 +1020,13 @@ function updateTemplateStats() {
 
         // Cập nhật giá trị và kích hoạt animation nếu có thay đổi
         const timeCell = row.querySelector('.stat-time');
-
-        // Tính toán sự thay đổi về thời gian để tạo hiệu ứng
-        const oldTime = parseFloat(timeCell.textContent) || 0;
-        const timeChange = currentTime - oldTime;
-
-        if (timeChange !== 0) {
-            timeCell.textContent = currentTime;
-            triggerStatAnimation(timeCell, `${timeChange > 0 ? '+' : ''}${timeChange.toFixed(2)}`);
-        }
+        timeCell.textContent = currentTime;
     }
 
     // --- Cập nhật dòng tổng kết ---
     const totalTimeCell = table.querySelector('#stats-total-time');
-
-    const oldTotalTime = parseFloat(totalTimeCell.textContent) || 0;
     const newTotalTime = totalCount * 0.25;
-    const totalTimeChange = newTotalTime - oldTotalTime;
-
-    if (totalTimeChange !== 0) {
-        totalTimeCell.textContent = (totalCount * 0.25).toFixed(2);
-        triggerStatAnimation(totalTimeCell, `${totalTimeChange > 0 ? '+' : ''}${totalTimeChange.toFixed(2)}`);
-    }
+    totalTimeCell.textContent = newTotalTime.toFixed(2);
 
     // Đồng bộ giá trị "Đã sắp xếp" ở trên với tổng số giờ vừa tính toán
     const scheduledHoursValueEl = document.getElementById('scheduled-hours-value');

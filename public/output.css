@@ -1931,6 +1931,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
   text-transform: uppercase;
 }
 
+.italic {
+  font-style: italic;
+}
+
 .leading-5 {
   line-height: 1.25rem;
 }
