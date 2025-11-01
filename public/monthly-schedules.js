@@ -1,11 +1,12 @@
 import { db } from './firebase.js';
-import { collection, getDocs, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { collection, getDocs, query, where, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 let domController = null;
 let allStores = [];
 let allEmployees = [];
 let currentDate = new Date();
 let allShiftCodes = []; // Biến để lưu danh sách mã ca
+let payrollStartDay = 1; // Ngày bắt đầu chu kỳ lương, mặc định là 1
 
 /**
  * Hiển thị spinner tải dữ liệu.
@@ -40,6 +41,20 @@ async function loadShiftCodes() {
 }
 
 /**
+ * Tải cài đặt chu kỳ lương từ Firestore.
+ */
+async function loadPayrollSettings() {
+    try {
+        const payrollSettingsRef = doc(db, 'system_configurations', 'payroll_settings');
+        const docSnap = await getDoc(payrollSettingsRef);
+        if (docSnap.exists() && docSnap.data().startDay) {
+            payrollStartDay = docSnap.data().startDay;
+        }
+    } catch (error) {
+        console.error("Lỗi khi tải cài đặt chu kỳ lương:", error);
+    }
+}
+/**
  * Tải dữ liệu nền cần thiết.
  */
 async function fetchInitialData() {
@@ -62,6 +77,29 @@ async function fetchInitialData() {
 function createStoreFilter() {
     const filterContainer = document.getElementById('filter-container');
     const currentUser = window.currentUser;
+
+    // Hiển thị cài đặt chu kỳ lương cho Admin
+    const adminSettingsContainer = document.getElementById('admin-settings-container');
+    if (currentUser?.roleId === 'ADMIN' && adminSettingsContainer) {
+        adminSettingsContainer.classList.remove('hidden');
+        adminSettingsContainer.classList.add('flex');
+        const payrollInput = document.getElementById('payroll-day-input');
+        const saveBtn = document.getElementById('save-payroll-day-btn');
+        if (payrollInput) payrollInput.value = payrollStartDay;
+
+        saveBtn?.addEventListener('click', async () => {
+            const newDay = parseInt(payrollInput.value, 10);
+            if (newDay >= 1 && newDay <= 28) {
+                const payrollSettingsRef = doc(db, 'system_configurations', 'payroll_settings');
+                await setDoc(payrollSettingsRef, { startDay: newDay, updatedAt: serverTimestamp() });
+                payrollStartDay = newDay;
+                window.showToast('Đã lưu ngày bắt đầu chu kỳ lương!', 'success');
+                changeMonth(0); // Tải lại lịch cho chu kỳ hiện tại
+            } else {
+                window.showToast('Ngày bắt đầu chu kỳ phải từ 1 đến 28.', 'error');
+            }
+        });
+    }
 
     if (!filterContainer || !currentUser) return;
 
@@ -115,10 +153,20 @@ function createStoreFilter() {
 async function loadScheduleForStore(storeId) {    
     showLoadingSpinner();
 
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
+    // --- LOGIC MỚI: TÍNH TOÁN NGÀY BẮT ĐẦU VÀ KẾT THÚC DỰA TRÊN CHU KỲ LƯƠNG ---
+    const today = currentDate;
+    let cycleStartDate, cycleEndDate;
+
+    if (today.getDate() >= payrollStartDay) {
+        // Chu kỳ hiện tại: từ ngày payrollStartDay của tháng này đến ngày (payrollStartDay - 1) của tháng sau
+        cycleStartDate = new Date(today.getFullYear(), today.getMonth(), payrollStartDay);
+        cycleEndDate = new Date(today.getFullYear(), today.getMonth() + 1, payrollStartDay - 1);
+    } else {
+        // Chu kỳ hiện tại: từ ngày payrollStartDay của tháng trước đến ngày (payrollStartDay - 1) của tháng này
+        cycleStartDate = new Date(today.getFullYear(), today.getMonth() - 1, payrollStartDay);
+        cycleEndDate = new Date(today.getFullYear(), today.getMonth(), payrollStartDay - 1);
+    }
+    cycleEndDate.setHours(23, 59, 59, 999); // Đảm bảo lấy hết ngày cuối cùng
 
     // Lấy danh sách nhân viên thuộc cửa hàng này
     const employeesInStore = allEmployees.filter(emp => emp.storeId === storeId);
@@ -132,8 +180,8 @@ async function loadScheduleForStore(storeId) {
     // Tải lịch làm việc của tất cả nhân viên đó trong tháng
     const scheduleQuery = query(collection(db, 'schedules'),
         where("storeId", "==", storeId),
-        where("date", ">=", firstDay.toISOString().split('T')[0]),
-        where("date", "<=", lastDay.toISOString().split('T')[0])
+        where("date", ">=", cycleStartDate.toISOString().split('T')[0]),
+        where("date", "<=", cycleEndDate.toISOString().split('T')[0])
     );
 
     try {
@@ -156,30 +204,40 @@ function renderCalendar(schedules, employees) {
     const container = document.getElementById('schedule-container');
     if (!container) return;
 
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const monthName = currentDate.toLocaleString('vi-VN', { month: 'long' });
+    // --- LOGIC MỚI: TÍNH TOÁN NGÀY BẮT ĐẦU VÀ KẾT THÚC DỰA TRÊN CHU KỲ LƯƠNG ---
+    const today = currentDate;
+    let cycleStartDate, cycleEndDate;
+
+    if (today.getDate() >= payrollStartDay) {
+        cycleStartDate = new Date(today.getFullYear(), today.getMonth(), payrollStartDay);
+        cycleEndDate = new Date(today.getFullYear(), today.getMonth() + 1, payrollStartDay - 1);
+    } else {
+        cycleEndDate = new Date(today.getFullYear(), today.getMonth(), payrollStartDay - 1);
+        cycleStartDate = new Date(today.getFullYear(), today.getMonth() - 1, payrollStartDay);
+    }
+    cycleEndDate.setHours(23, 59, 59, 999);
+
+    const cycleRangeString = `${cycleStartDate.toLocaleDateString('vi-VN')} - ${cycleEndDate.toLocaleDateString('vi-VN')}`;
 
     let calendarHTML = `
         <div id="calendar-header" class="flex justify-between items-center mb-4 px-2">
-            <h2 class="text-xl font-bold text-gray-800">${monthName} ${year}</h2>
+            <h2 class="text-xl font-bold text-gray-800">Chu kỳ: ${cycleRangeString}</h2>
             <div class="flex items-center gap-2">
-                <button id="prev-month-btn" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors" title="Tháng trước"><i class="fas fa-chevron-left text-sm text-gray-600"></i></button>
-                <button id="next-month-btn" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors" title="Tháng sau"><i class="fas fa-chevron-right text-sm text-gray-600"></i></button>
+                <button id="prev-month-btn" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors" title="Chu kỳ trước"><i class="fas fa-chevron-left text-sm text-gray-600"></i></button>
+                <button id="next-month-btn" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors" title="Chu kỳ sau"><i class="fas fa-chevron-right text-sm text-gray-600"></i></button>
             </div>
         </div>
         <div class="grid grid-cols-7">
             <!-- Weekday Headers -->
             <div class="col-span-7 grid grid-cols-7 border-t border-l border-r border-gray-200 bg-gray-50">
-                ${['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => `<div class="p-3 text-center font-semibold text-sm text-gray-500">${day}</div>`).join('')}
+                ${['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map(day => `<div class="p-3 text-center font-semibold text-sm text-gray-500">${day}</div>`).join('')}
             </div>
             <!-- Day Cells -->
             <div id="calendar-body" class="col-span-7 grid grid-cols-7">`;
 
-    const firstDayOfMonth = new Date(year, month, 1);
-    const lastDayOfMonth = new Date(year, month + 1, 0);
-    const daysInMonth = lastDayOfMonth.getDate();
-    let startDayIndex = firstDayOfMonth.getDay();
+    // --- LOGIC MỚI: RENDER CÁC NGÀY TRONG CHU KỲ ---
+    const firstDayOfGrid = new Date(cycleStartDate);
+    let startDayIndex = firstDayOfGrid.getDay();
     if (startDayIndex === 0) startDayIndex = 7; // Chủ nhật là 0, chuyển thành 7
     const paddingDays = startDayIndex - 1;
 
@@ -187,15 +245,19 @@ function renderCalendar(schedules, employees) {
         calendarHTML += `<div class="border-t border-l border-gray-200 bg-gray-50 [&:nth-child(7n)]:border-r"></div>`;
     }
 
-    for (let day = 1; day <= daysInMonth; day++) {
-        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    for (let d = new Date(cycleStartDate); d <= cycleEndDate; d.setDate(d.getDate() + 1)) {
+        const day = d.getDate();
+        const month = d.getMonth() + 1;
+        const lunarIconHTML = ''; // Xóa bỏ logic lịch âm
+
+        const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const schedulesForDay = schedules.filter(s => s.date === dateStr);
         let contentHTML = '';
         const currentUser = window.currentUser;
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const cellDate = new Date(year, month, day);
+        const cellDate = new Date(d);
         const isPastDate = cellDate < today;
 
         if (currentUser && currentUser.roleId === 'STAFF') {
@@ -262,7 +324,9 @@ function renderCalendar(schedules, employees) {
         
         calendarHTML += `
             <div class="${cellClasses} ${contentHTML ? 'bg-green-50' : ''}" ${cellDataAttributes}>
-                <span class="self-end text-sm font-medium text-gray-500">${day}</span>
+                <span class="self-end text-sm font-medium text-gray-500 flex items-center">
+                    ${lunarIconHTML}
+                    ${day}/${month}</span>
                 <div class="flex-1 pointer-events-none">${contentHTML}</div>
             </div>`;
     }
@@ -297,7 +361,7 @@ function renderCalendar(schedules, employees) {
  * @param {number} delta - Số tháng để thay đổi (+1 hoặc -1).
  */
 function changeMonth(delta) {
-    currentDate.setMonth(currentDate.getMonth() + delta);
+    currentDate.setMonth(currentDate.getMonth() + delta, payrollStartDay); // Đặt ngày về ngày bắt đầu chu kỳ để tránh lỗi nhảy tháng
     const storeFilter = document.getElementById('store-filter');
     const storeId = storeFilter ? storeFilter.value : window.currentUser?.storeId;
     if (storeId) {
@@ -309,6 +373,7 @@ export async function init() {
     domController = new AbortController();
     currentDate = new Date(); // Reset về tháng hiện tại mỗi khi init
     showLoadingSpinner();
+    await loadPayrollSettings(); // Tải cài đặt chu kỳ lương
     await loadShiftCodes(); // Tải mã ca
     await fetchInitialData();
     createStoreFilter();
