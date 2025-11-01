@@ -167,7 +167,7 @@ function addShiftRow(tbody, shiftNumber) {
     const workPositionOptions = allWorkPositions.map(pos => `<option value="${pos.id}">${pos.name}</option>`).join('');
 
     let bodyRowHtml = `
-        <td class="group relative p-1 border border-slate-200 align-top sticky left-0 bg-white z-10 w-40 min-w-40 font-semibold text-center">
+        <td class="group p-1 border border-slate-200 align-top sticky left-0 bg-white z-10 w-40 min-w-40 font-semibold text-center">
             <div class="space-y-1">
                 <input list="shift-codes-datalist" 
                        class="shift-code-selector form-input w-full text-xs text-center p-1 font-semibold" 

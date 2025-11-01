@@ -14,18 +14,6 @@ let allRoles = [];
 let allShiftCodes = [];
 let dailyTemplate = null;
 
-// --- DEBUG LOGGING ---
-const DEBUG_STORE_NAME = 'AEON MaxValu Điện Biên Phủ';
-const DEBUG_DATE = '2025-11-02';
-const DEBUG_EMPLOYEE_ID = 'AMPM_DN_DDB_LEAD_01'; // ID của Quốc Thiên
-const debugLog = (message, data = null, date = null) => {
-    // Chỉ log nếu không có ngày cụ thể, hoặc ngày trùng với ngày debug
-    if (!date || date === DEBUG_DATE) { 
-        console.log(`[DEBUG ${DEBUG_STORE_NAME}] ${message}`, data !== null ? data : '');
-    }
-};
-// --------------------
-
 /**
  * Định dạng Date thành chuỗi 'YYYY-MM-DD'.
  */
@@ -450,11 +438,6 @@ function renderSingleRow(item, level, weekDates, isCollapsed, isHidden) {
             });
 
             const shifts = shiftsForDay.slice(0, 2);
-            if (item.id === DEBUG_EMPLOYEE_ID && dateStr === DEBUG_DATE) {
-                debugLog(`[renderSingleRow] Nhân viên: ${item.name}. Ngày: ${dateStr}.`, null, dateStr);
-                debugLog(`   -> shifts[0] (Ca 1):`, shifts[0], dateStr);
-                debugLog(`   -> shifts[1] (Ca 2):`, shifts[1], dateStr);
-            }
             cellsHTML += renderEmployeeShiftCell(shifts[0] || {}, allStores, date);
             cellsHTML += renderEmployeeShiftCell(shifts[1] || {}, allStores, date);
         } else if (item.type === 'store') {
