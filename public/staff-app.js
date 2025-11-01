@@ -19,7 +19,7 @@ const staffPages = {
 
 let currentPageModule = null;
 
-function loadPageModule(pageName) {
+async function loadPageModule(pageName) {
     // Dọn dẹp module cũ
     if (currentPageModule && typeof currentPageModule.cleanup === 'function') {
         currentPageModule.cleanup();
@@ -30,7 +30,7 @@ function loadPageModule(pageName) {
     if (page && page.module) {
         currentPageModule = page.module;
         if (typeof currentPageModule.init === 'function') {
-            currentPageModule.init();
+            await currentPageModule.init();
         }
     } else {
         currentPageModule = null;
@@ -42,7 +42,7 @@ async function initializeStaffApp() {
     initializeLayoutController();
 
     const initialPageName = window.location.pathname.split('/').pop() || 'monthly-schedules.html';
-    loadPageModule(initialPageName);
+    await loadPageModule(initialPageName);
 
     document.addEventListener('page-content-loaded', (event) => loadPageModule(event.detail.pageName));
 }

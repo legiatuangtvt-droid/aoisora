@@ -74,5 +74,10 @@ service cloud.firestore { // Cấu hình cho Firestore
     match /work_positions/{positionId} {
       allow read, write: if true;
     }
+
+    // Cho phép đọc/ghi vào collection cấu hình hệ thống (ví dụ: mã ca)
+    match /system_configurations/{configId} {
+      allow read, write: if true;
+    }
   }
 }

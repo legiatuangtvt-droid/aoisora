@@ -67,27 +67,11 @@ function handleTaskAdd(evt) {
 }
 
 /**
- * Tải danh sách mã ca từ localStorage.
- */
-function loadShiftCodes() {
-    const SHIFT_CODES_STORAGE_KEY = 'aoisora_shiftCodes';
-    const storedData = localStorage.getItem(SHIFT_CODES_STORAGE_KEY);
-    if (storedData) {
-        try {
-            const parsedData = JSON.parse(storedData);
-            if (Array.isArray(parsedData)) {
-                allShiftCodes = parsedData;
-            }
-        } catch (e) {
-            console.error("Lỗi khi đọc dữ liệu mã ca từ localStorage", e);
-        }
-    }
-}
-/**
  * Tải tất cả dữ liệu nền cần thiết một lần.
  */
 async function fetchInitialData() {
     try {
+        const shiftCodesDocRef = doc(db, 'system_configurations', 'shift_codes');
         // Tải nhóm công việc để lấy thông tin màu
         const taskGroupsQuery = query(collection(db, 'task_groups'));
         const taskGroupsSnapshot = await getDocs(taskGroupsQuery);
@@ -100,13 +84,17 @@ async function fetchInitialData() {
         const workPositionsSnapshot = await getDocs(collection(db, 'work_positions'));
         allWorkPositions = workPositionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
+        // Tải mã ca
+        const shiftCodesSnap = await getDoc(shiftCodesDocRef);
+        if (shiftCodesSnap.exists()) {
+            allShiftCodes = shiftCodesSnap.data().codes || [];
+        }
+
     } catch (error) {
         console.error("Lỗi nghiêm trọng khi tải dữ liệu nền:", error);
         const container = document.getElementById('template-builder-grid-container');
         if(container) container.innerHTML = `<div class="p-10 text-center text-red-500">Không thể tải dữ liệu nền. Vui lòng thử lại.</div>`;
     }
-
-    loadShiftCodes(); // Tải mã ca từ localStorage
 }
 
 /**

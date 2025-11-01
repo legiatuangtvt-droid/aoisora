@@ -4,7 +4,6 @@ import { doc, setDoc, getDoc, serverTimestamp, writeBatch, collection, query, wh
 let domController = null;
 let viewStartDate = new Date(); // Sẽ được đặt lại thành ngày mai
 let shiftCodes = [];
-const SHIFT_CODES_STORAGE_KEY = 'aoisora_shiftCodes';
 
 /**
  * Định dạng một đối tượng Date thành chuỗi YYYY-MM-DD.
@@ -38,25 +37,19 @@ function timeToMinutes(timeStr) {
 
 
 
-/**
- * Tải danh sách mã ca từ localStorage.
- */
-function loadShiftCodes() {
-    const storedData = localStorage.getItem(SHIFT_CODES_STORAGE_KEY);
-
-    if (storedData) {
-        try {
-            const parsedData = JSON.parse(storedData);
-            if (Array.isArray(parsedData)) {
-                // Chỉ tải mảng shiftCodes, không còn tương tác với DOM datalist toàn cục
-                shiftCodes = parsedData;
-            }
-        } catch (e) {
-            console.error("Lỗi khi đọc dữ liệu mã ca từ localStorage", e);
+async function loadShiftCodes() {
+    try {
+        const shiftCodesDocRef = doc(db, 'system_configurations', 'shift_codes');
+        const shiftCodesSnap = await getDoc(shiftCodesDocRef);
+        if (shiftCodesSnap.exists()) {
+            shiftCodes = shiftCodesSnap.data().codes || [];
+        } else {
+            console.warn("Không tìm thấy tài liệu mã ca trong Firestore.");
             shiftCodes = [];
         }
-    } else {
-        console.warn("Không tìm thấy dữ liệu mã ca trong localStorage.");
+    } catch (error) {
+        console.error("Lỗi khi tải mã ca từ Firestore:", error);
+        shiftCodes = [];
     }
 }
 
@@ -544,7 +537,7 @@ export function cleanup() {
     }
 }
 
-export function init() {
+export async function init() {
     // Trong kiến trúc SPA này, init() được gọi sau khi nội dung trang đã được tải vào DOM.
     // Do đó, không cần chờ 'DOMContentLoaded' nữa và có thể chạy trực tiếp.
     // Logic mới: Kiểm tra tham số 'date' trên URL trước khi chạy init
@@ -558,10 +551,10 @@ export function init() {
         initialDate = new Date(year, month - 1, day);
     }
 
-    runInit(initialDate);
+    await runInit(initialDate);
 }
 
-function runInit(initialDate = null) {
+async function runInit(initialDate = null) {
     domController = new AbortController();
     const { signal } = domController;
 
@@ -569,7 +562,7 @@ function runInit(initialDate = null) {
     viewStartDate = initialDate || getTomorrow();
     viewStartDate.setHours(0, 0, 0, 0);
 
-    loadShiftCodes();
+    await loadShiftCodes();
     renderWeekView();
 
     document.getElementById('prev-week-btn')?.addEventListener('click', () => changeWeek(-1), { signal });

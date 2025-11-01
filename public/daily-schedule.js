@@ -1,5 +1,5 @@
 ﻿﻿﻿﻿import { db } from './firebase.js';
-import { collection, onSnapshot, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { collection, onSnapshot, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 let viewStartDate = new Date(); // Ngày đầu tiên của tuần đang xem (Thứ 2)
 let domController = null;
 
@@ -12,7 +12,6 @@ let allTaskGroups = {};
 let dailyTemplate = null; // Biến để lưu mẫu lịch trình ngày
 let currentScheduleData = []; // Lịch làm việc cho ngày đang chọn
 let allShiftCodes = []; // Biến để lưu danh sách mã ca
-const SHIFT_CODES_STORAGE_KEY = 'aoisora_shiftCodes';
 
 /**
  * Định dạng một đối tượng Date thành chuỗi YYYY-MM-DD.
@@ -39,27 +38,16 @@ function getMonday(d) {
 
 //#region DATA_FETCHING
 /**
- * Tải danh sách mã ca từ localStorage.
- */
-function loadShiftCodes() {
-    const storedData = localStorage.getItem(SHIFT_CODES_STORAGE_KEY);
-    if (storedData) {
-        try {
-            const parsedData = JSON.parse(storedData);
-            if (Array.isArray(parsedData)) {
-                allShiftCodes = parsedData;
-            }
-        } catch (e) {
-            console.error("Lỗi khi đọc dữ liệu mã ca từ localStorage", e);
-        }
-    }
-}
-/**
  * Tải tất cả dữ liệu nền cần thiết một lần.
  */
 async function fetchInitialData() {
     try {
-        const [employeesSnap, storesSnap, areasSnap, regionsSnap, taskGroupsSnap, templateSnap] = await Promise.all([
+        const shiftCodesDocRef = doc(db, 'system_configurations', 'shift_codes');
+        const [
+            shiftCodesSnap,
+            employeesSnap, storesSnap, areasSnap, regionsSnap, taskGroupsSnap, templateSnap
+        ] = await Promise.all([
+            getDoc(shiftCodesDocRef),
             getDocs(collection(db, 'employee')),
             getDocs(collection(db, 'stores')),
             getDocs(collection(db, 'areas')),
@@ -67,6 +55,11 @@ async function fetchInitialData() {
             getDocs(collection(db, 'task_groups')),
             getDocs(query(collection(db, 'daily_templates'), where('name', '==', 'Test'))), // Tải mẫu "Test"
         ]);
+
+        // Xử lý mã ca
+        if (shiftCodesSnap.exists()) {
+            allShiftCodes = shiftCodesSnap.data().codes || [];
+        }
 
         let fetchedEmployees = employeesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         allStores = storesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -638,7 +631,6 @@ export async function init() {
     }
 
     showLoadingSpinner();
-    loadShiftCodes(); // Tải mã ca để sử dụng cho việc sắp xếp
     await fetchInitialData();
 
     // Khởi tạo ngày bắt đầu của tuần là thứ 2 của tuần hiện tại

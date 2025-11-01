@@ -688,41 +688,37 @@ async function applyTemplateToAllStores() {
                 }
             }
 
-            // --- BƯỚC 4: TẠO CÁC BẢN GHI LỊCH TRÌNH ---
-            for (const shiftId of assignedShifts) {
-                const mapping = shiftMappings[shiftId];
-                // Tìm nhân viên được gán cho ca này
-                const employeeId = [...assignedEmployees.entries()].find(([empId, positions]) => {
-                    // Logic này cần được xem lại nếu 1 nhân viên có thể làm nhiều ca khác nhau
-                    // Hiện tại, ta giả định 1 nhân viên được gán vào 1 ca (trừ leader)
-                    const assignedShiftForEmp = Object.keys(shiftMappings).find(sId => assignedShifts.has(sId) && empId === [...assignedEmployees.keys()][[...assignedShifts].indexOf(sId)]);
-                    return shiftId === assignedShiftForEmp;
-                })?.[0];
+            // --- BƯỚC 4: TẠO CÁC BẢN GHI LỊCH TRÌNH (LOGIC MỚI) ---
+            // Logic này đảm bảo xử lý đúng trường hợp một nhân viên làm nhiều ca.
+            for (const [employeeId, assignedPositionIds] of assignedEmployees.entries()) {
+                // Tạo một bản sao của mảng vị trí để có thể thay đổi nó một cách an toàn
+                const positionsToAssign = [...assignedPositionIds];
 
-                // Tìm nhân viên được phân công cho ca này
-                const assignedEmployeeEntry = [...assignedEmployees.entries()].find(([empId, posIds]) => {
-                    // Tìm xem nhân viên này có được gán vào ca hiện tại không
-                    // Đây là một logic đơn giản, có thể cần cải tiến nếu 1 nhân viên làm nhiều ca
-                    return posIds.includes(mapping.positionId);
-                });
+                // Lặp qua tất cả các ca đã được phân công trong `assignedShifts`
+                for (const shiftId of assignedShifts) {
+                    const mapping = shiftMappings[shiftId];
+                    const positionIndex = positionsToAssign.indexOf(mapping.positionId);
 
-                if (assignedEmployeeEntry) {
-                    const [employeeId, posIds] = assignedEmployeeEntry;
-                    // Xóa vị trí đã dùng để nhân viên có thể được gán cho ca khác (nếu logic cho phép)
-                    posIds.splice(posIds.indexOf(mapping.positionId), 1);
+                    // Nếu nhân viên này được gán vào vị trí của ca hiện tại
+                    if (positionIndex !== -1) {
+                        // Xóa vị trí đã sử dụng để đảm bảo nó không được gán lại cho một ca khác của cùng một nhân viên
+                        positionsToAssign.splice(positionIndex, 1);
 
-                    const tasks = (templateSchedule[shiftId] || []).map(task => ({
-                        groupId: task.groupId, startTime: task.startTime, taskCode: task.taskCode, name: task.taskName
-                    }));
-                    const newScheduleDoc = { 
-                        date: dateString, 
-                        employeeId, storeId: store.id, 
-                        shift: mapping.shiftCode, positionId: mapping.positionId, 
-                        tasks, createdAt: serverTimestamp() // Thêm timestamp của server
-                    };
-                    const scheduleRef = doc(collection(db, 'schedules'));
-                    batch.set(scheduleRef, newScheduleDoc);
-                    schedulesCreatedCount++;
+                        const tasks = (templateSchedule[shiftId] || []).map(task => ({
+                            groupId: task.groupId, startTime: task.startTime, taskCode: task.taskCode, name: task.taskName
+                        }));
+                        const newScheduleDoc = {
+                            date: dateString,
+                            employeeId,
+                            storeId: store.id,
+                            shift: mapping.shiftCode,
+                            positionId: mapping.positionId,
+                            tasks, createdAt: serverTimestamp()
+                        };
+                        const scheduleRef = doc(collection(db, 'schedules'));
+                        batch.set(scheduleRef, newScheduleDoc);
+                        schedulesCreatedCount++;
+                    }
                 }
             }
         }

@@ -1,5 +1,5 @@
 import { db } from './firebase.js';
-import { collection, getDocs, query, where, doc, setDoc, serverTimestamp, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { collection, getDocs, query, where, doc, setDoc, serverTimestamp, deleteDoc, writeBatch, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 let domController = null;
 let viewStartDate = new Date();
@@ -8,7 +8,6 @@ let allAvailabilities = [];
 let workPositions = []; // To store all possible work positions from datalist
 let allRoles = []; // Để lưu trữ danh sách chức vụ
 let shiftCodes = [];
-const SHIFT_CODES_STORAGE_KEY = 'aoisora_shiftCodes';
 
 function formatDate(date) {
     const year = date.getFullYear();
@@ -24,27 +23,23 @@ function getTomorrow() {
 }
 
 /**
- * Tải danh sách mã ca từ localStorage.
+ * Tải danh sách mã ca từ Firestore.
  */
-function loadShiftCodes() {
-    const storedData = localStorage.getItem(SHIFT_CODES_STORAGE_KEY);
+async function loadShiftCodes() {
     const datalist = document.getElementById('shift-codes-datalist');
     if (!datalist) return;
 
     datalist.innerHTML = ''; // Clear old options
 
-    if (storedData) {
-        try {
-            const parsedData = JSON.parse(storedData);
-            if (Array.isArray(parsedData)) {
-                shiftCodes = parsedData;
-                shiftCodes.forEach(sc => {
-                    datalist.innerHTML += `<option value="${sc.shiftCode}">${sc.timeRange}</option>`;
-                });
-            }
-        } catch (e) {
-            console.error("Lỗi khi đọc dữ liệu mã ca từ localStorage", e);
+    try {
+        const shiftCodesDocRef = doc(db, 'system_configurations', 'shift_codes');
+        const shiftCodesSnap = await getDoc(shiftCodesDocRef);
+        if (shiftCodesSnap.exists()) {
+            shiftCodes = shiftCodesSnap.data().codes || [];
+            shiftCodes.forEach(sc => datalist.innerHTML += `<option value="${sc.shiftCode}">${sc.timeRange}</option>`);
         }
+    } catch (error) {
+        console.error("Lỗi khi tải mã ca từ Firestore:", error);
     }
 }
 
@@ -726,7 +721,7 @@ export async function init() {
     viewStartDate = getTomorrow(); // Bắt đầu từ ngày mai
     viewStartDate.setHours(0, 0, 0, 0);
 
-    loadShiftCodes();
+    await loadShiftCodes();
     await loadWorkPositions(); // Load work positions at initialization
     await fetchInitialData();
     renderAssignmentTable();

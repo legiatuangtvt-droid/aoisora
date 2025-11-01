@@ -1,12 +1,11 @@
 import { db } from './firebase.js';
-import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { collection, getDocs, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 let domController = null;
 let allStores = [];
 let allEmployees = [];
 let currentDate = new Date();
 let allShiftCodes = []; // Biến để lưu danh sách mã ca
-const SHIFT_CODES_STORAGE_KEY = 'aoisora_shiftCodes';
 
 /**
  * Hiển thị spinner tải dữ liệu.
@@ -26,19 +25,17 @@ function showLoadingSpinner() {
 }
 
 /**
- * Tải danh sách mã ca từ localStorage.
+ * Tải danh sách mã ca từ Firestore.
  */
-function loadShiftCodes() {
-    const storedData = localStorage.getItem(SHIFT_CODES_STORAGE_KEY);
-    if (storedData) {
-        try {
-            const parsedData = JSON.parse(storedData);
-            if (Array.isArray(parsedData)) {
-                allShiftCodes = parsedData;
-            }
-        } catch (e) {
-            console.error("Lỗi khi đọc dữ liệu mã ca từ localStorage", e);
+async function loadShiftCodes() {
+    try {
+        const shiftCodesDocRef = doc(db, 'system_configurations', 'shift_codes');
+        const shiftCodesSnap = await getDoc(shiftCodesDocRef);
+        if (shiftCodesSnap.exists()) {
+            allShiftCodes = shiftCodesSnap.data().codes || [];
         }
+    } catch (error) {
+        console.error("Lỗi khi tải mã ca từ Firestore:", error);
     }
 }
 
@@ -312,7 +309,7 @@ export async function init() {
     domController = new AbortController();
     currentDate = new Date(); // Reset về tháng hiện tại mỗi khi init
     showLoadingSpinner();
-    loadShiftCodes(); // Tải mã ca
+    await loadShiftCodes(); // Tải mã ca
     await fetchInitialData();
     createStoreFilter();
 }

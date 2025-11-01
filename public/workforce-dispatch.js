@@ -1,5 +1,5 @@
 import { db } from './firebase.js';
-import { collection, getDocs, query, where, doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { collection, getDocs, query, where, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 let domController = null;
 let viewStartDate = new Date(); // Ngày đầu tiên của 7 ngày hiển thị
@@ -10,10 +10,21 @@ let allStores = [];
 let allAreas = [];
 let allRegions = [];
 let allSchedules = [];
+let allRoles = [];
 let allShiftCodes = [];
 let dailyTemplate = null;
 
-const SHIFT_CODES_STORAGE_KEY = 'aoisora_shiftCodes';
+// --- DEBUG LOGGING ---
+const DEBUG_STORE_NAME = 'AEON MaxValu Điện Biên Phủ';
+const DEBUG_DATE = '2025-11-02';
+const DEBUG_EMPLOYEE_ID = 'AMPM_DN_DDB_LEAD_01'; // ID của Quốc Thiên
+const debugLog = (message, data = null, date = null) => {
+    // Chỉ log nếu không có ngày cụ thể, hoặc ngày trùng với ngày debug
+    if (!date || date === DEBUG_DATE) { 
+        console.log(`[DEBUG ${DEBUG_STORE_NAME}] ${message}`, data !== null ? data : '');
+    }
+};
+// --------------------
 
 /**
  * Định dạng Date thành chuỗi 'YYYY-MM-DD'.
@@ -57,18 +68,18 @@ async function fetchInitialData() {
     }
 
     try {
-        // Tải dữ liệu mã ca từ localStorage
-        const storedShifts = localStorage.getItem(SHIFT_CODES_STORAGE_KEY);
-        if (storedShifts) allShiftCodes = JSON.parse(storedShifts);
+        // Tải dữ liệu mã ca từ Firestore
+        const shiftCodesDocRef = doc(db, 'system_configurations', 'shift_codes');
 
         // Tối ưu hóa: Chuẩn bị các promise để chạy song song
         const promises = [
             // Các truy vấn này sẽ chạy đồng thời
+            getDoc(shiftCodesDocRef), // Tải mã ca
             getDocs(collection(db, 'stores')),
             getDocs(collection(db, 'areas')),
             getDocs(collection(db, 'regions')),
             getDocs(query(collection(db, 'daily_templates'), where('name', '==', 'Test'))),
-            getDocs(collection(db, 'roles'))
+            getDocs(query(collection(db, 'roles')))
         ];
 
         // Chuẩn bị promise để tải nhân viên dựa trên vai trò
@@ -95,13 +106,18 @@ async function fetchInitialData() {
         }
 
         const [
-            storesSnap, areasSnap, regionsSnap, templateSnap, rolesSnap, employeeSnap
+            shiftCodesSnap, storesSnap, areasSnap, regionsSnap, templateSnap, rolesSnap, employeeSnap
         ] = await Promise.all(promises);
+
+        // Xử lý mã ca
+        if (shiftCodesSnap.exists()) {
+            allShiftCodes = shiftCodesSnap.data().codes || [];
+        }
 
         allStores = storesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         allAreas = areasSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         allRegions = regionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        const allRoles = rolesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        allRoles = rolesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
         // Nếu employeePromise đã được thực thi, xử lý kết quả
         if (employeeSnap) {
@@ -409,15 +425,36 @@ function renderSingleRow(item, level, weekDates, isCollapsed, isHidden) {
 
     let firstColHTML = `
         <div class="flex items-center" style="padding-left: ${indent}px;">
-            ${isCollapsible ? `<button class="toggle-btn w-6 h-6 flex-shrink-0 text-gray-500 hover:bg-gray-200 rounded-full"><i class="fas ${isCollapsed ? 'fa-chevron-right' : 'fa-chevron-down'}"></i></button>` : '<div class="w-6"></div>'}
-            <span class="ml-2 font-semibold text-sm">${item.name}</span>
+            ${isCollapsible ? `<button class="toggle-btn w-6 h-6 flex-shrink-0 text-gray-500 hover:bg-gray-200 rounded-full"><i class="fas ${isCollapsed ? 'fa-chevron-right' : 'fa-chevron-down'}"></i></button>` : '<div class="w-6 h-6 flex-shrink-0"></div>'}
+            <div class="ml-2">
+                <span class="font-semibold text-sm">${item.name}</span>
+                ${item.type === 'employee' && item.roleId ? `<div class="text-xs text-gray-500">${allRoles.find(r => r.id === item.roleId)?.name || item.roleId}</div>` : ''}
+            </div>
         </div>`;
 
     let cellsHTML = '';
     weekDates.forEach(date => {
         const dateStr = formatDate(date);
         if (item.type === 'employee') {
-            const shifts = allSchedules.filter(s => s.employeeId === item.id && s.date === dateStr).slice(0, 2);
+            const shiftsForDay = allSchedules.filter(s => s.employeeId === item.id && s.date === dateStr);
+
+            // Sắp xếp các ca làm việc theo thời gian bắt đầu để đảm bảo thứ tự hiển thị chính xác
+            shiftsForDay.sort((a, b) => {
+                const shiftInfoA = allShiftCodes.find(sc => sc.shiftCode === a.shift);
+                const shiftInfoB = allShiftCodes.find(sc => sc.shiftCode === b.shift);
+                if (!shiftInfoA?.timeRange) return 1;
+                if (!shiftInfoB?.timeRange) return -1;
+                const startTimeA = shiftInfoA.timeRange.split('~')[0].trim();
+                const startTimeB = shiftInfoB.timeRange.split('~')[0].trim();
+                return startTimeA.localeCompare(startTimeB);
+            });
+
+            const shifts = shiftsForDay.slice(0, 2);
+            if (item.id === DEBUG_EMPLOYEE_ID && dateStr === DEBUG_DATE) {
+                debugLog(`[renderSingleRow] Nhân viên: ${item.name}. Ngày: ${dateStr}.`, null, dateStr);
+                debugLog(`   -> shifts[0] (Ca 1):`, shifts[0], dateStr);
+                debugLog(`   -> shifts[1] (Ca 2):`, shifts[1], dateStr);
+            }
             cellsHTML += renderEmployeeShiftCell(shifts[0] || {}, allStores, date);
             cellsHTML += renderEmployeeShiftCell(shifts[1] || {}, allStores, date);
         } else if (item.type === 'store') {

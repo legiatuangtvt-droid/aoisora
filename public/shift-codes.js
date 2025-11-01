@@ -1,5 +1,6 @@
+import { db } from './firebase.js';
+import { doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 let domController = null;
-const SHIFT_CODES_STORAGE_KEY = 'aoisora_shiftCodes';
 
 /**
  * Thêm một dòng mới vào bảng mã ca.
@@ -10,7 +11,7 @@ const SHIFT_CODES_STORAGE_KEY = 'aoisora_shiftCodes';
  * @param {number} shiftData.duration - Tổng giờ.
  * @param {boolean} [shouldSave=true] - Có nên lưu vào localStorage không.
  */
-function addShiftCodeToTable(shiftData, shouldSave = true) {
+function addShiftCodeToTable(shiftData) {
     const list = document.getElementById('shift-codes-list');
     if (!list) return;
 
@@ -32,15 +33,12 @@ function addShiftCodeToTable(shiftData, shouldSave = true) {
 
     list.appendChild(row);
 
-    if (shouldSave) {
-        saveShiftCodesToStorage();
-    }
 }
 
 /**
- * Lưu danh sách mã ca hiện tại trong bảng vào localStorage.
+ * Lưu danh sách mã ca hiện tại trong bảng vào Firestore.
  */
-function saveShiftCodesToStorage() {
+async function saveShiftCodesToFirestore() {
     const list = document.getElementById('shift-codes-list');
     if (!list) return;
 
@@ -55,24 +53,32 @@ function saveShiftCodesToStorage() {
         };
     });
 
-    localStorage.setItem(SHIFT_CODES_STORAGE_KEY, JSON.stringify(shiftCodes));
+    try {
+        const docRef = doc(db, 'system_configurations', 'shift_codes');
+        await setDoc(docRef, { 
+            codes: shiftCodes,
+            updatedAt: serverTimestamp()
+        });
+    } catch (error) {
+        console.error("Lỗi khi lưu mã ca vào Firestore:", error);
+        window.showToast("Không thể lưu danh sách mã ca.", "error");
+    }
 }
 
 /**
- * Tải danh sách mã ca từ localStorage và hiển thị lên bảng.
+ * Tải danh sách mã ca từ Firestore và hiển thị lên bảng.
  */
-function loadShiftCodesFromStorage() {
-    const storedData = localStorage.getItem(SHIFT_CODES_STORAGE_KEY);
-    if (storedData && storedData !== '[]') {
-        try {
-            const shiftCodes = JSON.parse(storedData);
-            if (Array.isArray(shiftCodes) && shiftCodes.length > 0) {
-                shiftCodes.forEach(shiftData => addShiftCodeToTable(shiftData, false));
-                return true; // Dữ liệu đã tồn tại
-            }
-        } catch (e) {
-            console.error("Lỗi khi đọc dữ liệu mã ca từ localStorage", e);
+async function loadShiftCodesFromFirestore() {
+    try {
+        const docRef = doc(db, 'system_configurations', 'shift_codes');
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists() && docSnap.data().codes?.length > 0) {
+            const shiftCodes = docSnap.data().codes;
+            shiftCodes.forEach(shiftData => addShiftCodeToTable(shiftData));
+            return true; // Dữ liệu đã tồn tại
         }
+    } catch (error) {
+        console.error("Lỗi khi tải mã ca từ Firestore:", error);
     }
     return false; // Không có dữ liệu
 }
@@ -81,7 +87,7 @@ function loadShiftCodesFromStorage() {
  * Xử lý sự kiện submit form để tạo mã ca mới.
  * @param {Event} e - Sự kiện submit.
  */
-function handleGenerateShiftCode(e) {
+async function handleGenerateShiftCode(e) {
     e.preventDefault();
 
     const list = document.getElementById('shift-codes-list');
@@ -174,7 +180,7 @@ function handleGenerateShiftCode(e) {
                 structure,
                 timeRange,
                 duration
-            }, false); // false để không lưu vào localStorage trong mỗi vòng lặp
+            });
             itemsGenerated++;
         }
     }
@@ -191,8 +197,8 @@ function handleGenerateShiftCode(e) {
         }
     }
 
-    // Lưu tất cả các mã ca vừa tạo vào localStorage một lần duy nhất
-    saveShiftCodesToStorage();
+    // Lưu tất cả các mã ca vừa tạo vào Firestore một lần duy nhất
+    await saveShiftCodesToFirestore();
 }
 
 /**
@@ -208,11 +214,11 @@ export function cleanup() {
 /**
  * Hàm khởi tạo, được gọi bởi main.js.
  */
-export function init() {
+export async function init() {
     domController = new AbortController();
     const { signal } = domController;
 
-    const dataExists = loadShiftCodesFromStorage();
+    const dataExists = await loadShiftCodesFromFirestore();
     const button = document.querySelector('#shift-code-generator-form button[type="submit"]');
 
     // Cập nhật nút nếu dữ liệu đã tồn tại khi tải trang
