@@ -5,13 +5,15 @@ import { initializeDevMenu } from './dev-menu.js';
 import { initializeLayoutController } from './layout-controller.js';
 
 // Import các module trang thuộc nhóm Staff
-import * as staffSchedule from './staff-schedule.js';
+import * as monthlySchedules from './monthly-schedules.js';
 import * as staffAvailability from './staff-availability.js';
+import * as dailySchedule from './daily-schedule.js';
 
 // Map các trang của Staff App với module tương ứng
 const staffPages = {
-    'staff-schedule.html': { module: staffSchedule, title: 'Lịch Làm Việc Của Tôi' },
+    'monthly-schedules.html': { module: monthlySchedules, title: 'Lịch Làm Việc Tháng' },
     'staff-availability.html': { module: staffAvailability, title: 'Đăng Ký Giờ Làm' },
+    'daily-schedule.html': { module: dailySchedule, title: 'Lịch Hàng Ngày' },
     // Thêm các trang cho Staff ở đây nếu có
 };
 
@@ -39,7 +41,7 @@ async function initializeStaffApp() {
     initializeDevMenu();
     initializeLayoutController();
 
-    const initialPageName = window.location.pathname.split('/').pop() || 'staff-schedule.html';
+    const initialPageName = window.location.pathname.split('/').pop() || 'monthly-schedules.html';
     loadPageModule(initialPageName);
 
     document.addEventListener('page-content-loaded', (event) => loadPageModule(event.detail.pageName));

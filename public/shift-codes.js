@@ -98,30 +98,37 @@ function handleGenerateShiftCode(e) {
     const char = charInput.value.trim().toUpperCase();
     const durationMin = parseFloat(document.getElementById('shift-duration-min').value);
     const durationMax = parseFloat(document.getElementById('shift-duration-max').value);
-    const startTimeMinStr = document.getElementById('shift-start-time-min').value;
-    const startTimeMaxStr = document.getElementById('shift-start-time-max').value;
+    const startTimeStr = document.getElementById('shift-start-time-min').value;
+    const endTimeMaxStr = document.getElementById('shift-end-time-max').value;
 
     // Validate character
     if (!/^[A-Z]$/.test(char)) {
-        alert("Ký tự phải là một chữ cái trong bảng chữ cái tiếng Anh (A-Z).");
+        window.showToast("Ký tự phải là một chữ cái trong bảng chữ cái tiếng Anh (A-Z).", "warning");
         charInput.focus();
         return;
     }
     charInput.value = char; // Ensure input shows the uppercase value
 
-    if (isNaN(durationMin) || isNaN(durationMax) || !startTimeMinStr || !startTimeMaxStr) {
+    if (isNaN(durationMin) || isNaN(durationMax) || !startTimeStr || !endTimeMaxStr) {
         alert("Vui lòng điền đầy đủ thông tin.");
         return;
     }
 
     if (durationMin > durationMax) {
-        alert("Số giờ tối thiểu không được lớn hơn số giờ tối đa.");
+        window.showToast("Số giờ tối thiểu không được lớn hơn số giờ tối đa.", "warning");
         return;
     }
 
     const timeToMinutes = (timeStr) => timeStr.split(':').map(Number).reduce((h, m) => h * 60 + m);
-    const startTimeMin = timeToMinutes(startTimeMinStr);
-    const startTimeMax = timeToMinutes(startTimeMaxStr);
+    const startTimeMin = timeToMinutes(startTimeStr);
+    // Dựa theo logic đã sửa ở lần trước, đây là thời gian kết thúc muộn nhất
+    const endTimeMax = timeToMinutes(endTimeMaxStr);
+
+    // Đổi tên biến startTimeMax thành latestPossibleStartTime để rõ ràng hơn
+    // và tính toán lại dựa trên endTimeMax và duration.
+    // Đây là một phần logic đã được cập nhật ở các phiên bản trước.
+    // Dòng if (startTimeMin > startTimeMax) dưới đây sẽ được điều chỉnh cho phù hợp.
+    const startTimeMax = endTimeMax; // Tạm thời gán để logic cũ không bị lỗi hoàn toàn, nhưng sẽ được thay thế
 
     if (startTimeMin > startTimeMax) {
         alert("Thời gian bắt đầu tối thiểu không được lớn hơn thời gian bắt đầu tối đa.");
@@ -129,8 +136,13 @@ function handleGenerateShiftCode(e) {
     }
 
     // Nested loops: duration and start time
-    for (let duration = durationMin; duration <= durationMax; duration += 0.5) {
-        for (let currentTime = startTimeMin; currentTime <= startTimeMax; currentTime += 30) {
+    for (let duration = durationMin; duration <= durationMax; duration += 1) {
+        // Vòng lặp cho thời gian bắt đầu, tăng 30 phút mỗi lần
+        // Giới hạn trên của vòng lặp là thời gian kết thúc muộn nhất trừ đi thời gian làm việc,
+        // để đảm bảo không có ca nào bắt đầu quá muộn.
+        const latestPossibleStartTime = endTimeMax - (duration * 60);
+
+        for (let currentTime = startTimeMin; currentTime <= latestPossibleStartTime; currentTime += 30) {
             const startHour = Math.floor(currentTime / 60);
             const startMinute = currentTime % 60;
 
@@ -138,7 +150,8 @@ function handleGenerateShiftCode(e) {
             const timeCode = startHour * 2 + (startMinute / 30);
 
             // Generate shift code
-            const shiftCode = `${char}${duration}${timeCode}`;
+            const durationString = duration.toString().replace('.', 'S');
+            const shiftCode = `${char}${durationString}${timeCode}`;
 
             // Generate structure string
             const structure = `${char} - ${duration} - ${timeCode}`;

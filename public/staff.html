@@ -20,10 +20,10 @@
         <div id="header-placeholder"></div>
 
         <!-- Content Area -->
-        <main class="flex-1 overflow-auto p-6">
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
-                    <h2 class="text-lg font-semibold text-gray-700">Danh Sách Nhân Viên</h2>
+        <main class="flex-1 overflow-hidden p-6">
+            <div class="bg-white p-6 rounded-lg shadow-md h-full flex flex-col">
+                <div class="flex justify-between items-center mb-3 flex-wrap gap-4">
+                    <h2 class="text-lg font-semibold text-gray-700 flex-shrink-0">Danh Sách Nhân Viên</h2>
                     <div class="flex items-center gap-2">
                         <button id="add-staff-btn" class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
                             <i class="fas fa-user-plus mr-2"></i>Thêm Nhân Viên
@@ -35,23 +35,74 @@
                 </div>
 
                 <!-- Staff List Table -->
-                <div class="overflow-x-auto">
+                <div class="overflow-hidden flex-1">
                     <table class="min-w-full divide-y divide-gray-200">
+
                         <thead class="bg-slate-50">
-                            <tr>
-                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Mã NV</th>
-                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Họ Tên</th>
-                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Chức Vụ</th>
-                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Cửa Hàng</th>
-                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Số Điện Thoại</th>
-                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng Thái</th>
-                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Hành Động</th>
+                            <tr id="staff-table-header">
+                                <th scope="col" class="th-sortable" data-column="id">
+                                    <span>STT</span>
+                                    <span class="sort-indicator"></span>
+                                </th>
+                                <th scope="col" class="th-sortable" data-column="id">
+                                    <span>Mã NV</span>
+                                    <span class="sort-indicator"></span>
+                                </th>
+                                <th scope="col" class="th-sortable" data-column="name">
+                                    <span>Họ Tên</span>
+                                    <span class="sort-indicator"></span>
+                                </th>
+                                <th scope="col" class="th-sortable" data-column="roleId" data-filterable="true">
+                                    <span>Chức Vụ</span>
+                                    <span class="sort-indicator"></span>
+                                </th>
+                                <th scope="col" class="th-sortable" data-column="storeId" data-filterable="true">
+                                    <span>Cửa Hàng/Khu vực</span>
+                                    <span class="sort-indicator"></span>
+                                </th>
+                                <th scope="col" class="th-sortable" data-column="phone">
+                                    <span>Số Điện Thoại</span>
+                                    <span class="sort-indicator"></span>
+                                </th>
+                                <th scope="col" class="th-sortable" data-column="status" data-filterable="true">
+                                    <span>Trạng Thái</span>
+                                    <span class="sort-indicator"></span>
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Hành Động
+                                </th>
                             </tr>
                         </thead>
-                        <tbody id="staff-list" class="divide-y divide-gray-200">
+                        <tbody id="employee-list" class="divide-y divide-gray-200">
                             <!-- Dữ liệu nhân viên sẽ được JS render vào đây -->
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Pagination Controls -->
+                <div id="pagination-controls" class="flex items-center justify-between mt-4 px-4 py-3 sm:px-6">
+                    <!-- Nội dung phân trang sẽ được JS render vào đây -->
+                </div>
+
+                <!-- Sort/Filter Popup -->
+                <div id="sort-filter-popup" class="hidden absolute z-20 mt-2 w-60 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+                    <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
+                        <div id="sort-options">
+                            <a href="#" class="sort-btn block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" data-direction="asc"><i class="fas fa-arrow-up-a-z w-5 mr-2"></i> Sắp xếp A-Z</a>
+                            <a href="#" class="sort-btn block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" data-direction="desc"><i class="fas fa-arrow-down-z-a w-5 mr-2"></i> Sắp xếp Z-A</a>
+                        </div>
+                        <div id="filter-options" class="border-t border-gray-100">
+                            <div class="p-2">
+                                <input type="text" id="filter-search" class="form-input form-input-sm w-full" placeholder="Tìm kiếm để lọc...">
+                            </div>
+                            <div id="filter-list" class="max-h-48 overflow-y-auto">
+                                <!-- Filter items will be injected here -->
+                            </div>
+                            <div class="border-t border-gray-100 p-2">
+                                <button id="clear-filter-btn" class="w-full btn btn-secondary btn-sm text-xs">Xóa bộ lọc</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- MODAL: Thêm/Sửa Nhân Viên -->
@@ -142,7 +193,6 @@
         </main>
     </div>
 
-    <script src="layout.js" defer></script>
     <script type="module" src="bootstrapper.js" defer></script>
 </body>
 </html>

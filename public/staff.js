@@ -1,12 +1,21 @@
 import { db } from './firebase.js';
-import { collection, onSnapshot, query, orderBy, doc, setDoc, deleteDoc, getDocs, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { collection, onSnapshot, query, orderBy, doc, setDoc, deleteDoc, getDocs, updateDoc, serverTimestamp, where, limit, startAfter, endBefore, getCountFromServer } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 // Dữ liệu chức vụ sẽ được lấy từ Firestore
-let allEmployees = [];
 let allRoles = [];
 let allStores = [];
+let allAreas = [];
+let allRegions = [];
 let allEmployeeStatuses = [];
 let domController = null;
+let currentPage = 1;
+const itemsPerPage = 10; // Số nhân viên trên mỗi trang
+let pageSnapshots = [null]; // Lưu snapshot đầu tiên của mỗi trang, pageSnapshots[0] luôn là null cho trang 1
+let totalEmployees = 0; // Tổng số nhân viên sau khi lọc
+
+// State for sorting and filtering
+let sortCriteria = []; // Sẽ được đặt lại trong init()
+let filters = {};
 let activeModal = null;
 
 
@@ -16,6 +25,12 @@ let activeModal = null;
 async function fetchInitialData() {
     const storesSnapshot = await getDocs(collection(db, 'stores'));
     allStores = storesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    const areasSnapshot = await getDocs(collection(db, 'areas'));
+    allAreas = areasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    const regionsSnapshot = await getDocs(collection(db, 'regions'));
+    allRegions = regionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
     const statusesSnapshot = await getDocs(collection(db, 'employee_statuses'));
     allEmployeeStatuses = statusesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -31,8 +46,8 @@ function listenForRoleChanges() {
     const unsubscribe = onSnapshot(q, (snapshot) => {
         allRoles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderManagedRoles(allRoles);
-        // Render lại danh sách nhân viên để cập nhật tên chức vụ nếu có thay đổi
-        renderEmployeeList(allEmployees);
+        // Tải lại dữ liệu trang hiện tại để cập nhật tên chức vụ nếu có thay đổi
+        fetchAndRenderEmployees('current');
     }, (error) => {
         console.error("Lỗi khi lắng nghe thay đổi chức vụ:", error);
         showToast("Mất kết nối tới dữ liệu chức vụ.", "error");
@@ -44,42 +59,52 @@ function listenForRoleChanges() {
 }
 
 /**
- * Lắng nghe các thay đổi từ collection `employee` và render lại.
- */
-function listenForEmployeeChanges() {
-    const employeeCollection = collection(db, 'employee');
-    const q = query(employeeCollection, orderBy("name"));
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-        allEmployees = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        renderEmployeeList(allEmployees);
-    }, (error) => {
-        console.error("Lỗi khi lắng nghe thay đổi nhân viên:", error);
-        showToast("Mất kết nối tới dữ liệu nhân viên.", "error");
-    });
-
-    if (domController && !domController.signal.aborted) {
-        domController.signal.addEventListener('abort', unsubscribe);
-    }
-}
-/**
  * Render danh sách nhân viên ra bảng.
  * @param {Array} employeeList - Danh sách nhân viên cần hiển thị.
  */
 function renderEmployeeList(employeeList) {
+    const processedEmployees = getProcessedEmployees();
     const listElement = document.getElementById('employee-list');
     if (!listElement) return;
-
     listElement.innerHTML = ''; // Xóa nội dung cũ
 
     if (employeeList.length === 0) {
-        listElement.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-gray-500">Không có nhân viên nào.</td></tr>`;
+        listElement.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-gray-500">Không có nhân viên nào.</td></tr>`;
+        renderPagination(0); // Xóa các nút phân trang
         return;
     }
 
-    employeeList.forEach(employee => {
+    employeeList.forEach((employee, index) => {
+        const serialNumber = (currentPage - 1) * itemsPerPage + index + 1;
         const roleInfo = allRoles.find(r => r.id === employee.roleId) || { name: employee.roleId || 'N/A' };
-        const storeInfo = allStores.find(s => s.id === employee.storeId) || { name: employee.storeId || 'N/A' };
+        
+        let storeInfoText = '';
+        let storeInfoTitle = '';
+
+        switch (employee.roleId) {
+            case 'AREA_MANAGER':
+                const managedArea = allAreas.find(a => employee.managedAreaIds?.includes(a.id));
+                storeInfoText = managedArea ? managedArea.name : 'Khu vực không xác định';
+                const managedStoresInArea = allStores.filter(s => s.areaId === managedArea?.id);
+                storeInfoTitle = managedStoresInArea.length > 0 ? `Quản lý các cửa hàng:\n${managedStoresInArea.map(s => `• ${s.name}`).join('\n')}` : 'Chưa có cửa hàng trong khu vực';
+                break;
+            case 'REGIONAL_MANAGER':
+                const managedRegion = allRegions.find(r => r.id === employee.managedRegionId);
+                storeInfoText = managedRegion ? managedRegion.name : 'Miền không xác định';
+                const managedAreasInRegion = allAreas.filter(a => a.regionId === managedRegion?.id);
+                storeInfoTitle = managedAreasInRegion.length > 0 ? `Quản lý các khu vực:\n${managedAreasInRegion.map(a => `• ${a.name}`).join('\n')}` : 'Chưa có khu vực trong miền';
+                break;
+            case 'HQ_STAFF':
+                storeInfoText = 'Head Quarter';
+                storeInfoTitle = 'Nhân viên văn phòng';
+                break;
+            default: // STAFF, STORE_LEADER, etc.
+                const storeInfo = allStores.find(s => s.id === employee.storeId);
+                storeInfoText = storeInfo ? storeInfo.name : (employee.storeId || 'N/A');
+                storeInfoTitle = storeInfoText;
+                break;
+        }
+
         const statusInfo = allEmployeeStatuses.find(s => s.id === employee.status) || { name: employee.status, color: 'gray' };
 
         const statusColor = statusInfo.color || 'gray';
@@ -89,10 +114,11 @@ function renderEmployeeList(employeeList) {
         row.className = 'hover:bg-gray-50';
         row.dataset.id = employee.id;
         row.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">${serialNumber}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-medium text-gray-900">${employee.id}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-700">${employee.name}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500" title="${roleInfo.name}">${employee.roleId}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">${storeInfo.name}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500" title="${storeInfoTitle}">${storeInfoText}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">${employee.phone}</td>
             <td class="px-6 py-4 whitespace-nowrap  text-center">${statusBadge}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-medium space-x-4">
@@ -102,6 +128,73 @@ function renderEmployeeList(employeeList) {
         `;
         listElement.appendChild(row);
     });
+
+    renderPagination(totalEmployees);
+}
+
+/**
+ * Render các nút điều khiển phân trang.
+ * @param {number} totalItems - Tổng số nhân viên.
+ */
+function renderPagination(totalItems) {
+    const paginationContainer = document.getElementById('pagination-controls');
+    if (!paginationContainer) return;
+
+    const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+
+    if (totalPages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
+
+    const startIndex = (currentPage - 1) * itemsPerPage + 1;
+    const endIndex = Math.min(startIndex + itemsPerPage - 1, totalItems);
+
+    paginationContainer.innerHTML = `
+        <div class="flex-1 flex justify-between sm:hidden">
+            <button class="prev-page-btn relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" ${currentPage === 1 ? 'disabled' : ''}>
+                Trước
+            </button>
+            <button class="next-page-btn relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" ${currentPage === totalPages ? 'disabled' : ''}>
+                Sau
+            </button>
+        </div>
+        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+            <div>
+                <p class="text-sm text-gray-700">
+                    Hiển thị từ <span class="font-medium">${startIndex}</span> đến <span class="font-medium">${endIndex}</span> trong tổng số <span class="font-medium">${totalItems}</span> nhân viên
+                </p>
+            </div>
+            <div>
+                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    <button class="first-page-btn relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" ${currentPage === 1 ? 'disabled' : ''} title="Trang đầu">
+                        <span class="sr-only">First</span>
+                        <i class="fas fa-backward-step h-5 w-5 flex items-center justify-center"></i>
+                    </button>
+                    <button class="prev-5-page-btn relative inline-flex items-center px-2 py-2 border-y border-l border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" ${currentPage <= 5 ? 'disabled' : ''} title="Lùi 5 trang">
+                        <span class="sr-only">Previous 5 pages</span>
+                        <i class="fas fa-angles-left h-5 w-5 flex items-center justify-center"></i>
+                    </button>
+                    <button class="prev-page-btn relative inline-flex items-center px-2 py-2 border-y border-l border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" ${currentPage === 1 ? 'disabled' : ''} title="Trang trước">
+                        <span class="sr-only">Previous</span>
+                        <i class="fas fa-chevron-left h-5 w-5 flex items-center justify-center"></i>
+                    </button>
+                    <button class="next-page-btn relative inline-flex items-center px-2 py-2 border-y border-l border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" ${currentPage === totalPages ? 'disabled' : ''} title="Trang sau">
+                        <span class="sr-only">Next</span>
+                        <i class="fas fa-chevron-right h-5 w-5 flex items-center justify-center"></i>
+                    </button>
+                    <button class="next-5-page-btn relative inline-flex items-center px-2 py-2 border-y border-l border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" ${currentPage > totalPages - 5 ? 'disabled' : ''} title="Tới 5 trang">
+                        <span class="sr-only">Next 5 pages</span>
+                        <i class="fas fa-angles-right h-5 w-5 flex items-center justify-center"></i>
+                    </button>
+                    <button class="last-page-btn relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" ${currentPage === totalPages ? 'disabled' : ''} title="Trang cuối">
+                        <span class="sr-only">Last</span>
+                        <i class="fas fa-forward-step h-5 w-5 flex items-center justify-center"></i>
+                    </button>
+                </nav>
+            </div>
+        </div>
+    `;
 }
 
 /**
@@ -134,11 +227,18 @@ function openEmployeeModal(employeeId = null) {
         idInput.value = employeeId;
         idInput.readOnly = true;
 
-        const employee = allEmployees.find(s => s.id === employeeId);
-        if (employee) {
-            document.getElementById('employee-name').value = employee.name;
-            document.getElementById('employee-phone').value = employee.phone || '';
-            roleSelect.value = employee.roleId || '';
+        // Tạm thời lấy thông tin từ DOM vì allEmployees không còn tồn tại
+        const row = document.querySelector(`tr[data-id="${employeeId}"]`);
+        if (row) {
+            const employeeName = row.cells[1].textContent;
+            const roleId = row.cells[2].textContent;
+            const phone = row.cells[4].textContent;
+            const statusText = row.querySelector('span').textContent;
+            const status = allEmployeeStatuses.find(s => s.name === statusText)?.id || 'ACTIVE';
+
+            document.getElementById('employee-name').value = employeeName;
+            document.getElementById('employee-phone').value = phone || '';
+            roleSelect.value = roleId || '';
             storeSelect.value = employee.storeId || '';
             statusSelect.value = employee.status || 'ACTIVE';
         }
@@ -152,6 +252,180 @@ function openEmployeeModal(employeeId = null) {
     }
 
     showModal('employee-modal');
+}
+
+/**
+ * Lấy danh sách nhân viên đã được lọc và sắp xếp.
+ * @returns {Array}
+ */
+function getProcessedEmployees() {
+    // This function is now deprecated as filtering and sorting are done server-side.
+    // It's kept for compatibility with parts of the code that might still call it,
+    // but it no longer performs any processing.
+    return [];
+}
+
+/**
+ * Xây dựng và thực thi truy vấn Firestore để lấy dữ liệu nhân viên.
+ * @param {string} direction - 'next', 'prev', hoặc 'first' để điều hướng trang.
+ */
+async function fetchAndRenderEmployees(direction = 'first') {
+    const listElement = document.getElementById('employee-list');
+    if (!listElement) return;
+    listElement.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i> Đang tải...</td></tr>`;
+
+    // Thay vì truy vấn một collection, chúng ta sẽ thực hiện 3 truy vấn song song
+    const employeeQuery = getDocs(collection(db, 'employee'));
+    const areaManagerQuery = getDocs(collection(db, 'area_managers'));
+    const regionalManagerQuery = getDocs(collection(db, 'regional_managers'));
+
+    const [employeeSnap, areaManagerSnap, regionalManagerSnap] = await Promise.all([
+        employeeQuery,
+        areaManagerQuery,
+        regionalManagerQuery
+    ]);
+
+    let allPersonnel = [
+        ...employeeSnap.docs.map(doc => ({ id: doc.id, ...doc.data()})),
+        ...areaManagerSnap.docs.map(doc => ({ id: doc.id, ...doc.data()})),
+        ...regionalManagerSnap.docs.map(doc => ({ id: doc.id, ...doc.data()})),
+    ].map(person => {
+        // Gắn level vào mỗi nhân viên để sắp xếp
+        const role = allRoles.find(r => r.id === person.roleId);
+        return { ...person, level: role ? (role.level || 0) : 0 };
+    });
+
+
+
+    // 1. Áp dụng Filters (where)
+    if (Object.keys(filters).length > 0) {
+        allPersonnel = allPersonnel.filter(person => {
+            return Object.keys(filters).every(column => {
+                return person[column] === filters[column];
+            });
+        });
+    }
+
+    // 2. Áp dụng Sorting (orderBy)
+    allPersonnel.sort((a, b) => {
+        for (const criterion of sortCriteria) {
+            const { column, direction } = criterion;
+            const valA = a[column] || '';
+            const valB = b[column] || '';
+            const comparison = String(valA).localeCompare(String(valB), 'vi', { sensitivity: 'base' });
+            if (comparison !== 0) {
+                return direction === 'asc' ? comparison : -comparison;
+            }
+        }
+        return 0;
+    });
+
+    totalEmployees = allPersonnel.length;
+
+    // 3. Áp dụng Pagination
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const employeesForPage = allPersonnel.slice(startIndex, endIndex);
+
+    try {
+        renderEmployeeList(employeesForPage);
+        updateSortFilterIndicators();
+    } catch (error) {
+        console.error("Lỗi khi tải dữ liệu nhân viên:", error);
+        window.showToast("Lỗi khi tải dữ liệu. Firestore index có thể bị thiếu.", "error");
+        listElement.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-red-500">Lỗi tải dữ liệu.</td></tr>`;
+    }
+}
+
+/**
+ * Hiển thị popup để sắp xếp và lọc.
+ * @param {Event} e - Sự kiện click.
+ */
+function showSortFilterPopup(e) {
+    const th = e.currentTarget;
+    const column = th.dataset.column;
+    const isFilterable = th.dataset.filterable === 'true';
+
+    const popup = document.getElementById('sort-filter-popup');
+    const filterOptions = document.getElementById('filter-options');
+    const filterList = document.getElementById('filter-list');
+    const filterSearch = document.getElementById('filter-search');
+
+    // Hiển thị/ẩn phần lọc
+    filterOptions.style.display = isFilterable ? 'block' : 'none';
+    filterList.innerHTML = '';
+    filterSearch.value = '';
+
+    if (isFilterable) {
+        let options = [];
+        if (column === 'roleId') {
+            options = allRoles.map(r => ({ value: r.id, text: r.name }));
+        } else if (column === 'storeId') {
+            options = allStores.map(s => ({ value: s.id, text: s.name }));
+        } else if (column === 'status') {
+            options = allEmployeeStatuses.map(s => ({ value: s.id, text: s.name }));
+        }
+
+        const renderFilterItems = (searchTerm = '') => {
+            filterList.innerHTML = '';
+            const filteredOptions = options.filter(opt => opt.text.toLowerCase().includes(searchTerm.toLowerCase()));
+            filteredOptions.forEach(opt => {
+                const item = document.createElement('a');
+                item.href = '#';
+                item.className = 'filter-item block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100';
+                item.dataset.value = opt.value;
+                item.textContent = opt.text;
+                item.onclick = (event) => {
+                    event.preventDefault();
+                    filters[column] = opt.value;
+                    currentPage = 1; // Reset về trang đầu khi lọc
+                    fetchAndRenderEmployees('first');
+                    updateSortFilterIndicators();
+                    popup.classList.add('hidden');
+                };
+                filterList.appendChild(item);
+            });
+        };
+
+        renderFilterItems();
+        filterSearch.oninput = () => renderFilterItems(filterSearch.value);
+    }
+
+    // Gán sự kiện cho các nút
+    popup.querySelectorAll('.sort-btn').forEach(btn => {
+        btn.onclick = (event) => {
+            event.preventDefault();
+            sortCriteria = [{ column, direction: btn.dataset.direction }];
+            currentPage = 1; // Reset về trang đầu khi sắp xếp
+            fetchAndRenderEmployees('first');
+            updateSortFilterIndicators();
+            popup.classList.add('hidden');
+        };
+    });
+
+    document.getElementById('clear-filter-btn').onclick = () => {
+        delete filters[column];
+        currentPage = 1; // Reset về trang đầu khi xóa lọc
+        fetchAndRenderEmployees('first');
+        updateSortFilterIndicators();
+        popup.classList.add('hidden');
+    };
+
+    // Định vị và hiển thị popup
+    const rect = th.getBoundingClientRect();
+    popup.style.left = `${rect.left}px`;
+    popup.style.top = `${rect.bottom}px`;
+    popup.classList.remove('hidden');
+
+    // Đóng popup khi click ra ngoài
+    setTimeout(() => {
+        document.addEventListener('click', function hide(event) {
+            if (!popup.contains(event.target) && event.target !== th) {
+                popup.classList.add('hidden');
+                document.removeEventListener('click', hide);
+            }
+        }, { once: true });
+    }, 0);
 }
 
 /**
@@ -187,6 +461,33 @@ function renderManagedRoles(roles) {
             </td>
         </tr>`).join('');
     list.closest('table').innerHTML = header + `<tbody>${rowsHtml}</tbody>`;
+}
+
+/**
+ * Cập nhật các chỉ báo sắp xếp/lọc trên tiêu đề bảng.
+ */
+function updateSortFilterIndicators() {
+    const headers = document.querySelectorAll('#staff-table-header .th-sortable');
+    headers.forEach(th => {
+        const column = th.dataset.column;
+        const indicator = th.querySelector('.sort-indicator');
+        indicator.innerHTML = ''; // Clear old indicators
+
+        // Sort indicator
+        const sortCriterion = sortCriteria.find(c => c.column === column);
+        if (sortCriterion) {
+            const icon = document.createElement('i');
+            icon.className = `fas ${sortCriterion.direction === 'asc' ? 'fa-arrow-up' : 'fa-arrow-down'} ml-2 text-indigo-500`;
+            indicator.appendChild(icon);
+        }
+
+        // Filter indicator
+        if (filters[column]) {
+            const icon = document.createElement('i');
+            icon.className = 'fas fa-filter ml-2 text-amber-500';
+            indicator.appendChild(icon);
+        }
+    });
 }
 
 //#region MODAL_MANAGEMENT
@@ -251,6 +552,12 @@ export async function init() {
     domController = new AbortController();
     const { signal } = domController;
 
+    // Đặt lại tiêu chí sắp xếp mặc định
+    sortCriteria = [
+        { column: 'level', direction: 'desc' }, // Sắp xếp theo level giảm dần
+        { column: 'name', direction: 'asc' }   // Nếu level bằng nhau, sắp xếp theo tên
+    ];
+
     // Gắn listener cho các hành động chung của modal
     document.body.addEventListener('click', (e) => {
         if (e.target.closest('.modal-close-btn') || e.target.classList.contains('modal-overlay')) {
@@ -268,7 +575,7 @@ export async function init() {
 
     // Lắng nghe các thay đổi từ Firestore và render
     listenForRoleChanges();
-    listenForEmployeeChanges();
+    fetchAndRenderEmployees('first'); // Tải trang đầu tiên khi khởi tạo
 
     const addEmployeeBtn = document.getElementById('add-employee-btn');
     const manageRolesBtn = document.getElementById('manage-roles-btn');
@@ -405,6 +712,53 @@ export async function init() {
             }
         });
     }, { signal });
+
+    // Event delegation cho các nút phân trang
+    document.getElementById('pagination-controls')?.addEventListener('click', (e) => {
+        const prevBtn = e.target.closest('.prev-page-btn');
+        const nextBtn = e.target.closest('.next-page-btn');
+        const firstPageBtn = e.target.closest('.first-page-btn');
+        const lastPageBtn = e.target.closest('.last-page-btn');
+        const prev5PageBtn = e.target.closest('.prev-5-page-btn');
+        const next5PageBtn = e.target.closest('.next-5-page-btn');
+
+        const totalPages = Math.ceil(totalEmployees / itemsPerPage);
+        let pageChanged = false;
+        let direction = 'first';
+
+        if (prevBtn && currentPage > 1) {
+            currentPage--;
+            pageChanged = true;
+            direction = 'prev';
+        } else if (nextBtn && currentPage < totalPages) {
+            currentPage++;
+            pageChanged = true;
+            direction = 'next';
+        } else if (firstPageBtn && currentPage > 1) {
+            currentPage = 1;
+            pageChanged = true;
+            direction = 'first';
+        } else if (lastPageBtn && currentPage < totalPages) {
+            currentPage = totalPages;
+            pageChanged = true;
+            direction = 'last'; // Cần xử lý đặc biệt
+        } else if (prev5PageBtn && currentPage > 1) {
+            currentPage = Math.max(1, currentPage - 5);
+            pageChanged = true;
+        } else if (next5PageBtn && currentPage < totalPages) {
+            currentPage = Math.min(totalPages, currentPage + 5);
+            pageChanged = true;
+        }
+
+        if (pageChanged) {
+            fetchAndRenderEmployees(direction);
+        }
+    }, { signal });
+
+    // Event listener cho các tiêu đề cột có thể sắp xếp/lọc
+    document.querySelectorAll('#staff-table-header .th-sortable').forEach(th => {
+        th.addEventListener('click', showSortFilterPopup, { signal });
+    });
 
     // TODO: Thêm logic cho tìm kiếm, sửa, xóa
 }

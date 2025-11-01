@@ -123,7 +123,6 @@ async function checkCoreFeatures() {
             const data = JSON.parse(dataContent);
             check('`public/data.json` phải là một file JSON hợp lệ.', true);
             check('`data.json` phải chứa mảng `staff`.', Array.isArray(data.staff));
-            check('`data.json` phải chứa mảng `main_tasks`.', Array.isArray(data.main_tasks));
             check('`data.json` phải chứa mảng `schedules`.', Array.isArray(data.schedules));
         } catch (e) {
             check('`public/data.json` phải là một file JSON hợp lệ.', false);
@@ -190,16 +189,6 @@ async function provideSuggestions() {
                 type: 'Hiệu năng',
                 priority: 'Cao',
                 suggestion: `Hàm 'updateScheduleDataFromDOM' và việc gọi lại 'renderSchedule()' mỗi khi kéo/thả có thể gây chậm khi có nhiều dữ liệu. Cân nhắc việc chỉ cập nhật các phần tử DOM bị thay đổi thay vì render lại toàn bộ.`,
-            });
-        }
-
-        // Đề xuất 4: Quản lý dữ liệu tập trung
-        if (content.includes('const MOCK_MAIN_TASKS') || content.includes('const scheduleByDate')) {
-            suggestions.push({
-                file,
-                type: 'Kiến trúc',
-                priority: 'Cao',
-                suggestion: `Dữ liệu giả lập (mock data) đang được định nghĩa trực tiếp trong file HTML. Nên tạo một file riêng (ví dụ: 'data/mock-data.js') để quản lý tất cả dữ liệu tập trung.`,
             });
         }
 

@@ -4,13 +4,13 @@ import './confirmation-modal.js';
 import { initializeDevMenu } from './dev-menu.js';
 import { initializeLayoutController } from './layout-controller.js';
 
-// Import các module trang thuộc nhóm Area Manager
-import * as taskGroups from './task-groups.js';
+// Import các module trang thuộc nhóm Store Leader
+import * as dailyTemplates from './daily-templates.js';
 
-// Map các trang của Area Manager App với module tương ứng
-const areaManagerPages = {
-    'task-groups.html': { module: taskGroups, title: 'Quản Lý Nhóm Công Việc' },
-    // Thêm các trang báo cáo, quản lý khu vực ở đây
+// Map các trang của Store App với module tương ứng
+const storePages = {
+    'daily-templates.html': { module: dailyTemplates, title: 'Quản Lý Mẫu Ngày' },
+    // Thêm các trang cho Store Leader ở đây nếu có
 };
 
 let currentPageModule = null;
@@ -22,7 +22,7 @@ function loadPageModule(pageName) {
     }
 
     // Tải module mới
-    const page = areaManagerPages[pageName];
+    const page = storePages[pageName];
     if (page && page.module) {
         currentPageModule = page.module;
         if (typeof currentPageModule.init === 'function') {
@@ -33,13 +33,14 @@ function loadPageModule(pageName) {
     }
 }
 
-async function initializeAreaManagerApp() {
+async function initializeStoreApp() {
     initializeDevMenu();
     initializeLayoutController();
 
-    const initialPageName = window.location.pathname.split('/').pop() || 'task-groups.html';
+    const initialPageName = window.location.pathname.split('/').pop() || 'daily-templates.html';
     loadPageModule(initialPageName);
 
     document.addEventListener('page-content-loaded', (event) => loadPageModule(event.detail.pageName));
 }
-initializeAreaManagerApp();
+initializeStoreApp();
+

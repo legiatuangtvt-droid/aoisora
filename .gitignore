@@ -1,21 +1,19 @@
 # Dependencies
 /node_modules
 
-# Build output
-/dist
-/build
+# Firebase
+# Bỏ qua các tệp cache và cấu hình cục bộ của Firebase
+/.firebase/
 
-# Logs
+# Build output
+/public/output.css
+
+# Log files
 logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Environment variables
-.env
-.env.local
-
-# OS generated files
+# System files
 .DS_Store
-Thumbs.db

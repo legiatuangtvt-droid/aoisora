@@ -1,12 +1,12 @@
 import { db } from './firebase.js';
 import { collection, getDocs, query, orderBy, doc, setDoc, serverTimestamp, addDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
-let allMainTasks = {}; // Dùng object để tra cứu nhanh bằng ID
 let sortableInstances = [];
 
 let allTemplates = [];
 let currentTemplateId = null;
 
+let allWorkPositions = []; // Biến để lưu danh sách vị trí công việc
 let allShiftCodes = []; // Biến để lưu danh sách mã ca
 // Bảng màu mặc định nếu group không có màu
 const defaultColor = {
@@ -88,13 +88,6 @@ function loadShiftCodes() {
  */
 async function fetchInitialData() {
     try {
-        // Tải danh sách công việc chính
-        const tasksSnapshot = await getDocs(collection(db, 'main_tasks'));
-        allMainTasks = tasksSnapshot.docs.reduce((acc, doc) => {
-            acc[doc.id] = { id: doc.id, ...doc.data() };
-            return acc;
-        }, {});
-
         // Tải nhóm công việc để lấy thông tin màu
         const taskGroupsQuery = query(collection(db, 'task_groups'));
         const taskGroupsSnapshot = await getDocs(taskGroupsQuery);
@@ -102,6 +95,11 @@ async function fetchInitialData() {
             acc[doc.id] = { id: doc.id, ...doc.data() };
             return acc;
         }, {});
+
+        // Tải danh sách vị trí công việc
+        const workPositionsSnapshot = await getDocs(collection(db, 'work_positions'));
+        allWorkPositions = workPositionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
     } catch (error) {
         console.error("Lỗi nghiêm trọng khi tải dữ liệu nền:", error);
         const container = document.getElementById('template-builder-grid-container');
@@ -171,20 +169,28 @@ function updateRowAppearance(row) {
  * @param {number} shiftNumber - Số thứ tự của ca (ví dụ: 2 cho "Ca 2").
  */
 function addShiftRow(tbody, shiftNumber) {
-    const timeSlots = Array.from({ length: 16 }, (_, i) => `${i + 6}:00`);
+    const timeSlots = Array.from({ length: 18 }, (_, i) => `${i + 6}:00`);
     const shiftId = `shift-${shiftNumber}`;
     const newRow = document.createElement('tr');
     newRow.dataset.shiftId = shiftId;
 
     // Tạo dropdown cho việc chọn mã ca
-    const shiftCodeOptions = allShiftCodes.map(sc => `<option value="${sc.shiftCode}">${sc.shiftCode} (${sc.timeRange})</option>`).join('');
+    // Tạo dropdown cho việc chọn vị trí công việc
+    const workPositionOptions = allWorkPositions.map(pos => `<option value="${pos.id}">${pos.name}</option>`).join('');
 
     let bodyRowHtml = `
-        <td class="group relative p-1 border border-slate-200 align-center sticky left-0 bg-white z-10 w-56 min-w-56 font-semibold text-center">
-            <select class="shift-code-selector form-input w-full text-sm p-1">
-                <option value="">-- Chọn Ca --</option>
-                ${shiftCodeOptions}
-            </select>
+        <td class="group relative p-1 border border-slate-200 align-top sticky left-0 bg-white z-10 w-40 min-w-40 font-semibold text-center">
+            <div class="space-y-1">
+                <input list="shift-codes-datalist" 
+                       class="shift-code-selector form-input w-full text-xs text-center p-1 font-semibold" 
+                       placeholder="-- Nhập/Chọn Ca --">
+                <!-- Thêm div để hiển thị khung giờ -->
+                <div class="shift-time-display text-xs text-slate-500 h-4"></div>
+                <select class="work-position-selector form-input w-full text-xs text-center p-1">
+                    <option value="">-- Chọn Vị trí --</option>
+                    ${workPositionOptions}
+                </select>
+            </div>
             <button class="delete-shift-row-btn absolute top-1 right-1 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity" title="Xóa dòng ca này">
                 <i class="fas fa-times"></i>
             </button>
@@ -210,10 +216,27 @@ function addShiftRow(tbody, shiftNumber) {
     // Gắn sự kiện onchange cho dropdown vừa tạo
     const newSelector = newRow.querySelector('.shift-code-selector');
     if (newSelector) {
-        newSelector.addEventListener('change', () => {
+        // Sử dụng sự kiện 'input' để bắt cả việc gõ và chọn từ datalist
+        newSelector.addEventListener('input', () => {
+            const shiftCodeValue = newSelector.value;
+            const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === shiftCodeValue);
+            const timeDisplay = newRow.querySelector('.shift-time-display');
+
+            if (shiftInfo) {
+                if (timeDisplay) timeDisplay.textContent = shiftInfo.timeRange;
+            } else {
+                if (timeDisplay) timeDisplay.textContent = ''; // Xóa giờ nếu mã ca không hợp lệ
+            }
+
+            // Cập nhật giao diện và lưu thay đổi
             updateRowAppearance(newRow);
             updateTemplateFromDOM();
         });
+    }
+    const newPositionSelector = newRow.querySelector('.work-position-selector');
+    if (newPositionSelector) {
+        // Tự động lưu khi thay đổi vị trí
+        newPositionSelector.addEventListener('change', updateTemplateFromDOM);
     }
 
     // Kích hoạt lại chức năng kéo-thả cho các ô mới trong dòng vừa thêm
@@ -242,7 +265,7 @@ function renderGrid() {
     const container = document.getElementById('template-builder-grid-container');
     if (!container) return;
 
-    const timeSlots = Array.from({ length: 16 }, (_, i) => `${i + 6}:00`); // 6:00 -> 21:00
+    const timeSlots = Array.from({ length: 18 }, (_, i) => `${i + 6}:00`); // 6:00 -> 23:00
 
     // Tạo bảng
     const table = document.createElement('table');
@@ -251,7 +274,7 @@ function renderGrid() {
     // --- Tạo Header (Tên nhân viên) ---
     const thead = document.createElement('thead');
     thead.className = 'bg-slate-100 sticky top-0 z-20'; // Tăng z-index để header nổi trên các ô sticky
-    let headerRowHtml = `<th class="p-2 border border-slate-200 w-56 min-w-56 sticky left-0 bg-slate-100 z-30">Ca</th>`; // Cột Ca, sticky
+    let headerRowHtml = `<th class="p-2 border border-slate-200 min-w-36 sticky left-0 bg-slate-100 z-30">Ca</th>`; // Cột Ca, sticky
     timeSlots.forEach(time => {
         headerRowHtml += `
             <th class="p-2 border border-slate-200 min-w-[308px] text-center font-semibold text-slate-700">${time}</th>
@@ -270,9 +293,8 @@ function renderGrid() {
 
     // --- Tạo nút "Thêm Dòng Ca" ---
     const addRowButtonContainer = document.createElement('div');
-    // Cập nhật: Thêm các lớp sticky, bottom, left và z-index để cố định nút.
-    // Nút sẽ luôn hiển thị ở góc dưới bên trái của màn hình.
-    addRowButtonContainer.className = 'sticky bottom-4 left-4 z-40 mt-4';
+    // Nút này sẽ nằm dưới bảng
+    addRowButtonContainer.className = 'mt-4';
     const addRowButton = document.createElement('button');
     addRowButton.id = 'add-shift-row-btn';
     addRowButton.className = 'btn btn-secondary text-sm';
@@ -489,12 +511,14 @@ async function saveTemplate() {
     const scheduleData = {};
     const shiftMappings = {}; // Lưu map giữa shiftId và shiftCode
 
-    // 1. Thu thập dữ liệu từ DOM
+    // 1. Thu thập dữ liệu task từ DOM
     document.querySelectorAll('.scheduled-task-item').forEach(taskItem => {
         const slot = taskItem.closest('.quarter-hour-slot');
         if (!slot) return;
 
         const shiftId = slot.dataset.shiftId;
+        if (!shiftId) return;
+
         const taskName = taskItem.querySelector('span.overflow-hidden').textContent; // Lấy tên task từ DOM
         const taskCode = taskItem.dataset.taskCode;
         const groupId = taskItem.dataset.groupId; // Lấy groupId từ DOM
@@ -509,28 +533,31 @@ async function saveTemplate() {
         scheduleData[shiftId].push({ taskCode, taskName, startTime, groupId });
     });
 
-    // Thu thập dữ liệu từ các dropdown chọn ca
+    // Thu thập dữ liệu từ các dropdown chọn ca và vị trí
     document.querySelectorAll('#template-builder-grid-container tbody tr').forEach(row => {
         const shiftId = row.dataset.shiftId;
         const selectedShiftCode = row.querySelector('.shift-code-selector')?.value;
-        if (shiftId && selectedShiftCode) {
-            shiftMappings[shiftId] = selectedShiftCode;
+        const selectedPositionId = row.querySelector('.work-position-selector')?.value;
+        if (shiftId && (selectedShiftCode || selectedPositionId)) {
+            shiftMappings[shiftId] = { shiftCode: selectedShiftCode, positionId: selectedPositionId };
         }
     });
 
     // 2. Lưu vào Firestore
     try {
+        const dataToSave = { schedule: scheduleData, shiftMappings: shiftMappings, totalManhour: totalManhour };
         if (templateIdToSave) {
             // Cập nhật mẫu đã có
             const templateRef = doc(db, 'daily_templates', templateIdToSave);
-            await setDoc(templateRef, { schedule: scheduleData, shiftMappings: shiftMappings, totalManhour: totalManhour, updatedAt: serverTimestamp() }, { merge: true });
+            await setDoc(templateRef, { ...dataToSave, updatedAt: serverTimestamp() }, { merge: true });
         } else {
             // Tạo mẫu mới
             const newDocRef = await addDoc(collection(db, 'daily_templates'), {
                 name: templateName.trim(),
                 schedule: scheduleData,
+                shiftMappings: shiftMappings, // Lưu cả khi tạo mới
                 createdAt: serverTimestamp()
-            });
+            , totalManhour: totalManhour});
             // Sau khi tạo thành công, tải lại danh sách và tự động chọn mẫu vừa tạo
             await fetchAndRenderTemplates();
             document.getElementById('template-selector').value = newDocRef.id;
@@ -563,7 +590,7 @@ async function updateTemplateFromDOM() {
     const totalManhour = parseFloat(document.getElementById('template-manhour-input').value) || 0;
 
     // 1. Thu thập dữ liệu từ DOM
-    document.querySelectorAll('.scheduled-task-item').forEach(taskItem => {
+    document.querySelectorAll('#template-builder-grid-container .scheduled-task-item').forEach(taskItem => {
         const slot = taskItem.closest('.quarter-hour-slot');
         if (!slot) return;
 
@@ -581,18 +608,20 @@ async function updateTemplateFromDOM() {
         scheduleData[shiftId].push({ taskCode, taskName, startTime, groupId });
     });
 
-    // Thu thập dữ liệu từ các dropdown chọn ca
+    // Thu thập dữ liệu từ các dropdown chọn ca và vị trí
     document.querySelectorAll('#template-builder-grid-container tbody tr').forEach(row => {
         const shiftId = row.dataset.shiftId;
         const selectedShiftCode = row.querySelector('.shift-code-selector')?.value;
-        if (shiftId && selectedShiftCode) {
-            shiftMappings[shiftId] = selectedShiftCode;
+        const selectedPositionId = row.querySelector('.work-position-selector')?.value;
+        if (shiftId) {
+            // Lưu cả mã ca và mã vị trí
+            shiftMappings[shiftId] = { shiftCode: selectedShiftCode, positionId: selectedPositionId };
         }
     });
 
     // 2. Cập nhật vào Firestore
     try {
-        const templateRef = doc(db, 'daily_templates', currentTemplateId);
+        const templateRef = doc(db, 'daily_templates', currentTemplateId); // Cập nhật shiftMappings
         await setDoc(templateRef, { schedule: scheduleData, shiftMappings: shiftMappings, totalManhour: totalManhour, updatedAt: serverTimestamp() }, { merge: true });
         // showToast('Đã tự động lưu thay đổi!', 'success', 1000); // Có thể thêm toast nhỏ
     } catch (error) {
@@ -684,8 +713,21 @@ async function loadTemplate(templateId) {
                     const row = document.querySelector(`tr[data-shift-id="${shiftId}"]`);
                     if (row) {
                         const selector = row.querySelector('.shift-code-selector');
-                        if (selector) selector.value = shiftMappings[shiftId];
+                        const positionSelector = row.querySelector('.work-position-selector');
+                        const mappingData = shiftMappings[shiftId];
+                        if (selector && mappingData?.shiftCode) selector.value = mappingData.shiftCode; // Gán giá trị cho input
+                        if (positionSelector && mappingData?.positionId) positionSelector.value = mappingData.positionId;
                         updateRowAppearance(row); // Tô màu cho dòng sau khi tải
+
+                        // Cập nhật hiển thị khung giờ cho input
+                        if (selector.value && mappingData?.shiftCode) {
+                            const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === mappingData.shiftCode);
+                            const timeDisplay = row.querySelector('.shift-time-display');
+                            if (shiftInfo && timeDisplay) {
+                                timeDisplay.textContent = shiftInfo.timeRange;
+                            }
+                        }
+
                     }
                 });
             }
@@ -789,6 +831,15 @@ export async function init() {
     document.getElementById('delete-template-btn')?.addEventListener('click', deleteCurrentTemplate);
     document.getElementById('template-selector')?.addEventListener('change', (e) => loadTemplate(e.target.value));
 
+    // Tạo datalist cho mã ca nếu chưa có
+    if (!document.getElementById('shift-codes-datalist')) {
+        const datalist = document.createElement('datalist');
+        datalist.id = 'shift-codes-datalist';
+        datalist.innerHTML = allShiftCodes.map(sc => `<option value="${sc.shiftCode}">${sc.timeRange}</option>`).join('');
+        document.body.appendChild(datalist);
+    }
+
+
     // Thêm listener để cập nhật tiêu đề khi nhập manhour
     const manhourInput = document.getElementById('template-manhour-input');
     const manhourDisplay = document.getElementById('total-manhour-display');
@@ -890,10 +941,6 @@ function triggerStatAnimation(cell, text) {
  * Cập nhật bảng thống kê group task dựa trên các task đang có trên lưới.
  */
 function updateTemplateStats() {
-    // --- Lấy dữ liệu cũ từ bảng đang hiển thị (nếu có) ---
-    const oldTotalCountEl = document.getElementById('stats-total-count');
-    const oldTotalCount = oldTotalCountEl ? parseInt(oldTotalCountEl.textContent, 10) : 0;
-
     const statsContentWrapper = document.getElementById('stats-content-wrapper');
     if (!statsContentWrapper) return;
     const scheduledTasks = document.querySelectorAll('.scheduled-task-item');
@@ -917,7 +964,7 @@ function updateTemplateStats() {
         statsContentWrapper.innerHTML = ''; // Chỉ xóa nội dung bên trong wrapper
         table = document.createElement('table');
         table.id = 'stats-table';
-        table.className = 'w-full text-sm border-collapse';
+        table.className = 'w-full text-xs border-collapse';
         table.innerHTML = `
             <thead class="bg-slate-50 sticky top-0 z-10">
                 <tr>
@@ -937,18 +984,6 @@ function updateTemplateStats() {
         statsContentWrapper.appendChild(table);
     }
 
-    // --- Lấy dữ liệu cũ từ các dòng trong bảng ---
-    const oldRowStats = {};
-    table.querySelectorAll('tbody tr[data-group-id]').forEach(row => {
-        const groupId = row.dataset.groupId;
-        const countCell = row.querySelector('.stat-count');
-        if (groupId && countCell) {
-            oldRowStats[groupId] = {
-                count: parseInt(countCell.textContent, 10) || 0
-            };
-        }
-    });
-
     const tbody = table.querySelector('tbody');
     let totalCount = 0;
     let rowIndex = 1;
@@ -963,7 +998,6 @@ function updateTemplateStats() {
     // --- Cập nhật hoặc thêm các dòng cho từng group ---
     for (const groupId of sortedGroupIds) {
         const groupInfo = allTaskGroups[groupId];
-        const oldGroupCount = oldRowStats[groupId] ? oldRowStats[groupId].count : 0;
         const currentCount = newStats[groupId] ? newStats[groupId].count : 0;
         const currentTime = (currentCount * 0.25).toFixed(2);
         totalCount += currentCount;
@@ -986,28 +1020,13 @@ function updateTemplateStats() {
 
         // Cập nhật giá trị và kích hoạt animation nếu có thay đổi
         const timeCell = row.querySelector('.stat-time');
-
-        // Tính toán sự thay đổi về thời gian để tạo hiệu ứng
-        const oldTime = parseFloat(timeCell.textContent) || 0;
-        const timeChange = currentTime - oldTime;
-
-        if (timeChange !== 0) {
-            timeCell.textContent = currentTime;
-            triggerStatAnimation(timeCell, `${timeChange > 0 ? '+' : ''}${timeChange.toFixed(2)}`);
-        }
+        timeCell.textContent = currentTime;
     }
 
     // --- Cập nhật dòng tổng kết ---
     const totalTimeCell = table.querySelector('#stats-total-time');
-
-    const oldTotalTime = parseFloat(totalTimeCell.textContent) || 0;
     const newTotalTime = totalCount * 0.25;
-    const totalTimeChange = newTotalTime - oldTotalTime;
-
-    if (totalTimeChange !== 0) {
-        totalTimeCell.textContent = (totalCount * 0.25).toFixed(2);
-        triggerStatAnimation(totalTimeCell, `${totalTimeChange > 0 ? '+' : ''}${totalTimeChange.toFixed(2)}`);
-    }
+    totalTimeCell.textContent = newTotalTime.toFixed(2);
 
     // Đồng bộ giá trị "Đã sắp xếp" ở trên với tổng số giờ vừa tính toán
     const scheduledHoursValueEl = document.getElementById('scheduled-hours-value');

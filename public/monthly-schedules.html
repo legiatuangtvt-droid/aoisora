@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="logo.png" type="image/png">
+    <title>Lịch Làm Việc Tháng - AoiSora</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="output.css">
+    <style>
+        /* Thêm style để đảm bảo chiều cao tối thiểu và hiển thị spinner */
+        #schedule-container {
+            min-height: 400px;
+        }
+    </style>
+</head>
+<body class="flex h-screen text-gray-800">
+
+    <!-- Sidebar Placeholder -->
+    <div id="sidebar-placeholder"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Header Placeholder -->
+        <div id="header-placeholder"></div>
+
+        <!-- Content Area -->
+        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-bold text-gray-800">Lịch Làm Việc Tháng</h1>
+                <!-- Container cho bộ lọc -->
+                <div id="filter-container" class="flex items-center gap-4">
+                    <!-- Bộ lọc cửa hàng sẽ được chèn vào đây bởi JS -->
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <!-- Container cho lịch trình -->
+                <div id="schedule-container">
+                    <!-- Lịch trình sẽ được render ở đây bởi JavaScript -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="bootstrapper.js" defer></script>
+</body>
+</html>

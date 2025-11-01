@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" class="h-full overflow-hidden">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="output.css">
 </head>
-<body class="flex h-screen text-gray-800">
+<body class="flex h-full text-gray-800">
 
     <!-- Sidebar Placeholder -->
     <div id="sidebar-placeholder"></div>
@@ -20,7 +20,7 @@
         <div id="header-placeholder"></div>
 
         <!-- Content Area -->
-        <main class="flex-1 overflow-auto p-6">
+        <main class="flex-1 p-6">
             <div class="bg-white p-6 rounded-lg shadow-md">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-lg font-semibold text-gray-700">Danh Sách Cửa Hàng</h2>
@@ -34,10 +34,10 @@
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-slate-50">
                             <tr>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">STT</th>
                                 <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Mã CH</th>
                                 <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Tên Cửa Hàng</th>
                                 <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Địa Chỉ</th>
-                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Số Điện Thoại</th>
                                 <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng Thái</th>
                                 <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Hành Động</th>
                             </tr>
@@ -46,6 +46,11 @@
                             <!-- Dữ liệu cửa hàng sẽ được JS render vào đây -->
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Pagination Controls -->
+                <div id="pagination-controls" class="flex items-center justify-between mt-4 px-4 py-3 sm:px-6">
+                    <!-- Nội dung phân trang sẽ được JS render vào đây -->
                 </div>
             </div>
 
@@ -70,17 +75,11 @@
                             <label for="store-address" class="block text-sm font-medium text-gray-700">Địa Chỉ</label>
                             <input type="text" id="store-address" class="form-input">
                         </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="form-group p-0 m-0">
-                                <label for="store-phone" class="block text-sm font-medium text-gray-700">Số Điện Thoại</label>
-                                <input type="tel" id="store-phone" class="form-input">
-                            </div>
-                            <div class="form-group p-0 m-0">
-                                <label for="store-status" class="block text-sm font-medium text-gray-700">Trạng Thái</label>
-                                <select id="store-status" class="form-select">
-                                    <!-- Các lựa chọn sẽ được JS tải từ Firestore -->
-                                </select>
-                            </div>
+                        <div class="form-group">
+                            <label for="store-status" class="block text-sm font-medium text-gray-700">Trạng Thái</label>
+                            <select id="store-status" class="form-select">
+                                <!-- Các lựa chọn sẽ được JS tải từ Firestore -->
+                            </select>
                         </div>
 
                         <div class="modal-footer">
@@ -95,7 +94,6 @@
         </main>
     </div>
 
-    <script src="layout.js" defer></script>
     <script type="module" src="bootstrapper.js" defer></script>
 </body>
 </html>
