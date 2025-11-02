@@ -601,124 +601,108 @@ async function applyTemplateToAllStores() {
         const availabilitySnap = await getDocs(availabilityQuery);
         const allAvailabilities = availabilitySnap.docs.map(doc => doc.data());
 
-
         let schedulesCreatedCount = 0;
 
-        // 5. Lặp qua tất cả cửa hàng và tạo lịch
-        // QUY TẮC TẠO LỊCH (áp dụng theo thứ tự ưu tiên từ 1->5):
-        // 1. Mỗi lịch làm việc phải phân công chính xác số lượng vị trí (ca làm việc) theo mẫu.
-        // 2. Chỉ nhân viên có vai trò leader (level 1x) mới được phân công vào vị trí "LEADER".
-        // 3. Trường hợp cửa hàng chỉ có 1 leader nhưng mẫu yêu cầu 2 ca LEADER, leader đó sẽ được phân công cả 2 ca.
-        // 4. Vị trí làm việc phải đảm bảo theo giá trị balance tại work_postitions theo mỗi nhân viên để đảm bảo sự công bằng tương đối,
-        // tránh một nhân viên bị phân công 1 vị trí quá nhiều (trừ vị trí leader).
-        // 5. Nếu có dữ liệu đăng ký ưu tiên ca của nhân viên tại collection 'staff_availability' thì ưu tiên phân công ca đó cho nhân viên đó.
-
+        // =================================================================================
+        // LOGIC PHÂN CÔNG LỊCH LÀM VIỆC MỚI (ĐÃ SỬA LỖI)
+        // Cách tiếp cận: Coi mỗi `shiftId` trong template là một "suất" cần được lấp đầy.
+        // Việc phân công là tìm một nhân viên phù hợp cho mỗi "suất".
+        // =================================================================================
         for (const store of allStores) {
             const storeEmployees = allEmployees.filter(emp => emp.storeId === store.id && emp.status === 'ACTIVE');
-            const employeeAvailabilities = allAvailabilities.filter(a => storeEmployees.some(e => e.id === a.employeeId));
+            if (storeEmployees.length === 0) continue;
 
-            let assignedShifts = new Set(); // Theo dõi các ca đã được phân công: "shiftId"
-            let assignedEmployees = new Map(); // Theo dõi nhân viên đã được phân công và vị trí của họ: { employeeId: [positionId1, positionId2] }
-            let neededShifts = { ...shiftMappings }; // Clone các ca cần lấp đầy
+            // Danh sách các "suất" làm việc cần được phân công, lấy từ template
+            let slotsToFill = Object.keys(shiftMappings).map(shiftId => ({
+                shiftId: shiftId,
+                shiftCode: shiftMappings[shiftId].shiftCode,
+                positionId: shiftMappings[shiftId].positionId,
+                employeeId: null // Nhân viên sẽ được gán vào đây
+            }));
 
-            // --- BƯỚC 1: ƯU TIÊN PHÂN CÔNG THEO ĐĂNG KÝ CỦA NHÂN VIÊN (QUY TẮC 5) ---
-            employeeAvailabilities.sort((a, b) => (a.registrations[0]?.priority || 3) - (b.registrations[0]?.priority || 3)); // Ưu tiên priority 1
+            let availableEmployees = [...storeEmployees];
+
+            // --- BƯỚC 1: PHÂN CÔNG VỊ TRÍ LEADER (QUY TẮC 2 & 3) ---
+            const leaderSlots = slotsToFill.filter(slot => slot.positionId === 'LEADER' && !slot.employeeId);
+            const leadersInStore = availableEmployees.filter(emp => emp.roleId.includes('LEADER'));
+
+            if (leaderSlots.length > 0 && leadersInStore.length > 0) {
+                let leaderIndex = 0;
+                for (const slot of leaderSlots) {
+                    const leaderToAssign = leadersInStore[leaderIndex % leadersInStore.length];
+                    slot.employeeId = leaderToAssign.id;
+                    // Loại leader đã được phân công ra khỏi danh sách nhân viên có sẵn để tránh bị phân công lại ở các bước sau
+                    availableEmployees = availableEmployees.filter(emp => emp.id !== leaderToAssign.id);
+                    leaderIndex++;
+                }
+            }
+
+            // --- BƯỚC 2: PHÂN CÔNG THEO ĐĂNG KÝ ƯU TIÊN (QUY TẮC 5) ---
+            const employeeAvailabilities = allAvailabilities.filter(a => availableEmployees.some(e => e.id === a.employeeId));
+            // Sắp xếp nhân viên theo priority (1 là cao nhất)
+            employeeAvailabilities.sort((a, b) => (a.registrations[0]?.priority || 3) - (b.registrations[0]?.priority || 3));
 
             for (const availability of employeeAvailabilities) {
+                // Nếu nhân viên này đã được phân công, bỏ qua
+                if (!availableEmployees.some(e => e.id === availability.employeeId)) continue;
+
                 for (const registration of availability.registrations) {
                     if (!registration.shiftCode) continue;
 
-                    // Tìm ca trong template khớp với đăng ký của nhân viên
-                    const matchingShiftId = Object.keys(neededShifts).find(shiftId =>
-                        neededShifts[shiftId].shiftCode === registration.shiftCode && !assignedShifts.has(shiftId)
+                    // Tìm một "suất" trống phù hợp với đăng ký của nhân viên
+                    const matchingSlot = slotsToFill.find(slot =>
+                        !slot.employeeId && // Suất còn trống
+                        slot.shiftCode === registration.shiftCode && // Đúng mã ca
+                        slot.positionId !== 'LEADER' // Không phải suất leader
                     );
 
-                    if (matchingShiftId && !assignedEmployees.has(availability.employeeId)) {
-                        const { positionId } = neededShifts[matchingShiftId];
-                        // Phân công và đánh dấu
-                        assignedShifts.add(matchingShiftId);
-                        assignedEmployees.set(availability.employeeId, [positionId]);
-                        delete neededShifts[matchingShiftId];
+                    if (matchingSlot) {
+                        matchingSlot.employeeId = availability.employeeId;
+                        // Loại nhân viên đã được phân công ra khỏi danh sách có sẵn
+                        availableEmployees = availableEmployees.filter(emp => emp.id !== availability.employeeId);
                         break; // Mỗi nhân viên chỉ được xếp 1 ca ở bước này
                     }
                 }
             }
 
-            // --- BƯỚC 2: PHÂN CÔNG CÁC VỊ TRÍ LEADER CÒN LẠI (QUY TẮC 2 & 3) ---
-            const leaderShifts = Object.keys(neededShifts).filter(id => neededShifts[id].positionId === 'LEADER');
-            if (leaderShifts.length > 0) {
-                const leadersInStore = storeEmployees.filter(emp => emp.roleId.includes('LEADER'));
-                for (const shiftId of leaderShifts) {
-                    let leaderToAssign = leadersInStore.find(l => !assignedEmployees.has(l.id));
-                    // Nếu không còn leader trống và cửa hàng chỉ có 1 leader, cho phép leader đó làm nhiều ca
-                    if (!leaderToAssign && leadersInStore.length === 1) {
-                        leaderToAssign = leadersInStore[0];
-                    }
-                    if (leaderToAssign) {
-                        assignedShifts.add(shiftId);
-                        const currentAssignments = assignedEmployees.get(leaderToAssign.id) || [];
-                        assignedEmployees.set(leaderToAssign.id, [...currentAssignments, 'LEADER']);
-                        delete neededShifts[shiftId];
-                    }
+            // --- BƯỚC 3: PHÂN CÔNG CÁC SUẤT CÒN LẠI (QUY TẮC 1 & 4) ---
+            const remainingSlots = slotsToFill.filter(slot => !slot.employeeId);
+            for (const slot of remainingSlots) {
+                if (availableEmployees.length > 0) {
+                    // TODO: Có thể thêm logic sắp xếp `availableEmployees` theo tiêu chí balance (quy tắc 4) ở đây.
+                    // Hiện tại, đang lấy nhân viên đầu tiên trong danh sách còn lại.
+                    const employeeToAssign = availableEmployees.shift(); // Lấy và xóa nhân viên đầu tiên
+                    slot.employeeId = employeeToAssign.id;
+                } else {
+                    // Nếu hết nhân viên mà vẫn còn suất, suất đó sẽ bị bỏ trống.
+                    console.warn(`Cửa hàng ${store.name} không đủ nhân viên để lấp đầy suất ${slot.positionId} (${slot.shiftCode})`);
                 }
             }
 
-            // --- BƯỚC 3: PHÂN CÔNG CÁC VỊ TRÍ CÒN LẠI THEO BALANCE (QUY TẮC 4) ---
-            const remainingShiftIds = Object.keys(neededShifts);
-            const availableEmployees = storeEmployees.filter(emp => !assignedEmployees.has(emp.id));
+            // --- BƯỚC 4: TẠO BẢN GHI LỊCH TRÌNH TỪ CÁC SUẤT ĐÃ PHÂN CÔNG ---
+            for (const filledSlot of slotsToFill) {
+                // Chỉ tạo lịch nếu suất đó đã được phân công cho một nhân viên
+                if (filledSlot.employeeId) {
+                    const tasks = (templateSchedule[filledSlot.shiftId] || []).map(task => ({
+                        groupId: task.groupId,
+                        startTime: task.startTime,
+                        taskCode: task.taskCode,
+                        name: task.taskName
+                    }));
 
-            for (const shiftId of remainingShiftIds) {
-                const { positionId } = neededShifts[shiftId];
-                if (positionId === 'LEADER') continue; // Bỏ qua leader vì đã xử lý
+                    const newScheduleDoc = {
+                        date: dateString,
+                        employeeId: filledSlot.employeeId,
+                        storeId: store.id,
+                        shift: filledSlot.shiftCode,
+                        positionId: filledSlot.positionId,
+                        tasks,
+                        createdAt: serverTimestamp()
+                    };
 
-                // Sắp xếp nhân viên còn lại dựa trên "sự thiếu hụt" vị trí này
-                availableEmployees.sort((a, b) => {
-                    const assignmentsA = assignedEmployees.get(a.id) || [];
-                    const assignmentsB = assignedEmployees.get(b.id) || [];
-                    const shortageA = (assignmentsA.filter(p => p === positionId).length / (assignmentsA.length || 1));
-                    const shortageB = (assignmentsB.filter(p => p === positionId).length / (assignmentsB.length || 1));
-                    return shortageA - shortageB; // Ưu tiên người có tỷ lệ làm vị trí này thấp hơn
-                });
-
-                const employeeToAssign = availableEmployees.shift(); // Lấy người phù hợp nhất
-                if (employeeToAssign) {
-                    assignedShifts.add(shiftId);
-                    assignedEmployees.set(employeeToAssign.id, [positionId]); // Gán ca đầu tiên cho họ
-                    delete neededShifts[shiftId];
-                }
-            }
-
-            // --- BƯỚC 4: TẠO CÁC BẢN GHI LỊCH TRÌNH (LOGIC MỚI) ---
-            // Logic này đảm bảo xử lý đúng trường hợp một nhân viên làm nhiều ca.
-            for (const [employeeId, assignedPositionIds] of assignedEmployees.entries()) {
-                // Tạo một bản sao của mảng vị trí để có thể thay đổi nó một cách an toàn
-                const positionsToAssign = [...assignedPositionIds];
-
-                // Lặp qua tất cả các ca đã được phân công trong `assignedShifts`
-                for (const shiftId of assignedShifts) {
-                    const mapping = shiftMappings[shiftId];
-                    const positionIndex = positionsToAssign.indexOf(mapping.positionId);
-
-                    // Nếu nhân viên này được gán vào vị trí của ca hiện tại
-                    if (positionIndex !== -1) {
-                        // Xóa vị trí đã sử dụng để đảm bảo nó không được gán lại cho một ca khác của cùng một nhân viên
-                        positionsToAssign.splice(positionIndex, 1);
-
-                        const tasks = (templateSchedule[shiftId] || []).map(task => ({
-                            groupId: task.groupId, startTime: task.startTime, taskCode: task.taskCode, name: task.taskName
-                        }));
-                        const newScheduleDoc = {
-                            date: dateString,
-                            employeeId,
-                            storeId: store.id,
-                            shift: mapping.shiftCode,
-                            positionId: mapping.positionId,
-                            tasks, createdAt: serverTimestamp()
-                        };
-                        const scheduleRef = doc(collection(db, 'schedules'));
-                        batch.set(scheduleRef, newScheduleDoc);
-                        schedulesCreatedCount++;
-                    }
+                    const scheduleRef = doc(collection(db, 'schedules'));
+                    batch.set(scheduleRef, newScheduleDoc);
+                    schedulesCreatedCount++;
                 }
             }
         }

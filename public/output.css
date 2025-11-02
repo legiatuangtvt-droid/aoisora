@@ -1068,6 +1068,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
   width: 4rem;
 }
 
+.w-20 {
+  width: 5rem;
+}
+
 .w-24 {
   width: 6rem;
 }
@@ -1136,10 +1140,6 @@ body.sidebar-expanded #sidebar .sidebar-text {
   width: 100%;
 }
 
-.w-20 {
-  width: 5rem;
-}
-
 .min-w-36 {
   min-width: 9rem;
 }
@@ -1170,10 +1170,6 @@ body.sidebar-expanded #sidebar .sidebar-text {
 
 .min-w-full {
   min-width: 100%;
-}
-
-.min-w-\[250px\] {
-  min-width: 250px;
 }
 
 .max-w-2xl {
@@ -1906,10 +1902,6 @@ body.sidebar-expanded #sidebar .sidebar-text {
   line-height: 1rem;
 }
 
-.text-\[6px\] {
-  font-size: 6px;
-}
-
 .font-bold {
   font-weight: 700;
 }
@@ -2121,11 +2113,6 @@ body.sidebar-expanded #sidebar .sidebar-text {
 .text-white {
   --tw-text-opacity: 1;
   color: rgb(255 255 255 / var(--tw-text-opacity, 1));
-}
-
-.text-sky-500 {
-  --tw-text-opacity: 1;
-  color: rgb(14 165 233 / var(--tw-text-opacity, 1));
 }
 
 .opacity-0 {

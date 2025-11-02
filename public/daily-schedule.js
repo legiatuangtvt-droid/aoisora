@@ -1,5 +1,6 @@
 ﻿﻿﻿﻿import { db } from './firebase.js';
 import { collection, onSnapshot, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+
 let viewStartDate = new Date(); // Ngày đầu tiên của tuần đang xem (Thứ 2)
 let domController = null;
 
@@ -10,6 +11,7 @@ let allAreas = [];
 let allRegions = [];
 let allTaskGroups = {};
 let dailyTemplate = null; // Biến để lưu mẫu lịch trình ngày
+let allWorkPositions = []; // Biến để lưu vị trí làm việc
 let currentScheduleData = []; // Lịch làm việc cho ngày đang chọn
 let allShiftCodes = []; // Biến để lưu danh sách mã ca
 
@@ -43,11 +45,13 @@ function getMonday(d) {
 async function fetchInitialData() {
     try {
         const shiftCodesDocRef = doc(db, 'system_configurations', 'shift_codes');
+        const workPositionsQuery = query(collection(db, 'work_positions'), where('status', '==', 'ACTIVE'));
         const [
             shiftCodesSnap,
-            employeesSnap, storesSnap, areasSnap, regionsSnap, taskGroupsSnap, templateSnap
+            workPositionsSnap, employeesSnap, storesSnap, areasSnap, regionsSnap, taskGroupsSnap, templateSnap
         ] = await Promise.all([
             getDoc(shiftCodesDocRef),
+            getDocs(workPositionsQuery),
             getDocs(collection(db, 'employee')),
             getDocs(collection(db, 'stores')),
             getDocs(collection(db, 'areas')),
@@ -60,6 +64,9 @@ async function fetchInitialData() {
         if (shiftCodesSnap.exists()) {
             allShiftCodes = shiftCodesSnap.data().codes || [];
         }
+
+        // Xử lý vị trí làm việc
+        allWorkPositions = workPositionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
         let fetchedEmployees = employeesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         allStores = storesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -145,6 +152,20 @@ function listenForScheduleChanges(dateString) {
             }
         });
         currentScheduleData = schedules;
+
+        // DEBUG LOG: Phân tích dữ liệu lịch làm việc đã tải về cho cửa hàng và ngày được chọn
+        const shiftCounts = currentScheduleData.reduce((acc, schedule) => {
+            const shiftCode = schedule.shift || 'UNKNOWN';
+            acc[shiftCode] = (acc[shiftCode] || 0) + 1;
+            return acc;
+        }, {});
+
+        console.groupCollapsed(`[DEBUG] Phân tích lịch làm việc cho Store ID: ${selectedStoreId} | Ngày: ${dateString}`);
+        console.log(`Tổng số ca đã phân công: ${currentScheduleData.length}`);
+        console.log('Thống kê mã ca:', shiftCounts);
+        console.log('Dữ liệu chi tiết:', currentScheduleData);
+        console.groupEnd();
+        // KẾT THÚC DEBUG LOG
 
         // --- LOGIC SẮP XẾP MỚI ---
         if (dailyTemplate && dailyTemplate.shiftMappings) {
@@ -314,7 +335,8 @@ function renderScheduleGrid() {
             row.dataset.employeeId = schedule.employeeId; // Thêm ID để dễ dàng truy vấn
             let rowHtml = `
                 <td class="group p-2 border border-slate-200 align-middle sticky left-0 bg-white z-10 w-40 min-w-40 font-semibold text-center">
-                    <div class="text-sm text-slate-800">${schedule.name}</div>
+                    <div class="text-sm text-slate-800">${schedule.name}</div>                    
+                    <!-- TODO: Hiển thị tên vị trí thay vì ID -->
                     <div class="text-xs text-slate-600 font-medium mt-1">${schedule.positionId || ''}</div>
                     <div class="text-xs text-slate-500 font-normal">${schedule.shift}</div>
                     <div class="text-xs text-slate-500 font-normal">${timeRange}</div>
