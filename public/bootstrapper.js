@@ -81,7 +81,6 @@ async function bootstrapApp() {
     if (simulatedUserString) {
         try {
             window.currentUser = JSON.parse(simulatedUserString);
-            console.log('[Bootstrapper] Simulating user:', window.currentUser);
         } catch (e) {
             console.error("Bootstrapper: Lỗi khi phân tích dữ liệu người dùng mô phỏng.", e);
             localStorage.removeItem(SIMULATED_USER_STORAGE_KEY);

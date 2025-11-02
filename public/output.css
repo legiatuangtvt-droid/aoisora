@@ -789,6 +789,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
   visibility: hidden;
 }
 
+.fixed {
+  position: fixed;
+}
+
 .absolute {
   position: absolute;
 }
@@ -799,6 +803,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
 
 .sticky {
   position: sticky;
+}
+
+.inset-0 {
+  inset: 0px;
 }
 
 .-right-2 {
@@ -847,6 +855,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
 
 .z-30 {
   z-index: 30;
+}
+
+.z-\[99999\] {
+  z-index: 99999;
 }
 
 .col-span-7 {
@@ -1723,6 +1735,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
   background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
 }
 
+.bg-opacity-75 {
+  --tw-bg-opacity: 0.75;
+}
+
 .object-cover {
   -o-object-fit: cover;
      object-fit: cover;
@@ -2178,6 +2194,11 @@ body.sidebar-expanded #sidebar .sidebar-text {
 
 .filter {
   filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
+}
+
+.backdrop-blur-sm {
+  --tw-backdrop-blur: blur(4px);
+  backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);
 }
 
 .transition {
