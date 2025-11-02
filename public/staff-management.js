@@ -308,6 +308,17 @@ async function fetchAndRenderEmployees(direction = 'first') {
         return { ...person, level: role ? (role.level || 0) : 0 };
     });
 
+    // Lọc danh sách nhân sự cho vai trò STORE_INCHARGE
+    const currentUser = window.currentUser;
+    if (currentUser && currentUser.roleId === 'STORE_INCHARGE' && Array.isArray(currentUser.managedStoreIds)) {
+        console.log('[Staff Management] SI detected. Filtering for managed stores:', currentUser.managedStoreIds);
+        allPersonnel = allPersonnel.filter(person => {
+            // Giữ lại chính SI đó
+            if (person.id === currentUser.id) return true;
+            // Giữ lại các nhân viên thuộc các cửa hàng mà SI quản lý
+            return currentUser.managedStoreIds.includes(person.storeId);
+        });
+    }
 
 
     // 1. Áp dụng Filters (where)
@@ -352,7 +363,11 @@ async function fetchAndRenderEmployees(direction = 'first') {
     } catch (error) {
         console.error("Lỗi khi tải dữ liệu nhân viên:", error);
         window.showToast("Lỗi khi tải dữ liệu. Firestore index có thể bị thiếu.", "error");
-        listElement.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-red-500">Lỗi tải dữ liệu.</td></tr>`;
+        if (listElement) {
+            listElement.innerHTML = `<tr><td colspan="8" class="text-center py-10">
+                <div class="text-red-500"><i class="fas fa-exclamation-triangle fa-lg mr-2"></i>Không thể tải danh sách nhân viên. Vui lòng kiểm tra kết nối mạng và thử tải lại trang.</div>
+            </td></tr>`;
+        }
     }
 }
 

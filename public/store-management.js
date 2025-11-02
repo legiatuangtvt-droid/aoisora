@@ -35,12 +35,27 @@ function listenForStoreChanges() {
     // Sử dụng documentId() để sắp xếp theo mã cửa hàng (là ID của document).
     const q = query(storesCollection, orderBy("areaId"), orderBy(documentId()));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-        const fetchedStores = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        allStores = fetchedStores; // Lưu lại toàn bộ danh sách
+        let fetchedStores = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // Lọc danh sách cửa hàng cho vai trò STORE_INCHARGE
+        const currentUser = window.currentUser;
+        if (currentUser && currentUser.roleId === 'STORE_INCHARGE' && Array.isArray(currentUser.managedStoreIds)) {
+            // Chỉ giữ lại các cửa hàng mà SI này quản lý
+            console.log('[Store Management] SI detected. Filtering for managed stores:', currentUser.managedStoreIds);
+            fetchedStores = fetchedStores.filter(store => currentUser.managedStoreIds.includes(store.id));
+        }
+
+        allStores = fetchedStores; // Lưu lại toàn bộ danh sách (đã được lọc nếu cần)
         renderStoreList(allStores);
     }, (error) => {
         console.error("[Store] Lỗi khi lắng nghe thay đổi cửa hàng (onSnapshot):", error);
         showToast("Mất kết nối tới dữ liệu cửa hàng.", "error");
+        const listElement = document.getElementById('store-list');
+        if (listElement) {
+            listElement.innerHTML = `<tr><td colspan="6" class="text-center py-10">
+                <div class="text-red-500"><i class="fas fa-exclamation-triangle fa-lg mr-2"></i>Không thể tải danh sách cửa hàng. Vui lòng kiểm tra kết nối mạng và thử tải lại trang.</div>
+            </td></tr>`;
+        }
     });
     // Lưu lại hàm hủy listener để dọn dẹp khi chuyển trang
     if (!domController.signal.aborted) {

@@ -367,7 +367,8 @@ function initializeDevMenu() {
                     roleId: selectedPerson.roleId,
                     storeId: selectedPerson.storeId || null, // Thêm dòng này
                     managedAreaIds: selectedPerson.managedAreaIds || null,
-                    managedRegionId: selectedPerson.managedRegionId || null
+                    managedRegionId: selectedPerson.managedRegionId || null,
+                    managedStoreIds: selectedPerson.managedStoreIds || null // Bổ sung trường còn thiếu
                 };
                 localStorage.setItem(SIMULATED_USER_STORAGE_KEY, JSON.stringify(simulatedUser));
                 window.showToast(`Chuyển sang người dùng: ${selectedPerson.name} (${selectedPerson.roleId})`, 'info');

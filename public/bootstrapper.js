@@ -75,16 +75,19 @@ async function bootstrapApp() {
     // Khởi tạo biến toàn cục để lưu thông tin người dùng hiện tại
     window.currentUser = null;
     const SIMULATED_USER_STORAGE_KEY = 'simulatedUser';
-
+    
     // Đọc thông tin người dùng mô phỏng từ localStorage
     const simulatedUserString = localStorage.getItem(SIMULATED_USER_STORAGE_KEY);
     if (simulatedUserString) {
         try {
             window.currentUser = JSON.parse(simulatedUserString);
+            console.log('[Bootstrapper] Simulating user:', window.currentUser);
         } catch (e) {
             console.error("Bootstrapper: Lỗi khi phân tích dữ liệu người dùng mô phỏng.", e);
             localStorage.removeItem(SIMULATED_USER_STORAGE_KEY);
         }
+    } else {
+        console.log('[Bootstrapper] No simulated user found. Defaulting to ADMIN.');
     }
 
     // Tải song song dữ liệu cửa hàng và vai trò để tăng tốc độ
@@ -93,12 +96,14 @@ async function bootstrapApp() {
         fetchRoles()
     ]);
 
-    // Gắn thông tin `level` vào currentUser nếu có
-    if (window.currentUser && window.currentUser.roleId) {
+    // Nếu không có người dùng mô phỏng, mặc định là Admin
+    if (!window.currentUser) {
+        window.currentUser = { roleId: 'ADMIN', name: 'Admin', level: 99 };
+    } 
+    // Nếu có người dùng, gắn thêm thông tin `level` vào
+    else if (window.currentUser.roleId) {
         const userRoleData = allRoles.find(role => role.id === window.currentUser.roleId);
         window.currentUser.level = userRoleData ? userRoleData.level : 0; // Mặc định level 0 nếu không tìm thấy
-    } else if (!window.currentUser) { // Gán level cho Admin
-        window.currentUser = { roleId: 'ADMIN', name: 'Admin', level: 99 };
     }
 
     // Tải các thành phần layout SAU KHI đã xác định được currentUser
