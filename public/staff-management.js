@@ -88,6 +88,11 @@ function renderEmployeeList(employeeList) {
                 const managedStoresInArea = allStores.filter(s => s.areaId === managedArea?.id);
                 storeInfoTitle = managedStoresInArea.length > 0 ? `Quản lý các cửa hàng:\n${managedStoresInArea.map(s => `• ${s.name}`).join('\n')}` : 'Chưa có cửa hàng trong khu vực';
                 break;
+            case 'STORE_INCHARGE':
+                const managedStore = allStores.find(s => s.id === employee.storeId);
+                storeInfoText = managedStore ? managedStore.name : (employee.storeId || 'N/A');
+                storeInfoTitle = `Quản lý: ${allStores.filter(s => employee.managedStoreIds?.includes(s.id)).map(s => s.name).join(', ')}`;
+                break;
             case 'REGIONAL_MANAGER':
                 const managedRegion = allRegions.find(r => r.id === employee.managedRegionId);
                 storeInfoText = managedRegion ? managedRegion.name : 'Miền không xác định';
@@ -291,6 +296,14 @@ async function fetchAndRenderEmployees(direction = 'first') {
         ...regionalManagerSnap.docs.map(doc => ({ id: doc.id, ...doc.data()})),
     ].map(person => {
         // Gắn level vào mỗi nhân viên để sắp xếp
+        // Xử lý đặc biệt cho STORE_INCHARGE để hiển thị đúng trong bảng
+        if (person.roleId === 'STORE_INCHARGE') {
+            // Để hiển thị trong cột cửa hàng, ta có thể gán tạm storeId là cửa hàng đầu tiên họ quản lý
+            // Hoặc để trống và chỉ hiển thị ở tooltip. Ở đây, ta gán storeId để có thể lọc.
+            if (Array.isArray(person.managedStoreIds) && person.managedStoreIds.length > 0) {
+                person.storeId = person.managedStoreIds[0];
+            }
+        }
         const role = allRoles.find(r => r.id === person.roleId);
         return { ...person, level: role ? (role.level || 0) : 0 };
     });
@@ -299,9 +312,15 @@ async function fetchAndRenderEmployees(direction = 'first') {
 
     // 1. Áp dụng Filters (where)
     if (Object.keys(filters).length > 0) {
-        allPersonnel = allPersonnel.filter(person => {
-            return Object.keys(filters).every(column => {
-                return person[column] === filters[column];
+        allPersonnel = allPersonnel.filter(person => {            
+            return Object.entries(filters).every(([column, value]) => {
+                // Xử lý logic lọc đặc biệt cho STORE_INCHARGE trên cột storeId
+                if (column === 'storeId' && person.roleId === 'STORE_INCHARGE') {
+                    // Nếu là SI, kiểm tra xem cửa hàng được lọc có nằm trong danh sách quản lý của họ không
+                    return person.managedStoreIds?.includes(value);
+                }
+                // Logic lọc mặc định cho các trường hợp khác
+                return person[column] === value;
             });
         });
     }

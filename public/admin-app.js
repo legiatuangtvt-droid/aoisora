@@ -8,8 +8,8 @@ import { initializeLayoutController } from './layout-controller.js';
 
 // Import tất cả các module trang
 import * as dailySchedule from './daily-schedule.js';
-import * as staff from './staff.js';
-import * as store from './store.js';
+import * as staffManagement from './staff-management.js';
+import * as storeManagement from './store-management.js';
 import * as dailyTemplates from './daily-templates.js';
 import * as shiftCodes from './shift-codes.js';
 import * as taskGroups from './task-groups.js';
@@ -19,8 +19,8 @@ import * as workforceDispatch from './workforce-dispatch.js';
 // Map tất cả các trang với module tương ứng
 const allPages = {
     'daily-schedule.html': { module: dailySchedule, title: 'Lịch Hàng Ngày' },
-    'staff.html': { module: staff, title: 'Quản Lý Nhân Viên' },
-    'store.html': { module: store, title: 'Quản Lý Cửa Hàng' },
+    'staff-management.html': { module: staffManagement, title: 'Quản Lý Nhân Viên' },
+    'store-management.html': { module: storeManagement, title: 'Quản Lý Cửa Hàng' },
     'daily-templates.html': { module: dailyTemplates, title: 'Quản Lý Mẫu Ngày' },
     'shift-codes.html': { module: shiftCodes, title: 'Quản Lý Mã Ca Làm Việc' },
     'task-groups.html': { module: taskGroups, title: 'Quản Lý Nhóm Công Việc' },

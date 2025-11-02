@@ -40,5 +40,13 @@ export function loadLayoutComponents() {
             
             document.getElementById('sidebar-placeholder').innerHTML = sidebarTemplate.innerHTML;
             document.getElementById('header-placeholder').innerHTML = headerTemplate.innerHTML;
+
+            // Sau khi chèn sidebar, kiểm tra và hiển thị menu "Tổ chức" cho STORE_INCHARGE
+            if (currentUser && currentUser.roleId === 'STORE_INCHARGE') {
+                const organizationNavGroup = document.querySelector('.nav-group-organization');
+                if (organizationNavGroup) {
+                    organizationNavGroup.classList.remove('hidden');
+                }
+            }
         });
 }
