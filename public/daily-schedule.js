@@ -153,20 +153,6 @@ function listenForScheduleChanges(dateString) {
         });
         currentScheduleData = schedules;
 
-        // DEBUG LOG: Phân tích dữ liệu lịch làm việc đã tải về cho cửa hàng và ngày được chọn
-        const shiftCounts = currentScheduleData.reduce((acc, schedule) => {
-            const shiftCode = schedule.shift || 'UNKNOWN';
-            acc[shiftCode] = (acc[shiftCode] || 0) + 1;
-            return acc;
-        }, {});
-
-        console.groupCollapsed(`[DEBUG] Phân tích lịch làm việc cho Store ID: ${selectedStoreId} | Ngày: ${dateString}`);
-        console.log(`Tổng số ca đã phân công: ${currentScheduleData.length}`);
-        console.log('Thống kê mã ca:', shiftCounts);
-        console.log('Dữ liệu chi tiết:', currentScheduleData);
-        console.groupEnd();
-        // KẾT THÚC DEBUG LOG
-
         // --- LOGIC SẮP XẾP MỚI ---
         if (dailyTemplate && dailyTemplate.shiftMappings) {
             currentScheduleData.sort((a, b) => {

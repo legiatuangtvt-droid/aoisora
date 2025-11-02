@@ -1,5 +1,5 @@
 import { db } from './firebase.js';
-import { writeBatch, doc, serverTimestamp, collection, getDocs, query, orderBy, where } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { writeBatch, doc, serverTimestamp, collection, getDocs, query, orderBy, where, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 let allRoles = [];
 let allEmployees = [];
@@ -577,6 +577,51 @@ async function applyTemplateToAllStores() {
             return;
         }
 
+        // --- TẢI DỮ LIỆU BỔ SUNG CHO QUY TẮC 4 (CÂN BẰNG) ---
+        // Tải lịch sử làm việc trong 2 tháng gần nhất để tính toán tỷ lệ hiện tại
+        const now = new Date();
+        const startDate = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+        const endDate = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
+        const historyQuery = query(collection(db, 'schedules'),
+            where('date', '>=', formatLocalDate(startDate)),
+            where('date', '<=', formatLocalDate(endDate))
+        );
+        const [workPositionsSnap, historySnap, shiftCodesSnap] = await Promise.all([
+            getDocs(collection(db, 'work_positions')),
+            getDocs(historyQuery),
+            getDoc(doc(db, 'system_configurations', 'shift_codes'))
+        ]);
+        const allWorkPositions = workPositionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const scheduleHistory = historySnap.docs.map(doc => doc.data());
+        const allShiftCodes = shiftCodesSnap.exists() ? shiftCodesSnap.data().codes : [];
+
+        // --- TÍNH TOÁN TỶ LỆ LÀM VIỆC HIỆN TẠI CHO TẤT CẢ NHÂN VIÊN (QUY TẮC 4) ---
+        const employeePositionHours = new Map(); // Map<employeeId, Map<positionName, totalHours>>
+        scheduleHistory.forEach(schedule => {
+            const { employeeId, positionId, shift } = schedule;
+            if (!employeeId || !positionId || !shift) return;
+
+            const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === shift);
+            if (!shiftInfo || !shiftInfo.duration) return; // Bỏ qua nếu không tìm thấy ca hoặc ca không có số giờ
+
+            // Tìm tên vị trí từ ID
+            const positionInfo = allWorkPositions.find(p => p.id === positionId);
+            if (!positionInfo) return;
+            const positionName = positionInfo.name;
+
+            if (!employeePositionHours.has(employeeId)) {
+                const positionMap = new Map();
+                allWorkPositions.forEach(p => positionMap.set(p.name, 0));
+                employeePositionHours.set(employeeId, positionMap);
+            }
+
+            const currentHoursMap = employeePositionHours.get(employeeId);
+            if (currentHoursMap.has(positionName)) {
+                currentHoursMap.set(positionName, currentHoursMap.get(positionName) + shiftInfo.duration);
+            }
+        });
+
+
         window.showToast(`Bắt đầu tạo lịch cho ngày ${dateString} từ mẫu "${template.name}"...`, 'info');
 
         // 4. Lấy dữ liệu cần thiết
@@ -668,15 +713,29 @@ async function applyTemplateToAllStores() {
             // --- BƯỚC 3: PHÂN CÔNG CÁC SUẤT CÒN LẠI (QUY TẮC 1 & 4) ---
             const remainingSlots = slotsToFill.filter(slot => !slot.employeeId);
             for (const slot of remainingSlots) {
-                if (availableEmployees.length > 0) {
-                    // TODO: Có thể thêm logic sắp xếp `availableEmployees` theo tiêu chí balance (quy tắc 4) ở đây.
-                    // Hiện tại, đang lấy nhân viên đầu tiên trong danh sách còn lại.
-                    const employeeToAssign = availableEmployees.shift(); // Lấy và xóa nhân viên đầu tiên
-                    slot.employeeId = employeeToAssign.id;
-                } else {
+                if (availableEmployees.length === 0) {
                     // Nếu hết nhân viên mà vẫn còn suất, suất đó sẽ bị bỏ trống.
                     console.warn(`Cửa hàng ${store.name} không đủ nhân viên để lấp đầy suất ${slot.positionId} (${slot.shiftCode})`);
+                    continue;
                 }
+
+                // Sắp xếp nhân viên còn lại dựa trên "độ thiếu hụt" vị trí của slot hiện tại
+                availableEmployees.sort((a, b) => {
+                    const positionInfo = allWorkPositions.find(p => p.id === slot.positionId);
+                    const targetBalance = positionInfo ? (positionInfo.balance / 100) : 0;
+
+                    const getShortage = (employeeId) => {
+                        const positionHours = employeePositionHours.get(employeeId);
+                        const totalHours = positionHours ? Array.from(positionHours.values()).reduce((sum, h) => sum + h, 0) : 0;
+                        const currentPercentage = totalHours > 0 ? ((positionHours?.get(slot.positionId) || 0) / totalHours) : 0;
+                        return targetBalance - currentPercentage;
+                    };
+
+                    return getShortage(b.id) - getShortage(a.id); // Sắp xếp giảm dần, người thiếu hụt nhiều nhất lên đầu
+                });
+
+                const employeeToAssign = availableEmployees.shift(); // Lấy người phù hợp nhất
+                slot.employeeId = employeeToAssign.id;
             }
 
             // --- BƯỚC 4: TẠO BẢN GHI LỊCH TRÌNH TỪ CÁC SUẤT ĐÃ PHÂN CÔNG ---
