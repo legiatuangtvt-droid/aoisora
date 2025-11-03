@@ -667,6 +667,53 @@ async function fetchAndRenderTemplates() {
 }
 
 /**
+ * (Dành cho HQ) Tìm và hiển thị trạng thái áp dụng của mẫu đang được chọn.
+ * @param {string} templateId ID của mẫu đang được chọn.
+ */
+async function showTemplateApplyStatus(templateId) {
+    const statusContainer = document.getElementById('template-display-container');
+    const statusDisplay = document.getElementById('template-name-display');
+    if (!statusContainer || !statusDisplay) return;
+
+    if (!templateId || templateId === 'new') {
+        statusContainer.classList.add('hidden');
+        return;
+    }
+
+    statusDisplay.textContent = 'Đang kiểm tra...';
+    statusContainer.classList.remove('hidden');
+
+    try {
+        const plansQuery = query(
+            collection(db, 'monthly_plans'),
+            where('templateId', '==', templateId),
+            orderBy('cycleStartDate', 'desc'),
+            limit(1)
+        );
+        const plansSnap = await getDocs(plansQuery);
+ 
+        if (plansSnap.empty) {
+            statusDisplay.textContent = 'Chưa được áp dụng cho chu kỳ nào.';
+        } else {
+            const latestPlan = plansSnap.docs[0].data();
+            // Tìm trong lịch sử để lấy ngày triển khai chính xác
+            const hqAppliedEntry = latestPlan.history?.find(h => h.status === 'HQ_APPLIED');
+            if (hqAppliedEntry && hqAppliedEntry.timestamp) {
+                const deploymentDate = hqAppliedEntry.timestamp.toDate().toLocaleDateString('vi-VN');
+                statusDisplay.textContent = `Đã triển khai đến các Region Manager vào ngày ${deploymentDate}.`;
+            } else {
+                // Fallback nếu không tìm thấy lịch sử
+                const startDate = new Date(latestPlan.cycleStartDate).toLocaleDateString('vi-VN');
+                statusDisplay.textContent = `Đã áp dụng cho chu kỳ từ ${startDate}. Trạng thái: ${latestPlan.status}`;
+            }
+        }
+    } catch (error) {
+        console.error("Lỗi khi kiểm tra trạng thái mẫu:", error);
+        statusDisplay.textContent = 'Lỗi khi kiểm tra trạng thái.';
+    }
+}
+
+/**
  * Tải dữ liệu của một mẫu cụ thể và hiển thị lên lưới.
  * @param {string} templateId ID của mẫu cần tải.
  */
@@ -679,6 +726,12 @@ async function loadTemplate(templateId) {
 
     currentTemplateId = templateId;
     renderGrid(); // Render lại lưới trống trước
+
+    // Đối với HQ, hiển thị trạng thái áp dụng của mẫu đã chọn
+    const currentUser = window.currentUser;
+    if (currentUser && (currentUser.roleId === 'HQ_STAFF' || currentUser.roleId === 'ADMIN')) {
+        showTemplateApplyStatus(templateId);
+    }
 
     // Hiển thị các nút cho chế độ xem/sửa
     document.getElementById('new-template-btn').classList.remove('hidden');
@@ -801,6 +854,11 @@ function switchToCreateNewMode() {
     document.getElementById('new-template-btn').classList.add('hidden');
     document.getElementById('delete-template-btn').classList.add('hidden');
 
+    // Ẩn luôn phần hiển thị trạng thái
+    const statusContainer = document.getElementById('template-display-container');
+    if (statusContainer) {
+        statusContainer.classList.add('hidden');
+    }
     // Reset giá trị Manhour
     const manhourInput = document.getElementById('template-manhour-input');
     const manhourDisplay = document.getElementById('total-manhour-display');
@@ -851,18 +909,17 @@ export async function init() {
         document.getElementById('save-template-btn')?.classList.add('hidden');
         document.getElementById('new-template-btn')?.classList.add('hidden');
         document.getElementById('delete-template-btn')?.classList.add('hidden');
-
-        // Hiển thị nút "Gửi" và khu vực theo dõi kế hoạch
-        const sendPlanBtn = document.getElementById('send-plan-btn');
-        if (sendPlanBtn) {
-            sendPlanBtn.classList.remove('hidden');
-            sendPlanBtn.addEventListener('click', sendMonthlyPlan, { signal });
-        }
         
+        // Hiển thị container tên mẫu cho RM/AM
+        document.getElementById('template-display-container')?.classList.remove('hidden');
+
         // Tải kế hoạch và mẫu được áp dụng gần nhất cho RM/AM
         await loadAppliedPlanForManager();
 
     } else if (currentUser && (currentUser.roleId === 'HQ_STAFF' || currentUser.roleId === 'ADMIN')) {
+        // Đối với HQ, ẩn container tên mẫu mặc định, nó sẽ chỉ hiện khi cần
+        document.getElementById('template-display-container')?.classList.add('hidden');
+
         // Logic cũ cho HQ/Admin: hiển thị nút Apply
         const hqApplyBtn = document.getElementById('apply-template-hq-btn');
         if (hqApplyBtn) {
@@ -924,8 +981,8 @@ export function cleanup() {
  */
 async function applyTemplateForHq() {
     const btn = document.getElementById('apply-template-hq-btn');
-    const btnSpan = btn.querySelector('span');
-    btn.disabled = true;    if (btnSpan) btnSpan.textContent = 'Đang xử lý...';
+    const btnSpan = btn?.querySelector('span');
+    if(btn) btn.disabled = true;    if (btnSpan) btnSpan.textContent = 'Đang xử lý...';
 
     try {
         // 1. Kiểm tra đã chọn template chưa
@@ -964,8 +1021,8 @@ async function applyTemplateForHq() {
         };
 
         const selectedManagerIds = await window.showCheckboxListPrompt(
-            'Chọn Quản lý Miền để áp dụng lịch trình:',
-            'Áp dụng Lịch trình cho Miền',
+            'Chọn Quản lý Miền để triển khai kế hoạch:',
+            'Triển khai Kế hoạch cho Miền',
             managerOptions
         );
 
@@ -1048,7 +1105,7 @@ async function applyTemplateForHq() {
         window.showToast(`Đã xảy ra lỗi: ${error.message}`, 'error');
     } finally {
         btn.disabled = false;
-        if (btnSpan) btnSpan.textContent = 'Áp dụng cho Miền';
+        if (btnSpan) btnSpan.textContent = 'Triển khai';
     }
 }
 
@@ -1147,22 +1204,6 @@ function renderPlanTracker(plan) {
     } else {
         commentList.innerHTML = `<p class="text-xs text-gray-400 italic">Chưa có bình luận.</p>`;
     }
-}
-
-/**
- * (Dành cho RM/AM) Gửi kế hoạch đi (chuyển trạng thái).
- */
-async function sendMonthlyPlan() {
-    // Logic để chuyển trạng thái kế hoạch
-    // Ví dụ: RM đang ở bước 1, nhấn nút sẽ chuyển sang bước 2
-    // Cần xác định trạng thái tiếp theo dựa trên vai trò và trạng thái hiện tại.
-    // Đây là một ví dụ đơn giản, cần được mở rộng cho đầy đủ các bước.
-    if (!currentMonthlyPlan) {
-        window.showToast('Không có kế hoạch nào để gửi đi.', 'error');
-        return;
-    }
-    // Logic chuyển trạng thái sẽ được thêm ở đây...
-    window.showToast('Chức năng "Gửi Kế hoạch" đang được phát triển.', 'info');
 }
 
 /**

@@ -641,6 +641,51 @@ body.sidebar-expanded #sidebar .sidebar-text {
   }
 }
 
+/* Chuyển định nghĩa form vào đây để các lớp utility có thể ghi đè */
+
+.form-input, .form-select, .form-textarea {
+  display: block;
+  width: 100%;
+  border-radius: 0.375rem;
+  border-width: 1px;
+  --tw-border-opacity: 1;
+  border-color: rgb(209 213 219 / var(--tw-border-opacity, 1));
+  --tw-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --tw-shadow-colored: 0 1px 2px 0 var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  /* Tương đương padding: 0.5rem 0.75rem */
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  --tw-border-opacity: 1;
+  border-color: rgb(99 102 241 / var(--tw-border-opacity, 1));
+  --tw-ring-opacity: 1;
+  --tw-ring-color: rgb(99 102 241 / var(--tw-ring-opacity, 1));
+}
+
+/* Form bên trong modal */
+
+.modal-form {
+  margin-top: 1rem;
+}
+
+.modal-form > .form-group ~ .form-group {
+  margin-top: 1rem;
+}
+
+/* Lớp mới để đảm bảo chiều rộng tối thiểu cho input */
+
+.form-input-min {
+  min-width: 120px;
+  /* Đặt chiều rộng tối thiểu */
+  padding-left: 0.75rem;
+  /* Thêm padding để nội dung không bị sát viền */
+}
+
 #sidebar-pin-btn.pinned {
   --tw-bg-opacity: 1;
   background-color: rgb(51 65 85 / var(--tw-bg-opacity, 1));
@@ -1048,6 +1093,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
   height: 100vh;
 }
 
+.max-h-40 {
+  max-height: 10rem;
+}
+
 .max-h-48 {
   max-height: 12rem;
 }
@@ -1056,16 +1105,8 @@ body.sidebar-expanded #sidebar .sidebar-text {
   max-height: 20rem;
 }
 
-.max-h-60 {
-  max-height: 15rem;
-}
-
 .max-h-96 {
   max-height: 24rem;
-}
-
-.max-h-40 {
-  max-height: 10rem;
 }
 
 .w-10 {
@@ -1146,6 +1187,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
 
 .w-\[70px\] {
   width: 70px;
+}
+
+.w-auto {
+  width: auto;
 }
 
 .w-full {
@@ -1864,6 +1909,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
   padding-left: 0.75rem;
 }
 
+.pr-2 {
+  padding-right: 0.5rem;
+}
+
 .pr-3 {
   padding-right: 0.75rem;
 }
@@ -1874,10 +1923,6 @@ body.sidebar-expanded #sidebar .sidebar-text {
 
 .pt-4 {
   padding-top: 1rem;
-}
-
-.pr-2 {
-  padding-right: 0.5rem;
 }
 
 .text-left {
@@ -2628,35 +2673,6 @@ html, body {
 .modal-close-btn:hover {
   color: #4b5567;
   /* text-gray-600 */
-}
-
-/* Form bên trong modal */
-
-.modal-form {
-  margin-top: 1rem;
-  /* mt-4 */
-}
-
-.modal-form > .form-group ~ .form-group {
-  margin-top: 1rem;
-  /* space-y-4 */
-}
-
-/* Các thành phần của form */
-
-.form-input, .form-select, .form-textarea {
-  margin-top: 0.25rem;
-  /* mt-1 */
-  display: block;
-  width: 100%;
-  border-radius: 0.375rem;
-  /* rounded-md */
-  border-width: 1px;
-  border-color: #d1d5db;
-  /* border-gray-300 */
-  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  /* shadow-sm */
-  padding: 0.5rem 0.75rem;
 }
 
 .form-input:focus, .form-select:focus, .form-textarea:focus {
