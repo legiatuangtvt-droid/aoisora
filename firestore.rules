@@ -57,7 +57,8 @@ service cloud.firestore { // Cấu hình cho Firestore
 
     // Cho phép đọc/ghi vào collection mẫu lịch hàng ngày
     match /daily_templates/{templateId} {
-      allow read, write: if true;
+      allow get, write: if true; // Cho phép đọc 1 doc cụ thể và ghi
+      allow list: if true;       // Cho phép đọc danh sách (cần cho query với orderBy)
     }
 
     // Cho phép đọc/ghi vào collection đăng ký ca làm việc của nhân viên
@@ -82,6 +83,11 @@ service cloud.firestore { // Cấu hình cho Firestore
 
     // Cho phép đọc/ghi vào collection RE Tasks
     match /re_tasks/{taskId} {
+      allow read, write: if true;
+    }
+
+    // Cho phép đọc/ghi vào collection kế hoạch tháng (dùng cho quy trình 7 bước)
+    match /monthly_plans/{planId} {
       allow read, write: if true;
     }
   }

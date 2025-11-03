@@ -1,11 +1,12 @@
 import { db } from './firebase.js';
-import { collection, getDocs, query, orderBy, doc, setDoc, serverTimestamp, addDoc, deleteDoc, getDoc, where, writeBatch } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { collection, getDocs, query, orderBy, doc, setDoc, serverTimestamp, addDoc, deleteDoc, getDoc, where, writeBatch, limit } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 let sortableInstances = [];
 let domController = null;
 
 let allTemplates = [];
 let currentTemplateId = null;
+let currentMonthlyPlan = null; // Biến để lưu kế hoạch tháng hiện tại cho RM
 
 let allPersonnel = []; // For HQ Apply
 let allWorkPositions = []; // Biến để lưu danh sách vị trí công việc
@@ -841,8 +842,28 @@ export async function init() {
     await fetchAndRenderTemplates(); // Tải danh sách mẫu vào dropdown
     switchToCreateNewMode(); // Đặt trạng thái mặc định là tạo mới
 
-    // Show HQ Apply button if user is HQ_STAFF
-    if (window.currentUser && ['HQ_STAFF', 'ADMIN', 'REGIONAL_MANAGER', 'AREA_MANAGER'].includes(window.currentUser.roleId)) {
+    const currentUser = window.currentUser;
+
+    // Logic mới cho các vai trò khác nhau
+    if (currentUser && (currentUser.roleId === 'REGIONAL_MANAGER' || currentUser.roleId === 'AREA_MANAGER')) {
+        // Đối với RM/AM, ẩn bộ chọn và nút tạo/xóa/lưu
+        document.getElementById('template-selector-container')?.classList.add('hidden');
+        document.getElementById('save-template-btn')?.classList.add('hidden');
+        document.getElementById('new-template-btn')?.classList.add('hidden');
+        document.getElementById('delete-template-btn')?.classList.add('hidden');
+
+        // Hiển thị nút "Gửi" và khu vực theo dõi kế hoạch
+        const sendPlanBtn = document.getElementById('send-plan-btn');
+        if (sendPlanBtn) {
+            sendPlanBtn.classList.remove('hidden');
+            sendPlanBtn.addEventListener('click', sendMonthlyPlan, { signal });
+        }
+        
+        // Tải kế hoạch và mẫu được áp dụng gần nhất cho RM/AM
+        await loadAppliedPlanForManager();
+
+    } else if (currentUser && (currentUser.roleId === 'HQ_STAFF' || currentUser.roleId === 'ADMIN')) {
+        // Logic cũ cho HQ/Admin: hiển thị nút Apply
         const hqApplyBtn = document.getElementById('apply-template-hq-btn');
         if (hqApplyBtn) {
             hqApplyBtn.classList.remove('hidden');
@@ -889,7 +910,7 @@ export function cleanup() {
         domController = null;
     }
     // Dọn dẹp các listener bằng cách clone và thay thế node
-    ['save-template-btn', 'new-template-btn', 'delete-template-btn', 'template-selector', 'apply-template-hq-btn'].forEach(id => {
+    ['save-template-btn', 'new-template-btn', 'delete-template-btn', 'template-selector', 'apply-template-hq-btn', 'send-plan-btn'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
             const newEl = el.cloneNode(true);
@@ -931,14 +952,14 @@ async function applyTemplateForHq() {
         const allRegions = regionsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
         const managerOptions = {
-            headers: ['Quản lý', 'Miền', 'Số cửa hàng'],
+            headers: ['Miền', 'Quản lý', 'Số cửa hàng'],
             rows: regionalManagers.map(rm => {
                 const region = allRegions.find(r => r.id === rm.managedRegionId);
                 const areasInRegion = allAreas.filter(a => a.regionId === rm.managedRegionId);
                 const areaIds = areasInRegion.map(a => a.id);
                 const storeCount = allStores.filter(s => areaIds.includes(s.areaId)).length;
 
-                return { value: rm.id, cells: [rm.name, region?.name || 'N/A', storeCount] };
+                return { value: rm.id, cells: [region?.name || 'N/A', rm.name, storeCount] };
             })
         };
 
@@ -975,7 +996,29 @@ async function applyTemplateForHq() {
         const formattedStartDate = startDate.toLocaleDateString('vi-VN');
         window.showToast(`Mẫu sẽ được áp dụng từ ngày ${formattedStartDate}.`, 'info', 4000);
 
+        const batch = writeBatch(db);
+
         // 4. Lấy danh sách cửa hàng thuộc tất cả các miền đã chọn
+        // --- LOGIC MỚI: Tạo bản ghi kế hoạch cho từng miền ---
+        for (const manager of selectedManagers) {
+            const newPlan = {
+                regionId: manager.managedRegionId,
+                regionManagerId: manager.id,
+                cycleStartDate: dateString,
+                templateId: template.id,
+                templateName: template.name,
+                status: 'HQ_APPLIED', // Step 1
+                history: [{
+                    status: 'HQ_APPLIED',
+                    timestamp: new Date(), // Sử dụng new Date() thay vì serverTimestamp() trong mảng
+                    userId: window.currentUser.id,
+                    userName: window.currentUser.name
+                }],
+                comments: []
+            };
+            const planRef = doc(collection(db, 'monthly_plans'));
+            batch.set(planRef, newPlan);
+        }
         const selectedRegionIds = selectedManagers.map(rm => rm.managedRegionId);
         const managedAreaIds = allAreas.filter(a => selectedRegionIds.includes(a.regionId)).map(a => a.id);
         const storesInRegion = allStores.filter(s => managedAreaIds.includes(s.areaId));
@@ -986,9 +1029,9 @@ async function applyTemplateForHq() {
 
         // 5. Hỏi xác nhận
         const confirmed = await window.showConfirmation(
-            `Bạn có chắc chắn muốn XÓA TẤT CẢ lịch làm việc của ngày ${dateString} tại ${storesInRegion.length} cửa hàng thuộc các miền của [${selectedManagerNames}] và tạo lại từ mẫu "${template.name}" không?`,
-            'Xác nhận tạo lịch hàng loạt',
-            'Xóa và Tạo mới',
+            `Bạn có chắc chắn muốn gửi kế hoạch dựa trên mẫu <strong>"${template.name}"</strong> đến các miền của [${selectedManagerNames}] cho chu kỳ bắt đầu từ ngày <strong>${formattedStartDate}</strong> không?`,
+            'Xác nhận gửi kế hoạch',
+            'Gửi Kế hoạch',
             'Hủy'
         );
 
@@ -997,124 +1040,8 @@ async function applyTemplateForHq() {
             return;
         }
 
-        window.showToast(`Bắt đầu tạo lịch cho ngày ${dateString} từ mẫu "${template.name}"...`, 'info');
-
-        // 6. Bắt đầu quá trình áp dụng (tương tự logic trong dev-menu)
-        const { schedule: templateSchedule, shiftMappings } = template;
-        const batch = writeBatch(db);
-
-        // Xóa lịch trình cũ trong ngày đã chọn cho các cửa hàng thuộc miền
-        const storeIdsInRegion = storesInRegion.map(s => s.id);
-        const oldSchedulesQuery = query(collection(db, 'schedules'), where('date', '==', dateString), where('storeId', 'in', storeIdsInRegion));
-        const oldSchedulesSnap = await getDocs(oldSchedulesQuery);
-        oldSchedulesSnap.forEach(doc => batch.delete(doc.ref));
-        if (!oldSchedulesSnap.empty) {
-            window.showToast(`Đã xóa ${oldSchedulesSnap.size} lịch làm việc cũ của ngày ${dateString}.`, 'info');
-        }
-
-        // Tải dữ liệu nhân viên và đăng ký ca
-        const employeesInRegionSnap = await getDocs(query(collection(db, 'employee'), where('storeId', 'in', storeIdsInRegion)));
-        const employeesInRegion = employeesInRegionSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-        const availabilityQuery = query(collection(db, 'staff_availability'), where('date', '==', dateString));
-        const availabilitySnap = await getDocs(availabilityQuery);
-        const allAvailabilities = availabilitySnap.docs.map(doc => doc.data());
-
-        let schedulesCreatedCount = 0;
-
-        for (const store of storesInRegion) {
-            const storeEmployees = employeesInRegion.filter(emp => emp.storeId === store.id && emp.status === 'ACTIVE');
-            if (storeEmployees.length === 0) continue;
-
-            let slotsToFill = Object.keys(shiftMappings).map(shiftId => ({
-                shiftId: shiftId,
-                shiftCode: shiftMappings[shiftId].shiftCode,
-                positionId: shiftMappings[shiftId].positionId,
-                employeeId: null
-            }));
-
-            let availableEmployees = [...storeEmployees];
-
-            // --- BƯỚC 1: PHÂN CÔNG LEADER ---
-            const leaderSlots = slotsToFill.filter(slot => slot.positionId === 'LEADER' && !slot.employeeId);
-            const leadersInStore = availableEmployees.filter(emp => emp.roleId.includes('LEADER'));
-
-            if (leaderSlots.length > 0 && leadersInStore.length > 0) {
-                let leaderIndex = 0;
-                for (const slot of leaderSlots) {
-                    const leaderToAssign = leadersInStore[leaderIndex % leadersInStore.length];
-                    slot.employeeId = leaderToAssign.id;
-                    availableEmployees = availableEmployees.filter(emp => emp.id !== leaderToAssign.id);
-                    leaderIndex++;
-                }
-            }
-
-            // --- BƯỚC 2: PHÂN CÔNG THEO ĐĂNG KÝ ƯU TIÊN ---
-            const employeeAvailabilities = allAvailabilities.filter(a => availableEmployees.some(e => e.id === a.employeeId));
-            employeeAvailabilities.sort((a, b) => (a.registrations[0]?.priority || 3) - (b.registrations[0]?.priority || 3));
-
-            for (const availability of employeeAvailabilities) {
-                if (!availableEmployees.some(e => e.id === availability.employeeId)) continue;
-
-                for (const registration of availability.registrations) {
-                    if (!registration.shiftCode) continue;
-
-                    const matchingSlot = slotsToFill.find(slot =>
-                        !slot.employeeId &&
-                        slot.shiftCode === registration.shiftCode &&
-                        slot.positionId !== 'LEADER'
-                    );
-
-                    if (matchingSlot) {
-                        matchingSlot.employeeId = availability.employeeId;
-                        availableEmployees = availableEmployees.filter(emp => emp.id !== availability.employeeId);
-                        break;
-                    }
-                }
-            }
-
-            // --- BƯỚC 3: PHÂN CÔNG CÁC SUẤT CÒN LẠI ---
-            const remainingSlots = slotsToFill.filter(slot => !slot.employeeId);
-            for (const slot of remainingSlots) {
-                if (availableEmployees.length === 0) {
-                    console.warn(`Cửa hàng ${store.name} không đủ nhân viên để lấp đầy suất ${slot.positionId} (${slot.shiftCode})`);
-                    continue;
-                }
-
-                // Sắp xếp ngẫu nhiên nhân viên còn lại để phân công
-                availableEmployees.sort(() => 0.5 - Math.random());
-                const employeeToAssign = availableEmployees.shift();
-                slot.employeeId = employeeToAssign.id;
-            }
-
-            // --- BƯỚC 4: TẠO BẢN GHI LỊCH TRÌNH ---
-            for (const filledSlot of slotsToFill) {
-                if (filledSlot.employeeId) {
-                    const tasks = (templateSchedule[filledSlot.shiftId] || []).map(task => ({
-                        groupId: task.groupId,
-                        startTime: task.startTime,
-                        taskCode: task.taskCode,
-                        name: task.taskName
-                    }));
-
-                    const newScheduleDoc = {
-                        date: dateString,
-                        employeeId: filledSlot.employeeId,
-                        storeId: store.id,
-                        shift: filledSlot.shiftCode,
-                        positionId: filledSlot.positionId,
-                        tasks,
-                        createdAt: serverTimestamp()
-                    };
-
-                    const scheduleRef = doc(collection(db, 'schedules'));
-                    batch.set(scheduleRef, newScheduleDoc);
-                    schedulesCreatedCount++;
-                }
-            }
-        }
-
         await batch.commit();
-        window.showToast(`Hoàn tất! Đã tạo ${schedulesCreatedCount} lịch làm việc cho ngày ${dateString} tại ${storesInRegion.length} cửa hàng.`, 'success', 5000);
+        window.showToast(`Hoàn tất! Đã gửi kế hoạch từ mẫu "${template.name}" đến ${selectedManagers.length} miền.`, 'success', 5000);
 
     } catch (error) {
         console.error("Lỗi khi áp dụng template cho miền:", error);
@@ -1123,6 +1050,119 @@ async function applyTemplateForHq() {
         btn.disabled = false;
         if (btnSpan) btnSpan.textContent = 'Áp dụng cho Miền';
     }
+}
+
+/**
+ * (Dành cho RM/AM) Tải kế hoạch và mẫu được áp dụng gần nhất.
+ */
+async function loadAppliedPlanForManager() {
+    const currentUser = window.currentUser;
+    if (!currentUser) return;
+
+    let regionIdToQuery = null;
+    if (currentUser.roleId === 'REGIONAL_MANAGER') {
+        regionIdToQuery = currentUser.managedRegionId;
+    } else if (currentUser.roleId === 'AREA_MANAGER') {
+        // Tìm regionId dựa trên areaId của AM
+        const areasSnap = await getDocs(query(collection(db, 'areas'), where('id', 'in', currentUser.managedAreaIds || ['dummy']), limit(1)));
+        if (!areasSnap.empty) {
+            regionIdToQuery = areasSnap.docs[0].data().regionId;
+        }
+    }
+
+    if (!regionIdToQuery) {
+        document.getElementById('template-name-display').textContent = 'Bạn chưa được phân công vào miền nào.';
+        renderGrid();
+        return;
+    }
+
+    // Tìm kế hoạch gần nhất cho miền này
+    const plansQuery = query(
+        collection(db, 'monthly_plans'),
+        where('regionId', '==', regionIdToQuery),
+        orderBy('cycleStartDate', 'desc'),
+        limit(1)
+    );
+
+    const plansSnap = await getDocs(plansQuery);
+    if (plansSnap.empty) {
+        document.getElementById('template-name-display').textContent = 'Chưa có mẫu nào được áp dụng cho miền của bạn.';
+        renderGrid();
+    } else {
+        const plan = { id: plansSnap.docs[0].id, ...plansSnap.docs[0].data() };
+        currentMonthlyPlan = plan;
+
+        // Hiển thị tên mẫu và tải dữ liệu mẫu
+        document.getElementById('template-name-display').textContent = plan.templateName || 'Mẫu không tên';
+        await loadTemplate(plan.templateId);
+
+        // Hiển thị thông tin theo dõi kế hoạch
+        renderPlanTracker(plan);
+    }
+}
+
+/**
+ * Hiển thị giao diện theo dõi tiến độ kế hoạch.
+ * @param {object} plan - Đối tượng kế hoạch tháng.
+ */
+function renderPlanTracker(plan) {
+    const container = document.getElementById('plan-tracker-container');
+    if (!container) return;
+
+    container.classList.remove('hidden');
+    const historyList = container.querySelector('#plan-history-list');
+    const commentList = container.querySelector('#plan-comments-list');
+
+    // Định nghĩa các bước
+    const steps = [
+        { id: 'HQ_APPLIED', label: '1. HQ gửi về RM' },
+        { id: 'RM_SENT_TO_STAFF', label: '2. RM gửi về Staff' },
+        { id: 'STAFF_REGISTERED', label: '3. Staff đăng ký' },
+        { id: 'SL_ADJUSTED', label: '4. SL điều chỉnh & gửi AM' },
+        { id: 'AM_DISPATCHED', label: '5. AM điều phối & gửi RM' },
+        { id_RM_DISPATCHED: 'RM_DISPATCHED', label: '6. RM điều phối & gửi HQ' },
+        { id: 'HQ_CONFIRMED', label: '7. HQ xác nhận & gửi Store' }
+    ];
+
+    // Hiển thị lịch sử
+    historyList.innerHTML = steps.map(step => {
+        const historyEntry = plan.history.find(h => h.status === step.id);
+        if (historyEntry) {
+            const timestamp = historyEntry.timestamp?.toDate().toLocaleString('vi-VN') || 'N/A';
+            return `<li class="text-green-600"><i class="fas fa-check-circle mr-2"></i><strong>${step.label}:</strong> Hoàn thành bởi ${historyEntry.userName} lúc ${timestamp}</li>`;
+        } else {
+            return `<li class="text-gray-400"><i class="far fa-circle mr-2"></i>${step.label}: Chưa thực hiện</li>`;
+        }
+    }).join('');
+
+    // Hiển thị bình luận
+    if (plan.comments && plan.comments.length > 0) {
+        commentList.innerHTML = plan.comments.map(comment => {
+            const timestamp = comment.timestamp?.toDate().toLocaleString('vi-VN') || 'N/A';
+            return `<div class="p-2 bg-gray-100 rounded-md">
+                        <p class="text-sm">${comment.text}</p>
+                        <p class="text-xs text-gray-500 text-right mt-1">- ${comment.userName} lúc ${timestamp}</p>
+                    </div>`;
+        }).join('');
+    } else {
+        commentList.innerHTML = `<p class="text-xs text-gray-400 italic">Chưa có bình luận.</p>`;
+    }
+}
+
+/**
+ * (Dành cho RM/AM) Gửi kế hoạch đi (chuyển trạng thái).
+ */
+async function sendMonthlyPlan() {
+    // Logic để chuyển trạng thái kế hoạch
+    // Ví dụ: RM đang ở bước 1, nhấn nút sẽ chuyển sang bước 2
+    // Cần xác định trạng thái tiếp theo dựa trên vai trò và trạng thái hiện tại.
+    // Đây là một ví dụ đơn giản, cần được mở rộng cho đầy đủ các bước.
+    if (!currentMonthlyPlan) {
+        window.showToast('Không có kế hoạch nào để gửi đi.', 'error');
+        return;
+    }
+    // Logic chuyển trạng thái sẽ được thêm ở đây...
+    window.showToast('Chức năng "Gửi Kế hoạch" đang được phát triển.', 'info');
 }
 
 /**

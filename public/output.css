@@ -1064,6 +1064,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
   max-height: 24rem;
 }
 
+.max-h-40 {
+  max-height: 10rem;
+}
+
 .w-10 {
   width: 2.5rem;
 }
@@ -1870,6 +1874,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
 
 .pt-4 {
   padding-top: 1rem;
+}
+
+.pr-2 {
+  padding-right: 0.5rem;
 }
 
 .text-left {

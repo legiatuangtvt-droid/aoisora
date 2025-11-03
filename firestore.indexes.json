@@ -199,6 +199,20 @@
         { "fieldPath": "roleId", "order": "DESCENDING" },
         { "fieldPath": "storeId", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "monthly_plans",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "regionId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "cycleStartDate",
+          "order": "DESCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": []
