@@ -8,7 +8,7 @@ let currentEditId = null;
 // --- Pagination State ---
 let allTasks = [];
 let currentPage = 1;
-let itemsPerPage = 10; // Giá trị mặc định, sẽ được tính toán lại
+const itemsPerPage = 10; // Hiển thị cố định 10 dòng trên mỗi trang
 
 /**
  * Render danh sách RE tasks ra bảng.
@@ -94,35 +94,6 @@ function renderPaginationControls() {
 }
 
 /**
- * Tính toán và cập nhật số lượng mục trên mỗi trang dựa trên chiều cao có sẵn.
- */
-function updateItemsPerPage() {
-    const tableContainer = document.getElementById('re-task-table-container');
-    const thead = tableContainer?.querySelector('thead');
-    if (!tableContainer || !thead) {
-        itemsPerPage = 10; // Fallback
-        return;
-    }
-
-    const containerHeight = tableContainer.clientHeight;
-    const headerHeight = thead.offsetHeight;
-    const availableBodyHeight = containerHeight - headerHeight;
-
-    // Ước tính chiều cao của một dòng. Giả sử là 53px (padding + line-height).
-    // Đây là một cách tiếp cận đơn giản, có thể cần điều chỉnh nếu style thay đổi.
-    const typicalRowHeight = 53; 
-
-    const calculatedItems = Math.floor(availableBodyHeight / typicalRowHeight);
-
-    // Đảm bảo luôn hiển thị ít nhất 1 mục
-    itemsPerPage = Math.max(1, calculatedItems);
-
-    // Đảm bảo trang hiện tại không vượt quá tổng số trang mới
-    const totalPages = Math.ceil(allTasks.length / itemsPerPage) || 1;
-    currentPage = Math.min(currentPage, totalPages);
-}
-
-/**
  * Render trang hiện tại của danh sách.
  */
 function renderCurrentPage() {
@@ -144,8 +115,8 @@ function listenForTaskChanges() {
     const q = query(tasksCollection, orderBy("createdAt", "desc"));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-        const tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        allTasks = tasks;
+        allTasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Bỏ tính toán số dòng động, chỉ render lại
         renderCurrentPage(); // Render lại trang hiện tại với dữ liệu mới
     }, (error) => {
         console.error("Lỗi khi lắng nghe thay đổi RE tasks:", error);
@@ -398,12 +369,6 @@ export function init() {
     document.getElementById('import-tasks-btn')?.addEventListener('click', openImportModal, { signal });
     document.getElementById('re-task-form')?.addEventListener('submit', handleFormSubmit, { signal });
     document.getElementById('import-tasks-form')?.addEventListener('submit', handleBulkImportSubmit, { signal });
-
-    // Tính toán lại số dòng khi kích thước cửa sổ thay đổi
-    window.addEventListener('resize', () => {
-        updateItemsPerPage();
-        renderCurrentPage();
-    }, { signal });
 
     // Gắn sự kiện cho phân trang
     document.getElementById('pagination-controls')?.addEventListener('click', (e) => {
