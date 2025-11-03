@@ -7,6 +7,7 @@ let currentEditId = null;
 
 // --- Pagination State ---
 let allTasks = [];
+let filteredTasks = [];
 let currentPage = 1;
 const itemsPerPage = 10; // Hiển thị cố định 10 dòng trên mỗi trang
 
@@ -59,7 +60,7 @@ function renderPaginationControls() {
     const paginationContainer = document.getElementById('pagination-controls');
     if (!paginationContainer) return;
 
-    const totalItems = allTasks.length;
+    const totalItems = filteredTasks.length;
     const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
 
     if (totalItems <= itemsPerPage) {
@@ -99,12 +100,26 @@ function renderPaginationControls() {
 function renderCurrentPage() {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
-    const tasksForPage = allTasks.slice(startIndex, endIndex);
+    const tasksForPage = filteredTasks.slice(startIndex, endIndex);
 
     renderTaskList(tasksForPage, startIndex);
     renderPaginationControls();
 }
 
+/**
+ * Lọc và render lại danh sách task dựa trên từ khóa tìm kiếm.
+ */
+function filterAndRender() {
+    const searchTerm = document.getElementById('search-task-input')?.value.toLowerCase() || '';
+    
+    if (searchTerm) {
+        filteredTasks = allTasks.filter(task => task.name.toLowerCase().includes(searchTerm));
+    } else {
+        filteredTasks = [...allTasks];
+    }
+    currentPage = 1; // Reset về trang đầu tiên mỗi khi tìm kiếm
+    renderCurrentPage();
+}
 
 /**
  * Lắng nghe các thay đổi từ collection `re_tasks` và render lại.
@@ -116,8 +131,8 @@ function listenForTaskChanges() {
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
         allTasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        // Bỏ tính toán số dòng động, chỉ render lại
-        renderCurrentPage(); // Render lại trang hiện tại với dữ liệu mới
+        // Sau khi lấy dữ liệu mới, áp dụng bộ lọc hiện tại và render lại
+        filterAndRender();
     }, (error) => {
         console.error("Lỗi khi lắng nghe thay đổi RE tasks:", error);
         window.showToast("Không thể tải danh sách công việc.", "error");
@@ -369,13 +384,16 @@ export function init() {
     document.getElementById('import-tasks-btn')?.addEventListener('click', openImportModal, { signal });
     document.getElementById('re-task-form')?.addEventListener('submit', handleFormSubmit, { signal });
     document.getElementById('import-tasks-form')?.addEventListener('submit', handleBulkImportSubmit, { signal });
+    
+    // Gắn sự kiện cho ô tìm kiếm
+    document.getElementById('search-task-input')?.addEventListener('input', filterAndRender, { signal });
 
     // Gắn sự kiện cho phân trang
     document.getElementById('pagination-controls')?.addEventListener('click', (e) => {
         const button = e.target.closest('.pagination-btn');
         if (!button || button.disabled) return;
 
-        const totalPages = Math.ceil(allTasks.length / itemsPerPage);
+        const totalPages = Math.ceil(filteredTasks.length / itemsPerPage);
         const action = button.dataset.page;
 
         if (action === 'prev' && currentPage > 1) currentPage--;

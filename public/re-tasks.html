@@ -22,8 +22,16 @@
         <!-- Content Area -->
         <main class="flex-1 overflow-hidden p-6 lg:p-8 bg-gray-50 flex flex-col">
             <div class="bg-white p-6 rounded-lg shadow-md flex flex-col flex-1 overflow-hidden">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-semibold text-gray-800 flex-shrink-0">RE Task List</h2>
+                <div class="flex justify-between items-center flex-wrap gap-4 mb-6">
+                    <div class="flex items-center gap-4">
+                        <h2 class="text-xl font-semibold text-gray-800 flex-shrink-0">RE Task List</h2>
+                        <div class="flex items-center w-full md:w-80 rounded-md shadow-sm border border-gray-300 bg-white focus-within:ring-1 focus-within:ring-indigo-500 focus-within:border-indigo-500">
+                            <div class="pl-3">
+                                <i class="fas fa-search text-gray-400" aria-hidden="true"></i>
+                            </div>
+                            <input type="text" id="search-task-input" class="block w-full border-0 bg-transparent py-2 pl-2 pr-3 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm" placeholder="Tìm theo tên task...">
+                        </div>
+                    </div>
                     <div class="flex items-center gap-2">
                         <button id="import-tasks-btn" class="btn btn-secondary">
                             <i class="fas fa-file-import mr-2"></i>Nhập Hàng Loạt
