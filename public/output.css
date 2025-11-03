@@ -1452,10 +1452,6 @@ body.sidebar-expanded #sidebar .sidebar-text {
   align-self: flex-end;
 }
 
-.justify-self-center {
-  justify-self: center;
-}
-
 .overflow-auto {
   overflow: auto;
 }
@@ -2315,6 +2311,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.hidden {
+  display: none !important;
+}
+
 /* Reset cơ bản + font chung */
 
 html, body {
@@ -2381,6 +2381,8 @@ html, body {
     border-top: 16px solid #ffa100;
   }
 }
+
+/* Ghi đè lớp hidden của Tailwind để đảm bảo nó luôn được ưu tiên */
 
 /* HOME SCREEN HORIZONTAL BAR */
 
@@ -3449,6 +3451,10 @@ html, body {
   .sm\:text-sm {
     font-size: 0.875rem;
     line-height: 1.25rem;
+  }
+
+  .sm\:hidden {
+    display: none !important;
   }
 }
 

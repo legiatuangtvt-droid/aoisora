@@ -68,6 +68,12 @@ html, body {
   }
 }
 
+/* Ghi đè lớp hidden của Tailwind để đảm bảo nó luôn được ưu tiên */
+@layer utilities {
+  .hidden {
+    display: none !important;
+  }
+}
 /* HOME SCREEN HORIZONTAL BAR */
 .home-screen {
   width: 100%;

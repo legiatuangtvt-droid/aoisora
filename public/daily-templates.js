@@ -908,39 +908,36 @@ export async function init() {
     domController = new AbortController();
     const { signal } = domController;
 
+    // Tải dữ liệu nền và danh sách mẫu trước
     await fetchInitialData();
-    await fetchAndRenderTemplates(); // Tải danh sách mẫu vào dropdown
-    switchToCreateNewMode(); // Đặt trạng thái mặc định là tạo mới
+    await fetchAndRenderTemplates();
 
     const currentUser = window.currentUser;
 
-    // Logic mới cho các vai trò khác nhau
+    // Phân luồng hiển thị giao diện dựa trên vai trò người dùng
     if (currentUser && (currentUser.roleId === 'REGIONAL_MANAGER' || currentUser.roleId === 'AREA_MANAGER')) {
-        // Đối với RM/AM, hiển thị bộ chọn nhưng ẩn các nút quản lý mẫu
+        // --- GIAO DIỆN CHO MANAGER (RM/AM) ---
+        // Hiển thị bộ chọn mẫu
         document.getElementById('template-selector-container')?.classList.remove('hidden');
+        // Ẩn tất cả các nút quản lý không liên quan
         document.getElementById('save-template-btn')?.classList.add('hidden');
         document.getElementById('new-template-btn')?.classList.add('hidden');
         document.getElementById('delete-template-btn')?.classList.add('hidden');
+        document.getElementById('apply-template-hq-btn')?.classList.remove('hidden'); // Hiển thị nút "Triển khai" cho RM/AM
 
         // Tải kế hoạch và mẫu được áp dụng gần nhất cho RM/AM
         await loadAppliedPlanForManager();
-    }
-    else if (currentUser && (currentUser.roleId === 'HQ_STAFF' || currentUser.roleId === 'ADMIN')) {
-        // Đối với HQ, ẩn container tên mẫu mặc định, nó sẽ chỉ hiện khi cần
-        document.getElementById('template-display-container')?.classList.add('hidden');
-        const hqApplyBtn = document.getElementById('apply-template-hq-btn');
-        if (hqApplyBtn) {
-            hqApplyBtn.classList.remove('hidden');
-            hqApplyBtn.addEventListener('click', applyTemplateForHq, { signal });
-        }
-    }
 
-    // Tạo datalist cho mã ca nếu chưa có
-    if (!document.getElementById('shift-codes-datalist')) {
-        const datalist = document.createElement('datalist');
-        datalist.id = 'shift-codes-datalist';
-        datalist.innerHTML = allShiftCodes.map(sc => `<option value="${sc.shiftCode}">${sc.timeRange}</option>`).join('');
-        document.body.appendChild(datalist);
+    } else if (currentUser && (currentUser.roleId === 'HQ_STAFF' || currentUser.roleId === 'ADMIN')) {
+        // --- GIAO DIỆN CHO HQ/ADMIN ---
+        // Hiển thị bộ chọn mẫu và các nút quản lý
+        document.getElementById('template-selector-container')?.classList.remove('hidden');
+        document.getElementById('apply-template-hq-btn')?.classList.remove('hidden');
+        // Ẩn các container không dành cho HQ
+        document.getElementById('template-display-container')?.classList.add('hidden');
+        document.getElementById('plan-tracker-container')?.classList.add('hidden');
+        // Đặt trạng thái mặc định là "Tạo Mẫu Mới"
+        switchToCreateNewMode();
     }
 
     document.getElementById('save-template-btn')?.addEventListener('click', saveTemplate, { signal });
@@ -950,6 +947,16 @@ export async function init() {
 
 
     // Thêm listener để cập nhật tiêu đề khi nhập manhour
+    const hqApplyBtn = document.getElementById('apply-template-hq-btn');
+    if (hqApplyBtn) {
+        hqApplyBtn.addEventListener('click', applyTemplateForHq, { signal });
+    }
+    if (!document.getElementById('shift-codes-datalist')) {
+        const datalist = document.createElement('datalist');
+        datalist.id = 'shift-codes-datalist';
+        datalist.innerHTML = allShiftCodes.map(sc => `<option value="${sc.shiftCode}">${sc.timeRange}</option>`).join('');
+        document.body.appendChild(datalist);
+    }
     const manhourInput = document.getElementById('template-manhour-input');
     const manhourDisplay = document.getElementById('total-manhour-display');
     if (manhourInput && manhourDisplay) {
