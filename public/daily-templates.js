@@ -655,8 +655,20 @@ async function fetchAndRenderTemplates() {
         const snapshot = await getDocs(q);
         allTemplates = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        // Luôn thêm lựa chọn "Tạo Mẫu Mới" ở đầu
-        let optionsHtml = `<option value="new">-- Tạo Mẫu Mới --</option>`;
+        const currentUser = window.currentUser;
+        let optionsHtml = '';
+
+        // Chỉ hiển thị tùy chọn "Tạo Mẫu Mới" cho vai trò HQ và Admin
+        if (currentUser && (currentUser.roleId === 'HQ_STAFF' || currentUser.roleId === 'ADMIN')) {
+            optionsHtml = `<option value="new">-- Tạo Mẫu Mới --</option>`;
+        } else {
+            // Đối với các vai trò khác (Manager), kiểm tra xem có mẫu nào không
+            if (allTemplates.length > 0) {
+                optionsHtml = ``; // Không cần tùy chọn mặc định vì hệ thống sẽ tự động chọn mẫu được áp dụng
+            } else {
+                optionsHtml = `<option value="">-- Chưa có mẫu --</option>`;
+            }
+        }
         optionsHtml += allTemplates.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
         templateSelector.innerHTML = optionsHtml;
 
@@ -729,7 +741,7 @@ async function loadTemplate(templateId) {
 
     // Đối với HQ, hiển thị trạng thái áp dụng của mẫu đã chọn
     const currentUser = window.currentUser;
-    if (currentUser && (currentUser.roleId === 'HQ_STAFF' || currentUser.roleId === 'ADMIN')) {
+    if (currentUser && (currentUser.roleId === 'HQ_STAFF' || currentUser.roleId === 'ADMIN' || currentUser.roleId === 'REGIONAL_MANAGER' || currentUser.roleId === 'AREA_MANAGER')) {
         showTemplateApplyStatus(templateId);
     }
 
@@ -904,23 +916,18 @@ export async function init() {
 
     // Logic mới cho các vai trò khác nhau
     if (currentUser && (currentUser.roleId === 'REGIONAL_MANAGER' || currentUser.roleId === 'AREA_MANAGER')) {
-        // Đối với RM/AM, ẩn bộ chọn và nút tạo/xóa/lưu
-        document.getElementById('template-selector-container')?.classList.add('hidden');
+        // Đối với RM/AM, hiển thị bộ chọn nhưng ẩn các nút quản lý mẫu
+        document.getElementById('template-selector-container')?.classList.remove('hidden');
         document.getElementById('save-template-btn')?.classList.add('hidden');
         document.getElementById('new-template-btn')?.classList.add('hidden');
         document.getElementById('delete-template-btn')?.classList.add('hidden');
-        
-        // Hiển thị container tên mẫu cho RM/AM
-        document.getElementById('template-display-container')?.classList.remove('hidden');
 
         // Tải kế hoạch và mẫu được áp dụng gần nhất cho RM/AM
         await loadAppliedPlanForManager();
-
-    } else if (currentUser && (currentUser.roleId === 'HQ_STAFF' || currentUser.roleId === 'ADMIN')) {
+    }
+    else if (currentUser && (currentUser.roleId === 'HQ_STAFF' || currentUser.roleId === 'ADMIN')) {
         // Đối với HQ, ẩn container tên mẫu mặc định, nó sẽ chỉ hiện khi cần
         document.getElementById('template-display-container')?.classList.add('hidden');
-
-        // Logic cũ cho HQ/Admin: hiển thị nút Apply
         const hqApplyBtn = document.getElementById('apply-template-hq-btn');
         if (hqApplyBtn) {
             hqApplyBtn.classList.remove('hidden');
@@ -1128,6 +1135,10 @@ async function loadAppliedPlanForManager() {
     }
 
     if (!regionIdToQuery) {
+        // Nếu không có miền, ẩn bộ chọn và hiển thị thông báo
+        // Nếu không có miền, ẩn bộ chọn và hiển thị thông báo tĩnh
+        document.getElementById('template-selector-container').classList.add('hidden');
+        document.getElementById('template-display-container').classList.remove('hidden');
         document.getElementById('template-name-display').textContent = 'Bạn chưa được phân công vào miền nào.';
         renderGrid();
         return;
@@ -1143,17 +1154,20 @@ async function loadAppliedPlanForManager() {
 
     const plansSnap = await getDocs(plansQuery);
     if (plansSnap.empty) {
-        document.getElementById('template-name-display').textContent = 'Chưa có mẫu nào được áp dụng cho miền của bạn.';
+        // Nếu không có kế hoạch nào, ẩn bộ chọn và hiển thị thông báo
+        document.getElementById('template-selector-container').classList.add('hidden');
+        document.getElementById('template-display-container').classList.remove('hidden');
+        document.getElementById('template-display-container').querySelector('#template-name-display').textContent = 'Chưa có kế hoạch nào được áp dụng cho miền của bạn.';
         renderGrid();
     } else {
         const plan = { id: plansSnap.docs[0].id, ...plansSnap.docs[0].data() };
         currentMonthlyPlan = plan;
 
-        // Hiển thị tên mẫu và tải dữ liệu mẫu
-        document.getElementById('template-name-display').textContent = plan.templateName || 'Mẫu không tên';
+        // Tự động chọn mẫu của kế hoạch vào dropdown và tải dữ liệu
+        document.getElementById('template-selector').value = plan.templateId; // Fix: Ensure this line is present
         await loadTemplate(plan.templateId);
 
-        // Hiển thị thông tin theo dõi kế hoạch
+        // Hiển thị thông tin theo        renderPlanTracker(plan);
         renderPlanTracker(plan);
     }
 }
