@@ -79,5 +79,10 @@ service cloud.firestore { // Cấu hình cho Firestore
     match /system_configurations/{configId} {
       allow read, write: if true;
     }
+
+    // Cho phép đọc/ghi vào collection RE Tasks
+    match /re_tasks/{taskId} {
+      allow read, write: if true;
+    }
   }
 }
