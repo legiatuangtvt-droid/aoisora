@@ -202,3 +202,61 @@
         </div>
     </aside>
 </template>
+
+<!-- ==========================================================================
+     TEMPLATE CHO SIDEBAR MANAGER (RM, AM)
+     ========================================================================== -->
+<template id="template-sidebar-manager">
+    <aside id="sidebar" class="flex-shrink-0 bg-slate-800 text-white flex flex-col h-screen transition-all duration-300 ease-in-out">
+        <!-- Header của Sidebar -->
+        <div class="h-16 flex items-center justify-center border-b border-slate-700 flex-shrink-0 px-4">
+            <a href="workforce-dispatch.html" class="flex items-center text-2xl font-bold overflow-hidden">
+                <i class="fas fa-wind mr-3 text-green-400"></i>
+                <span class="sidebar-text whitespace-nowrap">AoiSora</span>
+            </a>
+            <button id="sidebar-pin-btn" class="sidebar-text w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-700 transition-all ml-auto" title="Ghim/Bỏ ghim sidebar">
+                <i class="fas fa-thumbtack"></i>
+            </button>
+        </div>
+
+        <!-- Menu điều hướng -->
+        <nav class="flex-1 p-4 space-y-2">
+            <!-- Nhóm Lịch trình & Điều phối -->
+            <div class="nav-group-schedule">
+                <h3 class="sidebar-text px-4 pt-4 pb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">Lịch trình</h3>
+                <a href="daily-schedule.html" class="nav-link flex items-center px-4 py-2 text-slate-300 rounded-lg hover:bg-slate-700 transition-colors overflow-hidden" title="Lịch hàng ngày">
+                    <i class="fas fa-calendar-day w-6 text-center"></i>
+                    <span class="sidebar-text ml-3 whitespace-nowrap">Lịch hàng ngày</span>
+                </a>
+                <a href="monthly-schedules.html" class="nav-link flex items-center px-4 py-2 text-slate-300 rounded-lg hover:bg-slate-700 transition-colors overflow-hidden" title="Lịch hàng tháng">
+                    <i class="fas fa-calendar-check w-6 text-center"></i>
+                    <span class="sidebar-text ml-3 whitespace-nowrap">Lịch hàng tháng</span>
+                </a>
+                <a href="workforce-dispatch.html" class="nav-link flex items-center px-4 py-2 text-slate-300 rounded-lg hover:bg-slate-700 transition-colors overflow-hidden" title="Điều Phối Nhân Lực">
+                    <i class="fas fa-people-arrows w-6 text-center"></i>
+                    <span class="sidebar-text ml-3 whitespace-nowrap">Điều phối nhân lực</span>
+                </a>
+            </div>
+            <!-- Nhóm Tổ chức -->
+            <div class="nav-group-organization">
+                <h3 class="sidebar-text px-4 pt-4 pb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">Tổ chức</h3>
+                <a href="store-management.html" class="nav-link flex items-center px-4 py-2 text-slate-300 rounded-lg hover:bg-slate-700 transition-colors overflow-hidden" title="Cửa Hàng">
+                    <i class="fas fa-store w-6 text-center"></i>
+                    <span class="sidebar-text ml-3 whitespace-nowrap">Cửa Hàng</span>
+                </a>
+                <a href="staff-management.html" class="nav-link flex items-center px-4 py-2 text-slate-300 rounded-lg hover:bg-slate-700 transition-colors overflow-hidden" title="Nhân Viên">
+                    <i class="fas fa-users w-6 text-center"></i>
+                    <span class="sidebar-text ml-3 whitespace-nowrap">Nhân Viên</span>
+                </a>
+            </div>
+            <!-- Nhóm Quản lý Công việc -->
+            <div class="nav-group-work-management">
+                <h3 class="sidebar-text px-4 pt-4 pb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">Quản lý Công việc</h3>
+                <a href="daily-templates.html" class="nav-link flex items-center px-4 py-2 text-slate-300 rounded-lg hover:bg-slate-700 transition-colors overflow-hidden" title="Quản Lý Mẫu Ngày">
+                    <i class="fas fa-file-alt w-6 text-center"></i>
+                    <span class="sidebar-text ml-3 whitespace-nowrap">Mẫu Ngày</span>
+                </a>
+            </div>
+        </nav>
+    </aside>
+</template>

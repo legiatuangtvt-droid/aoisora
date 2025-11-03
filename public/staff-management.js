@@ -308,15 +308,28 @@ async function fetchAndRenderEmployees(direction = 'first') {
         return { ...person, level: role ? (role.level || 0) : 0 };
     });
 
-    // Lọc danh sách nhân sự cho vai trò STORE_INCHARGE
+    // Lọc danh sách nhân sự cho các vai trò quản lý (SI, AM, RM)
     const currentUser = window.currentUser;
-    if (currentUser && currentUser.roleId === 'STORE_INCHARGE' && Array.isArray(currentUser.managedStoreIds)) {
-        console.log('[Staff Management] SI detected. Filtering for managed stores:', currentUser.managedStoreIds);
+    if (currentUser && ['STORE_INCHARGE', 'AREA_MANAGER', 'REGIONAL_MANAGER'].includes(currentUser.roleId)) {
+        let managedStoreIds = [];
+        if (currentUser.roleId === 'STORE_INCHARGE') {
+            managedStoreIds = currentUser.managedStoreIds || [];
+        } else if (currentUser.roleId === 'AREA_MANAGER') {
+            const areas = allAreas.filter(a => currentUser.managedAreaIds?.includes(a.id));
+            const areaIds = areas.map(a => a.id);
+            managedStoreIds = allStores.filter(s => areaIds.includes(s.areaId)).map(s => s.id);
+        } else if (currentUser.roleId === 'REGIONAL_MANAGER') {
+            const areas = allAreas.filter(a => a.regionId === currentUser.managedRegionId);
+            const areaIds = areas.map(a => a.id);
+            managedStoreIds = allStores.filter(s => areaIds.includes(s.areaId)).map(s => s.id);
+        }
+
+        console.log(`[Staff Management] ${currentUser.roleId} detected. Filtering for ${managedStoreIds.length} managed stores.`);
         allPersonnel = allPersonnel.filter(person => {
-            // Giữ lại chính SI đó
+            // Giữ lại chính người quản lý đó
             if (person.id === currentUser.id) return true;
-            // Giữ lại các nhân viên thuộc các cửa hàng mà SI quản lý
-            return currentUser.managedStoreIds.includes(person.storeId);
+            // Giữ lại các nhân viên thuộc các cửa hàng được quản lý
+            return managedStoreIds.includes(person.storeId);
         });
     }
 

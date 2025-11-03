@@ -74,7 +74,7 @@ async function fetchInitialData() {
         let employeePromise;
         switch (currentUser.roleId) {
             case 'ADMIN':
-            case 'HQ_STAFF':
+            case 'HQ_STAFF': // Admin và HQ Staff có quyền xem tất cả
                 employeePromise = getDocs(collection(db, 'employee'));
                 break;
             case 'REGIONAL_MANAGER':

@@ -22,6 +22,13 @@ export function loadLayoutComponents() {
                 sidebarTemplate = doc.getElementById('template-sidebar-staff');
             } else if (
                 currentUser && (
+                    currentUser.roleId === 'REGIONAL_MANAGER' ||
+                    currentUser.roleId === 'AREA_MANAGER'
+                )
+            ) {
+                sidebarTemplate = doc.getElementById('template-sidebar-manager');
+            } else if (
+                currentUser && (
                     currentUser.roleId === 'STORE_LEADER' ||
                     currentUser.roleId === 'STORE_LEADER_G2' ||
                     currentUser.roleId === 'STORE_LEADER_G3' ||

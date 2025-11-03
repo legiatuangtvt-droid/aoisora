@@ -1,11 +1,13 @@
 import { db } from './firebase.js';
-import { collection, getDocs, query, orderBy, doc, setDoc, serverTimestamp, addDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { collection, getDocs, query, orderBy, doc, setDoc, serverTimestamp, addDoc, deleteDoc, getDoc, where, writeBatch } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 let sortableInstances = [];
+let domController = null;
 
 let allTemplates = [];
 let currentTemplateId = null;
 
+let allPersonnel = []; // For HQ Apply
 let allWorkPositions = []; // Biến để lưu danh sách vị trí công việc
 let allShiftCodes = []; // Biến để lưu danh sách mã ca
 // Bảng màu mặc định nếu group không có màu
@@ -90,6 +92,16 @@ async function fetchInitialData() {
             allShiftCodes = shiftCodesSnap.data().codes || [];
         }
 
+        // Tải dữ liệu nhân sự cần cho chức năng "Apply" của HQ
+        const [employeesSnap, areaManagersSnap, regionalManagersSnap] = await Promise.all([
+            getDocs(collection(db, 'employee')),
+            getDocs(collection(db, 'area_managers')),
+            getDocs(collection(db, 'regional_managers')),
+        ]);
+        const employees = employeesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const areaManagers = areaManagersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const regionalManagers = regionalManagersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        allPersonnel = [...employees, ...areaManagers, ...regionalManagers];
     } catch (error) {
         console.error("Lỗi nghiêm trọng khi tải dữ liệu nền:", error);
         const container = document.getElementById('template-builder-grid-container');
@@ -105,6 +117,18 @@ async function fetchInitialData() {
 function timeToMinutes(timeStr) {
     const [hours, minutes] = timeStr.split(':').map(Number);
     return hours * 60 + minutes;
+}
+
+/**
+ * Định dạng một đối tượng Date thành chuỗi YYYY-MM-DD theo giờ địa phương.
+ * @param {Date} date - Đối tượng Date.
+ * @returns {string} Chuỗi ngày tháng.
+ */
+function formatLocalDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
 /**
@@ -810,14 +834,21 @@ async function deleteCurrentTemplate() {
 }
 
 export async function init() {
+    domController = new AbortController();
+    const { signal } = domController;
+
     await fetchInitialData();
     await fetchAndRenderTemplates(); // Tải danh sách mẫu vào dropdown
     switchToCreateNewMode(); // Đặt trạng thái mặc định là tạo mới
 
-    document.getElementById('save-template-btn')?.addEventListener('click', saveTemplate);
-    document.getElementById('new-template-btn')?.addEventListener('click', switchToCreateNewMode);
-    document.getElementById('delete-template-btn')?.addEventListener('click', deleteCurrentTemplate);
-    document.getElementById('template-selector')?.addEventListener('change', (e) => loadTemplate(e.target.value));
+    // Show HQ Apply button if user is HQ_STAFF
+    if (window.currentUser && ['HQ_STAFF', 'ADMIN', 'REGIONAL_MANAGER', 'AREA_MANAGER'].includes(window.currentUser.roleId)) {
+        const hqApplyBtn = document.getElementById('apply-template-hq-btn');
+        if (hqApplyBtn) {
+            hqApplyBtn.classList.remove('hidden');
+            hqApplyBtn.addEventListener('click', applyTemplateForHq, { signal });
+        }
+    }
 
     // Tạo datalist cho mã ca nếu chưa có
     if (!document.getElementById('shift-codes-datalist')) {
@@ -826,6 +857,11 @@ export async function init() {
         datalist.innerHTML = allShiftCodes.map(sc => `<option value="${sc.shiftCode}">${sc.timeRange}</option>`).join('');
         document.body.appendChild(datalist);
     }
+
+    document.getElementById('save-template-btn')?.addEventListener('click', saveTemplate, { signal });
+    document.getElementById('new-template-btn')?.addEventListener('click', switchToCreateNewMode, { signal });
+    document.getElementById('delete-template-btn')?.addEventListener('click', deleteCurrentTemplate, { signal });
+    document.getElementById('template-selector')?.addEventListener('change', (e) => loadTemplate(e.target.value), { signal });
 
 
     // Thêm listener để cập nhật tiêu đề khi nhập manhour
@@ -848,14 +884,245 @@ export async function init() {
 export function cleanup() {
     sortableInstances.forEach(s => s.destroy());
     sortableInstances = [];
+    if (domController) {
+        domController.abort();
+        domController = null;
+    }
     // Dọn dẹp các listener bằng cách clone và thay thế node
-    ['save-template-btn', 'new-template-btn', 'delete-template-btn', 'template-selector'].forEach(id => {
+    ['save-template-btn', 'new-template-btn', 'delete-template-btn', 'template-selector', 'apply-template-hq-btn'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
             const newEl = el.cloneNode(true);
             el.parentNode.replaceChild(newEl, el);
         }
     });
+}
+
+/**
+ * Áp dụng template cho các cửa hàng của một Miền được chọn (dành cho HQ Staff).
+ */
+async function applyTemplateForHq() {
+    const btn = document.getElementById('apply-template-hq-btn');
+    const btnSpan = btn.querySelector('span');
+    btn.disabled = true;    if (btnSpan) btnSpan.textContent = 'Đang xử lý...';
+
+    try {
+        // 1. Kiểm tra đã chọn template chưa
+        if (!currentTemplateId) {
+            throw new Error("Vui lòng chọn một mẫu lịch trình trước khi áp dụng.");
+        }
+        const template = allTemplates.find(t => t.id === currentTemplateId);
+        if (!template || !template.schedule || !template.shiftMappings) {
+            throw new Error(`Mẫu "${template.name}" không hợp lệ hoặc không có dữ liệu ca làm việc.`);
+        }
+
+        // 2. Lấy danh sách Region Managers và yêu cầu chọn
+        const regionalManagers = allPersonnel.filter(p => p.roleId === 'REGIONAL_MANAGER');
+        if (regionalManagers.length === 0) {
+            throw new Error("Không tìm thấy Quản lý Miền (Regional Manager) nào trong hệ thống.");
+        }
+
+        // --- NEW: Chuẩn bị dữ liệu cho bảng ---
+        const storesSnap = await getDocs(collection(db, 'stores'));
+        const allStores = storesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const areasSnap = await getDocs(collection(db, 'areas'));
+        const allAreas = areasSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const regionsSnap = await getDocs(collection(db, 'regions'));
+        const allRegions = regionsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+        const managerOptions = {
+            headers: ['Quản lý', 'Miền', 'Số cửa hàng'],
+            rows: regionalManagers.map(rm => {
+                const region = allRegions.find(r => r.id === rm.managedRegionId);
+                const areasInRegion = allAreas.filter(a => a.regionId === rm.managedRegionId);
+                const areaIds = areasInRegion.map(a => a.id);
+                const storeCount = allStores.filter(s => areaIds.includes(s.areaId)).length;
+
+                return { value: rm.id, cells: [rm.name, region?.name || 'N/A', storeCount] };
+            })
+        };
+
+        const selectedManagerIds = await window.showCheckboxListPrompt(
+            'Chọn Quản lý Miền để áp dụng lịch trình:',
+            'Áp dụng Lịch trình cho Miền',
+            managerOptions
+        );
+
+        if (!selectedManagerIds || selectedManagerIds.length === 0) {
+            window.showToast('Hủy thao tác.', 'info');
+            return;
+        }
+        const selectedManagers = regionalManagers.filter(rm => selectedManagerIds.includes(rm.id));
+        const selectedManagerNames = selectedManagers.map(rm => rm.name).join(', ');
+
+        // 3. Tự động tính toán ngày bắt đầu áp dụng dựa trên chu kỳ lương từ Firebase
+        const payrollSettingsRef = doc(db, 'system_configurations', 'payroll_settings');
+        const payrollSettingsSnap = await getDoc(payrollSettingsRef);
+        const payrollStartDay = payrollSettingsSnap.exists() ? payrollSettingsSnap.data().startDay : 26; // Mặc định là 26 nếu không có
+
+        const today = new Date();
+        let startDate;
+
+        if (today.getDate() < payrollStartDay) {
+            // Nếu ngày hiện tại nhỏ hơn ngày bắt đầu chu kỳ, áp dụng cho chu kỳ của tháng này
+            startDate = new Date(today.getFullYear(), today.getMonth(), payrollStartDay);
+        } else {
+            // Nếu ngày hiện tại bằng hoặc lớn hơn, áp dụng cho chu kỳ của tháng tiếp theo
+            startDate = new Date(today.getFullYear(), today.getMonth() + 1, payrollStartDay);
+        }
+
+        const dateString = formatLocalDate(startDate);
+        const formattedStartDate = startDate.toLocaleDateString('vi-VN');
+        window.showToast(`Mẫu sẽ được áp dụng từ ngày ${formattedStartDate}.`, 'info', 4000);
+
+        // 4. Lấy danh sách cửa hàng thuộc tất cả các miền đã chọn
+        const selectedRegionIds = selectedManagers.map(rm => rm.managedRegionId);
+        const managedAreaIds = allAreas.filter(a => selectedRegionIds.includes(a.regionId)).map(a => a.id);
+        const storesInRegion = allStores.filter(s => managedAreaIds.includes(s.areaId));
+
+        if (storesInRegion.length === 0) {
+            throw new Error(`Các miền đã chọn không quản lý cửa hàng nào.`);
+        }
+
+        // 5. Hỏi xác nhận
+        const confirmed = await window.showConfirmation(
+            `Bạn có chắc chắn muốn XÓA TẤT CẢ lịch làm việc của ngày ${dateString} tại ${storesInRegion.length} cửa hàng thuộc các miền của [${selectedManagerNames}] và tạo lại từ mẫu "${template.name}" không?`,
+            'Xác nhận tạo lịch hàng loạt',
+            'Xóa và Tạo mới',
+            'Hủy'
+        );
+
+        if (!confirmed) {
+            window.showToast('Đã hủy thao tác.', 'info');
+            return;
+        }
+
+        window.showToast(`Bắt đầu tạo lịch cho ngày ${dateString} từ mẫu "${template.name}"...`, 'info');
+
+        // 6. Bắt đầu quá trình áp dụng (tương tự logic trong dev-menu)
+        const { schedule: templateSchedule, shiftMappings } = template;
+        const batch = writeBatch(db);
+
+        // Xóa lịch trình cũ trong ngày đã chọn cho các cửa hàng thuộc miền
+        const storeIdsInRegion = storesInRegion.map(s => s.id);
+        const oldSchedulesQuery = query(collection(db, 'schedules'), where('date', '==', dateString), where('storeId', 'in', storeIdsInRegion));
+        const oldSchedulesSnap = await getDocs(oldSchedulesQuery);
+        oldSchedulesSnap.forEach(doc => batch.delete(doc.ref));
+        if (!oldSchedulesSnap.empty) {
+            window.showToast(`Đã xóa ${oldSchedulesSnap.size} lịch làm việc cũ của ngày ${dateString}.`, 'info');
+        }
+
+        // Tải dữ liệu nhân viên và đăng ký ca
+        const employeesInRegionSnap = await getDocs(query(collection(db, 'employee'), where('storeId', 'in', storeIdsInRegion)));
+        const employeesInRegion = employeesInRegionSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const availabilityQuery = query(collection(db, 'staff_availability'), where('date', '==', dateString));
+        const availabilitySnap = await getDocs(availabilityQuery);
+        const allAvailabilities = availabilitySnap.docs.map(doc => doc.data());
+
+        let schedulesCreatedCount = 0;
+
+        for (const store of storesInRegion) {
+            const storeEmployees = employeesInRegion.filter(emp => emp.storeId === store.id && emp.status === 'ACTIVE');
+            if (storeEmployees.length === 0) continue;
+
+            let slotsToFill = Object.keys(shiftMappings).map(shiftId => ({
+                shiftId: shiftId,
+                shiftCode: shiftMappings[shiftId].shiftCode,
+                positionId: shiftMappings[shiftId].positionId,
+                employeeId: null
+            }));
+
+            let availableEmployees = [...storeEmployees];
+
+            // --- BƯỚC 1: PHÂN CÔNG LEADER ---
+            const leaderSlots = slotsToFill.filter(slot => slot.positionId === 'LEADER' && !slot.employeeId);
+            const leadersInStore = availableEmployees.filter(emp => emp.roleId.includes('LEADER'));
+
+            if (leaderSlots.length > 0 && leadersInStore.length > 0) {
+                let leaderIndex = 0;
+                for (const slot of leaderSlots) {
+                    const leaderToAssign = leadersInStore[leaderIndex % leadersInStore.length];
+                    slot.employeeId = leaderToAssign.id;
+                    availableEmployees = availableEmployees.filter(emp => emp.id !== leaderToAssign.id);
+                    leaderIndex++;
+                }
+            }
+
+            // --- BƯỚC 2: PHÂN CÔNG THEO ĐĂNG KÝ ƯU TIÊN ---
+            const employeeAvailabilities = allAvailabilities.filter(a => availableEmployees.some(e => e.id === a.employeeId));
+            employeeAvailabilities.sort((a, b) => (a.registrations[0]?.priority || 3) - (b.registrations[0]?.priority || 3));
+
+            for (const availability of employeeAvailabilities) {
+                if (!availableEmployees.some(e => e.id === availability.employeeId)) continue;
+
+                for (const registration of availability.registrations) {
+                    if (!registration.shiftCode) continue;
+
+                    const matchingSlot = slotsToFill.find(slot =>
+                        !slot.employeeId &&
+                        slot.shiftCode === registration.shiftCode &&
+                        slot.positionId !== 'LEADER'
+                    );
+
+                    if (matchingSlot) {
+                        matchingSlot.employeeId = availability.employeeId;
+                        availableEmployees = availableEmployees.filter(emp => emp.id !== availability.employeeId);
+                        break;
+                    }
+                }
+            }
+
+            // --- BƯỚC 3: PHÂN CÔNG CÁC SUẤT CÒN LẠI ---
+            const remainingSlots = slotsToFill.filter(slot => !slot.employeeId);
+            for (const slot of remainingSlots) {
+                if (availableEmployees.length === 0) {
+                    console.warn(`Cửa hàng ${store.name} không đủ nhân viên để lấp đầy suất ${slot.positionId} (${slot.shiftCode})`);
+                    continue;
+                }
+
+                // Sắp xếp ngẫu nhiên nhân viên còn lại để phân công
+                availableEmployees.sort(() => 0.5 - Math.random());
+                const employeeToAssign = availableEmployees.shift();
+                slot.employeeId = employeeToAssign.id;
+            }
+
+            // --- BƯỚC 4: TẠO BẢN GHI LỊCH TRÌNH ---
+            for (const filledSlot of slotsToFill) {
+                if (filledSlot.employeeId) {
+                    const tasks = (templateSchedule[filledSlot.shiftId] || []).map(task => ({
+                        groupId: task.groupId,
+                        startTime: task.startTime,
+                        taskCode: task.taskCode,
+                        name: task.taskName
+                    }));
+
+                    const newScheduleDoc = {
+                        date: dateString,
+                        employeeId: filledSlot.employeeId,
+                        storeId: store.id,
+                        shift: filledSlot.shiftCode,
+                        positionId: filledSlot.positionId,
+                        tasks,
+                        createdAt: serverTimestamp()
+                    };
+
+                    const scheduleRef = doc(collection(db, 'schedules'));
+                    batch.set(scheduleRef, newScheduleDoc);
+                    schedulesCreatedCount++;
+                }
+            }
+        }
+
+        await batch.commit();
+        window.showToast(`Hoàn tất! Đã tạo ${schedulesCreatedCount} lịch làm việc cho ngày ${dateString} tại ${storesInRegion.length} cửa hàng.`, 'success', 5000);
+
+    } catch (error) {
+        console.error("Lỗi khi áp dụng template cho miền:", error);
+        window.showToast(`Đã xảy ra lỗi: ${error.message}`, 'error');
+    } finally {
+        btn.disabled = false;
+        if (btnSpan) btnSpan.textContent = 'Áp dụng cho Miền';
+    }
 }
 
 /**

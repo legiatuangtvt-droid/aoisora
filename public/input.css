@@ -389,6 +389,9 @@ html, body {
 .btn-danger { background-color: #dc2626; color: #fff; } /* red-600 */
 .btn-danger:hover { background-color: #b91c1c; } /* red-700 */
 
+.btn-success { background-color: #16a34a; color: #fff; } /* green-600 */
+.btn-success:hover { background-color: #15803d; } /* green-700 */
+
 /* --- TOAST STYLES (Chuyển từ toast.css) --- */
 /* ... (các style toast đã có) ... */
 
