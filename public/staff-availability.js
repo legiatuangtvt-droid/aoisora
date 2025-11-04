@@ -1,9 +1,26 @@
-import { db } from './firebase.js';
-import { doc, setDoc, getDoc, serverTimestamp, writeBatch, collection, query, where, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+// import { db } from './firebase.js';
+// import { doc, setDoc, getDoc, serverTimestamp, writeBatch, collection, query, where, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 let domController = null;
 let viewStartDate = new Date(); // Sẽ được đặt lại thành ngày mai
 let shiftCodes = [];
+
+/**
+ * ==================================================
+ * MOCK DATA FOR DEMO
+ * ==================================================
+ */
+const mockCurrentUser = {
+    id: 'staff01',
+    name: 'Nguyễn Văn A'
+};
+
+const mockShiftCodes = [
+    { shiftCode: 'V712', timeRange: '06:00 ~ 13:00', duration: 7 },
+    { shiftCode: 'V829', timeRange: '14:30 ~ 22:30', duration: 8 }
+];
+
+let mockAvailability = {}; // Dữ liệu đăng ký sẽ được lưu tạm ở đây
 
 /**
  * Định dạng một đối tượng Date thành chuỗi YYYY-MM-DD.
@@ -17,10 +34,21 @@ function formatDate(date) {
     return `${year}-${month}-${day}`;
 }
 
+/**
+ * Lấy ngày bắt đầu chu kỳ lương tiếp theo (ngày 26).
+ * @returns {Date} - Ngày bắt đầu chu kỳ lương tiếp theo.
+ */
 function getTomorrow() {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     return tomorrow;
+}
+
+function getNextPayrollStartDate() {
+    const today = new Date();
+    const payrollStartDay = 26; // Ngày bắt đầu chu kỳ lương
+    let startDate = new Date(today.getFullYear(), today.getMonth(), payrollStartDay);
+    return startDate;
 }
 
 /**
@@ -37,20 +65,15 @@ function timeToMinutes(timeStr) {
 
 
 
-async function loadShiftCodes() {
-    try {
-        const shiftCodesDocRef = doc(db, 'system_configurations', 'shift_codes');
-        const shiftCodesSnap = await getDoc(shiftCodesDocRef);
-        if (shiftCodesSnap.exists()) {
-            shiftCodes = shiftCodesSnap.data().codes || [];
-        } else {
-            console.warn("Không tìm thấy tài liệu mã ca trong Firestore.");
-            shiftCodes = [];
-        }
-    } catch (error) {
-        console.error("Lỗi khi tải mã ca từ Firestore:", error);
-        shiftCodes = [];
-    }
+/**
+ * Tải 2 mã ca áp dụng cho nhân viên từ mẫu "Test" hoặc dùng mã mặc định.
+ */
+async function loadApplicableShiftCodes() {
+    // DEMO: Sử dụng dữ liệu giả
+    console.log("DEMO: Loading mock shift codes.");
+    shiftCodes = mockShiftCodes;
+    // Giả lập độ trễ mạng
+    return new Promise(resolve => setTimeout(resolve, 100));
 }
 
 /**
@@ -100,26 +123,25 @@ function filterDatalist(datalistElement, selfShiftCode, otherShiftCode) {
  * Render toàn bộ bảng đăng ký cho tuần hiện tại.
  */
 async function renderWeekView() {
-    const weekHeaderRow = document.getElementById('week-header-row');    
-    const registrationRow = document.getElementById('registration-row');
+    const tableBody = document.getElementById('availability-table-body');
     const currentDateDisplay = document.getElementById('current-date-display');
 
-    if (!weekHeaderRow || !registrationRow || !currentDateDisplay) return;
+    if (!tableBody || !currentDateDisplay) return;
 
     // Xóa nội dung cũ
-    weekHeaderRow.innerHTML = '';
-    registrationRow.innerHTML = '';
+    tableBody.innerHTML = '';
 
-    const weekDates = [];
-    for (let i = 0; i < 7; i++) {
+    const allDates = [];
+    const totalDays = 30; // Hiển thị 30 ngày
+    for (let i = 0; i < totalDays; i++) {
         const date = new Date(viewStartDate);
         date.setDate(date.getDate() + i);
-        weekDates.push(date);
+        allDates.push(date);
     }
 
-    const firstDay = weekDates[0];
-    const lastDay = weekDates[6];
-    currentDateDisplay.textContent = `Tuần từ ${firstDay.toLocaleDateString('vi-VN')} - ${lastDay.toLocaleDateString('vi-VN')}`;
+    const firstDay = allDates[0];
+    const lastDay = allDates[allDates.length - 1];
+    currentDateDisplay.textContent = `Chu kỳ từ ${firstDay.toLocaleDateString('vi-VN')} đến ${lastDay.toLocaleDateString('vi-VN')}`;
 
     // Vô hiệu hóa nút lùi nếu tuần hiện tại chứa ngày mai
     const prevWeekBtn = document.getElementById('prev-week-btn');
@@ -139,68 +161,68 @@ async function renderWeekView() {
         return;
     }
 
-    weekDates.forEach(date => {
-        // Dòng 2: Header ngày
-        const headerCell = dayHeaderTemplate.content.cloneNode(true);
-        const dayName = headerCell.querySelector('.day-name');
-        const dateNumber = headerCell.querySelector('.date-number');
-        
-        dayName.textContent = date.toLocaleDateString('en-US', { weekday: 'short' });
-        dateNumber.textContent = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
-        if (formatDate(date) === todayString) {
-            headerCell.querySelector('th').classList.add('bg-indigo-50', 'text-indigo-700');
-        }
-        weekHeaderRow.appendChild(headerCell);
+    // Chia 30 ngày thành các tuần (mỗi tuần 7 ngày)
+    for (let i = 0; i < allDates.length; i += 7) {
+        const weekDates = allDates.slice(i, i + 7);
 
-        // Dòng 3: Ô đăng ký (chứa 2 ca)
-        const shiftCell = shiftCellTemplate.content.cloneNode(true);
-        const td = shiftCell.querySelector('td');
-        const dateStr = formatDate(date);
-        td.dataset.date = dateStr;
+        const weekHeaderRow = document.createElement('tr');
+        const registrationRow = document.createElement('tr');
 
-        // Lặp qua 2 khối đăng ký trong template
-        td.querySelectorAll('.shift-registration-block').forEach(block => {
-            const input = block.querySelector('.shift-input');
-            const priorityBtns = block.querySelectorAll('.priority-btn');
-            const shiftIndex = block.dataset.shiftIndex;
-
-            // Đặt placeholder
-            const defaultOptionText = (shiftIndex === '0' ? '-- Ca 1 --' : '-- Ca 2 --');
-            input.placeholder = defaultOptionText;
-
-            // Gán ID duy nhất cho input
-            const inputId = `shift-input-${dateStr}-${shiftIndex}`;
-            input.id = inputId;
-
-            // Tạo một datalist duy nhất cho input này
-            const datalistId = `datalist-${dateStr}-${shiftIndex}`;
-            const datalist = document.createElement('datalist');
-            datalist.id = datalistId;
-            // Ban đầu điền tất cả các mã ca vào datalist
-            shiftCodes.forEach(sc => {
-                datalist.innerHTML += `<option value="${sc.shiftCode}">${sc.timeRange}</option>`;
-            });
-            td.appendChild(datalist); // Thêm datalist vào td
-            input.setAttribute('list', datalistId); // Liên kết input với datalist của nó
-
-            // Vô hiệu hóa nút ưu tiên mặc định
-            priorityBtns.forEach(btn => btn.disabled = true);
-
-            // Vô hiệu hóa hoàn toàn nếu ngày là hôm nay hoặc trong quá khứ
-            if (dateStr <= todayString) {
-                block.classList.add('opacity-50', 'pointer-events-none');
-                input.disabled = true;
-                input.placeholder = '-- Đã khóa --';
-                priorityBtns.forEach(btn => btn.disabled = true);
+        weekDates.forEach(date => {
+            // Dòng header ngày
+            const headerCell = dayHeaderTemplate.content.cloneNode(true);
+            const dayName = headerCell.querySelector('.day-name');
+            const dateNumber = headerCell.querySelector('.date-number');
+            
+            dayName.textContent = date.toLocaleDateString('en-US', { weekday: 'short' });
+            dateNumber.textContent = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+            if (formatDate(date) === todayString) {
+                headerCell.querySelector('th').classList.add('bg-indigo-50', 'text-indigo-700');
             }
-        });
-        if (dateStr <= todayString) {
-            td.classList.add('bg-slate-50');
-        }
-        registrationRow.appendChild(shiftCell);
-    });
+            weekHeaderRow.appendChild(headerCell);
 
-    await loadAvailabilityForWeek(weekDates);
+            // Dòng ô đăng ký
+            const shiftCell = shiftCellTemplate.content.cloneNode(true);
+            const td = shiftCell.querySelector('td');
+            const dateStr = formatDate(date);
+            td.dataset.date = dateStr;
+
+            // Lặp qua 2 khối đăng ký trong template
+            td.querySelectorAll('.shift-registration-block').forEach(block => {
+                const input = block.querySelector('.shift-input');
+                const priorityBtn = block.querySelector('.priority-toggle-btn');
+                const shiftIndex = block.dataset.shiftIndex;
+
+                input.id = `shift-input-${dateStr}-${shiftIndex}`;
+
+                // Tạo các tùy chọn cho select dropdown
+                let optionsHTML = `<option value="">-- Ca ${parseInt(shiftIndex, 10) + 1} --</option>`;
+                shiftCodes.forEach(sc => {
+                    optionsHTML += `<option value="${sc.shiftCode}">${sc.timeRange}</option>`;
+                });
+                input.innerHTML = optionsHTML;
+
+                priorityBtn.disabled = true;
+
+                if (dateStr <= todayString) {
+                    block.classList.add('opacity-50', 'pointer-events-none');
+                    input.disabled = true;
+                    // Thay đổi option đầu tiên thành "Đã khóa"
+                    input.options[0].textContent = '-- Đã khóa --';
+                    priorityBtn.disabled = true;
+                }
+            });
+            if (dateStr <= todayString) {
+                td.classList.add('bg-slate-50');
+            }
+            registrationRow.appendChild(shiftCell);
+        });
+
+        tableBody.appendChild(weekHeaderRow);
+        tableBody.appendChild(registrationRow);
+    }
+
+    await loadAvailabilityForWeek(allDates);
     addCellEventListeners();
 }
 
@@ -209,116 +231,75 @@ async function renderWeekView() {
  * @param {Date[]} weekDates - Mảng các đối tượng Date trong tuần.
  */
 async function loadAvailabilityForWeek(weekDates) {
-    const currentUser = window.currentUser;
-    if (!currentUser || !currentUser.id) {
-        return;
-    }
+    // DEMO: Đọc từ dữ liệu giả
+    console.log("DEMO: Loading availability from mock data.");
+    const currentUser = mockCurrentUser;
 
-    const dateStrings = weekDates.map(formatDate);
-    const docIds = dateStrings.map(d => `${d}_${currentUser.id}`);
-    
-    if (docIds.length === 0) return;
-    
-    const availabilityRef = collection(db, 'staff_availability');
-    const q = query(availabilityRef, where('__name__', 'in', docIds));
-    
-    try {
-        const querySnapshot = await getDocs(q);
-        querySnapshot.forEach(docSnap => {
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                const date = data.date;
-                const registrations = data.registrations || []; // [{shiftCode: 'V8', priority: 1}, {shiftCode: 'V4.5', priority: 2}]
+    weekDates.forEach(dateObj => {
+        const dateStr = formatDate(dateObj);
+        const docId = `${dateStr}_${currentUser.id}`;
+        const data = mockAvailability[docId];
 
-                registrations.forEach((reg, index) => {
-                    const block = document.querySelector(`td[data-date="${date}"] .shift-registration-block[data-shift-index="${index}"]`);
-                    if (block) {
-                        const td = block.closest('td'); // Định nghĩa td ở đây
-                        const input = block.querySelector('.shift-input');
-                        const priorityBtns = block.querySelectorAll('.priority-btn');
+        if (data) {
+            const registrations = data.registrations || [];
+            registrations.forEach((reg, index) => {
+                const block = document.querySelector(`td[data-date="${dateStr}"] .shift-registration-block[data-shift-index="${index}"]`);
+                if (block) {
+                    const input = block.querySelector('.shift-input');                    
+                    const priorityBtn = block.querySelector('.priority-toggle-btn');
 
-                        // Cập nhật input
-                        if (reg.shiftCode) {
-                            input.value = reg.shiftCode;
-                            // Kích hoạt nút ưu tiên vì đã có ca được chọn
-                            priorityBtns.forEach(btn => btn.disabled = false);
-                        } else {
-                            // Vô hiệu hóa nếu không có ca
-                            priorityBtns.forEach(btn => btn.disabled = true);
-                        }
-
-                        // Cập nhật priority
-                        if (reg.priority) {
-                            updatePriorityUI(block, reg.priority);
-                        }
-                        updateShiftTimeDisplay(block); // Hiển thị khung giờ cho ca đã lưu
-
-                    // Sau khi tải dữ liệu, lọc lại datalist cho cả hai input trong ngày
-                    const targetInput = input;
-                    const shiftIndex = index; // Gán giá trị index vào shiftIndex
-                    const otherInput = td.querySelector(`.shift-input[data-shift-index="${1 - shiftIndex}"]`); // Lấy input còn lại
-                    
-                    const targetDatalist = document.getElementById(targetInput.getAttribute('list'));
-                    const otherDatalist = otherInput ? document.getElementById(otherInput.getAttribute('list')) : null;
-
-                    const targetShiftCode = targetInput.value;
-                    const otherShiftCode = otherInput ? otherInput.value : null;
-
-                    if (targetDatalist) filterDatalist(targetDatalist, targetShiftCode, otherShiftCode);
-                    if (otherDatalist) filterDatalist(otherDatalist, otherShiftCode, targetShiftCode);
-
+                    if (reg.shiftCode) {
+                        input.value = reg.shiftCode;
+                        priorityBtn.disabled = false;
                     }
-                });
+
+                    // Cập nhật giao diện nút ưu tiên dựa trên dữ liệu đã lưu
+                    updatePriorityUI(priorityBtn, reg.priority || 0);
+                }
+            });
+
+            // Tải và hiển thị giờ help đã lưu
+            if (data.helpTime) {
+                // Tìm nút help trong header của cột tương ứng
+                const helpBtn = document.querySelector(`th[data-date="${dateStr}"] .help-btn`);
+                if (helpBtn) {
+                    updateHelpButtonUI(helpBtn, data.helpTime.start, data.helpTime.end);
+                }
             }
-        });
-    } catch (error) {
-        console.error("Lỗi khi tải dữ liệu đăng ký tuần:", error);
-        window.showToast("Không thể tải dữ liệu đã đăng ký.", "error");
-    }
+        }
+    });
+    // Giả lập độ trễ mạng
 }
 
-/**
- * Cập nhật hiển thị khung giờ làm việc dựa trên mã ca đã nhập.
- * @param {HTMLElement} block - Khối div.shift-registration-block chứa input.
- */
-function updateShiftTimeDisplay(block) {
-    const input = block.querySelector('.shift-input');
-    const timeDisplay = block.querySelector('.shift-time-display');
-    if (!input || !timeDisplay) return;
-
-    const shiftCodeValue = input.value;
-    const shift = shiftCodes.find(sc => sc.shiftCode === shiftCodeValue);
-
-    if (shift) {
-        timeDisplay.textContent = shift.timeRange;
-    } else {
-        timeDisplay.textContent = '';
-    }
-}
 /**
  * Cập nhật giao diện của các nút ưu tiên.
  * @param {HTMLElement} block - Khối div.shift-registration-block chứa các nút.
  * @param {number} selectedPriority - Mức ưu tiên được chọn (1 hoặc 2).
+ * 0 để reset.
  */
-function updatePriorityUI(block, selectedPriority) {
-    const priorityBtns = block.querySelectorAll('.priority-btn');
-    priorityBtns.forEach(btn => {
-        const icon = btn.querySelector('i');
-        const priority = parseInt(btn.dataset.priority, 10);
+function updatePriorityUI(button, priority) {
+    if (!button) return;
+    const icon = button.querySelector('i');
+    if (!icon) return;
 
-        // Reset màu
-        icon.classList.remove('text-green-500', 'text-amber-500');
+    // Reset icon
+    icon.classList.remove('fa-circle', 'fa-triangle-exclamation', 'text-green-500', 'text-amber-500');
+
+    if (priority === 1) {
+        icon.classList.add('fa-circle', 'text-green-500');
+        button.dataset.priority = "1";
+        button.title = "Chắc chắn vào ca";
+    } else if (priority === 2) {
+        icon.classList.add('fa-triangle-exclamation', 'text-amber-500');
+        button.dataset.priority = "2";
+        button.title = "Có thể vào ca";
+    } else { // Trạng thái reset hoặc không chọn
         icon.classList.add('text-gray-300');
-
-        if (priority === selectedPriority) {
-            if (priority === 1) {
-                icon.classList.add('text-green-500');
-            } else if (priority === 2) {
-                icon.classList.add('text-amber-500');
-            }
-            icon.classList.remove('text-gray-300');
-        }
-    });
+        // Mặc định là icon tròn khi reset
+        icon.classList.add('fa-circle');
+        button.dataset.priority = "1"; // Khi reset, lần click tiếp theo sẽ là prio 1
+        button.title = "Chắc chắn vào ca";
+    }
 }
 
 /**
@@ -333,9 +314,9 @@ function handleCellChange(event) {
     if (!td) return;
 
     // Lấy cả hai input trong ô ngày hiện tại
-    // Xử lý khi thay đổi giá trị ca (sự kiện 'input')
-    if (target.classList.contains('shift-input')) {
-        const priorityBtns = block.querySelectorAll('.priority-btn');
+    // Xử lý khi thay đổi giá trị ca
+    if (target.classList.contains('shift-input') && event.type === 'change') {
+        const priorityBtn = block.querySelector('.priority-toggle-btn');
             // --- LOGIC KIỂM TRA TRÙNG GIỜ ---
             const inputs = td.querySelectorAll('.shift-input');
             const otherInput = Array.from(inputs).find(inp => inp !== target);
@@ -361,39 +342,39 @@ function handleCellChange(event) {
                         window.showToast('Lỗi: Khung giờ của hai ca bị trùng nhau.', 'error');
                         target.value = ''; // Xóa lựa chọn không hợp lệ
                         // Vô hiệu hóa và reset ưu tiên
-                        priorityBtns.forEach(btn => btn.disabled = true);
-                        updatePriorityUI(block, 0);
-                        updateShiftTimeDisplay(block);
+                        priorityBtn.disabled = true;
+                        updatePriorityUI(priorityBtn, 0);
                         return; // Dừng xử lý thêm
                     }
                 }
             }
             // --- KẾT THÚC LOGIC KIỂM TRA ---
 
-
             if (target.value) {
-                // Kích hoạt các nút ưu tiên nếu một ca được chọn
-                priorityBtns.forEach(btn => btn.disabled = false);
+                // Kích hoạt nút ưu tiên và đặt mặc định là Prio 1 (icon tròn)
+                priorityBtn.disabled = false;
+                updatePriorityUI(priorityBtn, 1);
             } else {
                 // Vô hiệu hóa và reset ưu tiên nếu không có ca nào được chọn
-                priorityBtns.forEach(btn => btn.disabled = true);
-                updatePriorityUI(block, 0); // Reset màu của icon
+                priorityBtn.disabled = true;
+                updatePriorityUI(priorityBtn, 0); // Reset về trạng thái ban đầu
             }
-            updateShiftTimeDisplay(block); // Cập nhật hiển thị khung giờ
 
         }
     // Xử lý chọn priority
-    const priorityBtn = target.closest('.priority-btn');
+    const priorityBtn = target.closest('.priority-toggle-btn');
     if (priorityBtn) {
         const currentPriority = parseInt(priorityBtn.dataset.priority, 10);
-        const icon = priorityBtn.querySelector('i');
-        
-        // Nếu icon đã được chọn, bỏ chọn nó
-        if (!icon.classList.contains('text-gray-300')) {
-            updatePriorityUI(block, 0); // 0 để bỏ chọn tất cả
-        } else {
-            updatePriorityUI(block, currentPriority);
-        }
+        // Chuyển đổi trạng thái: nếu đang là 1 -> 2, nếu là 2 -> 1
+        const nextPriority = currentPriority === 1 ? 2 : 1;
+        updatePriorityUI(priorityBtn, nextPriority);
+    }
+
+    // Xử lý khi click nút Help
+    const helpBtn = target.closest('.help-btn');
+    const th = target.closest('th[data-date]');
+    if (helpBtn && th) {
+        openHelpModal(td.dataset.date);
     }
 }
 
@@ -424,18 +405,14 @@ function handleCellFocus(event) {
  * Gửi dữ liệu đăng ký của cả tuần hiển thị lên Firestore.
  */
 async function saveWeekAvailability() {
-    const currentUser = window.currentUser;
-    if (!currentUser || !currentUser.id) {
-        return;
-    }
-
     const saveButton = document.getElementById('save-week-availability-btn');
+    const currentUser = mockCurrentUser;
     if (!saveButton) return;
 
     saveButton.disabled = true;
     saveButton.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Đang lưu...`;
 
-    const batch = writeBatch(db);
+    // const batch = writeBatch(db); // Loại bỏ dòng code liên quan đến Firebase
     const allCells = document.querySelectorAll('.min-w-full tbody td[data-date]');
     const dataByDate = {};
 
@@ -445,8 +422,8 @@ async function saveWeekAvailability() {
         td.querySelectorAll('.shift-registration-block').forEach(block => {
             const shiftIndex = parseInt(block.dataset.shiftIndex, 10);
             const shiftCode = block.querySelector('.shift-input').value;
-            const selectedPriorityBtn = block.querySelector('.priority-btn i:not(.text-gray-300)');
-        const priority = selectedPriorityBtn ? parseInt(selectedPriorityBtn.closest('.priority-btn').dataset.priority, 10) : 0;
+            const priorityBtn = block.querySelector('.priority-toggle-btn');
+            const priority = shiftCode ? parseInt(priorityBtn.dataset.priority, 10) : 0;
 
         if (!dataByDate[date]) {
             dataByDate[date] = [];
@@ -454,64 +431,157 @@ async function saveWeekAvailability() {
         dataByDate[date][shiftIndex] = { shiftCode, priority };
     });
     });
-
-    // 2. Chuẩn bị ghi hàng loạt (batch write)
-    for (const date in dataByDate) {
-        let registrations = dataByDate[date];
-
-        // Lọc bỏ các đăng ký rỗng ở cuối để tiết kiệm dung lượng
-        while (registrations.length > 0) {
-            const lastReg = registrations[registrations.length - 1];
-            if (!lastReg || (!lastReg.shiftCode && lastReg.priority === 0)) {
-                registrations.pop();
-            } else {
-                break;
-            }
+    // Thu thập dữ liệu giờ help từ tooltip của nút
+    allCells.forEach(td => {
+        const date = td.dataset.date;
+        // Tìm nút help trong header tương ứng với ngày này
+        const helpBtn = document.querySelector(`th[data-date="${date}"] .help-btn`);
+        if (helpBtn && helpBtn.dataset.startTime && helpBtn.dataset.endTime) {
+            if (!dataByDate[date]) dataByDate[date] = []; // Đảm bảo object tồn tại
+            dataByDate[date].helpTime = { start: helpBtn.dataset.startTime, end: helpBtn.dataset.endTime };
         }
+    });
 
+    // 2. DEMO: Lưu vào biến mockAvailability
+    console.log("DEMO: Saving data to mockAvailability object.");
+    for (const date in dataByDate) {
         const docId = `${date}_${currentUser.id}`;
-        const docRef = doc(db, 'staff_availability', docId);
+        const hasRegistration = dataByDate[date].some(reg => reg && reg.shiftCode);
 
-        if (registrations.length === 0) {
-            // Nếu không có đăng ký nào cho ngày này, xóa document khỏi Firestore
-            batch.delete(docRef);
-        } else {
-            // Nếu có, cập nhật hoặc tạo mới document
-            const dataToSave = {
+        // Kiểm tra xem có đăng ký ca hoặc đăng ký help không
+        if (hasRegistration || dataByDate[date].helpTime) {
+            mockAvailability[docId] = {
                 employeeId: currentUser.id,
                 employeeName: currentUser.name,
                 date: date,
-                registrations: registrations,
-                updatedAt: serverTimestamp()
+                registrations: dataByDate[date].filter(item => typeof item === 'object'), // Chỉ lấy các object đăng ký ca
+                helpTime: dataByDate[date].helpTime || null
             };
-            batch.set(docRef, dataToSave);
+        } else {
+            // Nếu không có đăng ký nào, xóa khỏi mock data
+            delete mockAvailability[docId];
         }
     }
 
-    // 3. Thực thi ghi hàng loạt
-    try {
-        await batch.commit();
+    // 3. Giả lập lưu thành công
+    setTimeout(() => {
         window.showToast('Đã lưu đăng ký tuần thành công!', 'success');
-    } catch (error) {
-        console.error("Lỗi khi lưu đăng ký tuần:", error);
-        window.showToast("Đã xảy ra lỗi khi lưu đăng ký.", "error");
-    } finally {
         saveButton.disabled = false;
-        saveButton.innerHTML = `<i class="fas fa-save mr-2"></i> Lưu Đăng Ký Tuần`;
+        saveButton.innerHTML = `<i class="fas fa-save mr-2"></i> Đăng Ký`;
+        console.log("Current Mock Data:", mockAvailability);
+    }, 500);
+}
+
+/**
+ * Mở modal để chọn giờ Help.
+ * @param {string} date - Ngày được chọn (YYYY-MM-DD).
+ */
+function openHelpModal(date) {
+    const modal = document.getElementById('help-modal');
+    const title = document.getElementById('help-modal-title');
+    const dateInput = document.getElementById('help-modal-date');
+    const startTimeInput = document.getElementById('help-start-time');
+    const endTimeInput = document.getElementById('help-end-time');
+
+    if (!modal || !title || !dateInput || !startTimeInput || !endTimeInput) return;
+
+    // Điền thông tin vào modal
+    title.textContent = `Đăng ký giờ hỗ trợ ngày ${new Date(date + 'T00:00:00').toLocaleDateString('vi-VN')}`;
+    dateInput.value = date;
+
+    // Lấy giờ đã lưu (nếu có) từ nút help tương ứng
+    // Tìm nút help trong header của cột tương ứng
+    const helpBtn = document.querySelector(`th[data-date="${date}"] .help-btn`);
+    startTimeInput.value = helpBtn?.dataset.startTime || '';
+    endTimeInput.value = helpBtn?.dataset.endTime || '';
+
+    // Hiển thị modal
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    setTimeout(() => modal.classList.add('show'), 10);
+}
+
+/**
+ * Đóng modal.
+ * @param {string} modalId - ID của modal cần đóng.
+ */
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('show');
+        setTimeout(() => {
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }, 200);
     }
+}
+
+/**
+ * Cập nhật giao diện nút Help sau khi lưu.
+ * @param {HTMLElement} button - Nút help cần cập nhật.
+ * @param {string} startTime - Giờ bắt đầu.
+ * @param {string} endTime - Giờ kết thúc.
+ */
+function updateHelpButtonUI(button, startTime, endTime) {
+    if (!button) return;
+
+    if (startTime && endTime) {
+        button.classList.remove('btn-secondary');
+        button.classList.add('btn-success'); // Đổi màu nút để báo hiệu đã đăng ký
+        button.title = `Hỗ trợ từ ${startTime} đến ${endTime}`;
+        // Lưu giờ vào dataset để dễ truy xuất
+        button.dataset.startTime = startTime;
+        button.dataset.endTime = endTime;
+    } else {
+        button.classList.remove('btn-success');
+        button.classList.add('btn-secondary');
+        button.title = '';
+        // Xóa dataset
+        delete button.dataset.startTime;
+        delete button.dataset.endTime;
+    }
+}
+
+/**
+ * Xử lý việc lưu giờ Help từ modal.
+ */
+function handleSaveHelpTime() {
+    const date = document.getElementById('help-modal-date').value;
+    const startTime = document.getElementById('help-start-time').value;
+    const endTime = document.getElementById('help-end-time').value;
+
+    if (startTime && endTime && startTime >= endTime) {
+        window.showToast('Lỗi: Giờ kết thúc phải sau giờ bắt đầu.', 'error');
+        return;
+    }
+
+    // Tìm nút help trong header của cột tương ứng
+    const helpBtn = document.querySelector(`th[data-date="${date}"] .help-btn`);
+    updateHelpButtonUI(helpBtn, startTime, endTime);
+    closeModal('help-modal');
+    window.showToast('Đã cập nhật giờ hỗ trợ!', 'success');
 }
 
 /**
  * Gắn các event listener cho các ô trong bảng.
  */
 function addCellEventListeners() {
-    const tableBody = document.querySelector('.min-w-full tbody');
+    const tableBody = document.getElementById('availability-table-body');
     if (tableBody) {
         // Sử dụng event delegation
-        tableBody.addEventListener('click', handleCellChange); // Chỉ xử lý click nút ưu tiên
-        tableBody.addEventListener('input', handleCellChange); // Xử lý khi giá trị input thay đổi
+        tableBody.addEventListener('click', handleCellChange);
+        tableBody.addEventListener('change', handleCellChange); // Đổi từ 'input' sang 'change' cho <select>
         tableBody.addEventListener('focusin', handleCellFocus); // Xử lý khi focus vào input
     }
+
+    // Gắn listener cho các nút trong modal
+    document.getElementById('save-help-time-btn')?.addEventListener('click', handleSaveHelpTime);
+    document.querySelectorAll('.modal-close-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const modalId = btn.dataset.modalId;
+            if (modalId) closeModal(modalId);
+        });
+    });
 }
 
 /**
@@ -529,10 +599,10 @@ export function cleanup() {
         domController = null;
     }
     // Xóa event listener đã delegate
-    const tableBody = document.querySelector('.min-w-full tbody');
+    const tableBody = document.getElementById('availability-table-body');
     if (tableBody) {
         tableBody.removeEventListener('click', handleCellChange);
-        tableBody.removeEventListener('input', handleCellChange);
+        tableBody.removeEventListener('change', handleCellChange);
         tableBody.removeEventListener('focusin', handleCellFocus);
     }
 }
@@ -542,6 +612,9 @@ export async function init() {
     // Do đó, không cần chờ 'DOMContentLoaded' nữa và có thể chạy trực tiếp.
     // Logic mới: Kiểm tra tham số 'date' trên URL trước khi chạy init
     const urlParams = new URLSearchParams(window.location.search);
+    // Gán mockCurrentUser vào window để các phần khác của app (nếu có) có thể truy cập
+    window.currentUser = mockCurrentUser;
+
     const dateParam = urlParams.get('date');
     let initialDate = null;
 
@@ -559,10 +632,10 @@ async function runInit(initialDate = null) {
     const { signal } = domController;
 
     // Đặt ngày bắt đầu là ngày mai
-    viewStartDate = initialDate || getTomorrow();
+    viewStartDate = initialDate || getNextPayrollStartDate();
     viewStartDate.setHours(0, 0, 0, 0);
 
-    await loadShiftCodes();
+    await loadApplicableShiftCodes();
     renderWeekView();
 
     document.getElementById('prev-week-btn')?.addEventListener('click', () => changeWeek(-1), { signal });
