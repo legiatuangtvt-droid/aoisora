@@ -1106,18 +1106,23 @@ function toggleBuilderView() {
     const toggleBtnSpan = toggleBtn.querySelector('span');
     const saveBtn = document.getElementById('save-template-btn');
     const newBtn = document.getElementById('new-template-btn');
+    const deployBtn = document.getElementById('apply-template-hq-btn');
+    const deleteBtn = document.getElementById('delete-template-btn');
+
     if (currentView === 'builder') {
         // Chuyển sang RE Logic
         currentView = 're-logic';
         builderContainer.classList.add('hidden');
         reLogicContainer.classList.remove('hidden');
-        
+
         toggleBtnIcon.className = 'fas fa-sitemap mr-2';
         toggleBtnSpan.textContent = 'Model';
-        
+
         // Ẩn các nút không liên quan
         saveBtn.classList.add('hidden');
         newBtn.classList.add('hidden');
+        deployBtn.classList.add('hidden');
+        deleteBtn.classList.add('hidden');
 
         // Khởi tạo view RE Logic (nếu chưa)
         initRELogicView();
@@ -1135,6 +1140,8 @@ function toggleBuilderView() {
         if (window.currentUser && (window.currentUser.roleId === 'HQ_STAFF' || window.currentUser.roleId === 'ADMIN')) {
             saveBtn.classList.remove('hidden');
             newBtn.classList.remove('hidden');
+            deployBtn.classList.remove('hidden');
+            deleteBtn.classList.remove('hidden');
         }
     }
 }

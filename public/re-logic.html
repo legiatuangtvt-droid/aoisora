@@ -1,35 +1,40 @@
 <!-- This file now acts as a template for the RE Logic view content -->
 <!-- Main content area for RE Logic -->
-<div id="re-logic-main-content" class="flex flex-col h-full">
-    <!-- Summary card for RE Logic, now at the top of the main content -->
-    <div id="re-summary-card" class="p-4 border-b border-slate-200 flex-shrink-0">
-        <h3 class="text-lg font-semibold text-gray-800 flex items-center justify-center">
-            <i class="fas fa-calculator mr-3 text-indigo-500"></i>
-            <span>RE Summary</span>
-        </h3>
-        <div id="re-summary-content" class="mt-4">
-            <!-- Summary table will be rendered here -->
-            <p class="text-slate-500">Đang tính toán...</p>
-        </div>
-    </div>
-<div id="re-logic-main-content" class="p-4">
-    <!-- Store Info Section -->
-    <div class="mb-4">
-        <button id="re-store-info-toggle" class="w-full text-left p-3 bg-slate-100 hover:bg-slate-200 rounded-lg font-semibold text-slate-700 transition-colors">
-            Thông tin cửa hàng <i class="fas fa-chevron-down ml-2 transition-transform"></i>
-        </button>
-        <div id="re-store-info-content" class="hidden mt-2 p-4 border rounded-lg bg-white">
-            <!-- Store info table will be rendered here -->
-            <p class="text-slate-500">Đang tải thông tin cửa hàng...</p>
-        </div>
-    </div>
-    <!-- Task Details Section -->
-    <div class="bg-white p-4 rounded-lg shadow-sm border">
-        <h3 class="text-lg font-semibold text-slate-800 mb-4">Chi tiết các Group Task</h3>
-        <div id="re-task-accordion" class="space-y-2">
-            <!-- Accordion items for each task group will be rendered here -->
-            <p class="text-slate-500">Đang tải danh sách công việc...</p>
-        </div>
-    </div>
-</div>
-</div>
+  <div id="re-logic-main-content" class="p-4 flex flex-col h-full">
+      <!-- Store Info Section -->
+      <div class="mb-4 flex-shrink-0">
+          <h3 class="text-lg font-semibold text-slate-800 mb-2 flex items-center">
+              Thông tin cửa hàng
+          </h3>
+          <div id="re-store-info-content" class="mt-2 p-4 border rounded-lg bg-white">
+              <table class="w-full text-sm border-collapse">
+                  <thead class="bg-slate-50">
+                      <tr>
+                          <th class="p-2 border text-center font-semibold text-slate-600">Số khách hàng (người)</th>
+                          <th class="p-2 border text-center font-semibold text-slate-600">Diện tích (m2)</th>
+                          <th class="p-2 border text-center font-semibold text-slate-600">Số nhân viên (người)</th>
+                          <th class="p-2 border text-center font-semibold text-slate-600">Tổng kiện hàng khô (kiện)</th>
+                          <th class="p-2 border text-center font-semibold text-slate-600">Hàng rau củ (kg)</th>
+                      </tr>
+                  </thead>
+                  <tbody id="re-store-info-body">
+                      <tr>
+                          <td class="p-2 border text-center">0</td>
+                          <td class="p-2 border text-center">0</td>
+                          <td class="p-2 border text-center">0</td>
+                          <td class="p-2 border text-center">0</td>
+                          <td class="p-2 border text-center">0</td>
+                      </tr>
+                  </tbody>
+              </table>
+          </div>
+      </div>
+      <!-- Task Details Section -->
+      <div class="bg-white p-4 rounded-lg shadow-sm border flex-1 overflow-y-auto">
+          <h3 class="text-lg font-semibold text-slate-800 mb-4">Chi tiết các Group Task</h3>
+          <div id="re-task-accordion" class="space-y-2">
+              <!-- Accordion items for each task group will be rendered here -->
+              <p class="text-slate-500">Đang tải danh sách công việc...</p>
+          </div>
+      </div>
+  </div>

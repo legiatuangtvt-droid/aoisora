@@ -119,7 +119,6 @@ export async function initRELogicView() {
             const doc = parser.parseFromString(html, 'text/html');
             
             reLogicContainer.innerHTML = doc.body.innerHTML; // Chèn toàn bộ nội dung từ template
-
         } catch (error) {
             reLogicContainer.innerHTML = `<p class="text-red-500 p-4">Error loading view.</p>`;
             return;
