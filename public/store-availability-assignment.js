@@ -9,6 +9,45 @@ let workPositions = []; // To store all possible work positions from datalist
 let allRoles = []; // Để lưu trữ danh sách chức vụ
 let shiftCodes = [];
 
+//Mock Data:
+//1. Mỗi nhân viên chỉ có thể đăng ký 1 trong 2 ca: V812 và V829;
+//2. Mỗi nhân viên có xác suất đăng ký số lượng ca mỗi ngày như sau: 2 ca: 60%, 1 ca: 30%, không đăng ký ca nào: 10%;
+//3. Mỗi ca đăng ký có xác xuất có thể vào ca như sau: Chắc chắn vào ca: 80%, có thể vào ca: 20%
+//4. Mỗi nhân viên có xác suất đăng ký help là 10%, đảm bảo khung giờ không trung với khung giờ đã đăng ký trong ngày đó (nếu có), giờ bắt đầu tối thiểu 6:00, số giờ làm đăng ký không nhỏ hơn 4h và có step 0.5h
+const mockStaffProfiles = [
+    // Profile 1
+    {
+        "2025-11-26": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-27": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: '', priority: 0 }] },
+        "2025-11-28": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
+        "2025-11-29": { registrations: [{ shiftCode: 'V829', priority: 2 }, { shiftCode: '', priority: 0 }] },
+        "2025-11-30": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-12-01": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }] },
+        "2025-12-02": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 2 }] },
+    },
+    // Profile 2
+    {
+        "2025-11-26": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-27": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
+        "2025-11-28": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 2 }] },
+        "2025-11-29": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }] },
+        "2025-11-30": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-12-01": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: '', priority: 0 }] },
+        "2025-12-02": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+    },
+    // Profile 3
+    {
+        "2025-11-26": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: '', priority: 0 }] },
+        "2025-11-27": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-28": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
+        "2025-11-29": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-30": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }] },
+        "2025-12-01": { registrations: [{ shiftCode: 'V812', priority: 2 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-12-02": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: '', priority: 0 }] },
+    },
+    // Thêm các profile khác nếu cần
+];
+
 function formatDate(date) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -16,10 +55,28 @@ function formatDate(date) {
     return `${year}-${month}-${day}`;
 }
 
-function getTomorrow() {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow;
+
+/**
+ * Lấy ngày bắt đầu chu kỳ lương tiếp theo (mặc định là ngày 26).
+ * @returns {Date}
+ */
+function getNextPayrollStartDate() {
+    const today = new Date();
+    const currentDay = today.getDate();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    const payrollStartDay = 26;
+
+    let nextPayrollDate;
+
+    if (currentDay < payrollStartDay) {
+        // Chu kỳ tiếp theo bắt đầu vào ngày 26 của tháng này
+        nextPayrollDate = new Date(currentYear, currentMonth, payrollStartDay);
+    } else {
+        // Chu kỳ tiếp theo bắt đầu vào ngày 26 của tháng sau
+        nextPayrollDate = new Date(currentYear, currentMonth + 1, payrollStartDay);
+    }
+    return nextPayrollDate;
 }
 
 /**
@@ -92,6 +149,27 @@ async function fetchInitialData() {
     allEmployeesInStore = employeeSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
     await fetchAvailabilitiesForWeek();
+
+    // --- LOGIC MỚI: GÁN DỮ LIỆU MÔ PHỎNG CHO NHÂN VIÊN 'STAFF' ---
+    // Lọc ra các nhân viên có vai trò là STAFF
+    const staffEmployees = allEmployeesInStore.filter(emp => emp.roleId === 'STAFF');
+    const newMockAvailabilities = [];
+
+    staffEmployees.forEach((staff, index) => {
+        // Chọn một profile mô phỏng để gán cho nhân viên (sử dụng toán tử modulo để xoay vòng)
+        const profile = mockStaffProfiles[index % mockStaffProfiles.length];
+
+        // Tạo các bản ghi availability từ profile đã chọn
+        for (const date in profile) {
+            newMockAvailabilities.push({
+                employeeId: staff.id,
+                date: date,
+                registrations: profile[date].registrations
+            });
+        }
+    });
+    // Ghi đè allAvailabilities bằng dữ liệu mô phỏng vừa tạo
+    allAvailabilities = newMockAvailabilities;
 }
 
 async function fetchAvailabilitiesForWeek() {
@@ -718,7 +796,7 @@ export function cleanup() {
 
 export async function init() {
     domController = new AbortController();
-    viewStartDate = getTomorrow(); // Bắt đầu từ ngày mai
+    viewStartDate = getNextPayrollStartDate(); // Bắt đầu từ ngày 26 kế tiếp
     viewStartDate.setHours(0, 0, 0, 0);
 
     await loadShiftCodes();
