@@ -14,67 +14,84 @@ let shiftCodes = [];
 //2. Mỗi nhân viên có xác suất đăng ký số lượng ca mỗi ngày như sau: 2 ca: 60%, 1 ca: 30%, không đăng ký ca nào: 10%;
 //3. Mỗi ca đăng ký có xác xuất 3 trạng thái như sau: Chắc chắn vào ca: 70%, có thể vào ca: 30%;
 const mockStaffProfiles = [
-    // Profile 1 (4 ngày 2 ca, 2 ngày 1 ca, 1 ngày 0 ca)
-    {
-        "2025-11-26": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
-        "2025-11-27": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
-        "2025-11-28": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 2 }] },
-        "2025-11-29": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
-        "2025-11-30": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: '', priority: 0 }] },
-        "2025-12-01": { registrations: [{ shiftCode: 'V812', priority: 2 }, { shiftCode: '', priority: 0 }] },
-        "2025-12-02": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }] },
-    },
-    // Profile 2 (4 ngày 2 ca, 2 ngày 1 ca, 1 ngày 0 ca)
+    // Profile 1: 6 ngày (2 ca), 3 ngày (1 ca), 1 ngày (0 ca)
     {
         "2025-11-26": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
         "2025-11-27": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
         "2025-11-28": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
         "2025-11-29": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
-        "2025-11-30": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
+        "2025-11-30": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 2 }] },
+        "2025-12-01": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-12-02": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
+        "2025-12-03": { registrations: [{ shiftCode: 'V829', priority: 2 }, { shiftCode: '', priority: 0 }] },
+        "2025-12-04": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
+        "2025-12-05": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }] },
+    },
+    // Profile 2: 6 ngày (2 ca), 3 ngày (1 ca), 1 ngày (0 ca) - Thứ tự khác
+    {
+        "2025-11-26": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-27": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
+        "2025-11-28": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-29": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-30": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
         "2025-12-01": { registrations: [{ shiftCode: 'V829', priority: 2 }, { shiftCode: '', priority: 0 }] },
-        "2025-12-02": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }] },
+        "2025-12-02": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 2 }] },
+        "2025-12-03": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }] },
+        "2025-12-04": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-12-05": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: '', priority: 0 }] },
     },
-    // Profile 3 (4 ngày 2 ca, 2 ngày 1 ca, 1 ngày 0 ca)
+    // Profile 3: 6 ngày (2 ca), 3 ngày (1 ca), 1 ngày (0 ca) - Thứ tự khác
+    {
+        "2025-11-26": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }] },
+        "2025-11-27": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-28": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: '', priority: 0 }] },
+        "2025-11-29": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-30": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-12-01": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 2 }] },
+        "2025-12-02": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
+        "2025-12-03": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-12-04": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-12-05": { registrations: [{ shiftCode: 'V812', priority: 2 }, { shiftCode: '', priority: 0 }] },
+    },
+    // Profile 4: 6 ngày (2 ca), 3 ngày (1 ca), 1 ngày (0 ca) - Thứ tự khác
     {
         "2025-11-26": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
-        "2025-11-27": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 2 }] },
+        "2025-11-27": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
         "2025-11-28": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
         "2025-11-29": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
-        "2025-11-30": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: '', priority: 0 }] },
-        "2025-12-01": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
-        "2025-12-02": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }] },
-    },
-    // Profile 4 (4 ngày 2 ca, 2 ngày 1 ca, 1 ngày 0 ca)
-    {
-        "2025-11-26": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
-        "2025-11-27": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
-        "2025-11-28": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
-        "2025-11-29": { registrations: [{ shiftCode: 'V812', priority: 2 }, { shiftCode: 'V829', priority: 1 }] },
-        "2025-11-30": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
+        "2025-11-30": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
         "2025-12-01": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: '', priority: 0 }] },
-        "2025-12-02": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }] },
+        "2025-12-02": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-12-03": { registrations: [{ shiftCode: 'V812', priority: 2 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-12-04": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }] },
+        "2025-12-05": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
     },
-    // Profile 5 (4 ngày 2 ca, 2 ngày 1 ca, 1 ngày 0 ca)
+    // Profile 5: 6 ngày (2 ca), 3 ngày (1 ca), 1 ngày (0 ca) - Thứ tự khác
     {
         "2025-11-26": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
         "2025-11-27": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
-        "2025-11-28": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-28": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
         "2025-11-29": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
-        "2025-11-30": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: '', priority: 0 }] },
-        "2025-12-01": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
-        "2025-12-02": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }] },
+        "2025-11-30": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-12-01": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: '', priority: 0 }] },
+        "2025-12-02": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 2 }] },
+        "2025-12-03": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-12-04": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }] },
+        "2025-12-05": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
     },
-    // Profile 6 (4 ngày 2 ca, 2 ngày 1 ca, 1 ngày 0 ca)
+    // Profile 6: 6 ngày (2 ca), 3 ngày (1 ca), 1 ngày (0 ca) - Thứ tự khác
     {
         "2025-11-26": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
         "2025-11-27": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
-        "2025-11-28": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-28": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
         "2025-11-29": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
-        "2025-11-30": { registrations: [{ shiftCode: 'V829', priority: 2 }, { shiftCode: '', priority: 0 }] },
-        "2025-12-01": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
-        "2025-12-02": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }] },
-    },
-    // Thêm các profile khác nếu cần
+        "2025-11-30": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-12-01": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: '', priority: 0 }] },
+        "2025-12-02": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 2 }] },
+        "2025-12-03": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-12-04": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }] },
+        "2025-12-05": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
+    }
 ];
 
 function formatDate(date) {
@@ -515,10 +532,10 @@ function renderReadOnlyCellForStaff(employee, date) {
     const disabledAttr = isPastDate ? 'disabled' : '';
     
     // Lọc danh sách vị trí công việc. Nếu là STAFF, loại bỏ vị trí 'LEADER'.
-    const isStaffOrG2 = employee.roleId === 'STAFF' || employee.roleId === 'STORE_LEADER_G2';
-    const filteredWorkPositions = isStaffOrG2
-        ? workPositions // Nếu là STAFF hoặc G2, hiển thị tất cả vị trí
-        : workPositions.filter(pos => pos.id !== 'LEADER'); // Ngược lại, ẩn vị trí LEADER
+    const isStaff = employee.roleId === 'STAFF';
+    const filteredWorkPositions = isStaff
+        ? workPositions.filter(pos => pos.id !== 'LEADER') // Nếu là STAFF, ẩn vị trí LEADER
+        : workPositions; // Các vai trò khác (Leader) hiển thị tất cả vị trí
 
     const workPositionOptions = filteredWorkPositions.map(pos => `<option value="${pos.id}">${pos.name}</option>`).join('');
 
