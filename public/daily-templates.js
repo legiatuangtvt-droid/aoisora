@@ -729,8 +729,20 @@ async function showTemplateApplyStatus(templateId) {
         statusContainer.classList.add('hidden');
         return;
     }
+    // Lấy các nút để điều khiển trạng thái
+    const hqApplyBtn = document.getElementById('apply-template-hq-btn');
+    const hqApplyBtnSpan = hqApplyBtn?.querySelector('span');
+    const saveBtn = document.getElementById('save-template-btn');
+    const deleteBtn = document.getElementById('delete-template-btn');
 
-    statusDisplay.textContent = 'Đang kiểm tra...';
+    // Reset trạng thái các nút về mặc định trước khi kiểm tra
+    if (hqApplyBtn) hqApplyBtn.classList.remove('hidden');
+    if (hqApplyBtnSpan) hqApplyBtnSpan.textContent = 'Triển khai';
+    if (saveBtn) saveBtn.classList.remove('hidden');
+    if (deleteBtn) deleteBtn.classList.remove('hidden');
+
+
+    statusDisplay.textContent = 'Đang kiểm tra trạng thái...';
     statusContainer.classList.remove('hidden');
 
     try {
@@ -746,15 +758,28 @@ async function showTemplateApplyStatus(templateId) {
             statusDisplay.textContent = 'Chưa được áp dụng cho chu kỳ nào.';
         } else {
             const latestPlan = plansSnap.docs[0].data();
-            // Tìm trong lịch sử để lấy ngày triển khai chính xác
-            const hqAppliedEntry = latestPlan.history?.find(h => h.status === 'HQ_APPLIED');
-            if (hqAppliedEntry && hqAppliedEntry.timestamp) {
-                const deploymentDate = hqAppliedEntry.timestamp.toDate().toLocaleDateString('vi-VN');
-                statusDisplay.textContent = `Đã triển khai đến các Region Manager vào ngày ${deploymentDate}.`;
+            const isFinalState = latestPlan.status === 'HQ_CONFIRMED' || latestPlan.status === 'HQ_REJECTED_RM_CHANGES';
+
+            if (isFinalState) {
+                // Nếu kế hoạch đã hoàn thành hoặc bị từ chối, cho phép chỉnh sửa/áp dụng lại mẫu
+                statusDisplay.textContent = `Chu kỳ gần nhất đã hoàn tất (${latestPlan.status}). Mẫu có thể được sử dụng lại.`;
+                if (hqApplyBtn) hqApplyBtn.classList.remove('hidden');
+                if (hqApplyBtnSpan) hqApplyBtnSpan.textContent = 'Triển khai';
+                if (saveBtn) saveBtn.classList.remove('hidden');
+                if (deleteBtn) deleteBtn.classList.remove('hidden');
             } else {
-                // Fallback nếu không tìm thấy lịch sử
-                const startDate = new Date(latestPlan.cycleStartDate).toLocaleDateString('vi-VN');
-                statusDisplay.textContent = `Đã áp dụng cho chu kỳ từ ${startDate}. Trạng thái: ${latestPlan.status}`;
+                // Nếu kế hoạch đang trong quá trình xử lý, ẩn các nút
+                const hqAppliedEntry = latestPlan.history?.find(h => h.status === 'HQ_APPLIED');
+                const deploymentDateTime = hqAppliedEntry?.timestamp.toDate().toLocaleString('vi-VN', { day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) || 'không rõ';
+                const cycleStartDate = new Date(latestPlan.cycleStartDate).toLocaleDateString('vi-VN');
+
+                statusDisplay.textContent = `Mẫu đang được triển khai tới RM, do HQ thực hiện vào lúc ${deploymentDateTime}.`;
+
+                // Ẩn các nút vì mẫu đã được gửi đi
+                if (hqApplyBtn) hqApplyBtn.classList.add('hidden');
+                if (saveBtn) saveBtn.classList.add('hidden');
+                if (deleteBtn) deleteBtn.classList.add('hidden');
+
             }
         }
     } catch (error) {
