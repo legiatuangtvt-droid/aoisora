@@ -12,68 +12,67 @@ let shiftCodes = [];
 //Mock Data:
 //1. Mỗi nhân viên chỉ có thể đăng ký 1 trong 2 ca: V812 và V829;
 //2. Mỗi nhân viên có xác suất đăng ký số lượng ca mỗi ngày như sau: 2 ca: 60%, 1 ca: 30%, không đăng ký ca nào: 10%;
-//3. Mỗi ca đăng ký có xác xuất có thể vào ca như sau: Chắc chắn vào ca: 80%, có thể vào ca: 20%
-//4. Mỗi nhân viên có xác suất đăng ký help là 10%, đảm bảo khung giờ không trung với khung giờ đã đăng ký trong ngày đó (nếu có), giờ bắt đầu tối thiểu 6:00, số giờ làm đăng ký không nhỏ hơn 4h và có step 0.5h
+//3. Mỗi ca đăng ký có xác xuất 3 trạng thái như sau: Chắc chắn vào ca: 70%, có thể vào ca: 30%;
 const mockStaffProfiles = [
-    // Profile 1
+    // Profile 1 (4 ngày 2 ca, 2 ngày 1 ca, 1 ngày 0 ca)
     {
-        "2025-11-26": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }], helpTime: null },
-        "2025-11-27": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: '', priority: 0 }] },
-        "2025-11-28": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }], helpTime: { start: '15:00', end: '20:00' } }, // Đăng ký help 5h, không trùng ca V812 (06:00-14:00)
-        "2025-11-29": { registrations: [{ shiftCode: 'V829', priority: 2 }, { shiftCode: '', priority: 0 }] },
-        "2025-11-30": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
-        "2025-12-01": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }] },
-        "2025-12-02": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 2 }] },
-    },
-    // Profile 2
-    {
-        "2025-11-26": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }], helpTime: null },
-        "2025-11-27": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
-        "2025-11-28": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 2 }] },
-        "2025-11-29": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }], helpTime: { start: '08:00', end: '12:30' } }, // Đăng ký help 4.5h khi không có ca chính
-        "2025-11-30": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
-        "2025-12-01": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: '', priority: 0 }] },
-        "2025-12-02": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
-    },
-    // Profile 3
-    {
-        "2025-11-26": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: '', priority: 0 }], helpTime: { start: '08:00', end: '12:00' } }, // Đăng ký help 4h, không trùng ca V829 (14:30-22:30)
+        "2025-11-26": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
         "2025-11-27": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
-        "2025-11-28": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
+        "2025-11-28": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 2 }] },
         "2025-11-29": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
-        "2025-11-30": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }] },
-        "2025-12-01": { registrations: [{ shiftCode: 'V812', priority: 2 }, { shiftCode: 'V829', priority: 1 }] },
-        "2025-12-02": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: '', priority: 0 }] },
+        "2025-11-30": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: '', priority: 0 }] },
+        "2025-12-01": { registrations: [{ shiftCode: 'V812', priority: 2 }, { shiftCode: '', priority: 0 }] },
+        "2025-12-02": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }] },
     },
-    // Profile 4
+    // Profile 2 (4 ngày 2 ca, 2 ngày 1 ca, 1 ngày 0 ca)
     {
-        "2025-11-26": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }], helpTime: null },
-        "2025-11-27": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: 'V812', priority: 1 }] },
-        "2025-11-28": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }], helpTime: { start: '16:00', end: '20:00' } },
-        "2025-11-29": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: '', priority: 0 }] },
-        "2025-11-30": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
-        "2025-12-01": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }] },
-        "2025-12-02": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-26": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-27": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-28": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-29": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-30": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
+        "2025-12-01": { registrations: [{ shiftCode: 'V829', priority: 2 }, { shiftCode: '', priority: 0 }] },
+        "2025-12-02": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }] },
     },
-    // Profile 5
+    // Profile 3 (4 ngày 2 ca, 2 ngày 1 ca, 1 ngày 0 ca)
     {
-        "2025-11-26": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: 'V812', priority: 1 }], helpTime: null },
-        "2025-11-27": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
-        "2025-11-28": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: '', priority: 0 }] },
-        "2025-11-29": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }], helpTime: { start: '07:00', end: '11:30' } },
-        "2025-11-30": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }] },
-        "2025-12-01": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
-        "2025-12-02": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: '', priority: 0 }] },
-    },
-    // Profile 6
-    {
-        "2025-11-26": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }], helpTime: { start: '09:00', end: '13:00' } },
-        "2025-11-27": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
-        "2025-11-28": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: 'V812', priority: 1 }] },
-        "2025-11-29": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }] },
-        "2025-11-30": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-26": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-27": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 2 }] },
+        "2025-11-28": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-29": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-30": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: '', priority: 0 }] },
         "2025-12-01": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
-        "2025-12-02": { registrations: [{ shiftCode: 'V829', priority: 2 }, { shiftCode: '', priority: 0 }] },
+        "2025-12-02": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }] },
+    },
+    // Profile 4 (4 ngày 2 ca, 2 ngày 1 ca, 1 ngày 0 ca)
+    {
+        "2025-11-26": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-27": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-28": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-29": { registrations: [{ shiftCode: 'V812', priority: 2 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-30": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
+        "2025-12-01": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: '', priority: 0 }] },
+        "2025-12-02": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }] },
+    },
+    // Profile 5 (4 ngày 2 ca, 2 ngày 1 ca, 1 ngày 0 ca)
+    {
+        "2025-11-26": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-27": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-28": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-29": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-30": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: '', priority: 0 }] },
+        "2025-12-01": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
+        "2025-12-02": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }] },
+    },
+    // Profile 6 (4 ngày 2 ca, 2 ngày 1 ca, 1 ngày 0 ca)
+    {
+        "2025-11-26": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-27": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-28": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-29": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-30": { registrations: [{ shiftCode: 'V829', priority: 2 }, { shiftCode: '', priority: 0 }] },
+        "2025-12-01": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
+        "2025-12-02": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }] },
     },
     // Thêm các profile khác nếu cần
 ];
@@ -423,6 +422,15 @@ function renderEditableCellForLeader(employee, date) {
     const availability = allAvailabilities.find(a => a.employeeId === employee.id && a.date === dateStr);
     const registrations = availability?.registrations || [{}, {}];
 
+    // Lấy thông tin giờ help và tạo khối HTML trước vòng lặp
+    const helpTime = availability?.helpTime;
+    const helpTimeRange = helpTime ? `${helpTime.start} - ${helpTime.end}` : '';
+    const helpBlockHTML = `
+        <div class="flex-1 text-center text-xs p-1 border border-dashed border-slate-300 rounded-md bg-slate-50">
+            <div class="font-semibold text-slate-700">${helpTimeRange || '---'}</div>
+            <div class="mt-1 text-slate-500">${helpTime ? '<i class="fas fa-hands-helping"></i>' : ''}</div>
+        </div>`;
+
     let blocksHTML = '';
     for (let i = 0; i < 2; i++) {
         const reg = registrations[i] || {};
@@ -480,23 +488,23 @@ function renderReadOnlyCellForStaff(employee, date) {
     const timeRange2 = shiftCodes.find(sc => sc.shiftCode === reg2.shiftCode)?.timeRange || '&nbsp;';
     const priorityIcon1 = reg1.priority === 1 ? '<i class="fas fa-circle text-green-500" title="Chắc chắn"></i>' : (reg1.priority === 2 ? '<i class="fas fa-triangle-exclamation text-amber-500" title="Có thể"></i>' : '<i class="fas fa-circle text-transparent"></i>');
     
-    const helpTime = availability?.helpTime ? ` ${availability.helpTime.start} - ${availability.helpTime.end}` : '';
+    const helpTime = availability?.helpTime;
+    const helpTimeRange = helpTime ? `${helpTime.start} - ${helpTime.end}` : '';
     const priorityIcon2 = reg2.priority === 1 ? '<i class="fas fa-circle text-green-500" title="Chắc chắn"></i>' : (reg2.priority === 2 ? '<i class="fas fa-triangle-exclamation text-amber-500" title="Có thể"></i>' : '<i class="fas fa-circle text-transparent"></i>');
     
     const shiftInfoHTML = `
-        <div class="flex flex-col gap-0.5">
-            <div class="flex justify-around items-center text-xs font-medium">
-                <span class="px-0.5 ${reg1.shiftCode ? 'text-gray-800' : 'text-gray-400'}">${reg1.shiftCode || '---'}</span>
-                <span class="px-0.5 ${reg2.shiftCode ? 'text-gray-800' : 'text-gray-400'}">${reg2.shiftCode || '---'}</span>
+        <div class="flex items-start gap-1 w-full">
+            <!-- Cột Ca 1 -->
+            <div class="flex-1 text-center text-xs">
+                <div class="font-medium ${reg1.shiftCode ? 'text-gray-800' : 'text-gray-400'}">${reg1.shiftCode || '---'}</div>
+                <div class="text-gray-500 text-[10px] h-4">${timeRange1}</div>
+                <div class="h-4">${priorityIcon1}</div>
             </div>
-            <div class="flex justify-around items-center text-xs text-gray-500 h-4">
-                <span class="px-0.5 whitespace-nowrap text-[10px]">${timeRange1}</span>
-                <span class="px-0.5 whitespace-nowrap text-[10px]">${timeRange2}</span>
-            </div>
-            <div class="flex justify-around items-center text-xs h-4">
-                <span class="px-0.5 whitespace-nowrap text-[10px]" title="Giờ help: ${helpTime}">${helpTime ? '<i class="fas fa-hands-helping"></i>' : ''}</span>
-                <span>${priorityIcon1}</span>
-                <span>${priorityIcon2}</span>
+            <!-- Cột Ca 2 -->
+            <div class="flex-1 text-center text-xs">
+                <div class="font-medium ${reg2.shiftCode ? 'text-gray-800' : 'text-gray-400'}">${reg2.shiftCode || '---'}</div>
+                <div class="text-gray-500 text-[10px] h-4">${timeRange2}</div>
+                <div class="h-4">${priorityIcon2}</div>
             </div>
         </div>
     `;
