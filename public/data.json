@@ -1227,16 +1227,16 @@
         ]
       },
       "shiftMappings": {
-        "shift-1": { "positionId": "LEADER", "shiftCode": "V712" },
-        "shift-10": { "positionId": "MERCHANDISE", "shiftCode": "V729" },
-        "shift-2": { "positionId": "MMD", "shiftCode": "V712" },
-        "shift-3": { "positionId": "POS", "shiftCode": "V712" },
-        "shift-4": { "positionId": "MERCHANDISE", "shiftCode": "V712" },
-        "shift-5": { "positionId": "CAFE", "shiftCode": "V712" },
-        "shift-6": { "positionId": "LEADER", "shiftCode": "V729" },
-        "shift-7": { "positionId": "POS", "shiftCode": "V729" },
-        "shift-8": { "positionId": "POS", "shiftCode": "V729" },
-        "shift-9": { "positionId": "MERCHANDISE", "shiftCode": "V729" }
+        "shift-1": { "positionId": "LEADER", "shiftCode": "V812" },
+        "shift-10": { "positionId": "MERCHANDISE", "shiftCode": "V829" },
+        "shift-2": { "positionId": "MMD", "shiftCode": "V812" },
+        "shift-3": { "positionId": "POS", "shiftCode": "V812" },
+        "shift-4": { "positionId": "MERCHANDISE", "shiftCode": "V812" },
+        "shift-5": { "positionId": "CAFE", "shiftCode": "V812" },
+        "shift-6": { "positionId": "LEADER", "shiftCode": "V829" },
+        "shift-7": { "positionId": "POS", "shiftCode": "V829" },
+        "shift-8": { "positionId": "POS", "shiftCode": "V829" },
+        "shift-9": { "positionId": "MERCHANDISE", "shiftCode": "V829" }
       },
       "totalManhour": 80,
       "updatedAt": "2025-10-29T01:20:17.000Z"

@@ -1420,6 +1420,7 @@ function renderPlanTracker(plan) {
     const historyList = container.querySelector('#plan-history-list');
     const commentList = container.querySelector('#plan-comments-list');
     const approvalActions = document.getElementById('plan-approval-actions');
+    const commentsContainer = document.getElementById('plan-comments-container');
     const approveBtn = document.getElementById('approve-plan-btn');
     const rejectBtn = document.getElementById('reject-plan-btn');
 
@@ -1451,37 +1452,32 @@ function renderPlanTracker(plan) {
         { id: 'STAFF_REGISTERED', label: '3. Staff đăng ký' },
         { id: 'SL_ADJUSTED', label: '4. SL điều chỉnh & gửi AM' },
         { id: 'AM_DISPATCHED', label: '5. AM điều phối & gửi RM' },
-        { id_RM_DISPATCHED: 'RM_DISPATCHED', label: '6. RM điều phối & gửi HQ' },
+        { id: 'RM_DISPATCHED', label: '6. RM điều phối & gửi HQ' },
         { id: 'HQ_CONFIRMED', label: '7. HQ xác nhận & gửi Store' }
     ];
 
-    // Hiển thị lịch sử
-    historyList.innerHTML = steps.map(step => {
-        const historyEntry = plan.history.find(h => h.status === step.id);
-        if (historyEntry) {
-            const timestamp = historyEntry.timestamp?.toDate().toLocaleString('vi-VN') || 'N/A';
-            let commentHTML = '';
-            if (historyEntry.comment) {
-                commentHTML = `<div class="text-xs text-gray-600 italic pl-6 mt-1 p-1 bg-gray-100 rounded">- ${historyEntry.comment}</div>`;
-            }
-            const iconClass = step.id.includes('REJECTED') ? 'fa-times-circle text-red-600' : 'fa-check-circle text-green-700';
-            return `<li class="flex items-start"><i class="fas ${iconClass} mr-2 mt-1 flex-shrink-0"></i><div><strong>${step.label}:</strong> Hoàn thành bởi ${historyEntry.userName} lúc ${timestamp}${commentHTML}</div></li>`;
-        } else {
-            return `<li class="text-gray-400 flex items-start"><i class="far fa-circle mr-2 mt-1 flex-shrink-0"></i><div>${step.label}: Chưa thực hiện</div></li>`;
-        }
-    }).join('');
+    // Hiển thị lịch sử: Chỉ hiển thị các bước đã xảy ra
+    if (plan.history && plan.history.length > 0) {
+        const historyHTML = plan.history
+            .sort((a, b) => a.timestamp.toMillis() - b.timestamp.toMillis()) // Sắp xếp các bước theo thời gian
+            .map(historyEntry => {
+                // Tìm label tương ứng với status trong mảng steps
+                const stepInfo = steps.find(s => s.id === historyEntry.status);
+                const label = stepInfo ? stepInfo.label : historyEntry.status; // Fallback về status nếu không tìm thấy label
 
-    // Hiển thị bình luận
-    if (plan.comments && plan.comments.length > 0) {
-        commentList.innerHTML = plan.comments.map(comment => {
-            const timestamp = comment.timestamp?.toDate().toLocaleString('vi-VN') || 'N/A';
-            return `<div class="p-2 bg-gray-100 rounded-md">
-                        <p class="text-sm">${comment.text}</p>
-                        <p class="text-xs text-gray-500 text-right mt-1">- ${comment.userName} lúc ${timestamp}</p>
-                    </div>`;
-        }).join('');
+                const timestamp = historyEntry.timestamp?.toDate().toLocaleString('vi-VN') || 'N/A';
+                const iconClass = historyEntry.status.includes('REJECTED') ? 'fa-times-circle text-red-600' : 'fa-check-circle text-green-700';
+                
+                // Hiển thị bình luận ngay dưới bước tương ứng nếu có
+                const commentHTML = historyEntry.comment 
+                    ? `<div class="text-xs text-gray-600 italic pl-6 mt-1 p-1 bg-gray-100 rounded">- ${historyEntry.comment}</div>` 
+                    : '';
+
+                return `<li class="flex items-start"><i class="fas ${iconClass} mr-2 mt-1 flex-shrink-0"></i><div><strong>${label}:</strong> Hoàn thành bởi ${historyEntry.userName} lúc ${timestamp}${commentHTML}</div></li>`;
+            }).join('');
+        historyList.innerHTML = historyHTML;
     } else {
-        commentList.innerHTML = `<p class="text-sm text-gray-400 italic">Chưa có bình luận.</p>`;
+        historyList.innerHTML = `<li class="text-gray-400 italic">Chưa có hoạt động nào được ghi nhận.</li>`;
     }
 }
 

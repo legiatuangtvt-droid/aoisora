@@ -426,7 +426,8 @@ function initializeDevMenu() {
                 'employee_statuses',
                 'staff_availability', 
                 'work_assignments', 
-                'work_positions'
+                'work_positions',
+                'monthly_plans' // Xóa dữ liệu kế hoạch tháng để reset quy trình
             ];
             
             const deleteBatch = writeBatch(db);
