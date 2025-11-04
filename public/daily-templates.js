@@ -7,6 +7,7 @@ let domController = null;
 let allTemplates = [];
 let currentTemplateId = null;
 let currentMonthlyPlan = null; // Biến để lưu kế hoạch tháng hiện tại cho RM
+let originalTemplateData = null; // Biến để lưu trạng thái mẫu gốc cho RM
 
 let allPersonnel = []; // For HQ Apply
 let allWorkPositions = []; // Biến để lưu danh sách vị trí công việc
@@ -66,6 +67,7 @@ function handleTaskAdd(evt) {
     }
 
     updateTemplateFromDOM();
+    checkTemplateChangesAndToggleResetButton(); // Kiểm tra thay đổi sau khi thêm task
     updateTemplateStats();
 }
 
@@ -356,7 +358,7 @@ function initializeDragAndDrop() {
         gridContainer.addEventListener('click', function(e) {
             if (e.target.classList.contains('delete-task-btn')) {
                 e.target.closest('.scheduled-task-item').remove(); // Xóa toàn bộ thẻ task
-                updateTemplateFromDOM(); // Cập nhật lại dữ liệu sau khi xóa
+                updateTemplateFromDOM(); // Cập nhật lại dữ liệu sau khi xóa. Hàm này đã gọi checkTemplateChangesAndToggleResetButton()
                 updateTemplateStats(); // Cập nhật thống kê
             }
 
@@ -369,7 +371,7 @@ function initializeDragAndDrop() {
                 window.showConfirmation(`Bạn có chắc chắn muốn xóa toàn bộ dòng "${shiftName}" không?`, 'Xác nhận xóa dòng', 'Xóa', 'Hủy').then(confirmed => {
                     if (confirmed) {
                         row.remove();
-                        updateTemplateFromDOM();
+                        updateTemplateFromDOM(); // Cập nhật lại dữ liệu sau khi xóa. Hàm này đã gọi checkTemplateChangesAndToggleResetButton()
                         updateTemplateStats();
                     }
                 });
@@ -592,6 +594,13 @@ async function saveTemplate() {
  * Không yêu cầu tên mẫu hay tạo mẫu mới.
  */
 async function updateTemplateFromDOM() {
+    // --- LOGIC MỚI: Chỉ lưu vào DB nếu là HQ/Admin ---
+    const currentUser = window.currentUser;
+    const isPrivilegedUser = currentUser && (currentUser.roleId === 'HQ_STAFF' || currentUser.roleId === 'ADMIN');
+
+    // Luôn kiểm tra thay đổi để hiển thị nút Reset cho RM/AM
+    checkTemplateChangesAndToggleResetButton(); // Kiểm tra thay đổi mỗi khi DOM cập nhật
+
     if (!currentTemplateId) {
         // Nếu không có mẫu nào đang được chọn (chế độ tạo mới), không làm gì cả.
         // Việc lưu sẽ được xử lý bởi saveTemplate khi người dùng nhấn nút lưu.
@@ -599,6 +608,12 @@ async function updateTemplateFromDOM() {
     }
 
     const scheduleData = {};
+    // Nếu không phải người dùng có quyền, chỉ cần chạy checkTemplateChangesAndToggleResetButton và thoát
+    if (!isPrivilegedUser) {
+        // Không thực hiện việc thu thập dữ liệu và ghi vào DB
+        return;
+    }
+
     const shiftMappings = {};
     const totalManhour = parseFloat(document.getElementById('template-manhour-input').value) || 0;
 
@@ -731,6 +746,7 @@ async function showTemplateApplyStatus(templateId) {
  */
 async function loadTemplate(templateId) {
     // Nếu người dùng chọn "Tạo Mẫu Mới"
+    originalTemplateData = null; // Reset trạng thái gốc mỗi khi tải mẫu mới
     if (templateId === 'new') {
         switchToCreateNewMode();
         return;
@@ -762,6 +778,12 @@ async function loadTemplate(templateId) {
             const { schedule, totalManhour, shiftMappings } = docSnap.data();
 
             // Cập nhật giá trị Manhour từ Firestore
+            // Lưu lại trạng thái ban đầu của mẫu cho việc so sánh
+            originalTemplateData = {
+                schedule: JSON.parse(JSON.stringify(schedule || {})),
+                shiftMappings: JSON.parse(JSON.stringify(shiftMappings || {})),
+                totalManhour: totalManhour || 0
+            };
             const manhourInput = document.getElementById('template-manhour-input');
             const manhourDisplay = document.getElementById('total-manhour-display');
             if (manhourInput) {
@@ -860,6 +882,7 @@ async function loadTemplate(templateId) {
  * Chuyển giao diện về chế độ tạo mẫu mới.
  */
 function switchToCreateNewMode() {
+    originalTemplateData = null; // Xóa trạng thái gốc
     currentTemplateId = null;
     document.getElementById('template-selector').value = 'new';
     renderGrid(); // Vẽ lại lưới trống
@@ -868,6 +891,7 @@ function switchToCreateNewMode() {
     document.getElementById('new-template-btn').classList.add('hidden');
     document.getElementById('delete-template-btn').classList.add('hidden');
 
+    document.getElementById('reset-template-btn')?.classList.add('hidden');
     // Ẩn luôn phần hiển thị trạng thái
     const statusContainer = document.getElementById('template-display-container');
     if (statusContainer) {
@@ -925,6 +949,7 @@ export async function init() {
         document.getElementById('save-template-btn')?.classList.add('hidden');
         document.getElementById('new-template-btn')?.classList.add('hidden');
         document.getElementById('delete-template-btn')?.classList.add('hidden');
+        document.getElementById('reset-template-btn')?.classList.add('hidden'); // Ban đầu ẩn nút reset, chỉ hiện khi có thay đổi
         document.getElementById('apply-template-hq-btn')?.classList.remove('hidden'); // Hiển thị nút "Triển khai" cho RM/AM
 
         // Tải kế hoạch và mẫu được áp dụng gần nhất cho RM/AM
@@ -946,6 +971,7 @@ export async function init() {
     document.getElementById('save-template-btn')?.addEventListener('click', saveTemplate, { signal });
     document.getElementById('new-template-btn')?.addEventListener('click', switchToCreateNewMode, { signal });
     document.getElementById('delete-template-btn')?.addEventListener('click', deleteCurrentTemplate, { signal });
+    document.getElementById('reset-template-btn')?.addEventListener('click', handleResetTemplate, { signal });
     document.getElementById('template-selector')?.addEventListener('change', (e) => loadTemplate(e.target.value), { signal });
 
 
@@ -1005,9 +1031,9 @@ export function cleanup() {
         domController = null;
     }
     // Dọn dẹp các listener bằng cách clone và thay thế node
-    ['save-template-btn', 'new-template-btn', 'delete-template-btn', 'template-selector', 'apply-template-hq-btn', 'send-plan-btn'].forEach(id => {
+    ['save-template-btn', 'new-template-btn', 'delete-template-btn', 'template-selector', 'apply-template-hq-btn', 'send-plan-btn', 'reset-template-btn'].forEach(id => {
         const el = document.getElementById(id);
-        if (el) {
+        if (el) { // Thêm nút reset vào danh sách dọn dẹp
             const newEl = el.cloneNode(true);
             el.parentNode.replaceChild(newEl, el);
         }
@@ -1203,6 +1229,71 @@ async function loadAppliedPlanForManager() {
     }
 }
 
+/**
+ * So sánh mẫu hiện tại với mẫu gốc và hiển thị/ẩn nút Reset.
+ * Chỉ hoạt động cho vai trò không phải HQ/Admin.
+ */
+function checkTemplateChangesAndToggleResetButton() {
+    const currentUser = window.currentUser;
+    if (!currentUser || currentUser.roleId === 'HQ_STAFF' || currentUser.roleId === 'ADMIN') {
+        return; // Bỏ qua nếu là HQ/Admin
+    }
+
+    if (!originalTemplateData) {
+        return; // Bỏ qua nếu không có dữ liệu gốc để so sánh
+    }
+
+    // Thu thập dữ liệu hiện tại từ DOM
+    const currentSchedule = {};
+    const currentShiftMappings = {};
+    const currentTotalManhour = parseFloat(document.getElementById('template-manhour-input').value) || 0;
+
+    document.querySelectorAll('#template-builder-grid-container .scheduled-task-item').forEach(taskItem => {
+        const slot = taskItem.closest('.quarter-hour-slot');
+        if (!slot) return;
+        const shiftId = slot.dataset.shiftId;
+        const taskName = taskItem.querySelector('span.overflow-hidden').textContent;
+        const taskCode = taskItem.dataset.taskCode;
+        const groupId = taskItem.dataset.groupId;
+        const time = slot.dataset.time;
+        const quarter = slot.dataset.quarter;
+        const startTime = `${time.split(':')[0].padStart(2, '0')}:${quarter}`;
+
+        if (!currentSchedule[shiftId]) currentSchedule[shiftId] = [];
+        currentSchedule[shiftId].push({ taskCode, taskName, startTime, groupId });
+    });
+
+    document.querySelectorAll('#template-builder-grid-container tbody tr').forEach(row => {
+        const shiftId = row.dataset.shiftId;
+        const selectedShiftCode = row.querySelector('.shift-code-selector')?.value;
+        const selectedPositionId = row.querySelector('.work-position-selector')?.value;
+        if (shiftId) {
+            currentShiftMappings[shiftId] = { shiftCode: selectedShiftCode, positionId: selectedPositionId };
+        }
+    });
+
+    // So sánh dữ liệu hiện tại với dữ liệu gốc
+    const isChanged = JSON.stringify(currentSchedule) !== JSON.stringify(originalTemplateData.schedule) ||
+                      JSON.stringify(currentShiftMappings) !== JSON.stringify(originalTemplateData.shiftMappings) ||
+                      currentTotalManhour !== originalTemplateData.totalManhour;
+
+    // Hiển thị hoặc ẩn nút Reset
+    const resetButton = document.getElementById('reset-template-btn');
+    if (resetButton) {
+        resetButton.classList.toggle('hidden', !isChanged);
+    }
+}
+
+/**
+ * Xử lý sự kiện khi RM/AM nhấn nút Reset.
+ */
+async function handleResetTemplate() {
+    const confirmed = await window.showConfirmation('Bạn có chắc chắn muốn khôi phục lịch trình về trạng thái ban đầu do HQ gửi không? Mọi thay đổi sẽ bị mất.', 'Xác nhận Reset', 'Khôi phục', 'Hủy');
+    if (confirmed) {
+        await loadTemplate(currentTemplateId); // Tải lại mẫu gốc từ Firestore
+        window.showToast('Đã khôi phục lịch trình về trạng thái ban đầu.', 'success');
+    }
+}
 /**
  * Hiển thị giao diện theo dõi tiến độ kế hoạch.
  * @param {object} plan - Đối tượng kế hoạch tháng.
