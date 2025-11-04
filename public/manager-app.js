@@ -42,10 +42,24 @@ function loadPageModule(pageName) {
     } else {
         currentPageModule = null;
     }
+
+    // Logic hiển thị Task Library
+    if (pageName === 'daily-templates.html') {
+        showTaskLibrary();
+    } else {
+        hideTaskLibrary();
+    }
 }
 
-initializeDevMenu();
-initializeLayoutController();
-const initialPageName = window.location.pathname.split('/').pop() || 'workforce-dispatch.html';
-loadPageModule(initialPageName);
-document.addEventListener('page-content-loaded', (event) => loadPageModule(event.detail.pageName));
+async function initializeManagerApp() {
+    await initializeTaskLibrary();
+    initializeDevMenu();
+    initializeLayoutController();
+
+    const initialPageName = window.location.pathname.split('/').pop() || 'workforce-dispatch.html';
+    loadPageModule(initialPageName);
+
+    document.addEventListener('page-content-loaded', (event) => loadPageModule(event.detail.pageName));
+}
+
+initializeManagerApp();
