@@ -86,19 +86,21 @@
 
     <!-- Modal Theo dõi tiến độ kế hoạch (cho RM/AM) -->
     <div id="plan-tracker-modal" class="modal-overlay hidden">
-        <div class="modal-content max-w-3xl w-full">
+        <div class="modal-content max-w-2xl w-full">
             <div class="modal-header">
                 <h3 class="modal-title">Theo dõi tiến độ kế hoạch</h3>
                 <button type="button" class="modal-close-btn">&times;</button>
             </div>
             <div class="modal-body">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 gap-4">
                     <div>
                         <h5 class="font-medium text-sm mb-2">Lịch sử các bước:</h5>
                         <ul id="plan-history-list" class="space-y-2 text-sm">
                             <!-- Lịch sử sẽ được render ở đây -->
                         </ul>
                     </div>
+                    <!-- Thêm đường kẻ ngang để phân tách -->
+                    <div class="border-t border-gray-200 my-1"></div>
                     <div>
                         <h5 class="font-medium text-sm mb-2">Bình luận:</h5>
                         <div id="plan-comments-list" class="space-y-3 max-h-60 overflow-y-auto pr-2">

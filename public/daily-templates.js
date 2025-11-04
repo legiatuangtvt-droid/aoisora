@@ -932,10 +932,11 @@ export async function init() {
         // --- GIAO DIỆN CHO HQ/ADMIN ---
         // Hiển thị bộ chọn mẫu và các nút quản lý
         document.getElementById('template-selector-container')?.classList.remove('hidden');
+        document.getElementById('template-display-container')?.classList.remove('hidden'); // Cho phép HQ xem trạng thái
         document.getElementById('apply-template-hq-btn')?.classList.remove('hidden');
-        // Ẩn các container không dành cho HQ
-        document.getElementById('template-display-container')?.classList.add('hidden');
-        document.getElementById('plan-tracker-container')?.classList.add('hidden');
+        document.getElementById('save-template-btn')?.classList.remove('hidden');
+        document.getElementById('new-template-btn')?.classList.remove('hidden');
+        document.getElementById('delete-template-btn')?.classList.remove('hidden');
         // Đặt trạng thái mặc định là "Tạo Mẫu Mới"
         switchToCreateNewMode();
     }
@@ -1212,7 +1213,7 @@ function renderPlanTracker(plan) {
 
     // Định nghĩa các bước
     const steps = [
-        { id: 'HQ_APPLIED', label: '1. HQ gửi về RM' },
+        { id: 'HQ_APPLIED', label: '1. HQ triển khai đến RM' },
         { id: 'RM_SENT_TO_STAFF', label: '2. RM gửi về Staff' },
         { id: 'STAFF_REGISTERED', label: '3. Staff đăng ký' },
         { id: 'SL_ADJUSTED', label: '4. SL điều chỉnh & gửi AM' },
