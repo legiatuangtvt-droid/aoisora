@@ -184,6 +184,10 @@ function updateRowAppearance(row) {
  * @param {number} shiftNumber - Số thứ tự của ca (ví dụ: 2 cho "Ca 2").
  */
 function addShiftRow(tbody, shiftNumber) {
+    const currentUser = window.currentUser;
+    const isManager = currentUser && (currentUser.roleId === 'REGIONAL_MANAGER' || currentUser.roleId === 'AREA_MANAGER');
+    const disabledAttr = isManager ? 'disabled' : '';
+
     const timeSlots = Array.from({ length: 18 }, (_, i) => `${i + 6}:00`);
     const shiftId = `shift-${shiftNumber}`;
     const newRow = document.createElement('tr');
@@ -192,23 +196,26 @@ function addShiftRow(tbody, shiftNumber) {
     // Tạo dropdown cho việc chọn mã ca
     // Tạo dropdown cho việc chọn vị trí công việc
     const workPositionOptions = allWorkPositions.map(pos => `<option value="${pos.id}">${pos.name}</option>`).join('');
+    const deleteButtonHTML = isManager ? '' : `
+        <button class="delete-shift-row-btn absolute top-1 right-1 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity" title="Xóa dòng ca này">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
 
     let bodyRowHtml = `
-        <td class="group p-1 border border-slate-200 align-top sticky left-0 bg-white z-10 w-40 min-w-40 font-semibold text-center">
+        <td class="group p-1 border border-slate-200 align-center sticky left-0 bg-white z-10 w-40 min-w-40 font-semibold text-center">
             <div class="space-y-1">
                 <input list="shift-codes-datalist" 
                        class="shift-code-selector form-input w-full text-xs text-center p-1 font-semibold" 
-                       placeholder="-- Nhập/Chọn Ca --">
+                       placeholder="-- Nhập/Chọn Ca --" ${disabledAttr}>
                 <!-- Thêm div để hiển thị khung giờ -->
                 <div class="shift-time-display text-xs text-slate-500 h-4"></div>
-                <select class="work-position-selector form-input w-full text-xs text-center p-1">
+                <select class="work-position-selector form-input w-full text-xs text-center p-1" ${disabledAttr}>
                     <option value="">-- Chọn Vị trí --</option>
                     ${workPositionOptions}
                 </select>
             </div>
-            <button class="delete-shift-row-btn absolute top-1 right-1 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity" title="Xóa dòng ca này">
-                <i class="fas fa-times"></i>
-            </button>
+            ${deleteButtonHTML}
         </td>
     `;
 
@@ -320,6 +327,22 @@ function renderGrid() {
     });
     addRowButtonContainer.appendChild(addRowButton);
     container.appendChild(addRowButtonContainer);
+    // Chỉ hiển thị nút này cho HQ/Admin
+    const currentUser = window.currentUser;
+    if (currentUser && (currentUser.roleId === 'HQ_STAFF' || currentUser.roleId === 'ADMIN')) {
+        const addRowButtonContainer = document.createElement('div');
+        addRowButtonContainer.className = 'mt-4';
+        const addRowButton = document.createElement('button');
+        addRowButton.id = 'add-shift-row-btn';
+        addRowButton.className = 'btn btn-secondary text-sm';
+        addRowButton.innerHTML = '<i class="fas fa-plus mr-2"></i> Thêm Ca';
+        addRowButton.addEventListener('click', () => {
+            const currentShiftCount = tbody.children.length;
+            addShiftRow(tbody, currentShiftCount + 1);
+        });
+        addRowButtonContainer.appendChild(addRowButton);
+        container.appendChild(addRowButtonContainer);
+    }
 
     initializeDragAndDrop();
 }

@@ -25,7 +25,7 @@
  *    - Vai trò: Regional Manager (manager-app.js)
  *    - Trang: daily-templates.html
  *    - Hành động:
- *      1. RM xem lại mẫu và có thể chỉnh sửa (thêm/bớt/thay đổi task).
+ *      1. RM xem lại mẫu và có thể chỉnh sửa (thêm/bớt/thay đổi task), không thể thay đổi vị trí công việc hay ca làm việc.
  *      2. Hệ thống so sánh sự thay đổi (ví dụ: tổng man-hour) với mẫu gốc.
  *      3. Nếu thay đổi <= 10% (giá trị mặc định): RM có thể "Gửi Kế hoạch" trực tiếp. Status của `monthly_plans` chuyển thành 'RM_SENT_TO_STAFF'.
  *      4. Nếu thay đổi > 10%:
