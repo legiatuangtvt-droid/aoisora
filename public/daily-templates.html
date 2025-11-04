@@ -35,10 +35,10 @@
                                 </select>
                             </div>
                             <!-- Container hiển thị tên mẫu (cho RM/AM) -->
-                            <div id="template-display-container" class="flex-grow flex items-center gap-2">
+                            <div id="template-display-container" class="flex-grow flex items-center gap-2 cursor-pointer" title="Xem chi tiết tiến độ">
                                 <span class="text-sm font-medium text-gray-700">Trạng thái:</span>
                                 <span id="template-name-display" class="text-sm font-bold text-indigo-600">Đang tải...</span>
-                            </div>
+                            </div>                            
 
                             <div class="flex-shrink-0 flex items-center gap-2 ml-auto">
                                 <!-- Nút cho RM/AM -->
@@ -55,26 +55,6 @@
                         <!-- Lưới sẽ được render bằng JavaScript -->
                         <div class="p-10 text-center text-gray-500">
                             <i class="fas fa-spinner fa-spin mr-2"></i> Đang khởi tạo ...
-                        </div>
-                    </div>
-                    <!-- Khu vực theo dõi kế hoạch (cho RM/AM) -->
-                    <div id="plan-tracker-container" class="hidden p-4 border-t">
-                        <h4 class="text-md font-semibold mb-3">Theo dõi tiến độ kế hoạch</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <h5 class="font-medium text-sm mb-2">Lịch sử các bước:</h5>
-                                <ul id="plan-history-list" class="space-y-1 text-sm">
-                                    <!-- Lịch sử sẽ được render ở đây -->
-                                </ul>
-                            </div>
-                            <div>
-                                <h5 class="font-medium text-sm mb-2">Bình luận:</h5>
-                                <div id="plan-comments-list" class="space-y-2 max-h-40 overflow-y-auto pr-2">
-                                    <!-- Bình luận sẽ được render ở đây -->
-                                </div>
-                                <textarea id="new-comment-input" class="form-input w-full mt-2 text-sm" rows="2" placeholder="Thêm bình luận..."></textarea>
-                                <button id="add-comment-btn" class="btn btn-secondary btn-sm mt-2">Gửi bình luận</button>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -102,6 +82,34 @@
                 </div>
             </aside>
         </main>
+    </div>
+
+    <!-- Modal Theo dõi tiến độ kế hoạch (cho RM/AM) -->
+    <div id="plan-tracker-modal" class="modal-overlay hidden">
+        <div class="modal-content max-w-3xl w-full">
+            <div class="modal-header">
+                <h3 class="modal-title">Theo dõi tiến độ kế hoạch</h3>
+                <button type="button" class="modal-close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h5 class="font-medium text-sm mb-2">Lịch sử các bước:</h5>
+                        <ul id="plan-history-list" class="space-y-2 text-sm">
+                            <!-- Lịch sử sẽ được render ở đây -->
+                        </ul>
+                    </div>
+                    <div>
+                        <h5 class="font-medium text-sm mb-2">Bình luận:</h5>
+                        <div id="plan-comments-list" class="space-y-3 max-h-60 overflow-y-auto pr-2">
+                            <!-- Bình luận sẽ được render ở đây -->
+                        </div>
+                        <textarea id="new-comment-input" class="form-input w-full mt-2 text-sm" rows="2" placeholder="Thêm bình luận..."></textarea>
+                        <button id="add-comment-btn" class="btn btn-secondary btn-sm mt-2">Gửi bình luận</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>

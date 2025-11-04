@@ -946,6 +946,27 @@ export async function init() {
     document.getElementById('template-selector')?.addEventListener('change', (e) => loadTemplate(e.target.value), { signal });
 
 
+    // --- LOGIC MỚI: Xử lý Modal theo dõi tiến độ ---
+    const planTrackerModal = document.getElementById('plan-tracker-modal');
+    const templateDisplayContainer = document.getElementById('template-display-container');
+
+    if (planTrackerModal && templateDisplayContainer) {
+        // Mở modal khi click vào khu vực trạng thái
+        templateDisplayContainer.addEventListener('click', () => {
+            planTrackerModal.classList.remove('hidden');
+            planTrackerModal.classList.add('flex');
+            setTimeout(() => planTrackerModal.classList.add('show'), 10);
+        }, { signal });
+
+        // Đóng modal khi click nút close hoặc click ra ngoài
+        planTrackerModal.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay') || e.target.closest('.modal-close-btn')) {
+                planTrackerModal.classList.remove('show');
+                planTrackerModal.addEventListener('transitionend', () => planTrackerModal.classList.add('hidden'), { once: true });
+            }
+        }, { signal });
+    }
+
     // Thêm listener để cập nhật tiêu đề khi nhập manhour
     const hqApplyBtn = document.getElementById('apply-template-hq-btn');
     if (hqApplyBtn) {
@@ -1184,10 +1205,8 @@ async function loadAppliedPlanForManager() {
  * @param {object} plan - Đối tượng kế hoạch tháng.
  */
 function renderPlanTracker(plan) {
-    const container = document.getElementById('plan-tracker-container');
-    if (!container) return;
-
-    container.classList.remove('hidden');
+    const container = document.getElementById('plan-tracker-modal'); // Thay đổi để nhắm đến modal
+    if (!container) return;    
     const historyList = container.querySelector('#plan-history-list');
     const commentList = container.querySelector('#plan-comments-list');
 
@@ -1207,9 +1226,9 @@ function renderPlanTracker(plan) {
         const historyEntry = plan.history.find(h => h.status === step.id);
         if (historyEntry) {
             const timestamp = historyEntry.timestamp?.toDate().toLocaleString('vi-VN') || 'N/A';
-            return `<li class="text-green-600"><i class="fas fa-check-circle mr-2"></i><strong>${step.label}:</strong> Hoàn thành bởi ${historyEntry.userName} lúc ${timestamp}</li>`;
+            return `<li class="text-green-700 flex items-start"><i class="fas fa-check-circle mr-2 mt-1 flex-shrink-0"></i><div><strong>${step.label}:</strong> Hoàn thành bởi ${historyEntry.userName} lúc ${timestamp}</div></li>`;
         } else {
-            return `<li class="text-gray-400"><i class="far fa-circle mr-2"></i>${step.label}: Chưa thực hiện</li>`;
+            return `<li class="text-gray-400 flex items-start"><i class="far fa-circle mr-2 mt-1 flex-shrink-0"></i><div>${step.label}: Chưa thực hiện</div></li>`;
         }
     }).join('');
 
@@ -1223,7 +1242,7 @@ function renderPlanTracker(plan) {
                     </div>`;
         }).join('');
     } else {
-        commentList.innerHTML = `<p class="text-xs text-gray-400 italic">Chưa có bình luận.</p>`;
+        commentList.innerHTML = `<p class="text-sm text-gray-400 italic">Chưa có bình luận.</p>`;
     }
 }
 
