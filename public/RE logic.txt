@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DWS Modal - Full Group Tasks</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f7f9fc;
+      display: flex;
+      justify-content: space-between;
+      padding: 20px;
+    }
+    .left-panel {
+      width: 65%;
+      overflow-y: auto;
+      max-height: 90vh;
+    }
+    .store-info, .task-table {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .store-info table, .task-table table, .summary-card table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px;
+      text-align: center;
+    }
+    th {
+      background-color: #e8f0fe;
+    }
+    .summary-card {
+      width: 30%;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      text-align: center;
+      height: fit-content;
+      padding: 15px;
+      position: sticky;
+      top: 20px;
+    }
+    .summary-card h3 {
+      margin-bottom: 6px;
+      color: #2366b1;
+    }
+    .summary-card p {
+      font-size: 13px;
+      margin: 4px 0 10px;
+    }
+    .summary-card table th, .summary-card table td {
+      padding: 5px;
+      font-size: 13px;
+    }
+    .summary-card .total {
+      font-weight: bold;
+      background: #f0f4ff;
+    }
+    .collapsible {
+      background-color: #2366b1;
+      color: white;
+      cursor: pointer;
+      padding: 8px;
+      width: 100%;
+      border: none;
+      text-align: left;
+      outline: none;
+      font-size: 15px;
+      border-radius: 8px;
+    }
+    .content {
+      padding: 0 10px;
+      display: none;
+      overflow: hidden;
+    }
+    .accordion {
+      margin-top: 10px;
+    }
+    .accordion button {
+      background-color: #e8f0fe;
+      color: #333;
+      cursor: pointer;
+      padding: 10px;
+      width: 100%;
+      border: none;
+      text-align: left;
+      outline: none;
+      font-size: 15px;
+      margin-top: 5px;
+      border-radius: 6px;
+    }
+    .accordion button.active, .accordion button:hover {
+      background-color: #d0e2ff;
+    }
+    .panel {
+      padding: 0 15px;
+      display: none;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div class="left-panel">
+    <button class="collapsible">Thông tin cửa hàng ▼</button>
+    <div class="content store-info">
+      <table>
+        <tr><th>Số khách hàng</th><th>Diện tích</th><th>Số nhân viên</th><th>Tổng kiện hàng khô</th><th>Hàng rau củ</th></tr>
+        <tr><td>1000</td><td>350</td><td>10</td><td>100</td><td>50 KG</td></tr>
+      </table>
+    </div>
+
+    <div class="task-table">
+      <h3>Chi tiết các Group Task</h3>
+      <div class="accordion">
+        <button class="accordion-btn">POS</button>
+        <div class="panel">
+          <table>
+            <tr><th>STT</th><th>Task</th><th>Tần suất</th><th>Unit RE</th><th>RE</th></tr>
+            <tr><td>1</td><td>POS (POS1 - POS3)</td><td>2 lần/ngày</td><td>1</td><td>1000</td></tr>
+            <tr><td>2</td><td>Open POS</td><td>1 lần/ngày</td><td>5</td><td>5</td></tr>
+            <tr><td>3</td><td>EOD POS</td><td>1 lần/ngày</td><td>15</td><td>15</td></tr>
+            <tr class="total"><td colspan="4">Tổng giờ POS</td><td>18.25</td></tr>
+          </table>
+        </div>
+
+        <button class="accordion-btn">MMD</button>
+        <div class="panel">
+          <table>
+            <tr><th>STT</th><th>Task</th><th>Tần suất</th><th>Unit RE</th><th>RE</th></tr>
+            <tr><td>1</td><td>Nhận hàng Delica</td><td>2 lần/ngày</td><td>10</td><td>0.33</td></tr>
+            <tr><td>2</td><td>Nhận hàng Peri</td><td>nhiều lần/ngày</td><td>15</td><td>2.00</td></tr>
+            <tr class="total"><td colspan="4">Tổng giờ MMD</td><td>5.50</td></tr>
+          </table>
+        </div>
+
+        <button class="accordion-btn">LEADER</button>
+        <div class="panel">
+          <table>
+            <tr><th>STT</th><th>Task</th><th>Tần suất</th><th>Unit RE</th><th>RE</th></tr>
+            <tr><td>1</td><td>Hủy hàng & Update hệ thống</td><td>2 lần/ngày</td><td>5</td><td>0.16</td></tr>
+            <tr><td>2</td><td>Balancing</td><td>2 lần/ngày</td><td>10</td><td>0.33</td></tr>
+            <tr class="total"><td colspan="4">Tổng giờ LEADER</td><td>5.75</td></tr>
+          </table>
+        </div>
+
+        <button class="accordion-btn">QC-FSH</button>
+        <div class="panel">
+          <table>
+            <tr><th>STT</th><th>Task</th><th>Tần suất</th><th>Unit RE</th><th>RE</th></tr>
+            <tr><td>1</td><td>5S Khu vực POS</td><td>2 lần/ngày</td><td>20</td><td>0.66</td></tr>
+            <tr><td>2</td><td>5S Khu vực Tươi sống</td><td>2 lần/ngày</td><td>15</td><td>0.50</td></tr>
+            <tr class="total"><td colspan="4">Tổng giờ QC-FSH</td><td>8.50</td></tr>
+          </table>
+        </div>
+
+        <button class="accordion-btn">DELICA</button>
+        <div class="panel">
+          <table>
+            <tr><th>STT</th><th>Task</th><th>Tần suất</th><th>Unit RE</th><th>RE</th></tr>
+            <tr><td>1</td><td>Lên hàng Delica</td><td>2 lần/ngày</td><td>45</td><td>1.50</td></tr>
+            <tr><td>2</td><td>Kéo mặt Delica</td><td>3 lần/ngày</td><td>10</td><td>0.50</td></tr>
+            <tr class="total"><td colspan="4">Tổng giờ DELICA</td><td>2.00</td></tr>
+          </table>
+        </div>
+
+        <button class="accordion-btn">DRY</button>
+        <div class="panel">
+          <table>
+            <tr><th>STT</th><th>Task</th><th>Tần suất</th><th>Unit RE</th><th>RE</th></tr>
+            <tr><td>1</td><td>Lên hàng khô</td><td>1 lần/ngày</td><td>-</td><td>0.50</td></tr>
+            <tr><td>2</td><td>Kiểm tra HSD hàng khô</td><td>1 lần/tháng</td><td>-</td><td>0.25</td></tr>
+            <tr class="total"><td colspan="4">Tổng giờ DRY</td><td>8.75</td></tr>
+          </table>
+        </div>
+
+        <button class="accordion-btn">PERI</button>
+        <div class="panel">
+          <table>
+            <tr><th>STT</th><th>Task</th><th>Tần suất</th><th>Unit RE</th><th>RE</th></tr>
+            <tr><td>1</td><td>Lên hàng tươi sống</td><td>nhiều lần/ngày</td><td>-</td><td>2.00</td></tr>
+            <tr><td>2</td><td>Kiểm tra HSD Tươi sống</td><td>3 lần/ngày</td><td>30</td><td>0.50</td></tr>
+            <tr class="total"><td colspan="4">Tổng giờ PERI</td><td>13.50</td></tr>
+          </table>
+        </div>
+
+        <button class="accordion-btn">OTHER</button>
+        <div class="panel">
+          <table>
+            <tr><th>STT</th><th>Task</th><th>Tần suất</th><th>Unit RE</th><th>RE</th></tr>
+            <tr><td>1</td><td>Break Time</td><td>2 lần/ngày</td><td>60</td><td>1.00</td></tr>
+            <tr><td>2</td><td>Kiểm kê tháng - Staff</td><td>1 lần/tháng</td><td>180</td><td>0.25</td></tr>
+            <tr class="total"><td colspan="4">Tổng giờ OTHER</td><td>15.00</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="summary-card">
+    <h3>DWS Modal - 80 Manhour</h3>
+    <p><strong>Total Manhour:</strong> 80<br>Đã sắp xếp: <strong>80.00 Giờ</strong></p>
+    <table>
+      <tr><th>STT</th><th>Group Task</th><th>Giờ</th><th>System RE</th><th>Final</th></tr>
+      <tr><td>1</td><td>POS</td><td>21.00</td><td>18.25</td><td>20.00</td></tr>
+      <tr><td>2</td><td>PERI</td><td>13.50</td><td>12.80</td><td>13.00</td></tr>
+      <tr><td>3</td><td>DRY</td><td>8.75</td><td>9.10</td><td>9.00</td></tr>
+      <tr><td>4</td><td>MMD</td><td>5.50</td><td>5.60</td><td>5.50</td></tr>
+      <tr><td>5</td><td>LEADER</td><td>5.75</td><td>6.00</td><td>6.00</td></tr>
+      <tr><td>6</td><td>QC-FSH</td><td>8.50</td><td>8.00</td><td>8.50</td></tr>
+      <tr><td>7</td><td>DELICA</td><td>2.00</td><td>2.10</td><td>2.00</td></tr>
+      <tr><td>8</td><td>D&D</td><td>0.00</td><td>0.00</td><td>0.00</td></tr>
+      <tr><td>9</td><td>OTHER</td><td>15.00</td><td>14.75</td><td>15.00</td></tr>
+      <tr class="total"><td colspan="2">Tổng cộng</td><td>80.00</td><td>76.60</td><td>79.00</td></tr>
+    </table>
+  </div>
+
+  <script>
+    const coll = document.querySelector(".collapsible");
+    const content = document.querySelector(".content");
+    coll.addEventListener("click", () => {
+      content.style.display = content.style.display === "block" ? "none" : "block";
+      coll.textContent = content.style.display === "block" ? "Thông tin cửa hàng ▲" : "Thông tin cửa hàng ▼";
+    });
+
+    document.querySelectorAll(".accordion-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        btn.classList.toggle("active");
+        const panel = btn.nextElementSibling;
+        panel.style.display = panel.style.display === "block" ? "none" : "block";
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 import { db } from './firebase.js';
 import { collection, getDocs, query, orderBy, doc, setDoc, serverTimestamp, addDoc, deleteDoc, getDoc, where, writeBatch, limit } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { initRELogicView } from './re-logic.js';
 
 let sortableInstances = [];
 let domController = null;
@@ -13,6 +14,10 @@ let allPersonnel = []; // For HQ Apply
 let allWorkPositions = []; // Biến để lưu danh sách vị trí công việc
 let allShiftCodes = []; // Biến để lưu danh sách mã ca
 // Bảng màu mặc định nếu group không có màu
+
+let currentView = 'builder'; // 'builder' or 're-logic'
+
+
 const defaultColor = {
     tailwind_bg: 'bg-slate-200', tailwind_text: 'text-slate-800', tailwind_border: 'border-slate-400'
 };
@@ -1012,6 +1017,7 @@ export async function init() {
         document.getElementById('save-template-btn')?.classList.remove('hidden');
         document.getElementById('new-template-btn')?.classList.remove('hidden');
         document.getElementById('delete-template-btn')?.classList.remove('hidden');
+        document.getElementById('toggle-view-btn')?.classList.remove('hidden');
         // Đặt trạng thái mặc định là "Tạo Mẫu Mới"
         switchToCreateNewMode();
     }
@@ -1020,6 +1026,7 @@ export async function init() {
     document.getElementById('new-template-btn')?.addEventListener('click', switchToCreateNewMode, { signal });
     document.getElementById('delete-template-btn')?.addEventListener('click', deleteCurrentTemplate, { signal });
     document.getElementById('reset-template-btn')?.addEventListener('click', handleResetTemplate, { signal });
+    document.getElementById('toggle-view-btn')?.addEventListener('click', toggleBuilderView, { signal });
     document.getElementById('template-selector')?.addEventListener('change', (e) => loadTemplate(e.target.value), { signal });
 
 
@@ -1088,6 +1095,49 @@ export function cleanup() {
     });
 }
 
+/**
+ * Chuyển đổi giữa giao diện xây dựng mẫu và giao diện RE Logic.
+ */
+function toggleBuilderView() {
+    const builderContainer = document.getElementById('template-builder-grid-container');
+    const reLogicContainer = document.getElementById('re-logic-container');
+    const toggleBtn = document.getElementById('toggle-view-btn');
+    const toggleBtnIcon = toggleBtn.querySelector('i');
+    const toggleBtnSpan = toggleBtn.querySelector('span');
+    const saveBtn = document.getElementById('save-template-btn');
+    const newBtn = document.getElementById('new-template-btn');
+    if (currentView === 'builder') {
+        // Chuyển sang RE Logic
+        currentView = 're-logic';
+        builderContainer.classList.add('hidden');
+        reLogicContainer.classList.remove('hidden');
+        
+        toggleBtnIcon.className = 'fas fa-sitemap mr-2';
+        toggleBtnSpan.textContent = 'Model';
+        
+        // Ẩn các nút không liên quan
+        saveBtn.classList.add('hidden');
+        newBtn.classList.add('hidden');
+
+        // Khởi tạo view RE Logic (nếu chưa)
+        initRELogicView();
+
+    } else {
+        // Chuyển về Template Builder
+        currentView = 'builder';
+        builderContainer.classList.remove('hidden');
+        reLogicContainer.classList.add('hidden');
+
+        toggleBtnIcon.className = 'fas fa-list-alt mr-2';
+        toggleBtnSpan.textContent = 'Detail';
+
+        // Hiện lại các nút của builder
+        if (window.currentUser && (window.currentUser.roleId === 'HQ_STAFF' || window.currentUser.roleId === 'ADMIN')) {
+            saveBtn.classList.remove('hidden');
+            newBtn.classList.remove('hidden');
+        }
+    }
+}
 /**
  * Xử lý sự kiện click nút "Triển khai" / "Xin xác nhận" / "Sẵn sàng triển khai".
  * Logic sẽ phân nhánh dựa trên vai trò người dùng và trạng thái kế hoạch.
