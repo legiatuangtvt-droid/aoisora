@@ -179,6 +179,8 @@ async function renderWeekView() {
             if (formatDate(date) === todayString) {
                 headerCell.querySelector('th').classList.add('bg-indigo-50', 'text-indigo-700');
             }
+            // Gán data-date vào thẻ th để dễ dàng truy xuất khi click vào nút help
+            headerCell.querySelector('th').dataset.date = formatDate(date);
             weekHeaderRow.appendChild(headerCell);
 
             // Dòng ô đăng ký
@@ -307,37 +309,42 @@ function updatePriorityUI(button, priority) {
  */
 function handleCellChange(event) {
     const target = event.target; // Có thể là input hoặc button
-    const block = target.closest('.shift-registration-block');
-    if (!block) return;
 
-    const td = block.closest('td');
-    if (!td) return;
+    // --- Xử lý khi click nút Help (nằm trong <th>) ---
+    const helpBtnHeader = target.closest('.help-btn');
+    if (helpBtnHeader) {
+        const th = helpBtnHeader.closest('th[data-date]');
+        if (th) {
+            openHelpModal(th.dataset.date);
+            return; // Dừng xử lý để tránh xung đột
+        }
+    }
+    
+    // --- Xử lý khi tương tác với ô đăng ký (nằm trong <td>) ---
+    const registrationBlock = target.closest('.shift-registration-block');
+    if (registrationBlock) {
+        const td = registrationBlock.closest('td[data-date]');
+        if (!td) return;
 
-    // Lấy cả hai input trong ô ngày hiện tại
-    // Xử lý khi thay đổi giá trị ca
-    if (target.classList.contains('shift-input') && event.type === 'change') {
-        const priorityBtn = block.querySelector('.priority-toggle-btn');
+        // Xử lý khi thay đổi giá trị ca
+        if (target.classList.contains('shift-input') && event.type === 'change') {
+            const priorityBtn = registrationBlock.querySelector('.priority-toggle-btn');
             // --- LOGIC KIỂM TRA TRÙNG GIỜ ---
             const inputs = td.querySelectorAll('.shift-input');
             const otherInput = Array.from(inputs).find(inp => inp !== target);
 
             if (otherInput && otherInput.value) {
-                const shift1Code = target.value;
-                const shift2Code = otherInput.value;
-
-                const shift1 = shiftCodes.find(sc => sc.shiftCode === shift1Code);
-                const shift2 = shiftCodes.find(sc => sc.shiftCode === shift2Code);
+                const shift1 = shiftCodes.find(sc => sc.shiftCode === target.value);
+                const shift2 = shiftCodes.find(sc => sc.shiftCode === otherInput.value);
 
                 if (shift1 && shift2) {
                     const [start1Str, end1Str] = shift1.timeRange.split('~').map(s => s.trim());
                     const [start2Str, end2Str] = shift2.timeRange.split('~').map(s => s.trim());
-
                     const start1 = timeToMinutes(start1Str);
                     const end1 = timeToMinutes(end1Str);
                     const start2 = timeToMinutes(start2Str);
                     const end2 = timeToMinutes(end2Str);
 
-                    // Kiểm tra chồng chéo: (StartA < EndB) and (StartB < EndA)
                     if (start1 < end2 && start2 < end1) {
                         window.showToast('Lỗi: Khung giờ của hai ca bị trùng nhau.', 'error');
                         target.value = ''; // Xóa lựa chọn không hợp lệ
@@ -361,6 +368,9 @@ function handleCellChange(event) {
             }
 
         }
+        return; // Dừng xử lý để tránh xung đột
+    }
+
     // Xử lý chọn priority
     const priorityBtn = target.closest('.priority-toggle-btn');
     if (priorityBtn) {
@@ -469,7 +479,7 @@ async function saveWeekAvailability() {
         saveButton.disabled = false;
         saveButton.innerHTML = `<i class="fas fa-save mr-2"></i> Đăng Ký`;
         console.log("Current Mock Data:", mockAvailability);
-    }, 500);
+    });
 }
 
 /**
@@ -554,6 +564,33 @@ function handleSaveHelpTime() {
         window.showToast('Lỗi: Giờ kết thúc phải sau giờ bắt đầu.', 'error');
         return;
     }
+
+    // --- LOGIC MỚI: KIỂM TRA TRÙNG LẶP VỚI CA CHÍNH ---
+    const helpStartMinutes = timeToMinutes(startTime);
+    const helpEndMinutes = timeToMinutes(endTime);
+
+    // Tìm các ca chính đã đăng ký trong ngày
+    const mainShiftInputs = document.querySelectorAll(`td[data-date="${date}"] .shift-input`);
+    for (const input of mainShiftInputs) {
+        const shiftCode = input.value;
+        if (shiftCode) {
+            const shift = shiftCodes.find(sc => sc.shiftCode === shiftCode);
+            if (shift) {
+                const [shiftStartStr, shiftEndStr] = shift.timeRange.split('~').map(s => s.trim());
+                const shiftStartMinutes = timeToMinutes(shiftStartStr);
+                const shiftEndMinutes = timeToMinutes(shiftEndStr);
+
+                // Công thức kiểm tra trùng lặp: (StartA < EndB) and (StartB < EndA)
+                const overlaps = (helpStartMinutes < shiftEndMinutes && shiftStartMinutes < helpEndMinutes);
+
+                if (overlaps) {
+                    window.showToast(`Lỗi: Giờ Help (${startTime} - ${endTime}) bị trùng với ca làm việc chính (${shift.timeRange}).`, 'error');
+                    return; // Dừng thực thi
+                }
+            }
+        }
+    }
+    // --- KẾT THÚC LOGIC KIỂM TRA ---
 
     // Tìm nút help trong header của cột tương ứng
     const helpBtn = document.querySelector(`th[data-date="${date}"] .help-btn`);
