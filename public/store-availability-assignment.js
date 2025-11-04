@@ -17,9 +17,9 @@ let shiftCodes = [];
 const mockStaffProfiles = [
     // Profile 1
     {
-        "2025-11-26": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-26": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }], helpTime: null },
         "2025-11-27": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: '', priority: 0 }] },
-        "2025-11-28": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
+        "2025-11-28": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }], helpTime: { start: '15:00', end: '20:00' } }, // Đăng ký help 5h, không trùng ca V812 (06:00-14:00)
         "2025-11-29": { registrations: [{ shiftCode: 'V829', priority: 2 }, { shiftCode: '', priority: 0 }] },
         "2025-11-30": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
         "2025-12-01": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }] },
@@ -27,23 +27,53 @@ const mockStaffProfiles = [
     },
     // Profile 2
     {
-        "2025-11-26": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-11-26": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }], helpTime: null },
         "2025-11-27": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
         "2025-11-28": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 2 }] },
-        "2025-11-29": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }] },
+        "2025-11-29": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }], helpTime: { start: '08:00', end: '12:30' } }, // Đăng ký help 4.5h khi không có ca chính
         "2025-11-30": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
         "2025-12-01": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: '', priority: 0 }] },
         "2025-12-02": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
     },
     // Profile 3
     {
-        "2025-11-26": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: '', priority: 0 }] },
+        "2025-11-26": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: '', priority: 0 }], helpTime: { start: '08:00', end: '12:00' } }, // Đăng ký help 4h, không trùng ca V829 (14:30-22:30)
         "2025-11-27": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
         "2025-11-28": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
         "2025-11-29": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
         "2025-11-30": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }] },
         "2025-12-01": { registrations: [{ shiftCode: 'V812', priority: 2 }, { shiftCode: 'V829', priority: 1 }] },
         "2025-12-02": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: '', priority: 0 }] },
+    },
+    // Profile 4
+    {
+        "2025-11-26": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }], helpTime: null },
+        "2025-11-27": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: 'V812', priority: 1 }] },
+        "2025-11-28": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }], helpTime: { start: '16:00', end: '20:00' } },
+        "2025-11-29": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: '', priority: 0 }] },
+        "2025-11-30": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-12-01": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }] },
+        "2025-12-02": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+    },
+    // Profile 5
+    {
+        "2025-11-26": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: 'V812', priority: 1 }], helpTime: null },
+        "2025-11-27": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
+        "2025-11-28": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: '', priority: 0 }] },
+        "2025-11-29": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }], helpTime: { start: '07:00', end: '11:30' } },
+        "2025-11-30": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }] },
+        "2025-12-01": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-12-02": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: '', priority: 0 }] },
+    },
+    // Profile 6
+    {
+        "2025-11-26": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }], helpTime: { start: '09:00', end: '13:00' } },
+        "2025-11-27": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
+        "2025-11-28": { registrations: [{ shiftCode: 'V829', priority: 1 }, { shiftCode: 'V812', priority: 1 }] },
+        "2025-11-29": { registrations: [{ shiftCode: '', priority: 0 }, { shiftCode: '', priority: 0 }] },
+        "2025-11-30": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: 'V829', priority: 1 }] },
+        "2025-12-01": { registrations: [{ shiftCode: 'V812', priority: 1 }, { shiftCode: '', priority: 0 }] },
+        "2025-12-02": { registrations: [{ shiftCode: 'V829', priority: 2 }, { shiftCode: '', priority: 0 }] },
     },
     // Thêm các profile khác nếu cần
 ];
@@ -150,21 +180,36 @@ async function fetchInitialData() {
 
     await fetchAvailabilitiesForWeek();
 
-    // --- LOGIC MỚI: GÁN DỮ LIỆU MÔ PHỎNG CHO NHÂN VIÊN 'STAFF' ---
-    // Lọc ra các nhân viên có vai trò là STAFF
-    const staffEmployees = allEmployeesInStore.filter(emp => emp.roleId === 'STAFF');
+    // --- LOGIC MỚI: GÁN DỮ LIỆU MÔ PHỎNG CHO NHÂN VIÊN (TRỪ LEADER CAO NHẤT) ---
+    let highestLeader = null;
+    let maxLevel = -1;
+
+    // 1. Tìm leader có cấp bậc cao nhất trong cửa hàng
+    allEmployeesInStore.forEach(emp => {
+        const role = allRoles.find(r => r.id === emp.roleId);
+        const level = role ? (role.level || 0) : 0;
+        if (level > maxLevel) {
+            maxLevel = level;
+            highestLeader = emp;
+        }
+    });
+
+    // 2. Lọc ra danh sách nhân viên cần đăng ký ca (tất cả trừ leader cao nhất)
+    const employeesToAssign = allEmployeesInStore
+        .filter(emp => !highestLeader || emp.id !== highestLeader.id)
+        .sort((a, b) => a.name.localeCompare(b.name)); // Sắp xếp để đảm bảo thứ tự gán ổn định
+
+    // 3. Chỉ lấy số lượng nhân viên bằng số lượng profile có sẵn
+    const limitedEmployees = employeesToAssign.slice(0, mockStaffProfiles.length);
+
     const newMockAvailabilities = [];
-
-    staffEmployees.forEach((staff, index) => {
-        // Chọn một profile mô phỏng để gán cho nhân viên (sử dụng toán tử modulo để xoay vòng)
-        const profile = mockStaffProfiles[index % mockStaffProfiles.length];
-
-        // Tạo các bản ghi availability từ profile đã chọn
+    limitedEmployees.forEach((employee, index) => {
+        const profile = mockStaffProfiles[index]; // Gán profile tương ứng
         for (const date in profile) {
             newMockAvailabilities.push({
-                employeeId: staff.id,
+                employeeId: employee.id,
                 date: date,
-                registrations: profile[date].registrations
+                ...profile[date] // Sao chép cả registrations và helpTime
             });
         }
     });
@@ -293,7 +338,39 @@ function renderAssignmentTable() {
         return;
     }
 
-    allEmployeesInStore.forEach(employee => {
+    // Sắp xếp lại danh sách nhân viên theo thứ tự: SI -> G3 -> G2 -> Staff có đăng ký -> Staff không đăng ký
+    const rolePriority = {
+        'STORE_INCHARGE': 1,
+        'STORE_LEADER_G3': 2,
+        'STORE_LEADER_G2': 3,
+        'STAFF': 4
+    };
+
+    const getRolePriority = (employee) => rolePriority[employee.roleId] || 99; // 99 cho các vai trò khác
+
+    const sortedEmployees = [...allEmployeesInStore].sort((a, b) => {
+        const priorityA = getRolePriority(a);
+        const priorityB = getRolePriority(b);
+
+        // 1. Sắp xếp theo chức vụ
+        if (priorityA !== priorityB) {
+            return priorityA - priorityB;
+        }
+
+        // 2. Nếu cùng là STAFF, sắp xếp theo tình trạng đăng ký
+        if (priorityA === 4) { // Cả hai đều là STAFF
+            const hasAvailabilityA = allAvailabilities.some(avail => avail.employeeId === a.id && avail.registrations.some(reg => reg.shiftCode));
+            const hasAvailabilityB = allAvailabilities.some(avail => avail.employeeId === b.id && avail.registrations.some(reg => reg.shiftCode));
+            if (hasAvailabilityA !== hasAvailabilityB) {
+                return hasAvailabilityB - hasAvailabilityA; // true (1) sẽ đứng trước false (0)
+            }
+        }
+
+        // 3. Nếu các điều kiện trên bằng nhau, sắp xếp theo tên
+        return a.name.localeCompare(b.name);
+    });
+
+    sortedEmployees.forEach(employee => {
         const row = document.createElement('tr');
         const role = allRoles.find(r => r.id === employee.roleId);
         row.dataset.employeeId = employee.id;
@@ -353,11 +430,19 @@ function renderEditableCellForLeader(employee, date) {
         const priority1Selected = reg.priority === 1;
         const priority2Selected = reg.priority === 2;
 
+        // Lọc ra 2 mã ca V812 và V829 để tạo options cho select
+        const leaderShiftOptions = shiftCodes
+            .filter(sc => ['V812', 'V829'].includes(sc.shiftCode))
+            .map(sc => `<option value="${sc.shiftCode}" ${reg.shiftCode === sc.shiftCode ? 'selected' : ''}>${sc.shiftCode}</option>`)
+            .join('');
+
         blocksHTML += `
             <div class="shift-registration-block flex-1" data-shift-index="${i}">
                 <div class="flex-grow space-y-1">
-                    <input list="shift-codes-datalist" class="shift-input text-center form-input form-input-sm w-full text-xs" 
-                           placeholder="-- Ca ${i + 1} --" value="${reg.shiftCode || ''}">
+                    <select class="shift-input text-center form-select form-select-sm w-full text-xs">
+                        <option value="">-- Ca ${i + 1} --</option>
+                        ${leaderShiftOptions}
+                    </select>
                     <div class="shift-time-display text-xs text-center text-gray-500 h-4">${(shiftCodes.find(sc => sc.shiftCode === reg.shiftCode)?.timeRange) || ''}</div>
                 </div>
                 <div class="priority-selector flex justify-center items-center gap-2 mt-1">
@@ -394,6 +479,8 @@ function renderReadOnlyCellForStaff(employee, date) {
     const timeRange1 = shiftCodes.find(sc => sc.shiftCode === reg1.shiftCode)?.timeRange || '&nbsp;';
     const timeRange2 = shiftCodes.find(sc => sc.shiftCode === reg2.shiftCode)?.timeRange || '&nbsp;';
     const priorityIcon1 = reg1.priority === 1 ? '<i class="fas fa-circle text-green-500" title="Chắc chắn"></i>' : (reg1.priority === 2 ? '<i class="fas fa-triangle-exclamation text-amber-500" title="Có thể"></i>' : '<i class="fas fa-circle text-transparent"></i>');
+    
+    const helpTime = availability?.helpTime ? ` ${availability.helpTime.start} - ${availability.helpTime.end}` : '';
     const priorityIcon2 = reg2.priority === 1 ? '<i class="fas fa-circle text-green-500" title="Chắc chắn"></i>' : (reg2.priority === 2 ? '<i class="fas fa-triangle-exclamation text-amber-500" title="Có thể"></i>' : '<i class="fas fa-circle text-transparent"></i>');
     
     const shiftInfoHTML = `
@@ -407,6 +494,7 @@ function renderReadOnlyCellForStaff(employee, date) {
                 <span class="px-0.5 whitespace-nowrap text-[10px]">${timeRange2}</span>
             </div>
             <div class="flex justify-around items-center text-xs h-4">
+                <span class="px-0.5 whitespace-nowrap text-[10px]" title="Giờ help: ${helpTime}">${helpTime ? '<i class="fas fa-hands-helping"></i>' : ''}</span>
                 <span>${priorityIcon1}</span>
                 <span>${priorityIcon2}</span>
             </div>
@@ -417,15 +505,30 @@ function renderReadOnlyCellForStaff(employee, date) {
     const todayStr = formatDate(new Date());
     const isPastDate = dateStr < todayStr;
     const disabledAttr = isPastDate ? 'disabled' : '';
+    
+    // Lọc danh sách vị trí công việc. Nếu là STAFF, loại bỏ vị trí 'LEADER'.
+    const isStaffOrG2 = employee.roleId === 'STAFF' || employee.roleId === 'STORE_LEADER_G2';
+    const filteredWorkPositions = isStaffOrG2
+        ? workPositions // Nếu là STAFF hoặc G2, hiển thị tất cả vị trí
+        : workPositions.filter(pos => pos.id !== 'LEADER'); // Ngược lại, ẩn vị trí LEADER
 
-    const positionInputLineWithPastCheck = `
+    const workPositionOptions = filteredWorkPositions.map(pos => `<option value="${pos.id}">${pos.name}</option>`).join('');
+
+    // Thay thế input bằng select
+    const positionSelectLine = `
         <div class="mt-1 flex gap-1">
-            <input list="work-positions-datalist" class="position-input form-input form-input-sm w-full text-center text-xs ${!reg1.shiftCode || isPastDate ? 'bg-slate-50' : ''}" data-shift-index="0" placeholder="Vị trí 1..." ${!reg1.shiftCode ? 'disabled' : ''} ${disabledAttr}>
-            <input list="work-positions-datalist" class="position-input form-input form-input-sm w-full text-center text-xs ${!reg2.shiftCode || isPastDate ? 'bg-slate-50' : ''}" data-shift-index="1" placeholder="Vị trí 2..." ${!reg2.shiftCode ? 'disabled' : ''} ${disabledAttr}>
+            <select class="position-input form-select form-select-sm w-full text-center text-xs ${!reg1.shiftCode || isPastDate ? 'bg-slate-50' : ''}" data-shift-index="0" ${!reg1.shiftCode ? 'disabled' : ''} ${disabledAttr}>
+                <option value="">-- Vị trí 1 --</option>
+                ${workPositionOptions}
+            </select>
+            <select class="position-input form-select form-select-sm w-full text-center text-xs ${!reg2.shiftCode || isPastDate ? 'bg-slate-50' : ''}" data-shift-index="1" ${!reg2.shiftCode ? 'disabled' : ''} ${disabledAttr}>
+                <option value="">-- Vị trí 2 --</option>
+                ${workPositionOptions}
+            </select>
         </div>`;
 
     return `<td class="p-1 border-x border-gray-200 align-top" data-date="${dateStr}">
-                <div class="flex flex-col gap-1">${shiftInfoHTML}${positionInputLineWithPastCheck}</div>
+                <div class="flex flex-col gap-1">${shiftInfoHTML}${positionSelectLine}</div>
             </td>`;
 }
 
@@ -473,17 +576,14 @@ async function handleSaveAssignmentForDay(event) {
         for (let i = 0; i < 2; i++) {
             const reg = registrations[i] || {};
             const input = Array.from(positionInputs).find(inp => inp.dataset.shiftIndex == i);
-            const positionName = input ? input.value.trim() : '';
-            // Chuyển đổi tên vị trí thành ID trước khi lưu
-            const positionId = workPositions.find(p => p.name === positionName)?.id;
+            const positionId = input ? input.value : ''; // Lấy thẳng ID từ value của select
 
             if (reg.shiftCode) {
-                if (!positionName) {
+                if (!positionId) {
                     isValid = false;
                     input.classList.add('border-red-500', 'ring-red-500');
                     window.showToast(`Vui lòng phân công vị trí cho ${employee.name} (Ca ${i + 1})`, 'warning');
                 } else {
-                    // Logic lưu sẽ sử dụng positionId
                     input.classList.remove('border-red-500', 'ring-red-500');
                     employeeAssignments.push({
                         shiftCode: reg.shiftCode,
@@ -878,10 +978,9 @@ async function loadWorkAssignmentsForWeek() {
             if (schedules) {
                 schedules.forEach((schedule, index) => {
                     const input = row.querySelector(`td[data-date="${date}"] .position-input[data-shift-index="${index}"]`);
-                    // Tìm tên vị trí từ ID và hiển thị tên
-                    const position = workPositions.find(p => p.id === schedule.positionId);
-                    if (input && position) {
-                        input.value = position.name;
+                    // Gán thẳng positionId vào value của select
+                    if (input && schedule.positionId) {
+                        input.value = schedule.positionId;
                     }
                 })
             }
