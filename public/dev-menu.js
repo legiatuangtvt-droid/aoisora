@@ -406,7 +406,6 @@ function initializeDevMenu() {
             if (!response.ok) throw new Error('Không thể tải file data.json');
             
             const data = await response.json();
-            const batch = writeBatch(db);
 
             // --- Bước 1: Xóa dữ liệu cũ ---
             window.showToast('Bước 1/2: Đang xóa dữ liệu cũ...', 'info');
@@ -430,22 +429,20 @@ function initializeDevMenu() {
                 'monthly_plans' // Xóa dữ liệu kế hoạch tháng để reset quy trình
             ];
             
-            const deleteBatch = writeBatch(db);
+            const batch = writeBatch(db); // Sử dụng một batch duy nhất
             for (const collName of collectionsToDelete) {
                 // Bỏ qua nếu collection không tồn tại trong data.json để tránh lỗi không cần thiết
-                if (data[collName] === undefined && !['staff', 'staff_statuses'].includes(collName)) continue;
+                if (data[collName] === undefined && !['staff', 'staff_statuses', 'monthly_plans'].includes(collName)) continue;
 
                 const collRef = collection(db, collName);
                 const snapshot = await getDocs(collRef);
                 snapshot.forEach(doc => {
-                    deleteBatch.delete(doc.ref);
+                    batch.delete(doc.ref); // Thêm thao tác xóa vào batch chung
                 });
             }
-            await deleteBatch.commit();
 
             // --- Bước 2: Nhập dữ liệu mới ---
             window.showToast('Bước 2/2: Đang nhập dữ liệu mới...', 'info');
-            const addBatch = writeBatch(db);
 
             // Hàm trợ giúp để seed một collection
             const seedCollection = (collectionName, items) => {
@@ -460,13 +457,13 @@ function initializeDevMenu() {
                     if (collectionName === 'daily_templates') {
                         delete dataToSet.createdAt; // Xóa chuỗi timestamp từ JSON
                         delete dataToSet.updatedAt; // Xóa chuỗi timestamp từ JSON
-                        addBatch.set(docRef, {
+                        batch.set(docRef, {
                             ...dataToSet,
                             createdAt: serverTimestamp(),
                             updatedAt: serverTimestamp()
                         });
                     } else {
-                        addBatch.set(docRef, { ...dataToSet, createdAt: serverTimestamp() });
+                        batch.set(docRef, { ...dataToSet, createdAt: serverTimestamp() });
                     }
                 });
             };
@@ -475,7 +472,7 @@ function initializeDevMenu() {
             data.stores?.forEach(store => {
                 if (store.id && store.name) {
                     const docRef = doc(db, 'stores', store.id);
-                    addBatch.set(docRef, {
+                    batch.set(docRef, {
                         name: store.name,
                         areaId: store.areaId || '',
                         address: store.address || '',
@@ -497,7 +494,7 @@ function initializeDevMenu() {
             seedCollection('daily_templates', data.daily_templates);
             seedCollection('work_positions', data.work_positions);
 
-            await addBatch.commit();
+            await batch.commit(); // Commit tất cả các thay đổi (xóa và thêm) trong một lần
             window.showToast('Hoàn tất! Đã nhập toàn bộ dữ liệu mẫu.', 'success', 4000);
         } catch (error) {
             console.error("Lỗi khi nhập dữ liệu mẫu: ", error);
