@@ -1282,6 +1282,16 @@ body.sidebar-expanded #sidebar .sidebar-text {
   border-collapse: collapse;
 }
 
+@keyframes pulse {
+  50% {
+    opacity: .5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
 .cursor-grab {
   cursor: grab;
 }
@@ -2798,6 +2808,19 @@ html, body {
 }
 
 /* green-700 */
+
+.btn-warning {
+  background-color: #f59e0b;
+  color: #fff;
+}
+
+/* amber-500 */
+
+.btn-warning:hover {
+  background-color: #d97706;
+}
+
+/* amber-600 */
 
 /* --- TOAST STYLES (Chuyển từ toast.css) --- */
 

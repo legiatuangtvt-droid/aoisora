@@ -401,6 +401,9 @@ html, body {
 .btn-success { background-color: #16a34a; color: #fff; } /* green-600 */
 .btn-success:hover { background-color: #15803d; } /* green-700 */
 
+.btn-warning { background-color: #f59e0b; color: #fff; } /* amber-500 */
+.btn-warning:hover { background-color: #d97706; } /* amber-600 */
+
 /* --- TOAST STYLES (Chuyển từ toast.css) --- */
 /* ... (các style toast đã có) ... */
 
