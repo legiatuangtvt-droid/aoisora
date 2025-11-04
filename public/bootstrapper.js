@@ -21,18 +21,18 @@
  *    - Trang: daily-templates.html
  *    - Hành động: Chọn mẫu, chọn các RM và áp dụng. Một bản ghi `monthly_plans` được tạo với status 'HQ_APPLIED'.
  *
- * Bước 2: RM điều chỉnh kế hoạch và gửi đi
+ * Bước 2: RM điều chỉnh kế hoạch và gửi phê duyệt/triển khai
  *    - Vai trò: Regional Manager (manager-app.js)
  *    - Trang: daily-templates.html
  *    - Hành động:
  *      1. RM xem lại mẫu và có thể chỉnh sửa (thêm/bớt/thay đổi task), không thể thay đổi vị trí công việc hay ca làm việc.
- *      2. Hệ thống so sánh sự thay đổi (ví dụ: tổng man-hour) với mẫu gốc.
- *      3. Nếu thay đổi <= 10% (giá trị mặc định): RM có thể "Gửi Kế hoạch" trực tiếp. Status của `monthly_plans` chuyển thành 'RM_SENT_TO_STAFF'.
+ *      2. Hệ thống so sánh sự thay đổi với mẫu gốc và hiển thị tỷ lệ % trên nút "Reset".
+ *      3. Nếu thay đổi <= 10% (giá trị mặc định): Nút hiển thị "Triển khai". RM có thể nhấn để gửi kế hoạch trực tiếp tới nhân viên. Status của `monthly_plans` chuyển thành 'RM_SENT_TO_STAFF'.
  *      4. Nếu thay đổi > 10%:
- *          a. RM phải "Gửi Yêu cầu Phê duyệt" lên HQ. Status chuyển thành 'RM_AWAITING_APPROVAL'.
- *          b. HQ nhận được yêu cầu, có thể "Phê duyệt" hoặc "Từ chối".
- *             - Nếu Phê duyệt: RM được phép "Gửi Kế hoạch".
- *             - Nếu Từ chối: HQ bắt buộc phải nhập lý do/hướng dẫn. Status của `monthly_plans` chuyển thành 'HQ_REJECTED'. RM nhận được thông báo, xem lý do và phải chỉnh sửa lại kế hoạch để gửi lại yêu cầu.
+ *          a. Nút hiển thị "Xin xác nhận". RM nhấn để gửi yêu cầu phê duyệt lên HQ. Status chuyển thành 'RM_AWAITING_APPROVAL', nút chuyển thành "Đang chờ xác nhận".
+ *          b. HQ nhận được yêu cầu, có thể "Phê duyệt" hoặc "Từ chối" trong popup trạng thái.
+ *             - Nếu Phê duyệt: Status chuyển thành 'HQ_APPROVED_RM_CHANGES'. Nút phía RM đổi thành "Sẵn sàng triển khai" và có thể nhấn để thực hiện Bước 3.
+ *             - Nếu Từ chối: HQ bắt buộc phải nhập lý do. Status chuyển thành 'HQ_REJECTED_RM_CHANGES'. RM nhận được thông báo, xem lý do và phải chỉnh sửa lại kế hoạch để gửi lại yêu cầu (quay về bước 4a).
  *
  * Bước 3: Nhân viên (Staff) đăng ký ca làm việc
  *    - Vai trò: Staff (staff-app.js)

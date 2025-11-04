@@ -1946,6 +1946,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
   padding-top: 1rem;
 }
 
+.pl-6 {
+  padding-left: 1.5rem;
+}
+
 .text-left {
   text-align: left;
 }
@@ -2220,6 +2224,11 @@ body.sidebar-expanded #sidebar .sidebar-text {
 .text-white {
   --tw-text-opacity: 1;
   color: rgb(255 255 255 / var(--tw-text-opacity, 1));
+}
+
+.text-amber-700 {
+  --tw-text-opacity: 1;
+  color: rgb(180 83 9 / var(--tw-text-opacity, 1));
 }
 
 .opacity-0 {

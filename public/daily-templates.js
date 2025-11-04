@@ -1022,12 +1022,12 @@ export async function init() {
     // Thêm listener để cập nhật tiêu đề khi nhập manhour
     const hqApplyBtn = document.getElementById('apply-template-hq-btn');
     if (hqApplyBtn) {
-        hqApplyBtn.addEventListener('click', applyTemplateForHq, { signal });
+        hqApplyBtn.addEventListener('click', handleDeployClick, { signal });
     }
     if (!document.getElementById('shift-codes-datalist')) {
         const datalist = document.createElement('datalist');
         datalist.id = 'shift-codes-datalist';
-        datalist.innerHTML = allShiftCodes.map(sc => `<option value="${sc.shiftCode}">${sc.timeRange}</option>`).join('');
+        datalist.innerHTML = allShiftCodes.map(sc => `<option value="${sc.shiftCode}">${sc.timeRange}</option>`).join(''); // Fix: Thêm đóng tag option
         document.body.appendChild(datalist);
     }
     const manhourInput = document.getElementById('template-manhour-input');
@@ -1054,7 +1054,7 @@ export function cleanup() {
         domController = null;
     }
     // Dọn dẹp các listener bằng cách clone và thay thế node
-    ['save-template-btn', 'new-template-btn', 'delete-template-btn', 'template-selector', 'apply-template-hq-btn', 'send-plan-btn', 'reset-template-btn'].forEach(id => {
+    ['save-template-btn', 'new-template-btn', 'delete-template-btn', 'template-selector', 'apply-template-hq-btn', 'reset-template-btn', 'approve-plan-btn', 'reject-plan-btn'].forEach(id => {
         const el = document.getElementById(id);
         if (el) { // Thêm nút reset vào danh sách dọn dẹp
             const newEl = el.cloneNode(true);
@@ -1064,23 +1064,76 @@ export function cleanup() {
 }
 
 /**
- * Áp dụng template cho các cửa hàng của một Miền được chọn (dành cho HQ Staff).
+ * Xử lý sự kiện click nút "Triển khai" / "Xin xác nhận" / "Sẵn sàng triển khai".
+ * Logic sẽ phân nhánh dựa trên vai trò người dùng và trạng thái kế hoạch.
  */
-async function applyTemplateForHq() {
-    const btn = document.getElementById('apply-template-hq-btn');
+async function handleDeployClick() {
+    const btn = document.getElementById('apply-template-hq-btn');    
     const btnSpan = btn?.querySelector('span');
-    if(btn) btn.disabled = true;    if (btnSpan) btnSpan.textContent = 'Đang xử lý...';
+    if (btn) btn.disabled = true;
+    if (btnSpan) btnSpan.textContent = 'Đang xử lý...';
 
     try {
-        // 1. Kiểm tra đã chọn template chưa
         if (!currentTemplateId) {
             throw new Error("Vui lòng chọn một mẫu lịch trình trước khi áp dụng.");
         }
         const template = allTemplates.find(t => t.id === currentTemplateId);
         if (!template || !template.schedule || !template.shiftMappings) {
             throw new Error(`Mẫu "${template.name}" không hợp lệ hoặc không có dữ liệu ca làm việc.`);
+        }        const currentUser = window.currentUser;
+        // --- LOGIC CHO RM ---
+        if (currentUser.roleId === 'REGIONAL_MANAGER' || currentUser.roleId === 'AREA_MANAGER') {
+            if (!currentMonthlyPlan) throw new Error("Không tìm thấy kế hoạch tháng hiện tại để xử lý.");
+
+            const changePercentage = parseFloat(document.getElementById('reset-percentage-display')?.textContent.replace(/[()%]/g, '')) || 0;
+            const planRef = doc(db, 'monthly_plans', currentMonthlyPlan.id);
+
+            // Trường hợp 1: Thay đổi ít hoặc đã được HQ duyệt -> Triển khai cho Staff
+            if (changePercentage <= 10 || currentMonthlyPlan.status === 'HQ_APPROVED_RM_CHANGES') {
+                await updateDoc(planRef, {
+                    status: 'RM_SENT_TO_STAFF',
+                    'history': [...currentMonthlyPlan.history, {
+                        status: 'RM_SENT_TO_STAFF',
+                        timestamp: new Date(),
+                        userId: currentUser.id,
+                        userName: currentUser.name,
+                        comment: `Triển khai kế hoạch với ${changePercentage.toFixed(1)}% thay đổi.`
+                    }]
+                });
+                window.showToast('Đã gửi kế hoạch đăng ký ca cho nhân viên.', 'success');
+                await loadAppliedPlanForManager(); // Tải lại để cập nhật trạng thái
+            }
+            // Trường hợp 2: Thay đổi nhiều -> Gửi yêu cầu phê duyệt
+            else if (changePercentage > 10) {
+                await updateDoc(planRef, {
+                    status: 'RM_AWAITING_APPROVAL',
+                    'history': [...currentMonthlyPlan.history, {
+                        status: 'RM_AWAITING_APPROVAL',
+                        timestamp: new Date(),
+                        userId: currentUser.id,
+                        userName: currentUser.name,
+                        comment: `Yêu cầu phê duyệt cho kế hoạch có ${changePercentage.toFixed(1)}% thay đổi.`
+                    }]
+                });
+                window.showToast('Đã gửi yêu cầu phê duyệt đến HQ.', 'info');
+                await loadAppliedPlanForManager(); // Tải lại để cập nhật trạng thái
+            }
+            return; // Dừng hàm sau khi xử lý logic của RM
         }
 
+        // --- LOGIC CHO HQ (giữ nguyên) ---
+        await applyTemplateForHq(template);
+    } catch (error) {
+        console.error("Lỗi khi xử lý nút triển khai:", error);
+        window.showToast(`Đã xảy ra lỗi: ${error.message}`, 'error');
+    } finally {
+        if (btn) btn.disabled = false;
+        // Việc cập nhật lại text của button sẽ được xử lý trong checkTemplateChangesAndToggleResetButton
+    }
+}/**
+ * (Chỉ dành cho HQ) Áp dụng template cho các miền được chọn.
+ * @param {object} template - Đối tượng template đã được chọn.
+ */async function applyTemplateForHq(template) {
         // 2. Lấy danh sách Region Managers và yêu cầu chọn
         const regionalManagers = allPersonnel.filter(p => p.roleId === 'REGIONAL_MANAGER');
         if (regionalManagers.length === 0) {
@@ -1089,7 +1142,7 @@ async function applyTemplateForHq() {
 
         // --- NEW: Chuẩn bị dữ liệu cho bảng ---
         const storesSnap = await getDocs(collection(db, 'stores'));
-        const allStores = storesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const allStores = storesSnap.docs.map(d => ({ id: d.id, ...d.data() })); // This is a re-declaration, but it's scoped inside the function, so it's okay.
         const areasSnap = await getDocs(collection(db, 'areas'));
         const allAreas = areasSnap.docs.map(d => ({ id: d.id, ...d.data() }));
         const regionsSnap = await getDocs(collection(db, 'regions'));
@@ -1185,16 +1238,7 @@ async function applyTemplateForHq() {
         }
 
         await batch.commit();
-        window.showToast(`Hoàn tất! Đã gửi kế hoạch từ mẫu "${template.name}" đến ${selectedManagers.length} miền.`, 'success', 5000);
-
-    } catch (error) {
-        console.error("Lỗi khi áp dụng template cho miền:", error);
-        window.showToast(`Đã xảy ra lỗi: ${error.message}`, 'error');
-    } finally {
-        btn.disabled = false;
-        if (btnSpan) btnSpan.textContent = 'Triển khai';
-    }
-}
+        window.showToast(`Hoàn tất! Đã gửi kế hoạch từ mẫu "${template.name}" đến ${selectedManagers.length} miền.`, 'success', 5000);}
 
 /**
  * (Dành cho RM/AM) Tải kế hoạch và mẫu được áp dụng gần nhất.
@@ -1316,6 +1360,34 @@ function checkTemplateChangesAndToggleResetButton() {
     // 5. Cập nhật giao diện
     const resetButton = document.getElementById('reset-template-btn');
     const percentageDisplay = document.getElementById('reset-percentage-display');
+    const deployButton = document.getElementById('apply-template-hq-btn');
+    const deployButtonSpan = deployButton?.querySelector('span');
+
+    // Cập nhật nút "Triển khai" cho RM
+    if (currentUser && (currentUser.roleId === 'REGIONAL_MANAGER' || currentUser.roleId === 'AREA_MANAGER') && deployButton && deployButtonSpan) {
+        deployButton.disabled = false; // Mặc định là bật
+        deployButton.title = '';
+
+        if (currentMonthlyPlan?.status === 'RM_AWAITING_APPROVAL') {
+            deployButtonSpan.textContent = 'Đang chờ xác nhận';
+            deployButton.disabled = true;
+            deployButton.title = 'Đã gửi yêu cầu, đang chờ HQ phê duyệt.';
+        } else if (currentMonthlyPlan?.status === 'HQ_APPROVED_RM_CHANGES') {
+            deployButtonSpan.textContent = 'Sẵn sàng triển khai';
+            deployButton.title = 'HQ đã đồng ý và cho phép triển khai tới Staff.';
+        } else if (changePercentage > 10) {
+            deployButtonSpan.textContent = 'Xin xác nhận';
+            deployButton.title = 'Thay đổi vượt quá 10%, cần gửi HQ phê duyệt trước khi triển khai.';
+        } else {
+            deployButtonSpan.textContent = 'Triển khai';
+            deployButton.title = 'Triển khai kế hoạch đăng ký ca cho nhân viên.';
+        }
+    } else if (deployButtonSpan) {
+        // Reset về trạng thái mặc định cho HQ
+        deployButtonSpan.textContent = 'Triển khai';
+        deployButton.title = '';
+    }
+
     if (resetButton && percentageDisplay) {
         const hasChanged = changePercentage > 0;
         resetButton.classList.toggle('hidden', !hasChanged);
@@ -1343,12 +1415,38 @@ async function handleResetTemplate() {
 function renderPlanTracker(plan) {
     const container = document.getElementById('plan-tracker-modal'); // Thay đổi để nhắm đến modal
     if (!container) return;    
+
+    const currentUser = window.currentUser;
     const historyList = container.querySelector('#plan-history-list');
     const commentList = container.querySelector('#plan-comments-list');
+    const approvalActions = document.getElementById('plan-approval-actions');
+    const approveBtn = document.getElementById('approve-plan-btn');
+    const rejectBtn = document.getElementById('reject-plan-btn');
+
+    // Logic hiển thị các nút Phê duyệt/Từ chối cho HQ
+    if (currentUser.roleId === 'HQ_STAFF' || currentUser.roleId === 'ADMIN') {
+        if (plan.status === 'RM_AWAITING_APPROVAL') {
+            approvalActions.classList.remove('hidden');
+            approvalActions.classList.add('flex');
+        } else {
+            approvalActions.classList.add('hidden');
+            approvalActions.classList.remove('flex');
+        }
+    } else {
+        approvalActions.classList.add('hidden');
+        approvalActions.classList.remove('flex');
+    }
+
+    // Gắn sự kiện cho các nút phê duyệt
+    approveBtn.onclick = () => handleApprovalAction(plan.id, true);
+    rejectBtn.onclick = () => handleApprovalAction(plan.id, false);
 
     // Định nghĩa các bước
     const steps = [
         { id: 'HQ_APPLIED', label: '1. HQ triển khai đến RM' },
+        { id: 'RM_AWAITING_APPROVAL', label: '1.5. RM gửi yêu cầu phê duyệt' },
+        { id: 'HQ_REJECTED_RM_CHANGES', label: '1.6. HQ từ chối thay đổi' },
+        { id: 'HQ_APPROVED_RM_CHANGES', label: '1.7. HQ phê duyệt thay đổi' },
         { id: 'RM_SENT_TO_STAFF', label: '2. RM gửi về Staff' },
         { id: 'STAFF_REGISTERED', label: '3. Staff đăng ký' },
         { id: 'SL_ADJUSTED', label: '4. SL điều chỉnh & gửi AM' },
@@ -1362,7 +1460,12 @@ function renderPlanTracker(plan) {
         const historyEntry = plan.history.find(h => h.status === step.id);
         if (historyEntry) {
             const timestamp = historyEntry.timestamp?.toDate().toLocaleString('vi-VN') || 'N/A';
-            return `<li class="text-green-700 flex items-start"><i class="fas fa-check-circle mr-2 mt-1 flex-shrink-0"></i><div><strong>${step.label}:</strong> Hoàn thành bởi ${historyEntry.userName} lúc ${timestamp}</div></li>`;
+            let commentHTML = '';
+            if (historyEntry.comment) {
+                commentHTML = `<div class="text-xs text-gray-600 italic pl-6 mt-1 p-1 bg-gray-100 rounded">- ${historyEntry.comment}</div>`;
+            }
+            const iconClass = step.id.includes('REJECTED') ? 'fa-times-circle text-red-600' : 'fa-check-circle text-green-700';
+            return `<li class="flex items-start"><i class="fas ${iconClass} mr-2 mt-1 flex-shrink-0"></i><div><strong>${step.label}:</strong> Hoàn thành bởi ${historyEntry.userName} lúc ${timestamp}${commentHTML}</div></li>`;
         } else {
             return `<li class="text-gray-400 flex items-start"><i class="far fa-circle mr-2 mt-1 flex-shrink-0"></i><div>${step.label}: Chưa thực hiện</div></li>`;
         }
@@ -1382,6 +1485,55 @@ function renderPlanTracker(plan) {
     }
 }
 
+/**
+ * (Dành cho HQ) Xử lý hành động phê duyệt hoặc từ chối kế hoạch.
+ * @param {string} planId - ID của kế hoạch.
+ * @param {boolean} isApproved - True nếu phê duyệt, false nếu từ chối.
+ */
+async function handleApprovalAction(planId, isApproved) {
+    const currentUser = window.currentUser;
+    const planRef = doc(db, 'monthly_plans', planId);
+    const planSnap = await getDoc(planRef);
+    if (!planSnap.exists()) {
+        window.showToast('Lỗi: Không tìm thấy kế hoạch để xử lý.', 'error');
+        return;
+    }
+
+    const planData = planSnap.data();
+    let newStatus = '';
+    let comment = '';
+
+    if (isApproved) {
+        newStatus = 'HQ_APPROVED_RM_CHANGES';
+        comment = 'Đã phê duyệt các thay đổi từ RM.';
+    } else {
+        comment = await window.showPrompt('Vui lòng nhập lý do từ chối:', 'Từ chối Kế hoạch');
+        if (!comment || comment.trim() === '') {
+            window.showToast('Bạn phải nhập lý do để từ chối.', 'warning');
+            return;
+        }
+        newStatus = 'HQ_REJECTED_RM_CHANGES';
+    }
+
+    try {
+        await updateDoc(planRef, {
+            status: newStatus,
+            'history': [...planData.history, {
+                status: newStatus,
+                timestamp: new Date(),
+                userId: currentUser.id,
+                userName: currentUser.name,
+                comment: comment
+            }]
+        });
+        window.showToast(`Đã ${isApproved ? 'phê duyệt' : 'từ chối'} kế hoạch thành công.`, 'success');
+        hideModal(); // Đóng popup trạng thái
+        await loadAppliedPlanForManager(); // Tải lại để cập nhật giao diện cho RM (nếu RM đang xem)
+    } catch (error) {
+        console.error('Lỗi khi xử lý phê duyệt:', error);
+        window.showToast('Đã có lỗi xảy ra.', 'error');
+    }
+}
 /**
  * Tạo các bản sao thực sự khi người dùng nhả chuột.
  * @param {HTMLElement} finalTarget - Phần tử cuối cùng mà chuột trỏ tới.
