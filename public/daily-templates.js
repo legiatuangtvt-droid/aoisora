@@ -1235,52 +1235,70 @@ async function loadAppliedPlanForManager() {
  */
 function checkTemplateChangesAndToggleResetButton() {
     const currentUser = window.currentUser;
-    if (!currentUser || currentUser.roleId === 'HQ_STAFF' || currentUser.roleId === 'ADMIN') {
-        return; // Bỏ qua nếu là HQ/Admin
+    if (!currentUser || currentUser.roleId === 'HQ_STAFF' || currentUser.roleId === 'ADMIN' || !originalTemplateData) {
+        return;
     }
 
-    if (!originalTemplateData) {
-        return; // Bỏ qua nếu không có dữ liệu gốc để so sánh
-    }
+    // --- LOGIC TÍNH TOÁN MỚI: SO SÁNH SLOT-BY-SLOT ---
 
-    // Thu thập dữ liệu hiện tại từ DOM
-    const currentSchedule = {};
-    const currentShiftMappings = {};
-    const currentTotalManhour = parseFloat(document.getElementById('template-manhour-input').value) || 0;
+    // Hàm trợ giúp để tạo một "bản đồ" các task từ dữ liệu schedule
+    // Key: "shiftId_time_quarter", Value: taskCode
+    const createTaskMap = (schedule) => {
+        const map = new Map();
+        if (!schedule) return map;
+        for (const shiftId in schedule) {
+            for (const task of schedule[shiftId]) {
+                const [hour, quarter] = task.startTime.split(':');
+                const time = `${parseInt(hour, 10)}:00`;
+                const key = `${shiftId}_${time}_${quarter}`;
+                map.set(key, task.taskCode);
+            }
+        }
+        return map;
+    };
 
+    // 1. Tạo bản đồ cho mẫu gốc
+    const originalTaskMap = createTaskMap(originalTemplateData.schedule);
+
+    // 2. Tạo bản đồ cho mẫu hiện tại từ DOM
+    const currentTaskMap = new Map();
     document.querySelectorAll('#template-builder-grid-container .scheduled-task-item').forEach(taskItem => {
         const slot = taskItem.closest('.quarter-hour-slot');
         if (!slot) return;
-        const shiftId = slot.dataset.shiftId;
-        const taskName = taskItem.querySelector('span.overflow-hidden').textContent;
-        const taskCode = taskItem.dataset.taskCode;
-        const groupId = taskItem.dataset.groupId;
-        const time = slot.dataset.time;
-        const quarter = slot.dataset.quarter;
-        const startTime = `${time.split(':')[0].padStart(2, '0')}:${quarter}`;
-
-        if (!currentSchedule[shiftId]) currentSchedule[shiftId] = [];
-        currentSchedule[shiftId].push({ taskCode, taskName, startTime, groupId });
+        const key = `${slot.dataset.shiftId}_${slot.dataset.time}_${slot.dataset.quarter}`;
+        currentTaskMap.set(key, taskItem.dataset.taskCode);
     });
 
-    document.querySelectorAll('#template-builder-grid-container tbody tr').forEach(row => {
-        const shiftId = row.dataset.shiftId;
-        const selectedShiftCode = row.querySelector('.shift-code-selector')?.value;
-        const selectedPositionId = row.querySelector('.work-position-selector')?.value;
-        if (shiftId) {
-            currentShiftMappings[shiftId] = { shiftCode: selectedShiftCode, positionId: selectedPositionId };
+    // 3. So sánh hai bản đồ và đếm số vị trí thay đổi
+    let changedSlotCount = 0;
+    const allSlotKeys = new Set([...originalTaskMap.keys(), ...currentTaskMap.keys()]);
+
+    allSlotKeys.forEach(key => {
+        const originalTaskCode = originalTaskMap.get(key);
+        const currentTaskCode = currentTaskMap.get(key);
+
+        // Một vị trí được coi là thay đổi nếu task ở đó khác với bản gốc
+        // (bao gồm cả việc thêm mới vào ô trống hoặc xóa task khỏi ô đã có)
+        if (originalTaskCode !== currentTaskCode) {
+            changedSlotCount++;
         }
     });
 
-    // So sánh dữ liệu hiện tại với dữ liệu gốc
-    const isChanged = JSON.stringify(currentSchedule) !== JSON.stringify(originalTemplateData.schedule) ||
-                      JSON.stringify(currentShiftMappings) !== JSON.stringify(originalTemplateData.shiftMappings) ||
-                      currentTotalManhour !== originalTemplateData.totalManhour;
+    // 4. Tính toán tỷ lệ phần trăm
+    const totalOriginalSlots = originalTaskMap.size;
+    const changePercentage = totalOriginalSlots > 0
+        ? (changedSlotCount / totalOriginalSlots) * 100
+        : (changedSlotCount > 0 ? 100 : 0);
 
-    // Hiển thị hoặc ẩn nút Reset
+    // 5. Cập nhật giao diện
     const resetButton = document.getElementById('reset-template-btn');
-    if (resetButton) {
-        resetButton.classList.toggle('hidden', !isChanged);
+    const percentageDisplay = document.getElementById('reset-percentage-display');
+    if (resetButton && percentageDisplay) {
+        const hasChanged = changePercentage > 0;
+        resetButton.classList.toggle('hidden', !hasChanged);
+        if (hasChanged) {
+            percentageDisplay.textContent = `(${changePercentage.toFixed(1)}%)`;
+        }
     }
 }
 
@@ -1291,6 +1309,7 @@ async function handleResetTemplate() {
     const confirmed = await window.showConfirmation('Bạn có chắc chắn muốn khôi phục lịch trình về trạng thái ban đầu do HQ gửi không? Mọi thay đổi sẽ bị mất.', 'Xác nhận Reset', 'Khôi phục', 'Hủy');
     if (confirmed) {
         await loadTemplate(currentTemplateId); // Tải lại mẫu gốc từ Firestore
+        checkTemplateChangesAndToggleResetButton(); // Kiểm tra thay đổi và ẩn nút Reset nếu cần
         window.showToast('Đã khôi phục lịch trình về trạng thái ban đầu.', 'success');
     }
 }
