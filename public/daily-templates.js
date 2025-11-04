@@ -745,9 +745,11 @@ async function loadTemplate(templateId) {
         showTemplateApplyStatus(templateId);
     }
 
-    // Hiển thị các nút cho chế độ xem/sửa
-    document.getElementById('new-template-btn').classList.remove('hidden');
-    document.getElementById('delete-template-btn').classList.remove('hidden');
+    // Hiển thị các nút cho chế độ xem/sửa, chỉ dành cho HQ/Admin
+    if (currentUser && (currentUser.roleId === 'HQ_STAFF' || currentUser.roleId === 'ADMIN')) {
+        document.getElementById('new-template-btn').classList.remove('hidden');
+        document.getElementById('delete-template-btn').classList.remove('hidden');
+    }
 
     updateTemplateStats(); // Xóa thống kê cũ
     if (!templateId) return; // Thoát nếu không có ID
