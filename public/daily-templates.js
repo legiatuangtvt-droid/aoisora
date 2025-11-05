@@ -1186,7 +1186,7 @@ function renderREView() {
                 <td class="p-2 border text-left">${task.name}</td>
                 <td class="p-2 border text-center">${task.frequency || '-'}</td>
                 <td class="p-2 border text-center">${task.reUnit || '-'}</td>
-                <td class="p-2 border text-right">${(task.dailyHours || 0).toFixed(2)}h</td>
+                <td class="p-2 border text-center">${(task.dailyHours || 0).toFixed(2)}h</td>
             </tr>
         `).join('');
 
