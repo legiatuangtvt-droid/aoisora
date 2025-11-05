@@ -1,6 +1,5 @@
 import { db } from './firebase.js';
-import { collection, getDocs, query, orderBy, doc, setDoc, serverTimestamp, addDoc, deleteDoc, getDoc, where, writeBatch, limit } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
-import { initRELogicView } from './re-logic.js';
+import { collection, getDocs, query, orderBy, doc, setDoc, serverTimestamp, addDoc, deleteDoc, getDoc, where, writeBatch, limit, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 let sortableInstances = [];
 let domController = null;
@@ -14,6 +13,10 @@ let allPersonnel = []; // For HQ Apply
 let allWorkPositions = []; // Biến để lưu danh sách vị trí công việc
 let allShiftCodes = []; // Biến để lưu danh sách mã ca
 // Bảng màu mặc định nếu group không có màu
+
+// --- RE Logic Data ---
+let allRETasks = [];
+// --- End RE Logic Data ---
 
 let currentView = 'builder'; // 'builder' or 're-logic'
 
@@ -1098,19 +1101,20 @@ export function cleanup() {
 /**
  * Chuyển đổi giữa giao diện xây dựng mẫu và giao diện RE Logic.
  */
-function toggleBuilderView() {
+async function toggleBuilderView() {
     const builderContainer = document.getElementById('template-builder-grid-container');
     const reLogicContainer = document.getElementById('re-logic-container');
     const toggleBtn = document.getElementById('toggle-view-btn');
     const toggleBtnIcon = toggleBtn.querySelector('i');
     const toggleBtnSpan = toggleBtn.querySelector('span');
+    const rightSidebar = document.getElementById('right-sidebar-container');
     const saveBtn = document.getElementById('save-template-btn');
     const newBtn = document.getElementById('new-template-btn');
     const deployBtn = document.getElementById('apply-template-hq-btn');
     const deleteBtn = document.getElementById('delete-template-btn');
 
     if (currentView === 'builder') {
-        // Chuyển sang RE Logic
+        // Chuyển sang RE Logic (Detail)
         currentView = 're-logic';
         builderContainer.classList.add('hidden');
         reLogicContainer.classList.remove('hidden');
@@ -1118,14 +1122,16 @@ function toggleBuilderView() {
         toggleBtnIcon.className = 'fas fa-sitemap mr-2';
         toggleBtnSpan.textContent = 'Model';
 
-        // Ẩn các nút không liên quan
+        // Ẩn các nút của builder
         saveBtn.classList.add('hidden');
         newBtn.classList.add('hidden');
         deployBtn.classList.add('hidden');
         deleteBtn.classList.add('hidden');
 
-        // Khởi tạo view RE Logic (nếu chưa)
-        initRELogicView();
+        // Tải và khởi tạo view RE Logic nếu chưa có nội dung
+        if (!reLogicContainer.innerHTML.trim()) {
+            await initRELogicView();
+        }
 
     } else {
         // Chuyển về Template Builder
@@ -1145,6 +1151,109 @@ function toggleBuilderView() {
         }
     }
 }
+
+// =================================================================================
+// RE LOGIC FUNCTIONS (Moved from re-logic.js)
+// =================================================================================
+
+/**
+ * Tải dữ liệu cần thiết cho RE Logic view.
+ */
+async function fetchREData() {
+    try {
+        // allTaskGroups đã được tải ở fetchInitialData()
+        const reTasksSnap = await getDocs(query(collection(db, 're_tasks'), orderBy('category'), orderBy('name')));
+        allRETasks = reTasksSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+        window.showToast("Failed to load RE logic data.", "error");
+        console.error("Error fetching RE data:", error);
+    }
+}
+
+/**
+ * Render nội dung chính của RE Logic view.
+ */
+function renderREView() {
+    const accordionContainer = document.getElementById('re-task-accordion');
+    if (!accordionContainer) return;
+
+    const sortedTaskGroups = Object.values(allTaskGroups).sort((a, b) => (a.order || 99) - (b.order || 99));
+
+    if (sortedTaskGroups.length === 0) {
+        accordionContainer.innerHTML = '<p class="text-slate-500">Không tìm thấy nhóm công việc nào.</p>';
+        return;
+    }
+
+    accordionContainer.innerHTML = sortedTaskGroups.map(group => {
+        const tasksInCategory = allRETasks.filter(task => task.category === group.code);
+        const totalRE = tasksInCategory.reduce((sum, task) => sum + (task.dailyHours || 0), 0);
+
+        const taskRows = tasksInCategory.map((task, index) => `
+            <tr>
+                <td class="p-2 border text-center">${index + 1}</td>
+                <td class="p-2 border text-left">${task.name}</td>
+                <td class="p-2 border text-center">${task.frequency || '-'}</td>
+                <td class="p-2 border text-center">${task.reUnit || '-'}</td>
+                <td class="p-2 border text-right">${(task.dailyHours || 0).toFixed(2)}</td>
+            </tr>
+        `).join('');
+
+        return `
+            <div class="re-accordion-item border rounded-lg overflow-hidden">
+                <button class="re-accordion-toggle w-full text-left p-3 font-semibold flex justify-between items-center bg-slate-50 hover:bg-slate-100">
+                    <span>${group.name} (${group.code})</span>
+                    <i class="fas fa-chevron-down transition-transform"></i>
+                </button>
+                <div class="re-accordion-content hidden p-2">
+                    <table class="w-full text-sm border-collapse">
+                        <thead class="bg-slate-100">
+                            <tr>
+                                <th class="p-2 border text-center w-12">STT</th>
+                                <th class="p-2 border text-left">Task</th>
+                                <th class="p-2 border text-center">Tần suất</th>
+                                <th class="p-2 border text-center">Unit RE</th>
+                                <th class="p-2 border text-right w-24">RE (Giờ)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${taskRows.length > 0 ? taskRows : `<tr><td colspan="5" class="text-center p-4 text-slate-500">Không có task nào trong nhóm này.</td></tr>`}
+                            <tr class="font-bold bg-slate-100">
+                                <td colspan="4" class="p-2 border text-right">Tổng giờ ${group.code}</td>
+                                <td class="p-2 border text-right">${totalRE.toFixed(2)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Gắn sự kiện cho các accordion vừa tạo
+    document.querySelectorAll('.re-accordion-toggle').forEach(button => {
+        button.addEventListener('click', () => {
+            const content = button.nextElementSibling;
+            const icon = button.querySelector('i');
+            content.classList.toggle('hidden');
+            icon.classList.toggle('rotate-180');
+        });
+    });
+}
+
+/**
+ * Khởi tạo RE Logic view (tải HTML và dữ liệu).
+ */
+async function initRELogicView() {
+    const reLogicContainer = document.getElementById('re-logic-container');
+    reLogicContainer.innerHTML = `<div class="p-10 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i> Đang tải dữ liệu RE Logic...</div>`;
+
+    // Chèn trực tiếp HTML vào container
+    reLogicContainer.innerHTML = getRELogicHTMLTemplate();
+
+    // Tải dữ liệu và render
+    await fetchREData();
+    renderREView();
+}
+
 /**
  * Xử lý sự kiện click nút "Triển khai" / "Xin xác nhận" / "Sẵn sàng triển khai".
  * Logic sẽ phân nhánh dựa trên vai trò người dùng và trạng thái kế hoạch.
@@ -1773,4 +1882,50 @@ function updateTemplateStats() {
     // Đồng bộ giá trị "Đã sắp xếp" ở trên với tổng số giờ vừa tính toán
     const scheduledHoursValueEl = document.getElementById('scheduled-hours-value');
     if (scheduledHoursValueEl) scheduledHoursValueEl.textContent = newTotalTime.toFixed(2);
+}
+
+/**
+ * Trả về chuỗi HTML cho giao diện RE Logic.
+ * (Nội dung từ re-logic.html)
+ */
+function getRELogicHTMLTemplate() {
+    return `
+      <div id="re-logic-main-content" class="p-4 flex flex-col h-full">
+          <!-- Store Info Section -->
+          <div class="mb-4 flex-shrink-0">
+              <h3 class="text-lg font-semibold text-slate-800 mb-2 flex items-center">
+                  Thông tin cửa hàng
+              </h3>
+              <div id="re-store-info-content" class="mt-2 p-4 border rounded-lg bg-white">
+                  <table class="w-full text-sm border-collapse">
+                      <thead class="bg-slate-50">
+                          <tr>
+                              <th class="p-2 border text-center font-semibold text-slate-600">Số khách hàng (người)</th>
+                              <th class="p-2 border text-center font-semibold text-slate-600">Diện tích (m2)</th>
+                              <th class="p-2 border text-center font-semibold text-slate-600">Số nhân viên (người)</th>
+                              <th class="p-2 border text-center font-semibold text-slate-600">Tổng kiện hàng khô (kiện)</th>
+                              <th class="p-2 border text-center font-semibold text-slate-600">Hàng rau củ (kg)</th>
+                          </tr>
+                      </thead>
+                      <tbody id="re-store-info-body">
+                          <tr>
+                              <td class="p-2 border text-center">0</td>
+                              <td class="p-2 border text-center">0</td>
+                              <td class="p-2 border text-center">0</td>
+                              <td class="p-2 border text-center">0</td>
+                              <td class="p-2 border text-center">0</td>
+                          </tr>
+                      </tbody>
+                  </table>
+              </div>
+          </div>
+          <!-- Task Details Section -->
+          <div class="bg-white p-4 rounded-lg shadow-sm border flex-1 overflow-y-auto">
+              <h3 class="text-lg font-semibold text-slate-800 mb-4">Chi tiết các Group Task</h3>
+              <div id="re-task-accordion" class="space-y-2">
+                  <p class="text-slate-500">Đang tải danh sách công việc...</p>
+              </div>
+          </div>
+      </div>
+    `;
 }
