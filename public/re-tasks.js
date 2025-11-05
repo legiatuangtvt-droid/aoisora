@@ -146,13 +146,15 @@ function openTaskModal(task = null) {
     const modal = document.getElementById('re-task-modal');
     const modalTitle = document.getElementById('re-task-modal-title');
     const form = document.getElementById('re-task-form');
+    const submitButton = form.querySelector('button[type="submit"]');
     form.reset();
 
     if (task) { // Chế độ Sửa
         currentEditId = task.id;
         modalTitle.textContent = 'Chỉnh Sửa RE Task';
-        // document.getElementById('task-id').value = task.id; // ID không còn cần thiết
-        document.getElementById('task-category').value = task.groupCode || '';
+        submitButton.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Cập nhật';
+
+        document.getElementById('task-group-code').value = task.groupCode || '';
         document.getElementById('task-name').value = task.name || '';        
         document.getElementById('task-frequency').value = task.frequency || '';        
         document.getElementById('task-frequency-number').value = task.frequencyNumber || '';
@@ -163,11 +165,83 @@ function openTaskModal(task = null) {
     } else { // Chế độ Thêm
         currentEditId = null;
         modalTitle.textContent = 'Thêm RE Task Mới';
+        submitButton.innerHTML = '<i class="fas fa-plus-circle mr-2"></i>Thêm Task';
     }
 
     modal.classList.remove('hidden');
     modal.classList.add('flex');
     setTimeout(() => modal.classList.add('show'), 10);
+}
+
+/**
+ * Xử lý việc submit form thêm/sửa task.
+ * @param {Event} e - Sự kiện submit.
+ */
+async function handleFormSubmit(e) {
+    e.preventDefault();
+    const form = e.target;
+    const submitButton = form.querySelector('button[type="submit"]');
+    const isEditMode = !!currentEditId;
+
+    submitButton.disabled = true;
+    submitButton.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>${isEditMode ? 'Đang cập nhật...' : 'Đang thêm...'}`;
+
+    try {
+        if (isEditMode) {
+            // Logic cập nhật task (đã có)
+        }
+
+        // Tách groupCode và order từ currentEditId
+        const [groupCode, originalOrderStr] = currentEditId.split('-');
+        const originalOrder = parseInt(originalOrderStr, 10);
+
+        if (!groupCode || isNaN(originalOrder)) {
+            throw new Error("ID của task không hợp lệ.");
+        }
+
+        const groupDocRef = doc(db, 'task_groups', groupCode);
+        const docSnap = await getDoc(groupDocRef);
+
+        if (!docSnap.exists()) {
+            throw new Error(`Không tìm thấy nhóm công việc với mã: ${groupCode}`);
+        }
+
+        let tasks = docSnap.data().tasks || [];
+        // Sử dụng so sánh lỏng (==) để xử lý trường hợp `order` trong Firestore là string
+        // trong khi `originalOrder` là number.
+        const taskIndex = tasks.findIndex(t => t.order == originalOrder);
+
+        if (taskIndex === -1) {
+            throw new Error(`Không tìm thấy task với order ${originalOrder} trong nhóm.`);
+        }
+
+        // Cập nhật các trường của task
+        tasks[taskIndex].name = document.getElementById('task-name').value;
+        tasks[taskIndex].frequency = document.getElementById('task-frequency').value;
+        tasks[taskIndex].frequencyNumber = document.getElementById('task-frequency-number').value;
+        tasks[taskIndex].reUnit = document.getElementById('task-re-unit').value;
+        tasks[taskIndex].manual_number = document.getElementById('task-manual-number').value;
+        tasks[taskIndex].manualLink = document.getElementById('task-manual-link').value;
+        tasks[taskIndex].note = document.getElementById('task-note').value;
+
+        // Ghi lại toàn bộ mảng tasks đã được cập nhật
+        await updateDoc(groupDocRef, { tasks: tasks });
+
+        window.showToast('Đã cập nhật task thành công!', 'success');
+        hideModal();
+        listenForTaskChanges(); // Tải lại dữ liệu để làm mới bảng
+
+    } catch (error) {
+        console.error("Lỗi khi cập nhật RE task:", error);
+        window.showToast(error.message || "Có lỗi xảy ra khi lưu.", "error");
+    } finally {
+        submitButton.disabled = false;
+        if (isEditMode) {
+            submitButton.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Cập nhật';
+        } else {
+            submitButton.innerHTML = '<i class="fas fa-plus-circle mr-2"></i>Thêm Task';
+        }
+    }
 }
 
 /**
@@ -206,6 +280,7 @@ export function init() {
     listenForTaskChanges();
 
     // Gắn sự kiện cho các nút chính
+    document.getElementById('re-task-form')?.addEventListener('submit', handleFormSubmit, { signal });
    // Gắn sự kiện cho ô tìm kiếm
     document.getElementById('search-task-input')?.addEventListener('input', filterAndRender, { signal });
 
