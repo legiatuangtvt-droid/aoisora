@@ -29,13 +29,10 @@
                             <div class="pl-3">
                                 <i class="fas fa-search text-gray-400" aria-hidden="true"></i>
                             </div>
-                            <input type="text" id="search-task-input" class="block w-full border-0 bg-transparent py-2 pl-2 pr-3 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm" placeholder="Tìm theo tên task...">
+                            <input type="text" id="search-task-input" class="block w-full border-0 bg-transparent py-2 pl-2 pr-3 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm" placeholder="Tìm theo group hoặc task name...">
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
-                        <button id="import-tasks-btn" class="btn btn-secondary">
-                            <i class="fas fa-file-import mr-2"></i>Nhập Hàng Loạt
-                        </button>
                         <button id="add-task-btn" class="btn btn-indigo">
                             <i class="fas fa-plus mr-2"></i>Thêm Task Mới
                         </button>
@@ -44,18 +41,17 @@
 
                 <!-- RE Task List Table -->
                 <div id="re-task-table-container" class="flex-1 overflow-hidden">
-                    <table class="w-full table-fixed divide-y divide-gray-200 border-t border-b border-gray-200">
+                    <table class="w-full divide-y divide-gray-200 border-t border-b border-gray-200">
                         <thead class="bg-slate-50">
                             <tr>
                                 <th class="th-main text-sm border-l border-gray-200">STT</th>
-                                <th class="th-main text-sm border-l border-gray-200">Category</th>
-                                <th class="th-main text-sm border-l border-gray-200">Task Name in DWS</th>
-                                <th class="th-main text-sm border-l border-gray-200">Frequency</th>
-                                <th class="th-main text-sm border-l border-gray-200">RE Result (Min)</th>
-                                <th class="th-main text-sm border-l border-gray-200">Giờ cần cho 1 ngày</th>
-                                <th class="th-main text-sm border-l border-gray-200">Số cần nhập</th>
-                                <th class="th-main text-sm border-l border-gray-200">RE Unit/Method RE</th>
-                                <th class="th-main text-sm border-l border-gray-200">Manual number</th>
+                                <th class="th-main text-sm border-l border-gray-200">Group</th>
+                                <th class="th-main text-sm border-l border-gray-200">Task Name</th>
+                                <th class="th-main text-sm border-l border-gray-200">Frequency Type</th>
+                                <th class="th-main text-sm border-l border-gray-200">Frequency Number</th>
+                                <th class="th-main text-sm border-l border-gray-200">Re Unit</th>
+                                <th class="th-main text-sm border-l border-gray-200">Manual Number</th>
+                                <th class="th-main text-sm border-l border-gray-200">Manual Link</th>
                                 <th class="th-main text-sm border-l border-gray-200">Note</th>
                                 <th class="th-main text-sm border-l border-r border-gray-200">Hành Động</th>
                             </tr>
@@ -63,7 +59,7 @@
                         <tbody id="re-task-list" class="bg-white divide-y divide-gray-200">
                             <!-- Dữ liệu sẽ được JS render vào đây -->
                             <tr>
-                                <td colspan="11" class="text-center p-10 text-gray-500">
+                                <td colspan="7" class="text-center p-10 text-gray-500">
                                     <i class="fas fa-spinner fa-spin mr-2"></i> Đang tải dữ liệu...
                                 </td>
                             </tr>
@@ -72,8 +68,34 @@
                 </div>
 
                 <!-- Pagination Controls -->
-                <div id="pagination-controls" class="flex items-center justify-between mt-4 px-4 py-3 sm:px-6 flex-shrink-0">
-                    <!-- Nội dung phân trang sẽ được JS render vào đây -->
+                <div id="pagination-container" class="hidden flex items-center justify-between mt-4 px-4 py-3 sm:px-6 flex-shrink-0">
+                    <!-- Mobile Pagination -->
+                    <div id="pagination-mobile" class="flex-1 flex justify-between sm:hidden">
+                        <button class="pagination-btn relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" data-page="prev">
+                            Trang trước
+                        </button>
+                        <button class="pagination-btn relative inline-flex items-center ml-3 px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" data-page="next">
+                            Trang sau
+                        </button>
+                    </div>
+                    <!-- Desktop Pagination -->
+                    <div id="pagination-desktop" class="sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                        <div>
+                            <p class="text-sm text-gray-700">
+                                Hiển thị từ <span id="pagination-start-index" class="font-medium">1</span> đến <span id="pagination-end-index" class="font-medium">10</span> trong tổng số <span id="pagination-total-items" class="font-medium">0</span> mục
+                            </p>
+                        </div>
+                        <div>
+                            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                <button class="pagination-btn relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" data-page="prev" title="Trang trước">
+                                    <i class="fas fa-chevron-left h-5 w-5"></i>
+                                </button>
+                                <button class="pagination-btn relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50" data-page="next" title="Trang sau">
+                                    <i class="fas fa-chevron-right h-5 w-5"></i>
+                                </button>
+                            </nav>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -88,35 +110,31 @@
                         <div class="modal-body grid grid-cols-1 md:grid-cols-2 gap-4">
                             <input type="hidden" id="task-id">
                             <div class="form-group">
-                                <label for="task-category" class="form-label">Category</label>
-                                <input type="text" id="task-category" class="form-input">
+                                <label for="task-group-code" class="form-label">Group</label>
+                                <input type="text" id="task-group-code" class="form-input bg-gray-100" readonly>
                             </div>
                             <div class="form-group">
-                                <label for="task-name" class="form-label">Task Name in DWS (*)</label>
+                                <label for="task-name" class="form-label">Task Name(*)</label>
                                 <input type="text" id="task-name" required class="form-input">
                             </div>
                             <div class="form-group">
-                                <label for="task-frequency" class="form-label">Frequency</label>
+                                <label for="task-frequency" class="form-label">Frequency Type</label>
                                 <input type="text" id="task-frequency" class="form-input">
                             </div>
                             <div class="form-group">
-                                <label for="task-re-result" class="form-label">RE Result (Min)</label>
-                                <input type="number" id="task-re-result" class="form-input" step="any">
+                                <label for="task-frequency-number" class="form-label">Frequency Number</label>
+                                <input type="text" id="task-frequency-number" class="form-input">
                             </div>
                             <div class="form-group">
-                                <label for="task-daily-hours" class="form-label">Giờ cần cho 1 ngày</label>
-                                <input type="number" id="task-daily-hours" class="form-input" step="any">
-                            </div>
-                            <div class="form-group">
-                                <label for="task-input-number" class="form-label">Số cần nhập</label>
-                                <input type="number" id="task-input-number" class="form-input">
-                            </div>
-                            <div class="form-group">
-                                <label for="task-re-unit" class="form-label">RE Unit/Method RE</label>
+                                <label for="task-re-unit" class="form-label">Re Unit</label>
                                 <input type="text" id="task-re-unit" class="form-input">
                             </div>
                             <div class="form-group">
-                                <label for="task-manual-number" class="form-label">Manual number</label>
+                                <label for="task-manual-link" class="form-label">Manual Link</label>
+                                <input type="text" id="task-manual-link" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label for="task-manual-number" class="form-label">Manual Number</label>
                                 <input type="text" id="task-manual-number" class="form-input">
                             </div>
                             <div class="form-group md:col-span-2">
@@ -128,34 +146,6 @@
                             <button type="button" class="btn btn-secondary modal-close-btn">Hủy</button>
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-save mr-2"></i>Lưu Task
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- MODAL: Nhập Hàng Loạt -->
-            <div id="import-tasks-modal" class="modal-overlay hidden">
-                <div class="modal-content max-w-2xl">
-                    <form id="import-tasks-form">
-                        <div class="modal-header">
-                            <h3 class="modal-title">Nhập Hàng Loạt RE Task</h3>
-                            <button type="button" class="modal-close-btn">&times;</button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="form-group">
-                                <label for="bulk-data" class="form-label">Dữ liệu Task</label>
-                                <div class="text-xs text-gray-500 mb-2">
-                                    <p>Sao chép dữ liệu từ Excel (không bao gồm dòng tiêu đề) và dán vào ô bên dưới.</p>
-                                    <p>Thứ tự các cột phải là: <strong>Category, Task Name, Frequency, RE Result (Min), Giờ cần cho 1 ngày, Số cần nhập, RE Unit/Method RE, Manual number, Note</strong>.</p>
-                                </div>
-                                <textarea id="bulk-data" class="form-input font-mono text-sm" rows="10" placeholder="Dán dữ liệu từ Excel vào đây..."></textarea>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary modal-close-btn">Hủy</button>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-check mr-2"></i>Xác Nhận Nhập
                             </button>
                         </div>
                     </form>
