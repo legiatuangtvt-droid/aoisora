@@ -321,25 +321,11 @@ function renderGrid() {
     container.innerHTML = ''; // Xóa nội dung "đang tải"
     container.appendChild(table);
 
-    // --- Tạo nút "Thêm Dòng Ca" ---
-    const addRowButtonContainer = document.createElement('div');
-    // Nút này sẽ nằm dưới bảng
-    addRowButtonContainer.className = 'mt-4';
-    const addRowButton = document.createElement('button');
-    addRowButton.id = 'add-shift-row-btn';
-    addRowButton.className = 'btn btn-secondary text-sm';
-    addRowButton.innerHTML = '<i class="fas fa-plus mr-2"></i> Thêm Ca';
-    addRowButton.addEventListener('click', () => {
-        const currentShiftCount = tbody.children.length;
-        addShiftRow(tbody, currentShiftCount + 1);
-    });
-    addRowButtonContainer.appendChild(addRowButton);
-    container.appendChild(addRowButtonContainer);
     // Chỉ hiển thị nút này cho HQ/Admin
     const currentUser = window.currentUser;
     if (currentUser && (currentUser.roleId === 'HQ_STAFF' || currentUser.roleId === 'ADMIN')) {
         const addRowButtonContainer = document.createElement('div');
-        addRowButtonContainer.className = 'mt-4';
+        addRowButtonContainer.className = 'm-4';
         const addRowButton = document.createElement('button');
         addRowButton.id = 'add-shift-row-btn';
         addRowButton.className = 'btn btn-secondary text-sm';
@@ -1128,10 +1114,7 @@ async function toggleBuilderView() {
         deployBtn.classList.add('hidden');
         deleteBtn.classList.add('hidden');
 
-        // Tải và khởi tạo view RE Logic nếu chưa có nội dung
-        if (!reLogicContainer.innerHTML.trim()) {
-            await initRELogicView();
-        }
+        await initRELogicView();
 
     } else {
         // Chuyển về Template Builder
@@ -1175,18 +1158,27 @@ async function fetchREData() {
  */
 function renderREView() {
     const accordionContainer = document.getElementById('re-task-accordion');
-    if (!accordionContainer) return;
+    const template = document.getElementById('re-accordion-item-template');
+    if (!accordionContainer || !template) return;
 
     const sortedTaskGroups = Object.values(allTaskGroups).sort((a, b) => (a.order || 99) - (b.order || 99));
+
+    accordionContainer.innerHTML = ''; // Xóa nội dung cũ
 
     if (sortedTaskGroups.length === 0) {
         accordionContainer.innerHTML = '<p class="text-slate-500">Không tìm thấy nhóm công việc nào.</p>';
         return;
     }
 
-    accordionContainer.innerHTML = sortedTaskGroups.map(group => {
+    sortedTaskGroups.forEach(group => {
+        const clone = template.content.cloneNode(true);
+        const groupCodeSpan = clone.querySelector('[data-role="group-code"]');
+        const taskRowsContainer = clone.querySelector('[data-role="task-rows-container"]');
+
         const tasksInCategory = allRETasks.filter(task => task.category === group.code);
         const totalRE = tasksInCategory.reduce((sum, task) => sum + (task.dailyHours || 0), 0);
+
+        if (groupCodeSpan) groupCodeSpan.textContent = group.code;
 
         const taskRows = tasksInCategory.map((task, index) => `
             <tr>
@@ -1194,49 +1186,83 @@ function renderREView() {
                 <td class="p-2 border text-left">${task.name}</td>
                 <td class="p-2 border text-center">${task.frequency || '-'}</td>
                 <td class="p-2 border text-center">${task.reUnit || '-'}</td>
-                <td class="p-2 border text-right">${(task.dailyHours || 0).toFixed(2)}</td>
+                <td class="p-2 border text-right">${(task.dailyHours || 0).toFixed(2)}h</td>
             </tr>
         `).join('');
 
-        return `
-            <div class="re-accordion-item border rounded-lg overflow-hidden">
-                <button class="re-accordion-toggle w-full text-left p-3 font-semibold flex justify-between items-center bg-slate-50 hover:bg-slate-100">
-                    <span>${group.name} (${group.code})</span>
-                    <i class="fas fa-chevron-down transition-transform"></i>
-                </button>
-                <div class="re-accordion-content hidden p-2">
-                    <table class="w-full text-sm border-collapse">
-                        <thead class="bg-slate-100">
-                            <tr>
-                                <th class="p-2 border text-center w-12">STT</th>
-                                <th class="p-2 border text-left">Task</th>
-                                <th class="p-2 border text-center">Tần suất</th>
-                                <th class="p-2 border text-center">Unit RE</th>
-                                <th class="p-2 border text-right w-24">RE (Giờ)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${taskRows.length > 0 ? taskRows : `<tr><td colspan="5" class="text-center p-4 text-slate-500">Không có task nào trong nhóm này.</td></tr>`}
-                            <tr class="font-bold bg-slate-100">
-                                <td colspan="4" class="p-2 border text-right">Tổng giờ ${group.code}</td>
-                                <td class="p-2 border text-right">${totalRE.toFixed(2)}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+        const totalRow = `
+            <tr class="font-bold bg-slate-100">
+                <td colspan="4" class="p-2 border text-right">Tổng giờ ${group.code}</td>
+                <td class="p-2 border text-right">${totalRE.toFixed(2)}h</td>
+            </tr>
         `;
-    }).join('');
+
+        if (taskRowsContainer) {
+            if (taskRows.length > 0) {
+                taskRowsContainer.innerHTML = taskRows + totalRow;
+            } else {
+                taskRowsContainer.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-slate-500">Không có task nào trong nhóm này.</td></tr>`;
+            }
+        }
+        accordionContainer.appendChild(clone);
+    });
 
     // Gắn sự kiện cho các accordion vừa tạo
     document.querySelectorAll('.re-accordion-toggle').forEach(button => {
         button.addEventListener('click', () => {
             const content = button.nextElementSibling;
-            const icon = button.querySelector('i');
             content.classList.toggle('hidden');
-            icon.classList.toggle('rotate-180');
         });
     });
+
+    // Gắn sự kiện cho phần "Thông tin cửa hàng" có thể thu gọn/mở rộng
+    const storeInfoToggle = document.getElementById('re-store-info-toggle');
+    if (storeInfoToggle) {
+        storeInfoToggle.addEventListener('click', (e) => {
+            if (e.target.closest('#re-save-store-info-btn')) return; // Không đóng/mở khi click nút Lưu
+            const content = document.getElementById('re-store-info-content');
+            if (content) {
+                content.classList.toggle('hidden');
+            }
+        });
+    }
+
+    // Gắn sự kiện để hiển thị nút "Lưu" khi người dùng chỉnh sửa thông tin cửa hàng
+    const storeInfoBody = document.getElementById('re-store-info-body');
+    if (storeInfoBody) {
+        storeInfoBody.addEventListener('input', (e) => {
+            if (e.target.classList.contains('editable-cell')) {
+                const saveBtn = document.getElementById('re-save-store-info-btn');
+                if (saveBtn) {
+                    saveBtn.classList.remove('hidden');
+                }
+            }
+        });
+    }
+
+
+    // Gắn sự kiện cho nút lưu thông tin cửa hàng
+    const saveStoreInfoBtn = document.getElementById('re-save-store-info-btn');
+    if (saveStoreInfoBtn) {
+        saveStoreInfoBtn.addEventListener('click', async (e) => {
+            e.stopPropagation(); // Ngăn không cho accordion bị đóng/mở
+            if (!currentTemplateId) {
+                window.showToast('Vui lòng chọn một mẫu trước khi lưu.', 'warning');
+                return;
+            }
+
+            const cells = document.querySelectorAll('#re-store-info-body td');
+            const reParameters = {
+                customerCount: parseInt(cells[0].textContent, 10) || 0,
+                areaSize: parseInt(cells[1].textContent, 10) || 0,
+                employeeCount: parseInt(cells[2].textContent, 10) || 0,
+                dryGoodsVolume: parseInt(cells[3].textContent, 10) || 0,
+                vegetableWeight: parseInt(cells[4].textContent, 10) || 0,
+            };
+
+            await saveREParameters(reParameters);
+        });
+    }
 }
 
 /**
@@ -1244,14 +1270,27 @@ function renderREView() {
  */
 async function initRELogicView() {
     const reLogicContainer = document.getElementById('re-logic-container');
-    reLogicContainer.innerHTML = `<div class="p-10 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i> Đang tải dữ liệu RE Logic...</div>`;
-
-    // Chèn trực tiếp HTML vào container
-    reLogicContainer.innerHTML = getRELogicHTMLTemplate();
+    // HTML đã có sẵn trong daily-templates.html, chỉ cần tải dữ liệu và render
 
     // Tải dữ liệu và render
     await fetchREData();
     renderREView();
+
+    // Tải và hiển thị dữ liệu RE Parameters từ template hiện tại
+    if (currentTemplateId) {
+        const template = allTemplates.find(t => t.id === currentTemplateId);
+        if (template && template.reParameters) {
+            const params = template.reParameters;
+            const cells = document.querySelectorAll('#re-store-info-body td');
+            if (cells.length === 5) {
+                cells[0].textContent = params.customerCount || 0;
+                cells[1].textContent = params.areaSize || 0;
+                cells[2].textContent = params.employeeCount || 0;
+                cells[3].textContent = params.dryGoodsVolume || 0;
+                cells[4].textContent = params.vegetableWeight || 0;
+            }
+        }
+    }
 }
 
 /**
@@ -1885,47 +1924,23 @@ function updateTemplateStats() {
 }
 
 /**
- * Trả về chuỗi HTML cho giao diện RE Logic.
- * (Nội dung từ re-logic.html)
+ * Lưu các tham số RE vào template hiện tại trên Firestore.
+ * @param {object} reParameters - Đối tượng chứa các tham số RE.
  */
-function getRELogicHTMLTemplate() {
-    return `
-      <div id="re-logic-main-content" class="p-4 flex flex-col h-full">
-          <!-- Store Info Section -->
-          <div class="mb-4 flex-shrink-0">
-              <h3 class="text-lg font-semibold text-slate-800 mb-2 flex items-center">
-                  Thông tin cửa hàng
-              </h3>
-              <div id="re-store-info-content" class="mt-2 p-4 border rounded-lg bg-white">
-                  <table class="w-full text-sm border-collapse">
-                      <thead class="bg-slate-50">
-                          <tr>
-                              <th class="p-2 border text-center font-semibold text-slate-600">Số khách hàng (người)</th>
-                              <th class="p-2 border text-center font-semibold text-slate-600">Diện tích (m2)</th>
-                              <th class="p-2 border text-center font-semibold text-slate-600">Số nhân viên (người)</th>
-                              <th class="p-2 border text-center font-semibold text-slate-600">Tổng kiện hàng khô (kiện)</th>
-                              <th class="p-2 border text-center font-semibold text-slate-600">Hàng rau củ (kg)</th>
-                          </tr>
-                      </thead>
-                      <tbody id="re-store-info-body">
-                          <tr>
-                              <td class="p-2 border text-center">0</td>
-                              <td class="p-2 border text-center">0</td>
-                              <td class="p-2 border text-center">0</td>
-                              <td class="p-2 border text-center">0</td>
-                              <td class="p-2 border text-center">0</td>
-                          </tr>
-                      </tbody>
-                  </table>
-              </div>
-          </div>
-          <!-- Task Details Section -->
-          <div class="bg-white p-4 rounded-lg shadow-sm border flex-1 overflow-y-auto">
-              <h3 class="text-lg font-semibold text-slate-800 mb-4">Chi tiết các Group Task</h3>
-              <div id="re-task-accordion" class="space-y-2">
-                  <p class="text-slate-500">Đang tải danh sách công việc...</p>
-              </div>
-          </div>
-      </div>
-    `;
+async function saveREParameters(reParameters) {
+    if (!currentTemplateId) return;
+
+    const btn = document.getElementById('re-save-store-info-btn');
+    try {
+        if (btn) btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i>Đang lưu...`;
+        const templateRef = doc(db, 'daily_templates', currentTemplateId);
+        await updateDoc(templateRef, { reParameters });
+        window.showToast('Đã lưu thông tin cửa hàng thành công!', 'success');
+    } catch (error) {
+        console.error('Lỗi khi lưu thông tin cửa hàng:', error);
+        window.showToast('Không thể lưu thông tin cửa hàng.', 'error');
+    } finally {
+        if (btn) btn.innerHTML = `<i class="fas fa-save mr-1"></i>Lưu`;
+        btn.classList.add('hidden');
+    }
 }

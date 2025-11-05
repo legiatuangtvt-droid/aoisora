@@ -63,7 +63,70 @@
                     </div>
                     <!-- Container for RE Logic view -->
                     <div id="re-logic-container" class="overflow-auto hidden">
-                        <!-- Content from re-logic.html will be loaded here by JS -->
+                        <div id="re-logic-main-content" class="p-4 flex flex-col h-full">
+                            <!-- Store Info Section (Collapsible & Editable) -->
+                            <div class="mb-4 flex-shrink-0 border rounded-lg overflow-hidden bg-white">
+                                <button id="re-store-info-toggle" class="w-full text-left p-3 font-semibold flex justify-between items-center gap-4 bg-slate-50 hover:bg-slate-100">
+                                    <span class="flex-grow flex items-center">
+                                        Thông tin cửa hàng
+                                        <button id="re-save-store-info-btn" class="btn btn-secondary btn-xs ml-4 hidden"><i class="fas fa-save mr-1"></i>Lưu</button>
+                                    </span>
+                                </button>
+
+                                <div id="re-store-info-content" class="p-4">
+                                    <table class="w-full text-sm border-collapse">
+                                        <thead class="bg-slate-50">
+                                            <tr>
+                                                <th class="p-2 border text-center font-semibold text-slate-600">Số khách hàng (người)</th>
+                                                <th class="p-2 border text-center font-semibold text-slate-600">Diện tích (m2)</th>
+                                                <th class="p-2 border text-center font-semibold text-slate-600">Số nhân viên (người)</th>
+                                                <th class="p-2 border text-center font-semibold text-slate-600">Tổng kiện hàng khô (kiện)</th>
+                                                <th class="p-2 border text-center font-semibold text-slate-600">Hàng rau củ (kg)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="re-store-info-body">
+                                            <tr>
+                                                <td class="p-2 border text-center editable-cell" contenteditable="true">0</td>
+                                                <td class="p-2 border text-center editable-cell" contenteditable="true">0</td>
+                                                <td class="p-2 border text-center editable-cell" contenteditable="true">0</td>
+                                                <td class="p-2 border text-center editable-cell" contenteditable="true">0</td>
+                                                <td class="p-2 border text-center editable-cell" contenteditable="true">0</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <!-- Task Details Section -->
+                            <div class="bg-white p-4 rounded-lg shadow-sm border flex-1 overflow-y-auto">
+                                <h3 class="text-lg font-semibold text-slate-800 mb-4">Chi tiết các Group Task</h3>
+                                <div id="re-task-accordion" class="space-y-2">
+                                    <!-- Placeholder cho accordion, JS sẽ render vào đây -->
+                                    <template id="re-accordion-item-template">
+                                        <div class="re-accordion-item border rounded-lg overflow-hidden">
+                                            <button class="re-accordion-toggle w-full text-left p-3 font-semibold flex justify-between items-center bg-slate-50 hover:bg-slate-100">
+                                                <span data-role="group-code">GROUP_CODE</span>
+                                            </button>
+                                            <div class="re-accordion-content hidden p-2">
+                                                <table class="w-full text-sm border-collapse">
+                                                    <thead class="bg-slate-100">
+                                                        <tr>
+                                                            <th class="p-2 border text-center w-12">STT</th>
+                                                            <th class="p-2 border text-left">Task</th>
+                                                            <th class="p-2 border text-center">Tần suất</th>
+                                                            <th class="p-2 border text-center">Unit RE</th>
+                                                            <th class="p-2 border text-right w-24">RE (Giờ)</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody data-role="task-rows-container">
+                                                        <!-- Các dòng task sẽ được JS chèn vào đây -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

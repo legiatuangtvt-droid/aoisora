@@ -653,10 +653,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
   --tw-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --tw-shadow-colored: 0 1px 2px 0 var(--tw-shadow-color);
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
-  padding-left: 0.25rem;
-  padding-right: 0.25rem;
-  padding-top: 0.25rem;
-  padding-bottom: 0.25rem;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
   /* Tương đương padding: 0.5rem 0.75rem */
 }
 
@@ -910,6 +910,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
   margin: 0px;
 }
 
+.m-4 {
+  margin: 1rem;
+}
+
 .mx-auto {
   margin-left: auto;
   margin-right: auto;
@@ -962,6 +966,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
   margin-left: 0.75rem;
 }
 
+.ml-4 {
+  margin-left: 1rem;
+}
+
 .ml-auto {
   margin-left: auto;
 }
@@ -1000,10 +1008,6 @@ body.sidebar-expanded #sidebar .sidebar-text {
 
 .mt-auto {
   margin-top: auto;
-}
-
-.ml-4 {
-  margin-left: 1rem;
 }
 
 .box-border {
@@ -1381,10 +1385,6 @@ body.sidebar-expanded #sidebar .sidebar-text {
 
 .justify-between {
   justify-content: space-between;
-}
-
-.justify-around {
-  justify-content: space-around;
 }
 
 .gap-0\.5 {
@@ -1859,11 +1859,6 @@ body.sidebar-expanded #sidebar .sidebar-text {
   padding: 2rem;
 }
 
-.px-0\.5 {
-  padding-left: 0.125rem;
-  padding-right: 0.125rem;
-}
-
 .px-1 {
   padding-left: 0.25rem;
   padding-right: 0.25rem;
@@ -1943,6 +1938,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
   padding-left: 0.75rem;
 }
 
+.pl-6 {
+  padding-left: 1.5rem;
+}
+
 .pr-2 {
   padding-right: 0.5rem;
 }
@@ -1957,10 +1956,6 @@ body.sidebar-expanded #sidebar .sidebar-text {
 
 .pt-4 {
   padding-top: 1rem;
-}
-
-.pl-6 {
-  padding-left: 1.5rem;
 }
 
 .text-left {
@@ -2064,6 +2059,11 @@ body.sidebar-expanded #sidebar .sidebar-text {
 .text-amber-500 {
   --tw-text-opacity: 1;
   color: rgb(245 158 11 / var(--tw-text-opacity, 1));
+}
+
+.text-amber-700 {
+  --tw-text-opacity: 1;
+  color: rgb(180 83 9 / var(--tw-text-opacity, 1));
 }
 
 .text-amber-800 {
@@ -2237,11 +2237,6 @@ body.sidebar-expanded #sidebar .sidebar-text {
 .text-white {
   --tw-text-opacity: 1;
   color: rgb(255 255 255 / var(--tw-text-opacity, 1));
-}
-
-.text-amber-700 {
-  --tw-text-opacity: 1;
-  color: rgb(180 83 9 / var(--tw-text-opacity, 1));
 }
 
 .opacity-0 {
@@ -3405,6 +3400,11 @@ html, body {
   background-color: rgb(67 56 202 / var(--tw-bg-opacity, 1));
 }
 
+.hover\:bg-slate-100:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(241 245 249 / var(--tw-bg-opacity, 1));
+}
+
 .hover\:bg-slate-300:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(203 213 225 / var(--tw-bg-opacity, 1));
@@ -3423,16 +3423,6 @@ html, body {
 .hover\:bg-teal-700:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(15 118 110 / var(--tw-bg-opacity, 1));
-}
-
-.hover\:bg-slate-200:hover {
-  --tw-bg-opacity: 1;
-  background-color: rgb(226 232 240 / var(--tw-bg-opacity, 1));
-}
-
-.hover\:bg-slate-100:hover {
-  --tw-bg-opacity: 1;
-  background-color: rgb(241 245 249 / var(--tw-bg-opacity, 1));
 }
 
 .hover\:text-blue-600:hover {
