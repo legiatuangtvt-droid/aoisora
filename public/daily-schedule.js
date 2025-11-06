@@ -370,11 +370,14 @@ function renderScheduleGrid() {
 
                         <!-- Cụm bên phải (Biểu đồ vành khăn) -->
                         <div class="relative w-12 h-12 flex-shrink-0 self-center mx-2" title="Tỷ lệ hoàn thành task">
-                            <svg class="w-full h-full" viewBox="0 0 36 36">
-                                <path class="stroke-slate-200" stroke-width="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
-                                <path class="stroke-green-500" stroke-width="4" fill="none" stroke-dasharray="75, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
-                            </svg>
-                            <div class="absolute inset-0 flex items-center justify-center text-sm font-bold text-green-600">75%</div>
+                             <svg class="w-full h-full" viewBox="0 0 36 36">
+                                 <path class="stroke-slate-200" stroke-width="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                                 <path class="stroke-green-500" stroke-width="4" fill="none" stroke-dasharray="75, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                             </svg>
+                             <div class="absolute inset-0 flex flex-col items-center justify-center leading-tight">
+                                 <span class="text-xs font-bold text-green-600">75%</span>
+                                 <span class="text-[10px] font-semibold text-amber-600">+1000</span>
+                             </div>
                         </div>
                     </div>
                     <!-- Dòng 3, Ô 4: Sub-tasks -->
