@@ -1891,6 +1891,14 @@ body.sidebar-expanded #sidebar .sidebar-text {
   background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
 }
 
+.stroke-green-500 {
+  stroke: #22c55e;
+}
+
+.stroke-slate-200 {
+  stroke: #e2e8f0;
+}
+
 .object-cover {
   -o-object-fit: cover;
      object-fit: cover;

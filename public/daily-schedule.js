@@ -372,8 +372,8 @@ function renderScheduleGrid() {
                         <div class="col-span-1 p-2 flex items-center justify-center border-l border-black">
                             <div class="relative w-20 h-20" title="Tỷ lệ hoàn thành task">
                                 <svg class="w-full h-full" viewBox="0 0 36 36">
-                                    <path class="text-slate-200" stroke-width="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
-                                    <path class="text-green-500" stroke-width="4" fill="none" stroke-dasharray="75, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                                    <path class="stroke-slate-200" stroke-width="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                                    <path class="stroke-green-500" stroke-width="4" fill="none" stroke-dasharray="75, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
                                 </svg>
                                 <div class="absolute inset-0 flex items-center justify-center text-lg font-bold text-green-600">75%</div>
                             </div>
