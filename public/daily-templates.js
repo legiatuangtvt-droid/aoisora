@@ -1,5 +1,6 @@
 import { db } from './firebase.js';
 import { collection, getDocs, query, orderBy, doc, setDoc, serverTimestamp, addDoc, deleteDoc, getDoc, where, writeBatch, limit, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { calculateREForGroup } from './re-calculator.js';
 import { showTaskLibrary, hideTaskLibrary } from './task-library.js';
 import { initRELogicView } from './re-logic.js';
 
@@ -1742,35 +1743,8 @@ function updateTemplateStats() {
         const currentTime = (currentCount * 0.25).toFixed(2);
 
         // --- LOGIC TÍNH GIỜ ĐỀ XUẤT (RE) ---
-        let suggestedHours = 0;
-        if (groupInfo.tasks && Array.isArray(groupInfo.tasks)) {
-            groupInfo.tasks.forEach(task => {
-                let taskHours = 0;
-                const reUnit = task.reUnit || 0;
-
-                // Áp dụng công thức tính RE (Giờ) dựa trên tên task
-                switch (task.name) {
-                    case 'Chuẩn bị POS':
-                    case 'Đổi tiền lẻ':
-                    case 'EOD POS':
-                    case 'Giao ca':
-                    case 'Hỗ trợ POS':
-                    case 'Kết ca':
-                    case 'Mở POS':
-                    case 'Thế cơm Leader':
-                    case 'Thế cơm POS Staff':
-                        taskHours = (reUnit * posCount) / 60;
-                        break;
-                    case 'POS 1':
-                    case 'POS 2':
-                    case 'POS 3':
-                        taskHours = (reUnit * customerCount) / 60;
-                        break;
-                }
-                suggestedHours += Math.ceil(taskHours * 4) / 4; // Làm tròn lên 15 phút gần nhất
-            });
-            totalSuggestedHours += suggestedHours; // Cộng dồn vào tổng giờ đề xuất
-        }
+        const suggestedHours = calculateREForGroup(groupInfo, reParameters);
+        totalSuggestedHours += suggestedHours; // Cộng dồn vào tổng giờ đề xuất
         totalCount += currentCount;
 
         let row = tbody.querySelector(`tr[data-group-id="${groupId}"]`);
