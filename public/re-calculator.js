@@ -22,11 +22,24 @@ function roundUpToNearest15Minutes(hours) {
  */
 export function calculateREForTask(task, groupInfo, reParameters) {
     let taskHours = 0;
-    const { customerCount = 0, posCount = 0, vegetableWeight = 0 } = reParameters || {};
+    const { customerCount = 0, posCount = 0, vegetableWeight = 0, dryGoodsVolume = 0 } = reParameters || {};
     const reUnit = task.reUnit || 0;
-    const frequencyNumber = parseFloat(task.frequencyNumber) || 1;
+    let frequencyNumber = parseFloat(task.frequencyNumber) || 1;
 
-    // Áp dụng công thức tính RE (Giờ) cho từng nhóm
+    // Áp dụng hệ số tần suất
+    switch (task.frequency) {
+        case 'Weekly':
+            frequencyNumber /= 7;
+            break;
+        case 'Monthly':
+            frequencyNumber /= 30;
+            break;
+        case 'Yearly':
+            frequencyNumber /= 365;
+            break;
+    }
+
+        // Áp dụng công thức tính RE (Giờ) cho từng nhóm
     switch (groupInfo.code) {
         case 'POS':
             switch (task.name) {
@@ -46,6 +59,16 @@ export function calculateREForTask(task, groupInfo, reParameters) {
             if (periTasksWithWeight.includes(task.name)) {
                 taskHours = (reUnit * vegetableWeight * frequencyNumber) / 60;
             } else {
+                taskHours = (reUnit * frequencyNumber) / 60;
+            }
+            break;
+        
+        case 'DRY':
+            const dryTasksWithVolume = ['Lên hàng khô', 'Kéo mặt hàng khô', 'Check tồn WH nóc kệ châm hàng', 'Kéo mặt Grocery', 'Kéo mặt NF-HBC HL-SL'];
+            if (dryTasksWithVolume.includes(task.name)) {
+                taskHours = (reUnit * dryGoodsVolume * frequencyNumber) / 60;
+            } else {
+                // Các task còn lại trong nhóm DRY dùng công thức chuẩn
                 taskHours = (reUnit * frequencyNumber) / 60;
             }
             break;
