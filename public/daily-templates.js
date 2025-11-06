@@ -1,5 +1,7 @@
 import { db } from './firebase.js';
 import { collection, getDocs, query, orderBy, doc, setDoc, serverTimestamp, addDoc, deleteDoc, getDoc, where, writeBatch, limit, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { showTaskLibrary, hideTaskLibrary } from './task-library.js';
+import { initRELogicView } from './re-logic.js';
 
 let sortableInstances = [];
 let domController = null;
@@ -12,11 +14,6 @@ let originalTemplateData = null; // Biến để lưu trạng thái mẫu gốc 
 let allPersonnel = []; // For HQ Apply
 let allWorkPositions = []; // Biến để lưu danh sách vị trí công việc
 let allShiftCodes = []; // Biến để lưu danh sách mã ca
-// Bảng màu mặc định nếu group không có màu
-
-// --- RE Logic Data ---
-let allRETasks = [];
-// --- End RE Logic Data ---
 
 let currentView = 'builder'; // 'builder' or 're-logic'
 
@@ -1114,7 +1111,8 @@ async function toggleBuilderView() {
         deployBtn.classList.add('hidden');
         deleteBtn.classList.add('hidden');
 
-        await initRELogicView();
+        hideTaskLibrary(); // Ẩn thư viện task
+        await initRELogicView(currentTemplateId, allTemplates, allTaskGroups);
 
     } else {
         // Chuyển về Template Builder
@@ -1131,164 +1129,7 @@ async function toggleBuilderView() {
             newBtn.classList.remove('hidden');
             deployBtn.classList.remove('hidden');
             deleteBtn.classList.remove('hidden');
-        }
-    }
-}
-
-// =================================================================================
-// RE LOGIC FUNCTIONS (Moved from re-logic.js)
-// =================================================================================
-
-/**
- * Tải dữ liệu cần thiết cho RE Logic view.
- */
-async function fetchREData() {
-    try {
-        // allTaskGroups đã được tải ở fetchInitialData()
-        const reTasksSnap = await getDocs(query(collection(db, 're_tasks'), orderBy('category'), orderBy('name')));
-        allRETasks = reTasksSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    } catch (error) {
-        window.showToast("Failed to load RE logic data.", "error");
-        console.error("Error fetching RE data:", error);
-    }
-}
-
-/**
- * Render nội dung chính của RE Logic view.
- */
-function renderREView() {
-    const accordionContainer = document.getElementById('re-task-accordion');
-    const template = document.getElementById('re-accordion-item-template');
-    if (!accordionContainer || !template) return;
-
-    const sortedTaskGroups = Object.values(allTaskGroups).sort((a, b) => (a.order || 99) - (b.order || 99));
-
-    accordionContainer.innerHTML = ''; // Xóa nội dung cũ
-
-    if (sortedTaskGroups.length === 0) {
-        accordionContainer.innerHTML = '<p class="text-slate-500">Không tìm thấy nhóm công việc nào.</p>';
-        return;
-    }
-
-    sortedTaskGroups.forEach(group => {
-        const clone = template.content.cloneNode(true);
-        const groupCodeSpan = clone.querySelector('[data-role="group-code"]');
-        const taskRowsContainer = clone.querySelector('[data-role="task-rows-container"]');
-
-        const tasksInCategory = allRETasks.filter(task => task.category === group.code);
-        const totalRE = tasksInCategory.reduce((sum, task) => sum + (task.dailyHours || 0), 0);
-
-        if (groupCodeSpan) groupCodeSpan.textContent = group.code;
-
-        const taskRows = tasksInCategory.map((task, index) => `
-            <tr>
-                <td class="p-2 border text-center">${index + 1}</td>
-                <td class="p-2 border text-left">${task.name}</td>
-                <td class="p-2 border text-center">${task.frequency || '-'}</td>
-                <td class="p-2 border text-center">${task.reUnit || '-'}</td>
-                <td class="p-2 border text-center">${(task.dailyHours || 0).toFixed(2)}h</td>
-            </tr>
-        `).join('');
-
-        const totalRow = `
-            <tr class="font-bold bg-slate-100">
-                <td colspan="4" class="p-2 border text-right">Tổng giờ ${group.code}</td>
-                <td class="p-2 border text-right">${totalRE.toFixed(2)}h</td>
-            </tr>
-        `;
-
-        if (taskRowsContainer) {
-            if (taskRows.length > 0) {
-                taskRowsContainer.innerHTML = taskRows + totalRow;
-            } else {
-                taskRowsContainer.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-slate-500">Không có task nào trong nhóm này.</td></tr>`;
-            }
-        }
-        accordionContainer.appendChild(clone);
-    });
-
-    // Gắn sự kiện cho các accordion vừa tạo
-    document.querySelectorAll('.re-accordion-toggle').forEach(button => {
-        button.addEventListener('click', () => {
-            const content = button.nextElementSibling;
-            content.classList.toggle('hidden');
-        });
-    });
-
-    // Gắn sự kiện cho phần "Thông tin cửa hàng" có thể thu gọn/mở rộng
-    const storeInfoToggle = document.getElementById('re-store-info-toggle');
-    if (storeInfoToggle) {
-        storeInfoToggle.addEventListener('click', (e) => {
-            if (e.target.closest('#re-save-store-info-btn')) return; // Không đóng/mở khi click nút Lưu
-            const content = document.getElementById('re-store-info-content');
-            if (content) {
-                content.classList.toggle('hidden');
-            }
-        });
-    }
-
-    // Gắn sự kiện để hiển thị nút "Lưu" khi người dùng chỉnh sửa thông tin cửa hàng
-    const storeInfoBody = document.getElementById('re-store-info-body');
-    if (storeInfoBody) {
-        storeInfoBody.addEventListener('input', (e) => {
-            if (e.target.classList.contains('editable-cell')) {
-                const saveBtn = document.getElementById('re-save-store-info-btn');
-                if (saveBtn) {
-                    saveBtn.classList.remove('hidden');
-                }
-            }
-        });
-    }
-
-
-    // Gắn sự kiện cho nút lưu thông tin cửa hàng
-    const saveStoreInfoBtn = document.getElementById('re-save-store-info-btn');
-    if (saveStoreInfoBtn) {
-        saveStoreInfoBtn.addEventListener('click', async (e) => {
-            e.stopPropagation(); // Ngăn không cho accordion bị đóng/mở
-            if (!currentTemplateId) {
-                window.showToast('Vui lòng chọn một mẫu trước khi lưu.', 'warning');
-                return;
-            }
-
-            const cells = document.querySelectorAll('#re-store-info-body td');
-            const reParameters = {
-                customerCount: parseInt(cells[0].textContent, 10) || 0,
-                areaSize: parseInt(cells[1].textContent, 10) || 0,
-                employeeCount: parseInt(cells[2].textContent, 10) || 0,
-                dryGoodsVolume: parseInt(cells[3].textContent, 10) || 0,
-                vegetableWeight: parseInt(cells[4].textContent, 10) || 0,
-            };
-
-            await saveREParameters(reParameters);
-        });
-    }
-}
-
-/**
- * Khởi tạo RE Logic view (tải HTML và dữ liệu).
- */
-async function initRELogicView() {
-    const reLogicContainer = document.getElementById('re-logic-container');
-    // HTML đã có sẵn trong daily-templates.html, chỉ cần tải dữ liệu và render
-
-    // Tải dữ liệu và render
-    await fetchREData();
-    renderREView();
-
-    // Tải và hiển thị dữ liệu RE Parameters từ template hiện tại
-    if (currentTemplateId) {
-        const template = allTemplates.find(t => t.id === currentTemplateId);
-        if (template && template.reParameters) {
-            const params = template.reParameters;
-            const cells = document.querySelectorAll('#re-store-info-body td');
-            if (cells.length === 5) {
-                cells[0].textContent = params.customerCount || 0;
-                cells[1].textContent = params.areaSize || 0;
-                cells[2].textContent = params.employeeCount || 0;
-                cells[3].textContent = params.dryGoodsVolume || 0;
-                cells[4].textContent = params.vegetableWeight || 0;
-            }
+            showTaskLibrary(); // Hiện lại thư viện task
         }
     }
 }
@@ -1921,26 +1762,4 @@ function updateTemplateStats() {
     // Đồng bộ giá trị "Đã sắp xếp" ở trên với tổng số giờ vừa tính toán
     const scheduledHoursValueEl = document.getElementById('scheduled-hours-value');
     if (scheduledHoursValueEl) scheduledHoursValueEl.textContent = newTotalTime.toFixed(2);
-}
-
-/**
- * Lưu các tham số RE vào template hiện tại trên Firestore.
- * @param {object} reParameters - Đối tượng chứa các tham số RE.
- */
-async function saveREParameters(reParameters) {
-    if (!currentTemplateId) return;
-
-    const btn = document.getElementById('re-save-store-info-btn');
-    try {
-        if (btn) btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i>Đang lưu...`;
-        const templateRef = doc(db, 'daily_templates', currentTemplateId);
-        await updateDoc(templateRef, { reParameters });
-        window.showToast('Đã lưu thông tin cửa hàng thành công!', 'success');
-    } catch (error) {
-        console.error('Lỗi khi lưu thông tin cửa hàng:', error);
-        window.showToast('Không thể lưu thông tin cửa hàng.', 'error');
-    } finally {
-        if (btn) btn.innerHTML = `<i class="fas fa-save mr-1"></i>Lưu`;
-        btn.classList.add('hidden');
-    }
 }
