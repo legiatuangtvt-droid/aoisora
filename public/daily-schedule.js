@@ -339,7 +339,7 @@ function renderScheduleGrid() {
             const timeRange = shiftInfo ? shiftInfo.timeRange : '';
 
             const row = document.createElement('tr');
-            // row.className = 'border-2 border-black';
+            row.className = 'border-2 border-black';
             // Tô màu nền cho dòng của người dùng hiện tại
             if (schedule.employeeId === window.currentUser?.id) {
                 row.classList.add('bg-green-50');
@@ -349,7 +349,7 @@ function renderScheduleGrid() {
             const positionName = positionInfo ? positionInfo.name : (schedule.positionId || '');
 
             let rowHtml = `
-                <td class="group border-l-2 border-r-2 border-b-2 border-black align-top sticky left-0 bg-white z-10 w-80 min-w-80 flex flex-col">
+                <td class="group border-l-2 border-r-2 border-b-2 border-black align-top sticky left-0 bg-white z-10 min-w-52 flex flex-col">
                     <!-- Dòng 1: Tên, Vị trí, Điểm kinh nghiệm -->
                     <div class="relative text-center flex-shrink-0">
                         <div class="text-sm font-semibold text-slate-800">${schedule.name}</div>
