@@ -345,13 +345,41 @@ function renderScheduleGrid() {
                 row.classList.add('bg-green-50');
             }
             row.dataset.employeeId = schedule.employeeId; // Thêm ID để dễ dàng truy vấn
+            const positionInfo = allWorkPositions.find(p => p.id === schedule.positionId);
+            const positionName = positionInfo ? positionInfo.name : (schedule.positionId || '');
+
             let rowHtml = `
-                <td class="group p-2 border-2 border-black align-middle sticky left-0 bg-white z-10 w-40 min-w-40 font-semibold text-center">
-                    <div class="text-sm text-slate-800">${schedule.name}</div>                    
-                    <!-- TODO: Hiển thị tên vị trí thay vì ID -->
-                    <div class="text-xs text-slate-600 font-medium mt-1">${schedule.positionId || ''}</div>
-                    <div class="text-xs text-slate-500 font-normal">${schedule.shift}</div>
-                    <div class="text-xs text-slate-500 font-normal">${timeRange}</div>
+                <td class="group p-1 border-2 border-black align-top sticky left-0 bg-white z-10 w-64 min-w-64">
+                    <div class="grid grid-cols-2 grid-rows-[auto_1fr] gap-1 h-full">
+                        <!-- Dòng 1, Ô 1: Tên và Vị trí -->
+                        <div class="col-span-2 row-span-1 p-1 relative text-center">
+                            <div class="text-sm font-semibold text-slate-800">${schedule.name}</div>
+                            <div class="text-xs text-slate-600">${positionName}</div>
+                            <div class="absolute bottom-0 right-1 text-xs text-amber-600 font-bold" title="Điểm kinh nghiệm">
+                                <i class="fas fa-star text-amber-500"></i> 1,234
+                            </div>
+                        </div>
+
+                        <!-- Dòng 2, Ô 2: Plan/Actual và Alert -->
+                        <div class="col-span-1 row-span-1 p-1 text-xs space-y-1">
+                            <div><strong>Plan:</strong> ${schedule.shift}: ${timeRange}</div>
+                            <div><strong>Actual:</strong> 07:00~10:00</div>
+                            <div class="text-red-500 font-semibold"><i class="fas fa-exclamation-triangle mr-1"></i> Đi trễ</div>
+                        </div>                        
+
+                        <!-- Dòng 2, Ô 3: Biểu đồ vành khăn -->
+                        <div class="col-span-1 row-span-2 p-1 flex items-center justify-center">
+                            <div class="relative w-20 h-20" title="Tỷ lệ hoàn thành task">
+                                <svg class="w-full h-full" viewBox="0 0 36 36">
+                                    <path class="text-slate-200" stroke-width="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                                    <path class="text-green-500" stroke-width="4" fill="none" stroke-dasharray="75, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center text-lg font-bold text-green-600">75%</div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Dòng 3, Ô 4: Sub-tasks -->
+                    <div class="border-t border-dashed border-slate-300 mt-1 p-1 text-xs"><strong>Sub-tasks:</strong> Lên hàng, kiểm kê...</div>
                 </td>`;
 
             timeSlots.forEach(time => {
