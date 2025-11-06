@@ -313,14 +313,14 @@ function renderScheduleGrid() {
             const timeRange = shiftInfo ? shiftInfo.timeRange : '';
 
             const row = document.createElement('tr');
-            row.className = 'border-b border-slate-200';
+            row.className = 'border-2 border-black';
             // Tô màu nền cho dòng của người dùng hiện tại
             if (schedule.employeeId === window.currentUser?.id) {
                 row.classList.add('bg-green-50');
             }
             row.dataset.employeeId = schedule.employeeId; // Thêm ID để dễ dàng truy vấn
             let rowHtml = `
-                <td class="group p-2 border border-slate-200 align-middle sticky left-0 bg-white z-10 w-40 min-w-40 font-semibold text-center">
+                <td class="group p-2 border-2 border-black align-middle sticky left-0 bg-white z-10 w-40 min-w-40 font-semibold text-center">
                     <div class="text-sm text-slate-800">${schedule.name}</div>                    
                     <!-- TODO: Hiển thị tên vị trí thay vì ID -->
                     <div class="text-xs text-slate-600 font-medium mt-1">${schedule.positionId || ''}</div>
