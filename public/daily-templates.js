@@ -1701,13 +1701,15 @@ function updateTemplateStats() {
                 <tr>
                     <th class="p-2 text-center font-semibold text-slate-600 w-12">STT</th>
                     <th class="text-center font-semibold text-slate-600">Group Task</th>
-                    <th class="p-2 text-center font-semibold text-slate-600 w-24">Giờ</th>
+                    <th class="p-2 text-center font-semibold text-slate-600 w-24">Đề xuất</th>
+                    <th class="p-2 text-center font-semibold text-slate-600 w-24">Sắp xếp</th>
                 </tr>
             </thead>
             <tbody></tbody>
             <tfoot class="bg-slate-100 font-bold sticky bottom-0">
                  <tr>
                     <td class="p-2 font-semibold text-center" colspan="2">Tổng cộng</td>
+                    <td id="re-total-time" class="p-2 text-center">0.00</td>
                     <td id="stats-total-time" class="p-2 text-center">0.00</td>
                 </tr>
             </tfoot>
@@ -1716,7 +1718,14 @@ function updateTemplateStats() {
     }
 
     const tbody = table.querySelector('tbody');
+
+    // Lấy reParameters từ mẫu hiện tại để tính toán giờ đề xuất
+    const currentTemplate = allTemplates.find(t => t.id === currentTemplateId);
+    const reParameters = currentTemplate?.reParameters || {};
+    const customerCount = reParameters.customerCount || 0;
+    const posCount = reParameters.posCount || 0;
     let totalCount = 0;
+    let totalSuggestedHours = 0; // Biến mới để tính tổng giờ đề xuất
     let rowIndex = 1;
 
     // Sắp xếp các nhóm theo 'order' để hiển thị nhất quán
@@ -1731,6 +1740,37 @@ function updateTemplateStats() {
         const groupInfo = allTaskGroups[groupId];
         const currentCount = newStats[groupId] ? newStats[groupId].count : 0;
         const currentTime = (currentCount * 0.25).toFixed(2);
+
+        // --- LOGIC TÍNH GIỜ ĐỀ XUẤT (RE) ---
+        let suggestedHours = 0;
+        if (groupInfo.tasks && Array.isArray(groupInfo.tasks)) {
+            groupInfo.tasks.forEach(task => {
+                let taskHours = 0;
+                const reUnit = task.reUnit || 0;
+
+                // Áp dụng công thức tính RE (Giờ) dựa trên tên task
+                switch (task.name) {
+                    case 'Chuẩn bị POS':
+                    case 'Đổi tiền lẻ':
+                    case 'EOD POS':
+                    case 'Giao ca':
+                    case 'Hỗ trợ POS':
+                    case 'Kết ca':
+                    case 'Mở POS':
+                    case 'Thế cơm Leader':
+                    case 'Thế cơm POS Staff':
+                        taskHours = (reUnit * posCount) / 60;
+                        break;
+                    case 'POS 1':
+                    case 'POS 2':
+                    case 'POS 3':
+                        taskHours = (reUnit * customerCount) / 60;
+                        break;
+                }
+                suggestedHours += Math.ceil(taskHours * 4) / 4; // Làm tròn lên 15 phút gần nhất
+            });
+            totalSuggestedHours += suggestedHours; // Cộng dồn vào tổng giờ đề xuất
+        }
         totalCount += currentCount;
 
         let row = tbody.querySelector(`tr[data-group-id="${groupId}"]`);
@@ -1744,6 +1784,7 @@ function updateTemplateStats() {
             row.innerHTML = `
                 <td class="p-2 text-center text-slate-500">${stt}</td>
                 <td class="text-center font-medium ${color.tailwind_text}">${groupInfo.code}</td>
+                <td class="stat-suggested p-2 text-center text-slate-500 font-bold">${suggestedHours.toFixed(2)}</td>
                 <td class="stat-time p-2 text-center text-slate-500">0.00</td>
             `;
             tbody.appendChild(row);
@@ -1751,12 +1792,16 @@ function updateTemplateStats() {
 
         // Cập nhật giá trị và kích hoạt animation nếu có thay đổi
         const timeCell = row.querySelector('.stat-time');
+        const suggestedCell = row.querySelector('.stat-suggested');
         timeCell.textContent = currentTime;
+        suggestedCell.textContent = suggestedHours.toFixed(2);
     }
 
     // --- Cập nhật dòng tổng kết ---
     const totalTimeCell = table.querySelector('#stats-total-time');
     const newTotalTime = totalCount * 0.25;
+    const reTotalTimeCell = table.querySelector('#re-total-time'); // Lấy ô tổng giờ RE
+    reTotalTimeCell.textContent = totalSuggestedHours.toFixed(2); // Cập nhật giá trị
     totalTimeCell.textContent = newTotalTime.toFixed(2);
 
     // Đồng bộ giá trị "Đã sắp xếp" ở trên với tổng số giờ vừa tính toán
