@@ -14,26 +14,21 @@ function roundUpToNearest15Minutes(hours) {
 }
 
 /**
- * Tính toán tổng số giờ đề xuất (RE) cho một nhóm công việc.
- * @param {object} groupInfo - Thông tin của nhóm công việc (chứa danh sách các task).
- * @param {object} reParameters - Các tham số RE của cửa hàng (customerCount, posCount).
- * @returns {number} Tổng số giờ đề xuất đã được làm tròn.
+ * Tính toán số giờ đề xuất (RE) cho một task cụ thể (chưa làm tròn).
+ * @param {object} task - Đối tượng task.
+ * @param {object} groupInfo - Thông tin của nhóm chứa task đó.
+ * @param {object} reParameters - Các tham số RE của cửa hàng.
+ * @returns {number} Số giờ đề xuất (chưa làm tròn).
  */
-export function calculateREForGroup(groupInfo, reParameters) {
-    let totalSuggestedHours = 0;
-    const { customerCount = 0, posCount = 0 } = reParameters || {};
+export function calculateREForTask(task, groupInfo, reParameters) {
+    let taskHours = 0;
+    const { customerCount = 0, posCount = 0, vegetableWeight = 0 } = reParameters || {};
+    const reUnit = task.reUnit || 0;
+    const frequencyNumber = parseFloat(task.frequencyNumber) || 1;
 
-    if (groupInfo.tasks && Array.isArray(groupInfo.tasks)) {
-        groupInfo.tasks.forEach(task => {
-            let taskHours = 0;
-            const reUnit = task.reUnit || 0;
-            const frequencyNumber = parseFloat(task.frequencyNumber) || 1; // Lấy Frequency Number, mặc định là 1 nếu không có hoặc không hợp lệ
-
-            // Bỏ qua việc tính toán các task POS không đủ điều kiện
-            if (task.name === 'POS 2' && posCount < 2) return;
-            if (task.name === 'POS 3' && posCount < 3) return;
-
-            // Áp dụng công thức tính RE (Giờ) mới, bao gồm cả Frequency Number
+    // Áp dụng công thức tính RE (Giờ) cho từng nhóm
+    switch (groupInfo.code) {
+        case 'POS':
             switch (task.name) {
                 case 'Chuẩn bị POS': case 'Đổi tiền lẻ': case 'EOD POS': case 'Giao ca':
                 case 'Hỗ trợ POS': case 'Kết ca': case 'Mở POS': case 'Thế cơm Leader':
@@ -44,6 +39,38 @@ export function calculateREForGroup(groupInfo, reParameters) {
                     taskHours = (reUnit * customerCount * frequencyNumber) / 60;
                     break;
             }
+            break;
+
+        case 'PERI':
+            const periTasksWithWeight = ['Lên hàng thịt cá', 'Lên hàng rau củ', 'Repack Peri', 'Cắt gọt', 'Giảm giá Perish'];
+            if (periTasksWithWeight.includes(task.name)) {
+                taskHours = (reUnit * vegetableWeight * frequencyNumber) / 60;
+            } else {
+                taskHours = (reUnit * frequencyNumber) / 60;
+            }
+            break;
+    }
+    return taskHours;
+}
+
+/**
+ * Tính toán tổng số giờ đề xuất (RE) cho một nhóm công việc.
+ * @param {object} groupInfo - Thông tin của nhóm công việc (chứa danh sách các task).
+ * @param {object} reParameters - Các tham số RE của cửa hàng (customerCount, posCount).
+ * @returns {number} Tổng số giờ đề xuất đã được làm tròn.
+ */
+export function calculateREForGroup(groupInfo, reParameters) {
+    let totalSuggestedHours = 0;
+    const { posCount = 0 } = reParameters || {};
+
+    if (groupInfo.tasks && Array.isArray(groupInfo.tasks)) {
+        groupInfo.tasks.forEach(task => {
+            // Bỏ qua việc tính toán các task POS không đủ điều kiện
+            if (task.name === 'POS 2' && posCount < 2) return;
+            if (task.name === 'POS 3' && posCount < 3) return;
+
+            // Gọi hàm tính toán tập trung cho từng task
+            const taskHours = calculateREForTask(task, groupInfo, reParameters);
             totalSuggestedHours += roundUpToNearest15Minutes(taskHours);
         });
     }

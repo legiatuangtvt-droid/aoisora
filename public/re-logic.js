@@ -1,6 +1,6 @@
 import { db } from './firebase.js';
 import { collection, getDocs, query, orderBy, doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
-import { calculateREForGroup } from './re-calculator.js';
+import { calculateREForGroup, calculateREForTask } from './re-calculator.js';
 
 /**
  * Tải dữ liệu RE tasks từ Firestore.
@@ -67,23 +67,9 @@ function renderREView(allTaskGroups, reParameters) {
             })
             .map((task, index) => {
                 let calculatedDailyHours = 0;
-
-                // Logic tính toán RE (Giờ) cho TỪNG task để hiển thị chi tiết
                 if (reParameters) {
-                    const reUnit = task.reUnit || 0;
-                    const customerCount = reParameters.customerCount || 0;
-                    const posCount = reParameters.posCount || 0;
-
-                    switch (task.name) {
-                        case 'Chuẩn bị POS': case 'Đổi tiền lẻ': case 'EOD POS': case 'Giao ca':
-                        case 'Hỗ trợ POS': case 'Kết ca': case 'Mở POS': case 'Thế cơm Leader':
-                        case 'Thế cơm POS Staff':
-                            calculatedDailyHours = Math.ceil(((reUnit * posCount) / 60) * 4) / 4;
-                            break;
-                        case 'POS 1': case 'POS 2': case 'POS 3':
-                            calculatedDailyHours = Math.ceil(((reUnit * customerCount) / 60) * 4) / 4;
-                            break;
-                    }
+                    const rawHours = calculateREForTask(task, group, reParameters);
+                    calculatedDailyHours = Math.ceil(rawHours * 4) / 4; // Làm tròn lên 15 phút gần nhất
                 }
                 return `<tr><td class="p-2 border text-center">${index + 1}</td>
                 <td class="p-2 border text-left">${task.name}</td>
