@@ -5,24 +5,47 @@ import { collection, getDocs, query, orderBy, doc, updateDoc } from "https://www
 let allRETasks = [];
 
 /**
+ * Làm tròn số giờ lên bội số gần nhất của 0.25 (15 phút).
+ * Ví dụ: 1.1h -> 1.25h, 1.0h -> 1.0h, 1.26h -> 1.5h
+ * @param {number} hours - Số giờ cần làm tròn.
+ * @returns {number} Số giờ đã làm tròn.
+ */
+function roundUpToNearest15Minutes(hours) {
+    if (typeof hours !== 'number' || isNaN(hours)) return 0;
+    return Math.ceil(hours * 4) / 4;
+}
+
+/**
  * Tải dữ liệu RE tasks từ Firestore.
+ * @param {object} allTaskGroups - Dữ liệu các nhóm task được truyền từ module daily-templates.
  * @returns {Promise<void>}
  */
-async function fetchREData() {
+async function processRETasks(allTaskGroups) {
     try {
-        const reTasksSnap = await getDocs(query(collection(db, 're_tasks'), orderBy('category'), orderBy('name')));
-        allRETasks = reTasksSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const tasks = [];
+        for (const groupId in allTaskGroups) {
+            const group = allTaskGroups[groupId];
+            if (group.tasks && Array.isArray(group.tasks)) {
+                group.tasks.forEach(task => {
+                    // Thêm groupCode vào mỗi task và đẩy vào mảng chung
+                    tasks.push({ ...task, category: group.code });
+                });
+            }
+        }
+        // Sắp xếp lại toàn bộ task theo category (group code) rồi đến tên task
+        allRETasks = tasks.sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
     } catch (error) {
-        window.showToast("Failed to load RE logic data.", "error");
-        console.error("Error fetching RE data:", error);
+        window.showToast("Failed to process RE logic data.", "error");
+        console.error("Error processing RE tasks:", error);
     }
 }
 
 /**
  * Render nội dung chính của RE Logic view.
  * @param {object} allTaskGroups - Dữ liệu các nhóm task được truyền từ module daily-templates.
+ * @param {object} reParameters - Các tham số RE của cửa hàng (customerCount, posCount, etc.).
  */
-function renderREView(allTaskGroups) {
+function renderREView(allTaskGroups, reParameters) {
     const accordionContainer = document.getElementById('re-task-accordion');
     const template = document.getElementById('re-accordion-item-template');
     if (!accordionContainer || !template) return;
@@ -42,24 +65,65 @@ function renderREView(allTaskGroups) {
         const taskRowsContainer = clone.querySelector('[data-role="task-rows-container"]');
 
         const tasksInCategory = allRETasks.filter(task => task.category === group.code);
-        const totalRE = tasksInCategory.reduce((sum, task) => sum + (task.dailyHours || 0), 0);
+        let totalRE = 0;
 
         if (groupCodeSpan) groupCodeSpan.textContent = group.code;
 
-        const taskRows = tasksInCategory.map((task, index) => `
-            <tr>
-                <td class="p-2 border text-center">${index + 1}</td>
+        const taskRows = tasksInCategory.map((task, index) => {
+            const posCount = reParameters?.posCount || 0;
+
+            // Bỏ qua việc render và tính toán các task POS không đủ điều kiện
+            // Ví dụ: Nếu Số POS là 2, sẽ không hiển thị và tính toán cho POS 3.
+            if (task.name === 'POS 2' && posCount < 2) return '';
+            if (task.name === 'POS 3' && posCount < 3) return '';
+            // Có thể mở rộng cho POS 4, 5... trong tương lai
+            // if (task.name.startsWith('POS ') && parseInt(task.name.split(' ')[1]) > posCount) return '';
+
+            let calculatedDailyHours = task.dailyHours || 0; // Giá trị mặc định nếu không có quy tắc
+
+            // Logic tính toán RE (Giờ) dựa trên tên task và reParameters
+            if (reParameters) {
+                const reUnit = task.reUnit || 0;
+                const customerCount = reParameters.customerCount || 0;
+                const posCount = reParameters.posCount || 0;
+
+                // Áp dụng công thức tính RE (Giờ) dựa trên tên task
+                switch (task.name) {
+                    case 'Chuẩn bị POS':
+                    case 'Đổi tiền lẻ':
+                    case 'EOD POS':
+                    case 'Giao ca':
+                    case 'Hỗ trợ POS':
+                    case 'Kết ca':
+                    case 'Mở POS':
+                    case 'Thế cơm Leader':
+                    case 'Thế cơm POS Staff':
+                        // Công thức: RE (Giờ) = Unit RE x Số POS
+                        // reUnit được tính bằng phút, nên chia cho 60 để ra giờ.
+                        calculatedDailyHours = roundUpToNearest15Minutes((reUnit * posCount) / 60);
+                        break;
+                    case 'POS 1':
+                    case 'POS 2':
+                    case 'POS 3':
+                        // Công thức: RE (Giờ) = Unit RE x Số khách hàng (tính theo giờ)
+                        // reUnit được tính bằng phút, nên chia cho 60 để ra giờ.
+                        calculatedDailyHours = roundUpToNearest15Minutes((reUnit * customerCount) / 60);
+                        break;
+                }
+            }
+            totalRE += calculatedDailyHours; // Cộng dồn vào tổng RE của nhóm
+            return `<tr><td class="p-2 border text-center">${index + 1}</td>
                 <td class="p-2 border text-left">${task.name}</td>
                 <td class="p-2 border text-center">${task.frequency || '-'}</td>
                 <td class="p-2 border text-center">${task.reUnit || '-'}</td>
-                <td class="p-2 border text-center">${(task.dailyHours || 0).toFixed(2)}h</td>
+                <td class="p-2 border text-center">${calculatedDailyHours.toFixed(2)}</td>
             </tr>
-        `).join('');
+        `}).join('');
 
         const totalRow = `
             <tr class="font-bold bg-slate-100">
-                <td colspan="4" class="p-2 border text-right">Tổng giờ ${group.code}</td>
-                <td class="p-2 border text-right">${totalRE.toFixed(2)}h</td>
+                <td colspan="4" class="p-2 border text-center">Tổng giờ ${group.code}</td>
+                <td class="p-2 border text-center">${totalRE.toFixed(2)}</td>
             </tr>
         `;
 
@@ -137,25 +201,30 @@ async function saveREParameters(currentTemplateId, reParameters) {
  * @param {object} allTaskGroups - Dữ liệu các nhóm task.
  */
 export async function initRELogicView(currentTemplateId, allTemplates, allTaskGroups) {
-    await fetchREData();
-    renderREView(allTaskGroups);
+    await processRETasks(allTaskGroups); // Tải và xử lý các task RE
+
+    let reParameters = {}; // Khởi tạo với giá trị mặc định
+    let currentTemplate = null;
 
     // Tải và hiển thị dữ liệu RE Parameters từ template hiện tại
     if (currentTemplateId) {
-        const template = allTemplates.find(t => t.id === currentTemplateId);
-        if (template && template.reParameters) {
-            const params = template.reParameters;
+        currentTemplate = allTemplates.find(t => t.id === currentTemplateId);
+        if (currentTemplate && currentTemplate.reParameters) {
+            reParameters = currentTemplate.reParameters;
             const cells = document.querySelectorAll('#re-store-info-body td');
             if (cells.length === 6) {
-                cells[0].textContent = params.customerCount || 0; // Số khách hàng
-                cells[1].textContent = params.posCount || 0; // Số POS
-                cells[2].textContent = params.areaSize || 0; // Diện tích
-                cells[3].textContent = params.employeeCount || 0; // Số nhân viên
-                cells[4].textContent = params.dryGoodsVolume || 0; // Lượng hàng khô
-                cells[5].textContent = params.vegetableWeight || 0; // Lượng rau
+                cells[0].textContent = reParameters.customerCount || 0; // Số khách hàng
+                cells[1].textContent = reParameters.posCount || 0; // Số POS
+                cells[2].textContent = reParameters.areaSize || 0; // Diện tích
+                cells[3].textContent = reParameters.employeeCount || 0; // Số nhân viên
+                cells[4].textContent = reParameters.dryGoodsVolume || 0; // Lượng hàng khô
+                cells[5].textContent = reParameters.vegetableWeight || 0; // Lượng rau
             }
         }
     }
+    
+    // Gọi renderREView sau khi đã có reParameters
+    renderREView(allTaskGroups, reParameters);
 
     // Gắn sự kiện cho nút lưu thông tin cửa hàng
     const saveStoreInfoBtn = document.getElementById('re-save-store-info-btn');
@@ -180,6 +249,9 @@ export async function initRELogicView(currentTemplateId, allTemplates, allTaskGr
                 vegetableWeight: parseInt(cells[5].textContent, 10) || 0,
             };
             await saveREParameters(currentTemplateId, reParameters);
+
+            // Sau khi lưu thành công, render lại view với các tham số mới để cập nhật bảng tính
+            renderREView(allTaskGroups, reParameters);
         });
     }
 }
