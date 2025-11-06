@@ -1601,6 +1601,10 @@ body.sidebar-expanded #sidebar .sidebar-text {
   border-bottom-width: 4px;
 }
 
+.border-r-4 {
+  border-right-width: 4px;
+}
+
 .border-dashed {
   border-style: dashed;
 }
@@ -1697,6 +1701,11 @@ body.sidebar-expanded #sidebar .sidebar-text {
 .border-black {
   --tw-border-opacity: 1;
   border-color: rgb(0 0 0 / var(--tw-border-opacity, 1));
+}
+
+.border-b-black {
+  --tw-border-opacity: 1;
+  border-bottom-color: rgb(0 0 0 / var(--tw-border-opacity, 1));
 }
 
 .bg-amber-100 {

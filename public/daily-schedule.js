@@ -275,7 +275,7 @@ function renderScheduleGrid() {
 
     // --- Tạo Header ---
     const thead = document.createElement('thead');
-    thead.className = 'bg-slate-100 sticky top-0 z-20'; // Tăng z-index để header nổi trên các ô sticky
+    thead.className = 'bg-slate-100 border-2 border-b-black sticky top-0 z-20'; // Tăng z-index để header nổi trên các ô sticky
     let headerRowHtml = `<th class="p-2 border border-slate-200 w-40 min-w-40 sticky left-0 bg-slate-100 z-30">Nhân viên</th>`;
     timeSlots.forEach(time => {
         headerRowHtml += `<th class="p-2 border border-slate-200 min-w-[308px] text-center font-semibold text-slate-700" data-hour="${time.split(':')[0]}">${time}</th>`;
