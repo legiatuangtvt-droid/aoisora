@@ -351,7 +351,7 @@ function renderScheduleGrid() {
             let rowHtml = `
                 <td class="group border-l-2 border-r-2 border-b-2 border-black align-top sticky left-0 bg-white z-10 w-80 min-w-80 flex flex-col">
                     <!-- Dòng 1: Tên, Vị trí, Điểm kinh nghiệm -->
-                    <div class="p-1 relative text-center flex-shrink-0">
+                    <div class="relative text-center flex-shrink-0">
                         <div class="text-sm font-semibold text-slate-800">${schedule.name}</div>
                         <div class="text-xs text-slate-600">${positionName}</div>
                         <div class="absolute bottom-1 right-2 text-xs text-amber-600 font-bold" title="Điểm kinh nghiệm">
@@ -362,7 +362,7 @@ function renderScheduleGrid() {
                     <!-- Dòng 2: Plan/Actual (trái) và Biểu đồ vành khăn (phải) -->
                     <div class="flex justify-between items-stretch flex-grow border-t border-black">
                         <!-- Cụm bên trái: Plan/Actual và Alert -->
-                        <div class="text-xs space-y-1 whitespace-nowrap border-r border-black flex-grow">
+                        <div class="text-xs whitespace-nowrap border-r border-black flex-grow">
                             <div><strong>Plan:</strong> ${schedule.shift}: ${timeRange}</div>
                             <div><strong>Actual:</strong> 07:00~10:00</div>
                             <div class="text-red-500 font-semibold"><i class="fas fa-exclamation-triangle mr-1"></i> Đi trễ</div>
