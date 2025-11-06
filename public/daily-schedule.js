@@ -274,13 +274,39 @@ function renderScheduleGrid() {
     table.className = 'min-w-full border-collapse border border-slate-200 table-fixed';
 
     // --- Tạo Header ---
+    // Calculate hourly man-hours
+    const hourlyManhours = new Map();
+    for (let h = 5; h <= 23; h++) {
+        hourlyManhours.set(String(h).padStart(2, '0'), 0);
+    }
+
+    currentScheduleData.forEach(schedule => {
+        (schedule.tasks || []).forEach(task => {
+            const hour = task.startTime.split(':')[0]; // e.g., "06" from "06:15"
+            let current = hourlyManhours.get(hour) || 0;
+            hourlyManhours.set(hour, current + 0.25); // Each task is 15 minutes = 0.25 hours
+        });
+    });
+
     const thead = document.createElement('thead');
     thead.className = 'bg-slate-100 border-2 border-b-black sticky top-0 z-20'; // Tăng z-index để header nổi trên các ô sticky
-    let headerRowHtml = `<th class="p-2 border border-slate-200 w-40 min-w-40 sticky left-0 bg-slate-100 z-30">Nhân viên</th>`;
+    
+    // First header row: Man-hours
+    const manhourRow = document.createElement('tr');
+    manhourRow.innerHTML = `<th rowspan="2" class="p-2 border border-slate-200 w-40 min-w-40 sticky left-0 bg-slate-100 z-30">Nhân viên</th>`;
+    for (let h = 5; h <= 23; h++) {
+        const hourKey = String(h).padStart(2, '0');
+        const manhours = hourlyManhours.get(hourKey) || 0;
+        manhourRow.innerHTML += `<th class="p-2 border border-slate-200 text-center font-semibold text-slate-700">${manhours.toFixed(2)} Manhour</th>`;
+    }
+    thead.appendChild(manhourRow);
+
+    // Second header row: Time slots
+    const timeSlotRow = document.createElement('tr');
     timeSlots.forEach(time => {
-        headerRowHtml += `<th class="p-2 border border-slate-200 min-w-[308px] text-center font-semibold text-slate-700" data-hour="${time.split(':')[0]}">${time}</th>`;
+        timeSlotRow.innerHTML += `<th class="p-2 border border-slate-200 min-w-[308px] text-center font-semibold text-slate-700" data-hour="${time.split(':')[0]}">${time}</th>`;
     });
-    thead.innerHTML = `<tr>${headerRowHtml}</tr>`;
+    thead.appendChild(timeSlotRow);
     table.appendChild(thead);
 
     // --- Tạo Body ---
