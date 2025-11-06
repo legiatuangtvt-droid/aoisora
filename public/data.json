@@ -884,6 +884,14 @@
       "id": "TEST",
       "createdAt": "2025-10-29T00:21:00.000Z",
       "name": "Test",
+      "reParameters": {
+        "areaSize": 350,
+        "customerCount": 400,
+        "dryGoodsVolume": 60,
+        "employeeCount": 10,
+        "posCount": 2,
+        "vegetableWeight": 50
+      },
       "schedule": {
         "shift-1": [
           { "groupId": "LEADER", "startTime": "06:00", "taskCode": "1501", "taskName": "Mở kho" },
