@@ -351,7 +351,7 @@ function renderScheduleGrid() {
                     const color = (group.color && group.color.bg) ? group.color : defaultColor;
                     const taskItem = document.createElement('div');
                     // Áp dụng style giống trang daily-templates
-                    taskItem.className = `scheduled-task-item relative group w-[70px] h-[100px] border-2 text-xs p-1 rounded-md shadow-sm flex flex-col justify-between items-center text-center mb-1`;
+                    taskItem.className = `scheduled-task-item relative group w-[70px] h-[100px] border-2 text-xs p-1 rounded-md shadow-sm flex flex-col justify-between items-center text-center`;
                     taskItem.style.backgroundColor = color.bg;
                     taskItem.style.color = color.text;
                     taskItem.style.borderColor = color.border;
