@@ -362,23 +362,23 @@ function renderScheduleGrid() {
                     <!-- Dòng 2: Plan/Actual (trái) và Biểu đồ vành khăn (phải) -->
                     <div class="flex justify-between items-stretch flex-grow border-t border-black">
                         <!-- Cụm bên trái: Plan/Actual và Alert -->
-                        <div class="text-xs space-y-1 whitespace-nowrap border-r border-black p-2 flex-grow">
+                        <div class="text-xs space-y-1 whitespace-nowrap border-r border-black flex-grow">
                             <div><strong>Plan:</strong> ${schedule.shift}: ${timeRange}</div>
                             <div><strong>Actual:</strong> 07:00~10:00</div>
                             <div class="text-red-500 font-semibold"><i class="fas fa-exclamation-triangle mr-1"></i> Đi trễ</div>
                         </div>
 
                         <!-- Cụm bên phải (Biểu đồ vành khăn) -->
-                        <div class="relative p-1 w-16 h-16 flex-shrink-0 self-center mx-2" title="Tỷ lệ hoàn thành task">
+                        <div class="relative w-12 h-12 flex-shrink-0 self-center mx-2" title="Tỷ lệ hoàn thành task">
                             <svg class="w-full h-full" viewBox="0 0 36 36">
                                 <path class="stroke-slate-200" stroke-width="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
                                 <path class="stroke-green-500" stroke-width="4" fill="none" stroke-dasharray="75, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
                             </svg>
-                            <div class="absolute inset-0 flex items-center justify-center text-lg font-bold text-green-600">75%</div>
+                            <div class="absolute inset-0 flex items-center justify-center text-sm font-bold text-green-600">75%</div>
                         </div>
                     </div>
                     <!-- Dòng 3, Ô 4: Sub-tasks -->
-                    <div class="border-t border-black p-2 text-xs"><strong>Sub-tasks:</strong> Lên hàng, kiểm kê...</div>
+                    <div class="border-t border-black text-xs"><strong>Sub-tasks:</strong> Lên hàng, kiểm kê...</div>
                 </td>`;
 
             timeSlots.forEach(time => {
