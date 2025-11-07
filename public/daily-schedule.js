@@ -386,7 +386,7 @@ function renderScheduleGrid() {
 
             timeSlots.forEach(time => {
                 rowHtml += `
-                    <td class="h-[104px] p-0 border-b-2 border-black align-middle">
+                    <td class="h-[104px] p-0 border border-slate-200 align-middle">
                         <div class="grid grid-cols-4">
                             <div class="quarter-hour-slot border-r border-dashed border-slate-200 flex justify-center items-center" data-time="${time}" data-quarter="00"></div>
                             <div class="quarter-hour-slot border-r border-dashed border-slate-200 flex justify-center items-center" data-time="${time}" data-quarter="15"></div>
