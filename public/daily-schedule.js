@@ -358,7 +358,7 @@ function renderScheduleGrid() {
             const dailyExp = completedTasks * 5;
 
             let rowHtml = `
-                <td class="h-[106px] align-middle group border-l-2 border-r-2 border-black sticky left-0 bg-white z-10 min-w-52 flex flex-col">
+                <td data-action="toggle-edit" data-employee-id="${schedule.employeeId}" class="h-[106px] align-middle group border-l-2 border-r-2 border-black sticky left-0 bg-white z-10 min-w-52 flex flex-col transition-all duration-200 ease-in-out" title="Nhấp đúp để kích hoạt chỉnh sửa">
                     <!-- Dòng 1: Tên, Vị trí, Điểm kinh nghiệm -->
                     <div class="relative text-center flex-shrink-0">
                         <div class="text-sm font-semibold text-slate-800">${schedule.name}</div>
@@ -497,6 +497,12 @@ function renderScheduleGrid() {
 async function handleTaskClick(event) {
     const taskItem = event.target.closest('.scheduled-task-item');
     if (!taskItem) return;
+    const row = taskItem.closest('tr');
+
+    // Chỉ cho phép click khi hàng đang ở chế độ edit
+    if (!row || !row.classList.contains('edit-mode-active')) {
+        return;
+    }
 
     const { scheduleId, taskIndex, employeeId } = taskItem.dataset;
 
@@ -539,6 +545,9 @@ async function handleTaskClick(event) {
         // Chỉ chạy hiệu ứng nếu hoàn thành task mới
         if (!isCurrentlyCompleted) {
             triggerCompletionEffects(taskItem, points);
+            // Tự động khóa lại hàng sau khi hoàn thành
+            const row = taskItem.closest('tr');
+            row?.classList.remove('edit-mode-active');
         }
         // onSnapshot sẽ tự động cập nhật lại giao diện, không cần gọi render lại ở đây.
 
@@ -936,9 +945,36 @@ export async function init() {
     document.getElementById('prev-week-btn')?.addEventListener('click', () => changeWeek(-1), { signal });
     document.getElementById('next-week-btn')?.addEventListener('click', () => changeWeek(1), { signal });
 
-    // Gắn listener cho việc click vào task (sử dụng event delegation)
+    // --- SỬ DỤNG EVENT DELEGATION CHO TOÀN BỘ LƯỚI ---
     const gridContainer = document.getElementById('schedule-grid-container');
     if (gridContainer) {
-        gridContainer.addEventListener('click', handleTaskClick, { signal });
+        // Listener cho việc click vào task
+        gridContainer.addEventListener('click', (event) => {
+            if (event.target.closest('.scheduled-task-item')) {
+                handleTaskClick(event);
+            }
+        }, { signal });
+
+        // Listener cho việc nhấp đúp để mở khóa hàng
+        gridContainer.addEventListener('dblclick', (event) => {
+            const cell = event.target.closest('td[data-action="toggle-edit"]');
+            if (!cell) return;
+
+            const employeeId = cell.dataset.employeeId;
+            // Chỉ cho phép người dùng hiện tại kích hoạt hàng của chính họ
+            if (employeeId !== window.currentUser?.id) {
+                window.showToast('Bạn chỉ có thể chỉnh sửa công việc của mình.', 'warning');
+                return;
+            }
+
+            const row = cell.closest('tr');
+            if (row) {
+                // Trước khi kích hoạt hàng mới, hãy hủy kích hoạt tất cả các hàng khác
+                document.querySelectorAll('tr.edit-mode-active').forEach(activeRow => {
+                    activeRow.classList.remove('edit-mode-active');
+                });
+                row.classList.toggle('edit-mode-active');
+            }
+        }, { signal });
     }
 }
