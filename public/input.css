@@ -946,3 +946,27 @@ html, body {
         transform: scale(1.25);
     }
 }
+
+/* --- CSS cho hiệu ứng tương tác trong daily-schedule.js --- */
+@layer components {
+    /* Highlight the active row */
+    tr.edit-mode-active {
+        @apply outline outline-2 outline-blue-500 outline-offset-[-2px];
+    }
+
+    /* Add pointer cursor and outline on hover for the current user's name cell */
+    td[data-action="toggle-edit"].self-user:hover {
+        @apply cursor-pointer outline outline-2 outline-blue-500 outline-offset-[-2px];
+    }
+
+    /* Remove hover outline from the first cell when the row is already active */
+    tr.edit-mode-active td[data-action="toggle-edit"].cursor-pointer:hover {
+        @apply outline-none;
+    }
+
+    /* Add hover effect to clickable tasks within an active row */
+    tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
+        @apply scale-105 shadow-md;
+        transition: transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
+    }
+}

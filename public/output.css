@@ -814,6 +814,59 @@ body.sidebar-expanded #sidebar .sidebar-text {
 
 /* Ghi đè cho input date để loại bỏ mũi tên mặc định */
 
+/* Highlight the active row */
+
+tr.edit-mode-active {
+  outline-style: solid;
+  outline-width: 2px;
+  outline-offset: -2px;
+  outline-color: #3b82f6;
+}
+
+/* Add pointer cursor and outline on hover for the current user's name cell */
+
+tr.edit-mode-active td[data-action="toggle-edit"]td[data-action="toggle-edit"].self-user:hover:hover {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+tr.edit-mode-active td.scheduled-task-item[data-action="toggle-edit"].self-user:hover:hover {
+  --tw-scale-x: 1.05;
+  --tw-scale-y: 1.05;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+  --tw-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --tw-shadow-colored: 0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+  transition: transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
+}
+
+td[data-action="toggle-edit"].self-user:hover {
+  cursor: pointer;
+  outline-style: solid;
+  outline-width: 2px;
+  outline-offset: -2px;
+  outline-color: #3b82f6;
+}
+
+/* Remove hover outline from the first cell when the row is already active */
+
+tr.edit-mode-active td[data-action="toggle-edit"].cursor-pointer:hover {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+/* Add hover effect to clickable tasks within an active row */
+
+tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
+  --tw-scale-x: 1.05;
+  --tw-scale-y: 1.05;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+  --tw-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --tw-shadow-colored: 0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+  transition: transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -3493,6 +3546,8 @@ html, body {
   }
 }
 
+/* --- CSS cho hiệu ứng tương tác trong daily-schedule.js --- */
+
 .placeholder\:text-gray-400::-moz-placeholder {
   --tw-text-opacity: 1;
   color: rgb(156 163 175 / var(--tw-text-opacity, 1));
@@ -3627,22 +3682,6 @@ html, body {
   --tw-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --tw-shadow-colored: 0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
-}
-
-.hover\:outline:hover {
-  outline-style: solid;
-}
-
-.hover\:outline-2:hover {
-  outline-width: 2px;
-}
-
-.hover\:outline-offset-\[-2px\]:hover {
-  outline-offset: -2px;
-}
-
-.hover\:outline-blue-500:hover {
-  outline-color: #3b82f6;
 }
 
 .focus\:outline-none:focus {

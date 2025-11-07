@@ -358,7 +358,11 @@ function renderScheduleGrid() {
             const dailyExp = completedTasks * 5;
 
             let rowHtml = `
-                <td data-action="toggle-edit" data-employee-id="${schedule.employeeId}" class="h-[106px] align-middle group border-l-2 border-r-2 border-black sticky left-0 bg-white z-10 min-w-52 flex flex-col transition-all duration-200 ease-in-out" title="Nhấp đúp để kích hoạt chỉnh sửa">
+                <td data-action="toggle-edit" 
+                    data-employee-id="${schedule.employeeId}" 
+                    class="h-[106px] align-middle group border-l-2 border-r-2 border-black sticky left-0 bg-white z-10 min-w-52 flex flex-col transition-all duration-200 ease-in-out ${schedule.employeeId === window.currentUser?.id ? 'self-user' : ''}" 
+                    title="Nhấp đúp để kích hoạt chỉnh sửa">
+
                     <!-- Dòng 1: Tên, Vị trí, Điểm kinh nghiệm -->
                     <div class="relative text-center flex-shrink-0">
                         <div class="text-sm font-semibold text-slate-800">${schedule.name}</div>
