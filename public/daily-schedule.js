@@ -349,6 +349,12 @@ function renderScheduleGrid() {
             const positionInfo = allWorkPositions.find(p => p.id === schedule.positionId);
             const positionName = positionInfo ? positionInfo.name : (schedule.positionId || '');
 
+            // --- TÍNH TOÁN DỮ LIỆU CHO BIỂU ĐỒ ---
+            const totalTasks = (schedule.tasks || []).length;
+            const completedTasks = (schedule.tasks || []).filter(task => task.isComplete === 1).length;
+            const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+            const dailyExp = completedTasks * 5;
+
             let rowHtml = `
                 <td class="h-[106px] align-middle group border-l-2 border-r-2 border-black sticky left-0 bg-white z-10 min-w-52 flex flex-col">
                     <!-- Dòng 1: Tên, Vị trí, Điểm kinh nghiệm -->
@@ -373,11 +379,11 @@ function renderScheduleGrid() {
                         <div class="relative w-12 h-12 flex-shrink-0 self-center mx-2" title="Tỷ lệ hoàn thành task">
                              <svg class="w-full h-full" viewBox="0 0 36 36">
                                  <path class="stroke-slate-200" stroke-width="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
-                                 <path class="stroke-green-500" stroke-width="4" fill="none" stroke-dasharray="75, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                                 <path class="stroke-green-500" stroke-width="4" fill="none" stroke-dasharray="${completionRate}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
                              </svg>
                              <div class="absolute inset-0 flex flex-col items-center justify-center leading-tight">
-                                 <span class="text-xs font-bold text-green-600">75%</span>
-                                 <span class="text-[10px] font-semibold text-amber-600">+1000</span>
+                                 <span class="text-xs font-bold text-green-600">${completionRate}%</span>
+                                 <span class="text-[10px] font-semibold text-amber-600">+${dailyExp.toLocaleString('vi-VN')}</span>
                              </div>
                         </div>
                     </div>
