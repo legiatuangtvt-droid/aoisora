@@ -1,5 +1,5 @@
 ﻿﻿﻿﻿import { db } from './firebase.js';
-import { collection, onSnapshot, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { collection, onSnapshot, query, where, getDocs, doc, getDoc, runTransaction, increment } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 let viewStartDate = new Date(); // Ngày đầu tiên của tuần đang xem (Thứ 2)
 let domController = null;
@@ -145,6 +145,7 @@ function listenForScheduleChanges(dateString) {
 
             if (employeeInfo) {
                 schedules.push({
+                    id: doc.id, // Lưu lại ID của document schedule
                     ...scheduleData,
                     name: employeeInfo.name,
                     role: employeeInfo.roleId,
@@ -405,16 +406,23 @@ function renderScheduleGrid() {
             row.innerHTML = rowHtml;
 
             // Điền các task vào các ô
-            (schedule.tasks || []).forEach(task => {
+            (schedule.tasks || []).forEach((task, index) => {
                 const [hour, quarter] = task.startTime.split(':');
                 const time = `${hour}:00`;
                 const slot = row.querySelector(`.quarter-hour-slot[data-time="${time}"][data-quarter="${quarter}"]`);
                 if (slot) {
                     const group = allTaskGroups[task.groupId] || {};
                     const color = (group.color && group.color.bg) ? group.color : defaultColor;
+                    const isOwner = window.currentUser?.id === schedule.employeeId;
+                    const isCompleted = task.isComplete === 1;
+
                     const taskItem = document.createElement('div');
                     // Áp dụng style giống trang daily-templates
-                    taskItem.className = `scheduled-task-item relative group w-[70px] h-[100px] border-2 text-xs p-1 rounded-md shadow-sm flex flex-col justify-between items-center text-center`;
+                    taskItem.className = `scheduled-task-item relative group w-[70px] h-[100px] border-2 text-xs p-1 rounded-md shadow-sm flex flex-col justify-between items-center text-center ${isOwner ? 'cursor-pointer' : ''} ${isCompleted ? 'task-completed' : ''}`;
+                    taskItem.dataset.scheduleId = schedule.id;
+                    taskItem.dataset.taskIndex = index;
+                    taskItem.dataset.employeeId = schedule.employeeId;
+
                     taskItem.style.backgroundColor = color.bg;
                     taskItem.style.color = color.text;
                     taskItem.style.borderColor = color.border;
@@ -422,6 +430,9 @@ function renderScheduleGrid() {
                     taskItem.innerHTML = `
                         <div class="flex-grow flex flex-col justify-center"><span class="overflow-hidden text-ellipsis">${task.name}</span></div>
                         <span class="font-semibold mt-auto">${task.taskCode}</span>
+                        <div class="task-completed-overlay absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
+                            <i class="fas fa-check-circle text-white text-2xl"></i>
+                        </div>
                     `;
                     slot.appendChild(taskItem);
                 }
@@ -459,6 +470,151 @@ function renderScheduleGrid() {
             }
         }
     }, 100);
+}
+
+/**
+ * Xử lý khi người dùng click vào một task.
+ * @param {Event} event
+ */
+async function handleTaskClick(event) {
+    const taskItem = event.target.closest('.scheduled-task-item');
+    if (!taskItem) return;
+
+    const { scheduleId, taskIndex, employeeId } = taskItem.dataset;
+
+    // Chỉ cho phép chủ nhân của task tương tác
+    if (window.currentUser?.id !== employeeId) {
+        window.showToast('Bạn chỉ có thể cập nhật công việc của chính mình.', 'warning');
+        return;
+    }
+
+    const isCurrentlyCompleted = taskItem.classList.contains('task-completed');
+    const points = isCurrentlyCompleted ? -5 : 5; // Trừ điểm nếu hủy, cộng điểm nếu hoàn thành
+
+    // Vô hiệu hóa tạm thời để tránh click đúp
+    taskItem.style.pointerEvents = 'none';
+
+    try {
+        await updateTaskStatus(scheduleId, parseInt(taskIndex, 10), employeeId, !isCurrentlyCompleted);
+
+        // Chỉ chạy hiệu ứng nếu hoàn thành task mới
+        if (!isCurrentlyCompleted) {
+            triggerCompletionEffects(taskItem, points);
+        }
+        // onSnapshot sẽ tự động cập nhật lại giao diện, không cần gọi render lại ở đây.
+
+    } catch (error) {
+        console.error("Lỗi khi cập nhật trạng thái task:", error);
+        window.showToast("Không thể cập nhật công việc. Vui lòng thử lại.", "error");
+    } finally {
+        // Kích hoạt lại sau một khoảng trễ ngắn
+        setTimeout(() => {
+            taskItem.style.pointerEvents = 'auto';
+        }, 500);
+    }
+}
+
+/**
+ * Cập nhật trạng thái của một task và điểm kinh nghiệm của nhân viên trong một transaction.
+ * @param {string} scheduleId ID của document schedule.
+ * @param {number} taskIndex Index của task trong mảng.
+ * @param {string} employeeId ID của nhân viên.
+ * @param {boolean} newIsComplete Trạng thái hoàn thành mới (true/false).
+ */
+async function updateTaskStatus(scheduleId, taskIndex, employeeId, newIsComplete) {
+    const scheduleRef = doc(db, "schedules", scheduleId);
+    const employeeRef = doc(db, "employee", employeeId); // Sửa "employees" thành "employee"
+    const EXP_PER_TASK = 5;
+
+    await runTransaction(db, async (transaction) => {
+        const scheduleDoc = await transaction.get(scheduleRef);
+        if (!scheduleDoc.exists()) {
+            throw "Lịch làm việc không tồn tại!";
+        }
+
+        const scheduleData = scheduleDoc.data();
+        const tasks = scheduleData.tasks || [];
+        const targetTask = tasks[taskIndex];
+
+        if (!targetTask) {
+            throw "Công việc không tồn tại!";
+        }
+
+        // Chỉ thực hiện cập nhật nếu trạng thái thay đổi
+        const currentIsComplete = targetTask.isComplete === 1;
+        if (currentIsComplete === newIsComplete) {
+            console.log("Trạng thái công việc không đổi, bỏ qua cập nhật.");
+            return;
+        }
+
+        // Cập nhật trạng thái task
+        targetTask.isComplete = newIsComplete ? 1 : 0;
+
+        // 1. Cập nhật lại mảng tasks trong document schedule
+        transaction.update(scheduleRef, { tasks: tasks });
+
+        // 2. Cập nhật điểm kinh nghiệm cho nhân viên
+        const pointsChange = newIsComplete ? EXP_PER_TASK : -EXP_PER_TASK;
+        transaction.update(employeeRef, {
+            experiencePoints: increment(pointsChange)
+        });
+    });
+}
+
+/**
+ * Kích hoạt các hiệu ứng hình ảnh và âm thanh khi hoàn thành task.
+ * @param {HTMLElement} taskElement - Phần tử DOM của task vừa được click.
+ * @param {number} points - Số điểm được cộng.
+ */
+function triggerCompletionEffects(taskElement, points) {
+    // 1. Hiệu ứng âm thanh
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // A5 note
+    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.5);
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.5);
+
+    // 2. Hiệu ứng "+5" bay lên
+    const pointsEl = document.createElement('div');
+    pointsEl.className = 'floating-points-animation';
+    pointsEl.textContent = `+${points}`;
+    taskElement.appendChild(pointsEl);
+    setTimeout(() => pointsEl.remove(), 1000);
+
+    // 3. Hiệu ứng sao bay
+    const starEl = document.createElement('i');
+    starEl.className = 'fas fa-star flying-star-animation';
+    document.body.appendChild(starEl);
+
+    const startRect = taskElement.getBoundingClientRect();
+    const totalExpEl = taskElement.closest('tr').querySelector('.fa-star'); // Tìm ngôi sao của điểm tổng
+    const endRect = totalExpEl.getBoundingClientRect();
+
+    // Đặt vị trí ban đầu của ngôi sao
+    starEl.style.left = `${startRect.left + startRect.width / 2}px`;
+    starEl.style.top = `${startRect.top + startRect.height / 2}px`;
+
+    // Dùng requestAnimationFrame để đảm bảo trình duyệt đã áp dụng style ban đầu
+    requestAnimationFrame(() => {
+        // Đặt vị trí cuối cùng để kích hoạt transition
+        starEl.style.transform = `translate(${endRect.left - startRect.left}px, ${endRect.top - startRect.top}px) scale(0.5)`;
+        starEl.style.opacity = '0';
+    });
+
+    // Xóa ngôi sao sau khi animation kết thúc
+    setTimeout(() => starEl.remove(), 1000);
+
+    // 4. Hiệu ứng trên điểm tổng
+    totalExpEl.parentElement.classList.add('animate-pulse-once');
+    setTimeout(() => {
+        totalExpEl.parentElement.classList.remove('animate-pulse-once');
+    }, 700);
 }
 
 /**
@@ -724,4 +880,10 @@ export async function init() {
     // Gắn listener cho các nút điều khiển tuần
     document.getElementById('prev-week-btn')?.addEventListener('click', () => changeWeek(-1), { signal });
     document.getElementById('next-week-btn')?.addEventListener('click', () => changeWeek(1), { signal });
+
+    // Gắn listener cho việc click vào task (sử dụng event delegation)
+    const gridContainer = document.getElementById('schedule-grid-container');
+    if (gridContainer) {
+        gridContainer.addEventListener('click', handleTaskClick, { signal });
+    }
 }

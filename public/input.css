@@ -867,3 +867,62 @@ html, body {
         -webkit-appearance: none;
     }
 }
+/* --- CSS cho hiệu ứng Game Hóa --- */
+
+/* Lớp phủ và icon check cho task đã hoàn thành */
+.scheduled-task-item .task-completed-overlay {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.scheduled-task-item.task-completed .task-completed-overlay {
+    opacity: 1;
+}
+.scheduled-task-item.task-completed {
+    border-color: #22c55e; /* green-500 */
+}
+
+/* Hiệu ứng cộng điểm bay lên */
+.floating-points-animation {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.25rem; /* text-xl */
+    font-weight: bold;
+    color: #f59e0b; /* amber-500 */
+    opacity: 1;
+    animation: float-up 1s ease-out forwards;
+    pointer-events: none; /* Để không bắt sự kiện click */
+    text-shadow: 0 0 5px white;
+}
+
+@keyframes float-up {
+    to {
+        transform: translate(-50%, -200%);
+        opacity: 0;
+    }
+}
+
+/* Hiệu ứng ngôi sao bay */
+.flying-star-animation {
+    position: fixed; /* Dùng fixed để bay trên toàn màn hình */
+    z-index: 9999;
+    color: #f59e0b; /* amber-500 */
+    font-size: 1.5rem;
+    transition: transform 1s cubic-bezier(0.5, -0.5, 0.2, 1.5), opacity 1s ease-out;
+    pointer-events: none;
+}
+
+/* Hiệu ứng nhấp nháy một lần cho điểm tổng */
+.animate-pulse-once {
+    animation: pulse-once 0.7s ease-in-out;
+}
+
+@keyframes pulse-once {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.25);
+    }
+}
