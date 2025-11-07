@@ -563,6 +563,16 @@ async function applyTemplateToAllStores() {
             return;
         }
 
+        // --- LOGIC MỚI: Xác định trạng thái hoàn thành dựa trên ngày ---
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Đặt về 0 giờ để so sánh ngày chính xác
+
+        // Chuyển đổi chuỗi ngày nhập vào thành đối tượng Date
+        const [year, month, day] = dateString.split('-').map(Number);
+        const scheduleDate = new Date(year, month - 1, day);
+
+        const isCompleteValue = scheduleDate < today ? 1 : 0;
+
         // Hỏi xác nhận trước khi xóa và tạo mới
         const confirmed = await window.showConfirmation(
             `Bạn có chắc chắn muốn XÓA TẤT CẢ lịch làm việc của ngày ${dateString} và tạo lại từ mẫu "${template.name}" không?`,
@@ -741,11 +751,12 @@ async function applyTemplateToAllStores() {
             for (const filledSlot of slotsToFill) {
                 // Chỉ tạo lịch nếu suất đó đã được phân công cho một nhân viên
                 if (filledSlot.employeeId) {
-                    const tasks = (templateSchedule[filledSlot.shiftId] || []).map(task => ({
+                    const tasks = (templateSchedule[filledSlot.shiftId] || []).map(task => ({ // Áp dụng giá trị isComplete
                         groupId: task.groupId,
                         startTime: task.startTime,
                         taskCode: task.taskCode,
-                        name: task.taskName
+                        name: task.taskName,
+                        isComplete: isCompleteValue
                     }));
 
                     const newScheduleDoc = {
