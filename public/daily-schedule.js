@@ -428,10 +428,10 @@ function renderScheduleGrid() {
                     taskItem.style.borderColor = color.border;
                     taskItem.title = `${task.name} (${task.taskCode})`;
                     taskItem.innerHTML = `
-                        <div class="flex-grow flex flex-col justify-center"><span class="overflow-hidden text-ellipsis">${task.name}</span></div>
-                        <span class="font-semibold mt-auto">${task.taskCode}</span>
-                        <div class="task-completed-overlay absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
-                            <i class="fas fa-check-circle text-white text-2xl"></i>
+                        <div class="task-content flex-grow flex flex-col justify-center"><span class="overflow-hidden text-ellipsis">${task.name}</span></div>
+                        <span class="task-content font-semibold mt-auto">${task.taskCode}</span>
+                        <div class="task-completed-overlay absolute inset-0 flex items-center justify-center overflow-hidden pointer-events-none">
+                            <span class="completed-text-stamp">Complete</span>
                         </div>
                     `;
                     slot.appendChild(taskItem);

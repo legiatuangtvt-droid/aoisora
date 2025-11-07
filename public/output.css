@@ -1759,11 +1759,6 @@ body.sidebar-expanded #sidebar .sidebar-text {
   background-color: rgb(253 230 138 / var(--tw-bg-opacity, 1));
 }
 
-.bg-black {
-  --tw-bg-opacity: 1;
-  background-color: rgb(0 0 0 / var(--tw-bg-opacity, 1));
-}
-
 .bg-black\/10 {
   background-color: rgb(0 0 0 / 0.1);
 }
@@ -1875,10 +1870,6 @@ body.sidebar-expanded #sidebar .sidebar-text {
 .bg-white {
   --tw-bg-opacity: 1;
   background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
-}
-
-.bg-opacity-30 {
-  --tw-bg-opacity: 0.3;
 }
 
 .stroke-green-500 {
@@ -3416,6 +3407,32 @@ html, body {
 .scheduled-task-item.task-completed {
   border-color: #22c55e;
   /* green-500 */
+}
+
+.scheduled-task-item.task-completed .task-content {
+  opacity: 0.6;
+  /* Làm mờ nội dung task để chữ "Complete" nổi bật hơn */
+  transition: opacity 0.3s ease;
+}
+
+/* Dòng chữ "Complete" xoay chéo */
+
+.completed-text-stamp {
+  transform: rotate(-45deg);
+  font-size: 0.8rem;
+  font-weight: 500;
+  /* extra-bold */
+  color: #22c55e;
+  /* green-500 */
+  opacity: 0.25;
+  /* Làm cho chữ mờ đi để không che mất nội dung chính */
+  letter-spacing: 0.05em;
+  /* tracking-wider */
+  text-transform: uppercase;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
+  /* Ngăn không cho người dùng chọn chữ này */
 }
 
 /* Hiệu ứng cộng điểm bay lên */
