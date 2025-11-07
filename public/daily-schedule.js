@@ -488,6 +488,27 @@ async function handleTaskClick(event) {
         return;
     }
 
+    // --- LOGIC MỚI: KIỂM TRA THỜI GIAN THỰC HIỆN TASK ---
+    const isTryingToComplete = !taskItem.classList.contains('task-completed');
+    if (isTryingToComplete) {
+        const schedule = currentScheduleData.find(s => s.id === scheduleId);
+        if (!schedule) return;
+
+        const task = schedule.tasks[parseInt(taskIndex, 10)];
+        if (!task) return;
+
+        // Tạo đối tượng Date cho thời gian bắt đầu của task
+        const [year, month, day] = schedule.date.split('-').map(Number);
+        const [hour, minute] = task.startTime.split(':').map(Number);
+        const taskStartDateTime = new Date(year, month - 1, day, hour, minute);
+
+        // So sánh với thời gian hiện tại
+        if (new Date() < taskStartDateTime) {
+            window.showToast('Chưa đến giờ thực hiện công việc này.', 'warning');
+            return; // Dừng thực thi
+        }
+    }
+
     const isCurrentlyCompleted = taskItem.classList.contains('task-completed');
     const points = isCurrentlyCompleted ? -5 : 5; // Trừ điểm nếu hủy, cộng điểm nếu hoàn thành
 
