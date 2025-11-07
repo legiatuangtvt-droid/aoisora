@@ -453,6 +453,20 @@ function renderScheduleGrid() {
     container.innerHTML = '';
     container.appendChild(table);
 
+    // --- HIGHLIGHT CURRENT TIME SLOT ---
+    // Xác định quarter tại thời điểm hiện tại
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const quarter = currentMinute < 15 ? '00' : currentMinute < 30 ? '15' : currentMinute < 45 ? '30' : '45';
+    const timeString = `${String(currentHour).padStart(2, '0')}:00`;
+
+    // Tìm và tô màu các ô trong cột quarter hiện tại
+    const slotsToHighlight = container.querySelectorAll(`.quarter-hour-slot[data-time="${timeString}"][data-quarter="${quarter}"]`);
+    slotsToHighlight.forEach(slot => slot.classList.add('current-time-slot', 'bg-amber-100'));
+
+
+
     // Thêm một khoảng trễ nhỏ để đảm bảo trình duyệt đã render xong trước khi cuộn.
     // Điều này khắc phục vấn đề không cuộn đúng vị trí khi tải lại trang (F5).
     setTimeout(() => {
@@ -460,7 +474,6 @@ function renderScheduleGrid() {
             // Nếu có dữ liệu, cuộn đến giờ và nhân viên hiện tại
             if (isInitialLoad) {
                 updateTimeIndicator(); // Hàm này cũng bao gồm cuộn ngang
-                scrollToCurrentEmployee();
                 isInitialLoad = false; // Đặt lại cờ sau lần cuộn đầu tiên
             }
         } else {
@@ -474,6 +487,7 @@ function renderScheduleGrid() {
             }
         }
     }, 100);
+    scrollToCurrentEmployee();
 }
 
 /**
@@ -901,6 +915,7 @@ export async function init() {
     await fetchInitialData();
 
     // Khởi tạo ngày bắt đầu của tuần là thứ 2 của tuần hiện tại
+    updateTimeIndicator();
     viewStartDate = getMonday(initialDate);
     viewStartDate.setHours(0, 0, 0, 0);
 
