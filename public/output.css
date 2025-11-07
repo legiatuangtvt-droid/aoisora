@@ -3470,7 +3470,10 @@ html, body {
   color: #f59e0b;
   /* amber-500 */
   font-size: 1.5rem;
-  transition: transform 1s cubic-bezier(0.5, -0.5, 0.2, 1.5), opacity 1s ease-out;
+  /* Tăng thời gian và thay đổi easing function */
+  transition-property: transform, opacity;
+  transition-duration: 2s;
+  transition-timing-function: cubic-bezier(0.3, -0.3, 0.4, 1.2);
   pointer-events: none;
 }
 

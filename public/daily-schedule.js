@@ -15,6 +15,7 @@ let allWorkPositions = []; // Biến để lưu vị trí làm việc
 let currentScheduleData = []; // Lịch làm việc cho ngày đang chọn
 let allShiftCodes = []; // Biến để lưu danh sách mã ca
 
+let isInitialLoad = true; // Cờ để kiểm tra tải trang lần đầu
 /**
  * Định dạng một đối tượng Date thành chuỗi YYYY-MM-DD.
  * @param {Date} date - Đối tượng Date.
@@ -457,8 +458,11 @@ function renderScheduleGrid() {
     setTimeout(() => {
         if (currentScheduleData.length > 0) {
             // Nếu có dữ liệu, cuộn đến giờ và nhân viên hiện tại
-            updateTimeIndicator();
-            scrollToCurrentEmployee();
+            if (isInitialLoad) {
+                updateTimeIndicator(); // Hàm này cũng bao gồm cuộn ngang
+                scrollToCurrentEmployee();
+                isInitialLoad = false; // Đặt lại cờ sau lần cuộn đầu tiên
+            }
         } else {
             // Nếu không có dữ liệu, cuộn ra giữa để thấy thông báo
             // Dùng setTimeout để đảm bảo DOM đã được render trước khi cuộn
@@ -588,6 +592,20 @@ async function updateTaskStatus(scheduleId, taskIndex, employeeId, newIsComplete
  * @param {number} points - Số điểm được cộng.
  */
 function triggerCompletionEffects(taskElement, points) {
+    // 1. Xác định icon dựa trên nhóm công việc
+    const taskGroupIcons = {
+        'DELICA': 'fas fa-coffee',          // Đồ ăn chế biến sẵn, cafe
+        'DND': 'fas fa-cheese',             // Delicatessen & Dairy - Phô mai, sữa
+        'DRY': 'fas fa-box-open',           // Dry Goods - Hàng khô
+        'LEADER': 'fas fa-user-tie',         // Công việc quản lý
+        'MMD': 'fas fa-truck-loading',      // Merchandising/Receiving - Nhận hàng
+        'OTHER': 'fas fa-star',             // Các công việc khác
+        'PERI': 'fas fa-apple-alt',         // Perishables - Hàng tươi sống
+        'POS': 'fas fa-cash-register',      // Point of Sale - Thu ngân
+        'QC-FSH': 'fas fa-broom',            // Quality Control/Fresh - Vệ sinh
+    };
+    const groupId = taskElement.dataset.groupId;
+    const iconClass = taskGroupIcons[groupId] || 'fas fa-star'; // Mặc định là ngôi sao
     // 1. Hiệu ứng âm thanh
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
@@ -609,7 +627,7 @@ function triggerCompletionEffects(taskElement, points) {
     setTimeout(() => pointsEl.remove(), 1000);
 
     // 3. Hiệu ứng sao bay
-    const starEl = document.createElement('i');
+    const starEl = document.createElement('i'); // Thay đổi thành icon tương ứng
     starEl.className = 'fas fa-star flying-star-animation';
     document.body.appendChild(starEl);
 
@@ -707,6 +725,7 @@ function changeWeek(direction) {
  * @param {string} dateString - Ngày được chọn (YYYY-MM-DD).
  */
 function changeDay(dateString) {
+    isInitialLoad = true; // Reset cờ khi người dùng chủ động chuyển ngày
     const todayString = formatDate(new Date());
 
     document.querySelectorAll('.day-selector-btn').forEach(btn => {
