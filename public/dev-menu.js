@@ -1,5 +1,5 @@
 import { db } from './firebase.js';
-import { writeBatch, doc, serverTimestamp, collection, getDocs, query, orderBy, where, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { writeBatch, doc, serverTimestamp, collection, getDocs, query, orderBy, where, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 let allRoles = [];
 let allEmployees = [];
@@ -31,6 +31,10 @@ function initializeDevMenu() {
                 <i class="fas fa-store"></i>
                 <span>Áp dụng Template</span>
             </button>
+            <button id="recalculate-exp-btn" class="dev-menu-button flex items-center gap-2.5 px-3 py-2 border border-slate-300 rounded-md bg-white cursor-pointer text-sm text-slate-700 transition-colors hover:bg-slate-50 hover:border-slate-400">
+                <i class="fas fa-calculator text-amber-500"></i>
+                <span>Tính lại EXP Toàn bộ</span>
+            </button>
             <div class="border-t border-slate-200 my-2"></div>
             <div class="dev-menu-title-section">Mô phỏng người dùng</div>
             <div class="dev-menu-section">
@@ -53,6 +57,7 @@ function initializeDevMenu() {
     const header = menuContainer.querySelector('.dev-menu-header');
     const seedAllDataBtn = document.getElementById('seed-all-data-btn');
     const applyTemplateBtn = document.getElementById('apply-template-all-stores-btn');
+    const recalculateExpBtn = document.getElementById('recalculate-exp-btn');
     const menuBody = menuContainer.querySelector('.dev-menu-body');
     const menuTitle = menuContainer.querySelector('.dev-menu-title');
     const roleSelect = document.getElementById('dev-role-select');
@@ -392,6 +397,10 @@ function initializeDevMenu() {
 
     if (applyTemplateBtn) {
         applyTemplateBtn.addEventListener('click', applyTemplateToAllStores);
+    }
+
+    if (recalculateExpBtn) {
+        recalculateExpBtn.addEventListener('click', reCalculateAllEmployeeExp);
     }
 
     fetchPersonnelData();
@@ -786,6 +795,75 @@ async function applyTemplateToAllStores() {
     } finally {
         btn.disabled = false;
         btn.querySelector('span').textContent = 'Áp dụng Template';
+    }
+}
+
+/**
+ * Tính toán lại tổng điểm kinh nghiệm (EXP) cho tất cả nhân viên.
+ * Đọc toàn bộ collection `schedules`, đếm số task đã hoàn thành (`isComplete: 1`)
+ * cho mỗi nhân viên, và cập nhật lại trường `experiencePoints` trong collection `employee`.
+ * Đây là logic từ file `re-calculate-exp.js` được tích hợp vào đây.
+ */
+async function reCalculateAllEmployeeExp() {
+    const btn = document.getElementById('recalculate-exp-btn');
+    const confirmed = await window.showConfirmation(
+        'Bạn có chắc chắn muốn tính toán lại điểm kinh nghiệm cho TOÀN BỘ nhân viên không? Quá trình này sẽ đọc toàn bộ lịch sử công việc và có thể mất một lúc.',
+        'Xác nhận tính lại EXP',
+        'Chạy tính toán',
+        'Hủy'
+    );
+
+    if (!confirmed) {
+        window.showToast('Đã hủy thao tác.', 'info');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.querySelector('span').textContent = 'Đang tính toán...';
+    window.showToast('🚀 Bắt đầu quá trình tính toán lại EXP...', 'info');
+
+    const EXP_PER_TASK = 5;
+
+    try {
+        // --- Bước 1: Tải tất cả lịch sử công việc và nhân viên ---
+        window.showToast('... (1/3) Đang tải dữ liệu...', 'info');
+        const [schedulesSnapshot, employeesSnapshot] = await Promise.all([
+            getDocs(collection(db, 'schedules')),
+            getDocs(collection(db, 'employee'))
+        ]);
+        const allSchedules = schedulesSnapshot.docs.map(doc => doc.data());
+        const allEmployees = employeesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // --- Bước 2: Tính toán EXP cho mỗi nhân viên ---
+        window.showToast('... (2/3) Đang tính toán EXP...', 'info');
+        const employeeExpMap = new Map();
+        allEmployees.forEach(emp => employeeExpMap.set(emp.id, 0));
+
+        allSchedules.forEach(schedule => {
+            if (!schedule.employeeId || !schedule.tasks) return;
+            const completedTasksCount = schedule.tasks.filter(task => task.isComplete === 1).length;
+            if (completedTasksCount > 0) {
+                const currentExp = employeeExpMap.get(schedule.employeeId) || 0;
+                employeeExpMap.set(schedule.employeeId, currentExp + (completedTasksCount * EXP_PER_TASK));
+            }
+        });
+
+        // --- Bước 3: Cập nhật EXP cho từng nhân viên ---
+        window.showToast(`... (3/3) Đang cập nhật ${employeeExpMap.size} nhân viên...`, 'info');
+        const updatePromises = [];
+        employeeExpMap.forEach((totalExp, employeeId) => {
+            const employeeRef = doc(db, 'employee', employeeId);
+            updatePromises.push(updateDoc(employeeRef, { experiencePoints: totalExp }));
+        });
+        await Promise.all(updatePromises);
+
+        window.showToast('🎉 HOÀN TẤT! Đã cập nhật thành công điểm kinh nghiệm.', 'success', 5000);
+    } catch (error) {
+        console.error("❌ Đã xảy ra lỗi nghiêm trọng trong quá trình tính toán lại EXP:", error);
+        window.showToast('Đã có lỗi xảy ra. Vui lòng kiểm tra Console (F12).', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.querySelector('span').textContent = 'Tính lại EXP Toàn bộ';
     }
 }
 
