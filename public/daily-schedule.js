@@ -146,8 +146,9 @@ function listenForScheduleChanges(dateString) {
             if (employeeInfo) {
                 schedules.push({
                     ...scheduleData,
-                    name: employeeInfo.name, // Làm giàu dữ liệu với tên nhân viên
-                    role: employeeInfo.roleId
+                    name: employeeInfo.name,
+                    role: employeeInfo.roleId,
+                    experiencePoints: employeeInfo.experiencePoints || 0 // Lấy điểm kinh nghiệm tích lũy
                 });
             }
         });
@@ -355,7 +356,7 @@ function renderScheduleGrid() {
                         <div class="text-sm font-semibold text-slate-800">${schedule.name}</div>
                         <div class="text-xs text-slate-600">${positionName}</div>
                         <div class="absolute bottom-1 right-2 text-xs text-amber-600 font-bold" title="Điểm kinh nghiệm">
-                            <i class="fas fa-star text-amber-500"></i> 1,234
+                            <i class="fas fa-star text-amber-500"></i> ${(schedule.experiencePoints || 0).toLocaleString('vi-VN')}
                         </div>
                     </div>
 
