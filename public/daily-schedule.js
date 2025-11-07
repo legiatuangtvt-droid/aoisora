@@ -360,7 +360,7 @@ function renderScheduleGrid() {
             let rowHtml = `
                 <td data-action="toggle-edit" 
                     data-employee-id="${schedule.employeeId}" 
-                    class="h-[106px] align-middle group border-l-2 border-r-2 border-black sticky left-0 bg-white z-10 min-w-52 flex flex-col transition-all duration-200 ease-in-out ${schedule.employeeId === window.currentUser?.id ? 'self-user' : ''}" 
+                    class="h-[106px] align-middle group border-l-2 border-r-2 border-black sticky left-0 bg-white z-10 min-w-52 flex flex-col transition-all duration-200 ease-in-out editable-row-cell" 
                     title="Nhấp đúp để kích hoạt chỉnh sửa">
 
                     <!-- Dòng 1: Tên, Vị trí, Điểm kinh nghiệm -->
@@ -510,10 +510,20 @@ async function handleTaskClick(event) {
 
     const { scheduleId, taskIndex, employeeId } = taskItem.dataset;
 
-    // Chỉ cho phép chủ nhân của task tương tác
+    // Nếu người dùng click vào task của người khác, hiển thị popup xác nhận
     if (window.currentUser?.id !== employeeId) {
-        window.showToast('Bạn chỉ có thể cập nhật công việc của chính mình.', 'warning');
-        return;
+        const targetEmployee = allEmployees.find(emp => emp.id === employeeId);
+        const targetName = targetEmployee ? targetEmployee.name : 'người này';
+        const confirmed = await window.showConfirmation(
+            `Bạn có chắc chắn muốn xác nhận hoàn thành công việc này thay cho <strong>${targetName}</strong> không?`,
+            'Xác nhận làm thay',
+            'Xác nhận',
+            'Hủy'
+        );
+
+        if (!confirmed) {
+            return; // Người dùng hủy, không làm gì cả
+        }
     }
 
     // --- LOGIC MỚI: KIỂM TRA THỜI GIAN THỰC HIỆN TASK ---
@@ -965,11 +975,6 @@ export async function init() {
             if (!cell) return;
 
             const employeeId = cell.dataset.employeeId;
-            // Chỉ cho phép người dùng hiện tại kích hoạt hàng của chính họ
-            if (employeeId !== window.currentUser?.id) {
-                window.showToast('Bạn chỉ có thể chỉnh sửa công việc của mình.', 'warning');
-                return;
-            }
 
             const row = cell.closest('tr');
             if (row) {

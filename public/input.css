@@ -955,12 +955,12 @@ html, body {
     }
 
     /* Add pointer cursor and outline on hover for the current user's name cell */
-    td[data-action="toggle-edit"].self-user:hover {
+    td[data-action="toggle-edit"].editable-row-cell:hover {
         @apply cursor-pointer outline outline-2 outline-blue-500 outline-offset-[-2px];
     }
 
     /* Remove hover outline from the first cell when the row is already active */
-    tr.edit-mode-active td[data-action="toggle-edit"].cursor-pointer:hover {
+    tr.edit-mode-active td[data-action="toggle-edit"].editable-row-cell:hover {
         @apply outline-none;
     }
 

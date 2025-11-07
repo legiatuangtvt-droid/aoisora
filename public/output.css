@@ -825,12 +825,7 @@ tr.edit-mode-active {
 
 /* Add pointer cursor and outline on hover for the current user's name cell */
 
-tr.edit-mode-active td[data-action="toggle-edit"]td[data-action="toggle-edit"].self-user:hover:hover {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-}
-
-tr.edit-mode-active td.scheduled-task-item[data-action="toggle-edit"].self-user:hover:hover {
+tr.edit-mode-active td.scheduled-task-item[data-action="toggle-edit"].editable-row-cell:hover:hover {
   --tw-scale-x: 1.05;
   --tw-scale-y: 1.05;
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
@@ -840,7 +835,7 @@ tr.edit-mode-active td.scheduled-task-item[data-action="toggle-edit"].self-user:
   transition: transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
 }
 
-td[data-action="toggle-edit"].self-user:hover {
+td[data-action="toggle-edit"].editable-row-cell:hover {
   cursor: pointer;
   outline-style: solid;
   outline-width: 2px;
@@ -850,7 +845,7 @@ td[data-action="toggle-edit"].self-user:hover {
 
 /* Remove hover outline from the first cell when the row is already active */
 
-tr.edit-mode-active td[data-action="toggle-edit"].cursor-pointer:hover {
+tr.edit-mode-active td[data-action="toggle-edit"].editable-row-cell:hover {
   outline: 2px solid transparent;
   outline-offset: 2px;
 }
