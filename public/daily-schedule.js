@@ -662,11 +662,24 @@ function triggerCompletionEffects(taskElement, points) {
     pointsEl.textContent = `+${points}`;
     taskElement.appendChild(pointsEl);
     setTimeout(() => pointsEl.remove(), 1000);
-
-    // 3. Hiệu ứng sao bay
-    const starEl = document.createElement('i'); // Thay đổi thành icon tương ứng
-    starEl.className = 'fas fa-star flying-star-animation';
-    document.body.appendChild(starEl);
+ 
+    // 3. Hiệu ứng icon nhóm bay lên (NEU)
+    const groupIconEl = document.createElement('i');
+    // Sử dụng biến iconClass đã được khai báo
+    groupIconEl.className = `${iconClass} flying-group-icon-animation`;
+    // Gán màu sắc tương ứng với nhóm
+    const group = allTaskGroups[groupId] || {};
+    const color = (group.color && group.color.text) ? group.color.text : '#f59e0b'; // Mặc định màu vàng
+    groupIconEl.style.color = color;
+    document.body.appendChild(groupIconEl);
+    const taskRect = taskElement.getBoundingClientRect();
+    groupIconEl.style.left = `${taskRect.left + taskRect.width / 2}px`;
+    groupIconEl.style.top = `${taskRect.top + taskRect.height / 2}px`;
+    setTimeout(() => groupIconEl.remove(), 2000); // Tự xóa sau 2 giây
+ 
+    // 4. Hiệu ứng sao bay (giữ nguyên)
+    const starEl = document.createElement('i');
+    starEl.className = 'fas fa-star flying-star-animation'; document.body.appendChild(starEl);
 
     const startRect = taskElement.getBoundingClientRect();
     const totalExpEl = taskElement.closest('tr').querySelector('.fa-star'); // Tìm ngôi sao của điểm tổng
@@ -684,7 +697,7 @@ function triggerCompletionEffects(taskElement, points) {
     });
 
     // Xóa ngôi sao sau khi animation kết thúc
-    setTimeout(() => starEl.remove(), 1000);
+    setTimeout(() => starEl.remove(), 2000); // Tăng thời gian để khớp với hiệu ứng mới
 
     // 4. Hiệu ứng trên điểm tổng
     totalExpEl.parentElement.classList.add('animate-pulse-once');

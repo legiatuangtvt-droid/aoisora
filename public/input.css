@@ -947,6 +947,28 @@ html, body {
     }
 }
 
+/* --- Hiệu ứng icon nhóm bay lên --- */
+.flying-group-icon-animation {
+    position: fixed; /* Dùng fixed để bay trên toàn màn hình */
+    z-index: 9998; /* Thấp hơn sao bay một chút */
+    font-size: 2rem; /* Icon to hơn một chút */
+    opacity: 1;
+    pointer-events: none;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    /* Animation bay lên và mờ dần trong 2 giây */
+    animation: fly-up-and-fade 2s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+
+@keyframes fly-up-and-fade {
+    from {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 1;
+    }
+    to {
+        transform: translate(-50%, -250%) scale(1.2);
+        opacity: 0;
+    }
+}
 /* --- CSS cho hiệu ứng tương tác trong daily-schedule.js --- */
 @layer components {
     /* Highlight the active row */
