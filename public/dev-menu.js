@@ -1,5 +1,10 @@
 import { db } from './firebase.js';
 import { writeBatch, doc, serverTimestamp, collection, getDocs, query, orderBy, where, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+// --- FIX: Import các module tiện ích cần thiết ---
+import './toast.js';
+import './prompt-modal.js';
+import './confirmation-modal.js';
+// ----------------------------------------------------
 
 let allRoles = [];
 let allEmployees = [];

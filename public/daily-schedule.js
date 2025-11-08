@@ -353,9 +353,17 @@ function renderScheduleGrid() {
 
             // --- TÍNH TOÁN DỮ LIỆU CHO BIỂU ĐỒ ---
             const totalTasks = (schedule.tasks || []).length;
-            const completedTasks = (schedule.tasks || []).filter(task => task.isComplete === 1).length;
-            const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-            const dailyExp = completedTasks * 5;
+            const completedTasksArray = (schedule.tasks || []).filter(task => task.isComplete === 1);
+            const completionRate = totalTasks > 0 ? Math.round((completedTasksArray.length / totalTasks) * 100) : 0;
+            // --- FIX: Tính toán lại dailyExp để bao gồm cả công việc làm thay ---
+            // Duyệt qua TOÀN BỘ lịch làm việc của ngày hôm đó để tìm các task mà nhân viên này đã hoàn thành.
+            const dailyExp = currentScheduleData.reduce((sum, otherSchedule) => {
+                const tasksCompletedByThisEmployee = (otherSchedule.tasks || []).filter(
+                    task => task.isComplete === 1 && task.completingUserId === schedule.employeeId
+                );
+                const pointsFromThisSchedule = tasksCompletedByThisEmployee.reduce((taskSum, task) => taskSum + (task.awardedPoints || 0), 0);
+                return sum + pointsFromThisSchedule;
+            }, 0);
 
             let rowHtml = `
                 <td data-action="toggle-edit" 
@@ -619,10 +627,10 @@ async function handleTaskClick(event) {
 /**
  * Cập nhật trạng thái của một task và điểm kinh nghiệm của nhân viên trong một transaction.
  * @param {string} scheduleId ID của document schedule.
- * @param {number} taskIndex Index của task trong mảng.
- * @param {string} employeeId ID của nhân viên.
- * @param {boolean} newIsComplete Trạng thái hoàn thành mới (true/false).
+ * @param {number} taskIndex Index của task trong mảng tasks.
  * @param {string} completingUserId ID của người dùng thực hiện hành động.
+ * @param {boolean} newIsComplete Trạng thái hoàn thành mới (true/false).
+ * @param {number} pointsChange Số điểm thay đổi.
  */
 async function updateTaskStatus(scheduleId, taskIndex, completingUserId, newIsComplete, pointsChange) {
     const scheduleRef = doc(db, "schedules", scheduleId);
