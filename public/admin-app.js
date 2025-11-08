@@ -18,6 +18,7 @@ import * as taskGroups from './task-groups.js';
 import * as monthlySchedules from './monthly-schedules.js';
 import * as workforceDispatch from './workforce-dispatch.js';
 import * as reTasks from './re-tasks.js';
+import * as report from './report.js'; // Thêm module báo cáo
 
 // Map tất cả các trang với module tương ứng
 const allPages = {
@@ -30,6 +31,7 @@ const allPages = {
     'monthly-schedules.html': { module: monthlySchedules, title: 'Lịch Làm Việc Tháng' },
     'workforce-dispatch.html': { module: workforceDispatch, title: 'Điều Phối Nhân Lực' },
     're-tasks.html': { module: reTasks, title: 'Quản Lý RE Task' },
+    'report.html': { module: report, title: 'Báo Cáo' }, // Đăng ký trang báo cáo
     'intro.html': { module: null, title: 'Giới Thiệu Dự Án' },
 };
 

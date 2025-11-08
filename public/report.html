@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="logo.png" type="image/png">
+    <title>Báo Cáo Kinh Nghiệm - AoiSora</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="output.css">
+</head>
+<body class="flex h-screen text-gray-800">
+
+    <!-- Sidebar Placeholder -->
+    <div id="sidebar-placeholder"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Header Placeholder -->
+        <div id="header-placeholder"></div>
+
+        <!-- Content Area -->
+        <main class="flex-1 overflow-auto p-6 lg:p-8 bg-gray-50">
+            <div class="max-w-4xl mx-auto">
+                <h1 class="text-2xl font-bold text-gray-800 mb-6">Báo Cáo Điểm Kinh Nghiệm</h1>
+
+                <div id="report-container" class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                    <!-- Spinner loading -->
+                    <div id="loading-spinner" class="text-center py-10">
+                        <i class="fas fa-spinner fa-spin fa-2x text-gray-400"></i>
+                        <p class="mt-2 text-sm text-gray-500">Đang tải dữ liệu báo cáo...</p>
+                    </div>
+
+                    <!-- Nội dung báo cáo -->
+                    <div id="report-content" class="hidden space-y-6">
+                        <!-- Tổng điểm -->
+                        <div class="text-center border-b pb-6">
+                            <p class="text-sm text-gray-500">Tổng điểm kinh nghiệm đã đạt được</p>
+                            <p id="total-exp" class="text-5xl font-bold text-indigo-600">0</p>
+                        </div>
+
+                        <!-- Chi tiết điểm -->
+                        <div>
+                            <h3 class="text-lg font-semibold mb-4">Chi tiết các loại điểm:</h3>
+                            <div class="space-y-3">
+                                <!-- Điểm theo nhóm task -->
+                                <div id="group-exp-container" class="space-y-2">
+                                    <!-- JS sẽ render điểm theo nhóm vào đây -->
+                                </div>
+                                <!-- Điểm thưởng -->
+                                <div class="flex justify-between items-center p-3 bg-green-50 rounded-md">
+                                    <span class="font-medium text-green-800"><i class="fas fa-clock mr-2"></i>Điểm thưởng (đúng giờ)</span>
+                                    <span id="bonus-exp" class="font-bold text-green-800 text-lg">0</span>
+                                </div>
+                                <!-- Điểm nỗ lực -->
+                                <div class="flex justify-between items-center p-3 bg-blue-50 rounded-md">
+                                    <span class="font-medium text-blue-800"><i class="fas fa-hands-helping mr-2"></i>Điểm nỗ lực (làm thay)</span>
+                                    <span id="effort-exp" class="font-bold text-blue-800 text-lg">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="bootstrapper.js" defer></script>
+</body>
+</html>
