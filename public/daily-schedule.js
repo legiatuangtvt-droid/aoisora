@@ -552,17 +552,50 @@ async function handleTaskClick(event) {
     }
 
     const isCurrentlyCompleted = taskItem.classList.contains('task-completed');
-    const points = isCurrentlyCompleted ? -5 : 5; // Trừ điểm nếu hủy, cộng điểm nếu hoàn thành
+    let pointsChange = 0;
+    let toastMessage = '';
+
+    const scheduleForPoints = currentScheduleData.find(s => s.id === scheduleId);
+    const taskForPoints = scheduleForPoints?.tasks[parseInt(taskIndex, 10)];
+
+    if (isCurrentlyCompleted) {
+        // Logic khi HỦY HOÀN THÀNH: Trừ lại đúng số điểm đã được cộng trước đó
+        pointsChange = -(taskForPoints?.awardedPoints || 5); // Dùng điểm đã lưu, nếu không có thì mặc định là 5
+    } else {
+        // Logic khi HOÀN THÀNH MỚI: Tính điểm thưởng/phạt
+        const basePoints = 5;
+        const bonusPoints = 1;
+
+        const [year, month, day] = scheduleForPoints.date.split('-').map(Number);
+        const [hour, minute] = taskForPoints.startTime.split(':').map(Number);
+        const taskStartDateTime = new Date(year, month - 1, day, hour, minute);
+        const now = new Date();
+
+        const timeDiffMinutes = Math.abs((now.getTime() - taskStartDateTime.getTime()) / (1000 * 60));
+
+        if (timeDiffMinutes <= 60) {
+            // Hoàn thành trong vòng 1 giờ (trước hoặc sau) so với lịch trình
+            pointsChange = basePoints + bonusPoints;
+            toastMessage = `Đúng giờ! Bạn nhận được ${pointsChange} điểm kinh nghiệm.`;
+        } else {
+            // Hoàn thành ngoài khoảng 1 giờ
+            pointsChange = basePoints;
+            toastMessage = `Bạn nhận được ${pointsChange} điểm kinh nghiệm.`;
+        }
+    }
 
     // Vô hiệu hóa tạm thời để tránh click đúp
     taskItem.style.pointerEvents = 'none';
 
     try {
-        await updateTaskStatus(scheduleId, parseInt(taskIndex, 10), employeeId, !isCurrentlyCompleted);
+        await updateTaskStatus(scheduleId, parseInt(taskIndex, 10), employeeId, !isCurrentlyCompleted, pointsChange);
 
         // Chỉ chạy hiệu ứng nếu hoàn thành task mới
         if (!isCurrentlyCompleted) {
-            triggerCompletionEffects(taskItem, points);
+            triggerCompletionEffects(taskItem, pointsChange);
+            if (toastMessage) {
+                window.showToast(toastMessage, 'success');
+            }
             // Tự động khóa lại hàng sau khi hoàn thành
             const row = taskItem.closest('tr');
             row?.classList.remove('edit-mode-active');
@@ -587,10 +620,9 @@ async function handleTaskClick(event) {
  * @param {string} employeeId ID của nhân viên.
  * @param {boolean} newIsComplete Trạng thái hoàn thành mới (true/false).
  */
-async function updateTaskStatus(scheduleId, taskIndex, employeeId, newIsComplete) {
+async function updateTaskStatus(scheduleId, taskIndex, employeeId, newIsComplete, pointsChange) {
     const scheduleRef = doc(db, "schedules", scheduleId);
     const employeeRef = doc(db, "employee", employeeId); // Sửa "employees" thành "employee"
-    const EXP_PER_TASK = 5;
 
     await runTransaction(db, async (transaction) => {
         const scheduleDoc = await transaction.get(scheduleRef);
@@ -613,14 +645,21 @@ async function updateTaskStatus(scheduleId, taskIndex, employeeId, newIsComplete
             return;
         }
 
+        // Lưu lại số điểm đã thưởng vào task để có thể trừ lại chính xác
+        if (newIsComplete) {
+            targetTask.awardedPoints = pointsChange;
+        } else {
+            // Khi hủy, xóa trường điểm đã thưởng
+            delete targetTask.awardedPoints;
+        }
+
         // Cập nhật trạng thái task
         targetTask.isComplete = newIsComplete ? 1 : 0;
 
         // 1. Cập nhật lại mảng tasks trong document schedule
         transaction.update(scheduleRef, { tasks: tasks });
 
-        // 2. Cập nhật điểm kinh nghiệm cho nhân viên
-        const pointsChange = newIsComplete ? EXP_PER_TASK : -EXP_PER_TASK;
+        // 2. Cập nhật điểm kinh nghiệm cho nhân viên với số điểm đã tính toán
         transaction.update(employeeRef, {
             experiencePoints: increment(pointsChange)
         });
@@ -662,7 +701,7 @@ function triggerCompletionEffects(taskElement, points) {
 
     // 2. Hiệu ứng "+5" bay lên
     const pointsEl = document.createElement('div');
-    pointsEl.className = 'floating-points-animation';
+    pointsEl.className = `floating-points-animation ${points > 0 ? 'text-amber-500' : 'text-red-500'}`;
     pointsEl.textContent = `+${points}`;
     taskElement.appendChild(pointsEl);
     setTimeout(() => pointsEl.remove(), 1000);
