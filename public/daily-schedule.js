@@ -478,6 +478,7 @@ function renderScheduleGrid() {
             // Nếu có dữ liệu, cuộn đến giờ và nhân viên hiện tại
             if (isInitialLoad) {
                 updateTimeIndicator(); // Hàm này cũng bao gồm cuộn ngang
+        scrollToCurrentEmployee(); // Chỉ cuộn dọc khi tải lần đầu
                 isInitialLoad = false; // Đặt lại cờ sau lần cuộn đầu tiên
             }
         } else {
@@ -491,7 +492,6 @@ function renderScheduleGrid() {
             }
         }
     }, 100);
-    scrollToCurrentEmployee();
 }
 
 /**
@@ -642,6 +642,7 @@ function triggerCompletionEffects(taskElement, points) {
         'QC-FSH': 'fas fa-broom',            // Quality Control/Fresh - Vệ sinh
     };
     const groupId = taskElement.dataset.groupId;
+    console.log("Task Element:", taskElement);
     const iconClass = taskGroupIcons[groupId] || 'fas fa-star'; // Mặc định là ngôi sao
     // 1. Hiệu ứng âm thanh
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
