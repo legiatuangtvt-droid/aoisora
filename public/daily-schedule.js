@@ -427,6 +427,7 @@ function renderScheduleGrid() {
                     taskItem.dataset.scheduleId = schedule.id;
                     taskItem.dataset.taskIndex = index;
                     taskItem.dataset.employeeId = schedule.employeeId;
+                    taskItem.dataset.groupId = task.groupId; // <-- THÊM DÒNG NÀY
 
                     taskItem.style.backgroundColor = color.bg;
                     taskItem.style.color = color.text;
@@ -642,7 +643,6 @@ function triggerCompletionEffects(taskElement, points) {
         'QC-FSH': 'fas fa-broom',            // Quality Control/Fresh - Vệ sinh
     };
     const groupId = taskElement.dataset.groupId;
-    console.log("Task Element:", taskElement);
     const iconClass = taskGroupIcons[groupId] || 'fas fa-star'; // Mặc định là ngôi sao
     // 1. Hiệu ứng âm thanh
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
