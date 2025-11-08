@@ -30,13 +30,9 @@ async function generateReport() {
             taskGroups[doc.id] = doc.data();
         });
 
-        // --- FIX: Tối ưu hóa truy vấn ---
-        // Chỉ tải các lịch làm việc có chứa ID của người dùng hiện tại trong mảng completedBy.
-        const schedulesQuery = query(
-            collection(db, 'schedules'),
-            where('completedBy', 'array-contains', currentUser.id) // <-- Điểm có thể gây ra vấn đề
-        );
-        const schedulesSnap = await getDocs(schedulesQuery);
+        // --- FIX: Truy vấn toàn bộ lịch sử để đảm bảo tính chính xác tuyệt đối ---
+        // Tải tất cả các lịch làm việc để xử lý ở phía client.
+        const schedulesSnap = await getDocs(collection(db, 'schedules'));
 
         const groupExp = {};
         let bonusExp = 0;
