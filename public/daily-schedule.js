@@ -588,7 +588,10 @@ async function handleTaskClick(event) {
     taskItem.style.pointerEvents = 'none';
 
     try {
-        await updateTaskStatus(scheduleId, parseInt(taskIndex, 10), employeeId, !isCurrentlyCompleted, pointsChange);
+        // Lấy ID của người dùng đang thực hiện hành động
+        const completingUserId = window.currentUser?.id;
+        // Truyền ID của người xác nhận vào hàm cập nhật
+        await updateTaskStatus(scheduleId, parseInt(taskIndex, 10), completingUserId, !isCurrentlyCompleted, pointsChange);
 
         // Chỉ chạy hiệu ứng nếu hoàn thành task mới
         if (!isCurrentlyCompleted) {
@@ -619,10 +622,10 @@ async function handleTaskClick(event) {
  * @param {number} taskIndex Index của task trong mảng.
  * @param {string} employeeId ID của nhân viên.
  * @param {boolean} newIsComplete Trạng thái hoàn thành mới (true/false).
+ * @param {string} completingUserId ID của người dùng thực hiện hành động.
  */
-async function updateTaskStatus(scheduleId, taskIndex, employeeId, newIsComplete, pointsChange) {
+async function updateTaskStatus(scheduleId, taskIndex, completingUserId, newIsComplete, pointsChange) {
     const scheduleRef = doc(db, "schedules", scheduleId);
-    const employeeRef = doc(db, "employee", employeeId); // Sửa "employees" thành "employee"
 
     await runTransaction(db, async (transaction) => {
         const scheduleDoc = await transaction.get(scheduleRef);
@@ -647,9 +650,12 @@ async function updateTaskStatus(scheduleId, taskIndex, employeeId, newIsComplete
 
         // Lưu lại số điểm đã thưởng vào task để có thể trừ lại chính xác
         if (newIsComplete) {
+            // Khi hoàn thành, lưu lại ID người xác nhận và số điểm
+            targetTask.completingUserId = completingUserId;
             targetTask.awardedPoints = pointsChange;
         } else {
-            // Khi hủy, xóa trường điểm đã thưởng
+            // Khi hủy, xóa các trường đã lưu
+            delete targetTask.completingUserId;
             delete targetTask.awardedPoints;
         }
 
@@ -659,7 +665,12 @@ async function updateTaskStatus(scheduleId, taskIndex, employeeId, newIsComplete
         // 1. Cập nhật lại mảng tasks trong document schedule
         transaction.update(scheduleRef, { tasks: tasks });
 
-        // 2. Cập nhật điểm kinh nghiệm cho nhân viên với số điểm đã tính toán
+        // 2. Cập nhật điểm kinh nghiệm cho người dùng đã thực hiện hành động
+        // Nếu là hủy, `completingUserId` sẽ được lấy từ task đã lưu. Nếu là hoàn thành mới, nó được truyền vào.
+        const userToUpdateId = newIsComplete ? completingUserId : (targetTask.completingUserId || completingUserId);
+        if (!userToUpdateId) return; // Không cập nhật điểm nếu không có ID người dùng
+
+        const employeeRef = doc(db, "employee", userToUpdateId);
         transaction.update(employeeRef, {
             experiencePoints: increment(pointsChange)
         });
