@@ -541,9 +541,12 @@ async function handleTaskClick(event) {
         const [hour, minute] = task.startTime.split(':').map(Number);
         const taskStartDateTime = new Date(year, month - 1, day, hour, minute);
 
+        // Tạo thời gian cho phép bắt đầu (1 giờ trước lịch trình)
+        const allowedStartTime = new Date(taskStartDateTime.getTime() - 60 * 60 * 1000); // 1 giờ = 60 phút * 60 giây * 1000 ms
+
         // So sánh với thời gian hiện tại
-        if (new Date() < taskStartDateTime) {
-            window.showToast('Chưa đến giờ thực hiện công việc này.', 'warning');
+        if (new Date() < allowedStartTime) {
+            window.showToast('Chỉ có thể xác nhận hoàn thành trước tối đa 1 giờ.', 'warning');
             return; // Dừng thực thi
         }
     }
