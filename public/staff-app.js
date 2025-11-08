@@ -8,12 +8,14 @@ import { initializeLayoutController } from './layout-controller.js';
 import * as monthlySchedules from './monthly-schedules.js';
 import * as staffAvailability from './staff-availability.js';
 import * as dailySchedule from './daily-schedule.js';
+import * as report from './report.js'; // Thêm module báo cáo
 
 // Map các trang của Staff App với module tương ứng
 const staffPages = {
     'monthly-schedules.html': { module: monthlySchedules, title: 'Lịch Làm Việc Tháng' },
     'staff-availability.html': { module: staffAvailability, title: 'Đăng Ký Giờ Làm' },
     'daily-schedule.html': { module: dailySchedule, title: 'Lịch Hàng Ngày' },
+    'report.html': { module: report, title: 'Báo Cáo' }, // Đăng ký trang báo cáo
     // Thêm các trang cho Staff ở đây nếu có
 };
 

@@ -1,5 +1,5 @@
 import { db } from './firebase.js';
-import { collection, getDocs, query } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 let domController = null;
 
@@ -14,6 +14,7 @@ async function generateReport() {
     reportContent.classList.add('hidden');
 
     const currentUser = window.currentUser;
+
     if (!currentUser || !currentUser.id) {
         reportContent.innerHTML = '<p class="text-red-500 text-center">Không thể xác định người dùng hiện tại.</p>';
         loadingSpinner.classList.add('hidden');
@@ -29,8 +30,13 @@ async function generateReport() {
             taskGroups[doc.id] = doc.data();
         });
 
-        // Tải tất cả lịch làm việc
-        const schedulesSnap = await getDocs(collection(db, 'schedules'));
+        // --- FIX: Tối ưu hóa truy vấn ---
+        // Chỉ tải các lịch làm việc có chứa ID của người dùng hiện tại trong mảng completedBy.
+        const schedulesQuery = query(
+            collection(db, 'schedules'),
+            where('completedBy', 'array-contains', currentUser.id) // <-- Điểm có thể gây ra vấn đề
+        );
+        const schedulesSnap = await getDocs(schedulesQuery);
 
         let totalExp = 0;
         const groupExp = {};

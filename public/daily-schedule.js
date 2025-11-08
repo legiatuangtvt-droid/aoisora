@@ -677,6 +677,13 @@ async function updateTaskStatus(scheduleId, taskIndex, completingUserId, newIsCo
         // Cập nhật trạng thái task
         targetTask.isComplete = newIsComplete ? 1 : 0;
 
+        // Cập nhật mảng completedBy ở cấp cao nhất của document
+        const completedBySet = new Set(scheduleData.completedBy || []);
+        tasks.forEach(task => {
+            if (task.isComplete === 1 && task.completingUserId) {
+                completedBySet.add(task.completingUserId);
+            }
+        });
         // 1. Cập nhật lại mảng tasks trong document schedule
         transaction.update(scheduleRef, { tasks: tasks });
 
@@ -689,6 +696,9 @@ async function updateTaskStatus(scheduleId, taskIndex, completingUserId, newIsCo
         transaction.update(employeeRef, {
             experiencePoints: increment(pointsChange)
         });
+
+        // Cập nhật lại mảng completedBy
+        transaction.update(scheduleRef, { completedBy: Array.from(completedBySet) });
     }).then(() => {
         // --- FIX: Cập nhật thủ công điểm EXP ở phía client sau khi transaction thành công ---
         const userToUpdateId = newIsComplete ? completingUserId : (targetTask.completingUserId || completingUserId);
