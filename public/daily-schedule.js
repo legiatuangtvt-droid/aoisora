@@ -682,6 +682,14 @@ async function updateTaskStatus(scheduleId, taskIndex, completingUserId, newIsCo
         transaction.update(employeeRef, {
             experiencePoints: increment(pointsChange)
         });
+    }).then(() => {
+        // --- FIX: Cập nhật thủ công điểm EXP ở phía client sau khi transaction thành công ---
+        const userToUpdateId = newIsComplete ? completingUserId : (targetTask.completingUserId || completingUserId);
+        const employeeToUpdate = allEmployees.find(emp => emp.id === userToUpdateId);
+        if (employeeToUpdate) {
+            employeeToUpdate.experiencePoints = (employeeToUpdate.experiencePoints || 0) + pointsChange;
+        }
+        // onSnapshot của collection 'schedules' sẽ tự động gọi renderScheduleGrid() và sử dụng dữ liệu mới này.
     });
 }
 
