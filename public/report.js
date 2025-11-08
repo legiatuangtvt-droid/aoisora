@@ -38,7 +38,6 @@ async function generateReport() {
         );
         const schedulesSnap = await getDocs(schedulesQuery);
 
-        let totalExp = 0;
         const groupExp = {};
         let bonusExp = 0;
         let effortExp = 0;
@@ -55,7 +54,6 @@ async function generateReport() {
                 // Chỉ tính các task đã hoàn thành bởi người dùng hiện tại
                 if (task.isComplete === 1 && task.completingUserId === currentUser.id) {
                     const awardedPoints = task.awardedPoints || 0;
-                    totalExp += awardedPoints;
 
                     // Phân loại điểm
                     const basePoints = 5;
@@ -85,7 +83,8 @@ async function generateReport() {
         });
 
         // Hiển thị kết quả
-        document.getElementById('total-exp').textContent = totalExp.toLocaleString('vi-VN');
+        // Lấy tổng điểm tích lũy trực tiếp từ thông tin người dùng hiện tại
+        document.getElementById('total-exp').textContent = (currentUser.experiencePoints || 0).toLocaleString('vi-VN');
         document.getElementById('bonus-exp').textContent = bonusExp.toLocaleString('vi-VN');
         document.getElementById('effort-exp').textContent = effortExp.toLocaleString('vi-VN');
 
