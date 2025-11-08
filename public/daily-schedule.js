@@ -573,6 +573,7 @@ async function handleTaskClick(event) {
         // Logic khi HOÀN THÀNH MỚI: Tính điểm thưởng/phạt
         const basePoints = 5;
         const bonusPoints = 1;
+        const effortBonus = 1; // Điểm thưởng nỗ lực khi làm thay
 
         const [year, month, day] = scheduleForPoints.date.split('-').map(Number);
         const [hour, minute] = taskForPoints.startTime.split(':').map(Number);
@@ -589,6 +590,12 @@ async function handleTaskClick(event) {
             // Hoàn thành ngoài khoảng 1 giờ
             pointsChange = basePoints;
             toastMessage = `Bạn nhận được ${pointsChange} điểm kinh nghiệm.`;
+        }
+
+        // Cộng điểm nỗ lực nếu hoàn thành thay người khác
+        if (window.currentUser?.id !== employeeId) {
+            pointsChange += effortBonus;
+            toastMessage = `Bạn nhận được ${pointsChange} điểm (bao gồm +${effortBonus} điểm nỗ lực).`;
         }
     }
 
