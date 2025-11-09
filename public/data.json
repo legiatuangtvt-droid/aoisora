@@ -6,18 +6,18 @@
         "tailwind_bg": "bg-slate-200", "tailwind_text": "text-slate-800", "tailwind_border": "border-slate-500"
       },
       "tasks": [
-        { "order": "1", "name": "Mở POS", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "2", "name": "EOD POS", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "3", "name": "Chuẩn bị POS", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "4", "name": "Đổi tiền lẻ", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "5", "name": "Thế cơm POS Staff", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "6", "name": "Hỗ trợ POS", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "7", "name": "Kết ca", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "8", "name": "Giao ca", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "9", "name": "POS 1", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "10", "name": "POS 2", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "11", "name": "POS 3", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "12", "name": "Thế cơm Leader", "frequency": "Daily", "manual_number": null, "manual_link": "" }
+        { "order": "1", "name": "Mở POS", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 10, "manual_number": "POS-001", "manual_link": "", "note": "Tính theo số lượng POS" },
+        { "order": "2", "name": "EOD POS", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 15, "manual_number": "POS-002", "manual_link": "", "note": "Tính theo số lượng POS" },
+        { "order": "3", "name": "Chuẩn bị POS", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 5, "manual_number": "POS-003", "manual_link": "", "note": "Tính theo số lượng POS" },
+        { "order": "4", "name": "Đổi tiền lẻ", "frequency": "Daily", "frequencyNumber": 2, "reUnit": 5, "manual_number": "POS-004", "manual_link": "", "note": "Tính theo số lượng POS" },
+        { "order": "5", "name": "Thế cơm POS Staff", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 30, "manual_number": "POS-005", "manual_link": "", "note": "Tính theo số lượng POS" },
+        { "order": "6", "name": "Hỗ trợ POS", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 60, "manual_number": "POS-006", "manual_link": "", "note": "Tính theo số lượng POS" },
+        { "order": "7", "name": "Kết ca", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 15, "manual_number": "POS-007", "manual_link": "", "note": "Tính theo số lượng POS" },
+        { "order": "8", "name": "Giao ca", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 10, "manual_number": "POS-008", "manual_link": "", "note": "Tính theo số lượng POS" },
+        { "order": "9", "name": "POS 1", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 1.5, "manual_number": "POS-009", "manual_link": "", "note": "Tính theo số lượng khách hàng" },
+        { "order": "10", "name": "POS 2", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 1.5, "manual_number": "POS-010", "manual_link": "", "note": "Tính theo số lượng khách hàng" },
+        { "order": "11", "name": "POS 3", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 1.5, "manual_number": "POS-011", "manual_link": "", "note": "Tính theo số lượng khách hàng" },
+        { "order": "12", "name": "Thế cơm Leader", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 30, "manual_number": "POS-012", "manual_link": "", "note": "Tính theo số lượng POS" }
       ]},
     { "id": "PERI", "order": 2, "code": "PERI", 
       "color": {
@@ -25,16 +25,16 @@
         "tailwind_bg": "bg-green-200", "tailwind_text": "text-green-800", "tailwind_border": "border-green-500"
       },
       "tasks": [
-        { "order": "1", "name": "Lên hàng thịt cá", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "2", "name": "Lên hàng rau củ", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "3", "name": "Lên hàng tươi sống", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "4", "name": "Repack Peri", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "5", "name": "Cắt gọt", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "6", "name": "Hủy hàng Staff", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "7", "name": "Kiểm tra HSD Tươi sống (Staff)", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "8", "name": "Đặt hàng tươi sống", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "9", "name": "Làm POP Peri", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "10", "name": "Giảm giá Perish", "frequency": "Daily", "manual_number": null, "manual_link": "" }
+        { "order": "1", "name": "Lên hàng thịt cá", "frequency": "Daily", "frequencyNumber": 2, "reUnit": 2, "manual_number": "PER-001", "manual_link": "", "note": "Tính theo khối lượng rau củ (kg)" },
+        { "order": "2", "name": "Lên hàng rau củ", "frequency": "Daily", "frequencyNumber": 3, "reUnit": 2.5, "manual_number": "PER-002", "manual_link": "", "note": "Tính theo khối lượng rau củ (kg)" },
+        { "order": "3", "name": "Lên hàng tươi sống", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 30, "manual_number": "PER-003", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "4", "name": "Repack Peri", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 1.5, "manual_number": "PER-004", "manual_link": "", "note": "Tính theo khối lượng rau củ (kg)" },
+        { "order": "5", "name": "Cắt gọt", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 2, "manual_number": "PER-005", "manual_link": "", "note": "Tính theo khối lượng rau củ (kg)" },
+        { "order": "6", "name": "Hủy hàng Staff", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 20, "manual_number": "PER-006", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "7", "name": "Kiểm tra HSD Tươi sống (Staff)", "frequency": "Daily", "frequencyNumber": 2, "reUnit": 15, "manual_number": "PER-007", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "8", "name": "Đặt hàng tươi sống", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 20, "manual_number": "PER-008", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "9", "name": "Làm POP Peri", "frequency": "Weekly", "frequencyNumber": 2, "reUnit": 30, "manual_number": "PER-009", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "10", "name": "Giảm giá Perish", "frequency": "Daily", "frequencyNumber": 2, "reUnit": 1, "manual_number": "PER-010", "manual_link": "", "note": "Tính theo khối lượng rau củ (kg)" }
       ]},
     { "id": "DRY", "order": 3, "code": "DRY", 
       "color": {
@@ -42,19 +42,19 @@
         "tailwind_bg": "bg-blue-200", "tailwind_text": "text-blue-800", "tailwind_border": "border-blue-500"
       },
       "tasks": [
-        { "order": "1", "name": "Lên hàng khô", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "2", "name": "Kéo mặt hàng khô", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "3", "name": "Kiểm tra HSD hàng khô", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "4", "name": "Bắn OOS", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "5", "name": "Kéo mặt COC", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "6", "name": "Làm PC/POP Dry", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "7", "name": "Check tồn WH nóc kệ châm hàng", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "8", "name": "Kéo mặt Grocery", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "9", "name": "Kéo mặt NF-HBC HL-SL", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "10", "name": "Key Auto ORD", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "11", "name": "Check Auto ORD", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "12", "name": "Thay POG", "frequency": "Weekly", "manual_number": null, "manual_link": "" },
-        { "order": "13", "name": "Chuẩn bị kiểm kê năm", "frequency": "Yearly", "manual_number": null, "manual_link": "" }
+        { "order": "1", "name": "Lên hàng khô", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 3, "manual_number": "DRY-001", "manual_link": "", "note": "Tính theo lượng hàng khô (kiện)" },
+        { "order": "2", "name": "Kéo mặt hàng khô", "frequency": "Daily", "frequencyNumber": 2, "reUnit": 1.5, "manual_number": "DRY-002", "manual_link": "", "note": "Tính theo lượng hàng khô (kiện)" },
+        { "order": "3", "name": "Kiểm tra HSD hàng khô", "frequency": "Weekly", "frequencyNumber": 1, "reUnit": 60, "manual_number": "DRY-003", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "4", "name": "Bắn OOS", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 30, "manual_number": "DRY-004", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "5", "name": "Kéo mặt COC", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 20, "manual_number": "DRY-005", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "6", "name": "Làm PC/POP Dry", "frequency": "Weekly", "frequencyNumber": 3, "reUnit": 30, "manual_number": "DRY-006", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "7", "name": "Check tồn WH nóc kệ châm hàng", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 1, "manual_number": "DRY-007", "manual_link": "", "note": "Tính theo lượng hàng khô (kiện)" },
+        { "order": "8", "name": "Kéo mặt Grocery", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 1, "manual_number": "DRY-008", "manual_link": "", "note": "Tính theo lượng hàng khô (kiện)" },
+        { "order": "9", "name": "Kéo mặt NF-HBC HL-SL", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 1, "manual_number": "DRY-009", "manual_link": "", "note": "Tính theo lượng hàng khô (kiện)" },
+        { "order": "10", "name": "Key Auto ORD", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 45, "manual_number": "DRY-010", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "11", "name": "Check Auto ORD", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 30, "manual_number": "DRY-011", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "12", "name": "Thay POG", "frequency": "Monthly", "frequencyNumber": 2, "reUnit": 120, "manual_number": "DRY-012", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "13", "name": "Chuẩn bị kiểm kê năm", "frequency": "Yearly", "frequencyNumber": 1, "reUnit": 480, "manual_number": "DRY-013", "manual_link": "", "note": "Tính theo lần" }
       ]},
     { "id": "MMD", "order": 4, "code": "MMD", 
       "color": {
@@ -62,13 +62,13 @@
         "tailwind_bg": "bg-amber-200", "tailwind_text": "text-amber-800", "tailwind_border": "border-amber-500"
       },
       "tasks": [
-        { "order": "1", "name": "Nhận hàng Peri", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "2", "name": "Nhận hàng Delica", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "3", "name": "Nhận hàng RDC Dry", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "4", "name": "Nhận hàng RDC D&D", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "5", "name": "Nhận hàng D&D từ NCC", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "6", "name": "Làm báo cáo hóa đơn MMD", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "7", "name": "Xử lý và update GTN/GRN", "frequency": "Daily", "manual_number": null, "manual_link": "" }
+        { "order": "1", "name": "Nhận hàng Peri", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 60, "manual_number": "MMD-001", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "2", "name": "Nhận hàng Delica", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 30, "manual_number": "MMD-002", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "3", "name": "Nhận hàng RDC Dry", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 90, "manual_number": "MMD-003", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "4", "name": "Nhận hàng RDC D&D", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 45, "manual_number": "MMD-004", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "5", "name": "Nhận hàng D&D từ NCC", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 45, "manual_number": "MMD-005", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "6", "name": "Làm báo cáo hóa đơn MMD", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 30, "manual_number": "MMD-006", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "7", "name": "Xử lý và update GTN/GRN", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 60, "manual_number": "MMD-007", "manual_link": "", "note": "Tính theo lần" }
       ]},
     { "id": "LEADER", "order": 5, "code": "LEADER", 
       "color": {
@@ -76,19 +76,19 @@
         "tailwind_bg": "bg-teal-200", "tailwind_text": "text-teal-800", "tailwind_border": "border-teal-500"
       },
       "tasks": [
-        { "order": "1", "name": "Mở kho", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "2", "name": "Đóng kho", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "3", "name": "Hủy hàng và update hệ thống", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "4", "name": "Đặt văn phòng phẩm", "frequency": "Weekly", "manual_number": null, "manual_link": "" },
-        { "order": "5", "name": "Balancing", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "6", "name": "Kiểm tra HSD Tươi sống-Quản lý", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "7", "name": "Kiểm tra PC-POP", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "8", "name": "Kiểm tra hàng đổi trả", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "9", "name": "Tạo và chỉnh sửa DWS", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "10", "name": "Bàn giao tiền cho ngân hàng", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "11", "name": "Giảm giá Peri/Dry", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "12", "name": "Kiểm tra DWS", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "13", "name": "Xử lý công việc quản lý", "frequency": "Daily", "manual_number": null, "manual_link": "" }
+        { "order": "1", "name": "Mở kho", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 15, "manual_number": "LEA-001", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "2", "name": "Đóng kho", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 15, "manual_number": "LEA-002", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "3", "name": "Hủy hàng và update hệ thống", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 30, "manual_number": "LEA-003", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "4", "name": "Đặt văn phòng phẩm", "frequency": "Weekly", "frequencyNumber": 1, "reUnit": 15, "manual_number": "LEA-004", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "5", "name": "Balancing", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 30, "manual_number": "LEA-005", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "6", "name": "Kiểm tra HSD Tươi sống-Quản lý", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 15, "manual_number": "LEA-006", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "7", "name": "Kiểm tra PC-POP", "frequency": "Daily", "frequencyNumber": 2, "reUnit": 15, "manual_number": "LEA-007", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "8", "name": "Kiểm tra hàng đổi trả", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 15, "manual_number": "LEA-008", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "9", "name": "Tạo và chỉnh sửa DWS", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 30, "manual_number": "LEA-009", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "10", "name": "Bàn giao tiền cho ngân hàng", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 15, "manual_number": "LEA-010", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "11", "name": "Giảm giá Peri/Dry", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 30, "manual_number": "LEA-011", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "12", "name": "Kiểm tra DWS", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 15, "manual_number": "LEA-012", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "13", "name": "Xử lý công việc quản lý", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 120, "manual_number": "LEA-013", "manual_link": "", "note": "Tính theo lần" }
       ]},
     { "id": "QC-FSH", "order": 6, "code": "QC-FSH", 
       "color": {
@@ -96,25 +96,25 @@
         "tailwind_bg": "bg-purple-200", "tailwind_text": "text-purple-800", "tailwind_border": "border-purple-500"
       },
       "tasks": [
-        { "order": "1", "name": "5S khu vực POS", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "2", "name": "5S khu vực văn phòng", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "3", "name": "5S khu vực tươi sống", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "4", "name": "5S khu vực MMD", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "5", "name": "5S khu vực khách ngồi", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "6", "name": "5S Kho hàng hóa", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "7", "name": "Tổng vệ sinh Chiller với ADV", "frequency": "Weekly", "manual_number": null, "manual_link": "" },
-        { "order": "8", "name": "Cleaning Time 09:00", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "9", "name": "Cleaning Time 15:00", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "10", "name": "Cleaning Time 20:00", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "11", "name": "Vệ sinh máy Trà Chanh, Milo", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "12", "name": "Vệ sinh máy Cafe", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "13", "name": "Check nhiệt độ", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "14", "name": "Vệ sinh bể tách mỡ", "frequency": "Weekly", "manual_number": null, "manual_link": "" },
-        { "order": "15", "name": "5S Aeon Cafe", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "16", "name": "5S Khu vực bếp", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "17", "name": "Vệ sinh tủ lạnh cuối ngày", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "18", "name": "Vệ sinh quầy kệ hàng khô", "frequency": "Weekly", "manual_number": null, "manual_link": "" },
-        { "order": "19", "name": "Quét lau sàn", "frequency": "Daily", "manual_number": null, "manual_link": "" }
+        { "order": "1", "name": "5S khu vực POS", "frequency": "Daily", "frequencyNumber": 2, "reUnit": 15, "manual_number": "QCF-001", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "2", "name": "5S khu vực văn phòng", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 15, "manual_number": "QCF-002", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "3", "name": "5S khu vực tươi sống", "frequency": "Daily", "frequencyNumber": 2, "reUnit": 20, "manual_number": "QCF-003", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "4", "name": "5S khu vực MMD", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 20, "manual_number": "QCF-004", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "5", "name": "5S khu vực khách ngồi", "frequency": "Daily", "frequencyNumber": 3, "reUnit": 10, "manual_number": "QCF-005", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "6", "name": "5S Kho hàng hóa", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 30, "manual_number": "QCF-006", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "7", "name": "Tổng vệ sinh Chiller với ADV", "frequency": "Weekly", "frequencyNumber": 1, "reUnit": 60, "manual_number": "QCF-007", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "8", "name": "Cleaning Time 09:00", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 15, "manual_number": "QCF-008", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "9", "name": "Cleaning Time 15:00", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 15, "manual_number": "QCF-009", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "10", "name": "Cleaning Time 20:00", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 15, "manual_number": "QCF-010", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "11", "name": "Vệ sinh máy Trà Chanh, Milo", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 15, "manual_number": "QCF-011", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "12", "name": "Vệ sinh máy Cafe", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 20, "manual_number": "QCF-012", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "13", "name": "Check nhiệt độ", "frequency": "Daily", "frequencyNumber": 3, "reUnit": 10, "manual_number": "QCF-013", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "14", "name": "Vệ sinh bể tách mỡ", "frequency": "Weekly", "frequencyNumber": 1, "reUnit": 30, "manual_number": "QCF-014", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "15", "name": "5S Aeon Cafe", "frequency": "Daily", "frequencyNumber": 2, "reUnit": 15, "manual_number": "QCF-015", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "16", "name": "5S Khu vực bếp", "frequency": "Daily", "frequencyNumber": 2, "reUnit": 20, "manual_number": "QCF-016", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "17", "name": "Vệ sinh tủ lạnh cuối ngày", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 30, "manual_number": "QCF-017", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "18", "name": "Vệ sinh quầy kệ hàng khô", "frequency": "Weekly", "frequencyNumber": 1, "reUnit": 120, "manual_number": "QCF-018", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "19", "name": "Quét lau sàn", "frequency": "Daily", "frequencyNumber": 3, "reUnit": 20, "manual_number": "QCF-019", "manual_link": "", "note": "Tính theo lần" }
       ]},
     { "id": "DELICA", "order": 7, "code": "DELICA", 
       "color": {
@@ -122,18 +122,18 @@
         "tailwind_bg": "bg-indigo-200", "tailwind_text": "text-indigo-800", "tailwind_border": "border-indigo-500"
       },
       "tasks": [
-        { "order": "1", "name": "Pha chế Cafe", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "2", "name": "Chuẩn bị Aeon Cafe đầu ngày", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "3", "name": "Lên hàng Delica", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "4", "name": "Kéo mặt Delica", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "5", "name": "Kiểm tra HSD Delica", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "6", "name": "Giảm giá Delica", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "7", "name": "Kiểm tra POP Delica", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "8", "name": "Đặt nguyên liệu Delica", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "9", "name": "Đặt hàng Delica", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "10", "name": "Chuẩn bị Aeon Cafe cho ngày hôm sau", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "11", "name": "Bổ sung vật tư Aeon Cafe", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "12", "name": "Kiểm kê Delica", "frequency": "Monthly", "manual_number": null, "manual_link": "" }
+        { "order": "1", "name": "Pha chế Cafe", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 120, "manual_number": "DEL-001", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "2", "name": "Chuẩn bị Aeon Cafe đầu ngày", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 30, "manual_number": "DEL-002", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "3", "name": "Lên hàng Delica", "frequency": "Daily", "frequencyNumber": 2, "reUnit": 30, "manual_number": "DEL-003", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "4", "name": "Kéo mặt Delica", "frequency": "Daily", "frequencyNumber": 2, "reUnit": 15, "manual_number": "DEL-004", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "5", "name": "Kiểm tra HSD Delica", "frequency": "Daily", "frequencyNumber": 2, "reUnit": 15, "manual_number": "DEL-005", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "6", "name": "Giảm giá Delica", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 15, "manual_number": "DEL-006", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "7", "name": "Kiểm tra POP Delica", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 10, "manual_number": "DEL-007", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "8", "name": "Đặt nguyên liệu Delica", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 20, "manual_number": "DEL-008", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "9", "name": "Đặt hàng Delica", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 20, "manual_number": "DEL-009", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "10", "name": "Chuẩn bị Aeon Cafe cho ngày hôm sau", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 20, "manual_number": "DEL-010", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "11", "name": "Bổ sung vật tư Aeon Cafe", "frequency": "Daily", "frequencyNumber": 2, "reUnit": 10, "manual_number": "DEL-011", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "12", "name": "Kiểm kê Delica", "frequency": "Monthly", "frequencyNumber": 1, "reUnit": 120, "manual_number": "DEL-012", "manual_link": "", "note": "Tính theo lần" }
       ]},
     { "id": "DND", "order": 8, "code": "D&D", 
       "color": {
@@ -141,11 +141,11 @@
         "tailwind_bg": "bg-red-200", "tailwind_text": "text-red-800", "tailwind_border": "border-red-500"
       },
       "tasks": [
-        { "order": "1", "name": "Lên hàng D&D", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "2", "name": "Kéo mặt D&D", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "3", "name": "Kiểm tra HSD D&D", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "4", "name": "Đặt hàng D&D", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "5", "name": "Làm PC/POP D&D", "frequency": "Daily", "manual_number": null, "manual_link": "" }
+        { "order": "1", "name": "Lên hàng D&D", "frequency": "Daily", "frequencyNumber": 2, "reUnit": 30, "manual_number": "DND-001", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "2", "name": "Kéo mặt D&D", "frequency": "Daily", "frequencyNumber": 2, "reUnit": 15, "manual_number": "DND-002", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "3", "name": "Kiểm tra HSD D&D", "frequency": "Daily", "frequencyNumber": 2, "reUnit": 15, "manual_number": "DND-003", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "4", "name": "Đặt hàng D&D", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 20, "manual_number": "DND-004", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "5", "name": "Làm PC/POP D&D", "frequency": "Weekly", "frequencyNumber": 1, "reUnit": 30, "manual_number": "DND-005", "manual_link": "", "note": "Tính theo lần" }
       ]},
     { "id": "OTHER", "order": 9, "code": "OTHER", 
       "color": {
@@ -153,22 +153,22 @@
         "tailwind_bg": "bg-pink-200", "tailwind_text": "text-pink-800", "tailwind_border": "border-pink-500"
       },
       "tasks": [
-        { "order": "1", "name": "Đổi PC", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "2", "name": "Đổi POP", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "3", "name": "BRF Đầu ca", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "4", "name": "Kiểm kê tháng Leader", "frequency": "Monthly", "manual_number": null, "manual_link": "" },
-        { "order": "5", "name": "Kiểm kê tháng Staff", "frequency": "Monthly", "manual_number": null, "manual_link": "" },
-        { "order": "6", "name": "Kiểm kê năm", "frequency": "Yearly", "manual_number": null, "manual_link": "" },
-        { "order": "7", "name": "Tạo GE cho focus Item", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "8", "name": "Chuẩn bị Tasting", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "9", "name": "Chuẩn bị tem phụ", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "10", "name": "Break Time", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "11", "name": "Kiểm tra DWS", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "12", "name": "Sampling", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "13", "name": "Trưng POP Member Day", "frequency": "Monthly", "manual_number": null, "manual_link": "" },
-        { "order": "14", "name": "Thu POP Member Day", "frequency": "Monthly", "manual_number": null, "manual_link": "" },
-        { "order": "15", "name": "Giao hàng", "frequency": "Daily", "manual_number": null, "manual_link": "" },
-        { "order": "16", "name": "Họp hành Đào tạo Kiểm tra", "frequency": "Daily", "manual_number": null, "manual_link": "" }
+        { "order": "1", "name": "Đổi PC", "frequency": "Weekly", "frequencyNumber": 1, "reUnit": 60, "manual_number": "OTH-001", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "2", "name": "Đổi POP", "frequency": "Weekly", "frequencyNumber": 1, "reUnit": 60, "manual_number": "OTH-002", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "3", "name": "BRF Đầu ca", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 15, "manual_number": "OTH-003", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "4", "name": "Kiểm kê tháng Leader", "frequency": "Monthly", "frequencyNumber": 1, "reUnit": 240, "manual_number": "OTH-004", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "5", "name": "Kiểm kê tháng Staff", "frequency": "Monthly", "frequencyNumber": 1, "reUnit": 180, "manual_number": "OTH-005", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "6", "name": "Kiểm kê năm", "frequency": "Yearly", "frequencyNumber": 1, "reUnit": 480, "manual_number": "OTH-006", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "7", "name": "Tạo GE cho focus Item", "frequency": "Weekly", "frequencyNumber": 1, "reUnit": 30, "manual_number": "OTH-007", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "8", "name": "Chuẩn bị Tasting", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 30, "manual_number": "OTH-008", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "9", "name": "Chuẩn bị tem phụ", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 30, "manual_number": "OTH-009", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "10", "name": "Break Time", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 60, "manual_number": "OTH-010", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "11", "name": "Kiểm tra DWS", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 15, "manual_number": "OTH-011", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "12", "name": "Sampling", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 60, "manual_number": "OTH-012", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "13", "name": "Trưng POP Member Day", "frequency": "Monthly", "frequencyNumber": 1, "reUnit": 60, "manual_number": "OTH-013", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "14", "name": "Thu POP Member Day", "frequency": "Monthly", "frequencyNumber": 1, "reUnit": 30, "manual_number": "OTH-014", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "15", "name": "Giao hàng", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 120, "manual_number": "OTH-015", "manual_link": "", "note": "Tính theo lần" },
+        { "order": "16", "name": "Họp hành Đào tạo Kiểm tra", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 60, "manual_number": "OTH-016", "manual_link": "", "note": "Tính theo lần" }
       ]
     }
   ],
