@@ -791,6 +791,13 @@ async function loadTemplate(templateId) {
         switchToCreateNewMode();
         return;
     }
+    // --- FIX: Tải lại view RE Logic nếu đang ở view đó ---
+    if (currentView === 're-logic') {
+        // Chỉ cần gọi initRELogicView và thoát, không cần render lại lưới builder
+        await initRELogicView(templateId, allTemplates, allTaskGroups);
+        currentTemplateId = templateId; // Cập nhật lại ID mẫu hiện tại
+        return;
+    }
 
     currentTemplateId = templateId;
     renderGrid(); // Render lại lưới trống trước
