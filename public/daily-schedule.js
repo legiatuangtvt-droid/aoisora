@@ -659,7 +659,6 @@ async function updateTaskStatus(scheduleId, taskIndex, completingUserId, newIsCo
         // Chỉ thực hiện cập nhật nếu trạng thái thay đổi
         const currentIsComplete = targetTask.isComplete === 1;
         if (currentIsComplete === newIsComplete) {
-            console.log("Trạng thái công việc không đổi, bỏ qua cập nhật.");
             return;
         }
 

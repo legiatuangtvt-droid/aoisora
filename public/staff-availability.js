@@ -70,7 +70,6 @@ function timeToMinutes(timeStr) {
  */
 async function loadApplicableShiftCodes() {
     // DEMO: Sử dụng dữ liệu giả
-    console.log("DEMO: Loading mock shift codes.");
     shiftCodes = mockShiftCodes;
     // Giả lập độ trễ mạng
     return new Promise(resolve => setTimeout(resolve, 100));
@@ -234,7 +233,6 @@ async function renderWeekView() {
  */
 async function loadAvailabilityForWeek(weekDates) {
     // DEMO: Đọc từ dữ liệu giả
-    console.log("DEMO: Loading availability from mock data.");
     const currentUser = mockCurrentUser;
 
     weekDates.forEach(dateObj => {
@@ -453,7 +451,6 @@ async function saveWeekAvailability() {
     });
 
     // 2. DEMO: Lưu vào biến mockAvailability
-    console.log("DEMO: Saving data to mockAvailability object.");
     for (const date in dataByDate) {
         const docId = `${date}_${currentUser.id}`;
         const hasRegistration = dataByDate[date].some(reg => reg && reg.shiftCode);
@@ -478,7 +475,6 @@ async function saveWeekAvailability() {
         window.showToast('Đã lưu đăng ký tuần thành công!', 'success');
         saveButton.disabled = false;
         saveButton.innerHTML = `<i class="fas fa-save mr-2"></i> Đăng Ký`;
-        console.log("Current Mock Data:", mockAvailability);
     });
 }
 

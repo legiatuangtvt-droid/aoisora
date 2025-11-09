@@ -324,7 +324,6 @@ async function fetchAndRenderEmployees(direction = 'first') {
             managedStoreIds = allStores.filter(s => areaIds.includes(s.areaId)).map(s => s.id);
         }
 
-        console.log(`[Staff Management] ${currentUser.roleId} detected. Filtering for ${managedStoreIds.length} managed stores.`);
         allPersonnel = allPersonnel.filter(person => {
             // Giữ lại chính người quản lý đó
             if (person.id === currentUser.id) return true;

@@ -41,7 +41,6 @@ function listenForStoreChanges() {
         const currentUser = window.currentUser;
         if (currentUser && currentUser.roleId === 'STORE_INCHARGE' && Array.isArray(currentUser.managedStoreIds)) {
             // Chỉ giữ lại các cửa hàng mà SI này quản lý
-            console.log('[Store Management] SI detected. Filtering for managed stores:', currentUser.managedStoreIds);
             fetchedStores = fetchedStores.filter(store => currentUser.managedStoreIds.includes(store.id));
         }
 
