@@ -19,6 +19,57 @@ let allShiftCodes = []; // Biến để lưu danh sách mã ca
 let currentView = 'builder'; // 'builder' or 're-logic'
 
 
+/**
+ * Khóa hoặc mở khóa toàn bộ giao diện xây dựng mẫu.
+ * @param {boolean} locked - True để khóa, false để mở khóa.
+ */
+function toggleTemplateBuilderLock(locked) {
+    const gridContainer = document.getElementById('template-builder-grid-container');
+    const addRowButton = document.getElementById('add-shift-row-btn');
+    if (!gridContainer) return;
+
+    // --- LOGIC SỬA LỖI: Đặt lớp phủ bên trong container và dùng scrollHeight ---
+    const overlayId = 'template-builder-overlay';
+    let overlay = gridContainer.querySelector(`#${overlayId}`);
+
+    if (locked) {
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = overlayId;
+            // Sử dụng position: absolute để lớp phủ cuộn cùng với container
+            overlay.className = 'absolute inset-0 bg-gray-400 bg-opacity-20 z-30 cursor-not-allowed';
+            overlay.title = 'Mẫu đang được triển khai, không thể chỉnh sửa.';
+            // Đảm bảo container có position: relative để lớp phủ được định vị đúng
+            if (getComputedStyle(gridContainer).position === 'static') {
+                gridContainer.style.position = 'relative';
+            }
+            gridContainer.appendChild(overlay);
+        }
+        // SỬA LỖI: Sử dụng offsetHeight và offsetWidth để lấy kích thước trực quan chính xác của container,
+        // bao gồm cả padding và border, đảm bảo lớp phủ che kín toàn bộ.
+        overlay.style.width = `${gridContainer.offsetWidth}px`;
+        overlay.style.height = `${gridContainer.offsetHeight}px`;
+
+    } else {
+        if (overlay) {
+            overlay.remove();
+        }
+    }
+
+    // Vô hiệu hóa/Kích hoạt các input và select
+    gridContainer.querySelectorAll('.shift-code-selector, .work-position-selector').forEach(el => {
+        el.disabled = locked;
+    });
+
+    // Ẩn/Hiện các nút xóa và tay cầm nhân bản
+    gridContainer.querySelectorAll('.delete-task-btn, .delete-shift-row-btn, .resize-handle').forEach(el => {
+        el.style.display = locked ? 'none' : '';
+    });
+
+    // Ẩn/Hiện nút "Thêm Ca"
+    if (addRowButton) addRowButton.classList.toggle('hidden', locked);
+}
+
 const defaultColor = {
     tailwind_bg: 'bg-slate-200', tailwind_text: 'text-slate-800', tailwind_border: 'border-slate-400'
 };
@@ -718,6 +769,7 @@ async function showTemplateApplyStatus(templateId) {
     if (!statusContainer || !statusDisplay) return;
 
     if (!templateId || templateId === 'new') {
+        toggleTemplateBuilderLock(false); // Mở khóa khi ở chế độ tạo mới
         statusContainer.classList.add('hidden');
         return;
     }
@@ -733,6 +785,7 @@ async function showTemplateApplyStatus(templateId) {
     if (saveBtn) saveBtn.classList.remove('hidden');
     if (deleteBtn) deleteBtn.classList.remove('hidden');
 
+    toggleTemplateBuilderLock(false); // Mặc định là mở khóa
 
     statusDisplay.textContent = 'Đang kiểm tra trạng thái...';
     statusContainer.classList.remove('hidden');
@@ -748,6 +801,7 @@ async function showTemplateApplyStatus(templateId) {
  
         if (plansSnap.empty) {
             statusDisplay.textContent = 'Chưa được áp dụng cho chu kỳ nào.';
+            toggleTemplateBuilderLock(false); // Mở khóa nếu chưa áp dụng
         } else {
             const latestPlan = plansSnap.docs[0].data();
             const isFinalState = latestPlan.status === 'HQ_CONFIRMED' || latestPlan.status === 'HQ_REJECTED_RM_CHANGES';
@@ -759,6 +813,7 @@ async function showTemplateApplyStatus(templateId) {
                 if (hqApplyBtnSpan) hqApplyBtnSpan.textContent = 'Triển khai';
                 if (saveBtn) saveBtn.classList.remove('hidden');
                 if (deleteBtn) deleteBtn.classList.remove('hidden');
+                toggleTemplateBuilderLock(false); // Mở khóa khi chu kỳ đã kết thúc
             } else {
                 // Nếu kế hoạch đang trong quá trình xử lý, ẩn các nút
                 const hqAppliedEntry = latestPlan.history?.find(h => h.status === 'HQ_APPLIED');
@@ -771,7 +826,7 @@ async function showTemplateApplyStatus(templateId) {
                 if (hqApplyBtn) hqApplyBtn.classList.add('hidden');
                 if (saveBtn) saveBtn.classList.add('hidden');
                 if (deleteBtn) deleteBtn.classList.add('hidden');
-
+                toggleTemplateBuilderLock(true); // Khóa giao diện chỉnh sửa
             }
         }
     } catch (error) {
@@ -787,6 +842,7 @@ async function showTemplateApplyStatus(templateId) {
 async function loadTemplate(templateId) {
     // Nếu người dùng chọn "Tạo Mẫu Mới"
     originalTemplateData = null; // Reset trạng thái gốc mỗi khi tải mẫu mới
+    toggleTemplateBuilderLock(false); // Mở khóa khi tải mẫu mới
     if (templateId === 'new') {
         switchToCreateNewMode();
         return;
@@ -932,6 +988,7 @@ function switchToCreateNewMode() {
     originalTemplateData = null; // Xóa trạng thái gốc
     currentTemplateId = null;
     document.getElementById('template-selector').value = 'new';
+    toggleTemplateBuilderLock(false); // Luôn mở khóa ở chế độ tạo mới
     renderGrid(); // Vẽ lại lưới trống
 
     // Ẩn các nút không cần thiết
