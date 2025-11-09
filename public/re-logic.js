@@ -166,24 +166,30 @@ export async function initRELogicView(currentTemplateId, allTemplates, allTaskGr
     let reParameters = {}; // Khởi tạo với giá trị mặc định
     let currentTemplate = null;
 
+    const cells = document.querySelectorAll('#re-store-info-body td');
+
     // Tải và hiển thị dữ liệu RE Parameters từ template hiện tại
     if (currentTemplateId) {
         currentTemplate = allTemplates.find(t => t.id === currentTemplateId);
         if (currentTemplate && currentTemplate.reParameters) {
             reParameters = currentTemplate.reParameters;
-            const cells = document.querySelectorAll('#re-store-info-body td');
-            if (cells.length === 6) {
-                cells[0].textContent = reParameters.customerCount || 0; // Số khách hàng
-                cells[1].textContent = reParameters.posCount || 0; // Số POS
-                cells[2].textContent = reParameters.areaSize || 0; // Diện tích
-                cells[3].textContent = reParameters.employeeCount || 0; // Số nhân viên
-                cells[4].textContent = reParameters.dryGoodsVolume || 0; // Lượng hàng khô
-                cells[5].textContent = reParameters.vegetableWeight || 0; // Lượng rau
-            }
         }
     }
-    
-    // Gọi renderREView sau khi đã có reParameters
+
+    // Luôn cập nhật giao diện "Thông tin cửa hàng" dù có dữ liệu hay không
+    // Nếu không có reParameters, các giá trị sẽ là 0
+    if (cells.length === 6) {
+        cells[0].textContent = reParameters.customerCount || 0;
+        cells[1].textContent = reParameters.posCount || 0;
+        cells[2].textContent = reParameters.areaSize || 0;
+        cells[3].textContent = reParameters.employeeCount || 0;
+        cells[4].textContent = reParameters.dryGoodsVolume || 0;
+        cells[5].textContent = reParameters.vegetableWeight || 0;
+        // Ẩn nút lưu vì đây là dữ liệu được tải, không phải do người dùng chỉnh sửa
+        document.getElementById('re-save-store-info-btn')?.classList.add('hidden');
+    }
+
+    // Gọi renderREView sau khi đã có reParameters (có thể là object rỗng)
     renderREView(allTaskGroups, reParameters);
 
     // Gắn sự kiện cho nút lưu thông tin cửa hàng
@@ -199,19 +205,19 @@ export async function initRELogicView(currentTemplateId, allTemplates, allTaskGr
                 window.showToast('Vui lòng chọn một mẫu trước khi lưu.', 'warning');
                 return;
             }
-            const cells = document.querySelectorAll('#re-store-info-body td');
-            const reParameters = {
-                customerCount: parseInt(cells[0].textContent, 10) || 0,
-                posCount: parseInt(cells[1].textContent, 10) || 0, // Thêm posCount
-                areaSize: parseInt(cells[2].textContent, 10) || 0,
-                employeeCount: parseInt(cells[3].textContent, 10) || 0,
-                dryGoodsVolume: parseInt(cells[4].textContent, 10) || 0,
-                vegetableWeight: parseInt(cells[5].textContent, 10) || 0,
+            const updatedCells = document.querySelectorAll('#re-store-info-body td');
+            const newReParameters = {
+                customerCount: parseInt(updatedCells[0].textContent, 10) || 0,
+                posCount: parseInt(updatedCells[1].textContent, 10) || 0,
+                areaSize: parseInt(updatedCells[2].textContent, 10) || 0,
+                employeeCount: parseInt(updatedCells[3].textContent, 10) || 0,
+                dryGoodsVolume: parseInt(updatedCells[4].textContent, 10) || 0,
+                vegetableWeight: parseInt(updatedCells[5].textContent, 10) || 0,
             };
-            await saveREParameters(currentTemplateId, reParameters);
+            await saveREParameters(currentTemplateId, newReParameters);
 
             // Sau khi lưu thành công, render lại view với các tham số mới để cập nhật bảng tính
-            renderREView(allTaskGroups, reParameters);
+            renderREView(allTaskGroups, newReParameters);
         });
     }
 }

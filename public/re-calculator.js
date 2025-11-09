@@ -72,6 +72,17 @@ export function calculateREForTask(task, groupInfo, reParameters) {
                 taskHours = (reUnit * frequencyNumber) / 60;
             }
             break;
+        
+        // Các nhóm còn lại đều được tính theo lần, không phụ thuộc vào thông số cửa hàng
+        case 'MMD':
+        case 'LEADER':
+        case 'QC-FSH':
+        case 'DELICA':
+        case 'DND': // D&D
+        case 'OTHER':
+        default:
+            taskHours = (reUnit * frequencyNumber) / 60;
+            break;
     }
     return taskHours;
 }
