@@ -1317,7 +1317,10 @@ async function handleDeployClick() {
         }
 
         await batch.commit();
-        window.showToast(`Hoàn tất! Đã gửi kế hoạch từ mẫu "${template.name}" đến ${selectedManagers.length} miền.`, 'success', 5000);}
+        window.showToast(`Hoàn tất! Đã gửi kế hoạch từ mẫu "${template.name}" đến ${selectedManagers.length} miền.`, 'success', 5000);
+        
+        // Cập nhật ngay lập tức trạng thái của mẫu trên giao diện
+        await showTemplateApplyStatus(template.id);}
 
 /**
  * (Dành cho RM/AM) Tải kế hoạch và mẫu được áp dụng gần nhất.
