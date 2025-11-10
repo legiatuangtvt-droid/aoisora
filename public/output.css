@@ -1702,6 +1702,10 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
   border-top-width: 1px;
 }
 
+.border-t-2 {
+  border-top-width: 2px;
+}
+
 .border-dashed {
   border-style: dashed;
 }

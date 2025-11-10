@@ -2,11 +2,12 @@ import { db } from './firebase.js';
 import { collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 async function initializeCheckTaskView() {
-    // 1. Ẩn bộ chọn tuần/ngày và nội dung chính
     const dailyControls = document.getElementById('daily-schedule-controls');
     const gridContainer = document.getElementById('schedule-grid-container');
+    const checkTaskBtn = document.getElementById('check-task-btn');
     const mainContainer = gridContainer.parentElement; // Lấy container cha của lưới
 
+    // 1. Ẩn bộ chọn tuần/ngày và nội dung chính
     if (dailyControls) dailyControls.style.display = 'none';
     if (gridContainer) gridContainer.style.display = 'none';
 
@@ -18,13 +19,40 @@ async function initializeCheckTaskView() {
     if (!tableContainer) {
         tableContainer = document.createElement('div');
         tableContainer.id = 'check-task-table-container';
-        tableContainer.className = 'bg-white rounded-lg shadow-md overflow-hidden p-4'; // Thêm style
+        tableContainer.className = 'bg-white rounded-lg shadow-md overflow-hidden p-4 mt-4'; // Thêm style và margin-top
         mainContainer.appendChild(tableContainer);
     }
     tableContainer.style.display = 'block';
 
     // Tải dữ liệu và render bảng
     await renderTaskSummaryTable(tableContainer);
+
+    // 4. Thay đổi text và trạng thái của nút "Check Task"
+    if (checkTaskBtn) {
+        checkTaskBtn.textContent = 'DWS';
+        checkTaskBtn.classList.add('dws-active');
+    }
+}
+
+function revertToMainSchedule() {
+    const dailyControls = document.getElementById('daily-schedule-controls');
+    const gridContainer = document.getElementById('schedule-grid-container');
+    const checkTaskBtn = document.getElementById('check-task-btn');
+    const mainContainer = gridContainer.parentElement; // Lấy container cha của lưới
+    const tableContainer = document.getElementById('check-task-table-container');
+
+    // 1. Hiển thị lại bộ chọn tuần/ngày và nội dung chính
+    if (dailyControls) dailyControls.style.display = 'flex';
+    if (gridContainer) gridContainer.style.display = 'block';
+
+    // 2. Ẩn bảng thống kê
+    if (tableContainer) tableContainer.style.display = 'none';
+
+    // 3. Thay đổi text và trạng thái của nút "Check Task"
+    if (checkTaskBtn) {
+        checkTaskBtn.textContent = 'Check Task';
+        checkTaskBtn.classList.remove('dws-active');
+    }
 }
 
 async function renderTaskSummaryTable(container) {
@@ -41,7 +69,7 @@ async function renderTaskSummaryTable(container) {
         const table = document.createElement('table');
         table.className = 'min-w-full leading-normal';
         table.innerHTML = `
-            <thead>
+            <thead class="border-2 border-black">
                 <tr>
                     <th class="px-5 py-3 border border-black bg-gray-100 text-center text-xs font-bold text-gray-600 uppercase tracking-wider"></th>
                     <th class="px-5 py-3 border border-black bg-gray-100 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Mon</th>
@@ -158,4 +186,4 @@ async function fetchSchedules() {
 }
 
 // Export hàm khởi tạo
-export { initializeCheckTaskView };
+export { initializeCheckTaskView, revertToMainSchedule };
