@@ -780,6 +780,12 @@ html, body {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+.group-tab.active {
+    border-color: var(--active-border-color) !important; /* Sử dụng biến CSS */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: scale(1.05);
+}
+
 .group-tab-code {
     font-weight: 700;
     font-size: 0.9rem; /* text-lg */
