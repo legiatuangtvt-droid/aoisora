@@ -155,7 +155,7 @@ export function renderScheduleGrid() {
     const overallCompletionRate = overallTotalTasks > 0 ? Math.round((overallCompletedTasks / overallTotalTasks) * 100) : 0;
 
     manhourRow.innerHTML = `
-        <th rowspan="2" class="p-2 border border-slate-200 w-48 min-w-48 sticky left-0 bg-slate-100 z-30">
+        <th rowspan="2" class="p-2 border border-slate-200 w-40 min-w-40 sticky left-0 bg-slate-100 z-30">
             <div class="relative w-full h-full flex items-center justify-center" title="Tỷ lệ hoàn thành của cửa hàng">
                 <svg class="w-16 h-16" viewBox="0 0 36 36">
                     <path class="stroke-slate-300" stroke-width="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
