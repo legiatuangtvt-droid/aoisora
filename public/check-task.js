@@ -91,6 +91,7 @@ async function renderTaskSummaryTable(container) {
         const days = ['2025-11-10', '2025-11-11', '2025-11-12', '2025-11-13', '2025-11-14', '2025-11-15', '2025-11-16']; // Ví dụ ngày
         const modelData = {}; // Dữ liệu đã xử lý từ templates
         const dwsData = {}; // Dữ liệu đã xử lý từ schedules
+        const actualData = {}; // Dữ liệu chấm công thực tế
 
         // --- DỮ LIỆU MOCK MỚI ---
         // Sắp xếp (Model) và Đề xuất (DWS) theo giờ
@@ -117,6 +118,12 @@ async function renderTaskSummaryTable(container) {
             const dailyDwsTasks = Math.floor(totalDwsTasks / 7);
             modelData[group.code] = days.map((_, i) => dailyModelTasks + (i < totalModelTasks % 7 ? 1 : 0));
             dwsData[group.code] = days.map((_, i) => dailyDwsTasks + (i < totalDwsTasks % 7 ? 1 : 0));
+
+            // Tạo dữ liệu giả cho Actual (chấm công)
+            actualData[group.code] = dwsData[group.code].map(dwsCount => {
+                const variation = Math.random() < 0.7 ? 0 : (Math.random() < 0.5 ? -1 : 1); // 70% không đổi, còn lại +/- 1
+                return Math.max(0, dwsCount + variation); // Đảm bảo không âm
+            });
         });
 
         // Thêm dòng Model
@@ -159,6 +166,48 @@ async function renderTaskSummaryTable(container) {
                 }).join('');
             tbody.appendChild(groupRow);
         });
+
+        // --- Bổ sung dòng GAP 1 (DWS - Model) ---
+        const gap1Row = document.createElement('tr');
+        gap1Row.innerHTML = `<td class="px-5 py-3 border border-black bg-white text-sm font-bold text-center">GAP 1</td>` +
+            days.map((date, index) => {
+                const modelTotal = Object.values(modelData).reduce((sum, groupData) => sum + groupData[index], 0);
+                const dwsTotal = Object.values(dwsData).reduce((sum, groupData) => sum + groupData[index], 0);
+                const gap = dwsTotal - modelTotal;
+                let indicator = '';
+                let colorClass = 'text-gray-700';
+
+                if (gap > 0) {
+                    indicator = '↑';
+                    colorClass = 'text-green-500';
+                } else if (gap < 0) {
+                    indicator = '↓';
+                    colorClass = 'text-red-500';
+                }
+                return `<td class="px-5 py-3 border border-black bg-white text-sm text-center font-bold ${colorClass}">${gap} ${indicator}</td>`;
+            }).join('');
+        tbody.appendChild(gap1Row);
+
+        // --- Bổ sung dòng GAP 2 (Actual - Model) ---
+        const gap2Row = document.createElement('tr');
+        gap2Row.innerHTML = `<td class="px-5 py-3 border border-black bg-white text-sm font-bold text-center">GAP 2</td>` +
+            days.map((date, index) => {
+                const modelTotal = Object.values(modelData).reduce((sum, groupData) => sum + groupData[index], 0);
+                const actualTotal = Object.values(actualData).reduce((sum, groupData) => sum + groupData[index], 0);
+                const gap = actualTotal - modelTotal;
+                let indicator = '';
+                let colorClass = 'text-gray-700';
+
+                if (gap > 0) {
+                    indicator = '↑';
+                    colorClass = 'text-green-500';
+                } else if (gap < 0) {
+                    indicator = '↓';
+                    colorClass = 'text-red-500';
+                }
+                return `<td class="px-5 py-3 border border-black bg-white text-sm text-center font-bold ${colorClass}">${gap} ${indicator}</td>`;
+            }).join('');
+        tbody.appendChild(gap2Row);
 
         container.innerHTML = '';
         container.appendChild(table);
