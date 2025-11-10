@@ -2051,6 +2051,11 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
   padding-bottom: 1rem;
 }
 
+.px-5 {
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+
 .pb-1 {
   padding-bottom: 0.25rem;
 }
@@ -2192,6 +2197,10 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
 
 .leading-tight {
   line-height: 1.25;
+}
+
+.leading-normal {
+  line-height: 1.5;
 }
 
 .tracking-wider {

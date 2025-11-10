@@ -1,6 +1,7 @@
 ﻿﻿import { fetchInitialData, changeWeek, setViewStartDate, allEmployees, currentScheduleData, updateTaskStatus } from './daily-schedule-logic.js';
 import { renderWeekControls, createStoreFilter, showLoadingSpinner, updateTimeIndicator, triggerCompletionEffects, startAttentionAnimationInterval } from './daily-schedule-ui.js';
 import { formatDate, getMonday } from './utils.js';
+import { initializeCheckTaskView } from './check-task.js';
 
 let domController = null;
 
@@ -190,6 +191,9 @@ export async function init() {
     // Gắn listener cho các nút điều khiển tuần
     document.getElementById('prev-week-btn')?.addEventListener('click', () => changeWeek(-1), { signal });
     document.getElementById('next-week-btn')?.addEventListener('click', () => changeWeek(1), { signal });
+
+    // Gắn listener cho nút Check Task
+    document.getElementById('check-task-btn')?.addEventListener('click', initializeCheckTaskView, { signal });
 
     // --- SỬ DỤNG EVENT DELEGATION CHO TOÀN BỘ LƯỚI ---
     const gridContainer = document.getElementById('schedule-grid-container');
