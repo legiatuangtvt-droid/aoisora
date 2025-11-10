@@ -1,5 +1,5 @@
-import { allEmployees, allStores, allTaskGroups, allWorkPositions, currentScheduleData, allShiftCodes, viewStartDate, changeDay } from './daily-schedule-logic.js';
-import { formatDate, timeToMinutes } from './utils.js';
+import { allEmployees, allStores, allTaskGroups, allWorkPositions, currentScheduleData, allShiftCodes, viewStartDate, changeDay, dailyTemplate } from './daily-schedule-logic.js';
+import { formatDate, getMonday, timeToMinutes } from './utils.js';
 
 let isInitialLoad = true;
 
@@ -550,3 +550,78 @@ export function createStoreFilter() {
 export function setIsInitialLoad(value) {
     isInitialLoad = value;
 }
+
+//#region ATTENTION_ANIMATION
+let attentionInterval = null;
+
+/**
+ * Áp dụng hiệu ứng "nhảy" cho các task sắp đến hạn của người dùng hiện tại.
+ */
+function applyAttentionAnimation(getCurrentScheduleData) {
+    console.log('[Debug] Running applyAttentionAnimation at', new Date().toLocaleTimeString());
+    const currentUser = window.currentUser;
+    if (!currentUser) {
+        console.log('[Debug] No current user found. Skipping animation.');
+        return;
+    }
+
+    const now = new Date();
+    const oneHour = 60 * 60 * 1000;
+    const lowerBound = new Date(now.getTime() - oneHour); // 1 giờ trước
+    const upperBound = new Date(now.getTime() + oneHour); // 1 giờ sau
+
+    console.log(`[Debug] Checking for tasks between ${lowerBound.toLocaleTimeString()} and ${upperBound.toLocaleTimeString()}`);
+
+    const currentScheduleData = getCurrentScheduleData(); // Lấy dữ liệu mới nhất
+    const allTaskItems = document.querySelectorAll(`.scheduled-task-item[data-employee-id="${currentUser.id}"]`);
+    
+    if (allTaskItems.length === 0) {
+        console.log(`[Debug] No tasks found for user ${currentUser.id} on the current view.`);
+        return;
+    }
+
+    console.log(`[Debug] Found ${allTaskItems.length} tasks for user ${currentUser.name}.`);
+
+    allTaskItems.forEach(taskItem => {
+        // Luôn xóa animation cũ để reset trạng thái
+        taskItem.classList.remove('task-attention');
+
+        // Nếu task đã hoàn thành, bỏ qua
+        if (taskItem.classList.contains('task-completed')) {
+            console.log(`[Debug] Task ${taskItem.title} is already completed. Skipping.`);
+            return;
+        }
+
+        const scheduleId = taskItem.dataset.scheduleId;
+        const taskIndex = parseInt(taskItem.dataset.taskIndex, 10);
+
+        const schedule = currentScheduleData.find(s => s.id === scheduleId);
+        if (!schedule || !schedule.tasks || !schedule.tasks[taskIndex]) return;
+
+        const task = schedule.tasks[taskIndex];
+        const [year, month, day] = schedule.date.split('-').map(Number);
+        const [hour, minute] = task.startTime.split(':').map(Number);
+        const taskStartDateTime = new Date(year, month - 1, day, hour, minute);
+
+        // Kiểm tra xem task có nằm trong khoảng thời gian cần chú ý không
+        if (taskStartDateTime >= lowerBound && taskStartDateTime <= upperBound) {
+            console.log(`[Debug] Applying attention animation to task: ${task.name} at ${task.startTime}`);
+            taskItem.classList.add('task-attention');
+        }
+    });
+}
+
+/**
+ * Bắt đầu một interval để cập nhật hiệu ứng chú ý cho các task.
+ */
+export function startAttentionAnimationInterval(getCurrentScheduleData) {
+    // Dừng interval cũ nếu có
+    if (attentionInterval) {
+        clearInterval(attentionInterval);
+    }
+    // Chạy lần đầu ngay lập tức
+    applyAttentionAnimation(getCurrentScheduleData);
+    // Thiết lập interval chạy mỗi phút
+    attentionInterval = setInterval(() => applyAttentionAnimation(getCurrentScheduleData), 60 * 1000);
+}
+//#endregion

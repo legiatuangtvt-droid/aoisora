@@ -1,5 +1,5 @@
 ﻿﻿import { fetchInitialData, changeWeek, setViewStartDate, allEmployees, currentScheduleData, updateTaskStatus } from './daily-schedule-logic.js';
-import { renderWeekControls, createStoreFilter, showLoadingSpinner, updateTimeIndicator, triggerCompletionEffects } from './daily-schedule-ui.js';
+import { renderWeekControls, createStoreFilter, showLoadingSpinner, updateTimeIndicator, triggerCompletionEffects, startAttentionAnimationInterval } from './daily-schedule-ui.js';
 import { formatDate, getMonday } from './utils.js';
 
 let domController = null;
@@ -149,6 +149,11 @@ export function cleanup() {
         window.currentScheduleUnsubscribe();
         window.currentScheduleUnsubscribe = null;
     }
+    // Dừng interval của animation
+    if (window.attentionInterval) {
+        clearInterval(window.attentionInterval);
+        window.attentionInterval = null;
+    }
 }
 
 export async function init() {
@@ -188,6 +193,9 @@ export async function init() {
     // Gắn listener cho các nút điều khiển tuần
     document.getElementById('prev-week-btn')?.addEventListener('click', () => changeWeek(-1), { signal });
     document.getElementById('next-week-btn')?.addEventListener('click', () => changeWeek(1), { signal });
+
+    // Bắt đầu interval cho animation
+    startAttentionAnimationInterval(() => currentScheduleData);
 
     // --- SỬ DỤNG EVENT DELEGATION CHO TOÀN BỘ LƯỚI ---
     const gridContainer = document.getElementById('schedule-grid-container');

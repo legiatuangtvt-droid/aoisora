@@ -992,3 +992,19 @@ html, body {
         transition: transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
     }
 }
+/* Thêm vào tệp CSS chung của bạn */
+
+@keyframes jump-animation {
+  0%, 100% {
+    transform: translateY(0);
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  }
+  50% {
+    transform: translateY(-8px);
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  }
+}
+
+.task-attention {
+  animation: jump-animation 1.5s ease-in-out infinite;
+}
