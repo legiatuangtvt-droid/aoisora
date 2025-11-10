@@ -43,14 +43,14 @@ async function renderTaskSummaryTable(container) {
         table.innerHTML = `
             <thead>
                 <tr>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider"></th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Mon</th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Tue</th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Wed</th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Thu</th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Fri</th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Sat</th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Sun</th>
+                    <th class="px-5 py-3 border border-black bg-gray-100 text-center text-xs font-bold text-gray-600 uppercase tracking-wider"></th>
+                    <th class="px-5 py-3 border border-black bg-gray-100 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Mon</th>
+                    <th class="px-5 py-3 border border-black bg-gray-100 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Tue</th>
+                    <th class="px-5 py-3 border border-black bg-gray-100 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Wed</th>
+                    <th class="px-5 py-3 border border-black bg-gray-100 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Thu</th>
+                    <th class="px-5 py-3 border border-black bg-gray-100 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Fri</th>
+                    <th class="px-5 py-3 border border-black bg-gray-100 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Sat</th>
+                    <th class="px-5 py-3 border border-black bg-gray-100 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Sun</th>
                 </tr>
             </thead>
             <tbody>
@@ -73,8 +73,11 @@ async function renderTaskSummaryTable(container) {
 
         // Thêm dòng Model
         const modelRow = document.createElement('tr');
-        modelRow.innerHTML = `<td class="px-5 py-3 border border-black bg-white text-sm font-bold text-center">Model</td>` +
-            days.map(() => `<td class="px-5 py-3 border border-black bg-white text-sm text-center"></td>`).join('');
+        modelRow.innerHTML = `<td class="px-5 py-3 border border-black bg-white text-sm font-bold text-center">Model</td>`+
+            days.map((date, index) => {
+                const modelTotal = Object.values(modelData).reduce((sum, groupData) => sum + groupData[index], 0);
+                return `<td class="px-5 py-3 border border-black bg-white text-sm text-center font-bold">${modelTotal}</td>`;
+            }).join('');
         tbody.appendChild(modelRow);
 
         // Thêm dòng DWS
