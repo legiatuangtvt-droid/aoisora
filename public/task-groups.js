@@ -536,6 +536,14 @@ function injectAddTaskModal() {
                             <input type="text" id="add-task-name" name="name" required class="form-input" placeholder="Ví dụ: Lau sàn khu vực A">
                         </div>
                         <div class="form-group">
+                            <label for="add-task-type">Loại Task <span class="text-red-500">*</span></label>
+                            <select id="add-task-type" name="typeTask" required class="form-input">
+                                <option value="Product">Product (P)</option>
+                                <option value="Fixed">Fixed (F)</option>
+                                <option value="CTM">CTM</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label for="add-task-order">Thứ tự (Order) <span class="text-red-500">*</span></label>
                             <input type="number" id="add-task-order" name="order" required class="form-input" min="1" placeholder="Ví dụ: 1, 2, 3...">
                         </div>
@@ -605,6 +613,7 @@ async function handleAddTaskSubmit(e) {
     const groupCode = form.elements.groupCode.value;
     const taskName = form.elements.name.value.trim();
     const taskOrder = parseInt(form.elements.order.value, 10);
+    const typeTask = form.elements.typeTask.value;
     const frequency = form.elements.frequency.value;
     const manualNumber = form.elements.manual_number.value.trim();
     const manualLink = form.elements.manual_link.value.trim();
@@ -618,6 +627,7 @@ async function handleAddTaskSubmit(e) {
     const newTask = {
         name: taskName,
         order: taskOrder,
+        typeTask: typeTask,
         frequency: frequency,
         manual_number: manualNumber || null,
         manual_link: manualLink || ''
@@ -808,6 +818,15 @@ function injectEditTaskModal() {
                             <input type="text" id="edit-task-name" name="name" required class="form-input">
                         </div>
                         <div class="form-group">
+                            <label for="edit-task-type">Loại Task <span class="text-red-500">*</span></label>
+                            <select id="edit-task-type" name="typeTask" required class="form-input">
+                                <option value="">-- Chọn loại --</option>
+                                <option value="Product">Product (P)</option>
+                                <option value="Fixed">Fixed (F)</option>
+                                <option value="CTM">CTM</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label for="edit-task-order">Thứ tự (Order) <span class="text-red-500">*</span></label>
                             <input type="number" id="edit-task-order" name="order" required class="form-input" min="1">
                         </div>
@@ -875,6 +894,7 @@ async function showEditTaskModal(groupCode, taskOrder) {
                 document.getElementById('edit-task-original-order').value = taskToEdit.order;
                 document.getElementById('edit-task-name').value = taskToEdit.name;
                 document.getElementById('edit-task-order').value = taskToEdit.order;
+                document.getElementById('edit-task-type').value = taskToEdit.typeTask || '';
                 document.getElementById('edit-task-frequency').value = taskToEdit.frequency || 'Daily';
                 document.getElementById('edit-task-manual-number').value = taskToEdit.manual_number || '';
                 document.getElementById('edit-task-manual-link').value = taskToEdit.manual_link || '';
@@ -904,6 +924,7 @@ async function handleEditTaskSubmit(e) {
     const originalOrder = parseInt(form.elements.originalOrder.value, 10);
     const newName = form.elements.name.value.trim();
     const newOrder = parseInt(form.elements.order.value, 10);
+    const newTypeTask = form.elements.typeTask.value;
     const newFrequency = form.elements.frequency.value;
     const newManualNumber = form.elements.manual_number.value.trim();
     const newManualLink = form.elements.manual_link.value.trim();
@@ -944,6 +965,7 @@ async function handleEditTaskSubmit(e) {
             ...taskToUpdate, // Kế thừa tất cả thuộc tính của task gốc
             name: newName,
             order: newOrder,
+            typeTask: newTypeTask,
             frequency: newFrequency,
             manual_number: newManualNumber || null,
             manual_link: newManualLink || ''

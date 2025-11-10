@@ -40,7 +40,7 @@ async function listenForTaskChanges() {
  * @param {number} startIndex - Chỉ số bắt đầu để tính STT.
  */
 function renderTaskList(tasks, startIndex) {
-    const listElement = document.getElementById('re-task-list'); // Giữ nguyên ID
+    const listElement = document.getElementById('re-task-list');
     if (!listElement) return;
 
     listElement.innerHTML = ''; // Xóa nội dung cũ
@@ -57,6 +57,7 @@ function renderTaskList(tasks, startIndex) {
         row.innerHTML = `
             <td class="td-main text-sm text-center border-l border-gray-200">${startIndex + index + 1}</td>
             <td class="td-main text-sm text-center border-l border-gray-200">${task.groupCode || ''}</td> 
+            <td class="td-main text-sm text-center border-l border-gray-200">${task.typeTask || ''}</td>
             <td class="td-main text-sm text-left font-semibold border-l border-gray-200">${task.name || ''}</td>
             <td class="td-main text-sm text-center border-l border-gray-200">${task.frequency || ''}</td>
             <td class="td-main text-sm text-center border-l border-gray-200">${task.frequencyNumber || ''}</td>
@@ -155,6 +156,7 @@ function openTaskModal(task = null) {
         submitButton.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Cập nhật';
 
         document.getElementById('task-group-code').value = task.groupCode || '';
+        document.getElementById('task-type').value = task.typeTask || '';
         document.getElementById('task-name').value = task.name || '';        
         document.getElementById('task-frequency').value = task.frequency || '';        
         document.getElementById('task-frequency-number').value = task.frequencyNumber || '';
@@ -217,6 +219,7 @@ async function handleFormSubmit(e) {
 
         // Cập nhật các trường của task
         tasks[taskIndex].name = document.getElementById('task-name').value;
+        tasks[taskIndex].typeTask = document.getElementById('task-type').value;
         tasks[taskIndex].frequency = document.getElementById('task-frequency').value;
         tasks[taskIndex].frequencyNumber = document.getElementById('task-frequency-number').value;
         tasks[taskIndex].reUnit = document.getElementById('task-re-unit').value;
@@ -314,13 +317,14 @@ export function init() {
             const taskData = {
                 id: taskId,
                 groupCode: row.cells[1].textContent,
-                name: row.cells[2].textContent,
-                frequency: row.cells[3].textContent,                
-                frequencyNumber: row.cells[4].textContent,
-                reUnit: row.cells[5].textContent,
-                manual_number: row.cells[6].textContent,
-                manualLink: row.cells[7].textContent,
-                note: row.cells[8].textContent,
+                typeTask: row.cells[2].textContent,
+                name: row.cells[3].textContent,
+                frequency: row.cells[4].textContent,                
+                frequencyNumber: row.cells[5].textContent,
+                reUnit: row.cells[6].textContent,
+                manual_number: row.cells[7].textContent,
+                manualLink: row.cells[8].textContent,
+                note: row.cells[9].textContent,
             };
             openTaskModal(taskData);
         }

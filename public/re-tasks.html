@@ -46,6 +46,7 @@
                             <tr>
                                 <th class="th-main text-sm border-l border-gray-200">STT</th>
                                 <th class="th-main text-sm border-l border-gray-200">Group</th>
+                                <th class="th-main text-sm border-l border-gray-200">Type Task</th>
                                 <th class="th-main text-sm border-l border-gray-200">Task Name</th>
                                 <th class="th-main text-sm border-l border-gray-200">Frequency Type</th>
                                 <th class="th-main text-sm border-l border-gray-200">Frequency Number</th>
@@ -116,6 +117,14 @@
                             <div class="form-group">
                                 <label for="task-name" class="form-label">Task Name(*)</label>
                                 <input type="text" id="task-name" required class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label for="task-type" class="form-label">Type Task</label>
+                                <select id="task-type" class="form-select">
+                                    <option value="Product">Product (P)</option>
+                                    <option value="Fixed">Fixed (F)</option>
+                                    <option value="CTM">CTM</option>
+                                </select>
                             </div>
                             <div class="form-group">
                                 <label for="task-frequency" class="form-label">Frequency Type</label>
