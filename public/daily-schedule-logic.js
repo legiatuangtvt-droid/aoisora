@@ -1,6 +1,6 @@
 import { db } from './firebase.js';
 import { collection, onSnapshot, query, where, getDocs, doc, getDoc, runTransaction, increment } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
-import { renderScheduleGrid, renderWeekControls, createStoreFilter, showLoadingSpinner, triggerCompletionEffects, setIsInitialLoad } from './daily-schedule-ui.js';
+import { renderScheduleGrid, renderWeekControls, createStoreFilter, showLoadingSpinner, triggerCompletionEffects, setIsInitialLoad, startAttentionAnimationInterval } from './daily-schedule-ui.js';
 import { formatDate, getMonday, timeToMinutes } from './utils.js';
 
 export let viewStartDate = new Date(); // Ngày đầu tiên của tuần đang xem (Thứ 2)
@@ -160,6 +160,12 @@ export function listenForScheduleChanges(dateString) {
                 return orderA - orderB;
             });
         }
+        // Khởi động interval animation sau khi render lần đầu tiên
+        if (window.isFirstLoad) {
+            startAttentionAnimationInterval(() => currentScheduleData);
+            window.isFirstLoad = false; // Đặt lại cờ
+        }
+
         renderScheduleGrid();
     }, (error) => {
         console.error("Lỗi khi lắng nghe thay đổi lịch làm việc: ", error);

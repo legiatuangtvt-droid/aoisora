@@ -194,9 +194,6 @@ export async function init() {
     document.getElementById('prev-week-btn')?.addEventListener('click', () => changeWeek(-1), { signal });
     document.getElementById('next-week-btn')?.addEventListener('click', () => changeWeek(1), { signal });
 
-    // Bắt đầu interval cho animation
-    startAttentionAnimationInterval(() => currentScheduleData);
-
     // --- SỬ DỤNG EVENT DELEGATION CHO TOÀN BỘ LƯỚI ---
     const gridContainer = document.getElementById('schedule-grid-container');
     if (gridContainer) {

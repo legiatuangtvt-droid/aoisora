@@ -304,6 +304,9 @@ export function renderScheduleGrid() {
     container.innerHTML = '';
     container.appendChild(table);
 
+    // Áp dụng hiệu ứng chú ý ngay sau khi render xong
+    applyAttentionAnimation(() => currentScheduleData);
+
     // --- HIGHLIGHT CURRENT TIME SLOT ---
     // Xác định quarter tại thời điểm hiện tại
     const now = new Date();
@@ -615,12 +618,12 @@ function applyAttentionAnimation(getCurrentScheduleData) {
  * Bắt đầu một interval để cập nhật hiệu ứng chú ý cho các task.
  */
 export function startAttentionAnimationInterval(getCurrentScheduleData) {
-    // Dừng interval cũ nếu có
+    // Dừng interval cũ nếu có để tránh chạy nhiều lần
     if (attentionInterval) {
         clearInterval(attentionInterval);
     }
-    // Chạy lần đầu ngay lập tức
-    applyAttentionAnimation(getCurrentScheduleData);
+    // Chạy lần đầu ngay lập tức (đã được chuyển vào renderScheduleGrid)
+    // applyAttentionAnimation(getCurrentScheduleData);
     // Thiết lập interval chạy mỗi phút
     attentionInterval = setInterval(() => applyAttentionAnimation(getCurrentScheduleData), 60 * 1000);
 }

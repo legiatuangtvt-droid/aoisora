@@ -86,7 +86,6 @@ import { loadLayoutComponents } from './layout-loader.js';
 
 let allStores = [];
 let allRoles = [];
-let allEmployees = []; // Thêm biến để lưu tất cả nhân viên
 
 /**
  * Tải danh sách tất cả cửa hàng từ Firestore.
@@ -109,18 +108,6 @@ async function fetchRoles() {
         allRoles = rolesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (error) {
         console.error("Bootstrapper: Lỗi khi tải dữ liệu vai trò.", error);
-    }
-}
-
-/**
- * Tải danh sách tất cả nhân viên từ Firestore.
- */
-async function fetchEmployees() {
-    try {
-        const employeesSnapshot = await getDocs(collection(db, 'employee'));
-        allEmployees = employeesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    } catch (error) {
-        console.error("Bootstrapper: Lỗi khi tải dữ liệu nhân viên.", error);
     }
 }
 
@@ -159,6 +146,7 @@ function updateHeaderUserInfo(user) {
 async function bootstrapApp() {
     // Khởi tạo biến toàn cục để lưu thông tin người dùng hiện tại
     window.currentUser = null;
+    window.isFirstLoad = true; // Khởi tạo cờ cho animation
     const SIMULATED_USER_STORAGE_KEY = 'simulatedUser';
     
     // Đọc thông tin người dùng mô phỏng từ localStorage
@@ -177,8 +165,7 @@ async function bootstrapApp() {
     // Tải song song dữ liệu cửa hàng và vai trò để tăng tốc độ
     await Promise.all([
         fetchStores(),
-        fetchRoles(),
-        fetchEmployees() // Thêm fetchEmployees vào đây
+        fetchRoles()
     ]);
 
     // Nếu không có người dùng mô phỏng, mặc định là Admin
@@ -188,11 +175,6 @@ async function bootstrapApp() {
     // Nếu có người dùng, gắn thêm thông tin `level` vào
     else if (window.currentUser.roleId) {
         const userRoleData = allRoles.find(role => role.id === window.currentUser.roleId);
-        const fullEmployeeData = allEmployees.find(emp => emp.id === window.currentUser.id);
-        if (fullEmployeeData) {
-            // Gộp thông tin đầy đủ từ Firestore vào currentUser
-            window.currentUser = { ...window.currentUser, ...fullEmployeeData };
-        }
         window.currentUser.level = userRoleData ? userRoleData.level : 0; // Mặc định level 0 nếu không tìm thấy
     }
 
