@@ -189,18 +189,17 @@ export async function init() {
     createStoreFilter();
 
     // Gắn listener cho các nút điều khiển tuần
-    document.getElementById('prev-week-btn')?.addEventListener('click', () => changeWeek(-1), { signal });
-    document.getElementById('next-week-btn')?.addEventListener('click', () => changeWeek(1), { signal });
+    document.getElementById('prev-week-btn')?.addEventListener('click', () => changeWeek(-1), { signal });    document.getElementById('next-week-btn')?.addEventListener('click', () => changeWeek(1), { signal });
 
     // Gắn listener cho nút Check Task
-    document.getElementById('check-task-btn')?.addEventListener('click', () => {
-        const checkTaskBtn = document.getElementById('check-task-btn');
-        if (checkTaskBtn && checkTaskBtn.classList.contains('dws-active')) {
-            revertToMainSchedule();
-        } else {
-            initializeCheckTaskView();
-        }
-    }, { signal });
+    const checkTaskBtn = document.getElementById('check-task-btn');
+    if (window.currentUser?.roleId === 'STAFF') {
+        if (checkTaskBtn) checkTaskBtn.style.display = 'none';
+    } else if (checkTaskBtn) {
+        checkTaskBtn.addEventListener('click', () => {
+            if (checkTaskBtn.classList.contains('dws-active')) { revertToMainSchedule(); } else { initializeCheckTaskView(); }
+        }, { signal });
+    }
 
     // --- SỬ DỤNG EVENT DELEGATION CHO TOÀN BỘ LƯỚI ---
     const gridContainer = document.getElementById('schedule-grid-container');
