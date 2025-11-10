@@ -1,6 +1,6 @@
 import { db } from './firebase.js';
 import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
-import "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+import "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"; // This is a global import
 import "https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js";
 
 // Biến để lưu trữ dữ liệu và các view
@@ -8,6 +8,8 @@ let allGroupedTasks = [];
 let menuContainer = null; // Biến toàn cục cho container chính
 let groupTabsContainer, taskGridContainer;
 let isStateLoaded = false; // Cờ để kiểm tra xem state từ localStorage đã được tải chưa
+let typeTabsContainer = null; // NEW: Container cho các tab loại task
+let currentFilters = { groupId: null, typeTask: 'All' }; // NEW: State để quản lý bộ lọc
 let taskLibraryController = null;
 
 // Bảng màu mặc định nếu group không có màu
@@ -71,8 +73,8 @@ function renderGroupTabs() {
                 searchInput.value = '';
             }
             // Thêm active class cho tab được click
-            tab.classList.add('active');
-            renderTaskGridForGroup(group.id);
+            currentFilters.groupId = group.id;
+            renderTaskGrid();
         });
         groupTabsContainer.appendChild(tab);
     });
@@ -84,15 +86,66 @@ function renderGroupTabs() {
 }
 
 /**
- * Render lưới các task cho một nhóm cụ thể ở khu vực bên phải.
- * @param {string} groupId - ID của nhóm cần hiển thị task.
+ * Render các tab lọc theo loại task (Product, Fixed, CTM).
  */
-function renderTaskGridForGroup(groupId) {
+function renderTypeTaskTabs() {
+    if (!typeTabsContainer) return;
+    // Thêm style cho container của tab loại task
+    typeTabsContainer.className = 'flex-shrink-0 w-28 bg-slate-50 border-l border-slate-200 p-2 flex flex-col gap-2 overflow-y-auto';
+ 
+    const types = [
+        { id: 'All', name: 'Tất cả' },
+        { id: 'Product', name: 'Product (P)' },
+        { id: 'Fixed', name: 'Fixed (F)' },
+        { id: 'CTM', name: 'CTM' }
+    ];
+ 
+    // Thay đổi HTML để giống với tab nhóm
+    typeTabsContainer.innerHTML = types.map(type => {
+        const shortName = type.id === 'All' ? 'Tất cả' : type.id;
+        return `
+            <button class="type-task-tab flex flex-col items-center justify-center w-full h-16 p-1 rounded-lg border-2 border-transparent shadow-sm cursor-pointer transition-all duration-200" data-type="${type.id}" title="${type.name}">
+                <span class="font-bold text-lg">${shortName}</span>
+            </button>
+        `;
+    }).join('');
+
+    // Gắn sự kiện click
+    typeTabsContainer.querySelectorAll('.type-task-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            currentFilters.typeTask = tab.dataset.type;
+            renderTaskGrid();
+        });
+    });
+
+    // Kích hoạt tab mặc định
+    updateActiveTypeTab();
+}
+
+/**
+ * Cập nhật trạng thái active cho các tab loại task.
+ */
+function updateActiveTypeTab() {
+    if (!typeTabsContainer) return;
+    typeTabsContainer.querySelectorAll('.type-task-tab').forEach(tab => {
+        const isActive = tab.dataset.type === currentFilters.typeTask;
+        tab.classList.toggle('bg-indigo-100', isActive);
+        tab.classList.toggle('text-indigo-800', isActive);
+        tab.classList.toggle('border-indigo-400', isActive);
+        tab.classList.toggle('bg-white', !isActive);
+        tab.classList.toggle('text-slate-700', !isActive);
+        tab.classList.toggle('hover:bg-slate-100', !isActive);
+    });
+}
+
+/**
+ * Render lưới các task cho một nhóm cụ thể ở khu vực bên phải.
+ */
+function renderTaskGrid() {
     if (!taskGridContainer) return;
 
-    const group = allGroupedTasks.find(g => g.id === groupId);
+    const group = allGroupedTasks.find(g => g.id === currentFilters.groupId);
     if (!group) {
-        console.error(`Không tìm thấy nhóm với ID: ${groupId}`);
         taskGridContainer.innerHTML = '<p class="text-center text-red-500">Lỗi: Không tìm thấy nhóm.</p>';
         return;
     }
@@ -101,9 +154,16 @@ function renderTaskGridForGroup(groupId) {
 
     const searchTerm = document.getElementById('task-library-search')?.value.toLowerCase() || '';
 
-    const filteredTasks = searchTerm
-        ? group.tasks.filter(task => task.name.toLowerCase().includes(searchTerm))
-        : group.tasks;
+    let filteredTasks = group.tasks;
+
+    // Lọc theo loại task
+    if (currentFilters.typeTask !== 'All') {
+        filteredTasks = filteredTasks.filter(task => task.typeTask === currentFilters.typeTask);
+    }
+    // Lọc theo từ khóa tìm kiếm
+    if (searchTerm) {
+        filteredTasks = filteredTasks.filter(task => task.name.toLowerCase().includes(searchTerm));
+    }
 
     if (filteredTasks.length > 0) {
         // Sắp xếp task theo 'order' trước khi render
@@ -152,6 +212,9 @@ function renderTaskGridForGroup(groupId) {
             : 'Không có công việc trong nhóm này.';
         taskGridContainer.innerHTML = `<p class="text-sm text-gray-500 text-center mt-4 col-span-full">${message}</p>`;
     }
+
+    // Cập nhật trạng thái active cho tab loại task
+    updateActiveTypeTab();
 }
 
 /**
@@ -241,9 +304,10 @@ export async function initializeTaskLibrary() {
                 </div>
             </div>
         </div>
-        <div class="task-library-body opacity-0 invisible flex">
+        <div class="task-library-body opacity-0 invisible flex flex-row">
             <div id="group-tabs-container" class="flex-shrink-0"></div>
             <div id="task-grid-container" class="flex-grow"></div>
+            <div id="type-tabs-container" class="flex-shrink-0"></div>
         </div>
     `;
     document.body.appendChild(menuContainer);
@@ -254,6 +318,7 @@ export async function initializeTaskLibrary() {
     const taskLibraryToggleArea = menuContainer.querySelector('.task-library-toggle-area');
     groupTabsContainer = menuContainer.querySelector('#group-tabs-container');
     taskGridContainer = menuContainer.querySelector('#task-grid-container');
+    typeTabsContainer = menuContainer.querySelector('#type-tabs-container');
 
     // Đặt vị trí mặc định ngay khi khởi tạo
     setDefaultPosition();
@@ -262,6 +327,7 @@ export async function initializeTaskLibrary() {
     try {
         allGroupedTasks = await fetchAndGroupTasks();
         renderGroupTabs();
+        renderTypeTaskTabs();
     } catch (error) {
         console.error("Lỗi khi tải thư viện công việc:", error);
         groupTabsContainer.innerHTML = '<p class="p-2 text-center text-xs text-red-500">Lỗi tải.</p>';
@@ -281,8 +347,8 @@ export async function initializeTaskLibrary() {
     searchInput.addEventListener('input', () => {
         const activeTab = groupTabsContainer.querySelector('.group-tab.active');
         if (activeTab) {
-            const groupId = activeTab.dataset.groupId;
-            renderTaskGridForGroup(groupId);
+            currentFilters.groupId = activeTab.dataset.groupId;
+            renderTaskGrid();
         }
     });
 
