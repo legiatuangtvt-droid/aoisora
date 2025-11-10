@@ -24,16 +24,22 @@
             <!-- Container cho các bộ lọc, sẽ được JS di chuyển vào header nếu cần -->
             <div id="page-filters-container" class="mb-4 flex items-center justify-between">
                 <div id="store-filter-container"></div> <!-- Container riêng cho bộ lọc cửa hàng -->
-                <!-- Bộ chọn tuần và ngày (đã gộp lại) -->
-                <div id="daily-schedule-controls" class="flex items-center ml-auto">
-                    <div class="flex items-center rounded-md shadow-sm ring-1 ring-inset ring-gray-300 divide-x divide-gray-300">
-                        <button id="prev-week-btn" class="btn-base p-2 h-9 w-9 flex items-center justify-center rounded-l-md text-gray-600 hover:bg-gray-50" title="Tuần trước">
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-                        <!-- Các nút ngày sẽ được JS render vào đây -->
-                        <button id="next-week-btn" class="btn-base p-2 h-9 w-9 flex items-center justify-center rounded-r-md text-gray-600 hover:bg-gray-50" title="Tuần sau">
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
+                               
+                <!-- Nhóm các nút điều khiển bên phải -->
+                <div class="flex items-center gap-4 ml-auto">
+                    <!-- Nút Check Task mới -->
+                    <button id="check-task-btn" class="btn bg-blue-400 text-white rounded-md border border-black">Check Task</button>
+                    <!-- Bộ chọn tuần và ngày -->
+                    <div id="daily-schedule-controls" class="flex items-center">
+                        <div class="flex items-center rounded-md shadow-sm ring-1 ring-inset ring-gray-300 divide-x divide-gray-300">
+                            <button id="prev-week-btn" class="btn-base p-2 h-9 w-9 flex items-center justify-center rounded-l-md text-gray-600 hover:bg-gray-50" title="Tuần trước">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <!-- Các nút ngày sẽ được JS render vào đây -->
+                            <button id="next-week-btn" class="btn-base p-2 h-9 w-9 flex items-center justify-center rounded-r-md text-gray-600 hover:bg-gray-50" title="Tuần sau">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
