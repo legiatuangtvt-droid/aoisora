@@ -1,4 +1,4 @@
-import { db } from '../firebase.js';
+import { db } from './firebase.js';
 import { collection, getDocs, addDoc, query, where } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 // --- Firestore Logic (Thay thế cho check_lists.php) ---
