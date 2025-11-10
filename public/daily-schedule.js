@@ -171,22 +171,16 @@ export async function init() {
     showLoadingSpinner();
     await fetchInitialData();
 
-    // Khởi tạo ngày bắt đầu của tuần là thứ 2 của tuần hiện tại
+    // Khởi tạo ngày bắt đầu của tuần là thứ 2 của tuần chứa ngày được chọn (hoặc hôm nay)
     setViewStartDate(getMonday(initialDate));
     updateTimeIndicator();
 
-    // Render bộ điều khiển tuần
-    renderWeekControls(formatDate(initialDate)); // Truyền ngày được chọn (hoặc hôm nay) để active ban đầu
-
-    // Tự động chọn ngày hôm nay khi khởi tạo
-    const todayString = formatDate(new Date());
-    const todayButton = document.querySelector(`.day-selector-btn[data-date="${todayString}"]`);
-    if (todayButton) {
-        todayButton.classList.add('active');
-    }
+    // Render bộ điều khiển tuần, active ngày được chọn
+    renderWeekControls(formatDate(initialDate));
 
     // Tạo bộ lọc cửa hàng, hàm này sẽ tự động gọi listenForScheduleChanges
-    createStoreFilter();
+    // Truyền initialDate vào để đảm bảo ngày đúng được tải ngay từ đầu
+    createStoreFilter(formatDate(initialDate));
 
     // Gắn listener cho các nút điều khiển tuần
     document.getElementById('prev-week-btn')?.addEventListener('click', () => changeWeek(-1), { signal });    document.getElementById('next-week-btn')?.addEventListener('click', () => changeWeek(1), { signal });

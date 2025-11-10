@@ -203,25 +203,22 @@ export function changeWeek(direction) {
  * Chuyển sang ngày khác trong tuần.
  * @param {string} dateString - Ngày được chọn (YYYY-MM-DD).
  */
-export function changeDay(dateString) {
+export function changeDay(dateString, isInitialLoad = false) {
     setIsInitialLoad(true); // Reset cờ khi người dùng chủ động chuyển ngày
     const todayString = formatDate(new Date());
 
     document.querySelectorAll('.day-selector-btn').forEach(btn => {
         const btnDate = btn.dataset.date;
-        const isToday = btnDate === todayString;
         const isActive = btnDate === dateString;
 
         // 1. Reset tất cả các style cũ
         btn.classList.remove('bg-indigo-600', 'text-white', 'hover:bg-indigo-700', 'border-b-2', 'border-indigo-500', 'active');
         btn.classList.add('hover:bg-gray-100');
 
-        // 2. Áp dụng style mới dựa trên trạng thái
+        // 2. Áp dụng style mới
         if (isActive) {
             btn.classList.add('active', 'bg-indigo-600', 'text-white', 'hover:bg-indigo-700');
             btn.classList.remove('hover:bg-gray-100');
-        } else if (isToday) {
-            btn.classList.add('border-b-2', 'border-indigo-500');
         }
     });
     // Tải lịch cho ngày mới

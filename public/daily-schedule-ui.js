@@ -498,18 +498,18 @@ export function renderWeekControls(activeDate) {
 /**
  * Tạo và điền dữ liệu cho bộ lọc cửa hàng.
  */
-export function createStoreFilter() {
+export function createStoreFilter(initialDateString) {
     const container = document.getElementById('store-filter-container');
     if (!container) return;
     
     const currentUser = window.currentUser;
+    const dateToLoad = initialDateString || formatDate(new Date());
 
     if (currentUser && (
         currentUser.roleId === 'STAFF' || 
         currentUser.roleId === 'STORE_LEADER_G2' || 
         currentUser.roleId === 'STORE_LEADER_G3'
     )) {
-        // --- LOGIC CHO NHÂN VIÊN ---
         const staffStore = allStores.find(s => s.id === currentUser.storeId);
         if (staffStore) {
             // Hiển thị tên cửa hàng nhưng không cho phép thay đổi
@@ -522,12 +522,11 @@ export function createStoreFilter() {
                 </div>
             `;
             // Tự động tải lịch cho cửa hàng của nhân viên
-            changeDay(document.querySelector('.day-selector-btn.active')?.dataset.date);
+            changeDay(dateToLoad, true);
         } else {
             container.innerHTML = `<div class="flex-1 max-w-xs text-sm text-gray-500">Bạn chưa được gán vào cửa hàng nào.</div>`;
         }
     } else {
-        // --- LOGIC CHO ADMIN VÀ QUẢN LÝ (như cũ) ---
         const accessibleStoreIds = [...new Set(allEmployees.map(emp => emp.storeId).filter(Boolean))];
         const accessibleStores = allStores
             .filter(store => accessibleStoreIds.includes(store.id))
@@ -549,12 +548,12 @@ export function createStoreFilter() {
         
         const storeFilter = document.getElementById('store-filter');
         storeFilter?.addEventListener('change', () => {
-            const selectedDate = document.querySelector('.day-selector-btn.active')?.dataset.date;
-            changeDay(selectedDate);
+            const selectedDate = document.querySelector('.day-selector-btn.active')?.dataset.date || dateToLoad;
+            changeDay(selectedDate, false);
         });
 
         // Tải lịch cho cửa hàng đầu tiên trong danh sách
-        changeDay(document.querySelector('.day-selector-btn.active')?.dataset.date);
+        changeDay(dateToLoad, true);
     }
 }
 //#endregion
