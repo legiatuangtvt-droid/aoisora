@@ -140,7 +140,30 @@ export function renderScheduleGrid() {
     
     // First header row: Man-hours
     const manhourRow = document.createElement('tr');
-    manhourRow.innerHTML = `<th rowspan="2" class="p-2 border border-slate-200 w-40 min-w-40 sticky left-0 bg-slate-100 z-30">Nhân viên</th>`;
+
+    // Calculate overall store completion rate
+    let overallTotalTasks = 0;
+    let overallCompletedTasks = 0;
+    currentScheduleData.forEach(schedule => {
+        (schedule.tasks || []).forEach(task => {
+            overallTotalTasks++;
+            if (task.isComplete === 1) {
+                overallCompletedTasks++;
+            }
+        });
+    });
+    const overallCompletionRate = overallTotalTasks > 0 ? Math.round((overallCompletedTasks / overallTotalTasks) * 100) : 0;
+
+    manhourRow.innerHTML = `
+        <th rowspan="2" class="p-2 border border-slate-200 w-48 min-w-48 sticky left-0 bg-slate-100 z-30">
+            <div class="relative w-full h-full flex items-center justify-center" title="Tỷ lệ hoàn thành của cửa hàng">
+                <svg class="w-10 h-10" viewBox="0 0 36 36">
+                    <path class="stroke-slate-300" stroke-width="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                    <path class="stroke-indigo-500" stroke-width="4" fill="none" stroke-dasharray="${overallCompletionRate}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center text-xs font-bold text-indigo-600">${overallCompletionRate}%</div>
+            </div>
+        </th>`;
     for (let h = 5; h <= 23; h++) {
         const hourKey = String(h).padStart(2, '0');
         const manhours = hourlyManhours.get(hourKey) || 0;
