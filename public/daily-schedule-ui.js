@@ -1,6 +1,5 @@
-import { allEmployees, allStores, allAreas, allRegions, allTaskGroups, dailyTemplate, allWorkPositions, currentScheduleData, allShiftCodes, viewStartDate } from './daily-schedule-logic.js';
-import { formatDate, getMonday, timeToMinutes } from './utils.js';
-import { changeDay, changeWeek } from './daily-schedule-logic.js';
+import { allEmployees, allStores, allTaskGroups, allWorkPositions, currentScheduleData, allShiftCodes, viewStartDate, changeDay } from './daily-schedule-logic.js';
+import { formatDate, timeToMinutes } from './utils.js';
 
 let isInitialLoad = true;
 
