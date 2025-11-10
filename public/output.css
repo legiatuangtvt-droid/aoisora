@@ -3580,8 +3580,8 @@ html, body {
   opacity: 1;
   pointer-events: none;
   text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  /* Animation bay lên và mờ dần trong 2 giây */
-  animation: fly-up-and-fade 2s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+  /* Animation bay lên và mờ dần trong 5 giây */
+  animation: fly-up-and-fade 5s cubic-bezier(0.3, 0.2, 0.1, 1) forwards;
 }
 
 @keyframes fly-up-and-fade {
