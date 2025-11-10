@@ -1,8 +1,6 @@
-﻿﻿﻿﻿import { db } from './firebase.js';
-import { collection, runTransaction, increment, doc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
-import { fetchInitialData, listenForScheduleChanges, changeWeek, changeDay, viewStartDate, setViewStartDate, allEmployees, currentScheduleData } from './daily-schedule-logic.js';
+﻿﻿import { fetchInitialData, changeWeek, setViewStartDate, allEmployees, currentScheduleData, updateTaskStatus } from './daily-schedule-logic.js';
 import { renderWeekControls, createStoreFilter, showLoadingSpinner, updateTimeIndicator, triggerCompletionEffects } from './daily-schedule-ui.js';
-import { formatDate, getMonday, timeToMinutes } from './utils.js';
+import { formatDate, getMonday } from './utils.js';
 
 let domController = null;
 
@@ -141,8 +139,6 @@ async function handleTaskClick(event) {
         }, 500);
     }
 }
-
-import { updateTaskStatus } from './daily-schedule-logic.js';
 
 export function cleanup() {
     if (domController) {
