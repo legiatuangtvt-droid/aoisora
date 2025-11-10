@@ -108,6 +108,12 @@ export function renderScheduleGrid() {
     const container = document.getElementById('schedule-grid-container');
     if (!container) return;
 
+    // --- FIX: Lưu lại trạng thái của các hàng đang ở chế độ chỉnh sửa ---
+    const activeEmployeeIds = new Set();
+    container.querySelectorAll('tr.edit-mode-active').forEach(row => {
+        activeEmployeeIds.add(row.dataset.employeeId);
+    });
+
     hideLoadingSpinner(); // Ẩn spinner trước khi render lưới
     const timeSlots = Array.from({ length: 19 }, (_, i) => `${String(i + 5).padStart(2, '0')}:00`); // Từ 05:00 đến 23:00
 
@@ -301,6 +307,12 @@ export function renderScheduleGrid() {
     container.innerHTML = '';
     container.appendChild(table);
 
+    // --- FIX: Áp dụng lại trạng thái "chế độ chỉnh sửa" cho các hàng đã lưu ---
+    if (activeEmployeeIds.size > 0) {
+        activeEmployeeIds.forEach(employeeId => {
+            container.querySelector(`tr[data-employee-id="${employeeId}"]`)?.classList.add('edit-mode-active');
+        });
+    }
     // Áp dụng hiệu ứng chú ý ngay sau khi render xong
     applyAttentionAnimation(() => currentScheduleData);
 

@@ -123,9 +123,6 @@ async function handleTaskClick(event) {
             if (toastMessage) {
                 window.showToast(toastMessage, 'success');
             }
-            // Tự động khóa lại hàng sau khi hoàn thành
-            const row = taskItem.closest('tr');
-            row?.classList.remove('edit-mode-active');
         }
         // onSnapshot sẽ tự động cập nhật lại giao diện, không cần gọi render lại ở đây.
 
@@ -213,11 +210,7 @@ export async function init() {
 
             const row = cell.closest('tr');
             if (row) {
-                // Trước khi kích hoạt hàng mới, hãy hủy kích hoạt tất cả các hàng khác
-                document.querySelectorAll('tr.edit-mode-active').forEach(activeRow => {
-                    activeRow.classList.remove('edit-mode-active');
-                });
-                row.classList.toggle('edit-mode-active');
+                row.classList.toggle('edit-mode-active'); // Chỉ bật/tắt chế độ edit cho hàng được nhấp đúp
             }
         }, { signal });
     }
