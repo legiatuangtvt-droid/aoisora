@@ -994,6 +994,7 @@ html, body {
 }
 /* Thêm vào tệp CSS chung của bạn */
 
+/* Hiệu ứng nhảy gốc */
 @keyframes jump-animation {
   0%, 100% {
     transform: translateY(0);
@@ -1005,6 +1006,14 @@ html, body {
   }
 }
 
+/* Class gốc để áp dụng animation */
 .task-attention {
   animation: jump-animation 1.5s ease-in-out infinite;
 }
+
+/* Các class với độ trễ khác nhau */
+.task-attention-delay-1 { animation-delay: 0.1s; }
+.task-attention-delay-2 { animation-delay: 0.2s; }
+.task-attention-delay-3 { animation-delay: 0.3s; }
+.task-attention-delay-4 { animation-delay: 0.4s; }
+/* Bạn có thể thêm nhiều hơn nếu cần */

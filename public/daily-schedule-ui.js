@@ -578,9 +578,11 @@ function applyAttentionAnimation(getCurrentScheduleData) {
         return;
     }
 
+    let attentionTaskCounter = 0; // Biến đếm để áp dụng delay tuần tự
+
     allTaskItems.forEach(taskItem => {
         // Luôn xóa animation cũ để reset trạng thái
-        taskItem.classList.remove('task-attention');
+        taskItem.className = taskItem.className.replace(/\btask-attention-?\S*\b/g, '').trim();
 
         // Nếu task đã hoàn thành, bỏ qua
         if (taskItem.classList.contains('task-completed')) {
@@ -600,7 +602,10 @@ function applyAttentionAnimation(getCurrentScheduleData) {
 
         // Kiểm tra xem task có nằm trong khoảng thời gian cần chú ý không
         if (taskStartDateTime >= lowerBound && taskStartDateTime <= upperBound) {
-            taskItem.classList.add('task-attention');
+            // Áp dụng class gốc và class delay
+            const delayIndex = attentionTaskCounter % 5; // Lặp lại delay từ 0 đến 4
+            taskItem.classList.add('task-attention', `task-attention-delay-${delayIndex}`);
+            attentionTaskCounter++;
         }
     });
 }
