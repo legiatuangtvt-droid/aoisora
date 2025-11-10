@@ -64,11 +64,31 @@ async function renderTaskSummaryTable(container) {
         const modelData = {}; // Dữ liệu đã xử lý từ templates
         const dwsData = {}; // Dữ liệu đã xử lý từ schedules
 
-        // Tạo dữ liệu Model và DWS (thay thế bằng logic xử lý dữ liệu thật của bạn)
-        // Ví dụ:
+        // --- DỮ LIỆU MOCK MỚI ---
+        // Sắp xếp (Model) và Đề xuất (DWS) theo giờ
+        const mockHours = {
+            'POS':    { model: 21.00, dws: 20.25 },
+            'PERI':   { model: 13.50, dws: 13.25 },
+            'DRY':    { model: 8.75,  dws: 12.25 },
+            'MMD':    { model: 5.50,  dws: 6.00  },
+            'LEADER': { model: 5.75,  dws: 6.25  },
+            'QC-FSH': { model: 8.50,  dws: 8.75  },
+            'DELICA': { model: 2.00,  dws: 3.75  },
+            'D&D':    { model: 0.00,  dws: 2.75  },
+            'OTHER':  { model: 14.75, dws: 8.50  }
+        };
+
+        // Chuyển đổi giờ thành số lượng task (1 task = 0.25 giờ) và phân bổ cho 7 ngày
         taskGroups.forEach(group => {
-            modelData[group.code] = days.map(() => Math.floor(Math.random() * 5)); // Số ngẫu nhiên để demo
-            dwsData[group.code] = days.map(() => Math.floor(Math.random() * 5)); // Số ngẫu nhiên để demo
+            const groupHours = mockHours[group.code] || { model: 0, dws: 0 };
+            const totalModelTasks = Math.round(groupHours.model / 0.25);
+            const totalDwsTasks = Math.round(groupHours.dws / 0.25);
+
+            // Phân bổ số task cho 7 ngày một cách tương đối
+            const dailyModelTasks = Math.floor(totalModelTasks / 7);
+            const dailyDwsTasks = Math.floor(totalDwsTasks / 7);
+            modelData[group.code] = days.map((_, i) => dailyModelTasks + (i < totalModelTasks % 7 ? 1 : 0));
+            dwsData[group.code] = days.map((_, i) => dailyDwsTasks + (i < totalDwsTasks % 7 ? 1 : 0));
         });
 
         // Thêm dòng Model
