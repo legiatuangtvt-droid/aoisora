@@ -282,9 +282,6 @@ export function renderScheduleGrid() {
                     taskItem.innerHTML = `
                         <div class="task-content flex-grow flex flex-col justify-center"><span class="overflow-hidden text-ellipsis">${task.name}</span></div>
                         <span class="task-content font-semibold mt-auto">${task.taskCode}</span>
-                        <div class="task-completed-overlay absolute inset-0 flex items-center justify-center overflow-hidden pointer-events-none">
-                            <span class="completed-text-stamp">Complete</span>
-                        </div>
                     `;
                     slot.appendChild(taskItem);
                 }

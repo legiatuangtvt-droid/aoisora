@@ -869,33 +869,10 @@ html, body {
 }
 /* --- CSS cho hiệu ứng Game Hóa --- */
 
-/* Lớp phủ và icon check cho task đã hoàn thành */
-.scheduled-task-item .task-completed-overlay {
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-.scheduled-task-item.task-completed .task-completed-overlay {
-    opacity: 1;
-}
+/* Lớp phủ cho task đã hoàn thành */
 .scheduled-task-item.task-completed {
-    border-color: #22c55e; /* green-500 */
-}
-
-.scheduled-task-item.task-completed .task-content {
-    opacity: 0.6; /* Làm mờ nội dung task để chữ "Complete" nổi bật hơn */
-    transition: opacity 0.3s ease;
-}
-
-/* Dòng chữ "Complete" xoay chéo */
-.completed-text-stamp {
-    transform: rotate(-45deg);
-    font-size: 0.8rem;
-    font-weight: 500; /* extra-bold */
-    color: #22c55e; /* green-500 */
-    opacity: 0.25; /* Làm cho chữ mờ đi để không che mất nội dung chính */
-    letter-spacing: 0.05em; /* tracking-wider */
-    text-transform: uppercase;
-    user-select: none; /* Ngăn không cho người dùng chọn chữ này */
+    background-color: #fff !important; /* Luôn là màu trắng */
+    color: #1e293b !important; /* Luôn là màu chữ mặc định (slate-800) */
 }
 
 /* Hiệu ứng cộng điểm bay lên */
