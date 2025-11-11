@@ -1,6 +1,10 @@
-import { allShiftCodes, allWorkPositions, allTaskGroups } from './daily-templates-data.js';
+import { allShiftCodes, allWorkPositions, allTaskGroups, allTemplates, currentTemplateId } from './daily-templates-data.js';
 import { timeToMinutes } from './utils.js';
 import { initializeDragAndDrop } from './daily-templates.js';
+import { showTaskLibrary, hideTaskLibrary } from './task-library.js';
+import { initRELogicView } from './re-logic.js';
+
+let currentView = 'builder'; // 'builder' or 're-logic'
 import { addShiftRow } from './daily-templates-logic.js';
 import { updateTemplateFromDOM } from './daily-templates-logic.js';
 /**
