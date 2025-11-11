@@ -106,7 +106,7 @@ export function createShiftCodeDatalist() {
  * Cập nhật hiển thị khung giờ và màu sắc của dòng dựa trên mã ca được chọn.
  * @param {HTMLInputElement} selector - Input element của mã ca.
  */
-function updateShiftTimeDisplay(selector) {
+export function updateShiftTimeDisplay(selector) {
     const row = selector.closest('tr');
     if (!row) return;
 

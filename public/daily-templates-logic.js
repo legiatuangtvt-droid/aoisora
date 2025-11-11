@@ -3,7 +3,7 @@ import { collection, getDocs, query, orderBy, doc, setDoc, serverTimestamp, addD
 import { calculateREForGroup } from './re-calculator.js';
 import { showTaskLibrary } from './task-library.js';
 import { initRELogicView } from './re-logic.js';
-import { toggleTemplateBuilderLock, updateRowAppearance, renderGrid, renderPlanTracker } from './daily-templates-ui.js';
+import { toggleTemplateBuilderLock, updateRowAppearance, renderGrid, renderPlanTracker, updateShiftTimeDisplay } from './daily-templates-ui.js';
 import { allTemplates, currentTemplateId, currentMonthlyPlan, originalTemplateData, allWorkPositions, allTaskGroups, fetchAndRenderTemplates, setCurrentTemplateId, setOriginalTemplateData, loadTemplateData } from './daily-templates-data.js';
 import { initializeDragAndDrop } from './daily-templates.js';
 import { timeToMinutes, formatDate } from './utils.js';
