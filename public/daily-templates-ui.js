@@ -1,6 +1,6 @@
 import { allShiftCodes, allWorkPositions, allTaskGroups, allTemplates, currentTemplateId } from './daily-templates-data.js';
 import { timeToMinutes } from './utils.js';
-import { initializeDragAndDrop } from './daily-templates.js';
+import { initializeDragAndDrop, init } from './daily-templates.js';
 import { showTaskLibrary, hideTaskLibrary } from './task-library.js';
 import { initRELogicView } from './re-logic.js';
 
@@ -354,4 +354,9 @@ export async function toggleBuilderView() {
             showTaskLibrary();
         }
     }
+}
+
+// Hàm mới để logic file khác có thể biết view hiện tại là gì
+export function getCurrentView() {
+    return currentView;
 }

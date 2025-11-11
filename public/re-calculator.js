@@ -108,5 +108,6 @@ export function calculateREForGroup(groupInfo, reParameters) {
             totalSuggestedHours += roundUpToNearest15Minutes(taskHours);
         });
     }
+
     return totalSuggestedHours;
 }

@@ -37,9 +37,8 @@ function renderREView(allTaskGroups, reParameters) {
     const template = document.getElementById('re-accordion-item-template');
     if (!accordionContainer || !template) return;
 
+    accordionContainer.innerHTML = ''; // Xóa nội dung cũ để render lại
     const sortedTaskGroups = Object.values(allTaskGroups).sort((a, b) => (a.order || 99) - (b.order || 99));
-
-    accordionContainer.innerHTML = ''; // Xóa nội dung cũ
 
     if (sortedTaskGroups.length === 0) {
         accordionContainer.innerHTML = '<p class="text-slate-500">Không tìm thấy nhóm công việc nào.</p>';
@@ -71,6 +70,7 @@ function renderREView(allTaskGroups, reParameters) {
                     const rawHours = calculateREForTask(task, group, reParameters);
                     calculatedDailyHours = Math.ceil(rawHours * 4) / 4; // Làm tròn lên 15 phút gần nhất
                 }
+
                 return `<tr><td class="p-2 border text-center">${index + 1}</td>
                 <td class="p-2 border text-left">${task.name}</td>
                 <td class="p-2 border text-center">${task.frequency || '-'}</td>
@@ -161,7 +161,6 @@ async function saveREParameters(currentTemplateId, reParameters) {
  * @param {object} allTaskGroups - Dữ liệu các nhóm task.
  */
 export async function initRELogicView(currentTemplateId, allTemplates, allTaskGroups) {
-    // Không cần gọi processRETasks nữa
 
     let reParameters = {}; // Khởi tạo với giá trị mặc định
     let currentTemplate = null;
@@ -171,7 +170,7 @@ export async function initRELogicView(currentTemplateId, allTemplates, allTaskGr
     // Tải và hiển thị dữ liệu RE Parameters từ template hiện tại
     if (currentTemplateId) {
         currentTemplate = allTemplates.find(t => t.id === currentTemplateId);
-        if (currentTemplate && currentTemplate.reParameters) {
+        if (currentTemplate && currentTemplate.reParameters) {            
             reParameters = currentTemplate.reParameters;
         }
     }
@@ -218,6 +217,7 @@ export async function initRELogicView(currentTemplateId, allTemplates, allTaskGr
 
             // Sau khi lưu thành công, render lại view với các tham số mới để cập nhật bảng tính
             renderREView(allTaskGroups, newReParameters);
+            window.showToast('Đã lưu thông tin cửa hàng và cập nhật RE thành công!', 'success');
         });
     }
 }

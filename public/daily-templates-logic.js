@@ -3,7 +3,7 @@ import { collection, getDocs, query, orderBy, doc, setDoc, serverTimestamp, addD
 import { calculateREForGroup } from './re-calculator.js';
 import { showTaskLibrary } from './task-library.js';
 import { initRELogicView } from './re-logic.js';
-import { toggleTemplateBuilderLock, updateRowAppearance, renderGrid, renderPlanTracker, updateShiftTimeDisplay } from './daily-templates-ui.js';
+import { toggleTemplateBuilderLock, updateRowAppearance, renderGrid, renderPlanTracker, updateShiftTimeDisplay, getCurrentView } from './daily-templates-ui.js';
 import { allTemplates, currentTemplateId, currentMonthlyPlan, originalTemplateData, allWorkPositions, allTaskGroups, fetchAndRenderTemplates, setCurrentTemplateId, setOriginalTemplateData, loadTemplateData } from './daily-templates-data.js';
 import { initializeDragAndDrop } from './daily-templates.js';
 import { timeToMinutes, formatDate } from './utils.js';
@@ -200,6 +200,11 @@ export async function loadTemplate(templateId) {
 
         // Khóa giao diện nếu là Manager
         toggleTemplateBuilderLock(isManager);
+
+        // Nếu người dùng đang ở view 're-logic', cập nhật lại view đó
+        if (getCurrentView() === 're-logic') {
+            await initRELogicView(templateId, allTemplates, allTaskGroups); // Đã sửa ở lần trước
+        }
     } else {
         // Nếu không tải được dữ liệu, render lưới trống
         renderGrid();
