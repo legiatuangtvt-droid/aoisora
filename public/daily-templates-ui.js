@@ -213,8 +213,8 @@ export function renderGrid(templateData = null) {
     table.appendChild(tbody);
 
     // Nếu ở chế độ tạo mới (không có templateData) và không phải là Manager,
-    // hiển thị nút "Thêm dòng ca" trong chân bảng.
-    if (!templateData && !isManager) {
+    // hiển thị nút "Thêm dòng ca" trong chân bảng (luôn hiển thị nếu không phải Manager).
+    if (!isManager) {
         const tfoot = document.createElement('tfoot');
         tfoot.innerHTML = `
             <tr>
