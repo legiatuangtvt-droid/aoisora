@@ -202,7 +202,7 @@ function renderTaskGrid() {
             const generatedCode = `1${group.order}${String(task.order).padStart(2, '0')}`;
 
             // Áp dụng class Tailwind tĩnh và màu sắc qua inline style
-            taskItem.className = `task-library-item relative group border-2 text-xs p-1 rounded-md shadow-sm cursor-grab flex flex-col justify-between items-center text-center mb-1`;
+            taskItem.className = `task-library-item relative group border-2 text-xs p-1 rounded-md shadow-sm cursor-grab flex flex-col justify-between items-center text-center`;
             taskItem.dataset.taskCode = generatedCode; // Gán mã task đã tạo vào dataset
             taskItem.dataset.groupId = group.id; // Thêm groupId để xác định màu sắc
             taskItem.style.backgroundColor = color.bg;
