@@ -127,13 +127,9 @@ export async function init() {
 
             // Xử lý xóa task
             const deleteTaskButton = e.target.closest('.delete-task-btn');
-            console.log('Clicked element:', e.target);
-            console.log('Found deleteTaskButton:', deleteTaskButton);
             if (deleteTaskButton) {
                 const taskItem = deleteTaskButton.closest('.scheduled-task-item');
-                console.log('Found taskItem to remove:', taskItem);
                 if (taskItem) { // Kiểm tra an toàn để đảm bảo taskItem không phải là null
-                    console.log('Removing taskItem with data-task-code:', taskItem.dataset.taskCode);
                     taskItem.remove();
                     updateTemplateFromDOM();
                     updateTemplateStats();
