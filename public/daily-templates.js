@@ -278,7 +278,7 @@ function addShiftRow(tbody, shiftNumber) {
 
     timeSlots.forEach(time => {
         bodyRowHtml += `
-            <td class="p-0 border border-slate-200 align-top">
+            <td class="p-0 border border-slate-200 align-center">
                 <div class="grid grid-cols-4 h-[104px]">
                     <div class="quarter-hour-slot border-r border-dashed border-slate-200 flex justify-center items-center" data-shift-id="${shiftId}" data-time="${time}" data-quarter="00"></div>
                     <div class="quarter-hour-slot border-r border-dashed border-slate-200 flex justify-center items-center" data-shift-id="${shiftId}" data-time="${time}" data-quarter="15"></div>
@@ -356,7 +356,13 @@ function renderGrid() {
     let headerRowHtml = `<th class="p-2 border border-slate-200 min-w-36 sticky left-0 bg-slate-100 z-30">Ca</th>`; // Cột Ca, sticky
     timeSlots.forEach(time => {
         headerRowHtml += `
-            <th class="p-2 border border-slate-200 min-w-[308px] text-center font-semibold text-slate-700">${time}</th>
+            <th class="p-2 border border-slate-200 min-w-[308px] text-center font-semibold text-slate-700">
+                <div class="flex justify-between items-center">
+                    <span><i class="fas fa-users"></i></span>
+                    ${time}
+                    <span><i class="fas fa-cash-register"></i></span>
+                </div>
+            </th>
         `;
     });
     thead.innerHTML = `<tr>${headerRowHtml}</tr>`;
