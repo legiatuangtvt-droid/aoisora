@@ -356,11 +356,11 @@ function renderGrid() {
     let headerRowHtml = `<th class="p-2 border border-slate-200 min-w-36 sticky left-0 bg-slate-100 z-30">Ca</th>`; // Cột Ca, sticky
     timeSlots.forEach(time => {
         headerRowHtml += `
-            <th class="p-2 border border-slate-200 min-w-[308px] text-center font-semibold text-slate-700">
+            <th class="p-2 border border-slate-200 min-w-[308px] text-center font-semibold text-slate-700">            
                 <div class="flex justify-between items-center">
-                    <span><i class="fas fa-users"></i></span>
+                    <span><i class="fas fa-users text-blue-600"></i></span>
                     ${time}
-                    <span><i class="fas fa-cash-register"></i></span>
+                    <span><i class="fas fa-cash-register text-green-600"></i></span>
                 </div>
             </th>
         `;
