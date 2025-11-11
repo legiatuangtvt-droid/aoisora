@@ -104,9 +104,17 @@ function renderTypeTaskTabs() {
 
     // Thay đổi HTML để giống với tab nhóm
     typeTabsContainer.innerHTML = types.map(type => {
+        // Đếm số lượng task tương ứng với mỗi loại trong nhóm đang được chọn
+        const currentGroup = allGroupedTasks.find(g => g.id === currentFilters.groupId);
+        let count = 0;
+        if (currentGroup && currentGroup.tasks) {
+            count = currentGroup.tasks.filter(task => task.typeTask === type.id).length;
+        }
+
         return `
             <button class="type-task-tab flex flex-col items-center justify-center w-full h-20 p-1 rounded-lg border-2 border-transparent shadow-sm cursor-pointer transition-all duration-200 ${type.colorClasses}" data-type="${type.id}" title="${type.name}">
                 <span class="font-bold text-lg">${type.id}</span>
+                <span class="text-sm font-medium text-slate-600">${count}</span>
             </button>
         `;
     }).join('');
