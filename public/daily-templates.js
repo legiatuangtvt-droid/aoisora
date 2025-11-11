@@ -43,7 +43,18 @@ export function initializeDragAndDrop() {
             animation: 150,
             ghostClass: "swap-ghost",
             onEnd: handleDragEnd,
-            onAdd: (evt) => { /* Logic onAdd đã được chuyển vào đây */ }
+            onAdd: (evt) => {
+                const itemEl = evt.item; // Đây là task vừa được kéo vào
+                const isManager = window.currentUser && (window.currentUser.roleId === 'REGIONAL_MANAGER' || window.currentUser.roleId === 'AREA_MANAGER');
+
+                // Chỉ thêm nút xóa nếu không phải là Manager
+                if (!isManager && !itemEl.querySelector('.delete-task-btn')) {
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'delete-task-btn absolute top-0 right-0 w-5 h-5 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity';
+                    deleteBtn.innerHTML = '&times;';
+                    itemEl.appendChild(deleteBtn);
+                }
+            }
         });
         sortableInstances.push(sortable);
     });
