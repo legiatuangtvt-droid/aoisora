@@ -1,4 +1,4 @@
-import { fetchInitialData, fetchAndRenderTemplates, allTemplates, allTaskGroups } from './daily-templates-data.js';
+import { fetchInitialData, fetchAndRenderTemplates, allTemplates, allTaskGroups, allWorkPositions } from './daily-templates-data.js';
 import { renderGrid, updateRowAppearance, toggleBuilderView, createShiftCodeDatalist } from './daily-templates-ui.js';
 import { 
     handleDragEnd, 
@@ -48,42 +48,6 @@ export function initializeDragAndDrop() {
         sortableInstances.push(sortable);
     });
 
-    // Thêm listener để xóa task
-    const gridContainer = document.getElementById('template-builder-grid-container');
-    if (gridContainer) {
-        gridContainer.addEventListener('click', function (e) {
-            if (e.target.classList.contains('delete-task-btn')) {
-                e.target.closest('.scheduled-task-item').remove();
-                updateTemplateFromDOM();
-                updateTemplateStats();
-            }
-
-            // Xử lý xóa dòng ca
-            if (e.target.closest('.delete-shift-row-btn')) {
-                const row = e.target.closest('tr');
-                const shiftName = row.querySelector('.shift-code-selector option:checked')?.textContent || 'Ca chưa chọn';
-
-                window.showConfirmation(`Bạn có chắc chắn muốn xóa toàn bộ dòng "${shiftName}" không?`, 'Xác nhận xóa dòng', 'Xóa', 'Hủy').then(confirmed => {
-                    if (confirmed) {
-                        row.remove();
-                        updateTemplateFromDOM(); // Cập nhật lại dữ liệu sau khi xóa. Hàm này đã gọi checkTemplateChangesAndToggleResetButton()
-                        updateTemplateStats();
-                    }
-                });
-            }
-        });
-
-        // Xử lý thêm ca mới
-        gridContainer.addEventListener('click', function(e) {
-            if (e.target.id === 'add-shift-row-btn') {
-                const tbody = document.getElementById('template-builder-tbody');
-                if (tbody) {
-                    const newShiftNumber = tbody.children.length + 1;
-                    addShiftRow(tbody, newShiftNumber, allWorkPositions);
-                }
-            }
-        });
-    }
 }
 
 export async function init() {
@@ -133,6 +97,36 @@ export async function init() {
     document.getElementById('reset-template-btn')?.addEventListener('click', handleResetTemplate, { signal });
     document.getElementById('toggle-view-btn')?.addEventListener('click', toggleBuilderView, { signal });
     document.getElementById('template-selector')?.addEventListener('change', (e) => loadTemplate(e.target.value), { signal });
+
+    // Sử dụng event delegation cho các nút thêm/xóa trên toàn bộ lưới
+    const gridContainer = document.getElementById('template-builder-grid-container');
+    if (gridContainer) {
+        gridContainer.addEventListener('click', function (e) {
+            // Xử lý thêm ca mới
+            if (e.target.id === 'add-shift-row-btn') {
+                const tbody = document.getElementById('template-builder-tbody');
+                if (tbody) {
+                    const newShiftNumber = tbody.children.length + 1;
+                    addShiftRow(tbody, newShiftNumber);
+                }
+            }
+
+            // Xử lý xóa task
+            if (e.target.classList.contains('delete-task-btn')) {
+                e.target.closest('.scheduled-task-item').remove();
+                updateTemplateFromDOM();
+                updateTemplateStats();
+            }
+
+            // Xử lý xóa dòng ca
+            if (e.target.closest('.delete-shift-row-btn')) {
+                const row = e.target.closest('tr');
+                window.showConfirmation(`Bạn có chắc chắn muốn xóa dòng ca này không?`, 'Xác nhận xóa dòng', 'Xóa', 'Hủy').then(confirmed => {
+                    if (confirmed) { row.remove(); updateTemplateFromDOM(); updateTemplateStats(); }
+                });
+            }
+        }, { signal });
+    }
 
     // --- LOGIC MỚI: Xử lý Modal theo dõi tiến độ ---
     const planTrackerModal = document.getElementById('plan-tracker-modal');
