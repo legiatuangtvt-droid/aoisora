@@ -58,9 +58,6 @@ export async function fetchInitialData() {
 
         allWorkPositions = workPositionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         
-        // DEBUG: In ra dữ liệu vị trí công việc để kiểm tra
-        console.log('DEBUG: Dữ liệu work_positions đã được tải:', allWorkPositions);
-
         const employees = employeesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         const areaManagers = areaManagersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         const regionalManagers = regionalManagersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));

@@ -88,38 +88,64 @@ function renderGroupTabs() {
 }
 
 /**
+ * Cập nhật trạng thái active cho các tab loại task.
+ */
+function updateActiveTypeTab() {
+    if (!typeTabsContainer) return;
+    typeTabsContainer.querySelectorAll('.type-task-tab').forEach(tab => {
+        const isActive = tab.dataset.type === currentFilters.typeTask;
+        tab.classList.toggle('active', isActive);
+    });
+}
+
+/**
+ * Cập nhật số lượng task trên các tab loại task.
+ */
+function updateTypeTaskCounts() {
+    if (!typeTabsContainer) return;
+    typeTabsContainer.querySelectorAll('.type-task-tab').forEach(tab => {
+        const typeId = tab.dataset.type;
+        const currentGroup = allGroupedTasks.find(g => g.id === currentFilters.groupId);
+        let count = 0;
+        if (currentGroup && currentGroup.tasks) {
+            count = currentGroup.tasks.filter(task => task.typeTask === typeId).length;
+        }
+        const countSpan = tab.querySelector('.task-type-count');
+        if (countSpan) countSpan.textContent = count;
+    });
+}
+
+/**
  * Render các tab lọc theo loại task (Product, Fixed, CTM).
  */
 function renderTypeTaskTabs() {
     if (!typeTabsContainer) return;
-    // Thêm style cho container của tab loại task
     typeTabsContainer.className = 'flex-shrink-0 w-28 bg-slate-50 border-l border-slate-200 p-2 flex flex-col gap-2 overflow-y-auto';
 
-    // Sắp xếp lại thứ tự: CTM -> Fixed -> Product
     const types = [
         { id: 'CTM', name: 'CTM', colorClasses: 'bg-slate-200 text-slate-800 hover:bg-slate-300' },
         { id: 'Fixed', name: 'Fixed (F)', colorClasses: 'bg-green-100 text-green-800 hover:bg-green-200' },
         { id: 'Product', name: 'Product (P)', colorClasses: 'bg-amber-100 text-amber-800 hover:bg-amber-200' }
     ];
 
-    // Thay đổi HTML để giống với tab nhóm
     typeTabsContainer.innerHTML = types.map(type => {
-        // Đếm số lượng task tương ứng với mỗi loại trong nhóm đang được chọn
-        const currentGroup = allGroupedTasks.find(g => g.id === currentFilters.groupId);
+        // Calculate the count of tasks for the current type within this map iteration
         let count = 0;
-        if (currentGroup && currentGroup.tasks) {
-            count = currentGroup.tasks.filter(task => task.typeTask === type.id).length;
+        if (allGroupedTasks.length > 0 && currentFilters.groupId) {
+            const currentGroup = allGroupedTasks.find(g => g.id === currentFilters.groupId);
+            if (currentGroup && currentGroup.tasks) {
+                count = currentGroup.tasks.filter(task => task.typeTask === type.id).length;
+            }
         }
 
         return `
             <button class="type-task-tab flex flex-col items-center justify-center w-full h-20 p-1 rounded-lg border-2 border-transparent shadow-sm cursor-pointer transition-all duration-200 ${type.colorClasses}" data-type="${type.id}" title="${type.name}">
                 <span class="font-bold text-lg">${type.id}</span>
-                <span class="text-sm font-medium text-slate-600">${count}</span>
+                <span class="task-type-count text-sm font-medium text-slate-600">${count}</span>
             </button>
-        `;
+        `
     }).join('');
 
-    // Gắn sự kiện click
     typeTabsContainer.querySelectorAll('.type-task-tab').forEach(tab => {
         tab.addEventListener('click', () => {
             const clickedType = tab.dataset.type;
@@ -133,27 +159,17 @@ function renderTypeTaskTabs() {
             renderTaskGrid();
         });
     });
-
-    // Kích hoạt tab mặc định
+    updateTypeTaskCounts(); // Gọi hàm cập nhật số lượng sau khi render HTML
     updateActiveTypeTab();
-}
-
-/**
- * Cập nhật trạng thái active cho các tab loại task.
- */
-function updateActiveTypeTab() {
-    if (!typeTabsContainer) return;
-    typeTabsContainer.querySelectorAll('.type-task-tab').forEach(tab => {
-        const isActive = tab.dataset.type === currentFilters.typeTask;
-        // Thay vì chỉ đổi màu viền, ta sẽ thêm/xóa một lớp 'active' để có nhiều style hơn
-        tab.classList.toggle('active', isActive);
-    });
 }
 
 /**
  * Render lưới các task cho một nhóm cụ thể ở khu vực bên phải.
  */
 function renderTaskGrid() {
+    // Cập nhật số lượng task trên các tab loại task mỗi khi render lại lưới
+    updateTypeTaskCounts();
+
     if (!taskGridContainer) return;
 
     const group = allGroupedTasks.find(g => g.id === currentFilters.groupId);
