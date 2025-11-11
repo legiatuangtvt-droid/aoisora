@@ -73,7 +73,7 @@ export function initializeDragAndDrop() {
             }
         });
 
-        // Xử lý thêm dòng ca mới
+        // Xử lý thêm ca mới
         gridContainer.addEventListener('click', function(e) {
             if (e.target.id === 'add-shift-row-btn') {
                 const tbody = document.getElementById('template-builder-tbody');
