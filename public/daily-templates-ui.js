@@ -138,45 +138,63 @@ export function renderGrid(templateData = null) {
     const timeSlots = Array.from({ length: 18 }, (_, i) => `${i + 6}:00`);
 
     const table = document.createElement('table');
-    table.className = 'min-w-full border-collapse border border-slate-200 table-fixed'; 
+    table.className = 'min-w-full border-collapse border border-slate-200 table-fixed';
 
-    // --- LOGIC MỚI: Tính toán số lượng vị trí công việc theo giờ ---
-    const hourlyPositionCount = {};
+    // --- LOGIC MỚI: Tính toán các chỉ số theo giờ (vị trí & giờ POS) ---
+    const hourlyStats = {};
+    const posGroup = Object.values(allTaskGroups).find(g => g.code === 'POS');
+    const posGroupId = posGroup ? posGroup.id : null;
+
     timeSlots.forEach(time => {
         const hourStartMinutes = timeToMinutes(time);
         const hourEndMinutes = hourStartMinutes + 60;
-        let count = 0;
+        let positionCount = 0;
+        let posTaskCount = 0;
 
+        // Tính toán số lượng vị trí công việc
         if (shiftMappings) {
             for (const shiftId in shiftMappings) {
                 const mapping = shiftMappings[shiftId];
                 const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === mapping.shiftCode);
                 if (shiftInfo && shiftInfo.timeRange) {
                     const [startStr, endStr] = shiftInfo.timeRange.split('~').map(s => s.trim());
-                    const shiftStartMinutes = timeToMinutes(startStr);
-                    const shiftEndMinutes = timeToMinutes(endStr);
+                    const shiftStart = timeToMinutes(startStr);
+                    const shiftEnd = timeToMinutes(endStr);
 
-                    // Kiểm tra xem ca có chồng chéo với giờ hiện tại không
-                    if (shiftStartMinutes < hourEndMinutes && shiftEndMinutes > hourStartMinutes) {
-                        count++;
+                    if (shiftStart < hourEndMinutes && shiftEnd > hourStartMinutes) {
+                        positionCount++;
                     }
                 }
             }
         }
-        hourlyPositionCount[time] = count;
+
+        // Tính toán số lượng task POS
+        if (posGroupId && schedule) {
+            for (const shiftId in schedule) {
+                schedule[shiftId].forEach(task => {
+                    if (task.groupId === posGroupId) {
+                        const taskStartMinutes = timeToMinutes(task.startTime);
+                        if (taskStartMinutes >= hourStartMinutes && taskStartMinutes < hourEndMinutes) {
+                            posTaskCount++;
+                        }
+                    }
+                });
+            }
+        }
+        hourlyStats[time] = { positionCount, posManhour: (posTaskCount * 0.25).toFixed(2) };
     });
 
     const thead = document.createElement('thead');
     thead.className = 'bg-slate-100 sticky top-0 z-20';
     let headerRowHtml = `<th class="p-2 border border-slate-200 min-w-36 sticky left-0 bg-slate-100 z-30">Ca</th>`;
     timeSlots.forEach(time => {
-        const positionCount = hourlyPositionCount[time] || 0;
+        const stats = hourlyStats[time] || { positionCount: 0, posManhour: '0.00' };
         headerRowHtml += `
             <th class="p-2 border border-slate-200 min-w-[308px] text-center font-semibold text-slate-700">            
                 <div class="flex justify-between items-center">
-                    <span><i class="fas fa-users text-blue-600"> ${positionCount}</i></span>
+                    <span><i class="fas fa-users text-blue-600"> ${stats.positionCount}</i></span>
                     ${time}
-                    <span><i class="fas fa-cash-register text-green-600"></i> 0</span>
+                    <span><i class="fas fa-cash-register text-green-600"></i> ${stats.posManhour}</span>
                 </div>
             </th>
         `;
