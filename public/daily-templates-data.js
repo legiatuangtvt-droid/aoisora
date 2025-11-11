@@ -36,7 +36,7 @@ export async function fetchInitialData() {
     try {
         const shiftCodesDocRef = doc(db, 'system_configurations', 'shift_codes');
         const taskGroupsQuery = query(collection(db, 'task_groups'), orderBy('order'));
-        const workPositionsQuery = query(collection(db, 'work_positions'), where('status', '==', 'ACTIVE'));
+        const workPositionsQuery = query(collection(db, 'work_positions'));
         const [
             shiftCodesSnap, taskGroupsSnapshot, workPositionsSnap, employeesSnap, areaManagersSnap, regionalManagersSnap
         ] = await Promise.all([
@@ -57,15 +57,18 @@ export async function fetchInitialData() {
         });
 
         allWorkPositions = workPositionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
+        // DEBUG: In ra dữ liệu vị trí công việc để kiểm tra
+        console.log('DEBUG: Dữ liệu work_positions đã được tải:', allWorkPositions);
 
         const employees = employeesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         const areaManagers = areaManagersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         const regionalManagers = regionalManagersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         allPersonnel = [...employees, ...areaManagers, ...regionalManagers];
     } catch (error) {
-        console.error("Lỗi nghiêm trọng khi tải dữ liệu nền:", error);
+        console.error("Lỗi khi tải dữ liệu vị trí công việc:", error);
         const container = document.getElementById('template-builder-grid-container');
-        if(container) container.innerHTML = `<div class="p-10 text-center text-red-500">Không thể tải dữ liệu nền. Vui lòng thử lại.</div>`;
+        if(container) container.innerHTML = `<div class="p-10 text-center text-red-500">Không thể tải dữ liệu vị trí công việc. Vui lòng thử lại.</div>`;
     }
 }
 

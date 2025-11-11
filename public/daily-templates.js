@@ -1,5 +1,5 @@
 import { fetchInitialData, fetchAndRenderTemplates, allTemplates, allTaskGroups } from './daily-templates-data.js';
-import { renderGrid, updateRowAppearance, toggleBuilderView } from './daily-templates-ui.js';
+import { renderGrid, updateRowAppearance, toggleBuilderView, createShiftCodeDatalist } from './daily-templates-ui.js';
 import { 
     handleDragEnd, 
     addShiftRow,
@@ -79,7 +79,7 @@ export function initializeDragAndDrop() {
                 const tbody = document.getElementById('template-builder-tbody');
                 if (tbody) {
                     const newShiftNumber = tbody.children.length + 1;
-                    addShiftRow(tbody, newShiftNumber);
+                    addShiftRow(tbody, newShiftNumber, allWorkPositions);
                 }
             }
         });
@@ -92,6 +92,9 @@ export async function init() {
 
     // Tải dữ liệu nền và danh sách mẫu trước
     await fetchInitialData();
+
+    // Tạo datalist cho mã ca sau khi đã có dữ liệu
+    createShiftCodeDatalist();
 
     const currentUser = window.currentUser;
 
@@ -176,6 +179,7 @@ export function cleanup() {
         if (el) {
             const newEl = el.cloneNode(true);
             el.parentNode.replaceChild(newEl, el);
+
         }
     });
 }

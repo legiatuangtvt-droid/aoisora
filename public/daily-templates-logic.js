@@ -29,7 +29,7 @@ export function addShiftRow(tbody, shiftNumber) {
     const newRow = document.createElement('tr');
     newRow.dataset.shiftId = shiftId;
 
-    const workPositionOptions = allWorkPositions.map(pos => `<option value="${pos.id}">${pos.name}</option>`).join('');
+    const workPositionOptions = allWorkPositions ? allWorkPositions.map(pos => `<option value="${pos.id}">${pos.name}</option>`).join('') : '';
     const deleteButtonHTML = isManager ? '' : `
         <button class="delete-shift-row-btn absolute top-1 right-1 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity" title="Xóa dòng ca này">
             <i class="fas fa-times"></i>

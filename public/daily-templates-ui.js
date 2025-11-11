@@ -1,7 +1,7 @@
 import { allShiftCodes, allWorkPositions, allTaskGroups } from './daily-templates-data.js';
 import { timeToMinutes } from './utils.js';
 import { initializeDragAndDrop } from './daily-templates.js';
-
+import { addShiftRow } from './daily-templates-logic.js';
 /**
  * Khóa hoặc mở khóa toàn bộ giao diện xây dựng mẫu.
  * @param {boolean} locked - True để khóa, false để mở khóa.
@@ -86,6 +86,21 @@ export function updateRowAppearance(row) {
 }
 
 /**
+ * Tạo và chèn thẻ <datalist> chứa tất cả các mã ca vào body.
+ * Thẻ này sẽ được sử dụng bởi các input `shift-code-selector`.
+ */
+export function createShiftCodeDatalist() {
+    // Xóa datalist cũ nếu có để tránh trùng lặp
+    document.getElementById('shift-codes-datalist')?.remove();
+
+    const datalist = document.createElement('datalist');
+    datalist.id = 'shift-codes-datalist';
+    datalist.innerHTML = allShiftCodes.map(sc => 
+        `<option value="${sc.shiftCode}">${sc.timeRange}</option>`
+    ).join('');
+    document.body.appendChild(datalist);
+}
+/**
  * Render toàn bộ lưới xây dựng lịch trình.
  */
 export function renderGrid(templateData = null) {
@@ -103,6 +118,7 @@ export function renderGrid(templateData = null) {
     table.className = 'min-w-full border-collapse border border-slate-200 table-fixed';
 
     const thead = document.createElement('thead');
+
     thead.className = 'bg-slate-100 sticky top-0 z-20';
     let headerRowHtml = `<th class="p-2 border border-slate-200 min-w-36 sticky left-0 bg-slate-100 z-30">Ca</th>`;
     timeSlots.forEach(time => {
@@ -120,6 +136,7 @@ export function renderGrid(templateData = null) {
     table.appendChild(thead);
 
     const tbody = document.createElement('tbody');
+
     tbody.id = 'template-builder-tbody';
 
     // --- LOGIC MỚI: Render các dòng dựa trên templateData ---
@@ -141,7 +158,7 @@ export function renderGrid(templateData = null) {
             newRow.dataset.shiftId = shiftId;
 
             // Tạo HTML cho ô thông tin ca (ô đầu tiên)
-            const workPositionOptions = allWorkPositions.map(pos => `<option value="${pos.id}" ${pos.id === mapping.positionId ? 'selected' : ''}>${pos.name}</option>`).join('');
+            const workPositionOptions = allWorkPositions ? allWorkPositions.map(pos => `<option value="${pos.id}" ${pos.id === mapping.positionId ? 'selected' : ''}>${pos.name}</option>`).join('') : '';
             const deleteButtonHTML = isManager ? '' : `<button class="delete-shift-row-btn absolute top-1 right-1 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity" title="Xóa dòng ca này"><i class="fas fa-times"></i></button>`;
             let firstCellHtml = `
                 <td class="group p-1 border border-slate-200 align-center sticky left-0 bg-white z-10 w-40 min-w-40 font-semibold text-center">
@@ -186,6 +203,11 @@ export function renderGrid(templateData = null) {
             // Cập nhật giao diện cho dòng vừa thêm
             updateRowAppearance(newRow);
         });
+    }
+
+    if (!templateData) {
+        const newShiftNumber = tbody.children.length + 1;
+        addShiftRow(tbody, newShiftNumber, allWorkPositions); // Sử dụng biến tbody đã được tạo ở trên
     }
 
     table.appendChild(tbody);
