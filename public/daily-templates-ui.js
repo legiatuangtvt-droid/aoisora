@@ -2,6 +2,7 @@ import { allShiftCodes, allWorkPositions, allTaskGroups } from './daily-template
 import { timeToMinutes } from './utils.js';
 import { initializeDragAndDrop } from './daily-templates.js';
 import { addShiftRow } from './daily-templates-logic.js';
+import { updateTemplateFromDOM } from './daily-templates-logic.js';
 /**
  * Khóa hoặc mở khóa toàn bộ giao diện xây dựng mẫu.
  * @param {boolean} locked - True để khóa, false để mở khóa.
@@ -100,6 +101,24 @@ export function createShiftCodeDatalist() {
     ).join('');
     document.body.appendChild(datalist);
 }
+
+/**
+ * Cập nhật hiển thị khung giờ và màu sắc của dòng dựa trên mã ca được chọn.
+ * @param {HTMLInputElement} selector - Input element của mã ca.
+ */
+function updateShiftTimeDisplay(selector) {
+    const row = selector.closest('tr');
+    if (!row) return;
+
+    const timeDisplay = row.querySelector('.shift-time-display');
+    const selectedShiftCode = selector.value;
+    const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === selectedShiftCode);
+
+    if (timeDisplay) {
+        timeDisplay.textContent = shiftInfo ? shiftInfo.timeRange : '';
+    }
+    updateRowAppearance(row);
+}
 /**
  * Render toàn bộ lưới xây dựng lịch trình.
  */
@@ -157,6 +176,8 @@ export function renderGrid(templateData = null) {
             const newRow = document.createElement('tr');
             newRow.dataset.shiftId = shiftId;
 
+            const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === mapping.shiftCode);
+            const timeRange = shiftInfo ? shiftInfo.timeRange : '';
             // Tạo HTML cho ô thông tin ca (ô đầu tiên)
             const workPositionOptions = allWorkPositions ? allWorkPositions.map(pos => `<option value="${pos.id}" ${pos.id === mapping.positionId ? 'selected' : ''}>${pos.name}</option>`).join('') : '';
             const deleteButtonHTML = isManager ? '' : `<button class="delete-shift-row-btn absolute top-1 right-1 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity" title="Xóa dòng ca này"><i class="fas fa-times"></i></button>`;
@@ -164,7 +185,7 @@ export function renderGrid(templateData = null) {
                 <td class="group p-1 border border-slate-200 align-center sticky left-0 bg-white z-10 w-40 min-w-40 font-semibold text-center">
                     <div class="space-y-1">
                         <input list="shift-codes-datalist" class="shift-code-selector form-input w-full text-xs text-center p-1 font-semibold" placeholder="-- Nhập/Chọn Ca --" value="${mapping.shiftCode || ''}" ${isManager ? 'disabled' : ''}>
-                        <div class="shift-time-display text-xs text-slate-500 h-4"></div>
+                        <div class="shift-time-display text-xs text-slate-500 h-4">${timeRange}</div>
                         <select class="work-position-selector form-input w-full text-xs text-center p-1" ${isManager ? 'disabled' : ''}>
                             <option value="">-- Chọn Vị trí --</option>
                             ${workPositionOptions}
@@ -231,6 +252,15 @@ export function renderGrid(templateData = null) {
 
     // Khởi tạo lại chức năng kéo thả sau khi render xong
     initializeDragAndDrop();
+
+    // Gắn listener cho các input mã ca để cập nhật khung giờ
+    container.querySelectorAll('.shift-code-selector').forEach(selector => {
+        selector.addEventListener('change', (e) => {
+            updateShiftTimeDisplay(e.target);
+            // Tự động lưu lại thay đổi
+            updateTemplateFromDOM();
+        });
+    });
 }
 
 /**

@@ -70,6 +70,14 @@ export function addShiftRow(tbody, shiftNumber) {
 
     // Khởi tạo lại kéo-thả cho các ô mới được thêm vào
     initializeDragAndDrop();
+
+    // Gắn listener cho input mã ca của dòng vừa thêm
+    const newSelector = newRow.querySelector('.shift-code-selector');
+    if (newSelector) {
+        newSelector.addEventListener('change', (e) => {
+            updateShiftTimeDisplay(e.target);
+        });
+    }
 }
 
 /**
