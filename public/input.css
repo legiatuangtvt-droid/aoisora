@@ -785,6 +785,13 @@ html, body {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     transform: scale(1.05);
 }
+/* Thêm style cho tab type task được chọn */
+@layer components {
+    .type-task-tab.active {
+        @apply border-indigo-500 shadow-md ring-2 ring-indigo-300 ring-offset-1;
+        transform: translateY(-2px);
+    }
+}
 
 .group-tab-code {
     font-weight: 700;

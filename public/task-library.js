@@ -96,7 +96,6 @@ function renderTypeTaskTabs() {
     typeTabsContainer.className = 'flex-shrink-0 w-28 bg-slate-50 border-l border-slate-200 p-2 flex flex-col gap-2 overflow-y-auto';
 
     const types = [
-        { id: 'All', name: 'Tất cả', colorClasses: 'bg-white text-slate-700 hover:bg-slate-100' },
         { id: 'Product', name: 'Product (P)', colorClasses: 'bg-amber-100 text-amber-800 hover:bg-amber-200' },
         { id: 'Fixed', name: 'Fixed (F)', colorClasses: 'bg-green-100 text-green-800 hover:bg-green-200' },
         { id: 'CTM', name: 'CTM', colorClasses: 'bg-slate-200 text-slate-800 hover:bg-slate-300' }
@@ -104,10 +103,9 @@ function renderTypeTaskTabs() {
 
     // Thay đổi HTML để giống với tab nhóm
     typeTabsContainer.innerHTML = types.map(type => {
-        const shortName = type.id === 'All' ? 'Tất cả' : type.id;
         return `
             <button class="type-task-tab flex flex-col items-center justify-center w-full h-16 p-1 rounded-lg border-2 border-transparent shadow-sm cursor-pointer transition-all duration-200 ${type.colorClasses}" data-type="${type.id}" title="${type.name}">
-                <span class="font-bold text-lg">${shortName}</span>
+                <span class="font-bold text-lg">${type.id}</span>
             </button>
         `;
     }).join('');
@@ -115,7 +113,14 @@ function renderTypeTaskTabs() {
     // Gắn sự kiện click
     typeTabsContainer.querySelectorAll('.type-task-tab').forEach(tab => {
         tab.addEventListener('click', () => {
-            currentFilters.typeTask = tab.dataset.type;
+            const clickedType = tab.dataset.type;
+            // Nếu click vào tab đang active, hủy chọn nó (quay về 'All')
+            // Ngược lại, chọn tab mới
+            if (currentFilters.typeTask === clickedType) {
+                currentFilters.typeTask = 'All';
+            } else {
+                currentFilters.typeTask = clickedType;
+            }
             renderTaskGrid();
         });
     });
@@ -131,7 +136,8 @@ function updateActiveTypeTab() {
     if (!typeTabsContainer) return;
     typeTabsContainer.querySelectorAll('.type-task-tab').forEach(tab => {
         const isActive = tab.dataset.type === currentFilters.typeTask;
-        tab.classList.toggle('border-indigo-400', isActive);
+        // Thay vì chỉ đổi màu viền, ta sẽ thêm/xóa một lớp 'active' để có nhiều style hơn
+        tab.classList.toggle('active', isActive);
     });
 }
 
