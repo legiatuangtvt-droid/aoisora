@@ -68,6 +68,9 @@ export function addShiftRow(tbody, shiftNumber) {
     newRow.innerHTML = bodyRowHtml;
     tbody.appendChild(newRow);
 
+    // Sau khi thêm dòng mới, khởi tạo lại kéo-thả
+    initializeDragAndDrop();
+
     // Gắn listener cho input mã ca của dòng vừa thêm
     const newSelector = newRow.querySelector('.shift-code-selector');
     if (newSelector) {
