@@ -953,7 +953,7 @@ async function loadTemplate(templateId) {
                         const taskName = taskInfo.taskName || '...'; // Lấy taskName từ dữ liệu mẫu
                         const taskItem = document.createElement('div'); 
                         // Sử dụng justify-between để đẩy taskCode xuống dưới
-                        taskItem.className = `scheduled-task-item relative group w-[70px] h-[100px] border-2 text-xs p-1 rounded-md shadow-sm cursor-grab flex flex-col justify-between items-center text-center mb-1`;
+                        taskItem.className = `scheduled-task-item relative group w-[70px] h-[100px] border-2 text-xs p-1 rounded-md shadow-sm cursor-grab flex flex-col justify-between items-center text-center`;
                         taskItem.dataset.taskCode = taskCode;
                         taskItem.dataset.groupId = groupId;
                         taskItem.style.backgroundColor = color.bg;
