@@ -211,11 +211,37 @@ export function renderGrid(templateData = null) {
         const sortedShiftIds = Object.keys(shiftMappings).sort((a, b) => {
             const shiftA = shiftMappings[a];
             const shiftB = shiftMappings[b];
-            const shiftInfoA = allShiftCodes.find(sc => sc.shiftCode === shiftA.shiftCode);
-            const shiftInfoB = allShiftCodes.find(sc => sc.shiftCode === shiftB.shiftCode);
-            const startTimeA = shiftInfoA ? timeToMinutes(shiftInfoA.timeRange.split('~')[0]) : 9999;
-            const startTimeB = shiftInfoB ? timeToMinutes(shiftInfoB.timeRange.split('~')[0]) : 9999;
-            return startTimeA - startTimeB;
+
+            const getStartTime = (shift) => {
+                const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === shift.shiftCode);
+                return shiftInfo ? timeToMinutes(shiftInfo.timeRange.split('~')[0]) : 9999;
+            };
+
+            const startTimeA = getStartTime(shiftA);
+            const startTimeB = getStartTime(shiftB);
+
+            // Quy tắc 1: Ưu tiên giờ bắt đầu
+            if (startTimeA !== startTimeB) {
+                return startTimeA - startTimeB;
+            }
+
+            // Quy tắc 2: Nếu giờ bắt đầu giống nhau, ưu tiên vị trí công việc
+            const positionOrder = {
+                'LEADER': 1,
+                'POS': 2,
+                'MMD': 3,
+                'MERCHANDISE': 4,
+                'CAFE': 5
+            };
+
+            const positionA = shiftA.positionId || '';
+            const positionB = shiftB.positionId || '';
+
+            // Gán một số lớn (99) cho các vị trí không có trong danh sách ưu tiên để chúng xếp sau cùng
+            const orderA = positionOrder[positionA] || 99;
+            const orderB = positionOrder[positionB] || 99;
+
+            return orderA - orderB;
         });
 
         sortedShiftIds.forEach(shiftId => {
