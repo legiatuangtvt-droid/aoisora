@@ -793,6 +793,14 @@ html, body {
     }
 }
 
+/* --- TASK LIBRARY TYPE TABS - Sử dụng clip-path để tạo hình phễu --- */
+@layer components {
+    .type-task-tab {
+        /* Cắt phần tử để tạo hình dạng phễu. */
+        clip-path: polygon(0 0, 100% 0, 100% 75%, 50% 100%, 0 75%);
+    }
+}
+
 .group-tab-code {
     font-weight: 700;
     font-size: 0.9rem; /* text-lg */

@@ -95,16 +95,17 @@ function renderTypeTaskTabs() {
     // Thêm style cho container của tab loại task
     typeTabsContainer.className = 'flex-shrink-0 w-28 bg-slate-50 border-l border-slate-200 p-2 flex flex-col gap-2 overflow-y-auto';
 
+    // Sắp xếp lại thứ tự: CTM -> Fixed -> Product
     const types = [
-        { id: 'Product', name: 'Product (P)', colorClasses: 'bg-amber-100 text-amber-800 hover:bg-amber-200' },
+        { id: 'CTM', name: 'CTM', colorClasses: 'bg-slate-200 text-slate-800 hover:bg-slate-300' },
         { id: 'Fixed', name: 'Fixed (F)', colorClasses: 'bg-green-100 text-green-800 hover:bg-green-200' },
-        { id: 'CTM', name: 'CTM', colorClasses: 'bg-slate-200 text-slate-800 hover:bg-slate-300' }
+        { id: 'Product', name: 'Product (P)', colorClasses: 'bg-amber-100 text-amber-800 hover:bg-amber-200' }
     ];
 
     // Thay đổi HTML để giống với tab nhóm
     typeTabsContainer.innerHTML = types.map(type => {
         return `
-            <button class="type-task-tab flex flex-col items-center justify-center w-full h-16 p-1 rounded-lg border-2 border-transparent shadow-sm cursor-pointer transition-all duration-200 ${type.colorClasses}" data-type="${type.id}" title="${type.name}">
+            <button class="type-task-tab flex flex-col items-center justify-center w-full h-20 p-1 rounded-lg border-2 border-transparent shadow-sm cursor-pointer transition-all duration-200 ${type.colorClasses}" data-type="${type.id}" title="${type.name}">
                 <span class="font-bold text-lg">${type.id}</span>
             </button>
         `;

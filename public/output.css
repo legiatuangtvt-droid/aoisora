@@ -808,6 +808,11 @@ body.sidebar-expanded #sidebar .sidebar-text {
   transform: translateY(-2px);
 }
 
+.type-task-tab {
+  /* Cắt phần tử để tạo hình dạng phễu. */
+  clip-path: polygon(0 0, 100% 0, 100% 75%, 50% 100%, 0 75%);
+}
+
 .btn-base {
   margin: 0px;
   border-radius: 0px;
@@ -1204,6 +1209,10 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
 
 .h-screen {
   height: 100vh;
+}
+
+.h-20 {
+  height: 5rem;
 }
 
 .max-h-48 {
@@ -3441,6 +3450,8 @@ html, body {
 }
 
 /* Thêm style cho tab type task được chọn */
+
+/* --- TASK LIBRARY TYPE TABS - Sử dụng clip-path để tạo hình phễu --- */
 
 .group-tab-code {
   font-weight: 700;
