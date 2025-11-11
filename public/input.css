@@ -788,8 +788,15 @@ html, body {
 /* Thêm style cho tab type task được chọn */
 @layer components {
     .type-task-tab.active {
-        @apply border-indigo-500 shadow-md ring-2 ring-indigo-300 ring-offset-1;
-        transform: translateY(-2px);
+        /* 
+         * Thay thế border và ring bằng filter: drop-shadow.
+         * Tăng cường hiệu ứng bằng cách xếp chồng nhiều lớp bóng đổ:
+         * - Lớp trong: Một vầng sáng màu indigo-500 đậm và sắc nét.
+         * - Lớp ngoài: Một vầng sáng màu indigo-300 rộng và mềm hơn để tạo hiệu ứng hào quang.
+         */
+        filter: drop-shadow(0 0 3px #6366f1) drop-shadow(0 0 6px #a5b4fc) brightness(0.9);
+        /* Tăng độ "nổi" của nút lên một chút */
+        transform: translateY(-3px);
     }
 }
 
