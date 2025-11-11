@@ -47,11 +47,14 @@ export function initializeDragAndDrop() {
                 const itemEl = evt.item; // Đây là task vừa được kéo vào
                 const isManager = window.currentUser && (window.currentUser.roleId === 'REGIONAL_MANAGER' || window.currentUser.roleId === 'AREA_MANAGER');
 
+                // Đảm bảo task được kéo vào có đúng class để xử lý xóa
+                itemEl.classList.add('scheduled-task-item'); // Chỉ cần thêm class này, không xóa class cũ
+
                 // Chỉ thêm nút xóa nếu không phải là Manager
                 if (!isManager && !itemEl.querySelector('.delete-task-btn')) {
                     const deleteBtn = document.createElement('button');
                     deleteBtn.className = 'delete-task-btn absolute top-0 right-0 w-5 h-5 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity';
-                    deleteBtn.innerHTML = '&times;';
+                    deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
                     itemEl.appendChild(deleteBtn);
                 }
             }
@@ -123,17 +126,28 @@ export async function init() {
             }
 
             // Xử lý xóa task
-            if (e.target.classList.contains('delete-task-btn')) {
-                e.target.closest('.scheduled-task-item').remove();
-                updateTemplateFromDOM();
-                updateTemplateStats();
+            const deleteTaskButton = e.target.closest('.delete-task-btn');
+            console.log('Clicked element:', e.target);
+            console.log('Found deleteTaskButton:', deleteTaskButton);
+            if (deleteTaskButton) {
+                const taskItem = deleteTaskButton.closest('.scheduled-task-item');
+                console.log('Found taskItem to remove:', taskItem);
+                if (taskItem) { // Kiểm tra an toàn để đảm bảo taskItem không phải là null
+                    console.log('Removing taskItem with data-task-code:', taskItem.dataset.taskCode);
+                    taskItem.remove();
+                    updateTemplateFromDOM();
+                    updateTemplateStats();
+                }
             }
 
             // Xử lý xóa dòng ca
             if (e.target.closest('.delete-shift-row-btn')) {
-                const row = e.target.closest('tr');
+                const deleteButton = e.target.closest('.delete-shift-row-btn');
+                const row = deleteButton ? deleteButton.closest('tr') : null;
+                if (!row) return; // Nếu không tìm thấy dòng, không làm gì cả
+
                 window.showConfirmation(`Bạn có chắc chắn muốn xóa dòng ca này không?`, 'Xác nhận xóa dòng', 'Xóa', 'Hủy').then(confirmed => {
-                    if (confirmed) { row.remove(); updateTemplateFromDOM(); updateTemplateStats(); }
+                    if (confirmed) { row.remove(); updateTemplateFromDOM(); updateTemplateStats(); } // Giờ đây `row` chắc chắn không phải là null
                 });
             }
         }, { signal });
