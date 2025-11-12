@@ -57,20 +57,20 @@ export function initializeDragAndDrop() {
                 // Đảm bảo phần tử có class 'scheduled-task-item'
                 itemEl.classList.add('scheduled-task-item');
 
-                // Thêm các "tay nắm" (resize handles) cho chức năng kéo-nhân-bản
-                // Chỉ thêm nếu chúng chưa tồn tại
-                if (!itemEl.querySelector('.resize-handle-left')) {
-                    const leftHandle = document.createElement('div');
-                    leftHandle.className = 'resize-handle resize-handle-left';
-                    leftHandle.dataset.direction = 'left';
-                    itemEl.prepend(leftHandle); // Thêm vào đầu
-                }
-                if (!itemEl.querySelector('.resize-handle-right')) {
-                    const rightHandle = document.createElement('div');
-                    rightHandle.className = 'resize-handle resize-handle-right';
-                    rightHandle.dataset.direction = 'right';
-                    itemEl.prepend(rightHandle); // Thêm vào đầu
-                }
+                // Xóa các tay nắm cũ (nếu có) và tạo lại để đảm bảo tính nhất quán
+                itemEl.querySelectorAll('.resize-handle').forEach(h => h.remove());
+
+                // Tạo và thêm tay nắm bên trái
+                const leftHandle = document.createElement('div');
+                leftHandle.className = 'resize-handle resize-handle-left';
+                leftHandle.dataset.direction = 'left';
+                itemEl.prepend(leftHandle);
+
+                // Tạo và thêm tay nắm bên phải
+                const rightHandle = document.createElement('div');
+                rightHandle.className = 'resize-handle resize-handle-right';
+                rightHandle.dataset.direction = 'right';
+                itemEl.prepend(rightHandle);
 
                 // Chỉ thêm nút xóa nếu không phải là Manager
                 if (!isManager && !itemEl.querySelector('.delete-task-btn')) {
@@ -118,13 +118,13 @@ function initializeTaskCloning() {
 
         // Tạo ghost element
         ghostElement = sourceTaskElement.cloneNode(true);
-        ghostElement.id = 'cloning-ghost';
         const sourceRect = sourceTaskElement.getBoundingClientRect();
+        ghostElement.id = 'cloning-ghost'; // Áp dụng ID để CSS có thể target
         Object.assign(ghostElement.style, {
-            position: 'absolute',
-            left: `${sourceRect.left}px`,
-            top: `${sourceRect.top}px`,
-            width: `${sourceRect.width}px`,
+            position: 'fixed', // Sử dụng 'fixed' để ghost không bị ảnh hưởng bởi cuộn trang
+            left: `${sourceRect.left}px`, // Vị trí so với viewport
+            top: `${sourceRect.top}px`,   // Vị trí so với viewport
+            width: `${sourceRect.width}px`, // Bắt đầu với chiều rộng của task gốc
             height: `${sourceRect.height}px`, // Thêm height để đảm bảo kích thước
             zIndex: '9999' // Đảm bảo ghost luôn ở trên cùng
         });
@@ -138,15 +138,22 @@ function initializeTaskCloning() {
         if (!isCloning) return;
 
         const dx = e.clientX - startX;
-        const numSlots = Math.round(Math.abs(dx) / slotWidth);
+        let numSlots = 0;
 
-        // Cập nhật chiều rộng của ghost
-        ghostElement.style.width = `${slotWidth * (numSlots + 1)}px`;
-        if (direction === 'left' && dx < 0) {
-            const sourceRect = sourceTaskElement.getBoundingClientRect();
-            ghostElement.style.left = `${sourceRect.left + dx}px`;
+        // Chỉ tính toán số ô khi kéo đúng hướng
+        if ((direction === 'right' && dx > 0) || (direction === 'left' && dx < 0)) {
+            numSlots = Math.round(Math.abs(dx) / slotWidth);
         }
 
+        // Cập nhật chiều rộng của ghost
+        const sourceRect = sourceTaskElement.getBoundingClientRect();
+        ghostElement.style.width = `${sourceRect.width + (numSlots * slotWidth)}px`;
+
+        // Nếu kéo sang trái, cập nhật lại vị trí `left` của ghost
+        if (direction === 'left' && dx < 0) {
+            ghostElement.style.left = `${sourceRect.left - (numSlots * slotWidth)}px`;
+        }
+        
         // Highlight các ô đích
         highlightTargetSlots(numSlots);
     };
@@ -155,7 +162,13 @@ function initializeTaskCloning() {
         if (!isCloning) return;
 
         const dx = e.clientX - startX;
-        const numSlots = Math.round(Math.abs(dx) / slotWidth);
+        let numSlots = 0;
+
+        // Chỉ tính toán số ô khi kéo đúng hướng
+        if ((direction === 'right' && dx > 0) || (direction === 'left' && dx < 0)) {
+            numSlots = Math.round(Math.abs(dx) / slotWidth);
+        }
+
 
         if (numSlots > 0) {
             cloneTasksToHighlightedSlots();
@@ -175,10 +188,13 @@ function initializeTaskCloning() {
 
         let currentSlot = initialSlot;
         for (let i = 0; i < numSlots; i++) {
+            // Xác định ô tiếp theo dựa trên hướng kéo
             const nextSlot = direction === 'right'
-                ? currentSlot.nextElementSibling
-                : currentSlot.previousElementSibling;
-
+                ? currentSlot.nextElementSibling || currentSlot.parentElement?.parentElement?.nextElementSibling?.querySelector('.quarter-hour-slot')
+                : currentSlot.previousElementSibling || currentSlot.parentElement?.parentElement?.previousElementSibling?.querySelector('.quarter-hour-slot:last-child');
+            
+            // Dừng lại nếu không tìm thấy ô tiếp theo, hoặc ô đó không hợp lệ
+            // (đã có task, hoặc là ô không làm việc)
             if (nextSlot && !nextSlot.querySelector('.scheduled-task-item') && !nextSlot.classList.contains('non-work-slot')) {
                 nextSlot.classList.add('clone-target-highlight');
                 currentSlot = nextSlot;
@@ -194,15 +210,17 @@ function initializeTaskCloning() {
             const newTask = sourceTaskElement.cloneNode(true);
             // Xóa các class và id không cần thiết của ghost/handle
             newTask.classList.remove('dragging');
+            newTask.classList.remove('sortable-chosen', 'sortable-ghost', 'sortable-drag'); // Xóa các class của SortableJS
             newTask.removeAttribute('id');
             
             // Đảm bảo nút xóa được thêm đúng cách
-            if (!newTask.querySelector('.delete-task-btn')) {
-                 const deleteBtn = document.createElement('button');
-                 deleteBtn.className = 'delete-task-btn absolute top-0 right-0 w-5 h-5 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity z-10';
-                 deleteBtn.title = 'Xóa task';
-                 deleteBtn.innerHTML = '&times;'; // Sử dụng &times; cho an toàn
-                 newTask.appendChild(deleteBtn);
+            const isManager = window.currentUser && (window.currentUser.roleId === 'REGIONAL_MANAGER' || window.currentUser.roleId === 'AREA_MANAGER');
+            if (!isManager && !newTask.querySelector('.delete-task-btn')) {
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-task-btn absolute top-0 right-0 w-5 h-5 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity z-10';
+                deleteBtn.title = 'Xóa task';
+                deleteBtn.innerHTML = '&times;'; // Sử dụng &times; cho an toàn
+                newTask.appendChild(deleteBtn);
             }
 
             slot.innerHTML = ''; // Xóa highlight

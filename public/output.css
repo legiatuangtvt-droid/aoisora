@@ -903,6 +903,10 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
   visibility: collapse;
 }
 
+.fixed {
+  position: fixed;
+}
+
 .absolute {
   position: absolute;
 }
