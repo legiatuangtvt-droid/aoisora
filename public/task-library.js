@@ -330,7 +330,14 @@ export async function fetchMostUsedTasks() {
 
         // Chuyển map thành mảng, sắp xếp theo số lần sử dụng giảm dần và lấy 16 task đầu tiên
         const sortedTaskIds = Object.entries(usageCounts)
-            .sort(([, countA], [, countB]) => countB - countA)
+            .sort(([taskIdA, countA], [taskIdB, countB]) => {
+                // Tiêu chí 1: Sắp xếp theo tần suất sử dụng giảm dần
+                if (countB !== countA) {
+                    return countB - countA;
+                }
+                // Tiêu chí 2: Nếu tần suất bằng nhau, sắp xếp theo ID để đảm bảo thứ tự ổn định
+                return taskIdA.localeCompare(taskIdB);
+            })
             .slice(0, 16)
             .map(([taskId]) => taskId);
 
