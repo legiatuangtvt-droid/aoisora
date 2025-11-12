@@ -436,7 +436,7 @@ export async function applyTemplateForHq() {
         return;
     }
 
-    // --- Bước mới: Hiển thị modal chọn miền ---
+    // --- FIX: Hiển thị modal chọn miền để lấy selectedRegionIds ---
     const selectedRegionIds = await window.showCheckboxListPrompt(
         'Chọn các miền để áp dụng mẫu:',
         'Áp dụng cho Miền',
@@ -444,7 +444,7 @@ export async function applyTemplateForHq() {
             headers: ['Tên Miền', 'Tên RM'],
             rows: allRegions.map(region => {
                 // Tìm RM quản lý miền này
-                const regionalManager = allPersonnel.find(p => 
+                const regionalManager = allPersonnel.find(p =>
                     p.roleId === 'REGIONAL_MANAGER' && p.managedRegionId === region.id
                 );
                 return {
@@ -458,66 +458,58 @@ export async function applyTemplateForHq() {
         }
     );
 
-    if (!selectedRegionIds) {
+    if (!selectedRegionIds || selectedRegionIds.length === 0) {
         window.showToast('Đã hủy thao tác.', 'info');
         return;
     }
 
-    if (selectedRegionIds.length === 0) {
-        window.showToast('Vui lòng chọn một mẫu để áp dụng.', 'warning');
-        return;
+    const payrollSettingsRef = doc(db, 'system_configurations', 'payroll_settings');
+    const payrollSettingsSnap = await getDoc(payrollSettingsRef);
+    const payrollStartDay = payrollSettingsSnap.exists() ? payrollSettingsSnap.data().startDay : 26;
+
+    const today = new Date();
+    let startDate;
+
+    if (today.getDate() < payrollStartDay) {
+        startDate = new Date(today.getFullYear(), today.getMonth(), payrollStartDay);
+    } else {
+        startDate = new Date(today.getFullYear(), today.getMonth() + 1, payrollStartDay);
     }
-        const payrollSettingsRef = doc(db, 'system_configurations', 'payroll_settings');
-        const payrollSettingsSnap = await getDoc(payrollSettingsRef);
-        const payrollStartDay = payrollSettingsSnap.exists() ? payrollSettingsSnap.data().startDay : 26;
 
-        const today = new Date();
-        let startDate;
+    const dateString = formatDate(startDate);
+    const formattedStartDate = startDate.toLocaleDateString('vi-VN');
 
-        if (today.getDate() < payrollStartDay) {
-            startDate = new Date(today.getFullYear(), today.getMonth(), payrollStartDay);
-        } else {
-            startDate = new Date(today.getFullYear(), today.getMonth() + 1, payrollStartDay);
-        }
+    const selectedRegionNames = selectedRegionIds.map(id => allRegions.find(r => r.id === id)?.name || id).join(', ');
 
-        const dateString = formatDate(startDate);
-        const formattedStartDate = startDate.toLocaleDateString('vi-VN');
-        window.showToast(`Mẫu sẽ được áp dụng từ ngày ${formattedStartDate}.`, 'info', 4000);
-
-        const batch = writeBatch(db);
-
-        const newPlan = {
-            regionId: "ALL",
-            regionManagerId: "ALL",
-            cycleStartDate: dateString,
-            templateId: template.id,
-            templateName: template.name,
-            status: 'HQ_APPLIED',
-            history: [{
-                status: 'HQ_APPLIED',
-                timestamp: new Date(),
-                userId: currentUser.id,
-                userName: window.currentUser.name
-            }],
-            comments: []
-        };
-        const planRef = doc(collection(db, 'monthly_plans'));
-        batch.set(planRef, newPlan);
-
-       const confirmed = await window.showConfirmation(
-            `Bạn có chắc chắn muốn gửi kế hoạch dựa trên mẫu <strong>"${template.name}"</strong> đến các miền của [Tất cả] cho chu kỳ bắt đầu từ ngày <strong>${formattedStartDate}</strong> không?`,
+    const confirmed = await window.showConfirmation(
+            `Bạn có chắc chắn muốn gửi kế hoạch dựa trên mẫu <strong>"${template.name}"</strong> đến các miền: <strong>${selectedRegionNames}</strong> cho chu kỳ bắt đầu từ ngày <strong>${formattedStartDate}</strong> không?`,
             'Xác nhận gửi kế hoạch',
             'Gửi Kế hoạch',
             'Hủy'
         );
 
-        if (!confirmed) {
-            window.showToast('Đã hủy thao tác.', 'info');
-            return;
-        }
+    if (!confirmed) {
+        window.showToast('Đã hủy thao tác.', 'info');
+        return;
+    }
 
-        await batch.commit();
-        window.showToast(`Hoàn tất! Đã gửi kế hoạch từ mẫu "${template.name}" đến tất cả các miền.`, 'success', 5000);
+    const batch = writeBatch(db);
+    selectedRegionIds.forEach(regionId => {
+        const newPlan = {
+            regionId: regionId,
+            cycleStartDate: dateString,
+            templateId: template.id,
+            templateName: template.name,
+            status: 'HQ_APPLIED',
+            history: [{ status: 'HQ_APPLIED', timestamp: new Date(), userId: currentUser.id, userName: currentUser.name }],
+            comments: []
+        };
+        const planRef = doc(collection(db, 'monthly_plans'));
+        batch.set(planRef, newPlan);
+    });
+
+    await batch.commit();
+    window.showToast(`Hoàn tất! Đã gửi kế hoạch từ mẫu "${template.name}" đến ${selectedRegionIds.length} miền đã chọn.`, 'success', 5000);
         
         // Tải lại thông tin của mẫu vừa áp dụng để cập nhật trạng thái
         await loadTemplate(template.id);
@@ -541,43 +533,57 @@ async function fetchAllRegions() {
  * (Dành cho RM/AM) Tải kế hoạch và mẫu được áp dụng gần nhất.
  */
 export async function loadAppliedPlanForManager() {
+    console.log('[RM Load] Bắt đầu quá trình tải kế hoạch cho Manager.');
     const currentUser = window.currentUser;
-    if (!currentUser) return;
+    if (!currentUser) {
+        console.error('[RM Load] Lỗi: Không tìm thấy thông tin người dùng hiện tại (currentUser).');
+        return;
+    }
+    console.log('[RM Load] Dữ liệu người dùng hiện tại:', currentUser);
 
     let regionIdToQuery = null;
     if (currentUser.roleId === 'REGIONAL_MANAGER') {
         regionIdToQuery = currentUser.managedRegionId;
+        console.log(`[RM Load] User là RM. Lấy regionId từ managedRegionId: "${regionIdToQuery}"`);
     } else if (currentUser.roleId === 'AREA_MANAGER') {
+        console.log(`[RM Load] User là AM. Đang truy vấn regionId từ managedAreaIds:`, currentUser.managedAreaIds);
         const areasSnap = await getDocs(query(collection(db, 'areas'), where('id', 'in', currentUser.managedAreaIds || ['dummy']), limit(1)));
         if (!areasSnap.empty) {
-            regionIdToQuery = areasSnap.docs[0].data().regionId;
+            regionIdToQuery = areasSnap.docs[0].data()?.regionId;
+            console.log(`[RM Load] Đã tìm thấy regionId cho AM: "${regionIdToQuery}"`);
         }
     }
 
     if (!regionIdToQuery) {
+        console.warn('[RM Load] Cảnh báo: Không thể xác định được regionId để truy vấn. Hiển thị thông báo mặc định.');
         document.getElementById('template-selector-container').classList.add('hidden');
         document.getElementById('template-display-container').classList.remove('hidden');
         document.getElementById('template-display-container').querySelector('#template-name-display').textContent = 'Bạn chưa được phân công vào miền nào.';
         renderGrid();
         return;
     }
-
+    
+    console.log(`[RM Load] Thực hiện truy vấn kế hoạch cho regionId: "${regionIdToQuery}"`);
     const plansQuery = query(
         collection(db, 'monthly_plans'),
         where('regionId', '==', regionIdToQuery),
         orderBy('cycleStartDate', 'desc'),
         limit(1)
     );
-
+    
     const plansSnap = await getDocs(plansQuery);
     if (plansSnap.empty) {
+        console.log(`[RM Load] Không tìm thấy kế hoạch nào được áp dụng cho miền "${regionIdToQuery}".`);
         document.getElementById('template-selector-container').classList.add('hidden');
         document.getElementById('template-display-container').classList.remove('hidden');
         document.getElementById('template-display-container').querySelector('#template-name-display').textContent = 'Chưa có kế hoạch nào được áp dụng cho miền của bạn.';
         renderGrid();
     } else {
+        console.log(`[RM Load] Đã tìm thấy ${plansSnap.size} kế hoạch. Đang xử lý kế hoạch gần nhất...`);
         const plan = { id: plansSnap.docs[0].id, ...plansSnap.docs[0].data() };
-        currentMonthlyPlan = plan;
+        setCurrentMonthlyPlan(plan); // Sử dụng hàm setter
+        console.log('[RM Load] Dữ liệu kế hoạch đã tải:', plan);
+        console.log(`[RM Load] ID của mẫu cần tải từ kế hoạch: "${plan.templateId}"`);
 
         document.getElementById('template-selector').value = plan.templateId;
         await loadTemplate(plan.templateId); // Sử dụng hàm loadTemplate mới
