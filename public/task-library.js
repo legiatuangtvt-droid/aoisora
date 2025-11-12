@@ -249,18 +249,15 @@ function initializeSortableForGrid(gridContainer) {
  * Render lưới các task cho một nhóm cụ thể ở khu vực bên phải.
  */
 function renderTaskGrid() {
-    console.log(`[TaskLib] Bắt đầu render lưới. Filters: groupId=${currentFilters.groupId}, typeTask=${currentFilters.typeTask}`);
     // Cập nhật số lượng task trên các tab loại task mỗi khi render lại lưới
     updateTypeTaskCounts();
 
     updateActiveTypeTab(); // Thêm dòng này để đảm bảo tab luôn được cập nhật
     if (!taskGridContainer) return;
-
     const group = allGroupedTasks.find(g => g.id === currentFilters.groupId);
     
     // Xử lý trường hợp đặc biệt cho tab "Related"
     if (currentFilters.typeTask === 'Related') {
-        console.log('[TaskLib] Chế độ "Related". Gọi renderRecentlyUsedTasks().');
         const searchTerm = document.getElementById('task-library-search')?.value.toLowerCase() || '';
         renderRecentlyUsedTasks(searchTerm);
         return;
@@ -307,21 +304,17 @@ function renderTaskGrid() {
  * Tải 16 task được người dùng hiện tại sử dụng (kéo-thả) nhiều nhất.
  */
 export async function fetchMostUsedTasks() {
-    console.log('[TaskLib Fetch] 1. Bắt đầu tải các task được dùng nhiều nhất.');
     const currentUser = window.currentUser;
     if (!currentUser || !currentUser.id) {
         console.warn('[TaskLib Fetch] Lỗi: Không tìm thấy người dùng hiện tại.');
         recentlyUsedTasks = [];
         return;
     }
-
     try {
         const userStatsRef = doc(db, 'task_usage_stats', currentUser.id);
         const docSnap = await getDoc(userStatsRef);
-        console.log('docSnap: ', docSnap.data());
 
         if (!docSnap.exists() || !docSnap.data().usageCounts) {
-            console.log('[Related Tasks] Không có dữ liệu tần suất sử dụng cho người dùng này.');
             recentlyUsedTasks = []; // Đảm bảo mảng rỗng
             return;
         }
@@ -341,8 +334,6 @@ export async function fetchMostUsedTasks() {
             .slice(0, 16)
             .map(([taskId]) => taskId);
 
-        console.log('[TaskLib Fetch] 1.1. Các ID task được dùng nhiều nhất:', sortedTaskIds);
-
         // Lấy thông tin chi tiết của 16 task này từ `allGroupedTasks` đã được tải
         const mostUsedTasks = [];
         for (const taskId of sortedTaskIds) {
@@ -360,7 +351,6 @@ export async function fetchMostUsedTasks() {
         }
 
         recentlyUsedTasks = mostUsedTasks;
-        console.log('[TaskLib Fetch] 1.2. Hoàn tất tải "Related Tasks". Kết quả:', recentlyUsedTasks);
     } catch (error) {
         console.error("Lỗi khi tải các task được dùng nhiều nhất:", error);
         recentlyUsedTasks = [];
@@ -372,17 +362,14 @@ export async function fetchMostUsedTasks() {
  * @param {string} searchTerm - Từ khóa tìm kiếm.
  */
 function renderRecentlyUsedTasks(searchTerm) {
-    console.log('[TaskLib Render] Đang render danh sách "Related Tasks".');
     if (!taskGridContainer) return;
     taskGridContainer.innerHTML = '';
 
     let tasksToRender = recentlyUsedTasks.filter(task => 
         task.name.toLowerCase().includes(searchTerm)
     );
-    console.log('tasksToRender: ', tasksToRender)
 
     if (tasksToRender.length > 0) {
-        console.log(`[TaskLib Render] Tìm thấy ${tasksToRender.length} task "Related". Bắt đầu render...`);
         // Sắp xếp các task theo tần suất sử dụng (đã được sắp xếp từ fetchMostUsedTasks)
         // và render từng task.
         tasksToRender.forEach(task => {
@@ -390,7 +377,6 @@ function renderRecentlyUsedTasks(searchTerm) {
         });
         initializeSortableForGrid(taskGridContainer);
     } else {
-        console.log('[TaskLib Render] Không tìm thấy task "Related" nào để hiển thị.');
         taskGridContainer.innerHTML = `<p class="text-sm text-gray-500 text-center mt-4 col-span-full">Không có công việc nào được sử dụng gần đây.</p>`;
     }
 }
@@ -500,25 +486,19 @@ export async function initializeTaskLibrary() {
     // Đặt vị trí mặc định ngay khi khởi tạo
     setDefaultPosition();
 
-    console.log('[TaskLib Init] Bắt đầu khởi tạo thư viện task...');
     // --- Tải và render nội dung ---
     // Thay đổi thứ tự: Tải tất cả dữ liệu trước, sau đó mới render
     try {
         // 1. Tải song song dữ liệu task và dữ liệu "Related"
-        console.log('[TaskLib Init] Bắt đầu tải allGroupedTasks.');
         allGroupedTasks = await fetchAndGroupTasks();
-        console.log('[TaskLib Init] Tải allGroupedTasks hoàn tất. Bắt đầu tải mostUsedTasks.');
         await fetchMostUsedTasks();
-        console.log('[TaskLib Init] Tải mostUsedTasks hoàn tất. Dữ liệu đã sẵn sàng.');
 
 
         // 2. Render các thành phần giao diện
-        console.log('[TaskLib Init] Bắt đầu render các thành phần UI (tabs).');
         renderGroupTabs();
         renderTypeTaskTabs();
         
         // 3. Render lưới task lần đầu tiên
-        console.log('[TaskLib Init] Bắt đầu render lưới task lần đầu.');
         renderTaskGrid();
     } catch (error) {
         console.error("Lỗi khi tải thư viện công việc:", error);

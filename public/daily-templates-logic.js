@@ -24,8 +24,6 @@ export async function logTaskUsage(groupId, taskCode) {
         const uniqueTaskId = `${groupId}__${taskCode}`; // Sử dụng dấu phân cách an toàn hơn
         const userStatsRef = doc(db, 'task_usage_stats', currentUser.id);
 
-        console.log(`[Task Usage] Đang ghi nhận... User: ${currentUser.id}, Task: ${uniqueTaskId}`);
-
         // Sử dụng increment() để tăng số đếm một cách an toàn, tránh race condition.
         // Field name sử dụng dấu chấm để cập nhật một key cụ thể trong map.
         // SỬA LỖI: Dùng updateDoc thay vì setDoc để đảm bảo dot notation hoạt động đúng với nested map.
@@ -34,8 +32,6 @@ export async function logTaskUsage(groupId, taskCode) {
         await setDoc(userStatsRef, {
             usageCounts: { [uniqueTaskId]: increment(1) }
         }, { merge: true }); // Dùng setDoc với merge:true và cấu trúc nested object
-
-        console.log(`[Task Usage] Ghi nhận thành công cho task: ${uniqueTaskId}`);
 
     } catch (error) {
         console.error("Lỗi khi ghi nhận tần suất sử dụng task:", error);
@@ -47,17 +43,14 @@ export async function logTaskUsage(groupId, taskCode) {
  * Xử lý sự kiện khi một task được kéo thả xong (di chuyển, thêm, xóa).
  */
 export function handleDragEnd(evt) {
-    console.log('[Drag & Drop] Sự kiện handleDragEnd được kích hoạt. Chế độ:', evt.pullMode);
     updateTemplateFromDOM();
     updateTemplateStats();
     // Nếu một task mới được thêm vào từ thư viện (clone)
     if (evt.pullMode === 'clone') {
-        console.log('[Drag & Drop] Phát hiện thao tác kéo-thả từ thư viện (clone). Bắt đầu ghi nhận...');
         const taskItem = evt.item;
         // Lấy groupId và order gốc từ dataset của task trong thư viện
         const groupId = taskItem.dataset.groupId;
         const taskOrder = taskItem.dataset.taskOrder; // Sử dụng taskOrder thay vì taskCode
-        console.log(`[Drag & Drop] Thông tin task: groupId=${groupId}, taskOrder=${taskOrder}`);
         logTaskUsage(groupId, taskOrder);
     }
 }
