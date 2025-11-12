@@ -4,9 +4,24 @@ import { calculateREForGroup } from './re-calculator.js';
 import { showTaskLibrary } from './task-library.js';
 import { initRELogicView } from './re-logic.js';
 import { toggleTemplateBuilderLock, updateRowAppearance, renderGrid, renderPlanTracker, updateShiftTimeDisplay, getCurrentView} from './daily-templates-ui.js';
-import { allTemplates, currentTemplateId, currentMonthlyPlan, originalTemplateData, allWorkPositions, allTaskGroups, fetchAndRenderTemplates, setCurrentTemplateId, setOriginalTemplateData, loadTemplateData } from './daily-templates-data.js';
+import { allTemplates, currentTemplateId, currentMonthlyPlan, originalTemplateData, allWorkPositions, allTaskGroups, fetchAndRenderTemplates, setCurrentTemplateId, setOriginalTemplateData, loadTemplateData, setCurrentMonthlyPlan } from './daily-templates-data.js';
 import { initializeDragAndDrop } from './daily-templates.js';
 import { timeToMinutes, formatDate } from './utils.js';
+
+// Map các trạng thái kế hoạch tháng sang chuỗi hiển thị thân thiện
+const planStatusMessages = {
+    'HQ_APPLIED': 'HQ đã triển khai',
+    'RM_AWAITING_APPROVAL': 'RM đang chờ phê duyệt',
+    'HQ_REJECTED_RM_CHANGES': 'HQ đã từ chối thay đổi',
+    'HQ_APPROVED_RM_CHANGES': 'HQ đã phê duyệt thay đổi',
+    'RM_SENT_TO_STAFF': 'RM đã gửi về Staff',
+    'STAFF_REGISTERED': 'Staff đã đăng ký',
+    'SL_ADJUSTED': 'SL đã điều chỉnh',
+    'AM_DISPATCHED': 'AM đã điều phối',
+    'RM_DISPATCHED': 'RM đã điều phối',
+    'HQ_CONFIRMED': 'HQ đã xác nhận',
+    // Thêm các trạng thái khác nếu có
+};
 
 /**
  * Ghi nhận việc một task được sử dụng (kéo-thả) vào Firestore.
@@ -261,7 +276,7 @@ export async function loadTemplate(templateId) {
     const statusContainer = document.getElementById('template-display-container');
     const statusDisplay = document.getElementById('template-name-display');
 
-    if (currentUser && (currentUser.roleId === 'HQ_STAFF' || currentUser.roleId === 'ADMIN') && statusContainer && statusDisplay) {
+    if (currentUser && (currentUser.roleId === 'HQ_STAFF' || currentUser.roleId === 'ADMIN') && statusContainer) {
         if (templateId && templateId !== 'new') {
             // Tìm kế hoạch gần nhất được tạo từ template này
             const plansQuery = query(
@@ -271,10 +286,12 @@ export async function loadTemplate(templateId) {
                 limit(1)
             );
             const plansSnap = await getDocs(plansQuery);
-            if (plansSnap.empty) {
+           if (plansSnap.empty) {
                 statusDisplay.textContent = 'Mẫu này chưa được áp dụng.';
             } else {
                 const plan = { id: plansSnap.docs[0].id, ...plansSnap.docs[0].data() };
+                setCurrentMonthlyPlan(plan); // Sử dụng hàm setter để cập nhật biến
+                statusDisplay.textContent = planStatusMessages[plan.status] || `Trạng thái: ${plan.status}`; // Cập nhật dòng trạng thái chính
                 renderPlanTracker(plan); // Dùng hàm renderPlanTracker để hiển thị trạng thái
             }
         }
