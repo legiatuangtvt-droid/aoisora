@@ -34,7 +34,7 @@ function handleLibraryDragEnd(evt) {
     // Chỉ ghi nhận khi một task được sao chép (clone) thành công vào một ô hợp lệ.
     // evt.pullMode === 'clone' và evt.clone là phần tử được tạo ra ở đích.
     if (evt.pullMode === 'clone' && evt.clone) {
-        console.log('[Task Library Drag] Phát hiện thao tác kéo-thả từ thư viện (clone). Bắt đầu ghi nhận...');
+        // KHÔI PHỤC LOGIC GHI NHẬN
         const originalTaskItem = evt.item; // Phần tử gốc trong thư viện
         const groupId = originalTaskItem.dataset.groupId;
         const taskOrder = originalTaskItem.dataset.taskOrder;
@@ -64,11 +64,10 @@ async function fetchAndGroupTasks() {
  */
 function renderGroupTabs() {
     if (!groupTabsContainer) return;
-    groupTabsContainer.innerHTML = '';
+    groupTabsContainer.innerHTML = ''; // Xóa nội dung cũ để render lại
 
     if (allGroupedTasks.length === 0) {
         groupTabsContainer.innerHTML = '<p class="p-2 text-center text-xs text-slate-500">Không có nhóm nào.</p>';
-        return;
     }
 
     allGroupedTasks.forEach(group => {
@@ -97,6 +96,10 @@ function renderGroupTabs() {
             if (searchInput) {
                 searchInput.value = '';
             }
+            // Khi chọn một nhóm mới, luôn reset bộ lọc loại task về 'All'
+            // để hiển thị tất cả các task trong nhóm đó.
+            currentFilters.typeTask = 'All';
+
             // Thêm active class cho tab được click
             currentFilters.groupId = group.id;
             // FIX: Thêm class 'active' vào tab vừa được click
@@ -105,11 +108,6 @@ function renderGroupTabs() {
         });
         groupTabsContainer.appendChild(tab);
     });
-
-    // Tự động click vào tab đầu tiên để hiển thị task
-    if (groupTabsContainer.firstChild) {
-        groupTabsContainer.firstChild.click();
-    }
 }
 
 /**
@@ -193,9 +191,57 @@ function renderTypeTaskTabs() {
 }
 
 /**
+ * Render một task đơn lẻ vào container được chỉ định.
+ * @param {object} task - Đối tượng task.
+ * @param {HTMLElement} container - Container để render task vào.
+ */
+function renderSingleTask(task, container) {
+    const group = allGroupedTasks.find(g => g.id === task.groupId);
+    if (!group) return; // Bỏ qua nếu không tìm thấy nhóm
+
+    const color = (group.color && group.color.bg) ? group.color : defaultColor;
+    const taskItem = document.createElement('div');
+    const generatedCode = `1${group.order}${String(task.order).padStart(2, '0')}`;
+
+    taskItem.className = `task-library-item relative group border-2 text-xs p-1 rounded-md shadow-sm cursor-grab flex flex-col justify-between items-center text-center`;
+    taskItem.dataset.taskCode = generatedCode;
+    taskItem.dataset.taskOrder = task.order;
+    taskItem.dataset.groupId = group.id;
+    taskItem.style.backgroundColor = color.bg;
+    taskItem.style.color = color.text;
+    taskItem.style.borderColor = color.border;
+
+    taskItem.innerHTML = `
+        <div class="flex-grow flex flex-col justify-center">
+            <span class="overflow-hidden text-ellipsis">${task.name}</span>
+        </div>
+        <span class="font-semibold mt-auto">${generatedCode}</span>
+    `;
+    container.appendChild(taskItem);
+}
+
+/**
+ * Khởi tạo SortableJS cho một grid container.
+ * @param {HTMLElement} gridContainer - Container của lưới task.
+ */
+function initializeSortableForGrid(gridContainer) {
+    Sortable.create(gridContainer, {
+        group: {
+            name: 'template-tasks',
+            pull: 'clone',
+            put: false
+        },
+        sort: false,
+        animation: 150,
+        onEnd: handleLibraryDragEnd
+    });
+}
+
+/**
  * Render lưới các task cho một nhóm cụ thể ở khu vực bên phải.
  */
 function renderTaskGrid() {
+    console.log(`[TaskLib] Bắt đầu render lưới. Filters: groupId=${currentFilters.groupId}, typeTask=${currentFilters.typeTask}`);
     // Cập nhật số lượng task trên các tab loại task mỗi khi render lại lưới
     updateTypeTaskCounts();
 
@@ -203,21 +249,25 @@ function renderTaskGrid() {
     if (!taskGridContainer) return;
 
     const group = allGroupedTasks.find(g => g.id === currentFilters.groupId);
-    if (!group) {
-        taskGridContainer.innerHTML = '<p class="text-center text-red-500">Lỗi: Không tìm thấy nhóm.</p>';
-        return;
-    }
-
-    taskGridContainer.innerHTML = ''; // Xóa nội dung cũ
-
-    const searchTerm = document.getElementById('task-library-search')?.value.toLowerCase() || '';
     
     // Xử lý trường hợp đặc biệt cho tab "Related"
     if (currentFilters.typeTask === 'Related') {
+        console.log('[TaskLib] Chế độ "Related". Gọi renderRecentlyUsedTasks().');
+        const searchTerm = document.getElementById('task-library-search')?.value.toLowerCase() || '';
         renderRecentlyUsedTasks(searchTerm);
         return;
     }
 
+    if (!group) {
+        // Nếu không tìm thấy nhóm (ví dụ: khi vừa mở thư viện và chưa chọn nhóm nào),
+        // không làm gì cả hoặc hiển thị thông báo.
+        taskGridContainer.innerHTML = `<p class="text-sm text-gray-500 text-center mt-4 col-span-full">Vui lòng chọn một nhóm để xem công việc.</p>`;
+        return;
+    }
+    taskGridContainer.innerHTML = ''; // Xóa nội dung cũ
+
+    const searchTerm = document.getElementById('task-library-search')?.value.toLowerCase() || '';
+    
     let filteredTasks = group.tasks;
 
     // Lọc theo loại task
@@ -232,40 +282,8 @@ function renderTaskGrid() {
     if (filteredTasks.length > 0) {
         // Sắp xếp task theo 'order' trước khi render
         const sortedTasks = [...filteredTasks].sort((a, b) => (a.order || 0) - (b.order || 0));
-        sortedTasks.forEach(task => {
-            const color = (group.color && group.color.bg) ? group.color : defaultColor;
-            const taskItem = document.createElement('div');
-            const generatedCode = `1${group.order}${String(task.order).padStart(2, '0')}`;
-
-            // Áp dụng class Tailwind tĩnh và màu sắc qua inline style
-            taskItem.className = `task-library-item relative group border-2 text-xs p-1 rounded-md shadow-sm cursor-grab flex flex-col justify-between items-center text-center`;
-            taskItem.dataset.taskCode = generatedCode; // Gán mã task đã tạo vào dataset
-            taskItem.dataset.taskOrder = task.order; // Gán order gốc của task
-            taskItem.dataset.groupId = group.id; // Thêm groupId để xác định màu sắc
-            taskItem.style.backgroundColor = color.bg;
-            taskItem.style.color = color.text;
-            taskItem.style.borderColor = color.border;
-
-            taskItem.innerHTML = `
-                <div class="flex-grow flex flex-col justify-center">
-                    <span class="overflow-hidden text-ellipsis">${task.name}</span>
-                </div>
-                <span class="font-semibold mt-auto">${generatedCode}</span>
-            `;
-            taskGridContainer.appendChild(taskItem);
-        });
-
-        // Khởi tạo SortableJS cho danh sách task để có thể kéo đi
-        Sortable.create(taskGridContainer, {
-            group: {
-                name: 'template-tasks',
-                pull: 'clone', // Quan trọng: Sao chép task khi kéo, không di chuyển
-                put: false // Không cho phép thả item vào đây
-            },
-            sort: false, // Không cần sắp xếp lại trong thư viện
-            animation: 150,            
-            onEnd: handleLibraryDragEnd // Gọi hàm xử lý sự kiện onEnd mới
-        });
+        sortedTasks.forEach(task => renderSingleTask({ ...task, groupId: group.id }, taskGridContainer));
+        initializeSortableForGrid(taskGridContainer);
     } else {
         const message = searchTerm
             ? `Không tìm thấy task nào với tên "${searchTerm}".`
@@ -280,23 +298,23 @@ function renderTaskGrid() {
 /**
  * Tải 16 task được người dùng hiện tại sử dụng (kéo-thả) nhiều nhất.
  */
-async function fetchMostUsedTasks() {
-    console.log('[Related Tasks] Bắt đầu tải các công việc được dùng nhiều nhất...');
+export async function fetchMostUsedTasks() {
+    console.log('[TaskLib Fetch] 1. Bắt đầu tải các task được dùng nhiều nhất.');
     const currentUser = window.currentUser;
     if (!currentUser || !currentUser.id) {
-        console.warn('[Related Tasks] Không tìm thấy người dùng hiện tại. Dừng lại.');
+        console.warn('[TaskLib Fetch] Lỗi: Không tìm thấy người dùng hiện tại.');
         recentlyUsedTasks = [];
         return;
     }
-    console.log(`[Related Tasks] Tìm kiếm cho người dùng: ${currentUser.name} (ID: ${currentUser.id})`);
 
     try {
         const userStatsRef = doc(db, 'task_usage_stats', currentUser.id);
         const docSnap = await getDoc(userStatsRef);
+        console.log('docSnap: ', docSnap.data());
 
         if (!docSnap.exists() || !docSnap.data().usageCounts) {
             console.log('[Related Tasks] Không có dữ liệu tần suất sử dụng cho người dùng này.');
-            recentlyUsedTasks = [];
+            recentlyUsedTasks = []; // Đảm bảo mảng rỗng
             return;
         }
 
@@ -308,7 +326,7 @@ async function fetchMostUsedTasks() {
             .slice(0, 16)
             .map(([taskId]) => taskId);
 
-        console.log('[Related Tasks] 16 task ID được dùng nhiều nhất:', sortedTaskIds);
+        console.log('[TaskLib Fetch] 1.1. Các ID task được dùng nhiều nhất:', sortedTaskIds);
 
         // Lấy thông tin chi tiết của 16 task này từ `allGroupedTasks` đã được tải
         const mostUsedTasks = [];
@@ -318,8 +336,8 @@ async function fetchMostUsedTasks() {
             if (group) {
                 // Tìm task dựa trên taskCode (mã gốc, không phải mã đã генерується)
                 // Cần đảm bảo taskCode trong `daily-templates-logic` là mã gốc.
-                // Giả sử taskCode là `order` của task trong nhóm.
-                const task = group.tasks.find(t => String(t.order) === taskCode);
+                // taskCode ở đây chính là `order` của task trong nhóm.
+                const task = group.tasks.find(t => String(t.order) === String(taskCode));
                 if (task) {
                     mostUsedTasks.push({ ...task, groupId: group.id }); // Thêm groupId để render
                 }
@@ -327,7 +345,7 @@ async function fetchMostUsedTasks() {
         }
 
         recentlyUsedTasks = mostUsedTasks;
-        console.log('[Related Tasks] Hoàn tất! Danh sách các công việc được dùng nhiều nhất:', recentlyUsedTasks);
+        console.log('[TaskLib Fetch] 1.2. Hoàn tất tải "Related Tasks". Kết quả:', recentlyUsedTasks);
     } catch (error) {
         console.error("Lỗi khi tải các task được dùng nhiều nhất:", error);
         recentlyUsedTasks = [];
@@ -339,17 +357,25 @@ async function fetchMostUsedTasks() {
  * @param {string} searchTerm - Từ khóa tìm kiếm.
  */
 function renderRecentlyUsedTasks(searchTerm) {
+    console.log('[TaskLib Render] Đang render danh sách "Related Tasks".');
     if (!taskGridContainer) return;
     taskGridContainer.innerHTML = '';
 
     let tasksToRender = recentlyUsedTasks.filter(task => 
         task.name.toLowerCase().includes(searchTerm)
     );
+    console.log('tasksToRender: ', tasksToRender)
 
     if (tasksToRender.length > 0) {
-        tasksToRender.forEach(task => renderSingleTask(task, taskGridContainer));
+        console.log(`[TaskLib Render] Tìm thấy ${tasksToRender.length} task "Related". Bắt đầu render...`);
+        // Sắp xếp các task theo tần suất sử dụng (đã được sắp xếp từ fetchMostUsedTasks)
+        // và render từng task.
+        tasksToRender.forEach(task => {
+            renderSingleTask(task, taskGridContainer);
+        });
         initializeSortableForGrid(taskGridContainer);
     } else {
+        console.log('[TaskLib Render] Không tìm thấy task "Related" nào để hiển thị.');
         taskGridContainer.innerHTML = `<p class="text-sm text-gray-500 text-center mt-4 col-span-full">Không có công việc nào được sử dụng gần đây.</p>`;
     }
 }
@@ -459,12 +485,26 @@ export async function initializeTaskLibrary() {
     // Đặt vị trí mặc định ngay khi khởi tạo
     setDefaultPosition();
 
+    console.log('[TaskLib Init] Bắt đầu khởi tạo thư viện task...');
     // --- Tải và render nội dung ---
+    // Thay đổi thứ tự: Tải tất cả dữ liệu trước, sau đó mới render
     try {
+        // 1. Tải song song dữ liệu task và dữ liệu "Related"
+        console.log('[TaskLib Init] Bắt đầu tải allGroupedTasks.');
         allGroupedTasks = await fetchAndGroupTasks();
+        console.log('[TaskLib Init] Tải allGroupedTasks hoàn tất. Bắt đầu tải mostUsedTasks.');
+        await fetchMostUsedTasks();
+        console.log('[TaskLib Init] Tải mostUsedTasks hoàn tất. Dữ liệu đã sẵn sàng.');
+
+
+        // 2. Render các thành phần giao diện
+        console.log('[TaskLib Init] Bắt đầu render các thành phần UI (tabs).');
         renderGroupTabs();
         renderTypeTaskTabs();
-        await fetchMostUsedTasks(); // Tải các task được dùng nhiều nhất
+        
+        // 3. Render lưới task lần đầu tiên
+        console.log('[TaskLib Init] Bắt đầu render lưới task lần đầu.');
+        renderTaskGrid();
     } catch (error) {
         console.error("Lỗi khi tải thư viện công việc:", error);
         groupTabsContainer.innerHTML = '<p class="p-2 text-center text-xs text-red-500">Lỗi tải.</p>';

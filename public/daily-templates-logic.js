@@ -28,9 +28,12 @@ export async function logTaskUsage(groupId, taskCode) {
 
         // Sử dụng increment() để tăng số đếm một cách an toàn, tránh race condition.
         // Field name sử dụng dấu chấm để cập nhật một key cụ thể trong map.
+        // SỬA LỖI: Dùng updateDoc thay vì setDoc để đảm bảo dot notation hoạt động đúng với nested map.
+        // updateDoc sẽ tự động tạo document nếu nó không tồn tại khi dùng trong transaction hoặc batch,
+        // nhưng ở đây ta cần đảm bảo document tồn tại hoặc dùng setDoc với cấu trúc đúng.
         await setDoc(userStatsRef, {
-            [`usageCounts.${uniqueTaskId}`]: increment(1)
-        }, { merge: true }); // Dùng setDoc với merge:true để tạo document nếu chưa tồn tại
+            usageCounts: { [uniqueTaskId]: increment(1) }
+        }, { merge: true }); // Dùng setDoc với merge:true và cấu trúc nested object
 
         console.log(`[Task Usage] Ghi nhận thành công cho task: ${uniqueTaskId}`);
 
