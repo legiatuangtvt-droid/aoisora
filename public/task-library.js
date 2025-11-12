@@ -1,5 +1,5 @@
 import { db } from './firebase.js';
-import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { collection, getDocs, query, orderBy, where, limit } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 import "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"; // This is a global import
 import "https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js";
 
@@ -9,8 +9,9 @@ let menuContainer = null; // Biến toàn cục cho container chính
 let groupTabsContainer, taskGridContainer;
 let isStateLoaded = false; // Cờ để kiểm tra xem state từ localStorage đã được tải chưa
 let typeTabsContainer = null; // NEW: Container cho các tab loại task
-let currentFilters = { groupId: null, typeTask: 'All' }; // NEW: State để quản lý bộ lọc
+let currentFilters = { groupId: null, typeTask: 'Related' }; // Mặc định hiển thị tab "Gần đây"
 let taskLibraryController = null;
+let recentlyUsedTasks = []; // Biến mới để lưu các task đã dùng gần đây
 
 // Bảng màu mặc định nếu group không có màu
 const defaultColor = {
@@ -121,27 +122,31 @@ function updateTypeTaskCounts() {
 function renderTypeTaskTabs() {
     if (!typeTabsContainer) return;
     typeTabsContainer.className = 'flex-shrink-0 w-28 bg-slate-50 border-l border-slate-200 p-2 flex flex-col gap-2 overflow-y-auto';
-
+    
     const types = [
+        { id: 'Related', name: 'Gần đây', colorClasses: 'bg-indigo-100 text-indigo-800 hover:bg-indigo-200', icon: 'fas fa-history' },
         { id: 'CTM', name: 'CTM', colorClasses: 'bg-slate-200 text-slate-800 hover:bg-slate-300' },
         { id: 'Fixed', name: 'Fixed (F)', colorClasses: 'bg-green-100 text-green-800 hover:bg-green-200' },
         { id: 'Product', name: 'Product (P)', colorClasses: 'bg-amber-100 text-amber-800 hover:bg-amber-200' }
     ];
-
+    
     typeTabsContainer.innerHTML = types.map(type => {
         // Calculate the count of tasks for the current type within this map iteration
         let count = 0;
-        if (allGroupedTasks.length > 0 && currentFilters.groupId) {
+        if (type.id !== 'Related' && allGroupedTasks.length > 0 && currentFilters.groupId) {
             const currentGroup = allGroupedTasks.find(g => g.id === currentFilters.groupId);
             if (currentGroup && currentGroup.tasks) {
                 count = currentGroup.tasks.filter(task => task.typeTask === type.id).length;
             }
         }
-
+        
+        const contentHTML = type.icon
+            ? `<i class="${type.icon} text-xl"></i><span class="font-semibold text-sm mt-1">${type.name}</span>`
+            : `<span class="font-bold text-lg">${type.id}</span><span class="task-type-count text-sm font-medium text-slate-600">${count}</span>`;
+            
         return `
             <button class="type-task-tab flex flex-col items-center justify-center w-full h-20 p-1 rounded-lg border-2 border-transparent shadow-sm cursor-pointer transition-all duration-200 ${type.colorClasses}" data-type="${type.id}" title="${type.name}">
-                <span class="font-bold text-lg">${type.id}</span>
-                <span class="task-type-count text-sm font-medium text-slate-600">${count}</span>
+                ${contentHTML}
             </button>
         `
     }).join('');
@@ -170,6 +175,7 @@ function renderTaskGrid() {
     // Cập nhật số lượng task trên các tab loại task mỗi khi render lại lưới
     updateTypeTaskCounts();
 
+    updateActiveTypeTab(); // Thêm dòng này để đảm bảo tab luôn được cập nhật
     if (!taskGridContainer) return;
 
     const group = allGroupedTasks.find(g => g.id === currentFilters.groupId);
@@ -181,6 +187,12 @@ function renderTaskGrid() {
     taskGridContainer.innerHTML = ''; // Xóa nội dung cũ
 
     const searchTerm = document.getElementById('task-library-search')?.value.toLowerCase() || '';
+    
+    // Xử lý trường hợp đặc biệt cho tab "Related"
+    if (currentFilters.typeTask === 'Related') {
+        renderRecentlyUsedTasks(searchTerm);
+        return;
+    }
 
     let filteredTasks = group.tasks;
 
@@ -245,6 +257,68 @@ function renderTaskGrid() {
     updateActiveTypeTab();
 }
 
+/**
+ * Tải 16 task được người dùng hiện tại hoàn thành gần đây nhất.
+ */
+async function fetchRecentlyUsedTasks() {
+    const currentUser = window.currentUser;
+    if (!currentUser || !currentUser.id) {
+        recentlyUsedTasks = [];
+        return;
+    }
+
+    try {
+        // Truy vấn collection 'schedules' để tìm các task đã hoàn thành bởi người dùng này
+        const q = query(
+            collection(db, 'schedules'),
+            where('tasks', 'array-contains-any', [
+                { completingUserId: currentUser.id, isComplete: 1 }
+            ]),
+            orderBy('date', 'desc'), // Sắp xếp theo ngày gần nhất
+            limit(50) // Lấy 50 lịch trình gần nhất để đảm bảo có đủ 16 task
+        );
+
+        const querySnapshot = await getDocs(q);
+        const recentTasksSet = new Map(); // Dùng Map để tránh trùng lặp task
+
+        querySnapshot.forEach(doc => {
+            const schedule = doc.data();
+            (schedule.tasks || []).forEach(task => {
+                if (task.isComplete === 1 && task.completingUserId === currentUser.id && recentTasksSet.size < 16) {
+                    const uniqueTaskId = `${task.groupId}-${task.taskCode}`;
+                    if (!recentTasksSet.has(uniqueTaskId)) {
+                        recentTasksSet.set(uniqueTaskId, task);
+                    }
+                }
+            });
+        });
+
+        recentlyUsedTasks = Array.from(recentTasksSet.values());
+    } catch (error) {
+        console.error("Lỗi khi tải các task đã dùng gần đây:", error);
+        recentlyUsedTasks = [];
+    }
+}
+
+/**
+ * Render các task đã sử dụng gần đây.
+ * @param {string} searchTerm - Từ khóa tìm kiếm.
+ */
+function renderRecentlyUsedTasks(searchTerm) {
+    if (!taskGridContainer) return;
+    taskGridContainer.innerHTML = '';
+
+    let tasksToRender = recentlyUsedTasks.filter(task => 
+        task.name.toLowerCase().includes(searchTerm)
+    );
+
+    if (tasksToRender.length > 0) {
+        tasksToRender.forEach(task => renderSingleTask(task, taskGridContainer));
+        initializeSortableForGrid(taskGridContainer);
+    } else {
+        taskGridContainer.innerHTML = `<p class="text-sm text-gray-500 text-center mt-4 col-span-full">Không có công việc nào được sử dụng gần đây.</p>`;
+    }
+}
 /**
  * Đặt vị trí mặc định cho menu.
  * Được gọi khi khởi tạo và khi không có trạng thái nào được lưu.
@@ -356,6 +430,7 @@ export async function initializeTaskLibrary() {
         allGroupedTasks = await fetchAndGroupTasks();
         renderGroupTabs();
         renderTypeTaskTabs();
+        await fetchRecentlyUsedTasks(); // Tải các task đã dùng gần đây
     } catch (error) {
         console.error("Lỗi khi tải thư viện công việc:", error);
         groupTabsContainer.innerHTML = '<p class="p-2 text-center text-xs text-red-500">Lỗi tải.</p>';

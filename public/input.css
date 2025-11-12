@@ -785,13 +785,6 @@ html, body {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     transform: scale(1.05);
 }
-/* Thêm style cho tab type task được chọn */
-@layer components {
-    .type-task-tab.active {
-        filter: brightness(0.9);
-        transform: translateY(-3px);
-    }
-}
 
 /* --- TASK LIBRARY TYPE TABS - Sử dụng clip-path để tạo hình phễu --- */
 @layer components {
@@ -800,6 +793,15 @@ html, body {
         clip-path: polygon(0 0, 100% 0, 100% 75%, 50% 100%, 0 75%);
     }
 }
+/* Thêm style cho tab type task được chọn */
+@layer components {
+    .type-task-tab.active {
+        @apply shadow-lg ring-2 ring-offset-1;
+        filter: brightness(0.95);
+        transform: translateY(-2px);
+    }
+}
+
 
 .group-tab-code {
     font-weight: 700;
