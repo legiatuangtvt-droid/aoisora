@@ -404,7 +404,18 @@ export async function handleResetTemplate() {
 /**
  * (Chỉ dành cho HQ) Áp dụng template cho các miền được chọn.
  */
-export async function applyTemplateForHq(template) {
+export async function applyTemplateForHq() {
+    const currentUser = window.currentUser;
+    if (!currentUser || (currentUser.roleId !== 'HQ_STAFF' && currentUser.roleId !== 'ADMIN')) {
+        // Logic cho RM/AM sẽ được xử lý ở một hàm khác hoặc trong cùng hàm này với điều kiện khác
+        return;
+    }
+
+    const template = allTemplates.find(t => t.id === currentTemplateId);
+    if (!template) {
+        window.showToast('Vui lòng chọn một mẫu để áp dụng.', 'warning');
+        return;
+    }
         const payrollSettingsRef = doc(db, 'system_configurations', 'payroll_settings');
         const payrollSettingsSnap = await getDoc(payrollSettingsRef);
         const payrollStartDay = payrollSettingsSnap.exists() ? payrollSettingsSnap.data().startDay : 26;
@@ -434,7 +445,7 @@ export async function applyTemplateForHq(template) {
             history: [{
                 status: 'HQ_APPLIED',
                 timestamp: new Date(),
-                userId: window.currentUser.id,
+                userId: currentUser.id,
                 userName: window.currentUser.name
             }],
             comments: []
@@ -457,7 +468,8 @@ export async function applyTemplateForHq(template) {
         await batch.commit();
         window.showToast(`Hoàn tất! Đã gửi kế hoạch từ mẫu "${template.name}" đến tất cả các miền.`, 'success', 5000);
         
-        await showTemplateApplyStatus(template.id);
+        // Tải lại thông tin của mẫu vừa áp dụng để cập nhật trạng thái
+        await loadTemplate(template.id);
 }
 
 /**

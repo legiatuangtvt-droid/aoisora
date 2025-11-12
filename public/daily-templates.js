@@ -113,6 +113,17 @@ export async function init() {
     document.getElementById('delete-template-btn')?.addEventListener('click', deleteCurrentTemplate, { signal });
     document.getElementById('reset-template-btn')?.addEventListener('click', handleResetTemplate, { signal });
     document.getElementById('toggle-view-btn')?.addEventListener('click', toggleBuilderView, { signal });
+
+    // --- LOGIC MỚI: Gắn sự kiện cho nút "Triển khai" / "Xin xác nhận" ---
+    const applyBtn = document.getElementById('apply-template-hq-btn');
+    if (applyBtn) {
+        applyBtn.addEventListener('click', () => {
+            // Hàm applyTemplateForHq sẽ tự kiểm tra vai trò và trạng thái để thực hiện hành động phù hợp
+            applyTemplateForHq();
+        }, { signal });
+    }
+    // --------------------------------------------------------------------
+
     document.getElementById('template-selector')?.addEventListener('change', (e) => loadTemplate(e.target.value), { signal });
 
     // Sử dụng event delegation cho các nút thêm/xóa trên toàn bộ lưới
