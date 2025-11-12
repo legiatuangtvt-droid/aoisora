@@ -3310,7 +3310,7 @@ html, body {
 #task-library-container.expanded {
   width: 575px;
   /* Tăng chiều rộng để bù cho không gian của thanh cuộn dọc */
-  height: 60vh;
+  height: 57vh;
   /* Chiều cao có thể thay đổi */
   max-height: 700px;
   border-radius: 8px;
