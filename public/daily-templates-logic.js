@@ -3,7 +3,7 @@ import { collection, getDocs, query, orderBy, doc, setDoc, serverTimestamp, addD
 import { calculateREForGroup } from './re-calculator.js';
 import { showTaskLibrary } from './task-library.js';
 import { initRELogicView } from './re-logic.js';
-import { toggleTemplateBuilderLock, updateRowAppearance, renderGrid, renderPlanTracker, updateShiftTimeDisplay, getCurrentView} from './daily-templates-ui.js';
+import { toggleTemplateBuilderLock, updateRowAppearance, renderGrid, renderPlanTracker, updateShiftTimeDisplay, getCurrentView, updateGridHeaderStats} from './daily-templates-ui.js';
 import { allTemplates, currentTemplateId, currentMonthlyPlan, originalTemplateData, allWorkPositions, allTaskGroups, fetchAndRenderTemplates, setCurrentTemplateId, setOriginalTemplateData, loadTemplateData, setCurrentMonthlyPlan } from './daily-templates-data.js';
 import { initializeDragAndDrop } from './daily-templates.js';
 import { timeToMinutes, formatDate } from './utils.js';
@@ -113,7 +113,10 @@ export function addShiftRow(tbody, shiftNumber) {
     const newSelector = newRow.querySelector('.shift-code-selector');
     if (newSelector) {
         newSelector.addEventListener('change', (e) => {
-            updateShiftTimeDisplay(e.target);
+            // Cập nhật lại toàn bộ logic giống như khi render lưới ban đầu
+            updateShiftTimeDisplay(e.target); // Cập nhật giao diện dòng (màu sắc, giờ)
+            updateGridHeaderStats();          // Cập nhật chỉ số header (vị trí, man-hour)
+            updateTemplateFromDOM();          // Tự động lưu thay đổi
         });
     }
 }
