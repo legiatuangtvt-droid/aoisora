@@ -97,7 +97,7 @@ export async function init() {
         // --- GIAO DIỆN CHO HQ/ADMIN ---
         // Hiển thị bộ chọn mẫu và các nút quản lý
         document.getElementById('template-selector-container')?.classList.remove('hidden');
-        document.getElementById('template-display-container')?.classList.remove('hidden'); // Cho phép HQ xem trạng thái
+        document.getElementById('template-display-container')?.classList.remove('hidden'); // Luôn hiển thị container trạng thái cho HQ
         document.getElementById('apply-template-hq-btn')?.classList.remove('hidden');
         document.getElementById('save-template-btn')?.classList.remove('hidden');
         document.getElementById('new-template-btn')?.classList.remove('hidden');

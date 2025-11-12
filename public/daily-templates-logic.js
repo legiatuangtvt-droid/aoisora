@@ -228,6 +228,12 @@ export async function loadTemplate(templateId) {
     const templateData = await loadTemplateData(templateId);
     setCurrentTemplateId(templateId);
 
+    // --- LOGIC MỚI: Hiển thị lại container trạng thái khi tải mẫu có sẵn ---
+    const statusContainerForLoad = document.getElementById('template-display-container');
+    if (statusContainerForLoad) {
+        statusContainerForLoad.classList.remove('hidden');
+    }
+
     if (templateData) {
         // Render lưới với dữ liệu mẫu
         renderGrid(templateData);
@@ -250,6 +256,29 @@ export async function loadTemplate(templateId) {
     }
     updateTemplateStats();
     checkTemplateChangesAndToggleResetButton();
+
+    // --- LOGIC MỚI: Tải và hiển thị trạng thái kế hoạch cho HQ ---
+    const statusContainer = document.getElementById('template-display-container');
+    const statusDisplay = document.getElementById('template-name-display');
+
+    if (currentUser && (currentUser.roleId === 'HQ_STAFF' || currentUser.roleId === 'ADMIN') && statusContainer && statusDisplay) {
+        if (templateId && templateId !== 'new') {
+            // Tìm kế hoạch gần nhất được tạo từ template này
+            const plansQuery = query(
+                collection(db, 'monthly_plans'),
+                where('templateId', '==', templateId),
+                orderBy('cycleStartDate', 'desc'),
+                limit(1)
+            );
+            const plansSnap = await getDocs(plansQuery);
+            if (plansSnap.empty) {
+                statusDisplay.textContent = 'Mẫu này chưa được áp dụng.';
+            } else {
+                const plan = { id: plansSnap.docs[0].id, ...plansSnap.docs[0].data() };
+                renderPlanTracker(plan); // Dùng hàm renderPlanTracker để hiển thị trạng thái
+            }
+        }
+    }
 }
 
 /**
