@@ -49,6 +49,7 @@ export function initializeDragAndDrop() {
                 // Sau khi di chuyển hoặc hoán đổi task trong lưới,
                 // cập nhật lại dữ liệu và thống kê.
                 updateTemplateFromDOM();
+                updateAllResizeHandlesVisibility(); // Cập nhật hiển thị tay nắm
             },
             onAdd: (evt) => {
                 const itemEl = evt.item; // Đây là phần tử DOM của task vừa được kéo vào (đã được clone từ thư viện)
@@ -79,11 +80,58 @@ export function initializeDragAndDrop() {
                     deleteBtn.innerHTML = '&times;'; // Sử dụng &times; thay vì <i>
                     itemEl.appendChild(deleteBtn);
                 }
+
+                // Cập nhật hiển thị tay nắm cho các task xung quanh
+                updateAllResizeHandlesVisibility();
             }
         });
         sortableInstances.push(sortable);
     });
 
+}
+
+/**
+ * Cập nhật trạng thái hiển thị của tất cả các tay nắm (resize handles) trên lưới.
+ * Tay nắm sẽ bị ẩn nếu ô liền kề đã có task.
+ */
+function updateAllResizeHandlesVisibility() {
+    const allTasks = document.querySelectorAll('#template-builder-tbody .scheduled-task-item');
+    allTasks.forEach(task => {
+        const currentSlot = task.closest('.quarter-hour-slot');
+        if (!currentSlot) return;
+
+        const leftHandle = task.querySelector('.resize-handle-left');
+        const rightHandle = task.querySelector('.resize-handle-right');
+
+        // Hàm trợ giúp để tìm ô liền kề, có xử lý trường hợp vượt qua ranh giới giờ (<td>)
+        const getAdjacentSlot = (slot, direction) => {
+            if (direction === 'previous') {
+                // Nếu có ô trước đó trong cùng giờ, trả về nó
+                if (slot.previousElementSibling) {
+                    return slot.previousElementSibling;
+                }
+                // Nếu không, tìm ô cuối cùng của giờ trước đó
+                return slot.closest('td')?.previousElementSibling?.querySelector('.quarter-hour-slot:last-child');
+            } else { // direction === 'next'
+                // Nếu có ô tiếp theo trong cùng giờ, trả về nó
+                if (slot.nextElementSibling) {
+                    return slot.nextElementSibling;
+                }
+                // Nếu không, tìm ô đầu tiên của giờ tiếp theo
+                return slot.closest('td')?.nextElementSibling?.querySelector('.quarter-hour-slot:first-child');
+            }
+        };
+
+        // Kiểm tra ô bên trái
+        const prevSlot = getAdjacentSlot(currentSlot, 'previous');
+        const hasTaskOnLeft = prevSlot && prevSlot.querySelector('.scheduled-task-item');
+        leftHandle?.classList.toggle('hidden', !!hasTaskOnLeft);
+
+        // Kiểm tra ô bên phải
+        const nextSlot = getAdjacentSlot(currentSlot, 'next');
+        const hasTaskOnRight = nextSlot && nextSlot.querySelector('.scheduled-task-item');
+        rightHandle?.classList.toggle('hidden', !!hasTaskOnRight);
+    });
 }
 
 /**
@@ -229,6 +277,7 @@ function initializeTaskCloning() {
 
         updateTemplateFromDOM();
         updateTemplateStats();
+        updateAllResizeHandlesVisibility(); // Cập nhật hiển thị tay nắm sau khi nhân bản
     };
 
     gridContainer.addEventListener('mousedown', onMouseDown);
@@ -333,6 +382,9 @@ export async function init() {
                     if (confirmed) { row.remove(); updateTemplateFromDOM(); updateTemplateStats(); } // Giờ đây `row` chắc chắn không phải là null
                 });
             }
+
+            // Cập nhật lại trạng thái tay nắm sau khi xóa task/dòng
+            updateAllResizeHandlesVisibility();
         }, { signal });
     }
 
@@ -366,6 +418,9 @@ export async function init() {
             updateTemplateFromDOM(); // Tự động lưu khi thay đổi manhour
         });
     }
+
+    // Gọi lần đầu để đảm bảo các tay nắm được hiển thị đúng khi tải trang
+    updateAllResizeHandlesVisibility();
 }
 
 export function cleanup() {
