@@ -582,7 +582,10 @@ export async function loadAppliedPlanForManager() {
 export function updateTemplateStats() {
     const statsContentWrapper = document.getElementById('stats-content-wrapper');
     if (!statsContentWrapper) return;
-    const scheduledTasks = document.querySelectorAll('.scheduled-task-item');
+    // Sửa lỗi: Chỉ đếm các task đã thực sự được render, bỏ qua các ô đang được highlight để nhân bản.
+    // Điều này ngăn việc tính thừa giờ trong quá trình kéo-giãn.
+    const scheduledTasks = document.querySelectorAll('#template-builder-tbody .scheduled-task-item');
+
 
     const newStats = {};
 
