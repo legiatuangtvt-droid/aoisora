@@ -324,6 +324,7 @@ export function renderGrid(templateData = null) {
     container.querySelectorAll('.shift-code-selector').forEach(selector => {
         selector.addEventListener('change', (e) => {
             updateShiftTimeDisplay(e.target);
+            updateGridHeaderStats(); // THÊM: Cập nhật lại chỉ số header khi đổi ca
             // Tự động lưu lại thay đổi
             updateTemplateFromDOM();
         });
