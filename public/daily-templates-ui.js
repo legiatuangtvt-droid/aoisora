@@ -16,36 +16,18 @@ export function toggleTemplateBuilderLock(locked) {
     const addRowButton = document.getElementById('add-shift-row-btn');
     if (!gridContainer) return;
 
-    const overlayId = 'template-builder-overlay';
-    let overlay = gridContainer.querySelector(`#${overlayId}`);
-
-    if (locked) {
-        if (!overlay) {
-            overlay = document.createElement('div');
-            overlay.id = overlayId;
-            overlay.className = 'absolute inset-0 bg-gray-400 bg-opacity-20 z-30 cursor-not-allowed';
-            overlay.title = 'Mẫu đang được triển khai, không thể chỉnh sửa.';
-            if (getComputedStyle(gridContainer).position === 'static') {
-                gridContainer.style.position = 'relative';
-            }
-            gridContainer.appendChild(overlay);
-        }
-        overlay.style.width = `${gridContainer.offsetWidth}px`;
-        overlay.style.height = `${gridContainer.offsetHeight}px`;
-
-    } else {
-        if (overlay) {
-            overlay.remove();
-        }
-    }
+    // Đối với Manager (RM/AM), chúng ta chỉ khóa các input chọn ca và vị trí,
+    // nhưng vẫn cho phép họ tương tác với các task (kéo-thả, xóa).
+    // Do đó, chúng ta sẽ không thêm lớp phủ (overlay) nữa.
+    // Lớp phủ sẽ chỉ được thêm trong các trường hợp khác nếu cần.
+    // Hiện tại, logic khóa hoàn toàn không còn cần thiết cho RM/AM.
 
     gridContainer.querySelectorAll('.shift-code-selector, .work-position-selector').forEach(el => {
         el.disabled = locked;
     });
 
-    gridContainer.querySelectorAll('.delete-task-btn, .delete-shift-row-btn, .resize-handle').forEach(el => {
-        el.style.display = locked ? 'none' : '';
-    });
+    // Chỉ ẩn nút xóa dòng ca và nút thêm dòng, cho phép nút xóa task hiển thị.
+    gridContainer.querySelectorAll('.delete-shift-row-btn').forEach(el => el.style.display = locked ? 'none' : '');
 
     if (addRowButton) addRowButton.classList.toggle('hidden', locked);
 }
@@ -285,7 +267,7 @@ export function renderGrid(templateData = null) {
                                  style="background-color: ${color.bg}; color: ${color.text}; border-color: ${color.border};">
                                 <div class="flex-grow flex flex-col justify-center"><span class="overflow-hidden text-ellipsis">${task.taskName}</span></div>
                                 <span class="font-semibold mt-auto">${task.taskCode}</span>
-                                ${!isManager ? '<button class="delete-task-btn absolute top-0 right-0 w-5 h-5 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity" title="Xóa task">&times;</button>' : ''}
+                                <button class="delete-task-btn absolute top-0 right-0 w-5 h-5 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity" title="Xóa task">&times;</button>
                             </div>`;
                     }
                     timeCellsHtml += `<div class="quarter-hour-slot border-r border-dashed border-slate-200 flex justify-center items-center" data-shift-id="${shiftId}" data-time="${time}" data-quarter="${quarter}">${taskItemHtml}</div>`;

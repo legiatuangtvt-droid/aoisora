@@ -92,6 +92,9 @@ export async function init() {
 
         // Tải kế hoạch và mẫu được áp dụng gần nhất cho RM/AM
         await loadAppliedPlanForManager();
+        
+        // Luôn hiển thị thư viện task cho Manager để họ có thể kéo-thả
+        showTaskLibrary();
 
     } else if (currentUser && (currentUser.roleId === 'HQ_STAFF' || currentUser.roleId === 'ADMIN')) {
         // --- GIAO DIỆN CHO HQ/ADMIN ---
