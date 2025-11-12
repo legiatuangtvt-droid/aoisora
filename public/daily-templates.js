@@ -1,5 +1,5 @@
 import { fetchInitialData, fetchAndRenderTemplates, allTemplates, allTaskGroups, allWorkPositions } from './daily-templates-data.js';
-import { renderGrid, updateRowAppearance, toggleBuilderView, createShiftCodeDatalist } from './daily-templates-ui.js';
+import { renderGrid, updateRowAppearance, toggleBuilderView, createShiftCodeDatalist, updateGridHeaderStats } from './daily-templates-ui.js';
 import { 
     addShiftRow,
     updateTemplateFromDOM,
@@ -50,6 +50,7 @@ export function initializeDragAndDrop() {
                 // cập nhật lại dữ liệu và thống kê.
                 updateTemplateFromDOM();
                 updateTemplateStats(); // Thêm dòng này để cập nhật thống kê
+                updateGridHeaderStats(); // Cập nhật chỉ số trên header
                 updateAllResizeHandlesVisibility(); // Cập nhật hiển thị tay nắm
             },
             onAdd: (evt) => {
@@ -85,6 +86,7 @@ export function initializeDragAndDrop() {
                 // Cập nhật lại dữ liệu và thống kê sau khi thêm task mới
                 updateTemplateFromDOM();
                 updateTemplateStats();
+                updateGridHeaderStats(); // Cập nhật chỉ số trên header
                 // Cập nhật hiển thị tay nắm cho các task xung quanh
                 updateAllResizeHandlesVisibility();
             }
@@ -373,6 +375,7 @@ export async function init() {
                     taskItem.remove();
                     updateTemplateFromDOM();
                     updateTemplateStats();
+                    updateGridHeaderStats(); // Cập nhật chỉ số trên header
                 }
             }
 
@@ -383,7 +386,7 @@ export async function init() {
                 if (!row) return; // Nếu không tìm thấy dòng, không làm gì cả
 
                 window.showConfirmation(`Bạn có chắc chắn muốn xóa dòng ca này không?`, 'Xác nhận xóa dòng', 'Xóa', 'Hủy').then(confirmed => {
-                    if (confirmed) { row.remove(); updateTemplateFromDOM(); updateTemplateStats(); } // Giờ đây `row` chắc chắn không phải là null
+                    if (confirmed) { row.remove(); updateTemplateFromDOM(); updateTemplateStats(); updateGridHeaderStats(); } // Giờ đây `row` chắc chắn không phải là null
                 });
             }
 

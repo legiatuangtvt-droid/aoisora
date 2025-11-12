@@ -106,6 +106,57 @@ export function updateShiftTimeDisplay(selector) {
     updateRowAppearance(row);
 }
 /**
+ * Tính toán và cập nhật các chỉ số ở phần đầu của lưới (Vị trí, giờ POS)
+ * mà không cần render lại toàn bộ lưới.
+ */
+export function updateGridHeaderStats() {
+    const thead = document.querySelector('#template-builder-grid-container thead');
+    if (!thead) return;
+
+    // 1. Thu thập dữ liệu hiện tại từ DOM
+    const currentSchedule = {};
+    const currentShiftMappings = {};
+
+    document.querySelectorAll('#template-builder-tbody tr[data-shift-id]').forEach(row => {
+        const shiftId = row.dataset.shiftId;
+        const shiftCode = row.querySelector('.shift-code-selector')?.value;
+        const positionId = row.querySelector('.work-position-selector')?.value;
+        if (shiftId) {
+            currentShiftMappings[shiftId] = { shiftCode, positionId };
+        }
+
+        row.querySelectorAll('.scheduled-task-item').forEach(taskItem => {
+            const slot = taskItem.closest('.quarter-hour-slot');
+            if (!slot) return;
+            if (!currentSchedule[shiftId]) {
+                currentSchedule[shiftId] = [];
+            }
+            currentSchedule[shiftId].push({
+                groupId: taskItem.dataset.groupId,
+                startTime: `${slot.dataset.time.split(':')[0]}:${slot.dataset.quarter}`
+            });
+        });
+    });
+
+    // 2. Tính toán lại các chỉ số
+    const posGroup = Object.values(allTaskGroups).find(g => g.code === 'POS');
+    const posGroupId = posGroup ? posGroup.id : null;
+
+    thead.querySelectorAll('th[data-hour]').forEach(headerCell => {
+        const time = `${headerCell.dataset.hour}:00`;
+        const { positionCount, posManhour } = calculateHourlyStatsForTime(time, currentShiftMappings, currentSchedule, posGroupId);
+
+        // 3. Cập nhật DOM
+        const positionCountEl = headerCell.querySelector('.hourly-position-count');
+        const posManhourEl = headerCell.querySelector('.hourly-pos-manhour');
+
+        if (positionCountEl) positionCountEl.textContent = positionCount;
+        if (posManhourEl) posManhourEl.textContent = posManhour;
+    });
+}
+
+
+/**
  * Render toàn bộ lưới xây dựng lịch trình.
  */
 export function renderGrid(templateData = null) {
@@ -122,61 +173,17 @@ export function renderGrid(templateData = null) {
     const table = document.createElement('table');
     table.className = 'min-w-full border-collapse border border-slate-200 table-fixed';
 
-    // --- LOGIC MỚI: Tính toán các chỉ số theo giờ (vị trí & giờ POS) ---
-    const hourlyStats = {};
-    const posGroup = Object.values(allTaskGroups).find(g => g.code === 'POS');
-    const posGroupId = posGroup ? posGroup.id : null;
-
-    timeSlots.forEach(time => {
-        const hourStartMinutes = timeToMinutes(time);
-        const hourEndMinutes = hourStartMinutes + 60;
-        let positionCount = 0;
-        let posTaskCount = 0;
-
-        // Tính toán số lượng vị trí công việc
-        if (shiftMappings) {
-            for (const shiftId in shiftMappings) {
-                const mapping = shiftMappings[shiftId];
-                const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === mapping.shiftCode);
-                if (shiftInfo && shiftInfo.timeRange) {
-                    const [startStr, endStr] = shiftInfo.timeRange.split('~').map(s => s.trim());
-                    const shiftStart = timeToMinutes(startStr);
-                    const shiftEnd = timeToMinutes(endStr);
-
-                    if (shiftStart < hourEndMinutes && shiftEnd > hourStartMinutes) {
-                        positionCount++;
-                    }
-                }
-            }
-        }
-
-        // Tính toán số lượng task POS
-        if (posGroupId && schedule) {
-            for (const shiftId in schedule) {
-                schedule[shiftId].forEach(task => {
-                    if (task.groupId === posGroupId) {
-                        const taskStartMinutes = timeToMinutes(task.startTime);
-                        if (taskStartMinutes >= hourStartMinutes && taskStartMinutes < hourEndMinutes) {
-                            posTaskCount++;
-                        }
-                    }
-                });
-            }
-        }
-        hourlyStats[time] = { positionCount, posManhour: (posTaskCount * 0.25).toFixed(2) };
-    });
-
     const thead = document.createElement('thead');
     thead.className = 'bg-slate-100 sticky top-0 z-20';
     let headerRowHtml = `<th class="p-2 border border-slate-200 min-w-36 sticky left-0 bg-slate-100 z-30">Ca</th>`;
     timeSlots.forEach(time => {
-        const stats = hourlyStats[time] || { positionCount: 0, posManhour: '0.00' };
+        const { positionCount, posManhour } = calculateHourlyStatsForTime(time, shiftMappings, schedule);
         headerRowHtml += `
-            <th class="p-2 border border-slate-200 min-w-[308px] text-center font-semibold text-slate-700">            
+            <th class="p-2 border border-slate-200 min-w-[308px] text-center font-semibold text-slate-700" data-hour="${time.split(':')[0]}">
                 <div class="flex justify-between items-center">
-                    <span><i class="fas fa-users text-blue-600"> ${stats.positionCount}</i></span>
+                    <span><i class="fas fa-users text-blue-600"> <span class="hourly-position-count">${positionCount}</span></i></span>
                     ${time}
-                    <span><i class="fas fa-cash-register text-green-600"></i> ${stats.posManhour}</span>
+                    <span><i class="fas fa-cash-register text-green-600"></i> <span class="hourly-pos-manhour">${posManhour}</span></span>
                 </div>
             </th>
         `;
@@ -323,6 +330,52 @@ export function renderGrid(templateData = null) {
     });
 }
 
+/**
+ * Hàm trợ giúp để tính toán chỉ số cho một giờ cụ thể.
+ * @param {string} time - Giờ cần tính (ví dụ: "06:00").
+ * @param {object} shiftMappings - Dữ liệu map ca làm việc.
+ * @param {object} schedule - Dữ liệu lịch trình.
+ * @param {string|null} [posGroupId=null] - ID của nhóm POS.
+ * @returns {{positionCount: number, posManhour: string}}
+ */
+function calculateHourlyStatsForTime(time, shiftMappings, schedule, posGroupId = null) {
+    if (!posGroupId) {
+        const posGroup = Object.values(allTaskGroups).find(g => g.code === 'POS');
+        posGroupId = posGroup ? posGroup.id : null;
+    }
+
+    const hourStartMinutes = timeToMinutes(time);
+    const hourEndMinutes = hourStartMinutes + 60;
+    let positionCount = 0;
+    let posTaskCount = 0;
+
+    // Tính toán số lượng vị trí công việc
+    for (const shiftId in shiftMappings) {
+        const mapping = shiftMappings[shiftId];
+        const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === mapping.shiftCode);
+        if (shiftInfo && shiftInfo.timeRange) {
+            const [startStr, endStr] = shiftInfo.timeRange.split('~').map(s => s.trim());
+            const shiftStart = timeToMinutes(startStr);
+            const shiftEnd = timeToMinutes(endStr);
+            if (shiftStart < hourEndMinutes && shiftEnd > hourStartMinutes) {
+                positionCount++;
+            }
+        }
+    }
+
+    // Tính toán số lượng task POS
+    if (posGroupId) {
+        for (const shiftId in schedule) {
+            schedule[shiftId].forEach(task => {
+                if (task.groupId === posGroupId && timeToMinutes(task.startTime) >= hourStartMinutes && timeToMinutes(task.startTime) < hourEndMinutes) {
+                    posTaskCount++;
+                }
+            });
+        }
+    }
+
+    return { positionCount, posManhour: (posTaskCount * 0.25).toFixed(2) };
+}
 /**
  * Hiển thị giao diện theo dõi tiến độ kế hoạch.
  * @param {object} plan - Đối tượng kế hoạch tháng.
