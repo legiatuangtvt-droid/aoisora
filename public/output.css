@@ -3308,7 +3308,7 @@ html, body {
 /* --- Trạng thái mở rộng --- */
 
 #task-library-container.expanded {
-  width: 580px;
+  width: 650px;
   /* Tăng chiều rộng để bù cho không gian của thanh cuộn dọc */
   height: 60vh;
   /* Chiều cao có thể thay đổi */

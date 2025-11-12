@@ -21,7 +21,7 @@ export async function logTaskUsage(groupId, taskCode) {
     }
 
     try {
-        const uniqueTaskId = `${groupId}-${taskCode}`;
+        const uniqueTaskId = `${groupId}__${taskCode}`; // Sử dụng dấu phân cách an toàn hơn
         const userStatsRef = doc(db, 'task_usage_stats', currentUser.id);
 
         console.log(`[Task Usage] Đang ghi nhận... User: ${currentUser.id}, Task: ${uniqueTaskId}`);

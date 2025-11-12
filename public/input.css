@@ -665,7 +665,7 @@ html, body {
 
 /* --- Trạng thái mở rộng --- */
 #task-library-container.expanded {
-    width: 580px; /* Tăng chiều rộng để bù cho không gian của thanh cuộn dọc */
+    width: 650px; /* Tăng chiều rộng để bù cho không gian của thanh cuộn dọc */
     height: 60vh; /* Chiều cao có thể thay đổi */
     max-height: 700px;
     border-radius: 8px; /* Hình chữ nhật bo góc khi mở rộng */

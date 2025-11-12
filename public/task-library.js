@@ -339,13 +339,13 @@ export async function fetchMostUsedTasks() {
         // Lấy thông tin chi tiết của 16 task này từ `allGroupedTasks` đã được tải
         const mostUsedTasks = [];
         for (const taskId of sortedTaskIds) {
-            const [groupId, taskCode] = taskId.split('-');
+            const [groupId, taskCode] = taskId.split('__'); // Sử dụng dấu phân cách an toàn hơn
             const group = allGroupedTasks.find(g => g.id === groupId);
             if (group) {
                 // Tìm task dựa trên taskCode (mã gốc, không phải mã đã генерується)
                 // Cần đảm bảo taskCode trong `daily-templates-logic` là mã gốc.
                 // taskCode ở đây chính là `order` của task trong nhóm.
-                const task = group.tasks.find(t => String(t.order) === String(taskCode));
+                const task = group.tasks.find(t => String(t.order) === taskCode);
                 if (task) {
                     mostUsedTasks.push({ ...task, groupId: group.id }); // Thêm groupId để render
                 }
