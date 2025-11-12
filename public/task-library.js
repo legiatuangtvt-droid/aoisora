@@ -24,21 +24,29 @@ const defaultColor = {
  * Đây là nơi duy nhất sự kiện onEnd được kích hoạt khi clone.
  * @param {Event} evt - Sự kiện từ SortableJS.
  */
-function handleLibraryDragEnd(evt) {
+async function handleLibraryDragEnd(evt) {
     // evt.to là container đích mà task được thả vào.
     // Nếu không có container đích (kéo ra ngoài) hoặc thả vào chính nó, thì không làm gì cả.
     if (!evt.to || evt.to === evt.from) {
         return;
     }
-
     // Chỉ ghi nhận khi một task được sao chép (clone) thành công vào một ô hợp lệ.
     // evt.pullMode === 'clone' và evt.clone là phần tử được tạo ra ở đích.
     if (evt.pullMode === 'clone' && evt.clone) {
-        // KHÔI PHỤC LOGIC GHI NHẬN
         const originalTaskItem = evt.item; // Phần tử gốc trong thư viện
         const groupId = originalTaskItem.dataset.groupId;
         const taskOrder = originalTaskItem.dataset.taskOrder;
-        logTaskUsage(groupId, taskOrder);
+
+        // 1. Ghi nhận việc sử dụng task và đợi cho đến khi hoàn tất
+        await logTaskUsage(groupId, taskOrder);
+
+        // 2. Tải lại danh sách các task được dùng nhiều nhất
+        await fetchMostUsedTasks();
+
+        // 3. Nếu tab "Gần đây" đang được chọn, render lại lưới để cập nhật giao diện
+        if (currentFilters.typeTask === 'Related') {
+            renderTaskGrid();
+        }
     }
 }
 /**
