@@ -37,14 +37,15 @@ export function initializeDragAndDrop() {
                 name: 'template-tasks',
                 pull: true,
                 put: function (to) {
-                    // Chỉ cho phép thả vào nếu ô đó là ô làm việc VÀ ô đó đang trống.
-                    const isWorkSlot = !to.el.classList.contains('non-work-slot');
-                    const isEmpty = to.el.children.length === 0;
-                    return isWorkSlot && isEmpty;
+                    // Cho phép thả vào bất kỳ ô làm việc nào.
+                    // SortableJS sẽ tự động xử lý việc hoán đổi nếu ô đó đã có task.
+                    return !to.el.classList.contains('non-work-slot');
                 }
             },
             animation: 150,
             ghostClass: "swap-ghost",
+            swap: true, // Bật chức năng hoán đổi
+            swapClass: "swap-highlight", // Áp dụng class này cho item bị hoán đổi
             onAdd: (evt) => {
                 const itemEl = evt.item; // Đây là task vừa được kéo vào
                 const isManager = window.currentUser && (window.currentUser.roleId === 'REGIONAL_MANAGER' || window.currentUser.roleId === 'AREA_MANAGER');
