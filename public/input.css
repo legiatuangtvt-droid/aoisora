@@ -541,28 +541,23 @@ html, body {
     border-radius: 2px;
 }
 
-.scheduled-task-item .left-handle {
+.scheduled-task-item .resize-handle-left {
     left: -4px; /* Đặt một nửa ra ngoài để dễ thấy */
 }
 
-.scheduled-task-item .right-handle {
+.scheduled-task-item .resize-handle-right {
     right: -4px; /* Đặt một nửa ra ngoài để dễ thấy */
 }
 
 /* --- Style cho Preview Ghost khi nhân bản task --- */
-#resize-ghost-stretched {
-    position: absolute; /* Sẽ được định vị bằng JS */
+#cloning-ghost {
     pointer-events: none; /* Cho phép sự kiện chuột xuyên qua */
-    z-index: 9999;
     opacity: 0.6; /* Làm cho nó mờ đi */
     overflow: hidden; /* Ẩn nội dung tràn ra ngoài khi kéo giãn */
     box-sizing: border-box;
-    /* Giữ lại con trỏ resize */
-    cursor: col-resize;
     /* Thêm hiệu ứng chuyển động mượt mà khi kích thước thay đổi */
     transition: width 0.05s linear, left 0.05s linear;
 }
-
 /* --- TASK LIBRARY SEARCH --- */
 .task-library-search-container {
     position: relative;
@@ -610,14 +605,6 @@ html, body {
 #task-library-search:focus {
     outline: none;
     border-color: #4f46e5; /* indigo-500 */
-}
-
-/* Đảm bảo nội dung bên trong ghost không bị co lại hoặc biến dạng */
-#resize-ghost-stretched > div {
-    width: 100%;
-    height: 100%;
-    display: flex; /* Sử dụng flex để giữ cấu trúc */
-    flex-direction: column;
 }
 
 /* --- TASK LIBRARY STYLES (Chuyển từ task-library.css) --- */

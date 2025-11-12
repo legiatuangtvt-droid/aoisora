@@ -55,22 +55,6 @@ export async function logTaskUsage(groupId, taskCode) {
 }
 
 /**
- * Xử lý sự kiện khi một task được kéo thả xong (di chuyển, thêm, xóa).
- */
-export function handleDragEnd(evt) {
-    updateTemplateFromDOM();
-    updateTemplateStats();
-    // Nếu một task mới được thêm vào từ thư viện (clone)
-    if (evt.pullMode === 'clone') {
-        const taskItem = evt.item;
-        // Lấy groupId và order gốc từ dataset của task trong thư viện
-        const groupId = taskItem.dataset.groupId;
-        const taskOrder = taskItem.dataset.taskOrder; // Sử dụng taskOrder thay vì taskCode
-        logTaskUsage(groupId, taskOrder);
-    }
-}
-
-/**
  * Thêm một dòng ca mới vào bảng.
  */
 export function addShiftRow(tbody, shiftNumber) {

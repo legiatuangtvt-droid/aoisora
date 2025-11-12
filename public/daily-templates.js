@@ -1,7 +1,6 @@
 import { fetchInitialData, fetchAndRenderTemplates, allTemplates, allTaskGroups, allWorkPositions } from './daily-templates-data.js';
 import { renderGrid, updateRowAppearance, toggleBuilderView, createShiftCodeDatalist } from './daily-templates-ui.js';
 import { 
-    handleDragEnd, 
     addShiftRow,
     updateTemplateFromDOM,
     switchToCreateNewMode,
@@ -46,18 +45,38 @@ export function initializeDragAndDrop() {
             ghostClass: "swap-ghost",
             swap: true, // Bật chức năng hoán đổi
             swapClass: "swap-highlight", // Áp dụng class này cho item bị hoán đổi
+            onEnd: () => {
+                // Sau khi di chuyển hoặc hoán đổi task trong lưới,
+                // cập nhật lại dữ liệu và thống kê.
+                updateTemplateFromDOM();
+            },
             onAdd: (evt) => {
-                const itemEl = evt.item; // Đây là task vừa được kéo vào
+                const itemEl = evt.item; // Đây là phần tử DOM của task vừa được kéo vào (đã được clone từ thư viện)
                 const isManager = window.currentUser && (window.currentUser.roleId === 'REGIONAL_MANAGER' || window.currentUser.roleId === 'AREA_MANAGER');
 
-                // Đảm bảo task được kéo vào có đúng class để xử lý xóa
-                itemEl.classList.add('scheduled-task-item'); // Chỉ cần thêm class này, không xóa class cũ
+                // Đảm bảo phần tử có class 'scheduled-task-item'
+                itemEl.classList.add('scheduled-task-item');
+
+                // Thêm các "tay nắm" (resize handles) cho chức năng kéo-nhân-bản
+                // Chỉ thêm nếu chúng chưa tồn tại
+                if (!itemEl.querySelector('.resize-handle-left')) {
+                    const leftHandle = document.createElement('div');
+                    leftHandle.className = 'resize-handle resize-handle-left';
+                    leftHandle.dataset.direction = 'left';
+                    itemEl.prepend(leftHandle); // Thêm vào đầu
+                }
+                if (!itemEl.querySelector('.resize-handle-right')) {
+                    const rightHandle = document.createElement('div');
+                    rightHandle.className = 'resize-handle resize-handle-right';
+                    rightHandle.dataset.direction = 'right';
+                    itemEl.prepend(rightHandle); // Thêm vào đầu
+                }
 
                 // Chỉ thêm nút xóa nếu không phải là Manager
                 if (!isManager && !itemEl.querySelector('.delete-task-btn')) {
                     const deleteBtn = document.createElement('button');
-                    deleteBtn.className = 'delete-task-btn absolute top-0 right-0 w-5 h-5 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity';
-                    deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+                    deleteBtn.className = 'delete-task-btn absolute top-0 right-0 w-5 h-5 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity z-10'; // Thêm z-10
+                    deleteBtn.innerHTML = '&times;'; // Sử dụng &times; thay vì <i>
                     itemEl.appendChild(deleteBtn);
                 }
             }
@@ -65,6 +84,136 @@ export function initializeDragAndDrop() {
         sortableInstances.push(sortable);
     });
 
+}
+
+/**
+ * Khởi tạo logic kéo-giãn để nhân bản task.
+ * Sử dụng event delegation trên container của lưới.
+ */
+function initializeTaskCloning() {
+    const gridContainer = document.getElementById('template-builder-grid-container');
+    if (!gridContainer) return;
+
+    let isCloning = false;
+    let sourceTaskElement = null;
+    let ghostElement = null;
+    let startX = 0;
+    let direction = 'right';
+    let slotWidth = 0;
+    let initialSlot = null;
+
+    const onMouseDown = (e) => {
+        const handle = e.target.closest('.resize-handle');
+        if (!handle) return;
+
+        e.preventDefault();
+        e.stopPropagation(); // Ngăn SortableJS hoạt động
+
+        isCloning = true;
+        sourceTaskElement = handle.closest('.scheduled-task-item');
+        initialSlot = sourceTaskElement.closest('.quarter-hour-slot');
+        startX = e.clientX;
+        direction = handle.dataset.direction;
+        slotWidth = initialSlot.getBoundingClientRect().width;
+
+        // Tạo ghost element
+        ghostElement = sourceTaskElement.cloneNode(true);
+        ghostElement.id = 'cloning-ghost';
+        const sourceRect = sourceTaskElement.getBoundingClientRect();
+        Object.assign(ghostElement.style, {
+            position: 'absolute',
+            left: `${sourceRect.left}px`,
+            top: `${sourceRect.top}px`,
+            width: `${sourceRect.width}px`,
+            height: `${sourceRect.height}px`, // Thêm height để đảm bảo kích thước
+            zIndex: '9999' // Đảm bảo ghost luôn ở trên cùng
+        });
+        document.body.appendChild(ghostElement);
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    };
+
+    const onMouseMove = (e) => {
+        if (!isCloning) return;
+
+        const dx = e.clientX - startX;
+        const numSlots = Math.round(Math.abs(dx) / slotWidth);
+
+        // Cập nhật chiều rộng của ghost
+        ghostElement.style.width = `${slotWidth * (numSlots + 1)}px`;
+        if (direction === 'left' && dx < 0) {
+            const sourceRect = sourceTaskElement.getBoundingClientRect();
+            ghostElement.style.left = `${sourceRect.left + dx}px`;
+        }
+
+        // Highlight các ô đích
+        highlightTargetSlots(numSlots);
+    };
+
+    const onMouseUp = (e) => {
+        if (!isCloning) return;
+
+        const dx = e.clientX - startX;
+        const numSlots = Math.round(Math.abs(dx) / slotWidth);
+
+        if (numSlots > 0) {
+            cloneTasksToHighlightedSlots();
+        }
+
+        // Dọn dẹp
+        isCloning = false;
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        ghostElement?.remove();
+        document.querySelectorAll('.clone-target-highlight').forEach(el => el.classList.remove('clone-target-highlight'));
+    };
+
+    const highlightTargetSlots = (numSlots) => {
+        // Xóa highlight cũ
+        document.querySelectorAll('.clone-target-highlight').forEach(el => el.classList.remove('clone-target-highlight'));
+
+        let currentSlot = initialSlot;
+        for (let i = 0; i < numSlots; i++) {
+            const nextSlot = direction === 'right'
+                ? currentSlot.nextElementSibling
+                : currentSlot.previousElementSibling;
+
+            if (nextSlot && !nextSlot.querySelector('.scheduled-task-item') && !nextSlot.classList.contains('non-work-slot')) {
+                nextSlot.classList.add('clone-target-highlight');
+                currentSlot = nextSlot;
+            } else {
+                break; // Dừng lại nếu ô tiếp theo không hợp lệ
+            }
+        }
+    };
+
+    const cloneTasksToHighlightedSlots = () => {
+        const highlightedSlots = document.querySelectorAll('.clone-target-highlight');
+        highlightedSlots.forEach(slot => {
+            const newTask = sourceTaskElement.cloneNode(true);
+            // Xóa các class và id không cần thiết của ghost/handle
+            newTask.classList.remove('dragging');
+            newTask.removeAttribute('id');
+            
+            // Đảm bảo nút xóa được thêm đúng cách
+            if (!newTask.querySelector('.delete-task-btn')) {
+                 const deleteBtn = document.createElement('button');
+                 deleteBtn.className = 'delete-task-btn absolute top-0 right-0 w-5 h-5 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity z-10';
+                 deleteBtn.title = 'Xóa task';
+                 deleteBtn.innerHTML = '&times;'; // Sử dụng &times; cho an toàn
+                 newTask.appendChild(deleteBtn);
+            }
+
+            slot.innerHTML = ''; // Xóa highlight
+            slot.appendChild(newTask);
+        });
+
+        updateTemplateFromDOM();
+        updateTemplateStats();
+    };
+
+    gridContainer.addEventListener('mousedown', onMouseDown);
 }
 
 export async function init() {
@@ -76,6 +225,9 @@ export async function init() {
 
     // Tạo datalist cho mã ca sau khi đã có dữ liệu
     createShiftCodeDatalist();
+
+    // Khởi tạo tính năng kéo-nhân-bản
+    initializeTaskCloning();
 
     const currentUser = window.currentUser;
 

@@ -262,12 +262,16 @@ export function renderGrid(templateData = null) {
                         const group = allTaskGroups[task.groupId] || {};
                         const color = (group.color && group.color.bg) ? group.color : { bg: '#e2e8f0', text: '#1e293b', border: '#94a3b8' };
                         taskItemHtml = `
-                            <div class="scheduled-task-item relative group w-[70px] h-[100px] border-2 text-xs p-1 rounded-md shadow-sm flex flex-col justify-between items-center text-center" 
+                            <div class="scheduled-task-item relative group w-[70px] h-[100px] border-2 text-xs p-1 rounded-md shadow-sm flex flex-col justify-between items-center text-center"
                                  data-task-code="${task.taskCode}" data-group-id="${task.groupId}"
                                  style="background-color: ${color.bg}; color: ${color.text}; border-color: ${color.border};">
+                                <!-- Tay nắm để kéo nhân bản task -->
+                                <div class="resize-handle resize-handle-left" data-direction="left"></div>
+                                <div class="resize-handle resize-handle-right" data-direction="right"></div>
+                                
                                 <div class="flex-grow flex flex-col justify-center"><span class="overflow-hidden text-ellipsis">${task.taskName}</span></div>
                                 <span class="font-semibold mt-auto">${task.taskCode}</span>
-                                <button class="delete-task-btn absolute top-0 right-0 w-5 h-5 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity" title="Xóa task">&times;</button>
+                                <button class="delete-task-btn absolute top-0 right-0 w-5 h-5 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity z-10" title="Xóa task">&times;</button>
                             </div>`;
                     }
                     timeCellsHtml += `<div class="quarter-hour-slot border-r border-dashed border-slate-200 flex justify-center items-center" data-shift-id="${shiftId}" data-time="${time}" data-quarter="${quarter}">${taskItemHtml}</div>`;

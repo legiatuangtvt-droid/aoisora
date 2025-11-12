@@ -903,10 +903,6 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
   visibility: collapse;
 }
 
-.static {
-  position: static;
-}
-
 .absolute {
   position: absolute;
 }
@@ -1424,6 +1420,10 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
           user-select: none;
 }
 
+.resize {
+  resize: both;
+}
+
 .grid-cols-1 {
   grid-template-columns: repeat(1, minmax(0, 1fr));
 }
@@ -1861,11 +1861,6 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
   background-color: rgb(243 244 246 / var(--tw-bg-opacity, 1));
 }
 
-.bg-gray-400 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(156 163 175 / var(--tw-bg-opacity, 1));
-}
-
 .bg-gray-50 {
   --tw-bg-opacity: 1;
   background-color: rgb(249 250 251 / var(--tw-bg-opacity, 1));
@@ -1973,10 +1968,6 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
 .bg-white {
   --tw-bg-opacity: 1;
   background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
-}
-
-.bg-opacity-20 {
-  --tw-bg-opacity: 0.2;
 }
 
 .stroke-green-500 {
@@ -3152,31 +3143,26 @@ html, body {
   border-radius: 2px;
 }
 
-.scheduled-task-item .left-handle {
+.scheduled-task-item .resize-handle-left {
   left: -4px;
   /* Đặt một nửa ra ngoài để dễ thấy */
 }
 
-.scheduled-task-item .right-handle {
+.scheduled-task-item .resize-handle-right {
   right: -4px;
   /* Đặt một nửa ra ngoài để dễ thấy */
 }
 
 /* --- Style cho Preview Ghost khi nhân bản task --- */
 
-#resize-ghost-stretched {
-  position: absolute;
-  /* Sẽ được định vị bằng JS */
+#cloning-ghost {
   pointer-events: none;
   /* Cho phép sự kiện chuột xuyên qua */
-  z-index: 9999;
   opacity: 0.6;
   /* Làm cho nó mờ đi */
   overflow: hidden;
   /* Ẩn nội dung tràn ra ngoài khi kéo giãn */
   box-sizing: border-box;
-  /* Giữ lại con trỏ resize */
-  cursor: col-resize;
   /* Thêm hiệu ứng chuyển động mượt mà khi kích thước thay đổi */
   transition: width 0.05s linear, left 0.05s linear;
 }
@@ -3238,16 +3224,6 @@ html, body {
   outline: none;
   border-color: #4f46e5;
   /* indigo-500 */
-}
-
-/* Đảm bảo nội dung bên trong ghost không bị co lại hoặc biến dạng */
-
-#resize-ghost-stretched > div {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  /* Sử dụng flex để giữ cấu trúc */
-  flex-direction: column;
 }
 
 /* --- TASK LIBRARY STYLES (Chuyển từ task-library.css) --- */
