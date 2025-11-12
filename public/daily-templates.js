@@ -49,6 +49,7 @@ export function initializeDragAndDrop() {
                 // Sau khi di chuyển hoặc hoán đổi task trong lưới,
                 // cập nhật lại dữ liệu và thống kê.
                 updateTemplateFromDOM();
+                updateTemplateStats(); // Thêm dòng này để cập nhật thống kê
                 updateAllResizeHandlesVisibility(); // Cập nhật hiển thị tay nắm
             },
             onAdd: (evt) => {
@@ -81,6 +82,9 @@ export function initializeDragAndDrop() {
                     itemEl.appendChild(deleteBtn);
                 }
 
+                // Cập nhật lại dữ liệu và thống kê sau khi thêm task mới
+                updateTemplateFromDOM();
+                updateTemplateStats();
                 // Cập nhật hiển thị tay nắm cho các task xung quanh
                 updateAllResizeHandlesVisibility();
             }
