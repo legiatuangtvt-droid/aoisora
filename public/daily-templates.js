@@ -42,7 +42,6 @@ export function initializeDragAndDrop() {
             },
             animation: 150,
             ghostClass: "swap-ghost",
-            onEnd: handleDragEnd,
             onAdd: (evt) => {
                 const itemEl = evt.item; // Đây là task vừa được kéo vào
                 const isManager = window.currentUser && (window.currentUser.roleId === 'REGIONAL_MANAGER' || window.currentUser.roleId === 'AREA_MANAGER');

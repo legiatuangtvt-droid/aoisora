@@ -1,5 +1,6 @@
 import { db } from './firebase.js';
-import { collection, getDocs, query, orderBy, where, limit } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { collection, getDocs, query, orderBy, where, limit, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { logTaskUsage } from './daily-templates-logic.js'; // Import hàm logTaskUsage
 import "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"; // This is a global import
 import "https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js";
 
@@ -17,6 +18,29 @@ let recentlyUsedTasks = []; // Biến mới để lưu các task đã dùng gầ
 const defaultColor = {
     bg: '#e2e8f0', text: '#1e293b', border: '#94a3b8', hover: '#cbd5e1', tailwind_bg: 'bg-slate-200', tailwind_text: 'text-slate-800', tailwind_border: 'border-slate-400'
 };
+
+/**
+ * Xử lý sự kiện khi kéo-thả một task từ thư viện kết thúc.
+ * Đây là nơi duy nhất sự kiện onEnd được kích hoạt khi clone.
+ * @param {Event} evt - Sự kiện từ SortableJS.
+ */
+function handleLibraryDragEnd(evt) {
+    // evt.to là container đích mà task được thả vào.
+    // Nếu không có container đích (kéo ra ngoài) hoặc thả vào chính nó, thì không làm gì cả.
+    if (!evt.to || evt.to === evt.from) {
+        return;
+    }
+
+    // Chỉ ghi nhận khi một task được sao chép (clone) thành công vào một ô hợp lệ.
+    // evt.pullMode === 'clone' và evt.clone là phần tử được tạo ra ở đích.
+    if (evt.pullMode === 'clone' && evt.clone) {
+        console.log('[Task Library Drag] Phát hiện thao tác kéo-thả từ thư viện (clone). Bắt đầu ghi nhận...');
+        const originalTaskItem = evt.item; // Phần tử gốc trong thư viện
+        const groupId = originalTaskItem.dataset.groupId;
+        const taskOrder = originalTaskItem.dataset.taskOrder;
+        logTaskUsage(groupId, taskOrder);
+    }
+}
 /**
  * Lấy dữ liệu công việc từ Firestore và nhóm chúng lại.
  */
@@ -216,6 +240,7 @@ function renderTaskGrid() {
             // Áp dụng class Tailwind tĩnh và màu sắc qua inline style
             taskItem.className = `task-library-item relative group border-2 text-xs p-1 rounded-md shadow-sm cursor-grab flex flex-col justify-between items-center text-center`;
             taskItem.dataset.taskCode = generatedCode; // Gán mã task đã tạo vào dataset
+            taskItem.dataset.taskOrder = task.order; // Gán order gốc của task
             taskItem.dataset.groupId = group.id; // Thêm groupId để xác định màu sắc
             taskItem.style.backgroundColor = color.bg;
             taskItem.style.color = color.text;
@@ -238,13 +263,8 @@ function renderTaskGrid() {
                 put: false // Không cho phép thả item vào đây
             },
             sort: false, // Không cần sắp xếp lại trong thư viện
-            animation: 150,
-            onStart: function () {
-                document.body.classList.add('is-dragging-task');
-            },
-            onEnd: function () {
-                document.body.classList.remove('is-dragging-task');
-            }
+            animation: 150,            
+            onEnd: handleLibraryDragEnd // Gọi hàm xử lý sự kiện onEnd mới
         });
     } else {
         const message = searchTerm
@@ -258,44 +278,58 @@ function renderTaskGrid() {
 }
 
 /**
- * Tải 16 task được người dùng hiện tại hoàn thành gần đây nhất.
+ * Tải 16 task được người dùng hiện tại sử dụng (kéo-thả) nhiều nhất.
  */
-async function fetchRecentlyUsedTasks() {
+async function fetchMostUsedTasks() {
+    console.log('[Related Tasks] Bắt đầu tải các công việc được dùng nhiều nhất...');
     const currentUser = window.currentUser;
     if (!currentUser || !currentUser.id) {
+        console.warn('[Related Tasks] Không tìm thấy người dùng hiện tại. Dừng lại.');
         recentlyUsedTasks = [];
         return;
     }
+    console.log(`[Related Tasks] Tìm kiếm cho người dùng: ${currentUser.name} (ID: ${currentUser.id})`);
 
     try {
-        // Truy vấn collection 'schedules' để tìm các task đã hoàn thành bởi người dùng này
-        const q = query(
-            collection(db, 'schedules'),
-            where('tasks', 'array-contains-any', [
-                { completingUserId: currentUser.id, isComplete: 1 }
-            ]),
-            orderBy('date', 'desc'), // Sắp xếp theo ngày gần nhất
-            limit(50) // Lấy 50 lịch trình gần nhất để đảm bảo có đủ 16 task
-        );
+        const userStatsRef = doc(db, 'task_usage_stats', currentUser.id);
+        const docSnap = await getDoc(userStatsRef);
 
-        const querySnapshot = await getDocs(q);
-        const recentTasksSet = new Map(); // Dùng Map để tránh trùng lặp task
+        if (!docSnap.exists() || !docSnap.data().usageCounts) {
+            console.log('[Related Tasks] Không có dữ liệu tần suất sử dụng cho người dùng này.');
+            recentlyUsedTasks = [];
+            return;
+        }
 
-        querySnapshot.forEach(doc => {
-            const schedule = doc.data();
-            (schedule.tasks || []).forEach(task => {
-                if (task.isComplete === 1 && task.completingUserId === currentUser.id && recentTasksSet.size < 16) {
-                    const uniqueTaskId = `${task.groupId}-${task.taskCode}`;
-                    if (!recentTasksSet.has(uniqueTaskId)) {
-                        recentTasksSet.set(uniqueTaskId, task);
-                    }
+        const usageCounts = docSnap.data().usageCounts;
+
+        // Chuyển map thành mảng, sắp xếp theo số lần sử dụng giảm dần và lấy 16 task đầu tiên
+        const sortedTaskIds = Object.entries(usageCounts)
+            .sort(([, countA], [, countB]) => countB - countA)
+            .slice(0, 16)
+            .map(([taskId]) => taskId);
+
+        console.log('[Related Tasks] 16 task ID được dùng nhiều nhất:', sortedTaskIds);
+
+        // Lấy thông tin chi tiết của 16 task này từ `allGroupedTasks` đã được tải
+        const mostUsedTasks = [];
+        for (const taskId of sortedTaskIds) {
+            const [groupId, taskCode] = taskId.split('-');
+            const group = allGroupedTasks.find(g => g.id === groupId);
+            if (group) {
+                // Tìm task dựa trên taskCode (mã gốc, không phải mã đã генерується)
+                // Cần đảm bảo taskCode trong `daily-templates-logic` là mã gốc.
+                // Giả sử taskCode là `order` của task trong nhóm.
+                const task = group.tasks.find(t => String(t.order) === taskCode);
+                if (task) {
+                    mostUsedTasks.push({ ...task, groupId: group.id }); // Thêm groupId để render
                 }
-            });
-        });
+            }
+        }
 
-        recentlyUsedTasks = Array.from(recentTasksSet.values());
+        recentlyUsedTasks = mostUsedTasks;
+        console.log('[Related Tasks] Hoàn tất! Danh sách các công việc được dùng nhiều nhất:', recentlyUsedTasks);
     } catch (error) {
-        console.error("Lỗi khi tải các task đã dùng gần đây:", error);
+        console.error("Lỗi khi tải các task được dùng nhiều nhất:", error);
         recentlyUsedTasks = [];
     }
 }
@@ -430,7 +464,7 @@ export async function initializeTaskLibrary() {
         allGroupedTasks = await fetchAndGroupTasks();
         renderGroupTabs();
         renderTypeTaskTabs();
-        await fetchRecentlyUsedTasks(); // Tải các task đã dùng gần đây
+        await fetchMostUsedTasks(); // Tải các task được dùng nhiều nhất
     } catch (error) {
         console.error("Lỗi khi tải thư viện công việc:", error);
         groupTabsContainer.innerHTML = '<p class="p-2 text-center text-xs text-red-500">Lỗi tải.</p>';

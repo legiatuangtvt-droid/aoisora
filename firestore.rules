@@ -90,5 +90,10 @@ service cloud.firestore { // Cấu hình cho Firestore
     match /monthly_plans/{planId} {
       allow read, write: if true;
     }
+
+    // Cho phép đọc/ghi vào collection thống kê sử dụng task
+    match /task_usage_stats/{userId} {
+      allow read, write: if true;
+    }
   }
 }

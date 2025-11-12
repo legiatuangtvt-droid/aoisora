@@ -1,5 +1,5 @@
 import { db } from './firebase.js';
-import { collection, getDocs, query, orderBy, doc, setDoc, serverTimestamp, addDoc, deleteDoc, getDoc, where, writeBatch, limit, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { collection, getDocs, query, orderBy, doc, setDoc, serverTimestamp, addDoc, deleteDoc, getDoc, where, writeBatch, limit, updateDoc, increment } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 import { calculateREForGroup } from './re-calculator.js';
 import { showTaskLibrary } from './task-library.js';
 import { initRELogicView } from './re-logic.js';
@@ -9,11 +9,54 @@ import { initializeDragAndDrop } from './daily-templates.js';
 import { timeToMinutes, formatDate } from './utils.js';
 
 /**
+ * Ghi nhận việc một task được sử dụng (kéo-thả) vào Firestore.
+ * @param {string} groupId - ID của nhóm chứa task.
+ * @param {string} taskCode - Mã của task.
+ */
+export async function logTaskUsage(groupId, taskCode) {
+    const currentUser = window.currentUser;
+    if (!currentUser || !currentUser.id || !groupId || !taskCode) {
+        console.warn('[Task Usage] Dừng ghi nhận: Thiếu thông tin người dùng, groupId, hoặc taskCode.');
+        return;
+    }
+
+    try {
+        const uniqueTaskId = `${groupId}-${taskCode}`;
+        const userStatsRef = doc(db, 'task_usage_stats', currentUser.id);
+
+        console.log(`[Task Usage] Đang ghi nhận... User: ${currentUser.id}, Task: ${uniqueTaskId}`);
+
+        // Sử dụng increment() để tăng số đếm một cách an toàn, tránh race condition.
+        // Field name sử dụng dấu chấm để cập nhật một key cụ thể trong map.
+        await setDoc(userStatsRef, {
+            [`usageCounts.${uniqueTaskId}`]: increment(1)
+        }, { merge: true }); // Dùng setDoc với merge:true để tạo document nếu chưa tồn tại
+
+        console.log(`[Task Usage] Ghi nhận thành công cho task: ${uniqueTaskId}`);
+
+    } catch (error) {
+        console.error("Lỗi khi ghi nhận tần suất sử dụng task:", error);
+        // Không cần thông báo cho người dùng để tránh làm phiền
+    }
+}
+
+/**
  * Xử lý sự kiện khi một task được kéo thả xong (di chuyển, thêm, xóa).
  */
 export function handleDragEnd(evt) {
+    console.log('[Drag & Drop] Sự kiện handleDragEnd được kích hoạt. Chế độ:', evt.pullMode);
     updateTemplateFromDOM();
     updateTemplateStats();
+    // Nếu một task mới được thêm vào từ thư viện (clone)
+    if (evt.pullMode === 'clone') {
+        console.log('[Drag & Drop] Phát hiện thao tác kéo-thả từ thư viện (clone). Bắt đầu ghi nhận...');
+        const taskItem = evt.item;
+        // Lấy groupId và order gốc từ dataset của task trong thư viện
+        const groupId = taskItem.dataset.groupId;
+        const taskOrder = taskItem.dataset.taskOrder; // Sử dụng taskOrder thay vì taskCode
+        console.log(`[Drag & Drop] Thông tin task: groupId=${groupId}, taskOrder=${taskOrder}`);
+        logTaskUsage(groupId, taskOrder);
+    }
 }
 
 /**
