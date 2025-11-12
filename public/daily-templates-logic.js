@@ -10,10 +10,10 @@ import { timeToMinutes, formatDate } from './utils.js';
 
 // Map các trạng thái kế hoạch tháng sang chuỗi hiển thị thân thiện
 const planStatusMessages = {
-    'HQ_APPLIED': 'HQ đã triển khai',
-    'RM_AWAITING_APPROVAL': 'RM đang chờ phê duyệt',
-    'HQ_REJECTED_RM_CHANGES': 'HQ đã từ chối thay đổi',
-    'HQ_APPROVED_RM_CHANGES': 'HQ đã phê duyệt thay đổi',
+    'HQ_APPLIED': 'HQ đã triển khai tới RM',
+    'RM_AWAITING_APPROVAL': 'RM đang chờ HQ phê duyệt',
+    'HQ_REJECTED_RM_CHANGES': 'HQ đã từ chối thay đổi của RM',
+    'HQ_APPROVED_RM_CHANGES': 'HQ đã phê duyệt thay đổi của RM',
     'RM_SENT_TO_STAFF': 'RM đã gửi về Staff',
     'STAFF_REGISTERED': 'Staff đã đăng ký',
     'SL_ADJUSTED': 'SL đã điều chỉnh',
