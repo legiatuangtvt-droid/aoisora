@@ -37,7 +37,10 @@ export function initializeDragAndDrop() {
                 name: 'template-tasks',
                 pull: true,
                 put: function (to) {
-                    return !to.el.classList.contains('non-work-slot');
+                    // Chỉ cho phép thả vào nếu ô đó là ô làm việc VÀ ô đó đang trống.
+                    const isWorkSlot = !to.el.classList.contains('non-work-slot');
+                    const isEmpty = to.el.children.length === 0;
+                    return isWorkSlot && isEmpty;
                 }
             },
             animation: 150,
