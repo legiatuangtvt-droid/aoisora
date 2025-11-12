@@ -40,15 +40,15 @@ function showCheckboxListPrompt(message, title = 'Lựa chọn', options = [], o
             const headerHTML = `
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="p-2 w-10 text-center"><input type="checkbox" id="checkbox-select-all" class="form-checkbox h-4 w-4 text-indigo-600"></th>
-                        ${headers.map(h => `<th class="p-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${h}</th>`).join('')}
+                        <th class="p-2 w-10 text-center border border-gray-200"><input type="checkbox" id="checkbox-select-all" class="form-checkbox h-4 w-4 text-indigo-600"></th>
+                        ${headers.map(h => `<th class="p-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border border-gray-200">${h}</th>`).join('')}
                     </tr>
                 </thead>`;
             // Sửa lỗi: Lặp qua `options.rows` thay vì `options`
             const rowsHTML = options.rows.map((opt, index) => `
                 <tr class="hover:bg-gray-50">
-                    <td class="p-2 text-center"><input type="checkbox" id="checkbox-opt-${index}" value="${opt.value}" class="form-checkbox h-4 w-4 text-indigo-600" ${opt.checked ? 'checked' : ''}></td>
-                    ${opt.cells.map(cell => `<td class="p-2 text-sm text-gray-700">${cell}</td>`).join('')}
+                    <td class="p-2 text-center border border-gray-200"><input type="checkbox" id="checkbox-opt-${index}" value="${opt.value}" class="form-checkbox h-4 w-4 text-indigo-600" ${opt.checked ? 'checked' : ''}></td>
+                    ${opt.cells.map(cell => `<td class="p-2 text-sm text-gray-700 text-center border border-gray-200">${cell}</td>`).join('')}
                 </tr>
             `).join('');
 

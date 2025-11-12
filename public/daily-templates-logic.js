@@ -3,7 +3,7 @@ import { collection, getDocs, query, orderBy, doc, setDoc, serverTimestamp, addD
 import { calculateREForGroup } from './re-calculator.js';
 import { showTaskLibrary } from './task-library.js';
 import { initRELogicView } from './re-logic.js';
-import { toggleTemplateBuilderLock, updateRowAppearance, renderGrid, renderPlanTracker, updateShiftTimeDisplay, getCurrentView } from './daily-templates-ui.js';
+import { toggleTemplateBuilderLock, updateRowAppearance, renderGrid, renderPlanTracker, updateShiftTimeDisplay, getCurrentView} from './daily-templates-ui.js';
 import { allTemplates, currentTemplateId, currentMonthlyPlan, originalTemplateData, allWorkPositions, allTaskGroups, fetchAndRenderTemplates, setCurrentTemplateId, setOriginalTemplateData, loadTemplateData } from './daily-templates-data.js';
 import { initializeDragAndDrop } from './daily-templates.js';
 import { timeToMinutes, formatDate } from './utils.js';
@@ -406,6 +406,8 @@ export async function handleResetTemplate() {
  */
 export async function applyTemplateForHq() {
     const currentUser = window.currentUser;
+    const { allPersonnel } = await import('./daily-templates-data.js');
+    const allRegions = await fetchAllRegions(); // Lấy danh sách tất cả các miền
     if (!currentUser || (currentUser.roleId !== 'HQ_STAFF' && currentUser.roleId !== 'ADMIN')) {
         // Logic cho RM/AM sẽ được xử lý ở một hàm khác hoặc trong cùng hàm này với điều kiện khác
         return;
@@ -413,6 +415,38 @@ export async function applyTemplateForHq() {
 
     const template = allTemplates.find(t => t.id === currentTemplateId);
     if (!template) {
+        window.showToast('Vui lòng chọn một mẫu để áp dụng.', 'warning');
+        return;
+    }
+
+    // --- Bước mới: Hiển thị modal chọn miền ---
+    const selectedRegionIds = await window.showCheckboxListPrompt(
+        'Chọn các miền để áp dụng mẫu:',
+        'Áp dụng cho Miền',
+        {
+            headers: ['Tên Miền', 'Tên RM'],
+            rows: allRegions.map(region => {
+                // Tìm RM quản lý miền này
+                const regionalManager = allPersonnel.find(p => 
+                    p.roleId === 'REGIONAL_MANAGER' && p.managedRegionId === region.id
+                );
+                return {
+                    value: region.id,
+                    cells: [
+                        region.name,
+                        regionalManager ? regionalManager.name : '<span class="text-gray-400 italic">Chưa có</span>'
+                    ]
+                };
+            })
+        }
+    );
+
+    if (!selectedRegionIds) {
+        window.showToast('Đã hủy thao tác.', 'info');
+        return;
+    }
+
+    if (selectedRegionIds.length === 0) {
         window.showToast('Vui lòng chọn một mẫu để áp dụng.', 'warning');
         return;
     }
@@ -453,7 +487,7 @@ export async function applyTemplateForHq() {
         const planRef = doc(collection(db, 'monthly_plans'));
         batch.set(planRef, newPlan);
 
-        const confirmed = await window.showConfirmation(
+       const confirmed = await window.showConfirmation(
             `Bạn có chắc chắn muốn gửi kế hoạch dựa trên mẫu <strong>"${template.name}"</strong> đến các miền của [Tất cả] cho chu kỳ bắt đầu từ ngày <strong>${formattedStartDate}</strong> không?`,
             'Xác nhận gửi kế hoạch',
             'Gửi Kế hoạch',
@@ -472,6 +506,20 @@ export async function applyTemplateForHq() {
         await loadTemplate(template.id);
 }
 
+/**
+ * Tải danh sách tất cả các miền (regions) từ Firestore.
+ * @returns {Promise<Array>}
+ */
+async function fetchAllRegions() {
+    try {
+        const regionsSnapshot = await getDocs(collection(db, 'regions'));
+        return regionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+        console.error("Lỗi khi tải danh sách khu vực:", error);
+        window.showToast("Không thể tải danh sách khu vực.", "error");
+        return [];
+    }
+}
 /**
  * (Dành cho RM/AM) Tải kế hoạch và mẫu được áp dụng gần nhất.
  */
