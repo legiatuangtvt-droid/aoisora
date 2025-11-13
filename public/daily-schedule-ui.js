@@ -121,41 +121,24 @@ export function renderScheduleGrid() {
     table.className = 'min-w-full border-collapse border border-slate-200 table-fixed';
 
     // --- Tạo Header ---
-    // Calculate hourly man-hours
-    const hourlyManhours = new Map();
-    for (let h = 5; h <= 23; h++) {
-        hourlyManhours.set(String(h).padStart(2, '0'), 0);
-    }
-
-    currentScheduleData.forEach(schedule => {
-        (schedule.tasks || []).forEach(task => {
-            const hour = task.startTime.split(':')[0]; // e.g., "06" from "06:15"
-            let current = hourlyManhours.get(hour) || 0;
-            hourlyManhours.set(hour, current + 0.25); // Each task is 15 minutes = 0.25 hours
-        });
-    });
-
     const thead = document.createElement('thead');
     thead.className = 'bg-slate-100 border-2 border-b-black sticky top-0 z-20'; // Tăng z-index để header nổi trên các ô sticky
     
-    // First header row: Man-hours
-    const manhourRow = document.createElement('tr');
-
     // Calculate overall store completion rate
     let overallTotalTasks = 0;
     let overallCompletedTasks = 0;
     currentScheduleData.forEach(schedule => {
         (schedule.tasks || []).forEach(task => {
             overallTotalTasks++;
-            if (task.isComplete === 1) {
+            if (task.isComplete === 1) { // Sửa lỗi: Chỉ đếm task đã hoàn thành
                 overallCompletedTasks++;
             }
         });
     });
     const overallCompletionRate = overallTotalTasks > 0 ? Math.round((overallCompletedTasks / overallTotalTasks) * 100) : 0;
 
-    manhourRow.innerHTML = `
-        <th rowspan="2" class="p-2 border border-slate-200 w-40 min-w-40 sticky left-0 bg-slate-100 z-30">
+    let headerRowHtml = `
+        <th class="p-2 border border-slate-200 w-40 min-w-40 sticky left-0 bg-slate-100 z-30">
             <div class="relative w-full h-full flex items-center justify-center" title="Tỷ lệ hoàn thành của cửa hàng">
                 <svg class="w-16 h-16" viewBox="0 0 36 36">
                     <path class="stroke-slate-300" stroke-width="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
@@ -163,20 +146,29 @@ export function renderScheduleGrid() {
                 </svg>
                 <div class="absolute inset-0 flex items-center justify-center text-base font-bold text-indigo-600">${overallCompletionRate}%</div>
             </div>
-        </th>`;
-    for (let h = 5; h <= 23; h++) {
-        const hourKey = String(h).padStart(2, '0');
-        const manhours = hourlyManhours.get(hourKey) || 0;
-        manhourRow.innerHTML += `<th class="p-2 border border-slate-200 text-center font-semibold text-slate-700">${manhours.toFixed(2)} Manhour</th>`;
-    }
-    thead.appendChild(manhourRow);
+        </th>
+    `;
 
-    // Second header row: Time slots
-    const timeSlotRow = document.createElement('tr');
     timeSlots.forEach(time => {
-        timeSlotRow.innerHTML += `<th class="p-2 border border-slate-200 min-w-[308px] text-center font-semibold text-slate-700" data-hour="${time.split(':')[0]}">${time}</th>`;
+        const hourKey = time.split(':')[0];
+        const tasksInHour = currentScheduleData.flatMap(s => s.tasks || []).filter(t => t.startTime.startsWith(hourKey));
+        const positionCount = (tasksInHour.length * 0.25).toFixed(2);
+
+        const reParameters = dailyTemplate?.reParameters || {};
+        const hourlyCustomerCount = reParameters.customerCountByHour?.[hourKey] || 0;
+        const rawPosManhour = hourlyCustomerCount / 60;
+        const posManhour = (Math.ceil(rawPosManhour * 4) / 4).toFixed(2);
+
+        headerRowHtml += `
+            <th class="p-2 border border-slate-200 min-w-[308px] text-center font-semibold text-slate-700" data-hour="${hourKey}">
+                <div class="flex justify-between items-center">
+                    <span><i class="fas fa-users text-blue-600"> <span class="hourly-position-count">${positionCount}</span></i></span>
+                    ${time}
+                    <span><i class="fas fa-cash-register text-green-600"></i> <span class="hourly-pos-manhour">${posManhour}</span></span>
+                </div>
+            </th>`;
     });
-    thead.appendChild(timeSlotRow);
+    thead.innerHTML = `<tr>${headerRowHtml}</tr>`;
     table.appendChild(thead);
 
     // --- Tạo Body ---
