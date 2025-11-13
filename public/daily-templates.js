@@ -42,58 +42,78 @@ export function initializeDragAndDrop() {
                 }
             },
             animation: 150,
-            ghostClass: "swap-ghost",
-            swap: true, // Bật chức năng hoán đổi
-            swapClass: "swap-highlight", // Áp dụng class này cho item bị hoán đổi
-            onEnd: () => {
-                // Sau khi di chuyển hoặc hoán đổi task trong lưới,
-                // cập nhật lại dữ liệu và thống kê.
-                updateTemplateFromDOM();
-                updateTemplateStats(); // Thêm dòng này để cập nhật thống kê
-                updateGridHeaderStats(); // Cập nhật chỉ số trên header
-                updateAllResizeHandlesVisibility(); // Cập nhật hiển thị tay nắm
-            },
-            onAdd: (evt) => {
-                const itemEl = evt.item; // Đây là phần tử DOM của task vừa được kéo vào (đã được clone từ thư viện)
-                const isManager = window.currentUser && (window.currentUser.roleId === 'REGIONAL_MANAGER' || window.currentUser.roleId === 'AREA_MANAGER');
-
-                // Đảm bảo phần tử có class 'scheduled-task-item'
-                itemEl.classList.add('scheduled-task-item');
-
-                // Xóa các tay nắm cũ (nếu có) và tạo lại để đảm bảo tính nhất quán
-                itemEl.querySelectorAll('.resize-handle').forEach(h => h.remove());
-
-                // Tạo và thêm tay nắm bên trái
-                const leftHandle = document.createElement('div');
-                leftHandle.className = 'resize-handle resize-handle-left';
-                leftHandle.dataset.direction = 'left';
-                itemEl.prepend(leftHandle);
-
-                // Tạo và thêm tay nắm bên phải
-                const rightHandle = document.createElement('div');
-                rightHandle.className = 'resize-handle resize-handle-right';
-                rightHandle.dataset.direction = 'right';
-                itemEl.prepend(rightHandle);
-
-                // Chỉ thêm nút xóa nếu không phải là Manager
-                if (!isManager && !itemEl.querySelector('.delete-task-btn')) {
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.className = 'delete-task-btn absolute top-0 right-0 w-5 h-5 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity z-10'; // Thêm z-10
-                    deleteBtn.innerHTML = '&times;'; // Sử dụng &times; thay vì <i>
-                    itemEl.appendChild(deleteBtn);
-                }
-
-                // Cập nhật lại dữ liệu và thống kê sau khi thêm task mới
+            ghostClass: "swap-ghost", // Giữ lại ghost class để có hiệu ứng đẹp
+            // swap: true, // TẮT tùy chọn swap để xử lý thủ công
+            // swapClass: "swap-highlight", 
+            onEnd: (evt) => {
+                // onEnd vẫn cần thiết để cập nhật DOM và thống kê sau mỗi lần kéo thả,
+                // bất kể là di chuyển, hoán đổi hay kéo từ thư viện.
                 updateTemplateFromDOM();
                 updateTemplateStats();
-                updateGridHeaderStats(); // Cập nhật chỉ số trên header
-                // Cập nhật hiển thị tay nắm cho các task xung quanh
+                updateGridHeaderStats();
                 updateAllResizeHandlesVisibility();
+            },
+            onAdd: (evt) => {
+                const toSlot = evt.to; // Ô đích
+                const fromSlot = evt.from; // Ô nguồn
+                const draggedItem = evt.item; // Task được kéo
+                const oldItem = toSlot.querySelector('.scheduled-task-item:not(.sortable-ghost)'); // Task cũ trong ô đích (nếu có)
+
+                // Đảm bảo task được kéo vào luôn có các nút điều khiển
+                addControlsToTask(draggedItem);
+
+                // Logic hoán đổi thủ công:
+                // Nếu ô đích đã có một task (oldItem) và nó không phải là task đang được kéo,
+                // thì di chuyển task cũ đó về ô nguồn.
+                if (oldItem && oldItem !== draggedItem) {
+                    fromSlot.appendChild(oldItem);
+                    // Đảm bảo task được chuyển về cũng có các nút điều khiển
+                    addControlsToTask(oldItem);
+                }
+
+                // Các hàm cập nhật sẽ được gọi trong onEnd để tránh gọi nhiều lần.
             }
         });
         sortableInstances.push(sortable);
     });
 
+}
+
+/**
+ * Thêm các nút điều khiển (xóa, tay nắm resize) vào một task.
+ * Hàm này được tách ra để tái sử dụng trong cả onAdd và onEnd.
+ * @param {HTMLElement} taskElement - Phần tử DOM của task.
+ */
+function addControlsToTask(taskElement) {
+    if (!taskElement) return;
+
+    const isManager = window.currentUser && (window.currentUser.roleId === 'REGIONAL_MANAGER' || window.currentUser.roleId === 'AREA_MANAGER');
+
+    // Đảm bảo phần tử có class 'scheduled-task-item'
+    taskElement.classList.add('scheduled-task-item');
+
+    // Xóa các tay nắm cũ (nếu có) và tạo lại để đảm bảo tính nhất quán
+    taskElement.querySelectorAll('.resize-handle').forEach(h => h.remove());
+
+    // Tạo và thêm tay nắm bên trái
+    const leftHandle = document.createElement('div');
+    leftHandle.className = 'resize-handle resize-handle-left';
+    leftHandle.dataset.direction = 'left';
+    taskElement.prepend(leftHandle);
+
+    // Tạo và thêm tay nắm bên phải
+    const rightHandle = document.createElement('div');
+    rightHandle.className = 'resize-handle resize-handle-right';
+    rightHandle.dataset.direction = 'right';
+    taskElement.prepend(rightHandle);
+
+    // Chỉ thêm nút xóa nếu không phải là Manager và chưa có nút xóa
+    if (!isManager && !taskElement.querySelector('.delete-task-btn')) {
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-task-btn absolute top-0 right-0 w-5 h-5 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity z-10';
+        deleteBtn.innerHTML = '&times;';
+        taskElement.appendChild(deleteBtn);
+    }
 }
 
 /**
