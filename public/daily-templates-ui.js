@@ -454,6 +454,15 @@ export async function renderPlanTracker(plan) { // Giữ lại async vì có cá
                     const relatedPlansSnap = await getDocs(relatedPlansQuery);
                     const relatedPlans = relatedPlansSnap.docs.map(doc => doc.data());
 
+                    // --- LOGIC MỚI: Kiểm tra xem tất cả RM đã triển khai chưa ---
+                    const allRmsDeployed = relatedPlans.length > 0 && relatedPlans.every(p =>
+                        p.history.some(h => h.status === 'RM_SENT_TO_STAFF')
+                    );
+
+                    const completionIcon = allRmsDeployed
+                        ? '<i class="fas fa-check-circle text-green-700 mr-2"></i>'
+                        : ''; // Không hiển thị icon nếu chưa hoàn thành
+
                     const rmStatusesPromises = relatedPlans.map(async (p) => {
                         const regionalManager = allPersonnel.find(person => person.roleId === 'REGIONAL_MANAGER' && person.managedRegionId === p.regionId);
                         const region = allRegions.find(r => r.id === p.regionId);
@@ -488,7 +497,7 @@ export async function renderPlanTracker(plan) { // Giữ lại async vì có cá
 
                     additionalMessage = `
                         <div class="mt-2 pl-6">
-                            <strong class="text-sm">2. RMs triển khai tới Staffs:</strong>
+                            <strong class="text-sm flex items-center">${completionIcon}2. RMs triển khai tới Staffs:</strong>
                             <ul class="space-y-1 mt-1">${rmStatuses}</ul>
                         </div>
                     `;
