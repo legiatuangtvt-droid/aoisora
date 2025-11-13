@@ -489,6 +489,9 @@ export async function applyTemplateForHq() {
     }
 
     const batch = writeBatch(db);
+    // Tạo một ID duy nhất cho đợt triển khai này để nhóm các kế hoạch lại với nhau
+    const deploymentBatchId = doc(collection(db, 'monthly_plans')).id;
+
     selectedRegionIds.forEach(regionId => {
         const newPlan = {
             regionId: regionId,
@@ -500,7 +503,8 @@ export async function applyTemplateForHq() {
             userName: currentUser.name,
             status: 'HQ_APPLIED',
             history: [{ status: 'HQ_APPLIED', timestamp: new Date(), userId: currentUser.id, userName: currentUser.name, userRole: currentUser.roleId }],
-            comments: []
+            comments: [],
+            deploymentBatchId: deploymentBatchId // Thêm ID của đợt triển khai
         };
         const planRef = doc(collection(db, 'monthly_plans'));
         batch.set(planRef, newPlan);

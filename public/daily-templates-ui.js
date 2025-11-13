@@ -381,9 +381,11 @@ function calculateHourlyStatsForTime(time, shiftMappings, schedule, posGroupId =
  * Hiển thị giao diện theo dõi tiến độ kế hoạch.
  * @param {object} plan - Đối tượng kế hoạch tháng.
  */
-export function renderPlanTracker(plan) {
+export async function renderPlanTracker(plan) {
     const container = document.getElementById('plan-tracker-modal');
     if (!container) return;
+
+    const { allPersonnel } = await import('./daily-templates-data.js');
 
     const historyList = container.querySelector('#plan-history-list');
     const approvalActions = document.getElementById('plan-approval-actions');
@@ -404,12 +406,11 @@ export function renderPlanTracker(plan) {
     if (plan.history && plan.history.length > 0) {
         const historyHTML = plan.history
             .sort((a, b) => a.timestamp.toMillis() - b.timestamp.toMillis())
-            .map(historyEntry => {
+            .map(async (historyEntry) => {
                 const stepInfo = steps.find(s => s.id === historyEntry.status);
                 const label = stepInfo ? stepInfo.label : historyEntry.status;
                 
                 const userRole = historyEntry.userRole;
-                console.log('userRole: ', userRole);
                 let displayRole = '';
                 if (userRole) {
                     switch (userRole) {
@@ -439,20 +440,50 @@ export function renderPlanTracker(plan) {
                 const timestamp = historyEntry.timestamp?.toDate().toLocaleString('vi-VN') || 'N/A';
                 const iconClass = historyEntry.status.includes('REJECTED') ? 'fa-times-circle text-red-600' : 'fa-check-circle text-green-700';
                 
-                // Thêm thông điệp bổ sung cho trạng thái HQ_APPLIED
                 let additionalMessage = '';
-                if (historyEntry.status === 'HQ_APPLIED') {
-                    additionalMessage = '. <span class="italic text-gray-500">Đang chờ RMs xử lý.</span>';
+                // LOGIC MỚI: Xử lý hiển thị chi tiết cho trạng thái HQ_APPLIED
+                if (historyEntry.status === 'HQ_APPLIED' && plan.deploymentBatchId) {
+                    const { db } = await import('./firebase.js');
+                    const { collection, query, where, getDocs } = await import("https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js");
+
+                    const relatedPlansQuery = query(collection(db, 'monthly_plans'), where('deploymentBatchId', '==', plan.deploymentBatchId));
+                    const relatedPlansSnap = await getDocs(relatedPlansQuery);
+                    const relatedPlans = relatedPlansSnap.docs.map(doc => doc.data());
+
+                    const rmStatuses = relatedPlans.map(p => {
+                        const regionalManager = allPersonnel.find(person => person.roleId === 'REGIONAL_MANAGER' && person.managedRegionId === p.regionId);
+                        const rmName = regionalManager ? regionalManager.name : `Miền ${p.regionId}`;
+                        
+                        // Nếu kế hoạch của RM này đã có bước tiếp theo (lịch sử có nhiều hơn 1 entry)
+                        if (p.history.length > 1) {
+                            const nextStep = p.history[1]; // Lấy bước thứ 2
+                            const nextStepLabel = steps.find(s => s.id === nextStep.status)?.label || nextStep.status;
+                            const nextStepTimestamp = nextStep.timestamp?.toDate().toLocaleString('vi-VN') || '';
+                            return `<li class="ml-6 text-green-700"><i class="fas fa-check-circle mr-2"></i><strong>${rmName}:</strong> Đã xử lý (${nextStepLabel} lúc ${nextStepTimestamp})</li>`;
+                        } else {
+                            // Nếu chưa xử lý
+                            return `<li class="ml-6 text-gray-500 italic"><i class="fas fa-spinner fa-spin mr-2"></i><strong>${rmName}:</strong> Đang xử lý...</li>`;
+                        }
+                    }).join('');
+
+                    additionalMessage = `
+                        <div class="mt-2 pl-6">
+                            <strong class="text-sm">2. RMs triển khai tới Staffs:</strong>
+                            <ul class="space-y-1 mt-1">${rmStatuses}</ul>
+                        </div>
+                    `;
                 }
-                console.log('displayRole: ', displayRole);
 
                 const commentHTML = historyEntry.comment 
                     ? `<div class="text-xs text-gray-600 italic pl-6 mt-1 p-1 bg-gray-100 rounded">- ${historyEntry.comment}</div>` 
                     : '';
 
-                return `<li class="flex items-start"><i class="fas ${iconClass} mr-2 mt-1 flex-shrink-0"></i><div><strong>${label}:</strong> Hoàn thành bởi ${displayRole}${historyEntry.userName} lúc ${timestamp}${additionalMessage}${commentHTML}</div></li>`;
-            }).join('');
-        historyList.innerHTML = historyHTML;
+                return `<li class="flex items-start"><i class="fas ${iconClass} mr-2 mt-1 flex-shrink-0"></i><div><strong>${label}:</strong> Hoàn thành bởi ${displayRole}${historyEntry.userName} lúc ${timestamp}.${commentHTML}</div></li>${additionalMessage}`;
+            });
+        // Chờ tất cả các promise được giải quyết và sau đó mới cập nhật DOM
+        Promise.all(historyHTML).then(html => {
+            historyList.innerHTML = html.join('');
+        });
     } else {
         historyList.innerHTML = `<li class="text-gray-400 italic">Chưa có hoạt động nào được ghi nhận.</li>`;
     }
