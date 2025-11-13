@@ -113,6 +113,10 @@ export function updateGridHeaderStats() {
     const thead = document.querySelector('#template-builder-grid-container thead');
     if (!thead) return;
 
+    // Lấy reParameters từ template hiện tại để tính toán posManhour
+    const currentTemplate = allTemplates.find(t => t.id === currentTemplateId);
+    const reParameters = currentTemplate?.reParameters || {};
+
     // 1. Thu thập dữ liệu hiện tại từ DOM
     const currentSchedule = {};
     const currentShiftMappings = {};
@@ -144,7 +148,7 @@ export function updateGridHeaderStats() {
 
     thead.querySelectorAll('th[data-hour]').forEach(headerCell => {
         const time = `${headerCell.dataset.hour}:00`;
-        const { positionCount, posManhour } = calculateHourlyStatsForTime(time, currentShiftMappings, currentSchedule, posGroupId);
+        const { positionCount, posManhour } = calculateHourlyStatsForTime(time, currentShiftMappings, currentSchedule, reParameters, posGroupId);
 
         // 3. Cập nhật DOM
         const positionCountEl = headerCell.querySelector('.hourly-position-count');
@@ -162,6 +166,7 @@ export function updateGridHeaderStats() {
 export function renderGrid(templateData = null) {
     const schedule = templateData?.schedule || {};
     const shiftMappings = templateData?.shiftMappings || {};
+    const reParameters = templateData?.reParameters || {}; // Lấy reParameters từ templateData
     const currentUser = window.currentUser;
     const isManager = currentUser && (currentUser.roleId === 'REGIONAL_MANAGER' || currentUser.roleId === 'AREA_MANAGER');
 
@@ -177,7 +182,7 @@ export function renderGrid(templateData = null) {
     thead.className = 'bg-slate-100 sticky top-0 z-20';
     let headerRowHtml = `<th class="p-2 border border-slate-200 min-w-36 sticky left-0 bg-slate-100 z-30">Ca</th>`;
     timeSlots.forEach(time => {
-        const { positionCount, posManhour } = calculateHourlyStatsForTime(time, shiftMappings, schedule);
+        const { positionCount, posManhour } = calculateHourlyStatsForTime(time, shiftMappings, schedule, reParameters);
         headerRowHtml += `
             <th class="p-2 border border-slate-200 min-w-[308px] text-center font-semibold text-slate-700" data-hour="${time.split(':')[0]}">
                 <div class="flex justify-between items-center">
@@ -336,10 +341,11 @@ export function renderGrid(templateData = null) {
  * @param {string} time - Giờ cần tính (ví dụ: "06:00").
  * @param {object} shiftMappings - Dữ liệu map ca làm việc.
  * @param {object} schedule - Dữ liệu lịch trình.
+ * @param {object} reParameters - Các tham số RE (chứa customerCount).
  * @param {string|null} [posGroupId=null] - ID của nhóm POS.
  * @returns {{positionCount: number, posManhour: string}}
  */
-function calculateHourlyStatsForTime(time, shiftMappings, schedule, posGroupId = null) {
+function calculateHourlyStatsForTime(time, shiftMappings, schedule, reParameters = {}, posGroupId = null) {
     if (!posGroupId) {
         const posGroup = Object.values(allTaskGroups).find(g => g.code === 'POS');
         posGroupId = posGroup ? posGroup.id : null;
@@ -365,9 +371,14 @@ function calculateHourlyStatsForTime(time, shiftMappings, schedule, posGroupId =
         }
     }
 
-    // Tính toán manhour cho tổng số task và task POS
+    // --- LOGIC MỚI: Tính posManhour theo công thức mới ---
+    const customerCount = reParameters.customerCount || 0;
+    // Công thức: posManhour = customerCount * 1 / 60, sau đó làm tròn lên theo bước 0.25
+    const rawPosManhour = customerCount / 60;
+    const posManhour = (Math.ceil(rawPosManhour * 4) / 4).toFixed(2);
+
+    // Tính toán manhour cho tổng số task
     const totalManhour = (totalTasksInHour * 0.25).toFixed(2);
-    const posManhour = (posTaskCount * 0.25).toFixed(2);
 
     // Theo yêu cầu, positionCount được tính bằng manhour (số task trong giờ x 0.25)
     return { positionCount: totalManhour, posManhour: posManhour };
