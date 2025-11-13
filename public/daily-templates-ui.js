@@ -407,6 +407,9 @@ export async function renderPlanTracker(plan) { // Giữ lại async vì có cá
     if (plan.history && plan.history.length > 0) {
         const historyHTML = plan.history
             .sort((a, b) => a.timestamp.toMillis() - b.timestamp.toMillis())
+            // --- LOGIC MỚI: Lọc ra các bước RM_SENT_TO_STAFF để không hiển thị riêng lẻ ---
+            // Thông tin này sẽ được tích hợp vào mục "HQ_APPLIED"
+            .filter(historyEntry => historyEntry.status !== 'RM_SENT_TO_STAFF')
             .map(async (historyEntry) => {
                 const stepInfo = steps.find(s => s.id === historyEntry.status);
                 const label = stepInfo ? stepInfo.label : historyEntry.status;
@@ -458,10 +461,21 @@ export async function renderPlanTracker(plan) { // Giữ lại async vì có cá
                         const rmName = regionalManager ? regionalManager.name : 'Chưa có RM';
                         const fullRmTitle = `RM ${regionName} ${rmName}`;
                         
-                        // Nếu kế hoạch của RM này đã có bước tiếp theo (lịch sử có nhiều hơn 1 entry)
-                        if (p.history.length > 1) {
-                            const nextStep = p.history[1]; // Lấy bước thứ 2
-                            const nextStepLabel = steps.find(s => s.id === nextStep.status)?.label || nextStep.status;
+                        // --- LOGIC MỚI: Tìm bước RM_SENT_TO_STAFF trong lịch sử của RM ---
+                        const sentToStaffStep = p.history.find(h => h.status === 'RM_SENT_TO_STAFF');
+
+                        if (sentToStaffStep) {
+                            // Nếu RM đã triển khai cho nhân viên, hiển thị thông báo "Đã triển khai"
+                            const sentTimestamp = sentToStaffStep.timestamp?.toDate().toLocaleString('vi-VN') || '';
+                            return `<li class="ml-6 text-green-700"><i class="fas fa-check-circle mr-2"></i><strong>${fullRmTitle}:</strong> Đã triển khai lúc ${sentTimestamp}</li>`;
+                        } else if (p.history.length > 1) {
+                            // Nếu có bước khác nhưng không phải là 'RM_SENT_TO_STAFF' (ví dụ: đang chờ duyệt)
+                            // Lấy bước gần nhất sau bước 'HQ_APPLIED'
+                            const nextStep = p.history
+                                .filter(h => h.status !== 'HQ_APPLIED')
+                                .sort((a, b) => a.timestamp.toMillis() - b.timestamp.toMillis())[0];
+                            
+                            const nextStepLabel = steps.find(s => s.id === nextStep.status)?.label.replace(/^\d+\.\d*\.?\s*/, '') || nextStep.status; // Bỏ số thứ tự đầu dòng
                             const nextStepTimestamp = nextStep.timestamp?.toDate().toLocaleString('vi-VN') || '';
                             return `<li class="ml-6 text-green-700"><i class="fas fa-check-circle mr-2"></i><strong>${fullRmTitle}:</strong> Đã xử lý (${nextStepLabel} lúc ${nextStepTimestamp})</li>`;
                         } else {
