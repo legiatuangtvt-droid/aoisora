@@ -71,7 +71,8 @@ export function initializeDragAndDrop() {
                     addControlsToTask(oldItem);
                 }
 
-                // Các hàm cập nhật sẽ được gọi trong onEnd để tránh gọi nhiều lần.
+                // Cập nhật lại chỉ số header ngay lập tức khi có task mới từ thư viện.
+                updateGridHeaderStats();
             }
         });
         sortableInstances.push(sortable);
