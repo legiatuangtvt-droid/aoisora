@@ -1,5 +1,5 @@
 import { db } from './firebase.js';
-import { collection, getDocs, query, orderBy, doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 import { calculateREForGroup, calculateREForTask } from './re-calculator.js';
 
 /**
@@ -105,11 +105,112 @@ function renderREView(allTaskGroups, reParameters) {
         });
     });
 
+    // --- LOGIC MỚI: Gắn sự kiện cho form trong popup ---
+    const storeInfoForm = document.getElementById('re-store-info-form');
+    if (storeInfoForm) {
+        storeInfoForm.addEventListener('submit', (e) => handleStoreInfoFormSubmit(e, currentTemplateId, allTaskGroups));
+    }
+}
+
+/**
+ * Mở popup để chỉnh sửa thông tin cửa hàng.
+ * @param {object} reParameters - Các tham số RE hiện tại của template.
+ */
+function openStoreInfoModal(reParameters = {}) {
+    const modal = document.getElementById('re-store-info-modal');
+    if (!modal) return;
+
+    // Điền các giá trị chung
+    document.getElementById('modal-pos-count').value = reParameters.posCount || 0;
+    document.getElementById('modal-area-size').value = reParameters.areaSize || 0;
+    document.getElementById('modal-employee-count').value = reParameters.employeeCount || 0;
+    document.getElementById('modal-dry-goods-volume').value = reParameters.dryGoodsVolume || 0;
+    document.getElementById('modal-vegetable-weight').value = reParameters.vegetableWeight || 0;
+
+    // Điền bảng số lượng khách hàng theo giờ
+    const customerTableBody = document.getElementById('modal-customer-table-body');
+    customerTableBody.innerHTML = ''; // Xóa dữ liệu cũ
+    const customerCountByHour = reParameters.customerCountByHour || {};
+
+    for (let hour = 6; hour <= 22; hour++) {
+        const hourStr = String(hour).padStart(2, '0');
+        const customerCount = customerCountByHour[hourStr] || 0;
+        const posHours = (customerCount / 60).toFixed(2);
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td class="p-2 border text-center font-semibold">${hourStr}:00</td>
+            <td class="p-2 border text-center">
+                <input type="number" value="${customerCount}" data-hour="${hourStr}" class="customer-hour-input form-input w-24 text-center p-1">
+            </td>
+            <td class="p-2 border text-center pos-hour-output">${posHours}</td>
+        `;
+        customerTableBody.appendChild(row);
+    }
+
+    // Gắn sự kiện input cho các ô số lượng khách hàng để tự động cập nhật giờ POS
+    customerTableBody.querySelectorAll('.customer-hour-input').forEach(input => {
+        input.addEventListener('input', () => {
+            const count = parseFloat(input.value) || 0;
+            const posHourCell = input.closest('tr').querySelector('.pos-hour-output');
+            posHourCell.textContent = (count / 60).toFixed(2);
+        });
+    });
+
+    // Hiển thị modal
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    setTimeout(() => modal.classList.add('show'), 10);
+}
+
+/**
+ * Xử lý khi submit form thông tin cửa hàng từ popup.
+ * @param {Event} e - Sự kiện submit.
+ * @param {string} currentTemplateId - ID của template hiện tại.
+ * @param {object} allTaskGroups - Dữ liệu các nhóm task.
+ */
+export async function handleStoreInfoFormSubmit(e, currentTemplateId, allTaskGroups) {
+    e.preventDefault();
+    if (!currentTemplateId) {
+        window.showToast('Vui lòng chọn một mẫu trước khi lưu.', 'warning');
+        return;
+    }
+
+    // Thu thập dữ liệu từ popup
+    const newCustomerCountByHour = {};
+    document.querySelectorAll('#modal-customer-table-body .customer-hour-input').forEach(input => {
+        const hour = input.dataset.hour;
+        newCustomerCountByHour[hour] = parseInt(input.value, 10) || 0;
+    });
+
+    const newReParameters = {
+        posCount: parseInt(document.getElementById('modal-pos-count').value, 10) || 0,
+        areaSize: parseInt(document.getElementById('modal-area-size').value, 10) || 0,
+        employeeCount: parseInt(document.getElementById('modal-employee-count').value, 10) || 0,
+        dryGoodsVolume: parseInt(document.getElementById('modal-dry-goods-volume').value, 10) || 0,
+        vegetableWeight: parseInt(document.getElementById('modal-vegetable-weight').value, 10) || 0,
+        customerCountByHour: newCustomerCountByHour,
+        // Tính lại tổng customerCount để các logic cũ không bị lỗi
+        customerCount: Object.values(newCustomerCountByHour).reduce((sum, count) => sum + count, 0)
+    };
+
+    // Lưu dữ liệu
+    await saveREParameters(currentTemplateId, newReParameters);
+}
+
+/**
+ * Gắn các event listener cho các thành phần tương tác trong RE Logic view.
+ * @param {string} currentTemplateId - ID của template hiện tại.
+ * @param {Array} allTemplates - Danh sách tất cả templates.
+ * @param {object} allTaskGroups - Dữ liệu các nhóm task.
+ */
+function addEventListeners(currentTemplateId, allTemplates, allTaskGroups) {
     // Gắn sự kiện cho phần "Thông tin cửa hàng" có thể thu gọn/mở rộng
     const storeInfoToggle = document.getElementById('re-store-info-toggle');
     if (storeInfoToggle) {
         storeInfoToggle.addEventListener('click', (e) => {
-            if (e.target.closest('#re-save-store-info-btn')) return; // Không đóng/mở khi click nút Lưu
+            // Không đóng/mở khi click vào các nút bên trong
+            if (e.target.closest('button')) return;
             const content = document.getElementById('re-store-info-content');
             if (content) {
                 content.classList.toggle('hidden');
@@ -129,6 +230,22 @@ function renderREView(allTaskGroups, reParameters) {
             }
         });
     }
+
+    // Gắn sự kiện cho nút "Chỉnh sửa" thông tin cửa hàng (mở popup)
+    const editStoreInfoBtn = document.getElementById('re-edit-store-info-btn');
+    if (editStoreInfoBtn) {
+        editStoreInfoBtn.addEventListener('click', () => {
+            const currentTemplate = allTemplates.find(t => t.id === currentTemplateId);
+            const currentReParameters = currentTemplate?.reParameters || {};
+            openStoreInfoModal(currentReParameters);
+        });
+    }
+
+    // Gắn sự kiện cho form trong popup
+    const storeInfoForm = document.getElementById('re-store-info-form');
+    if (storeInfoForm) {
+        storeInfoForm.addEventListener('submit', (e) => handleStoreInfoFormSubmit(e, currentTemplateId, allTaskGroups));
+    }
 }
 
 /**
@@ -139,18 +256,17 @@ function renderREView(allTaskGroups, reParameters) {
 async function saveREParameters(currentTemplateId, reParameters) {
     if (!currentTemplateId) return;
 
-    const btn = document.getElementById('re-save-store-info-btn');
+    const btn = document.getElementById('re-store-info-form-submit-btn'); // Nút trong popup
     try {
         if (btn) btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i>Đang lưu...`;
         const templateRef = doc(db, 'daily_templates', currentTemplateId);
         await updateDoc(templateRef, { reParameters });
-        window.showToast('Đã lưu thông tin cửa hàng thành công!', 'success');
+        window.showToast('Đã lưu các tham số RE thành công!', 'success');
     } catch (error) {
-        console.error('Lỗi khi lưu thông tin cửa hàng:', error);
-        window.showToast('Không thể lưu thông tin cửa hàng.', 'error');
+        console.error('Lỗi khi lưu tham số RE:', error);
+        window.showToast('Không thể lưu tham số RE.', 'error');
     } finally {
-        if (btn) btn.innerHTML = `<i class="fas fa-save mr-1"></i>Lưu`;
-        btn.classList.add('hidden');
+        if (btn) btn.innerHTML = `<i class="fas fa-save mr-1"></i>Lưu thay đổi`;
     }
 }
 
@@ -177,47 +293,22 @@ export async function initRELogicView(currentTemplateId, allTemplates, allTaskGr
 
     // Luôn cập nhật giao diện "Thông tin cửa hàng" dù có dữ liệu hay không
     // Nếu không có reParameters, các giá trị sẽ là 0
+    // --- LOGIC MỚI: Hiển thị tổng số khách hàng thay vì giá trị đơn lẻ ---
     if (cells.length === 6) {
-        cells[0].textContent = reParameters.customerCount || 0;
+        const totalCustomers = reParameters.customerCountByHour 
+            ? Object.values(reParameters.customerCountByHour).reduce((sum, count) => sum + count, 0)
+            : (reParameters.customerCount || 0);
+        cells[0].textContent = totalCustomers;
         cells[1].textContent = reParameters.posCount || 0;
         cells[2].textContent = reParameters.areaSize || 0;
         cells[3].textContent = reParameters.employeeCount || 0;
         cells[4].textContent = reParameters.dryGoodsVolume || 0;
         cells[5].textContent = reParameters.vegetableWeight || 0;
-        // Ẩn nút lưu vì đây là dữ liệu được tải, không phải do người dùng chỉnh sửa
-        document.getElementById('re-save-store-info-btn')?.classList.add('hidden');
     }
 
     // Gọi renderREView sau khi đã có reParameters (có thể là object rỗng)
     renderREView(allTaskGroups, reParameters);
 
-    // Gắn sự kiện cho nút lưu thông tin cửa hàng
-    const saveStoreInfoBtn = document.getElementById('re-save-store-info-btn');
-    if (saveStoreInfoBtn) {
-        // Xóa listener cũ để tránh gắn nhiều lần
-        const newBtn = saveStoreInfoBtn.cloneNode(true);
-        saveStoreInfoBtn.parentNode.replaceChild(newBtn, saveStoreInfoBtn);
-
-        newBtn.addEventListener('click', async (e) => {
-            e.stopPropagation();
-            if (!currentTemplateId) {
-                window.showToast('Vui lòng chọn một mẫu trước khi lưu.', 'warning');
-                return;
-            }
-            const updatedCells = document.querySelectorAll('#re-store-info-body td');
-            const newReParameters = {
-                customerCount: parseInt(updatedCells[0].textContent, 10) || 0,
-                posCount: parseInt(updatedCells[1].textContent, 10) || 0,
-                areaSize: parseInt(updatedCells[2].textContent, 10) || 0,
-                employeeCount: parseInt(updatedCells[3].textContent, 10) || 0,
-                dryGoodsVolume: parseInt(updatedCells[4].textContent, 10) || 0,
-                vegetableWeight: parseInt(updatedCells[5].textContent, 10) || 0,
-            };
-            await saveREParameters(currentTemplateId, newReParameters);
-
-            // Sau khi lưu thành công, render lại view với các tham số mới để cập nhật bảng tính
-            renderREView(allTaskGroups, newReParameters);
-            window.showToast('Đã lưu thông tin cửa hàng và cập nhật RE thành công!', 'success');
-        });
-    }
+    // Gắn sự kiện cho các thành phần tương tác (nút chỉnh sửa, form popup)
+    addEventListeners(currentTemplateId, allTemplates, allTaskGroups);
 }

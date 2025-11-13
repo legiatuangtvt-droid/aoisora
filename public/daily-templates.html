@@ -69,7 +69,10 @@
                                 <button id="re-store-info-toggle" class="w-full text-left p-3 font-semibold flex justify-between items-center gap-4 bg-slate-50 hover:bg-slate-100">
                                     <span class="flex-grow flex items-center">
                                         Thông tin cửa hàng
-                                        <button id="re-save-store-info-btn" class="btn btn-secondary btn-xs ml-4 hidden"><i class="fas fa-save mr-1"></i>Lưu</button>
+                                    </span>
+                                    <!-- Nút chỉnh sửa (icon bút chì) -->
+                                    <span class="flex-shrink-0">
+                                        <button id="re-edit-store-info-btn" class="btn btn-secondary btn-xs" title="Chỉnh sửa thông số cửa hàng"><i class="fas fa-pencil-alt"></i></button>
                                     </span>
                                 </button>
 
@@ -87,12 +90,12 @@
                                         </thead>
                                         <tbody id="re-store-info-body">
                                             <tr>
-                                                <td class="p-2 border text-center editable-cell" contenteditable="true">0</td>
-                                                <td class="p-2 border text-center editable-cell" contenteditable="true">0</td>
-                                                <td class="p-2 border text-center editable-cell" contenteditable="true">0</td>
-                                                <td class="p-2 border text-center editable-cell" contenteditable="true">0</td>
-                                                <td class="p-2 border text-center editable-cell" contenteditable="true">0</td>
-                                                <td class="p-2 border text-center editable-cell" contenteditable="true">0</td>
+                                                <td class="p-2 border text-center">0</td>
+                                                <td class="p-2 border text-center">0</td>
+                                                <td class="p-2 border text-center">0</td>
+                                                <td class="p-2 border text-center">0</td>
+                                                <td class="p-2 border text-center">0</td>
+                                                <td class="p-2 border text-center">0</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -194,6 +197,65 @@
                 <button id="approve-plan-btn" class="btn btn-success">Phê duyệt</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- MODAL CHỈNH SỬA THÔNG SỐ CỬA HÀNG (RE LOGIC) -->
+    <div id="re-store-info-modal" class="modal-overlay">
+        <div class="modal-content max-w-4xl w-full">
+            <form id="re-store-info-form">
+                <div class="modal-header">
+                    <h3 class="modal-title">Chỉnh sửa Thông số Cửa hàng</h3>
+                    <button type="button" class="modal-close-btn" onclick="this.closest('.modal-overlay').classList.remove('show', 'flex'); this.closest('.modal-overlay').classList.add('hidden');">&times;</button>
+                </div>
+                <div class="modal-body grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Cột trái: Bảng khách hàng -->
+                    <div class="col-span-1">
+                        <h4 class="font-semibold mb-2">Số lượng khách hàng theo giờ</h4>
+                        <div class="max-h-96 overflow-y-auto border rounded-md">
+                            <table class="w-full">
+                                <thead class="sticky top-0 bg-slate-100">
+                                    <tr>
+                                        <th class="p-2 border">Giờ</th>
+                                        <th class="p-2 border">Số khách</th>
+                                        <th class="p-2 border">Giờ POS cần</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="modal-customer-table-body">
+                                    <!-- Dữ liệu sẽ được chèn bằng JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <!-- Cột phải: Các thông số khác -->
+                    <div class="col-span-1 space-y-4">
+                        <div>
+                            <label for="modal-pos-count" class="block text-sm font-medium text-gray-700">Số lượng POS</label>
+                            <input type="number" id="modal-pos-count" class="form-input mt-1">
+                        </div>
+                        <div>
+                            <label for="modal-area-size" class="block text-sm font-medium text-gray-700">Diện tích (m²)</label>
+                            <input type="number" id="modal-area-size" class="form-input mt-1">
+                        </div>
+                        <div>
+                            <label for="modal-employee-count" class="block text-sm font-medium text-gray-700">Số nhân viên</label>
+                            <input type="number" id="modal-employee-count" class="form-input mt-1">
+                        </div>
+                        <div>
+                            <label for="modal-dry-goods-volume" class="block text-sm font-medium text-gray-700">Hàng khô (kiện)</label>
+                            <input type="number" id="modal-dry-goods-volume" class="form-input mt-1">
+                        </div>
+                        <div>
+                            <label for="modal-vegetable-weight" class="block text-sm font-medium text-gray-700">Rau củ (kg)</label>
+                            <input type="number" id="modal-vegetable-weight" class="form-input mt-1">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-overlay').classList.remove('show', 'flex'); this.closest('.modal-overlay').classList.add('hidden');">Hủy</button>
+                    <button type="submit" id="re-store-info-form-submit-btn" class="btn btn-indigo"><i class="fas fa-save mr-1"></i>Lưu thay đổi</button>
+                </div>
+            </form>
         </div>
     </div>
 

@@ -22,7 +22,11 @@ function roundUpToNearest15Minutes(hours) {
  */
 export function calculateREForTask(task, groupInfo, reParameters) {
     let taskHours = 0;
-    const { customerCount = 0, posCount = 0, vegetableWeight = 0, dryGoodsVolume = 0 } = reParameters || {};
+    // --- LOGIC MỚI: Tính tổng customerCount từ dữ liệu theo giờ ---
+    const totalCustomerCount = reParameters?.customerCountByHour 
+        ? Object.values(reParameters.customerCountByHour).reduce((sum, count) => sum + count, 0)
+        : (reParameters?.customerCount || 0);
+    const { posCount = 0, vegetableWeight = 0, dryGoodsVolume = 0 } = reParameters || {};
     const reUnit = task.reUnit || 0;
     let frequencyNumber = parseFloat(task.frequencyNumber) || 1;
 
@@ -49,7 +53,7 @@ export function calculateREForTask(task, groupInfo, reParameters) {
                     taskHours = (reUnit * posCount * frequencyNumber) / 60;
                     break;
                 case 'POS 1': case 'POS 2': case 'POS 3':
-                    taskHours = (reUnit * customerCount * frequencyNumber) / 60;
+                    taskHours = (reUnit * totalCustomerCount * frequencyNumber) / 60;
                     break;
             }
             break;
