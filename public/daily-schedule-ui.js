@@ -160,11 +160,11 @@ export function renderScheduleGrid() {
         const posManhour = (Math.ceil(rawPosManhour * 4) / 4).toFixed(2);
 
         headerRowHtml += `
-            <th class="p-2 border border-slate-200 min-w-[210px] text-center font-semibold text-slate-700" data-hour="${hourKey}">
+            <th class="p-2 border border-slate-200 min-w-[310px] text-center font-semibold text-slate-700" data-hour="${hourKey}">
                 <div class="flex justify-between items-center">
-                    <span><i class="fas fa-users text-blue-600"> <span class="hourly-position-count">${positionCount}</span></i></span>
-                    ${time}
-                    <span><i class="fas fa-cash-register text-green-600"></i> <span class="hourly-pos-manhour">${posManhour}</span></span>
+                    <span><i class="fas fa-users text-blue-600"> <span class="hourly-position-count text-xs">${positionCount}</span></i></span>
+                    <span class="text-2xl">${time}</span>
+                    <span><i class="fas fa-cash-register text-green-600"></i> <span class="hourly-pos-manhour text-sm">${posManhour}</span></span>
                 </div>
             </th>`;
     });
