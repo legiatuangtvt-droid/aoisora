@@ -141,6 +141,7 @@ export async function updateTemplateFromDOM() {
     const scheduleData = {};
     const shiftMappings = {};
     const totalManhour = parseFloat(document.getElementById('template-manhour-input').value) || 0;
+    const hourlyManhours = {}; // --- NEW: Đối tượng để lưu manhour theo giờ ---
 
     document.querySelectorAll('#template-builder-grid-container .scheduled-task-item').forEach(taskItem => {
         const slot = taskItem.closest('.quarter-hour-slot');
@@ -169,9 +170,25 @@ export async function updateTemplateFromDOM() {
         }
     });
 
+    // --- NEW: Lấy dữ liệu manhour theo giờ từ header của bảng ---
+    document.querySelectorAll('#template-builder-grid-container thead th[data-hour]').forEach(headerCell => {
+        const hour = headerCell.dataset.hour; // "06", "07", ...
+        // Lấy giá trị từ span chứa manhour của POS, đã được tính toán bởi `calculateHourlyStatsForTime`
+        const manhourValue = parseFloat(headerCell.querySelector('.hourly-position-count')?.textContent) || 0;
+        if (hour) {
+            hourlyManhours[hour] = manhourValue;
+        }
+    });
+
     try {
         const templateRef = doc(db, 'daily_templates', currentTemplateId);
-        await setDoc(templateRef, { schedule: scheduleData, shiftMappings: shiftMappings, totalManhour: totalManhour, updatedAt: serverTimestamp() }, { merge: true });
+        await setDoc(templateRef, {
+            schedule: scheduleData,
+            shiftMappings: shiftMappings,
+            totalManhour: totalManhour,
+            hourlyManhours: hourlyManhours, // --- NEW: Thêm trường mới vào Firestore ---
+            updatedAt: serverTimestamp()
+        }, { merge: true });
     } catch (error) {
         console.error("Lỗi khi tự động cập nhật lịch trình mẫu:", error);
         window.showToast('Lỗi khi tự động lưu thay đổi. Vui lòng thử lại.', 'error');
