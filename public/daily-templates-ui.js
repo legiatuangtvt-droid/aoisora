@@ -381,11 +381,12 @@ function calculateHourlyStatsForTime(time, shiftMappings, schedule, posGroupId =
  * Hiển thị giao diện theo dõi tiến độ kế hoạch.
  * @param {object} plan - Đối tượng kế hoạch tháng.
  */
-export async function renderPlanTracker(plan) {
+export async function renderPlanTracker(plan) { // Giữ lại async vì có các thao tác bất đồng bộ bên trong
     const container = document.getElementById('plan-tracker-modal');
     if (!container) return;
 
-    const { allPersonnel } = await import('./daily-templates-data.js');
+    // Tải thêm dữ liệu về các miền
+    const { allPersonnel, allRegions } = await import('./daily-templates-data.js');
 
     const historyList = container.querySelector('#plan-history-list');
     const approvalActions = document.getElementById('plan-approval-actions');
@@ -450,21 +451,26 @@ export async function renderPlanTracker(plan) {
                     const relatedPlansSnap = await getDocs(relatedPlansQuery);
                     const relatedPlans = relatedPlansSnap.docs.map(doc => doc.data());
 
-                    const rmStatuses = relatedPlans.map(p => {
+                    const rmStatusesPromises = relatedPlans.map(async (p) => {
                         const regionalManager = allPersonnel.find(person => person.roleId === 'REGIONAL_MANAGER' && person.managedRegionId === p.regionId);
-                        const rmName = regionalManager ? regionalManager.name : `Miền ${p.regionId}`;
+                        const region = allRegions.find(r => r.id === p.regionId);
+                        const regionName = region ? region.name : `Miền ${p.regionId}`;
+                        const rmName = regionalManager ? regionalManager.name : 'Chưa có RM';
+                        const fullRmTitle = `RM ${regionName} ${rmName}`;
                         
                         // Nếu kế hoạch của RM này đã có bước tiếp theo (lịch sử có nhiều hơn 1 entry)
                         if (p.history.length > 1) {
                             const nextStep = p.history[1]; // Lấy bước thứ 2
                             const nextStepLabel = steps.find(s => s.id === nextStep.status)?.label || nextStep.status;
                             const nextStepTimestamp = nextStep.timestamp?.toDate().toLocaleString('vi-VN') || '';
-                            return `<li class="ml-6 text-green-700"><i class="fas fa-check-circle mr-2"></i><strong>${rmName}:</strong> Đã xử lý (${nextStepLabel} lúc ${nextStepTimestamp})</li>`;
+                            return `<li class="ml-6 text-green-700"><i class="fas fa-check-circle mr-2"></i><strong>${fullRmTitle}:</strong> Đã xử lý (${nextStepLabel} lúc ${nextStepTimestamp})</li>`;
                         } else {
                             // Nếu chưa xử lý
-                            return `<li class="ml-6 text-gray-500 italic"><i class="fas fa-spinner fa-spin mr-2"></i><strong>${rmName}:</strong> Đang xử lý...</li>`;
+                            return `<li class="ml-6 text-gray-500 italic"><i class="fas fa-spinner fa-spin mr-2"></i><strong>${fullRmTitle}:</strong> Đang xử lý...</li>`;
                         }
-                    }).join('');
+                    });
+
+                    const rmStatuses = (await Promise.all(rmStatusesPromises)).join('');
 
                     additionalMessage = `
                         <div class="mt-2 pl-6">

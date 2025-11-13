@@ -10,6 +10,7 @@ export let allPersonnel = [];
 export let allWorkPositions = [];
 export let allShiftCodes = [];
 export let allTaskGroups = {};
+export let allRegions = []; // Export biến allRegions
 
 /**
  * Lấy dữ liệu công việc từ Firestore và nhóm chúng lại.
@@ -38,7 +39,7 @@ export async function fetchInitialData() {
         const taskGroupsQuery = query(collection(db, 'task_groups'), orderBy('order'));
         const workPositionsQuery = query(collection(db, 'work_positions'));
         const [
-            shiftCodesSnap, taskGroupsSnapshot, workPositionsSnap, employeesSnap, areaManagersSnap, regionalManagersSnap
+            shiftCodesSnap, taskGroupsSnapshot, workPositionsSnap, employeesSnap, areaManagersSnap, regionalManagersSnap, regionsSnap
         ] = await Promise.all([
             getDoc(shiftCodesDocRef),
             getDocs(taskGroupsQuery),
@@ -46,6 +47,7 @@ export async function fetchInitialData() {
             getDocs(collection(db, 'employee')),
             getDocs(collection(db, 'area_managers')),
             getDocs(collection(db, 'regional_managers')),
+            getDocs(collection(db, 'regions')), // Tải thêm dữ liệu regions
         ]);
 
         if (shiftCodesSnap.exists()) {
@@ -62,6 +64,9 @@ export async function fetchInitialData() {
         const areaManagers = areaManagersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         const regionalManagers = regionalManagersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         allPersonnel = [...employees, ...areaManagers, ...regionalManagers];
+
+        // Lưu dữ liệu regions vào biến đã export
+        allRegions = regionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (error) {
         console.error("Lỗi khi tải dữ liệu vị trí công việc:", error);
         const container = document.getElementById('template-builder-grid-container');
