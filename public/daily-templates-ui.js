@@ -347,36 +347,32 @@ function calculateHourlyStatsForTime(time, shiftMappings, schedule, posGroupId =
 
     const hourStartMinutes = timeToMinutes(time);
     const hourEndMinutes = hourStartMinutes + 60;
-    let positionCount = 0;
+    let totalTasksInHour = 0;
     let posTaskCount = 0;
 
-    // Tính toán số lượng vị trí công việc
-    for (const shiftId in shiftMappings) {
-        const mapping = shiftMappings[shiftId];
-        const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === mapping.shiftCode);
-        if (shiftInfo && shiftInfo.timeRange) {
-            const [startStr, endStr] = shiftInfo.timeRange.split('~').map(s => s.trim());
-            const shiftStart = timeToMinutes(startStr);
-            const shiftEnd = timeToMinutes(endStr);
-            if (shiftStart < hourEndMinutes && shiftEnd > hourStartMinutes) {
-                positionCount++;
-            }
-        }
-    }
-
-    // Tính toán số lượng task POS
-    if (posGroupId) {
-        for (const shiftId in schedule) {
+    // Tính toán tổng số task và số task POS trong giờ
+    for (const shiftId in schedule) {
+        if (schedule[shiftId]) {
             schedule[shiftId].forEach(task => {
-                if (task.groupId === posGroupId && timeToMinutes(task.startTime) >= hourStartMinutes && timeToMinutes(task.startTime) < hourEndMinutes) {
-                    posTaskCount++;
+                const taskStartMinutes = timeToMinutes(task.startTime);
+                if (taskStartMinutes >= hourStartMinutes && taskStartMinutes < hourEndMinutes) {
+                    totalTasksInHour++;
+                    if (posGroupId && task.groupId === posGroupId) {
+                        posTaskCount++;
+                    }
                 }
             });
         }
     }
 
-    return { positionCount, posManhour: (posTaskCount * 0.25).toFixed(2) };
+    // Tính toán manhour cho tổng số task và task POS
+    const totalManhour = (totalTasksInHour * 0.25).toFixed(2);
+    const posManhour = (posTaskCount * 0.25).toFixed(2);
+
+    // Theo yêu cầu, positionCount được tính bằng manhour (số task trong giờ x 0.25)
+    return { positionCount: totalManhour, posManhour: posManhour };
 }
+
 /**
  * Hiển thị giao diện theo dõi tiến độ kế hoạch.
  * @param {object} plan - Đối tượng kế hoạch tháng.
