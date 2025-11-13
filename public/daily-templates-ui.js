@@ -373,7 +373,8 @@ function calculateHourlyStatsForTime(time, shiftMappings, schedule, reParameters
 
     // --- LOGIC MỚI: Tính posManhour theo công thức mới ---
     // Lấy số lượng khách hàng cho giờ cụ thể từ reParameters.
-    const hourKey = time.split(':')[0]; // "06" từ "06:00"
+    // Sửa lỗi: Đảm bảo hourKey luôn là chuỗi 2 chữ số (e.g., "06") để khớp với dữ liệu
+    const hourKey = time.split(':')[0].padStart(2, '0');
     const hourlyCustomerCount = reParameters.customerCountByHour?.[hourKey] || 0;
     // Công thức: posManhour = customerCount * 1 / 60, sau đó làm tròn lên theo bước 0.25
     const rawPosManhour = hourlyCustomerCount / 60;
