@@ -278,7 +278,15 @@ export async function loadTemplate(templateId) {
             } else {
                 const plan = { id: plansSnap.docs[0].id, ...plansSnap.docs[0].data() };
                 setCurrentMonthlyPlan(plan); // Sử dụng hàm setter để cập nhật biến
-                statusDisplay.textContent = planStatusMessages[plan.status] || `Trạng thái: ${plan.status}`; // Cập nhật dòng trạng thái chính
+
+                // Cập nhật dòng trạng thái chính để hiển thị thêm thông tin
+                const { allPersonnel } = await import('./daily-templates-data.js');
+                const regionName = allPersonnel.find(p => p.roleId === 'REGIONAL_MANAGER' && p.managedRegionId === plan.regionId)?.name || plan.regionId;
+                const cycleDate = plan.cycleStartDate.toDate ? plan.cycleStartDate.toDate() : new Date(plan.cycleStartDate);
+                const formattedDate = cycleDate.toLocaleDateString('vi-VN');
+                const statusText = planStatusMessages[plan.status] || `Trạng thái: ${plan.status}`;
+                statusDisplay.textContent = `${statusText}`;
+
                 renderPlanTracker(plan); // Dùng hàm renderPlanTracker để hiển thị trạng thái
             }
         }
@@ -520,29 +528,22 @@ async function fetchAllRegions() {
  * (Dành cho RM/AM) Tải kế hoạch và mẫu được áp dụng gần nhất.
  */
 export async function loadAppliedPlanForManager() {
-    console.log('[RM Load] Bắt đầu quá trình tải kế hoạch cho Manager.');
-    const currentUser = window.currentUser;
+    const currentUser = window.currentUser; // Sửa lỗi: Thêm khai báo currentUser
     if (!currentUser) {
-        console.error('[RM Load] Lỗi: Không tìm thấy thông tin người dùng hiện tại (currentUser).');
         return;
     }
-    console.log('[RM Load] Dữ liệu người dùng hiện tại:', currentUser);
 
     let regionIdToQuery = null;
     if (currentUser.roleId === 'REGIONAL_MANAGER') {
         regionIdToQuery = currentUser.managedRegionId;
-        console.log(`[RM Load] User là RM. Lấy regionId từ managedRegionId: "${regionIdToQuery}"`);
     } else if (currentUser.roleId === 'AREA_MANAGER') {
-        console.log(`[RM Load] User là AM. Đang truy vấn regionId từ managedAreaIds:`, currentUser.managedAreaIds);
         const areasSnap = await getDocs(query(collection(db, 'areas'), where('id', 'in', currentUser.managedAreaIds || ['dummy']), limit(1)));
         if (!areasSnap.empty) {
             regionIdToQuery = areasSnap.docs[0].data()?.regionId;
-            console.log(`[RM Load] Đã tìm thấy regionId cho AM: "${regionIdToQuery}"`);
         }
     }
 
     if (!regionIdToQuery) {
-        console.warn('[RM Load] Cảnh báo: Không thể xác định được regionId để truy vấn. Hiển thị thông báo mặc định.');
         document.getElementById('template-selector-container').classList.add('hidden');
         document.getElementById('template-display-container').classList.remove('hidden');
         document.getElementById('template-display-container').querySelector('#template-name-display').textContent = 'Bạn chưa được phân công vào miền nào.';
@@ -550,32 +551,41 @@ export async function loadAppliedPlanForManager() {
         return;
     }
     
-    console.log(`[RM Load] Thực hiện truy vấn kế hoạch cho regionId: "${regionIdToQuery}"`);
     const plansQuery = query(
         collection(db, 'monthly_plans'),
         where('regionId', '==', regionIdToQuery),
-        orderBy('cycleStartDate', 'desc'),
-        limit(1)
+        orderBy('cycleStartDate', 'desc') // Bỏ limit(1) để tải tất cả các kế hoạch
     );
     
     const plansSnap = await getDocs(plansQuery);
     if (plansSnap.empty) {
-        console.log(`[RM Load] Không tìm thấy kế hoạch nào được áp dụng cho miền "${regionIdToQuery}".`);
         document.getElementById('template-selector-container').classList.add('hidden');
         document.getElementById('template-display-container').classList.remove('hidden');
         document.getElementById('template-display-container').querySelector('#template-name-display').textContent = 'Chưa có kế hoạch nào được áp dụng cho miền của bạn.';
         renderGrid();
     } else {
-        console.log(`[RM Load] Đã tìm thấy ${plansSnap.size} kế hoạch. Đang xử lý kế hoạch gần nhất...`);
-        const plan = { id: plansSnap.docs[0].id, ...plansSnap.docs[0].data() };
-        setCurrentMonthlyPlan(plan); // Sử dụng hàm setter
-        console.log('[RM Load] Dữ liệu kế hoạch đã tải:', plan);
-        console.log(`[RM Load] ID của mẫu cần tải từ kế hoạch: "${plan.templateId}"`);
+        const allPlansForRegion = plansSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Render danh sách kế hoạch vào dropdown
+        await window.renderMonthlyPlansForManager(allPlansForRegion);
 
-        document.getElementById('template-selector').value = plan.templateId;
-        await loadTemplate(plan.templateId); // Sử dụng hàm loadTemplate mới
+        // Tự động chọn và tải kế hoạch gần nhất (đầu tiên trong danh sách đã sắp xếp)
+        const latestPlan = allPlansForRegion[0];
+        setCurrentMonthlyPlan(latestPlan);
+        document.getElementById('template-selector').value = latestPlan.id;
+        await loadTemplate(latestPlan.templateId);
 
-        renderPlanTracker(plan);
+        // Cập nhật dòng trạng thái cho RM/AM
+        const statusContainer = document.getElementById('template-display-container');
+        const statusDisplay = document.getElementById('template-name-display');
+        if (statusContainer && statusDisplay) {
+            statusContainer.classList.remove('hidden');
+            const statusText = planStatusMessages[latestPlan.status] || `Trạng thái: ${latestPlan.status}`;
+            // Sửa lỗi: Kiểm tra xem cycleStartDate có phải là Timestamp không trước khi gọi toDate()
+            const cycleDate = latestPlan.cycleStartDate.toDate ? latestPlan.cycleStartDate.toDate() : new Date(latestPlan.cycleStartDate);
+            statusDisplay.textContent = `${statusText}`;
+        }
+
+        renderPlanTracker(latestPlan);
     }
 }
 

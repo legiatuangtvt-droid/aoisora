@@ -84,15 +84,11 @@ export async function fetchAndRenderTemplates() {
         const currentUser = window.currentUser;
         let optionsHtml = '';
 
+        // Sửa lỗi: Luôn hiển thị các mẫu có sẵn cho tất cả các vai trò.
+        // Chỉ thêm tùy chọn "Tạo Mẫu Mới" cho HQ/Admin.
         if (currentUser && (currentUser.roleId === 'HQ_STAFF' || currentUser.roleId === 'ADMIN')) {
             optionsHtml = `<option value="new">-- Tạo Mẫu Mới --</option>`;
-        } else {
-            if (allTemplates.length > 0) {
-                optionsHtml = ``;
-            } else {
-                optionsHtml = `<option value="">-- Chưa có mẫu --</option>`;
-            }
-        }
+        } 
         optionsHtml += allTemplates.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
         templateSelector.innerHTML = optionsHtml;
 
@@ -100,6 +96,30 @@ export async function fetchAndRenderTemplates() {
         console.error("Lỗi khi tải danh sách mẫu:", error);
         templateSelector.innerHTML = `<option value="">-- Lỗi tải mẫu --</option>`;
     }
+}
+
+/**
+ * (Dành cho RM/AM) Render danh sách các kế hoạch tháng vào dropdown.
+ * @param {Array<object>} plans - Danh sách các kế hoạch tháng của miền.
+ */
+export async function renderMonthlyPlansForManager(plans) {
+    const templateSelector = document.getElementById('template-selector');
+    if (!templateSelector) return;
+
+    if (!plans || plans.length === 0) {
+        templateSelector.innerHTML = `<option value="">-- Chưa có kế hoạch --</option>`;
+        return;
+    }
+
+    // Tạo HTML cho các <option>
+    const optionsHtml = plans.map(plan => {
+        const cycleDate = plan.cycleStartDate.toDate ? plan.cycleStartDate.toDate() : new Date(plan.cycleStartDate);
+        const formattedDate = cycleDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        // Giá trị của option là ID của monthly_plan, text hiển thị là tên mẫu và ngày bắt đầu chu kỳ
+        return `<option value="${plan.id}">${plan.templateName} (Cycle: ${formattedDate})</option>`;
+    }).join('');
+
+    templateSelector.innerHTML = optionsHtml;
 }
 
 /**

@@ -1,4 +1,4 @@
-import { fetchInitialData, fetchAndRenderTemplates, allTemplates, allTaskGroups, allWorkPositions } from './daily-templates-data.js';
+import { fetchInitialData, fetchAndRenderTemplates, renderMonthlyPlansForManager, allTemplates, allTaskGroups, allWorkPositions } from './daily-templates-data.js';
 import { renderGrid, updateRowAppearance, toggleBuilderView, createShiftCodeDatalist, updateGridHeaderStats } from './daily-templates-ui.js';
 import { 
     addShiftRow,
@@ -321,6 +321,9 @@ export async function init() {
     // Tải dữ liệu nền và danh sách mẫu trước
     await fetchInitialData();
 
+    // Gán hàm render vào window để logic.js có thể gọi
+    window.renderMonthlyPlansForManager = renderMonthlyPlansForManager;
+
     // Tạo datalist cho mã ca sau khi đã có dữ liệu
     createShiftCodeDatalist();
 
@@ -377,7 +380,21 @@ export async function init() {
     }
     // --------------------------------------------------------------------
 
-    document.getElementById('template-selector')?.addEventListener('change', (e) => loadTemplate(e.target.value), { signal });
+    document.getElementById('template-selector')?.addEventListener('change', async (e) => {
+        const selectedValue = e.target.value;
+        const currentUser = window.currentUser;
+        const isManager = currentUser && (currentUser.roleId === 'REGIONAL_MANAGER' || currentUser.roleId === 'AREA_MANAGER');
+
+        if (isManager) {
+            // Đối với RM/AM, giá trị là planId. Cần tìm templateId từ plan đó.
+            const plan = allTemplates.find(p => p.id === selectedValue); // allTemplates bây giờ chứa plans cho RM
+            if (plan) {
+                await loadTemplate(plan.templateId);
+            }
+        } else {
+            await loadTemplate(selectedValue);
+        }
+    }, { signal });
 
     // Sử dụng event delegation cho các nút thêm/xóa trên toàn bộ lưới
     const gridContainer = document.getElementById('template-builder-grid-container');
