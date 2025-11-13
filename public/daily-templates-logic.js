@@ -418,12 +418,58 @@ export async function handleResetTemplate() {
  */
 export async function applyTemplateForHq() {
     const currentUser = window.currentUser;
-    const { allPersonnel } = await import('./daily-templates-data.js');
-    const allRegions = await fetchAllRegions(); // Lấy danh sách tất cả các miền
-    if (!currentUser || (currentUser.roleId !== 'HQ_STAFF' && currentUser.roleId !== 'ADMIN')) {
-        // Logic cho RM/AM sẽ được xử lý ở một hàm khác hoặc trong cùng hàm này với điều kiện khác
+    if (!currentUser) return;
+
+    // --- LOGIC FOR RM/AM ---
+    if (currentUser.roleId === 'REGIONAL_MANAGER' || currentUser.roleId === 'AREA_MANAGER') {
+        if (!currentMonthlyPlan) {
+            window.showToast('Không tìm thấy kế hoạch tháng hiện tại để thực hiện hành động.', 'error');
+            return;
+        }
+
+        const deployButton = document.getElementById('apply-template-hq-btn');
+        const buttonText = deployButton?.querySelector('span')?.textContent;
+
+        // Logic khi RM nhấn "Triển khai" (thay đổi < 10% hoặc đã được HQ duyệt)
+        if (buttonText === 'Triển khai' || buttonText === 'Sẵn sàng triển khai') {
+            const confirmed = await window.showConfirmation(
+                'Bạn có chắc chắn muốn triển khai kế hoạch này đến nhân viên không? Sau khi triển khai, nhân viên sẽ có thể bắt đầu đăng ký ca làm việc.',
+                'Xác nhận triển khai',
+                'Triển khai',
+                'Hủy'
+            );
+            if (!confirmed) return;
+
+            try {
+                const planRef = doc(db, 'monthly_plans', currentMonthlyPlan.id);
+                const newHistoryEntry = { status: 'RM_SENT_TO_STAFF', timestamp: new Date(), userId: currentUser.id, userName: currentUser.name, userRole: currentUser.roleId };
+                await updateDoc(planRef, {
+                    status: 'RM_SENT_TO_STAFF',
+                    history: [...(currentMonthlyPlan.history || []), newHistoryEntry]
+                });
+                window.showToast('Đã triển khai kế hoạch thành công!', 'success');
+
+                // --- LOGIC MỚI: Cập nhật ngay lập tức text trạng thái chính ---
+                const statusDisplay = document.getElementById('template-name-display');
+                if (statusDisplay) {
+                    const cycleDate = currentMonthlyPlan.cycleStartDate.toDate ? currentMonthlyPlan.cycleStartDate.toDate() : new Date(currentMonthlyPlan.cycleStartDate);
+                    const newStatusText = planStatusMessages['RM_SENT_TO_STAFF'] || 'RM đã gửi về Staff';
+                    statusDisplay.textContent = `Kế hoạch chu kỳ ${cycleDate.toLocaleDateString('vi-VN')}. ${newStatusText}`;
+                }
+                // -------------------------------------------------------------
+
+                await loadTemplate(currentMonthlyPlan.templateId); // Tải lại để cập nhật trạng thái
+            } catch (error) {
+                console.error("Lỗi khi triển khai kế hoạch:", error);
+                window.showToast('Đã xảy ra lỗi khi triển khai kế hoạch.', 'error');
+            }
+        }
         return;
     }
+
+    // --- LOGIC FOR HQ/ADMIN ---
+    const { allPersonnel } = await import('./daily-templates-data.js');
+    const allRegions = await fetchAllRegions(); // Lấy danh sách tất cả các miền
 
     const template = allTemplates.find(t => t.id === currentTemplateId);
     if (!template) {
