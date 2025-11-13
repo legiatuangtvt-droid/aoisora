@@ -138,7 +138,7 @@ export function renderScheduleGrid() {
     const overallCompletionRate = overallTotalTasks > 0 ? Math.round((overallCompletedTasks / overallTotalTasks) * 100) : 0;
 
     let headerRowHtml = `
-        <th class="p-2 border border-slate-200 w-40 min-w-40 sticky left-0 bg-slate-100 z-30">
+        <th class="p-2 border border-black w-40 min-w-40 sticky left-0 bg-slate-100 z-30">
             <div class="relative w-full h-full flex items-center justify-center" title="Tỷ lệ hoàn thành của cửa hàng">
                 <svg class="w-16 h-16" viewBox="0 0 36 36">
                     <path class="stroke-slate-300" stroke-width="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
@@ -160,7 +160,7 @@ export function renderScheduleGrid() {
         const posManhour = (Math.ceil(rawPosManhour * 4) / 4).toFixed(2);
 
         headerRowHtml += `
-            <th class="p-2 border border-slate-200 min-w-[310px] text-center font-semibold text-slate-700" data-hour="${hourKey}">
+            <th class="p-2 border border-black min-w-[310px] text-center font-semibold text-slate-700" data-hour="${hourKey}">
                 <div class="flex justify-between items-center">
                     <span><i class="fas fa-users text-blue-600"> <span class="hourly-position-count text-xs">${positionCount}</span></i></span>
                     <span class="text-2xl">${time}</span>
@@ -266,7 +266,7 @@ export function renderScheduleGrid() {
 
             timeSlots.forEach(time => {
                 rowHtml += `
-                    <td class="p-0 border border-slate-200 align-middle">
+                    <td class="p-0 border border-black align-middle">
                         <div class="grid grid-cols-4 h-[104px] ">
                             <div class="quarter-hour-slot border-r border-dashed border-slate-200 flex justify-center items-center" data-time="${time}" data-quarter="00"></div>
                             <div class="quarter-hour-slot border-r border-dashed border-slate-200 flex justify-center items-center" data-time="${time}" data-quarter="15"></div>
