@@ -509,8 +509,9 @@ export async function applyTemplateForHq() {
     await batch.commit();
     window.showToast(`Hoàn tất! Đã gửi kế hoạch từ mẫu "${template.name}" đến ${selectedRegionIds.length} miền đã chọn.`, 'success', 5000);
         
-        // Tải lại thông tin của mẫu vừa áp dụng để cập nhật trạng thái
-        await loadTemplate(template.id);
+    // FIX: Tải lại thông tin của mẫu vừa áp dụng để cập nhật trạng thái
+    // và render lại modal theo dõi tiến độ với dữ liệu mới nhất.
+    await loadTemplate(template.id);
 }
 
 /**
