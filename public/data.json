@@ -882,11 +882,34 @@
   "daily_templates": [
     {
       "id": "TEST",
-      "createdAt": "2025-10-29T00:21:00.000Z",
+      "createdAt": "2025-11-13T08:22:01.000Z",
       "name": "Test",
+      "hourlyManhours": {
+        "6": 5,
+        "7": 5,
+        "8": 5,
+        "9": 5,
+        "10": 5,
+        "11": 5,
+        "12": 5,
+        "13": 5,
+        "14": 2.5,
+        "15": 5,
+        "16": 5,
+        "17": 5,
+        "18": 5,
+        "19": 5,
+        "20": 5,
+        "21": 5,
+        "22": 2.5,
+        "23": 0
+      },
       "reParameters": {
         "areaSize": 350,
-        "customerCount": 400,
+        "customerCount": 1280,
+        "customerCountByHour": {
+          "10": 90, "11": 60, "12": 120, "13": 60, "14": 60, "15": 60, "16": 60, "17": 60, "18": 150, "19": 170, "20": 80, "21": 30, "22": 10, "06": 70, "07": 80, "08": 60, "09": 60
+        },
         "dryGoodsVolume": 60,
         "employeeCount": 10,
         "posCount": 2,
@@ -1247,7 +1270,7 @@
         "shift-9": { "positionId": "MERCHANDISE", "shiftCode": "V829" }
       },
       "totalManhour": 80,
-      "updatedAt": "2025-10-29T01:20:17.000Z"
+      "updatedAt": "2025-11-13T08:27:40.000Z"
     }
   ]
 }

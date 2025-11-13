@@ -104,12 +104,6 @@ function renderREView(allTaskGroups, reParameters) {
             content.classList.toggle('hidden');
         });
     });
-
-    // --- LOGIC MỚI: Gắn sự kiện cho form trong popup ---
-    const storeInfoForm = document.getElementById('re-store-info-form');
-    if (storeInfoForm) {
-        storeInfoForm.addEventListener('submit', (e) => handleStoreInfoFormSubmit(e, currentTemplateId, allTaskGroups));
-    }
 }
 
 /**
