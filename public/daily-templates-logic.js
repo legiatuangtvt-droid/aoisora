@@ -593,7 +593,8 @@ export async function loadAppliedPlanForManager() {
             statusDisplay.textContent = `Kế hoạch chu kỳ ${cycleDate.toLocaleDateString('vi-VN')}. ${statusText}`;
         }
 
-        renderPlanTracker(latestPlan);
+        // FIX: Gọi renderPlanTracker để cập nhật nội dung modal theo dõi tiến độ ngay khi tải trang
+        await renderPlanTracker(latestPlan);
     }
 }
 
