@@ -3476,7 +3476,8 @@ html, body {
 
 .swap-highlight {
   opacity: 0.4;
-  transform: scale(0.9);
+  /* transform: scale(0.9); */
+  /* Xóa dòng này để task không bị co lại */
 }
 
 /* 

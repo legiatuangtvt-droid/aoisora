@@ -57,16 +57,20 @@ export function initializeDragAndDrop() {
                 const toSlot = evt.to; // Ô đích
                 const fromSlot = evt.from; // Ô nguồn
                 const draggedItem = evt.item; // Task được kéo
-                const oldItem = toSlot.querySelector('.scheduled-task-item:not(.sortable-ghost)'); // Task cũ trong ô đích (nếu có)
+                
+                // Tìm tất cả các task trong ô đích, loại trừ task đang được kéo
+                const itemsInDest = Array.from(toSlot.querySelectorAll('.scheduled-task-item')).filter(item => item !== draggedItem);
 
                 // Đảm bảo task được kéo vào luôn có các nút điều khiển
                 addControlsToTask(draggedItem);
 
-                // Logic hoán đổi thủ công:
-                // Nếu ô đích đã có một task (oldItem) và nó không phải là task đang được kéo,
-                // thì di chuyển task cũ đó về ô nguồn.
-                if (oldItem && oldItem !== draggedItem) {
-                    fromSlot.appendChild(oldItem);
+                // LOGIC HOÁN ĐỔI MỚI:
+                // Nếu có bất kỳ task nào khác trong ô đích (thường chỉ có một),
+                // di chuyển nó về ô nguồn. Điều này xử lý cả trường hợp chèn trước và sau.
+                if (itemsInDest.length > 0) {
+                    const oldItem = itemsInDest[0]; // Lấy task đầu tiên tìm thấy
+                    fromSlot.appendChild(oldItem); // Di chuyển nó về ô nguồn
+
                     // Đảm bảo task được chuyển về cũng có các nút điều khiển
                     addControlsToTask(oldItem);
                 }
