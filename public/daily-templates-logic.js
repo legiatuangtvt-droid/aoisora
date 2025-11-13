@@ -495,8 +495,11 @@ export async function applyTemplateForHq() {
             cycleStartDate: dateString,
             templateId: template.id,
             templateName: template.name,
+            userRole: currentUser.roleId,
+            userId: currentUser.id,
+            userName: currentUser.name,
             status: 'HQ_APPLIED',
-            history: [{ status: 'HQ_APPLIED', timestamp: new Date(), userId: currentUser.id, userName: currentUser.name }],
+            history: [{ status: 'HQ_APPLIED', timestamp: new Date(), userId: currentUser.id, userName: currentUser.name, userRole: currentUser.roleId }],
             comments: []
         };
         const planRef = doc(collection(db, 'monthly_plans'));
@@ -582,7 +585,7 @@ export async function loadAppliedPlanForManager() {
             const statusText = planStatusMessages[latestPlan.status] || `Trạng thái: ${latestPlan.status}`;
             // Sửa lỗi: Kiểm tra xem cycleStartDate có phải là Timestamp không trước khi gọi toDate()
             const cycleDate = latestPlan.cycleStartDate.toDate ? latestPlan.cycleStartDate.toDate() : new Date(latestPlan.cycleStartDate);
-            statusDisplay.textContent = `${statusText}`;
+            statusDisplay.textContent = `Kế hoạch chu kỳ ${cycleDate.toLocaleDateString('vi-VN')}. ${statusText}`;
         }
 
         renderPlanTracker(latestPlan);

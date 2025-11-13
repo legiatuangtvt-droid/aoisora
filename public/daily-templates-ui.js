@@ -407,15 +407,50 @@ export function renderPlanTracker(plan) {
             .map(historyEntry => {
                 const stepInfo = steps.find(s => s.id === historyEntry.status);
                 const label = stepInfo ? stepInfo.label : historyEntry.status;
+                
+                const userRole = historyEntry.userRole;
+                console.log('userRole: ', userRole);
+                let displayRole = '';
+                if (userRole) {
+                    switch (userRole) {
+                        case 'HQ_STAFF':
+                        case 'ADMIN':
+                            displayRole = 'HQ ';
+                            break;
+                        case 'REGIONAL_MANAGER':
+                            displayRole = 'RM ';
+                            break;
+                        case 'AREA_MANAGER':
+                            displayRole = 'AM ';
+                            break;
+                        case 'STORE_LEADER_G2':
+                        case 'STORE_LEADER_G3':
+                        case 'STORE_INCHARGE':
+                            displayRole = 'SL ';
+                            break;
+                        case 'STAFF':
+                            displayRole = 'Staff ';
+                            break;
+                        default:
+                            displayRole = `${userRole} `; // Fallback to raw roleId if not mapped
+                    }
+                }
 
                 const timestamp = historyEntry.timestamp?.toDate().toLocaleString('vi-VN') || 'N/A';
                 const iconClass = historyEntry.status.includes('REJECTED') ? 'fa-times-circle text-red-600' : 'fa-check-circle text-green-700';
                 
+                // Thêm thông điệp bổ sung cho trạng thái HQ_APPLIED
+                let additionalMessage = '';
+                if (historyEntry.status === 'HQ_APPLIED') {
+                    additionalMessage = '. <span class="italic text-gray-500">Đang chờ RMs xử lý.</span>';
+                }
+                console.log('displayRole: ', displayRole);
+
                 const commentHTML = historyEntry.comment 
                     ? `<div class="text-xs text-gray-600 italic pl-6 mt-1 p-1 bg-gray-100 rounded">- ${historyEntry.comment}</div>` 
                     : '';
 
-                return `<li class="flex items-start"><i class="fas ${iconClass} mr-2 mt-1 flex-shrink-0"></i><div><strong>${label}:</strong> Hoàn thành bởi ${historyEntry.userName} lúc ${timestamp}${commentHTML}</div></li>`;
+                return `<li class="flex items-start"><i class="fas ${iconClass} mr-2 mt-1 flex-shrink-0"></i><div><strong>${label}:</strong> Hoàn thành bởi ${displayRole}${historyEntry.userName} lúc ${timestamp}${additionalMessage}${commentHTML}</div></li>`;
             }).join('');
         historyList.innerHTML = historyHTML;
     } else {
