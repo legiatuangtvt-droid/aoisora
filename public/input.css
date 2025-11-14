@@ -1004,3 +1004,74 @@ html, body {
 .task-attention-delay-3 { animation-delay: 0.3s; }
 .task-attention-delay-4 { animation-delay: 0.4s; }
 /* Bạn có thể thêm nhiều hơn nếu cần */
+
+/* --- STAFF AVAILABILITY MOBILE VIEW --- */
+.mobile-header {
+    @apply bg-black text-white p-4 text-center sticky top-0 z-20;
+}
+
+.mobile-header h2 {
+    @apply text-xl font-bold;
+}
+
+.mobile-main-content {
+    @apply p-4;
+}
+
+.mobile-calendar-grid {
+    @apply grid grid-cols-7 gap-1 text-center;
+}
+
+.calendar-day-header {
+    @apply font-semibold text-xs text-gray-500 pb-2;
+}
+
+.calendar-day {
+    @apply p-1 border border-transparent rounded-lg aspect-square flex flex-col items-center justify-center cursor-pointer transition-colors;
+}
+
+.calendar-day.other-month {
+    @apply text-gray-300;
+}
+
+.calendar-day.today {
+    @apply bg-indigo-100 text-indigo-700 font-bold;
+}
+
+.calendar-day.selected {
+    @apply bg-indigo-600 text-white ring-2 ring-indigo-400;
+}
+
+.calendar-day .day-number {
+    @apply text-sm;
+}
+
+.calendar-day .shift-code-mobile {
+    @apply text-xs font-bold mt-1;
+}
+
+.mobile-totals {
+    @apply flex justify-between items-center mt-4 p-4 bg-slate-100 rounded-lg;
+}
+
+.mobile-footer {
+    @apply p-4 border-t border-gray-200;
+}
+
+.mobile-shift-legend {
+    @apply mb-4 p-4 bg-slate-50 rounded-lg;
+}
+
+.mobile-daily-detail {
+    @apply p-4 bg-slate-50 rounded-lg;
+}
+
+/* Hide desktop view when mobile is active */
+.mobile-active #desktop-view {
+    @apply hidden;
+}
+
+/* Hide mobile view when desktop is active */
+.mobile-active #mobile-view {
+    @apply block;
+}

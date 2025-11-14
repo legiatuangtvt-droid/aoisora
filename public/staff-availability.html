@@ -37,81 +37,123 @@
         <div id="header-placeholder"></div>
 
         <!-- Content Area -->
-        <main class="flex-1 overflow-auto p-6 lg:p-8 bg-white">
-            <div class="mx-auto">
-                <!-- Dòng 1: Điều hướng ngày -->
-                <div class="text-center my-4">
-                    <h2 id="current-date-display" class="text-xl font-bold text-gray-800">Đang tải...</h2>
-                    <p class="text-sm text-gray-500">Chu kỳ đăng ký</p>
-                </div>
+        <main class="flex-1 overflow-auto p-6 lg:p-8 bg-white relative">
+            <!-- View Toggler -->
+            <div class="absolute top-4 right-4 z-30">
+                <button id="view-toggle-btn" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-mobile-alt mr-2"></i>
+                    <span>Mobile View</span>
+                </button>
+            </div>
 
-                <!-- Bảng đăng ký -->
-                <div class="bg-white p-4 rounded-lg shadow-md border border-gray-200">
-                    <div>
-                        <table class="min-w-full border-collapse">
-                            <!-- JavaScript sẽ render các dòng header và dòng đăng ký vào đây -->
-                            <tbody id="availability-table-body">
-                                <!-- Ví dụ: JS sẽ tạo ra các cặp <tr>...</tr> cho mỗi tuần -->
-                            </tbody>
-                        </table>
+            <!-- Desktop View -->
+            <div id="desktop-view">
+                <div class="mx-auto">
+                    <!-- Dòng 1: Điều hướng ngày -->
+                    <div class="text-center my-4">
+                        <h2 id="current-date-display" class="text-xl font-bold text-gray-800">Đang tải...</h2>
+                        <p class="text-sm text-gray-500">Chu kỳ đăng ký</p>
                     </div>
 
-                    <!-- Ghi chú -->
-                    <div class="mt-4 p-4 bg-gray-50 rounded-lg flex items-center justify-center gap-8 text-sm text-gray-600">
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-circle text-green-500"></i>
-                            <span>: Chắc chắn vào ca (Ưu tiên 1)</span>
+                    <!-- Bảng đăng ký -->
+                    <div class="bg-white p-4 rounded-lg shadow-md border border-gray-200">
+                        <div>
+                            <table class="min-w-full border-collapse">
+                                <!-- JavaScript sẽ render các dòng header và dòng đăng ký vào đây -->
+                                <tbody id="availability-table-body">
+                                    <!-- Ví dụ: JS sẽ tạo ra các cặp <tr>...</tr> cho mỗi tuần -->
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-triangle-exclamation text-amber-500"></i>
-                            <span>: Có thể vào ca (Ưu tiên 2)</span>
+
+                        <!-- Ghi chú -->
+                        <div class="mt-4 p-4 bg-gray-50 rounded-lg flex items-center justify-center gap-8 text-sm text-gray-600">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-circle text-green-500"></i>
+                                <span>: Chắc chắn vào ca (Ưu tiên 1)</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-triangle-exclamation text-amber-500"></i>
+                                <span>: Có thể vào ca (Ưu tiên 2)</span>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Nút lưu -->
-                <div class="mt-6 flex justify-end">
-                    <button id="save-week-availability-btn" class="btn btn-indigo">
-                        <i class="fas fa-save mr-2"></i>
-                        Đăng Ký
-                    </button>
-                </div>
-                <!-- Template cho các ô trong bảng -->
-                <template id="day-header-template">
-                    <th class="p-2 border-l border-gray-200 first:border-l-0 align-top">
-                        <div class="flex justify-center items-start relative">
-                            <div class="text-center">
-                                <div class="day-name font-semibold text-gray-700"></div>
-                                <div class="date-number text-xs text-gray-500"></div>
-                            </div>
-                            <button class="help-btn absolute top-0 right-0 text-slate-400 hover:text-indigo-600 transition-colors" title="Đăng ký giờ hỗ trợ"><i class="fas fa-hands-helping"></i></button>
-                        </div>
-                    </th>
-                </template>
-            
-                <template id="shift-cell-template">
-                    <td class="p-2 border-l border-gray-200 align-top first:border-l-0">
-                        <div class="flex flex-col h-full">
-                            <div class="flex items-start gap-1 flex-grow">
-                            <!-- Ca 1 -->
-                            <div class="shift-registration-block flex-1" data-shift-index="0">
-                                <div class="flex-grow">
-                                    <select class="shift-input text-center form-select form-select-sm w-full"></select>
+                    <!-- Nút lưu -->
+                    <div class="mt-6 flex justify-end">
+                        <button id="save-week-availability-btn" class="btn btn-indigo">
+                            <i class="fas fa-save mr-2"></i>
+                            Đăng Ký
+                        </button>
+                    </div>
+                    <!-- Template cho các ô trong bảng -->
+                    <template id="day-header-template">
+                        <th class="p-2 border-l border-gray-200 first:border-l-0 align-top">
+                            <div class="flex justify-center items-start relative">
+                                <div class="text-center">
+                                    <div class="day-name font-semibold text-gray-700"></div>
+                                    <div class="date-number text-xs text-gray-500"></div>
                                 </div>
-                                <button class="priority-toggle-btn mt-2 w-full h-8 flex items-center justify-center rounded disabled:opacity-50 disabled:cursor-not-allowed" data-priority="1" title="Chắc chắn vào ca" disabled><i class="fas fa-circle text-gray-300 text-lg"></i></button>
+                                <button class="help-btn absolute top-0 right-0 text-slate-400 hover:text-indigo-600 transition-colors" title="Đăng ký giờ hỗ trợ"><i class="fas fa-hands-helping"></i></button>
+                            </div>
+                        </th>
+                    </template>
+                
+                    <template id="shift-cell-template">
+                        <td class="p-2 border-l border-gray-200 align-top first:border-l-0">
+                            <div class="flex flex-col h-full">
+                                <div class="flex items-start gap-1 flex-grow">
+                                <!-- Ca 1 -->
+                                <div class="shift-registration-block flex-1" data-shift-index="0">
+                                    <div class="flex-grow">
+                                        <select class="shift-input text-center form-select form-select-sm w-full"></select>
+                                    </div>
+                                    <button class="priority-toggle-btn mt-2 w-full h-8 flex items-center justify-center rounded disabled:opacity-50 disabled:cursor-not-allowed" data-priority="1" title="Chắc chắn vào ca" disabled><i class="fas fa-circle text-gray-300 text-lg"></i></button>
 
-                            </div>
-                            <!-- Ca 2 -->
-                            <div class="shift-registration-block flex-1" data-shift-index="1">
-                                <div class="flex-grow">
-                                    <select class="shift-input text-center form-select form-select-sm w-full"></select>
                                 </div>
-                                <button class="priority-toggle-btn mt-2 w-full h-8 flex items-center justify-center rounded disabled:opacity-50 disabled:cursor-not-allowed" data-priority="1" title="Có thể vào ca" disabled><i class="fas fa-circle text-gray-300 text-lg"></i></button>
+                                <!-- Ca 2 -->
+                                <div class="shift-registration-block flex-1" data-shift-index="1">
+                                    <div class="flex-grow">
+                                        <select class="shift-input text-center form-select form-select-sm w-full"></select>
+                                    </div>
+                                    <button class="priority-toggle-btn mt-2 w-full h-8 flex items-center justify-center rounded disabled:opacity-50 disabled:cursor-not-allowed" data-priority="1" title="Có thể vào ca" disabled><i class="fas fa-circle text-gray-300 text-lg"></i></button>
+                                </div>
+                                </div>
                             </div>
-                            </div>
+                        </td>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Mobile View -->
+            <div id="mobile-view" class="hidden">
+                <div class="mobile-header">
+                    <h2 id="mobile-month-header">November 2025</h2>
+                </div>
+                <div class="mobile-main-content">
+                    <div id="mobile-calendar-grid" class="mobile-calendar-grid">
+                        <!-- Calendar will be rendered here by JS -->
+                    </div>
+                    <div class="mobile-totals">
+                        <span>Total</span>
+                        <span id="mobile-total-pay" class="font-bold">¥0 (0h)</span>
+                    </div>
+                </div>
+                <div class="mobile-footer">
+                    <section class="mobile-shift-legend">
+                        <h4 class="font-bold text-sm mb-2">Shift Legend</h4>
+                        <div id="mobile-shift-legend-body" class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                            <!-- Shift legend will be rendered here -->
                         </div>
-                    </td>
-                </template>
+                    </section>
+                    <section class="mobile-daily-detail">
+                        <h4 id="mobile-selected-date" class="font-bold text-sm">Select a date</h4>
+                        <input type="text" placeholder="Memo ..." class="form-input w-full mt-2 text-sm">
+                        <button class="btn btn-indigo w-full mt-2">
+                            <i class="fas fa-plus mr-2"></i> Add Shift
+                        </button>
+                    </section>
+                </div>
             </div>
         </main>
     </div>
