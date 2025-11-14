@@ -3820,14 +3820,10 @@ tr.edit-mode-active .scheduled-task-item.calendar-day:hover {
 }
 
 .mobile-totals {
-  margin-top: 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-radius: 0.5rem;
-  --tw-bg-opacity: 1;
-  background-color: rgb(241 245 249 / var(--tw-bg-opacity, 1));
-  padding: 1rem;
+  padding: 0.25rem;
 }
 
 .modal-overlay.mobile-totals {
@@ -3838,11 +3834,9 @@ tr.edit-mode-active .scheduled-task-item.calendar-day:hover {
   border-top-width: 1px;
   --tw-border-opacity: 1;
   border-color: rgb(229 231 235 / var(--tw-border-opacity, 1));
-  padding: 1rem;
 }
 
 .mobile-shift-legend {
-  margin-bottom: 1rem;
   border-radius: 0.5rem;
   --tw-bg-opacity: 1;
   background-color: rgb(248 250 252 / var(--tw-bg-opacity, 1));

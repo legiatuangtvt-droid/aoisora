@@ -1055,15 +1055,15 @@ html, body {
 }
 
 .mobile-totals {
-    @apply flex justify-between items-center mt-4 p-4 bg-slate-100 rounded-lg;
+    @apply flex justify-between items-center p-1;
 }
 
 .mobile-footer {
-    @apply p-4 border-t border-gray-200;
+    @apply border-t border-gray-200;
 }
 
 .mobile-shift-legend {
-    @apply mb-4 p-4 bg-slate-50 rounded-lg;
+    @apply p-4 bg-slate-50 rounded-lg;
 }
 
 .mobile-daily-detail {
