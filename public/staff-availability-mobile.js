@@ -141,9 +141,11 @@ function renderShiftLegend({ shiftCodes, availabilityData, selectedDateStr }) {
     if (shiftsToShow.length === 0) {
         legendBody.innerHTML = '<div class="text-center text-gray-500 italic">Không có ca làm việc nào được phân công cho ngày này.</div>';
     } else {
-        legendBody.innerHTML = shiftsToShow.map(sc => `
+        // Tạo một dòng kẻ liền mạch bằng cách sử dụng col-span-2
+        legendBody.innerHTML = shiftsToShow.map((sc, index) => `
             <div class="font-semibold text-left">${sc.shiftCode}</div>
             <div class="text-right">${sc.timeRange}</div>
+            ${index < shiftsToShow.length - 1 ? '<div class="col-span-2 border-b border-slate-200 my-1"></div>' : ''}
         `).join('');
     }
 }
