@@ -4,11 +4,12 @@ let domController = null;
  * Render lịch tháng cho giao diện mobile.
  */
 function renderMobileCalendar({ payrollCycle, availabilityData, formatDate, shiftCodes }) {
-    const grid = document.getElementById('mobile-calendar-grid');
+    const headerGrid = document.getElementById('mobile-calendar-header-grid');
+    const bodyGrid = document.getElementById('mobile-calendar-body-grid');
     const header = document.getElementById('mobile-month-header');
-    if (!grid || !header) return;
+    if (!headerGrid || !bodyGrid || !header) return;
 
-    grid.innerHTML = '';
+    bodyGrid.innerHTML = ''; // Chỉ xóa nội dung của lưới ngày
     header.classList.add('flex', 'justify-between', 'items-center');
     header.innerHTML = `
         <span>${payrollCycle.start.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
@@ -18,14 +19,15 @@ function renderMobileCalendar({ payrollCycle, availabilityData, formatDate, shif
     `;
 
     const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    headerGrid.innerHTML = ''; // Xóa header cũ
     weekdays.forEach(day => {
-        grid.innerHTML += `<div class="calendar-day-header">${day}</div>`;
+        headerGrid.innerHTML += `<div class="calendar-day-header">${day}</div>`;
     });
 
     let firstDayOfWeek = payrollCycle.start.getDay();
     if (firstDayOfWeek === 0) firstDayOfWeek = 7;
     for (let i = 1; i < firstDayOfWeek; i++) {
-        grid.innerHTML += '<div></div>';
+        bodyGrid.innerHTML += '<div></div>';
     }
 
     const todayStr = formatDate(new Date());
@@ -56,7 +58,7 @@ function renderMobileCalendar({ payrollCycle, availabilityData, formatDate, shif
             <span class="day-number">${dayDisplay}</span>
             <span class="shift-code-mobile">${shiftCode}</span>
         `;
-        grid.appendChild(dayCell);
+        bodyGrid.appendChild(dayCell);
     }
 }
 

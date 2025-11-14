@@ -3713,7 +3713,16 @@ html, body {
   font-weight: 700;
 }
 
-.mobile-calendar-grid {
+.mobile-calendar-header-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.25rem;
+  --tw-bg-opacity: 1;
+  background-color: rgb(226 232 240 / var(--tw-bg-opacity, 1));
+  text-align: center;
+}
+
+.mobile-calendar-body-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 0.25rem;
@@ -3725,8 +3734,6 @@ html, body {
   min-height: 30px;
   align-items: center;
   justify-content: center;
-  --tw-bg-opacity: 1;
-  background-color: rgb(226 232 240 / var(--tw-bg-opacity, 1));
   font-size: 0.75rem;
   line-height: 1rem;
   font-weight: 600;
