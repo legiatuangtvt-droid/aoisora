@@ -3713,10 +3713,6 @@ html, body {
   font-weight: 700;
 }
 
-.mobile-main-content {
-  padding: 1rem;
-}
-
 .mobile-calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -3725,12 +3721,21 @@ html, body {
 }
 
 .calendar-day-header {
-  padding-bottom: 0.5rem;
+  display: flex;
+  min-height: 30px;
+  align-items: center;
+  justify-content: center;
+  --tw-bg-opacity: 1;
+  background-color: rgb(226 232 240 / var(--tw-bg-opacity, 1));
   font-size: 0.75rem;
   line-height: 1rem;
   font-weight: 600;
   --tw-text-opacity: 1;
   color: rgb(107 114 128 / var(--tw-text-opacity, 1));
+}
+
+.modal-overlay.calendar-day-header {
+  display: flex;
 }
 
 tr.edit-mode-active .scheduled-task-item.calendar-day:hover {
@@ -4040,6 +4045,11 @@ tr.edit-mode-active .scheduled-task-item.calendar-day:hover {
   color: rgb(37 99 235 / var(--tw-text-opacity, 1));
 }
 
+.hover\:text-gray-700:hover {
+  --tw-text-opacity: 1;
+  color: rgb(55 65 81 / var(--tw-text-opacity, 1));
+}
+
 .hover\:text-indigo-600:hover {
   --tw-text-opacity: 1;
   color: rgb(79 70 229 / var(--tw-text-opacity, 1));
@@ -4058,11 +4068,6 @@ tr.edit-mode-active .scheduled-task-item.calendar-day:hover {
 .hover\:text-red-900:hover {
   --tw-text-opacity: 1;
   color: rgb(127 29 29 / var(--tw-text-opacity, 1));
-}
-
-.hover\:text-gray-700:hover {
-  --tw-text-opacity: 1;
-  color: rgb(55 65 81 / var(--tw-text-opacity, 1));
 }
 
 .hover\:shadow-md:hover {

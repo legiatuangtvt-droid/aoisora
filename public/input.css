@@ -1014,16 +1014,12 @@ html, body {
     @apply text-xl font-bold;
 }
 
-.mobile-main-content {
-    @apply p-4;
-}
-
 .mobile-calendar-grid {
     @apply grid grid-cols-7 gap-1 text-center;
 }
 
 .calendar-day-header {
-    @apply font-semibold text-xs text-gray-500 pb-2;
+    @apply font-semibold text-xs text-gray-500 min-h-[30px] flex items-center justify-center bg-slate-200;
 }
 
 .calendar-day {
