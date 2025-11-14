@@ -130,32 +130,29 @@
                 <div class="mobile-header">
                     <h2 id="mobile-month-header">November 2025</h2>
                 </div>
-                <div class="mobile-main-content">
-                    <div id="mobile-calendar-header-grid" class="mobile-calendar-header-grid">
-                        <!-- Weekday headers will be rendered here -->
+                <!-- Container cho toàn bộ nội dung có thể cuộn -->
+                <div class="flex-grow overflow-y-auto">
+                    <!-- Lịch tháng -->
+                    <div class="mobile-main-content">
+                        <div id="mobile-calendar-header-grid" class="mobile-calendar-header-grid"></div>
+                        <div id="mobile-calendar-body-grid" class="mobile-calendar-body-grid"></div>
                     </div>
-                    <div id="mobile-calendar-body-grid" class="mobile-calendar-body-grid">
-                        <!-- Calendar will be rendered here by JS -->
+                    <!-- Các khối thông tin độc lập -->
+                    <div class="mobile-totals p-2 bg-slate-50 rounded-lg">
+                        <span class="font-semibold">Total Pay (Est.)</span>
+                        <span id="mobile-total-pay" class="font-bold text-lg">...</span>
                     </div>
-                    <div class="mobile-totals">
-                        <span>Total</span>
-                        <span id="mobile-total-pay" class="font-bold">¥0 (0h)</span>
-                    </div>
-                </div>
-                <div class="mobile-footer">
                     <section class="mobile-shift-legend">
-                        <div id="mobile-shift-legend-body" class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-                            <!-- Shift legend will be rendered here -->
-                        </div>
-                    </section>
-                    <section class="mobile-daily-detail">
-                        <h4 id="mobile-selected-date" class="font-bold text-sm">Select a date</h4>
-                        <input type="text" placeholder="Memo ..." class="form-input w-full mt-2 text-sm">
-                        <button class="btn btn-indigo w-full mt-2">
-                            <i class="fas fa-plus mr-2"></i> Add Shift
-                        </button>
+                        <div id="mobile-shift-legend-body" class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm"></div>
                     </section>
                 </div>
+                <section class="mobile-daily-detail">
+                    <h4 id="mobile-selected-date" class="font-bold text-sm">Select a date</h4>
+                    <input type="text" placeholder="Memo ..." class="form-input w-full mt-2 text-sm">
+                    <button class="btn btn-indigo w-full mt-2">
+                        <i class="fas fa-plus mr-2"></i> Add Shift
+                    </button>
+                </section>
             </div>
         </main>
     </div>
