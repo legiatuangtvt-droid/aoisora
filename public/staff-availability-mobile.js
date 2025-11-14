@@ -39,11 +39,21 @@ function renderMobileCalendar({ payrollCycle, availabilityData, formatDate, shif
             dayCell.classList.add('today');
         }
 
+        // --- LOGIC MỚI: Thêm tháng vào ngày đầu và cuối tháng ---
+        let dayDisplay = d.getDate();
+        const nextDay = new Date(d);
+        nextDay.setDate(d.getDate() + 1);
+
+        // Kiểm tra nếu là ngày đầu tiên của tháng, hoặc là ngày cuối cùng của tháng
+        if (d.getDate() === 1 || nextDay.getDate() === 1) {
+            dayDisplay = `${d.getDate()}/${d.getMonth() + 1}`;
+        }
+
         const schedule = availabilityData[dateStr];
         const shiftCode = schedule?.shift || '';
 
         dayCell.innerHTML = `
-            <span class="day-number">${d.getDate()}</span>
+            <span class="day-number">${dayDisplay}</span>
             <span class="shift-code-mobile">${shiftCode}</span>
         `;
         grid.appendChild(dayCell);
