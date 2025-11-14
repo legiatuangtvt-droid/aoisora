@@ -1043,7 +1043,7 @@ html, body {
 }
 
 .calendar-day.selected {
-    @apply bg-indigo-600 text-white ring-2 ring-indigo-400;
+    @apply bg-indigo-600 text-white outline outline-2 outline-offset-[-2px] outline-indigo-400;
 }
 
 .calendar-day .day-number {
