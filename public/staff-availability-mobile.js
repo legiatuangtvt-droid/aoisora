@@ -139,7 +139,7 @@ function renderShiftLegend({ shiftCodes, availabilityData, selectedDateStr }) {
     }
 
     if (shiftsToShow.length === 0) {
-        legendBody.innerHTML = '<div class="text-center text-gray-500 italic">Không có ca làm việc nào được phân công cho ngày này.</div>';
+        legendBody.innerHTML = '<div class="text-gray-500 italic">Không có ca làm việc nào được phân công cho ngày này.</div>';
     } else {
         // Tạo một dòng kẻ liền mạch bằng cách sử dụng col-span-2
         legendBody.innerHTML = shiftsToShow.map((sc, index) => `
