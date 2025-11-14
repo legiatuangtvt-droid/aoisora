@@ -1019,7 +1019,7 @@ html, body {
 }
 
 .mobile-calendar-body-grid {
-    @apply grid grid-cols-7 text-center border-t border-slate-200;
+    @apply grid grid-cols-7 text-center border border-slate-200;
 }
 
 .calendar-day-header {

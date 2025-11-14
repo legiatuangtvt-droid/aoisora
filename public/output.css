@@ -3725,7 +3725,7 @@ html, body {
 .mobile-calendar-body-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  border-top-width: 1px;
+  border-width: 1px;
   --tw-border-opacity: 1;
   border-color: rgb(226 232 240 / var(--tw-border-opacity, 1));
   text-align: center;

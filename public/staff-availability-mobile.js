@@ -40,13 +40,16 @@ function renderMobileCalendar({ payrollCycle, availabilityData, formatDate, shif
     const totalCells = Math.ceil((emptyStartCells + daysInCycle) / 7) * 7;
 
     // 2. Tạo tất cả các ô trong lưới
+    const fragment = document.createDocumentFragment();
     const cells = [];
     for (let i = 0; i < totalCells; i++) {
         const cell = document.createElement('div');
         cell.className = 'calendar-day empty'; // Mặc định tất cả là ô trống
-        bodyGrid.appendChild(cell);
+        fragment.appendChild(cell);
         cells.push(cell);
     }
+    // Chèn tất cả các ô vào DOM cùng một lúc
+    bodyGrid.appendChild(fragment);
 
     // 3. Điền dữ liệu ngày vào các ô tương ứng
     const todayStr = formatDate(new Date());
