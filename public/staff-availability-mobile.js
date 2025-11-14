@@ -61,27 +61,44 @@ function renderMobileCalendar({ payrollCycle, availabilityData, formatDate, shif
 }
 
 /**
+ * Tạo dữ liệu chấm công giả lập dựa trên lịch đã phân công.
+ * Trong tương lai, hàm này sẽ được thay thế bằng logic tải dữ liệu chấm công thật.
+ * @param {object} availabilityData - Dữ liệu lịch làm việc đã phân công.
+ * @returns {object} Dữ liệu chấm công giả lập.
+ */
+function getMockAttendanceData(availabilityData) {
+    // Hiện tại, chúng ta giả định nhân viên làm việc đúng theo lịch đã phân công.
+    // Dữ liệu trả về có cấu trúc giống hệt availabilityData.
+    return availabilityData;
+}
+
+/**
  * Tính và hiển thị tổng giờ, tổng lương ước tính.
  */
-function calculateMobileTotals({ payrollCycle, shiftCodes, availabilityData }) {
+function calculateMobileTotals({ payrollCycle, shiftCodes, availabilityData, formatDate }) {
     const totalPayEl = document.getElementById('mobile-total-pay');
     if (!totalPayEl) return;
 
+    // Sử dụng dữ liệu chấm công giả lập
+    const attendanceData = getMockAttendanceData(availabilityData);
     const currentUser = window.currentUser;
     let totalHours = 0;
+
     for (let d = new Date(payrollCycle.start); d <= payrollCycle.end; d.setDate(d.getDate() + 1)) {
-        const dateStr = d.toISOString().slice(0, 10);
-        const schedule = availabilityData[dateStr];
-        if (schedule && schedule.shift) {
-            const shiftInfo = shiftCodes.find(sc => sc.shiftCode === schedule.shift);
+        const dateStr = formatDate(d); // Sử dụng formatDate để đảm bảo định dạng đúng
+        const attendance = attendanceData[dateStr];
+        if (attendance && attendance.shift) {
+            const shiftInfo = shiftCodes.find(sc => sc.shiftCode === attendance.shift);
             if (shiftInfo) {
                 totalHours += shiftInfo.duration;
             }
         }
     }
 
-    const totalPay = totalHours * (currentUser?.hourlyRate || 0);
-    totalPayEl.innerHTML = `¥${totalPay.toLocaleString('ja-JP')} <span class="text-gray-500 font-normal">(${totalHours}h)</span>`;
+    const totalPay = totalHours * (currentUser?.hourlyRate || 1000); // Sử dụng 1000 yên/giờ làm mặc định
+    const formattedHours = `${Math.floor(totalHours)}:${String(Math.round((totalHours % 1) * 60)).padStart(2, '0')}`;
+
+    totalPayEl.innerHTML = `¥${totalPay.toLocaleString('ja-JP')} <span class="text-gray-500 font-normal">(${formattedHours})</span>`;
 }
 
 /**
