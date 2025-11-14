@@ -587,7 +587,16 @@ function renderMobileCalendar() {
     if (!grid || !header) return;
 
     grid.innerHTML = ''; // Xóa lịch cũ
-    header.textContent = payrollCycle.start.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    // Thêm các class flexbox để căn chỉnh các mục con
+    header.classList.add('flex', 'justify-between', 'items-center');
+
+    // Cập nhật header để chứa cả tháng/năm và icon bánh răng
+    header.innerHTML = `
+        <span>${payrollCycle.start.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+        <button class="text-gray-500 hover:text-gray-700">
+            <i class="fas fa-cog"></i>
+        </button>
+    `;
 
     // Thêm tiêu đề các ngày trong tuần
     const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
