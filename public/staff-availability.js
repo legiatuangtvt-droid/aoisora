@@ -665,8 +665,8 @@ function renderShiftLegend() {
     if (!legendBody) return;
 
     legendBody.innerHTML = shiftCodes.map(sc => `
-        <div class="font-semibold">${sc.shiftCode}</div>
-        <div>${sc.timeRange}</div>
+        <div class="font-semibold text-left">${sc.shiftCode}</div>
+        <div class="text-right">${sc.timeRange}</div>
     `).join('');
 }
 

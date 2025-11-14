@@ -3837,6 +3837,72 @@ tr.edit-mode-active .scheduled-task-item.calendar-day:hover {
   padding: 1rem;
 }
 
+/* --- MOBILE VIEW SIMULATION --- */
+
+/* Khi ở chế độ mobile, đổi nền body và ẩn các layout chung */
+
+.mobile-active {
+  --tw-bg-opacity: 1;
+  background-color: rgb(51 65 85 / var(--tw-bg-opacity, 1));
+  /* Nền tối để làm nổi bật khung mô phỏng */
+}
+
+.mobile-active #sidebar-placeholder,
+.mobile-active #header-placeholder {
+  display: none;
+}
+
+#task-library-container.mobile-active #sidebar-placeholder,#task-library-container
+.mobile-active #header-placeholder {
+  display: none;
+}
+
+.mobile-active #sidebar-placeholder,
+.mobile-active #header-placeholder {
+  /* Ẩn sidebar và header */
+}
+
+/* Căn giữa khung mô phỏng */
+
+.mobile-active main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modal-overlay.mobile-active main {
+  display: flex;
+}
+
+/* Tạo kiểu cho khung mô phỏng điện thoại */
+
+.mobile-active #mobile-view {
+  position: relative;
+  display: flex;
+  height: 85vh;
+  max-height: 800px;
+  width: 100%;
+  max-width: 24rem;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 1rem;
+  border-width: 8px;
+  --tw-border-opacity: 1;
+  border-color: rgb(0 0 0 / var(--tw-border-opacity, 1));
+  --tw-bg-opacity: 1;
+  background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
+  --tw-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  --tw-shadow-colored: 0 25px 50px -12px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+.modal-overlay.mobile-active #mobile-view {
+  display: flex;
+}
+
+/* --- END MOBILE SIMULATION --- */
+
 /* Hide desktop view when mobile is active */
 
 .mobile-active #desktop-view {
