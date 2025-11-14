@@ -12,8 +12,8 @@ function renderMobileCalendar({ payrollCycle, availabilityData, formatDate, shif
     bodyGrid.innerHTML = ''; // Chỉ xóa nội dung của lưới ngày
     header.classList.add('flex', 'justify-between', 'items-center');
     header.innerHTML = `
-        <span>${payrollCycle.start.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
-        <button class="text-gray-500 hover:text-gray-700">
+        <span class="pl-2">${payrollCycle.start.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+        <button class="text-gray-500 hover:text-gray-700 pr-2">
             <i class="fas fa-cog"></i>
         </button>
     `;
