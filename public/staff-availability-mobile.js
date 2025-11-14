@@ -135,11 +135,11 @@ function renderShiftLegend({ shiftCodes, availabilityData, selectedDateStr }) {
  * Xử lý sự kiện khi người dùng chọn một ngày trên lịch mobile.
  */
 function handleDaySelection(dateStr = null, config) {
-    const grid = document.getElementById('mobile-calendar-grid');
+    const grid = document.getElementById('mobile-calendar-body-grid');
     if (!grid) return;
 
     const targetDateStr = dateStr || config.formatDate(new Date());
-    const targetCell = grid.querySelector(`.calendar-day[data-date="${targetDateStr}"]`);
+    const targetCell = grid.querySelector(`.calendar-day[data-date='${targetDateStr}']`);
 
     const currentSelected = grid.querySelector('.selected');
     if (currentSelected) {
@@ -169,7 +169,7 @@ export function initMobileView(config) { // Modified to accept full config
     domController = new AbortController();
     const { signal } = domController;
 
-    const mobileGrid = document.getElementById('mobile-calendar-grid');
+    const mobileGrid = document.getElementById('mobile-calendar-body-grid');
     if (mobileGrid) {
         mobileGrid.addEventListener('click', (e) => {
             const dayCell = e.target.closest('.calendar-day');
