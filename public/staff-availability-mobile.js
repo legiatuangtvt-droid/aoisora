@@ -35,9 +35,6 @@ function renderMobileCalendar({ payrollCycle, availabilityData, formatDate, shif
         dayCell.className = 'calendar-day';
         dayCell.dataset.date = dateStr;
 
-        if (d.getMonth() !== payrollCycle.start.getMonth()) {
-            dayCell.classList.add('other-month');
-        }
         if (dateStr === todayStr) {
             dayCell.classList.add('today');
         }
