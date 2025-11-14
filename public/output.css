@@ -3725,7 +3725,9 @@ html, body {
 .mobile-calendar-body-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 0.25rem;
+  border-top-width: 1px;
+  --tw-border-opacity: 1;
+  border-color: rgb(226 232 240 / var(--tw-border-opacity, 1));
   text-align: center;
 }
 
@@ -3762,9 +3764,10 @@ tr.edit-mode-active .scheduled-task-item.calendar-day:hover {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-radius: 0.5rem;
-  border-width: 1px;
-  border-color: transparent;
+  border-bottom-width: 1px;
+  border-right-width: 1px;
+  --tw-border-opacity: 1;
+  border-color: rgb(229 231 235 / var(--tw-border-opacity, 1));
   padding: 0.25rem;
   transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
@@ -3773,6 +3776,11 @@ tr.edit-mode-active .scheduled-task-item.calendar-day:hover {
 
 .modal-overlay.calendar-day {
   display: flex;
+}
+
+.calendar-day.empty {
+  pointer-events: none;
+  cursor: default;
 }
 
 .calendar-day.other-month {

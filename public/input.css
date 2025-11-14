@@ -1019,7 +1019,7 @@ html, body {
 }
 
 .mobile-calendar-body-grid {
-    @apply grid grid-cols-7 gap-1 text-center;
+    @apply grid grid-cols-7 text-center border-t border-slate-200;
 }
 
 .calendar-day-header {
@@ -1027,7 +1027,11 @@ html, body {
 }
 
 .calendar-day {
-    @apply p-1 border border-transparent rounded-lg aspect-square flex flex-col items-center justify-center cursor-pointer transition-colors;
+    @apply p-1 border-b border-r border-gray-200 aspect-square flex flex-col items-center justify-center cursor-pointer transition-colors;
+}
+
+.calendar-day.empty {
+    @apply cursor-default pointer-events-none;
 }
 
 .calendar-day.other-month {

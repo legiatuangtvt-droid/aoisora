@@ -19,38 +19,53 @@ function renderMobileCalendar({ payrollCycle, availabilityData, formatDate, shif
     `;
 
     const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    headerGrid.innerHTML = ''; // Xóa header cũ
+    headerGrid.innerHTML = ''; // Xóa header cũ để đảm bảo sạch sẽ
     weekdays.forEach(day => {
-        headerGrid.innerHTML += `<div class="calendar-day-header">${day}</div>`;
+        // Sử dụng document.createElement để đảm bảo tính nhất quán
+        const dayHeader = document.createElement('div');
+        dayHeader.className = 'calendar-day-header';
+        dayHeader.textContent = day;
+        headerGrid.appendChild(dayHeader);
     });
 
-    let firstDayOfWeek = payrollCycle.start.getDay();
+    // --- LOGIC MỚI: Vẽ lưới trước, điền dữ liệu sau ---
+
+    // 1. Tính toán số ô cần thiết
+    const startDate = new Date(payrollCycle.start);
+    const endDate = new Date(payrollCycle.end);
+    let firstDayOfWeek = startDate.getDay(); // 0=Sun, 1=Mon
     if (firstDayOfWeek === 0) firstDayOfWeek = 7;
-    for (let i = 1; i < firstDayOfWeek; i++) {
-        bodyGrid.innerHTML += '<div></div>';
+    const emptyStartCells = firstDayOfWeek - 1;
+    const daysInCycle = (endDate - startDate) / (1000 * 60 * 60 * 24) + 1;
+    const totalCells = Math.ceil((emptyStartCells + daysInCycle) / 7) * 7;
+
+    // 2. Tạo tất cả các ô trong lưới
+    const cells = [];
+    for (let i = 0; i < totalCells; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'calendar-day empty'; // Mặc định tất cả là ô trống
+        bodyGrid.appendChild(cell);
+        cells.push(cell);
     }
 
+    // 3. Điền dữ liệu ngày vào các ô tương ứng
     const todayStr = formatDate(new Date());
-    for (let d = new Date(payrollCycle.start); d <= payrollCycle.end; d.setDate(d.getDate() + 1)) {
+    for (let i = 0; i < daysInCycle; i++) {
+        const cellIndex = emptyStartCells + i;
+        if (cellIndex >= cells.length) continue;
+
+        const dayCell = cells[cellIndex];
+        const d = new Date(startDate);
+        d.setDate(startDate.getDate() + i);
         const dateStr = formatDate(d);
-        const dayCell = document.createElement('div');
-        dayCell.className = 'calendar-day';
+
+        dayCell.classList.remove('empty');
         dayCell.dataset.date = dateStr;
 
-        if (dateStr === todayStr) {
-            dayCell.classList.add('today');
-        }
+        if (dateStr === todayStr) dayCell.classList.add('today');
 
-        // --- LOGIC MỚI: Thêm tháng vào ngày đầu và cuối tháng ---
         let dayDisplay = d.getDate();
-        const nextDay = new Date(d);
-        nextDay.setDate(d.getDate() + 1);
-
-        // Kiểm tra nếu là ngày đầu tiên của tháng, hoặc là ngày cuối cùng của tháng
-        if (d.getDate() === 1 || nextDay.getDate() === 1) {
-            dayDisplay = `${d.getDate()}/${d.getMonth() + 1}`;
-        }
-
+        if (d.getDate() === 1 || new Date(d.getTime() + 86400000).getDate() === 1) dayDisplay = `${d.getDate()}/${d.getMonth() + 1}`;
         const schedule = availabilityData[dateStr];
         const shiftCode = schedule?.shift || '';
 
@@ -58,7 +73,6 @@ function renderMobileCalendar({ payrollCycle, availabilityData, formatDate, shif
             <span class="day-number">${dayDisplay}</span>
             <span class="shift-code-mobile">${shiftCode}</span>
         `;
-        bodyGrid.appendChild(dayCell);
     }
 }
 
