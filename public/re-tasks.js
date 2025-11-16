@@ -381,9 +381,9 @@ async function importTasksFromExcel(file) {
                         
                         const newTasksWithOrder = tasksByGroup[groupCode].map((task, index) => ({ ...task, order: lastOrder + 1 + index }));
                         const combinedTasks = [...existingTasks, ...newTasksWithOrder];
-                        batch.update(groupDocRef, { tasks: combinedTasks });
+                        batch.set(groupDocRef, { tasks: combinedTasks }, { merge: true });
                     } else { // 'overwrite' mode
-                        batch.update(groupDocRef, { tasks: tasksByGroup[groupCode] });
+                        batch.set(groupDocRef, { tasks: tasksByGroup[groupCode] }, { merge: true });
                     }
                 }
 
