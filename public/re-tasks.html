@@ -167,6 +167,43 @@
                 </div>
             </div>
 
+            <!-- MODAL: Import RE Tasks -->
+            <div id="import-modal" class="modal-overlay hidden">
+                <div class="modal-content max-w-xl">
+                    <form id="import-form">
+                        <div class="modal-header">
+                            <h3 class="modal-title"><i class="fas fa-file-excel mr-2 text-green-600"></i>Import RE Tasks từ Excel</h3>
+                            <button type="button" class="modal-close-btn">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="text-sm text-gray-600 mb-4">
+                                Tải lên file Excel chứa danh sách các RE Task. Hệ thống sẽ tự động đọc và cập nhật dữ liệu.
+                                <a href="#" class="text-indigo-600 hover:text-indigo-900 font-medium">Tải file mẫu tại đây</a>.
+                            </p>
+                            <div id="file-drop-zone" class="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10">
+                                <div class="text-center">
+                                    <i class="fas fa-file-excel mx-auto h-12 w-12 text-gray-300" aria-hidden="true"></i>
+                                    <div class="mt-4 flex text-sm leading-6 text-gray-600">
+                                        <label for="file-upload" class="relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500">
+                                            <span>Tải lên một file</span>
+                                            <input id="file-upload" name="file-upload" type="file" class="sr-only" accept=".xlsx, .xls">
+                                        </label>
+                                        <p class="pl-1">hoặc kéo và thả vào đây</p>
+                                    </div>
+                                    <p id="file-name-display" class="text-xs leading-5 text-gray-600 mt-2">Chấp nhận file .xlsx, .xls</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary modal-close-btn">Hủy</button>
+                            <button type="submit" id="submit-import-btn" class="btn btn-success" disabled>
+                                <i class="fas fa-check mr-2"></i>Xác nhận Import
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
         </main>
     </div>
 

@@ -1,5 +1,5 @@
 import { db } from './firebase.js';
-import { collection, getDocs, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { collection, getDocs, doc, updateDoc, getDoc, writeBatch } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 
 
@@ -306,6 +306,92 @@ function exportTasksToExcel() {
 }
 
 /**
+ * Đọc file Excel và cập nhật dữ liệu RE Tasks lên Firestore.
+ * @param {File} file - File Excel được người dùng tải lên.
+ */
+async function importTasksFromExcel(file) {
+    if (!file) {
+        window.showToast('Vui lòng chọn một file để import.', 'warning');
+        return;
+    }
+
+    if (typeof XLSX === 'undefined') {
+        window.showToast('Lỗi: Thư viện Excel chưa được tải. Vui lòng thử lại.', 'error');
+        return;
+    }
+
+    const submitButton = document.getElementById('submit-import-btn');
+    submitButton.disabled = true;
+    submitButton.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Đang xử lý...`;
+
+    try {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                
+                // Chuyển đổi sheet thành JSON, sử dụng header
+                const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+                if (jsonData.length === 0) {
+                    throw new Error("File Excel không có dữ liệu hoặc không đúng định dạng.");
+                }
+
+                // Nhóm các task lại theo 'Group'
+                const tasksByGroup = jsonData.reduce((acc, row) => {
+                    const groupCode = row.Group?.trim().toUpperCase();
+                    if (!groupCode) return acc;
+
+                    if (!acc[groupCode]) {
+                        acc[groupCode] = [];
+                    }
+
+                    // Tạo đối tượng task, đảm bảo các trường không phải là undefined
+                    const task = {
+                        order: acc[groupCode].length + 1, // Tự động gán thứ tự
+                        typeTask: row['Type Task'] || '',
+                        name: row['Task Name'] || 'Unnamed Task',
+                        frequency: row['Frequency Type'] || '',
+                        frequencyNumber: row['Frequency Number'] || '',
+                        reUnit: row['Re Unit (min)'] || '',
+                        manual_number: row['Manual Number'] || '',
+                        manualLink: row['Manual Link'] || '',
+                        note: row.Note || ''
+                    };
+                    acc[groupCode].push(task);
+                    return acc;
+                }, {});
+
+                // Cập nhật lên Firestore bằng writeBatch
+                const batch = writeBatch(db);
+                for (const groupCode in tasksByGroup) {
+                    const groupDocRef = doc(db, 'task_groups', groupCode);
+                    batch.update(groupDocRef, { tasks: tasksByGroup[groupCode] });
+                }
+
+                await batch.commit();
+                window.showToast(`Import thành công! Đã cập nhật ${jsonData.length} tasks.`, 'success');
+                hideModal('import-modal'); // Đóng modal sau khi thành công
+                listenForTaskChanges(); // Tải lại dữ liệu để làm mới bảng
+
+            } catch (error) {
+                console.error("Lỗi khi xử lý file Excel:", error);
+                window.showToast(error.message || 'Đã xảy ra lỗi khi đọc file.', 'error');
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    } catch (error) {
+        console.error("Lỗi khi import:", error);
+        window.showToast('Không thể bắt đầu quá trình import.', 'error');
+        submitButton.disabled = false;
+        submitButton.innerHTML = `<i class="fas fa-check mr-2"></i>Xác nhận Import`;
+    }
+}
+
+/**
  * Dọn dẹp các listener khi rời khỏi trang.
  */
 export function cleanup() {
@@ -326,11 +412,66 @@ export function init() {
 
     listenForTaskChanges();
 
+    // --- Import Modal Logic ---
+    const importBtn = document.getElementById('import-tasks-btn');
+    const importModal = document.getElementById('import-modal');
+    const importForm = document.getElementById('import-form');
+    const fileInput = document.getElementById('file-upload');
+    const fileDropZone = document.getElementById('file-drop-zone');
+    const fileNameDisplay = document.getElementById('file-name-display');
+    const submitImportBtn = document.getElementById('submit-import-btn');
+
+    const showImportModal = () => {
+        importModal.classList.remove('hidden');
+        importModal.classList.add('flex');
+        setTimeout(() => importModal.classList.add('show'), 10);
+    };
+
+    // Sử dụng hàm hideModal đã có sẵn
+
+    importBtn?.addEventListener('click', showImportModal, { signal });
+
+    const handleFileSelect = (file) => {
+        if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
+            fileNameDisplay.textContent = `File đã chọn: ${file.name}`;
+            submitImportBtn.disabled = false;
+            fileDropZone.classList.add('border-green-500', 'bg-green-50');
+        } else {
+            window.showToast('Vui lòng chọn file Excel (.xlsx hoặc .xls).', 'warning');
+            fileNameDisplay.textContent = 'Chấp nhận file .xlsx, .xls';
+            submitImportBtn.disabled = true;
+            fileDropZone.classList.remove('border-green-500', 'bg-green-50');
+        }
+    };
+
+    fileInput?.addEventListener('change', (e) => {
+        handleFileSelect(e.target.files[0]);
+    });
+
+    // Drag and Drop
+    fileDropZone?.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        fileDropZone.classList.add('border-indigo-600');
+    });
+    fileDropZone?.addEventListener('dragleave', () => {
+        fileDropZone.classList.remove('border-indigo-600');
+    });
+    fileDropZone?.addEventListener('drop', (e) => {
+        e.preventDefault();
+        fileDropZone.classList.remove('border-indigo-600');
+        handleFileSelect(e.dataTransfer.files[0]);
+    });
+
     // Gắn sự kiện cho các nút chính
     document.getElementById('re-task-form')?.addEventListener('submit', handleFormSubmit, { signal });
     document.getElementById('export-tasks-btn')?.addEventListener('click', (event) => {
         event.stopPropagation(); // Ngăn sự kiện lan truyền lên body, tránh xung đột với layout-controller
         exportTasksToExcel();
+    }, { signal });
+    document.getElementById('import-form')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const fileInput = document.getElementById('file-upload');
+        importTasksFromExcel(fileInput.files[0]);
     }, { signal });
 
    // Gắn sự kiện cho ô tìm kiếm
