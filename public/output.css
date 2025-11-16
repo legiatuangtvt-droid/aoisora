@@ -979,6 +979,26 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
   top: 0.125rem;
 }
 
+.bottom-2 {
+  bottom: 0.5rem;
+}
+
+.top-2 {
+  top: 0.5rem;
+}
+
+.right-0\.5 {
+  right: 0.125rem;
+}
+
+.right-\[1px\] {
+  right: 1px;
+}
+
+.right-\[0\.5px\] {
+  right: 0.5px;
+}
+
 .z-0 {
   z-index: 0;
 }
