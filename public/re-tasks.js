@@ -486,6 +486,7 @@ export function init() {
     const fileNameDisplay = document.getElementById('file-name-display');
     const submitImportBtn = document.getElementById('submit-import-btn');
     const downloadTemplateLink = document.getElementById('download-template-link');
+    let selectedFileForImport = null; // Biến để lưu file đã chọn (kể cả kéo-thả)
 
     const showImportModal = () => {
         importModal.classList.remove('hidden');
@@ -505,10 +506,12 @@ export function init() {
     const handleFileSelect = (file) => {
         if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
             fileNameDisplay.textContent = `File đã chọn: ${file.name}`;
+            selectedFileForImport = file; // Lưu file vào biến tạm
             submitImportBtn.disabled = false;
             fileDropZone.classList.add('border-green-500', 'bg-green-50');
         } else {
             window.showToast('Vui lòng chọn file Excel (.xlsx hoặc .xls).', 'warning');
+            selectedFileForImport = null; // Reset biến tạm
             fileNameDisplay.textContent = 'Chấp nhận file .xlsx, .xls';
             submitImportBtn.disabled = true;
             fileDropZone.classList.remove('border-green-500', 'bg-green-50');
@@ -541,8 +544,7 @@ export function init() {
     }, { signal });
     document.getElementById('import-form')?.addEventListener('submit', (e) => {
         e.preventDefault();
-        const fileInput = document.getElementById('file-upload');
-        importTasksFromExcel(fileInput.files[0]);
+        importTasksFromExcel(selectedFileForImport); // Sử dụng file từ biến tạm
     }, { signal });
 
    // Gắn sự kiện cho ô tìm kiếm
