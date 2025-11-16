@@ -542,6 +542,7 @@ export async function toggleBuilderView() {
     const newBtn = document.getElementById('new-template-btn');
     const deployBtn = document.getElementById('apply-template-hq-btn');
     const deleteBtn = document.getElementById('delete-template-btn');
+    const templateSelector = document.getElementById('template-selector');
 
     if (currentView === 'builder') {
         currentView = 're-logic';
@@ -553,6 +554,7 @@ export async function toggleBuilderView() {
         newBtn.classList.add('hidden');
         deployBtn.classList.add('hidden');
         deleteBtn.classList.add('hidden');
+        if (templateSelector) templateSelector.disabled = true; // Vô hiệu hóa bộ chọn mẫu
         hideTaskLibrary();
         await initRELogicView(currentTemplateId, allTemplates, allTaskGroups);
     } else {
@@ -561,6 +563,7 @@ export async function toggleBuilderView() {
         reLogicContainer.classList.add('hidden');
         toggleBtnIcon.className = 'fas fa-list-alt mr-2';
         toggleBtnSpan.textContent = 'Detail';
+        if (templateSelector) templateSelector.disabled = false; // Kích hoạt lại bộ chọn mẫu
         if (window.currentUser && (window.currentUser.roleId === 'HQ_STAFF' || window.currentUser.roleId === 'ADMIN')) {
             saveBtn.classList.remove('hidden');
             newBtn.classList.remove('hidden');

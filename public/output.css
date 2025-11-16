@@ -1019,6 +1019,10 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
   z-index: 30;
 }
 
+.z-\[10000\] {
+  z-index: 10000;
+}
+
 .col-span-1 {
   grid-column: span 1 / span 1;
 }
@@ -2086,6 +2090,15 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
 .bg-white {
   --tw-bg-opacity: 1;
   background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
+}
+
+.bg-gray-900 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(17 24 39 / var(--tw-bg-opacity, 1));
+}
+
+.bg-opacity-50 {
+  --tw-bg-opacity: 0.5;
 }
 
 .stroke-green-500 {
