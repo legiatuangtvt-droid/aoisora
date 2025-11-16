@@ -93,6 +93,38 @@
         </main>
     </div>
 
+    <!-- MODAL: Thêm mã ca thủ công -->
+    <div id="add-manual-shift-modal" class="modal-overlay hidden">
+        <div class="modal-content max-w-md">
+            <form id="add-manual-shift-form">
+                <div class="modal-header">
+                    <h3 class="modal-title">Thêm Mã Ca Thủ Công</h3>
+                    <button type="button" class="modal-close-btn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="manual-shift-code" class="form-label">Mã Ca (*)</label>
+                        <input type="text" id="manual-shift-code" class="form-input uppercase" placeholder="Ví dụ: V8.512" required>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label for="manual-start-time" class="form-label">Giờ Bắt Đầu (*)</label>
+                            <input type="time" id="manual-start-time" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="manual-end-time" class="form-label">Giờ Kết Thúc (*)</label>
+                            <input type="time" id="manual-end-time" class="form-input" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary modal-close-btn">Hủy</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-2"></i>Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script type="module" src="bootstrapper.js" defer></script>
 </body>
 </html>
