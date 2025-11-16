@@ -211,10 +211,10 @@ async function renderTaskSummaryTable(container) {
                         colorClass2 = 'text-red-500';
                     }
 
-                    const gap1HTML = gap1 !== 0 ? `<div class="absolute top-0 right-1 text-[10px] font-semibold ${colorClass1}" title="DWS - Model">
+                    const gap1HTML = gap1 !== 0 ? `<div class="absolute top-0.5 right-1 text-[10px] font-semibold ${colorClass1}" title="DWS - Model">
                                         ${gap1.toFixed(2)} ${indicator1}
                                     </div>` : '';
-                    const gap2HTML = gap2 !== 0 ? `<div class="absolute bottom-0 right-1 text-[10px] font-semibold ${colorClass2}" title="Actual - Model">
+                    const gap2HTML = gap2 !== 0 ? `<div class="absolute bottom-0.5 right-1 text-[10px] font-semibold ${colorClass2}" title="Actual - Model">
                                         ${gap2.toFixed(2)} ${indicator2}
                                     </div>` : '';
 
