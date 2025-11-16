@@ -1,5 +1,6 @@
 import { db } from './firebase.js';
-import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, serverTimestamp, writeBatch, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { collection, getDocs, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+
 
 
 let activeListeners = [];
@@ -262,6 +263,49 @@ function hideModal() {
 }
 
 /**
+ * Xuất dữ liệu RE Tasks hiện tại ra file Excel.
+ */
+function exportTasksToExcel() {
+    if (typeof XLSX === 'undefined') {
+        window.showToast('Lỗi: Thư viện Excel chưa được tải. Vui lòng thử lại.', 'error');
+        return;
+    }
+
+    if (!filteredTasks || filteredTasks.length === 0) {
+        window.showToast('Không có dữ liệu để xuất.', 'info');
+        return;
+    }
+
+    window.showToast('Đang chuẩn bị file Excel...', 'info');
+
+    // Định nghĩa header cho file Excel
+    const headers = [
+        "Group", "Type Task", "Task Name", "Frequency Type", "Frequency Number",
+        "Re Unit (min)", "Manual Number", "Manual Link", "Note"
+    ];
+
+    // Chuyển đổi dữ liệu task thành mảng các mảng
+    const data = filteredTasks.map(task => [
+        task.groupCode || '',
+        task.typeTask || '',
+        task.name || '',
+        task.frequency || '',
+        task.frequencyNumber || '',
+        task.reUnit || '',
+        task.manual_number || '',
+        task.manualLink || '',
+        task.note || ''
+    ]);
+
+    const worksheet = XLSX.utils.aoa_to_sheet([headers, ...data]);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "RE Tasks");
+
+    // Tạo và tải file
+    XLSX.writeFile(workbook, `RE_Tasks_Export_${new Date().toISOString().slice(0, 10)}.xlsx`);
+}
+
+/**
  * Dọn dẹp các listener khi rời khỏi trang.
  */
 export function cleanup() {
@@ -284,6 +328,11 @@ export function init() {
 
     // Gắn sự kiện cho các nút chính
     document.getElementById('re-task-form')?.addEventListener('submit', handleFormSubmit, { signal });
+    document.getElementById('export-tasks-btn')?.addEventListener('click', (event) => {
+        event.stopPropagation(); // Ngăn sự kiện lan truyền lên body, tránh xung đột với layout-controller
+        exportTasksToExcel();
+    }, { signal });
+
    // Gắn sự kiện cho ô tìm kiếm
     document.getElementById('search-task-input')?.addEventListener('input', filterAndRender, { signal });
 

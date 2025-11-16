@@ -127,7 +127,11 @@ export function initializeLayoutController() {
 
     document.body.addEventListener('click', e => {
         const link = e.target.closest('a');
-        if (link && link.href && link.origin === window.location.origin && !link.getAttribute('target')) {
+        // Điều kiện được cập nhật để bỏ qua các link tải file (blob)
+        if (link && link.href && 
+            !link.href.startsWith('blob:') && 
+            link.origin === window.location.origin && 
+            !link.getAttribute('target')) {
             e.preventDefault();
             navigate(link.href);
         }
