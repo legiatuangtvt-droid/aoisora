@@ -260,6 +260,27 @@ function hideModal() {
             modal.classList.remove('flex');
         }, { once: true });
     });
+    const modal = document.querySelector('.modal-overlay.show');
+    if (!modal) return;
+
+    modal.classList.remove('show');
+    modal.addEventListener('transitionend', () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+
+        // Nếu là modal import, reset form
+        if (modal.id === 'import-modal') {
+            const importForm = document.getElementById('import-form');
+            const fileNameDisplay = document.getElementById('file-name-display');
+            const submitImportBtn = document.getElementById('submit-import-btn');
+            const fileDropZone = document.getElementById('file-drop-zone');
+
+            importForm?.reset();
+            if (fileNameDisplay) fileNameDisplay.textContent = 'Chấp nhận file .xlsx, .xls';
+            if (submitImportBtn) submitImportBtn.disabled = true;
+            fileDropZone?.classList.remove('border-green-500', 'bg-green-50');
+        }
+    }, { once: true });
 }
 
 /**
