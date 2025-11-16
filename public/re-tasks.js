@@ -336,6 +336,8 @@ async function importTasksFromExcel(file) {
                 // Chuyển đổi sheet thành JSON, sử dụng header
                 const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
+                const importMode = document.querySelector('input[name="import-mode"]:checked').value;
+
                 if (jsonData.length === 0) {
                     throw new Error("File Excel không có dữ liệu hoặc không đúng định dạng.");
                 }
@@ -368,8 +370,21 @@ async function importTasksFromExcel(file) {
                 // Cập nhật lên Firestore bằng writeBatch
                 const batch = writeBatch(db);
                 for (const groupCode in tasksByGroup) {
+                    if (!tasksByGroup.hasOwnProperty(groupCode)) continue;
+
                     const groupDocRef = doc(db, 'task_groups', groupCode);
-                    batch.update(groupDocRef, { tasks: tasksByGroup[groupCode] });
+
+                    if (importMode === 'append') {
+                        const docSnap = await getDoc(groupDocRef); // Phải lấy dữ liệu cũ
+                        const existingTasks = docSnap.exists() ? docSnap.data().tasks || [] : [];
+                        const lastOrder = existingTasks.reduce((max, task) => Math.max(max, task.order || 0), 0);
+                        
+                        const newTasksWithOrder = tasksByGroup[groupCode].map((task, index) => ({ ...task, order: lastOrder + 1 + index }));
+                        const combinedTasks = [...existingTasks, ...newTasksWithOrder];
+                        batch.update(groupDocRef, { tasks: combinedTasks });
+                    } else { // 'overwrite' mode
+                        batch.update(groupDocRef, { tasks: tasksByGroup[groupCode] });
+                    }
                 }
 
                 await batch.commit();
