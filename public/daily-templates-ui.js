@@ -113,13 +113,14 @@ export function updateGridHeaderStats() {
     const thead = document.querySelector('#template-builder-grid-container thead');
     if (!thead) return;
 
-    // Lấy reParameters từ template hiện tại để tính toán posManhour
+    // Lấy reParameters từ template hiện tại để tính toán posManhour tiêu chuẩn
     const currentTemplate = allTemplates.find(t => t.id === currentTemplateId);
     const reParameters = currentTemplate?.reParameters || {};
 
     // 1. Thu thập dữ liệu hiện tại từ DOM
     const currentSchedule = {};
     const currentShiftMappings = {};
+    let hasChanges = false; // Cờ để kiểm tra xem có thay đổi không
 
     document.querySelectorAll('#template-builder-tbody tr[data-shift-id]').forEach(row => {
         const shiftId = row.dataset.shiftId;
@@ -140,22 +141,25 @@ export function updateGridHeaderStats() {
                 startTime: `${slot.dataset.time.split(':')[0]}:${slot.dataset.quarter}`
             });
         });
+        hasChanges = true;
     });
 
     // 2. Tính toán lại các chỉ số
     const posGroup = Object.values(allTaskGroups).find(g => g.code === 'POS');
     const posGroupId = posGroup ? posGroup.id : null;
 
+    // Chỉ tính toán lại nếu có dữ liệu trong bảng
     thead.querySelectorAll('th[data-hour]').forEach(headerCell => {
         const time = `${headerCell.dataset.hour}:00`;
-        const { positionCount, posManhour } = calculateHourlyStatsForTime(time, currentShiftMappings, currentSchedule, reParameters, posGroupId);
+        const { positionCount, posManhour, posManhourColor } = calculateHourlyStatsForTime(time, currentShiftMappings, currentSchedule, reParameters, posGroupId);
 
         // 3. Cập nhật DOM
         const positionCountEl = headerCell.querySelector('.hourly-position-count');
-        const posManhourEl = headerCell.querySelector('.hourly-pos-manhour');
+        const posManhourContainerEl = headerCell.querySelector('.pos-manhour-container'); // Lấy container để đổi màu
 
         if (positionCountEl) positionCountEl.textContent = positionCount;
-        if (posManhourEl) posManhourEl.textContent = posManhour;
+        if (posManhourContainerEl) posManhourContainerEl.className = `pos-manhour-container ${posManhourColor}`; // Cập nhật class màu
+        if (posManhourContainerEl) posManhourContainerEl.querySelector('.hourly-pos-manhour').textContent = posManhour;
     });
 }
 
@@ -182,13 +186,13 @@ export function renderGrid(templateData = null) {
     thead.className = 'bg-slate-100 sticky top-0 z-20';
     let headerRowHtml = `<th class="p-2 border border-slate-200 min-w-36 sticky left-0 bg-slate-100 z-30">Ca</th>`;
     timeSlots.forEach(time => {
-        const { positionCount, posManhour } = calculateHourlyStatsForTime(time, shiftMappings, schedule, reParameters);
+        const { positionCount, posManhour, posManhourColor } = calculateHourlyStatsForTime(time, shiftMappings, schedule, reParameters);
         headerRowHtml += `
             <th class="p-2 border border-slate-200 min-w-[308px] text-center font-semibold text-slate-700" data-hour="${time.split(':')[0]}">
                 <div class="flex justify-between items-center">
                     <span><i class="fas fa-users text-blue-600"> <span class="hourly-position-count">${positionCount}</span></i></span>
                     ${time}
-                    <span><i class="fas fa-cash-register text-green-600"></i> <span class="hourly-pos-manhour">${posManhour}</span></span>
+                    <span class="pos-manhour-container ${posManhourColor}"><i class="fas fa-cash-register"></i> <span class="hourly-pos-manhour">${posManhour}</span></span>
                 </div>
             </th>
         `;
@@ -344,6 +348,7 @@ export function renderGrid(templateData = null) {
  * @param {object} reParameters - Các tham số RE (chứa customerCount).
  * @param {string|null} [posGroupId=null] - ID của nhóm POS.
  * @returns {{positionCount: number, posManhour: string}}
+ * @returns {{positionCount: string, posManhour: string, posManhourColor: string}}
  */
 function calculateHourlyStatsForTime(time, shiftMappings, schedule, reParameters = {}, posGroupId = null) {
     if (!posGroupId) {
@@ -376,15 +381,27 @@ function calculateHourlyStatsForTime(time, shiftMappings, schedule, reParameters
     // Sửa lỗi: Đảm bảo hourKey luôn là chuỗi 2 chữ số (e.g., "06") để khớp với dữ liệu
     const hourKey = time.split(':')[0].padStart(2, '0');
     const hourlyCustomerCount = reParameters.customerCountByHour?.[hourKey] || 0;
-    // Công thức: posManhour = customerCount * 1 / 60, sau đó làm tròn lên theo bước 0.25
+    // Giờ POS tiêu chuẩn (Standard)
     const rawPosManhour = hourlyCustomerCount / 60;
-    const posManhour = (Math.ceil(rawPosManhour * 4) / 4).toFixed(2);
+    const standardPosManhour = Math.ceil(rawPosManhour * 4) / 4;
+
+    // Giờ POS thực tế (Actual)
+    const actualPosManhour = posTaskCount * 0.25;
+
+    // So sánh và xác định màu
+    let posManhourColor = 'text-slate-700'; // Màu mặc định (Đủ)
+    if (actualPosManhour < standardPosManhour) {
+        posManhourColor = 'text-red-500'; // Thiếu
+    } else if (actualPosManhour > standardPosManhour) {
+        posManhourColor = 'text-green-600'; // Thừa
+    }
 
     // Tính toán manhour cho tổng số task
     const totalManhour = (totalTasksInHour * 0.25).toFixed(2);
 
     // Theo yêu cầu, positionCount được tính bằng manhour (số task trong giờ x 0.25)
-    return { positionCount: totalManhour, posManhour: posManhour };
+    // Trả về giờ POS tiêu chuẩn để hiển thị, và class màu để áp dụng
+    return { positionCount: totalManhour, posManhour: standardPosManhour.toFixed(2), posManhourColor: posManhourColor };
 }
 
 /**

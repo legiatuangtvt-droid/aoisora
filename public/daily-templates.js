@@ -52,6 +52,10 @@ export function initializeDragAndDrop() {
                 updateTemplateStats();
                 updateGridHeaderStats();
                 updateAllResizeHandlesVisibility();
+
+                // [DEBUG] Log cho giờ nguồn và giờ đích
+                logPosTaskCountForHour(evt.from.dataset.time, 'Move/Swap (Source)');
+                logPosTaskCountForHour(evt.to.dataset.time, 'Move/Swap (Dest)');
             },
             onAdd: (evt) => {
                 const toSlot = evt.to; // Ô đích
@@ -87,11 +91,36 @@ export function initializeDragAndDrop() {
                 updateTemplateStats();   // Cập nhật bảng thống kê bên phải
                 updateGridHeaderStats();
                 updateAllResizeHandlesVisibility(); // Cập nhật lại tay nắm resize
+
+                // [DEBUG] Log cho giờ đích
+                logPosTaskCountForHour(toSlot.dataset.time, 'Add from Library');
             }
         });
         sortableInstances.push(sortable);
     });
 
+}
+/**
+ * [DEBUG] Ghi log số lượng task POS cho một giờ cụ thể.
+ * @param {string} hour - Giờ cần kiểm tra (ví dụ: "06:00").
+ * @param {string} operation - Tên thao tác (ví dụ: "Move/Swap").
+ */
+function logPosTaskCountForHour(hour, operation) {
+    const posGroup = Object.values(allTaskGroups).find(g => g.code === 'POS');
+    if (!posGroup) return;
+
+    const posGroupId = posGroup.id;
+    const hourKey = hour.split(':')[0];
+    let posTaskCount = 0;
+
+    // Đếm các task POS trong giờ đó trên toàn bộ lưới
+    document.querySelectorAll(`#template-builder-tbody .quarter-hour-slot[data-time^="${hourKey}:"]`).forEach(slot => {
+        const task = slot.querySelector(`.scheduled-task-item[data-group-id="${posGroupId}"]`);
+        if (task) {
+            posTaskCount++;
+        }
+    });
+    console.log(`[Drag&Drop Debug] Operation: ${operation} | Time: ${hour} | posTaskCount: ${posTaskCount}`);
 }
 
 /**
@@ -318,7 +347,13 @@ function initializeTaskCloning() {
 
         updateTemplateFromDOM();
         updateTemplateStats();
+        updateGridHeaderStats(); // <-- FIX: Thêm dòng này để cập nhật lại header sau khi nhân bản
         updateAllResizeHandlesVisibility(); // Cập nhật hiển thị tay nắm sau khi nhân bản
+
+        // [DEBUG] Log cho các giờ bị ảnh hưởng bởi nhân bản
+        const affectedHours = new Set(Array.from(highlightedSlots).map(slot => slot.dataset.time));
+        affectedHours.forEach(hour => logPosTaskCountForHour(hour, 'Clone'));
+
     };
 
     gridContainer.addEventListener('mousedown', onMouseDown);
