@@ -212,10 +212,10 @@ async function renderTaskSummaryTable(container) {
                     }
 
                     const gap1HTML = gap1 !== 0 ? `<div class="absolute top-0.5 right-1 text-[10px] font-semibold ${colorClass1}" title="DWS - Model">
-                                        ${gap1.toFixed(2)} ${indicator1}
+                                        GAP 1: ${gap1.toFixed(2)} ${indicator1}
                                     </div>` : '';
                     const gap2HTML = gap2 !== 0 ? `<div class="absolute bottom-0.5 right-1 text-[10px] font-semibold ${colorClass2}" title="Actual - Model">
-                                        ${gap2.toFixed(2)} ${indicator2}
+                                        GAP 2: ${gap2.toFixed(2)} ${indicator2}
                                     </div>` : '';
 
                     return `<td class="px-2 py-3 border border-black bg-white text-sm text-center">
