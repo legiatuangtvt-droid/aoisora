@@ -190,8 +190,8 @@ async function saveWeekAvailability() {
         });
 
         const helpBtn = document.querySelector(`th[data-date="${date}"] .help-btn`);
-        if (helpBtn && helpBtn.dataset.startTime && helpBtn.dataset.endTime) {
-            dataByDate[date].helpTime = { start: helpBtn.dataset.startTime, end: helpBtn.dataset.endTime };
+        if (helpBtn && helpBtn.dataset.helpShiftCode) {
+            dataByDate[date].helpShiftCode = helpBtn.dataset.helpShiftCode;
         }
     });
 
@@ -202,13 +202,13 @@ async function saveWeekAvailability() {
             const docRef = doc(localDb, 'staff_availability', docId);
             const hasRegistration = dataByDate[date]?.some(reg => reg && reg.shiftCode);
 
-            if (hasRegistration || dataByDate[date].helpTime) {
+            if (hasRegistration || dataByDate[date].helpShiftCode) {
                 const dataToSet = {
                     employeeId: currentUser.id,
                     employeeName: currentUser.name,
                     date: date,
                     registrations: dataByDate[date].filter(item => typeof item === 'object'),
-                    helpTime: dataByDate[date].helpTime || null,
+                    helpShiftCode: dataByDate[date].helpShiftCode || null,
                     updatedAt: serverTimestamp()
                 };
                 batch.set(docRef, dataToSet, { merge: true });
@@ -233,51 +233,52 @@ function openHelpModal(date) {
     modal.classList.add('flex');
     setTimeout(() => modal.classList.add('show'), 10);
 
-    document.getElementById('help-modal-title').textContent = `Đăng ký giờ hỗ trợ ngày ${new Date(date + 'T00:00:00').toLocaleDateString('vi-VN')}`;
+    const dateObj = new Date(date + 'T00:00:00');
+    document.getElementById('help-modal-title').textContent = `Đăng ký ca hỗ trợ ngày ${dateObj.toLocaleDateString('vi-VN')}`;
     document.getElementById('help-modal-date').value = date;
 
+    // Điền các mã ca vào dropdown
+    const helpShiftSelect = document.getElementById('help-shift-select');
+    helpShiftSelect.innerHTML = '<option value="">-- Bỏ chọn --</option>'; // Tùy chọn để xóa đăng ký
+    localShiftCodes.forEach(sc => {
+        helpShiftSelect.innerHTML += `<option value="${sc.shiftCode}">${sc.shiftCode} (${sc.timeRange})</option>`;
+    });
+
+    // Chọn lại giá trị đã lưu trước đó
     const helpBtn = document.querySelector(`th[data-date="${date}"] .help-btn`);
-    document.getElementById('help-start-time').value = helpBtn?.dataset.startTime || '';
-    document.getElementById('help-end-time').value = helpBtn?.dataset.endTime || '';
+    helpShiftSelect.value = helpBtn?.dataset.helpShiftCode || '';
 }
 
 function closeModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
         modal.classList.remove('show');
-        setTimeout(() => {
+        modal.addEventListener('transitionend', () => {
             modal.classList.remove('flex');
             modal.classList.add('hidden');
-        }, 200);
+        }, { once: true });
     }
 }
 
-function updateHelpButtonUI(button, startTime, endTime) {
+function updateHelpButtonUI(button, helpShiftCode) {
     if (!button) return;
-    button.classList.toggle('btn-success', startTime && endTime);
-    button.classList.toggle('btn-secondary', !startTime || !endTime);
-    button.title = startTime && endTime ? `Hỗ trợ từ ${startTime} đến ${endTime}` : 'Đăng ký giờ hỗ trợ';
-    if (startTime && endTime) {
-        button.dataset.startTime = startTime;
-        button.dataset.endTime = endTime;
+    const hasHelpShift = !!helpShiftCode;
+    button.classList.toggle('btn-success', hasHelpShift);
+    button.classList.toggle('btn-secondary', !hasHelpShift);
+
+    if (hasHelpShift) {
+        const shiftInfo = localShiftCodes.find(sc => sc.shiftCode === helpShiftCode);
+        button.title = shiftInfo ? `Hỗ trợ ca ${helpShiftCode} (${shiftInfo.timeRange})` : 'Đăng ký ca hỗ trợ';
+        button.dataset.helpShiftCode = helpShiftCode;
     } else {
-        delete button.dataset.startTime;
-        delete button.dataset.endTime;
+        button.title = 'Đăng ký ca hỗ trợ';
+        delete button.dataset.helpShiftCode;
     }
 }
 
 function handleSaveHelpTime() {
     const date = document.getElementById('help-modal-date').value;
-    const startTime = document.getElementById('help-start-time').value;
-    const endTime = document.getElementById('help-end-time').value;
-
-    if (startTime && endTime && startTime >= endTime) {
-        window.showToast('Lỗi: Giờ kết thúc phải sau giờ bắt đầu.', 'error');
-        return;
-    }
-
-    const helpStartMinutes = timeToMinutes(startTime);
-    const helpEndMinutes = timeToMinutes(endTime);
+    const selectedShiftCode = document.getElementById('help-shift-select').value;
 
     const mainShiftInputs = document.querySelectorAll(`td[data-date="${date}"] .shift-input`);
     for (const input of mainShiftInputs) {
@@ -287,18 +288,27 @@ function handleSaveHelpTime() {
                 const [shiftStartStr, shiftEndStr] = shift.timeRange.split('~').map(s => s.trim());
                 const shiftStartMinutes = timeToMinutes(shiftStartStr);
                 const shiftEndMinutes = timeToMinutes(shiftEndStr);
-                if (helpStartMinutes < shiftEndMinutes && shiftStartMinutes < helpEndMinutes) {
-                    window.showToast(`Lỗi: Giờ Help (${startTime} - ${endTime}) bị trùng với ca làm việc chính (${shift.timeRange}).`, 'error');
-                    return;
+
+                if (selectedShiftCode) {
+                    const helpShift = localShiftCodes.find(sc => sc.shiftCode === selectedShiftCode);
+                    if (helpShift) {
+                        const [helpStartStr, helpEndStr] = helpShift.timeRange.split('~').map(s => s.trim());
+                        const helpStartMinutes = timeToMinutes(helpStartStr);
+                        const helpEndMinutes = timeToMinutes(helpEndStr);
+                        if (helpStartMinutes < shiftEndMinutes && shiftStartMinutes < helpEndMinutes) {
+                            window.showToast(`Lỗi: Ca hỗ trợ (${helpShift.timeRange}) bị trùng với ca làm việc chính (${shift.timeRange}).`, 'error');
+                            return;
+                        }
+                    }
                 }
             }
         }
     }
 
     const helpBtn = document.querySelector(`th[data-date="${date}"] .help-btn`);
-    updateHelpButtonUI(helpBtn, startTime, endTime);
+    updateHelpButtonUI(helpBtn, selectedShiftCode);
     closeModal('help-modal');
-    window.showToast('Đã cập nhật giờ hỗ trợ!', 'success');
+    window.showToast('Đã cập nhật đăng ký ca hỗ trợ!', 'success');
 }
 
 function addEventListeners() {

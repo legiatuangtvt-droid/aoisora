@@ -161,20 +161,16 @@
     <div id="help-modal" class="modal-overlay hidden">
         <div class="modal-content max-w-sm">
             <div class="modal-header">
-                <h3 id="help-modal-title" class="modal-title">Đăng ký giờ hỗ trợ</h3>
+                <h3 id="help-modal-title" class="modal-title">Đăng ký ca hỗ trợ</h3>
                 <button type="button" class="modal-close-btn" data-modal-id="help-modal">&times;</button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="help-modal-date">
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="form-group">
-                        <label for="help-start-time" class="form-label">Giờ bắt đầu</label>
-                        <input type="time" id="help-start-time" class="form-input" step="1800">
-                    </div>
-                    <div class="form-group">
-                        <label for="help-end-time" class="form-label">Giờ kết thúc</label>
-                        <input type="time" id="help-end-time" class="form-input" step="1800">
-                    </div>
+                <div class="form-group">
+                    <label for="help-shift-select" class="form-label">Chọn ca hỗ trợ</label>
+                    <select id="help-shift-select" class="form-select w-full">
+                        <!-- Các mã ca sẽ được JS điền vào đây -->
+                    </select>
                 </div>
             </div>
             <div class="modal-footer"><button type="button" class="btn-secondary modal-close-btn" data-modal-id="help-modal">Hủy</button><button type="button" id="save-help-time-btn" class="btn btn-indigo">Lưu</button></div>
