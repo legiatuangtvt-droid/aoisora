@@ -356,6 +356,8 @@ async function importTasksFromExcel(file) {
                 
                 // Chuyển đổi sheet thành JSON, sử dụng header
                 const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                console.log("Raw JSON Data from Excel:", jsonData); // Thêm dòng này
+
 
                 const importMode = document.querySelector('input[name="import-mode"]:checked').value;
 
@@ -374,6 +376,7 @@ async function importTasksFromExcel(file) {
 
                     // Tạo đối tượng task, đảm bảo các trường không phải là undefined
                     const task = {
+                        groupCode: groupCode, // Thêm trường groupCode vào task
                         order: acc[groupCode].length + 1, // Tự động gán thứ tự
                         typeTask: row['Type Task'] || '',
                         name: row['Task Name'] || 'Unnamed Task',
