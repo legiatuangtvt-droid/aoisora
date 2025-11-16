@@ -22,50 +22,51 @@
         <!-- Content Area -->
         <main class="flex-1 overflow-auto p-6">
             <div class="bg-white p-6 rounded-lg shadow-md">
-                
-                <!-- Toolbar: Shift Code Generator -->
-                <div class="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Tạo Mã Ca Làm Việc</h3>
-                    <form id="shift-code-generator-form" class="flex flex-wrap items-end gap-4">
-                        <!-- Component 1: Letter -->
-                        <div class="form-group p-0 m-0 flex-1 max-w-[80px]">
-                            <label for="shift-char" class="block text-xs font-medium text-gray-600 mb-1">1. Ký tự</label>
-                            <input type="text" id="shift-char" class="form-input uppercase" maxlength="1" placeholder="A-Z" value="V">
-                        </div>
-
-                        <!-- Component 2: Duration -->
-                        <div class="form-group p-0 m-0 flex-1 min-w-[200px]">
-                            <label for="shift-duration-min" class="block text-xs font-medium text-gray-600 mb-1">2. Số giờ làm (Tối thiểu - Tối đa)</label>
-                            <div class="flex items-center gap-2">
-                                <input type="number" id="shift-duration-min" value="4" min="4" max="7" step="0.5" class="form-input" placeholder="Tối thiểu">
-                                <span class="text-gray-500">-</span>
-                                <input type="number" id="shift-duration-max" value="9" min="5" max="12" step="0.5" class="form-input" placeholder="Tối đa">
+                <!-- Toolbar -->
+                <div class="flex justify-between items-start mb-6 gap-4">
+                    <!-- Shift Code Generator -->
+                    <div class="flex-1 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4">Tạo Mã Ca Tự Động</h3>
+                        <form id="shift-code-generator-form" class="flex flex-wrap items-end gap-4">
+                            <!-- Component 1: Letter -->
+                            <div class="form-group p-0 m-0 flex-1 max-w-[80px]">
+                                <label for="shift-char" class="block text-xs font-medium text-gray-600 mb-1">1. Ký tự</label>
+                                <input type="text" id="shift-char" class="form-input uppercase" maxlength="1" placeholder="A-Z" value="V">
                             </div>
-                        </div>
 
-                        <!-- Component 3: Start Time -->
-                        <div class="form-group p-0 m-0 flex-1 min-w-[200px]">
-                            <label for="shift-start-time-min" class="block text-xs font-medium text-gray-600 mb-1">3. Bắt đầu từ - Kết thúc muộn nhất</label>
-                            <div class="flex items-center gap-2">
-                                <input type="time" id="shift-start-time-min" value="05:30" step="1800" class="form-input" placeholder="HH:mm" pattern="[0-9]{2}:[0-9]{2}">
-                                <span class="text-gray-500">-</span>
-                                <input type="time" id="shift-end-time-max" value="23:00" step="1800" class="form-input" placeholder="HH:mm" pattern="[0-9]{2}:[0-9]{2}">
+                            <!-- Component 2: Duration -->
+                            <div class="form-group p-0 m-0 flex-1 min-w-[200px]">
+                                <label for="shift-duration-min" class="block text-xs font-medium text-gray-600 mb-1">2. Số giờ làm (Tối thiểu - Tối đa)</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="number" id="shift-duration-min" value="4" min="4" max="7" step="0.5" class="form-input" placeholder="Tối thiểu">
+                                    <span class="text-gray-500">-</span>
+                                    <input type="number" id="shift-duration-max" value="9" min="5" max="12" step="0.5" class="form-input" placeholder="Tối đa">
+                                </div>
                             </div>
-                        </div>
 
-                        <!-- Action Button -->
-                        <div class="flex-shrink-0 w-full sm:w-auto">
-                            <button type="submit" class="btn btn-indigo w-full">
+                            <!-- Component 3: Start Time -->
+                            <div class="form-group p-0 m-0 flex-1 min-w-[200px]">
+                                <label for="shift-start-time-min" class="block text-xs font-medium text-gray-600 mb-1">3. Bắt đầu từ - Kết thúc muộn nhất</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="time" id="shift-start-time-min" value="05:30" step="1800" class="form-input" placeholder="HH:mm" pattern="[0-9]{2}:[0-9]{2}">
+                                    <span class="text-gray-500">-</span>
+                                    <input type="time" id="shift-end-time-max" value="23:00" step="1800" class="form-input" placeholder="HH:mm" pattern="[0-9]{2}:[0-9]{2}">
+                                </div>
+                            </div>
+
+                            <!-- Action Button -->
+                            <button type="submit" class="btn btn-indigo flex-shrink-0">
                                 <i class="fas fa-bolt mr-2"></i> Tạo Mã ca
                             </button>
-                        </div>
 
-                        <div class="flex justify-end">
-                            <button id="add-manual-shift-btn" class="btn btn-success">
-                                <i class="fas fa-plus mr-2"></i>Thêm mã ca
-                            </button>
-                        </div>
-                    </form>
+                            <!-- Manual Add Button -->
+                            <div class="flex-shrink-0">
+                                <button type="button" id="add-manual-shift-btn" class="btn btn-success">
+                                    <i class="fas fa-plus mr-2"></i>Thêm mã ca
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
 
                 <!-- Shift Code List -->
@@ -119,7 +120,46 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary modal-close-btn">Hủy</button>
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-2"></i>Lưu</button>
+                    <button type="submit" class="btn btn-indigo"><i class="fas fa-save mr-2"></i>Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="bootstrapper.js" defer></script>
+</body>
+</html>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL: Thêm mã ca thủ công -->
+    <div id="add-manual-shift-modal" class="modal-overlay hidden">
+        <div class="modal-content max-w-md">
+            <form id="add-manual-shift-form">
+                <div class="modal-header">
+                    <h3 class="modal-title">Thêm Mã Ca Thủ Công</h3>
+                    <button type="button" class="modal-close-btn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="manual-shift-code" class="form-label">Mã Ca (*)</label>
+                        <input type="text" id="manual-shift-code" class="form-input uppercase" placeholder="Ví dụ: V8.512" required>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label for="manual-start-time" class="form-label">Giờ Bắt Đầu (*)</label>
+                            <input type="time" id="manual-start-time" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="manual-end-time" class="form-label">Giờ Kết Thúc (*)</label>
+                            <input type="time" id="manual-end-time" class="form-input" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary modal-close-btn">Hủy</button>
+                    <button type="submit" class="btn btn-indigo"><i class="fas fa-save mr-2"></i>Lưu</button>
                 </div>
             </form>
         </div>
