@@ -88,7 +88,6 @@ async function generateReport() {
 
         // Hiển thị kết quả
         // Lấy tổng điểm tích lũy trực tiếp từ thông tin người dùng hiện tại
-        console.log('DEBUG: Tải dữ liệu Tổng điểm kinh nghiệm:', currentUser.experiencePoints);
         document.getElementById('total-exp').textContent = (currentUser.experiencePoints || 0).toLocaleString('vi-VN');
         document.getElementById('bonus-exp').textContent = bonusExp.toLocaleString('vi-VN');
         document.getElementById('effort-exp').textContent = effortExp.toLocaleString('vi-VN');

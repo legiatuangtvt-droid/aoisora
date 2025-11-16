@@ -32,28 +32,30 @@
                     <!-- Nội dung báo cáo -->
                     <div id="report-content" class="hidden grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
                         <!-- Cột 1: Tổng điểm -->
-                        <div class="md:col-span-1 text-center p-6 border rounded-lg bg-gray-50">
-                            <p class="text-sm text-gray-500">Tổng điểm kinh nghiệm đã đạt được</p>
-                            <p id="total-exp" class="text-6xl font-bold text-indigo-600 mt-2">0</p>
+                        <div class="md:col-span-1 space-y-4">
+                            <div class="text-center p-6 border rounded-lg bg-gray-50">
+                                <p class="text-sm text-gray-500">Tổng điểm kinh nghiệm đã đạt được</p>
+                                <p id="total-exp" class="text-6xl font-bold text-indigo-600 mt-2">0</p>
+                            </div>
+                            <!-- Điểm thưởng đúng giờ -->
+                            <div class="text-center p-6 border rounded-lg bg-green-50 border-green-200">
+                                <p class="text-sm text-green-700"><i class="fas fa-clock mr-1"></i>Điểm thưởng (đúng giờ)</p>
+                                <p id="bonus-exp" class="text-5xl font-bold text-green-600 mt-2">0</p>
+                            </div>
+                            <!-- Điểm nỗ lực làm thay -->
+                            <div class="text-center p-6 border rounded-lg bg-blue-50 border-blue-200">
+                                <p class="text-sm text-blue-700"><i class="fas fa-hands-helping mr-1"></i>Điểm nỗ lực (làm thay)</p>
+                                <p id="effort-exp" class="text-5xl font-bold text-blue-600 mt-2">0</p>
+                            </div>
                         </div>
 
                         <!-- Cột 2: Chi tiết điểm -->
                         <div class="md:col-span-2">
-                            <h3 class="text-lg font-semibold mb-4">Chi tiết các loại điểm:</h3>
+                            <h3 class="text-lg font-semibold mb-4">Chi tiết điểm theo nhóm công việc:</h3>
                             <div class="space-y-3">
                                 <!-- Điểm theo nhóm task -->
                                 <div id="group-exp-container" class="space-y-2">
                                     <!-- JS sẽ render điểm theo nhóm vào đây -->
-                                </div>
-                                <!-- Điểm thưởng đúng giờ -->
-                                <div class="flex justify-between items-center p-3 bg-green-50 rounded-md">
-                                    <span class="font-medium text-green-800"><i class="fas fa-clock mr-2"></i>Điểm thưởng (đúng giờ)</span>
-                                    <span id="bonus-exp" class="font-bold text-green-800 text-lg">0</span>
-                                </div>
-                                <!-- Điểm nỗ lực làm thay -->
-                                <div class="flex justify-between items-center p-3 bg-blue-50 rounded-md">
-                                    <span class="font-medium text-blue-800"><i class="fas fa-hands-helping mr-2"></i>Điểm nỗ lực (làm thay)</span>
-                                    <span id="effort-exp" class="font-bold text-blue-800 text-lg">0</span>
                                 </div>
                             </div>
                         </div>
