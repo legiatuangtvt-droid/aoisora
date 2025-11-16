@@ -107,26 +107,44 @@ async function renderTaskSummaryTable(container) {
             'OTHER':  { model: 5.75, dws: 4.50  }
         };
 
-        // Phân bổ giờ cho 7 ngày
+        // Khởi tạo dữ liệu
         taskGroups.forEach(group => {
-            const groupHours = mockHours[group.code] || { model: 0, dws: 0 };
-            const totalModelHours = groupHours.model;
-            const totalDwsHours = groupHours.dws;
+            modelData[group.code] = new Array(7).fill(0);
+            dwsData[group.code] = new Array(7).fill(0);
+            actualData[group.code] = new Array(7).fill(0);
+        });
 
-            // Sử dụng mockHours làm dữ liệu cho mỗi ngày, thêm biến động theo bước 0.25
-            modelData[group.code] = days.map(() => {
-                const variation = (Math.floor(Math.random() * 3) - 1) * 0.25; // Biến động ngẫu nhiên: -0.25, 0, hoặc 0.25
-                return Math.max(0, totalModelHours + variation);
-            });
-            dwsData[group.code] = days.map(() => {
-                const variation = (Math.floor(Math.random() * 3) - 1) * 0.25; // Biến động ngẫu nhiên: -0.25, 0, hoặc 0.25
-                return Math.max(0, totalDwsHours + variation);
-            });
+        // Tạo dữ liệu cho mỗi ngày, đảm bảo chỉ có 0-2 group có GAP
+        days.forEach((_, dayIndex) => {
+            // Chọn ngẫu nhiên tối đa 2 group để có bất kỳ sự biến động nào trong ngày
+            const shuffledGroups = [...taskGroups].sort(() => 0.5 - Math.random());
+            const numGroupsWithGap = Math.floor(Math.random() * 2) + 1; // Luôn có 1 hoặc 2 nhóm
+            const groupsWithAnyGap = shuffledGroups.slice(0, numGroupsWithGap);
+            const groupsWithGap1 = groupsWithAnyGap.filter(() => Math.random() > 0.3);
+            const groupsWithGap2 = groupsWithAnyGap.filter(() => Math.random() > 0.3);
 
-            // Tạo dữ liệu giả cho Actual (chấm công)
-            actualData[group.code] = dwsData[group.code].map(dwsHours => {
-                const variation = Math.random() < 0.7 ? 0 : (Math.random() < 0.5 ? -0.25 : 0.25); // 70% không đổi, còn lại +/- 0.25h
-                return Math.max(0, dwsHours + variation); // Đảm bảo không âm
+            taskGroups.forEach(group => {
+                const groupCode = group.code;
+                const baseHours = mockHours[groupCode] || { model: 0, dws: 0 };
+
+                // Hầu hết các ngày, model sẽ bằng giá trị gốc
+                modelData[groupCode][dayIndex] = baseHours.model;
+
+                // Tạo GAP 1 (DWS vs Model)
+                if (groupsWithGap1.some(g => g.code === groupCode)) {
+                    const variation = (Math.floor(Math.random() * 3) - 1) * 0.25; // -0.25, 0, 0.25
+                    dwsData[groupCode][dayIndex] = Math.max(0, modelData[groupCode][dayIndex] + variation);
+                } else {
+                    dwsData[groupCode][dayIndex] = modelData[groupCode][dayIndex]; // Gán bằng model để không có GAP
+                }
+
+                // Tạo GAP 2 (Actual vs Model)
+                if (groupsWithGap2.some(g => g.code === groupCode)) {
+                    const variation = (Math.floor(Math.random() * 3) - 1) * 0.25; // -0.25, 0, 0.25
+                    actualData[groupCode][dayIndex] = Math.max(0, modelData[groupCode][dayIndex] + variation);
+                } else {
+                    actualData[groupCode][dayIndex] = modelData[groupCode][dayIndex]; // Gán bằng model để không có GAP
+                }
             });
         });
 
@@ -165,8 +183,48 @@ async function renderTaskSummaryTable(container) {
             const groupRow = document.createElement('tr');
             groupRow.innerHTML = `<td class="px-5 py-3 border border-black bg-white text-sm text-center">${group.code}</td>` +
                 days.map((date, index) => {
-                    const modelHours = modelData[group.code] ? modelData[group.code][index] : 0;
-                    return `<td class="px-5 py-3 border border-black bg-white text-sm text-center">${modelHours.toFixed(2)}</td>`;
+                    const modelHours = modelData[group.code]?.[index] || 0;
+                    const dwsHours = dwsData[group.code]?.[index] || 0;
+                    const actualHours = actualData[group.code]?.[index] || 0;
+
+                    // Tính toán GAP 1 (DWS - Model)
+                    const gap1 = dwsHours - modelHours;
+                    let indicator1 = '';
+                    let colorClass1 = 'text-gray-500';
+                    if (gap1 > 0) {
+                        indicator1 = '↑';
+                        colorClass1 = 'text-green-500';
+                    } else if (gap1 < 0) {
+                        indicator1 = '↓';
+                        colorClass1 = 'text-red-500';
+                    }
+
+                    // Tính toán GAP 2 (Actual - Model)
+                    const gap2 = actualHours - modelHours;
+                    let indicator2 = '';
+                    let colorClass2 = 'text-gray-500';
+                    if (gap2 > 0) {
+                        indicator2 = '↑';
+                        colorClass2 = 'text-green-500';
+                    } else if (gap2 < 0) {
+                        indicator2 = '↓';
+                        colorClass2 = 'text-red-500';
+                    }
+
+                    const gap1HTML = gap1 !== 0 ? `<div class="absolute top-0 right-1 text-[10px] font-semibold ${colorClass1}" title="DWS - Model">
+                                        ${gap1.toFixed(2)} ${indicator1}
+                                    </div>` : '';
+                    const gap2HTML = gap2 !== 0 ? `<div class="absolute bottom-0 right-1 text-[10px] font-semibold ${colorClass2}" title="Actual - Model">
+                                        ${gap2.toFixed(2)} ${indicator2}
+                                    </div>` : '';
+
+                    return `<td class="px-2 py-3 border border-black bg-white text-sm text-center">
+                                <div class="relative h-full w-full flex items-center justify-center">
+                                    <span class="font-bold text-base">${modelHours.toFixed(2)}</span>
+                                    ${gap1HTML}
+                                    ${gap2HTML}
+                                </div>
+                            </td>`;
                 }).join('');
             tbody.appendChild(groupRow);
         });
