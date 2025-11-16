@@ -93,16 +93,27 @@ async function generateReport() {
         document.getElementById('effort-exp').textContent = effortExp.toLocaleString('vi-VN');
 
         const groupContainer = document.getElementById('group-exp-container');
-        groupContainer.innerHTML = Object.entries(groupExp).map(([groupId, points]) => {
+        const totalGroupPoints = Object.values(groupExp).reduce((sum, points) => sum + points, 0);
+
+        let groupHTML = Object.entries(groupExp).map(([groupId, points]) => {
             const groupInfo = taskGroups[groupId];
             if (!groupInfo) return '';
             return `
                 <div class="flex justify-between items-center p-3 bg-gray-50 rounded-md">
                     <span class="font-medium text-gray-700">${groupInfo.name || groupId}</span>
-                    <span class="font-bold text-gray-900 text-lg">${points.toLocaleString('vi-VN')}</span>
+                    <span class="font-bold text-gray-800 text-lg">${points.toLocaleString('vi-VN')}</span>
                 </div>
             `;
         }).join('');
+
+        // Thêm dòng tổng cộng
+        groupHTML += `
+            <div class="flex justify-between items-center p-3 mt-3 border-t-2 border-gray-200">
+                <span class="font-bold text-gray-800">Tổng cộng</span>
+                <span class="font-bold text-indigo-600 text-xl">${totalGroupPoints.toLocaleString('vi-VN')}</span>
+            </div>
+        `;
+        groupContainer.innerHTML = groupHTML;
 
     } catch (error) {
         console.error("Lỗi khi tạo báo cáo:", error);
