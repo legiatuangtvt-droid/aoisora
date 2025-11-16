@@ -202,6 +202,75 @@ async function handleGenerateShiftCode(e) {
 }
 
 /**
+ * Mở modal để thêm mã ca thủ công.
+ */
+function openAddManualShiftModal() {
+    const modal = document.getElementById('add-manual-shift-modal');
+    if (!modal) {
+        console.error('Modal "add-manual-shift-modal" không tồn tại trong DOM.');
+        return;
+    }
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    setTimeout(() => modal.classList.add('show'), 10);
+}
+
+/**
+ * Đóng modal đang hiển thị.
+ */
+function hideCurrentModal() {
+    const modal = document.querySelector('.modal-overlay.show');
+    if (modal) {
+        modal.classList.remove('show');
+        modal.addEventListener('transitionend', () => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            const form = modal.querySelector('form');
+            if (form) form.reset();
+        }, { once: true });
+    }
+}
+
+/**
+ * Xử lý việc submit form thêm mã ca thủ công.
+ * @param {Event} e 
+ */
+async function handleManualAddSubmit(e) {
+    e.preventDefault();
+    const shiftCode = document.getElementById('manual-shift-code').value.trim().toUpperCase();
+    const startTime = document.getElementById('manual-start-time').value;
+    const endTime = document.getElementById('manual-end-time').value;
+
+    if (!shiftCode || !startTime || !endTime) {
+        window.showToast('Vui lòng điền đầy đủ các trường bắt buộc.', 'warning');
+        return;
+    }
+
+    const timeToMinutes = (timeStr) => timeStr.split(':').map(Number).reduce((h, m) => h * 60 + m);
+    const startMinutes = timeToMinutes(startTime);
+    const endMinutes = timeToMinutes(endTime);
+
+    if (startMinutes >= endMinutes) {
+        window.showToast('Giờ kết thúc phải sau giờ bắt đầu.', 'warning');
+        return;
+    }
+
+    const durationMinutes = endMinutes - startMinutes;
+    const durationHours = durationMinutes / 60;
+
+    const newShiftData = {
+        shiftCode: shiftCode,
+        timeRange: `${startTime} ~ ${endTime}`,
+        duration: parseFloat(durationHours.toFixed(2)),
+        structure: '' // Cấu trúc không cần thiết cho việc thêm thủ công
+    };
+
+    addShiftCodeToTable(newShiftData);
+    await saveShiftCodesToFirestore();
+    window.showToast(`Đã thêm mã ca: ${shiftCode}`, 'success');
+    hideCurrentModal();
+}
+/**
  * Dọn dẹp các listener.
  */
 export function cleanup() {
@@ -223,11 +292,26 @@ export async function init() {
 
     // Cập nhật nút nếu dữ liệu đã tồn tại khi tải trang
     if (dataExists && button) {
-        button.innerHTML = `<i class="fas fa-sync-alt mr-2"></i> Cập nhật Danh sách Mã ca làm việc`;
+        button.innerHTML = `<i class="fas fa-sync-alt mr-2"></i> Cập nhật Mã ca`;
     }
 
     const form = document.getElementById('shift-code-generator-form');
     if (form) {
         form.addEventListener('submit', handleGenerateShiftCode, { signal });
     }
+
+    // Gắn sự kiện cho nút thêm thủ công
+    const addManualBtn = document.getElementById('add-manual-shift-btn');
+    if (addManualBtn) {
+        addManualBtn.addEventListener('click', openAddManualShiftModal, { signal });
+    }
+
+    // Gắn sự kiện cho modal thêm thủ công
+    const manualForm = document.getElementById('add-manual-shift-form');
+    if (manualForm) {
+        manualForm.addEventListener('submit', handleManualAddSubmit, { signal });
+    }
+    document.querySelectorAll('#add-manual-shift-modal .modal-close-btn').forEach(btn => {
+        btn.addEventListener('click', hideCurrentModal, { signal });
+    });
 }

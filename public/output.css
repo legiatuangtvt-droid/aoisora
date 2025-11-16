@@ -1404,6 +1404,10 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
   min-width: 100%;
 }
 
+.min-w-\[50px\] {
+  min-width: 50px;
+}
+
 .max-w-2xl {
   max-width: 42rem;
 }

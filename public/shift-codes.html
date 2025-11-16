@@ -28,7 +28,7 @@
                     <h3 class="text-lg font-semibold text-gray-700 mb-4">Tạo Mã Ca Làm Việc</h3>
                     <form id="shift-code-generator-form" class="flex flex-wrap items-end gap-4">
                         <!-- Component 1: Letter -->
-                        <div class="form-group p-0 m-0 flex-1 min-w-[120px]">
+                        <div class="form-group p-0 m-0 flex-1 min-w-[50px]">
                             <label for="shift-char" class="block text-xs font-medium text-gray-600 mb-1">1. Ký tự</label>
                             <input type="text" id="shift-char" class="form-input uppercase" maxlength="1" placeholder="A-Z" value="V">
                         </div>
@@ -56,7 +56,13 @@
                         <!-- Action Button -->
                         <div class="flex-shrink-0 w-full sm:w-auto">
                             <button type="submit" class="btn btn-indigo w-full">
-                                <i class="fas fa-bolt mr-2"></i> Tạo Danh sách Mã ca làm việc
+                                <i class="fas fa-bolt mr-2"></i> Tạo Mã ca
+                            </button>
+                        </div>
+
+                        <div class="flex justify-end">
+                            <button id="add-manual-shift-btn" class="btn btn-success">
+                                <i class="fas fa-plus mr-2"></i>Thêm mã ca
                             </button>
                         </div>
                     </form>
