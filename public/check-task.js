@@ -19,7 +19,7 @@ async function initializeCheckTaskView() {
     if (!tableContainer) {
         tableContainer = document.createElement('div');
         tableContainer.id = 'check-task-table-container';
-        tableContainer.className = 'bg-white rounded-lg shadow-md overflow-hidden p-4 mt-4'; // Thêm style và margin-top
+        tableContainer.className = 'bg-white rounded-lg shadow-md overflow-hidden p-4'; // Thêm style và margin-top
         mainContainer.appendChild(tableContainer);
     }
     tableContainer.style.display = 'block';
@@ -273,6 +273,18 @@ async function renderTaskSummaryTable(container) {
 
         container.innerHTML = '';
         container.appendChild(table);
+
+        // Thêm section ghi chú
+        const notesContainer = document.createElement('div');
+        notesContainer.className = 'mt-2 p-2 bg-slate-50 rounded-lg border border-slate-200 text-sm';
+        notesContainer.innerHTML = `
+            <h4 class="font-bold text-slate-700 mb-2">Ghi chú:</h4>
+            <ul class="list-disc list-inside space-y-1 text-slate-600">
+                <li class="mt-2"><strong>GAP 1 (DWS - Model):</strong> Chênh lệch giữa giờ áp dụng và giờ theo Model.</li>
+                <li class="mt-2"><strong>GAP 2 (Actual - Model):</strong> Chênh lệch giữa giờ chấm công và giờ theo Model.</li>
+            </ul>
+        `;
+        container.appendChild(notesContainer);
     } catch (error) {
         console.error("Lỗi khi render bảng thống kê:", error);
         container.innerHTML = `<p class="text-red-500">Lỗi tải dữ liệu.</p>`;
