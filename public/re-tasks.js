@@ -392,6 +392,35 @@ async function importTasksFromExcel(file) {
 }
 
 /**
+ * Tạo và tải xuống file Excel mẫu cho việc import RE Tasks.
+ */
+function downloadTemplateFile() {
+    if (typeof XLSX === 'undefined') {
+        window.showToast('Lỗi: Thư viện Excel chưa được tải. Vui lòng thử lại.', 'error');
+        return;
+    }
+
+    const headers = [
+        "Group", "Type Task", "Task Name", "Frequency Type", "Frequency Number",
+        "Re Unit (min)", "Manual Number", "Manual Link", "Note"
+    ];
+
+    // Tạo một dòng dữ liệu mẫu
+    const exampleData = [
+        ['POS', 'Product', 'Quét sàn khu vực POS', 'Daily', '1', '5', 'MN-01', 'http://example.com/manual/mn01', 'Quét sạch sẽ trước giờ mở cửa'],
+        ['DRY', 'Fixed', 'Lau kệ hàng khô', 'Weekly', '2', '15', 'MN-02', 'http://example.com/manual/mn02', 'Thực hiện vào Thứ 3 và Thứ 6']
+    ];
+
+    const worksheet = XLSX.utils.aoa_to_sheet([headers, ...exampleData]);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "RE Tasks Template");
+
+    // Tạo và tải file
+    XLSX.writeFile(workbook, `RE_Tasks_Template.xlsx`);
+    window.showToast('Đang tải file mẫu...', 'info');
+}
+
+/**
  * Dọn dẹp các listener khi rời khỏi trang.
  */
 export function cleanup() {
@@ -420,6 +449,7 @@ export function init() {
     const fileDropZone = document.getElementById('file-drop-zone');
     const fileNameDisplay = document.getElementById('file-name-display');
     const submitImportBtn = document.getElementById('submit-import-btn');
+    const downloadTemplateLink = document.getElementById('download-template-link');
 
     const showImportModal = () => {
         importModal.classList.remove('hidden');
@@ -430,6 +460,11 @@ export function init() {
     // Sử dụng hàm hideModal đã có sẵn
 
     importBtn?.addEventListener('click', showImportModal, { signal });
+    downloadTemplateLink?.addEventListener('click', (e) => {
+        e.preventDefault(); // Ngăn hành vi mặc định của thẻ <a>
+        e.stopPropagation(); // Ngăn xung đột với router
+        downloadTemplateFile();
+    }, { signal });
 
     const handleFileSelect = (file) => {
         if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
