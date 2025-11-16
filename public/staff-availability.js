@@ -1,5 +1,5 @@
 import { db } from './firebase.js';
-import { doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { doc, getDoc, collection, query, where, getDocs, limit } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 import { initDesktopView, cleanupDesktopView, renderDesktopView } from './staff-availability-desktop.js';
 import { initMobileView, cleanupMobileView, renderMobileView } from './staff-availability-mobile.js';
 
@@ -40,11 +40,30 @@ function getPayrollCycle(referenceDate) {
 }
 async function loadApplicableShiftCodes() {
     try {
-        const shiftCodesDocRef = doc(db, 'system_configurations', 'shift_codes');
-        const shiftCodesSnap = await getDoc(shiftCodesDocRef);
-        if (shiftCodesSnap.exists()) {
-            shiftCodes = shiftCodesSnap.data().codes || [];
+        // 1. Tải tất cả mã ca để có thông tin chi tiết (timeRange, duration, v.v.)
+        const allShiftCodesRef = doc(db, 'system_configurations', 'shift_codes');
+        const allShiftCodesSnap = await getDoc(allShiftCodesRef);
+        const allShiftCodesList = allShiftCodesSnap.exists() ? allShiftCodesSnap.data().codes || [] : [];
+
+        // 2. Tải mẫu "Test" để lấy danh sách mã ca được phép sử dụng
+        const templateQuery = query(collection(db, 'daily_templates'), where('name', '==', 'Test'), limit(1));
+        const templateSnapshot = await getDocs(templateQuery);
+
+        if (templateSnapshot.empty) {
+            window.showToast('Lỗi: Không tìm thấy mẫu "Test" để xác định ca làm việc.', 'error');
+            shiftCodes = []; // Không có ca nào để đăng ký nếu không có mẫu
+            return;
         }
+
+        const templateData = templateSnapshot.docs[0].data();
+        const shiftMappings = templateData.shiftMappings || {};
+
+        // 3. Trích xuất các mã ca duy nhất từ mẫu "Test"
+        const applicableShiftCodeIds = [...new Set(Object.values(shiftMappings).map(mapping => mapping.shiftCode))];
+
+        // 4. Lọc danh sách mã ca đầy đủ để chỉ giữ lại những ca có trong mẫu "Test"
+        shiftCodes = allShiftCodesList.filter(sc => applicableShiftCodeIds.includes(sc.shiftCode));
+
     } catch (error) {
         console.error("Lỗi khi tải mã ca từ Firestore:", error);
         window.showToast("Không thể tải danh sách mã ca.", "error");
