@@ -999,6 +999,10 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
   right: 0.5px;
 }
 
+.right-1\.5 {
+  right: 0.375rem;
+}
+
 .z-0 {
   z-index: 0;
 }
@@ -2282,6 +2286,10 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
 .text-xs {
   font-size: 0.75rem;
   line-height: 1rem;
+}
+
+.text-\[8px\] {
+  font-size: 8px;
 }
 
 .font-bold {

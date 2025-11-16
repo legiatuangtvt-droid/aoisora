@@ -211,11 +211,11 @@ async function renderTaskSummaryTable(container) {
                         colorClass2 = 'text-red-500';
                     }
 
-                    const gap1HTML = gap1 !== 0 ? `<div class="absolute top-2 right-[1px] text-[10px] font-semibold ${colorClass1}" title="DWS - Model">
-                                        GAP 1: ${gap1.toFixed(2)} ${indicator1}
+                    const gap1HTML = gap1 !== 0 ? `<div class="absolute top-2 right-0.5 text-[8px] font-semibold ${colorClass1}" title="DWS - Model">
+                                        GAP 1: ${Math.abs(gap1).toFixed(2)} ${indicator1}
                                     </div>` : '';
-                    const gap2HTML = gap2 !== 0 ? `<div class="absolute bottom-2 right-[1px] text-[10px] font-semibold ${colorClass2}" title="Actual - Model">
-                                        GAP 2: ${gap2.toFixed(2)} ${indicator2}
+                    const gap2HTML = gap2 !== 0 ? `<div class="absolute bottom-2 right-0.5 text-[8px] font-semibold ${colorClass2}" title="Actual - Model">
+                                        GAP 2: ${Math.abs(gap2).toFixed(2)} ${indicator2}
                                     </div>` : '';
 
                     return `<td class="p-1 border border-black bg-white text-sm text-center">
@@ -246,7 +246,7 @@ async function renderTaskSummaryTable(container) {
                     indicator = '↓';
                     colorClass = 'text-red-500';
                 }
-                return `<td class="px-5 py-3 border border-black bg-white text-sm text-center font-bold ${colorClass}">${gap.toFixed(2)} ${indicator}</td>`;
+                return `<td class="px-5 py-3 border border-black bg-white text-sm text-center font-bold ${colorClass}">${Math.abs(gap).toFixed(2)} ${indicator}</td>`;
             }).join('');
         tbody.appendChild(gap1Row);
 
@@ -267,7 +267,7 @@ async function renderTaskSummaryTable(container) {
                     indicator = '↓';
                     colorClass = 'text-red-500';
                 }
-                return `<td class="px-5 py-3 border border-black bg-white text-sm text-center font-bold ${colorClass}">${gap.toFixed(2)} ${indicator}</td>`;
+                return `<td class="px-5 py-3 border border-black bg-white text-sm text-center font-bold ${colorClass}">${Math.abs(gap).toFixed(2)} ${indicator}</td>`;
             }).join('');
         tbody.appendChild(gap2Row);
 
