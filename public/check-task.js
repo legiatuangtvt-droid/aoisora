@@ -161,8 +161,8 @@ async function renderTaskSummaryTable(container) {
             const groupRow = document.createElement('tr');
             groupRow.innerHTML = `<td class="px-5 py-3 border border-black bg-white text-sm text-center">${group.code}</td>` +
                 days.map((date, index) => {
-                    const dwsCount = dwsData[group.code][index];
-                    return `<td class="px-5 py-3 border border-black bg-white text-sm text-center">${dwsCount}</td>`;
+                    const modelCount = modelData[group.code] ? modelData[group.code][index] : 0;
+                    return `<td class="px-5 py-3 border border-black bg-white text-sm text-center">${modelCount}</td>`;
                 }).join('');
             tbody.appendChild(groupRow);
         });
