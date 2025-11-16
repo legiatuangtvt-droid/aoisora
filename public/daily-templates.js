@@ -75,8 +75,11 @@ export function initializeDragAndDrop() {
                     addControlsToTask(oldItem);
                 }
 
-                // Cập nhật lại chỉ số header ngay lập tức khi có task mới từ thư viện.
+                // Cập nhật lại toàn bộ thống kê khi có task mới từ thư viện.
+                updateTemplateFromDOM(); // Lưu lại thay đổi vào template
+                updateTemplateStats();   // Cập nhật bảng thống kê bên phải
                 updateGridHeaderStats();
+                updateAllResizeHandlesVisibility(); // Cập nhật lại tay nắm resize
             }
         });
         sortableInstances.push(sortable);
