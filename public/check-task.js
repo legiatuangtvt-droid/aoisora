@@ -126,15 +126,6 @@ async function renderTaskSummaryTable(container) {
             });
         });
 
-        // Thêm dòng Model
-        const modelRow = document.createElement('tr');
-        modelRow.innerHTML = `<td class="px-5 py-3 border border-black bg-white text-sm font-bold text-center">Model</td>`+
-            days.map((date, index) => {
-                const modelTotal = Object.values(modelData).reduce((sum, groupData) => sum + groupData[index], 0);
-                return `<td class="px-5 py-3 border border-black bg-white text-sm text-center font-bold">${modelTotal}</td>`;
-            }).join('');
-        tbody.appendChild(modelRow);
-
         // Thêm dòng DWS
         const dwsRow = document.createElement('tr');
         dwsRow.innerHTML = `<td class="px-5 py-3 border border-black bg-white text-sm font-bold text-center">DWS</td>` +
@@ -155,6 +146,15 @@ async function renderTaskSummaryTable(container) {
                 return `<td class="px-5 py-3 border border-black bg-white text-sm text-center font-bold ${colorClass}">${dwsTotal} ${indicator}</td>`;
             }).join('');
         tbody.appendChild(dwsRow);
+
+        // Thêm dòng Model
+        const modelRow = document.createElement('tr');
+        modelRow.innerHTML = `<td class="px-5 py-3 border border-black bg-white text-sm font-bold text-center">Model</td>`+
+            days.map((date, index) => {
+                const modelTotal = Object.values(modelData).reduce((sum, groupData) => sum + groupData[index], 0);
+                return `<td class="px-5 py-3 border border-black bg-white text-sm text-center font-bold">${modelTotal}</td>`;
+            }).join('');
+        tbody.appendChild(modelRow);
 
         // Thêm các dòng Group Task
         taskGroups.forEach(group => {
