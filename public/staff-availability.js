@@ -18,17 +18,21 @@ function formatDate(date) {
 }
 
 /**
- * Lấy chu kỳ lương hiện tại dựa trên một ngày cho trước.
- * @param {Date} date - Ngày để xác định chu kỳ.
+ * Lấy chu kỳ lương tiếp theo cho việc đăng ký, dựa trên một ngày cho trước.
+ * Ví dụ: Nếu hôm nay là 17/11, chu kỳ tiếp theo sẽ bắt đầu từ 26/11.
+ * Nếu hôm nay là 27/11, chu kỳ tiếp theo sẽ bắt đầu từ 26/12.
+ * @param {Date} referenceDate - Ngày tham chiếu để xác định chu kỳ tiếp theo.
  * @returns {{start: Date, end: Date}} - Đối tượng chứa ngày bắt đầu và kết thúc của chu kỳ.
  */
-function getPayrollCycle(date) {
+function getPayrollCycle(referenceDate) {
     const payrollStartDay = 26;
-    let year = date.getFullYear();
-    let month = date.getMonth();
+    let year = referenceDate.getFullYear();
+    let month = referenceDate.getMonth();
 
-    if (date.getDate() < payrollStartDay) {
-        month -= 1;
+    // Nếu ngày hiện tại lớn hơn hoặc bằng ngày bắt đầu chu kỳ,
+    // thì chu kỳ đăng ký tiếp theo sẽ ở tháng sau.
+    if (referenceDate.getDate() >= payrollStartDay) {
+        month += 1;
     }
     const start = new Date(year, month, payrollStartDay);
     const end = new Date(year, month + 1, payrollStartDay - 1);
