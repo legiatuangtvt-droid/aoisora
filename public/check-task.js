@@ -96,33 +96,37 @@ async function renderTaskSummaryTable(container) {
         // --- DỮ LIỆU MOCK MỚI ---
         // Sắp xếp (Model) và Đề xuất (DWS) theo giờ
         const mockHours = {
-            'POS':    { model: 21.00, dws: 20.25 },
-            'PERI':   { model: 13.50, dws: 13.25 },
-            'DRY':    { model: 8.75,  dws: 12.25 },
-            'MMD':    { model: 5.50,  dws: 6.00  },
-            'LEADER': { model: 5.75,  dws: 6.25  },
-            'QC-FSH': { model: 8.50,  dws: 8.75  },
-            'DELICA': { model: 2.00,  dws: 3.75  },
-            'D&D':    { model: 0.00,  dws: 2.75  },
-            'OTHER':  { model: 14.75, dws: 8.50  }
+            'POS':    { model: 20.00, dws: 21.25 },
+            'PERI':   { model: 14.50, dws: 13.75 },
+            'DRY':    { model: 10.75, dws: 12.25 },
+            'MMD':    { model: 6.50,  dws: 6.00  },
+            'LEADER': { model: 8.00,  dws: 8.00  },
+            'QC-FSH': { model: 9.50,  dws: 8.75  },
+            'DELICA': { model: 3.00,  dws: 3.75  },
+            'D&D':    { model: 2.00,  dws: 2.75  },
+            'OTHER':  { model: 5.75, dws: 4.50  }
         };
 
-        // Chuyển đổi giờ thành số lượng task (1 task = 0.25 giờ) và phân bổ cho 7 ngày
+        // Phân bổ giờ cho 7 ngày
         taskGroups.forEach(group => {
             const groupHours = mockHours[group.code] || { model: 0, dws: 0 };
-            const totalModelTasks = Math.round(groupHours.model / 0.25);
-            const totalDwsTasks = Math.round(groupHours.dws / 0.25);
+            const totalModelHours = groupHours.model;
+            const totalDwsHours = groupHours.dws;
 
-            // Phân bổ số task cho 7 ngày một cách tương đối
-            const dailyModelTasks = Math.floor(totalModelTasks / 7);
-            const dailyDwsTasks = Math.floor(totalDwsTasks / 7);
-            modelData[group.code] = days.map((_, i) => dailyModelTasks + (i < totalModelTasks % 7 ? 1 : 0));
-            dwsData[group.code] = days.map((_, i) => dailyDwsTasks + (i < totalDwsTasks % 7 ? 1 : 0));
+            // Sử dụng mockHours làm dữ liệu cho mỗi ngày, thêm biến động theo bước 0.25
+            modelData[group.code] = days.map(() => {
+                const variation = (Math.floor(Math.random() * 3) - 1) * 0.25; // Biến động ngẫu nhiên: -0.25, 0, hoặc 0.25
+                return Math.max(0, totalModelHours + variation);
+            });
+            dwsData[group.code] = days.map(() => {
+                const variation = (Math.floor(Math.random() * 3) - 1) * 0.25; // Biến động ngẫu nhiên: -0.25, 0, hoặc 0.25
+                return Math.max(0, totalDwsHours + variation);
+            });
 
             // Tạo dữ liệu giả cho Actual (chấm công)
-            actualData[group.code] = dwsData[group.code].map(dwsCount => {
-                const variation = Math.random() < 0.7 ? 0 : (Math.random() < 0.5 ? -1 : 1); // 70% không đổi, còn lại +/- 1
-                return Math.max(0, dwsCount + variation); // Đảm bảo không âm
+            actualData[group.code] = dwsData[group.code].map(dwsHours => {
+                const variation = Math.random() < 0.7 ? 0 : (Math.random() < 0.5 ? -0.25 : 0.25); // 70% không đổi, còn lại +/- 0.25h
+                return Math.max(0, dwsHours + variation); // Đảm bảo không âm
             });
         });
 
@@ -143,7 +147,7 @@ async function renderTaskSummaryTable(container) {
                     indicator = '↓';
                     colorClass = 'text-red-500';
                 }
-                return `<td class="px-5 py-3 border border-black bg-white text-sm text-center font-bold ${colorClass}">${dwsTotal} ${indicator}</td>`;
+                return `<td class="px-5 py-3 border border-black bg-white text-sm text-center font-bold ${colorClass}">${dwsTotal.toFixed(2)} ${indicator}</td>`;
             }).join('');
         tbody.appendChild(dwsRow);
 
@@ -152,7 +156,7 @@ async function renderTaskSummaryTable(container) {
         modelRow.innerHTML = `<td class="px-5 py-3 border border-black bg-white text-sm font-bold text-center">Model</td>`+
             days.map((date, index) => {
                 const modelTotal = Object.values(modelData).reduce((sum, groupData) => sum + groupData[index], 0);
-                return `<td class="px-5 py-3 border border-black bg-white text-sm text-center font-bold">${modelTotal}</td>`;
+                return `<td class="px-5 py-3 border border-black bg-white text-sm text-center font-bold">${modelTotal.toFixed(2)}</td>`;
             }).join('');
         tbody.appendChild(modelRow);
 
@@ -161,8 +165,8 @@ async function renderTaskSummaryTable(container) {
             const groupRow = document.createElement('tr');
             groupRow.innerHTML = `<td class="px-5 py-3 border border-black bg-white text-sm text-center">${group.code}</td>` +
                 days.map((date, index) => {
-                    const modelCount = modelData[group.code] ? modelData[group.code][index] : 0;
-                    return `<td class="px-5 py-3 border border-black bg-white text-sm text-center">${modelCount}</td>`;
+                    const modelHours = modelData[group.code] ? modelData[group.code][index] : 0;
+                    return `<td class="px-5 py-3 border border-black bg-white text-sm text-center">${modelHours.toFixed(2)}</td>`;
                 }).join('');
             tbody.appendChild(groupRow);
         });
@@ -184,7 +188,7 @@ async function renderTaskSummaryTable(container) {
                     indicator = '↓';
                     colorClass = 'text-red-500';
                 }
-                return `<td class="px-5 py-3 border border-black bg-white text-sm text-center font-bold ${colorClass}">${gap} ${indicator}</td>`;
+                return `<td class="px-5 py-3 border border-black bg-white text-sm text-center font-bold ${colorClass}">${gap.toFixed(2)} ${indicator}</td>`;
             }).join('');
         tbody.appendChild(gap1Row);
 
@@ -205,7 +209,7 @@ async function renderTaskSummaryTable(container) {
                     indicator = '↓';
                     colorClass = 'text-red-500';
                 }
-                return `<td class="px-5 py-3 border border-black bg-white text-sm text-center font-bold ${colorClass}">${gap} ${indicator}</td>`;
+                return `<td class="px-5 py-3 border border-black bg-white text-sm text-center font-bold ${colorClass}">${gap.toFixed(2)} ${indicator}</td>`;
             }).join('');
         tbody.appendChild(gap2Row);
 
