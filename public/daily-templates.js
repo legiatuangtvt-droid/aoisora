@@ -67,12 +67,19 @@ export function initializeDragAndDrop() {
                 // LOGIC HOÁN ĐỔI MỚI:
                 // Nếu có bất kỳ task nào khác trong ô đích (thường chỉ có một),
                 // di chuyển nó về ô nguồn. Điều này xử lý cả trường hợp chèn trước và sau.
-                if (itemsInDest.length > 0) {
-                    const oldItem = itemsInDest[0]; // Lấy task đầu tiên tìm thấy
-                    fromSlot.appendChild(oldItem); // Di chuyển nó về ô nguồn
+                if (itemsInDest.length > 0) { // Nếu ô đích đã có task
+                    const oldItem = itemsInDest[0];
+                    // Kiểm tra xem nguồn kéo có phải từ thư viện không
+                    const isFromLibrary = fromSlot.closest('#task-library-container');
 
-                    // Đảm bảo task được chuyển về cũng có các nút điều khiển
-                    addControlsToTask(oldItem);
+                    if (isFromLibrary) {
+                        // Nếu kéo từ thư viện, task cũ sẽ bị xóa (thay thế)
+                        oldItem.remove();
+                    } else {
+                        // Nếu kéo từ ô khác trong lưới, thực hiện hoán đổi
+                        fromSlot.appendChild(oldItem);
+                        addControlsToTask(oldItem);
+                    }
                 }
 
                 // Cập nhật lại toàn bộ thống kê khi có task mới từ thư viện.
