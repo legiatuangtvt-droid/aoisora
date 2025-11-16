@@ -356,9 +356,6 @@ async function importTasksFromExcel(file) {
                 
                 // Chuyển đổi sheet thành JSON, sử dụng header
                 const jsonData = XLSX.utils.sheet_to_json(worksheet);
-                console.log("Raw JSON Data from Excel:", jsonData); // Thêm dòng này
-
-
                 const importMode = document.querySelector('input[name="import-mode"]:checked').value;
 
                 if (jsonData.length === 0) {
