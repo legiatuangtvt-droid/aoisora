@@ -1,5 +1,5 @@
 import { db } from './firebase.js';
-import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { collection, getDocs, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 let domController = null;
 
@@ -13,7 +13,7 @@ async function generateReport() {
     loadingSpinner.classList.remove('hidden');
     reportContent.classList.add('hidden');
 
-    const currentUser = window.currentUser;
+    let currentUser = window.currentUser;
 
     if (!currentUser || !currentUser.id) {
         reportContent.innerHTML = '<p class="text-red-500 text-center">Không thể xác định người dùng hiện tại.</p>';
@@ -23,6 +23,14 @@ async function generateReport() {
     }
 
     try {
+        // FIX: Tải lại thông tin người dùng mới nhất để đảm bảo experiencePoints luôn được cập nhật
+        const userDocRef = doc(db, 'employee', currentUser.id);
+        const userDocSnap = await getDoc(userDocRef);
+        if (userDocSnap.exists()) {
+            // Cập nhật lại đối tượng currentUser với dữ liệu mới nhất
+            currentUser = { ...currentUser, ...userDocSnap.data() };
+        }
+
         // Tải tất cả các nhóm task để lấy tên
         const taskGroupsSnap = await getDocs(collection(db, 'task_groups'));
         const taskGroups = {};
@@ -80,6 +88,7 @@ async function generateReport() {
 
         // Hiển thị kết quả
         // Lấy tổng điểm tích lũy trực tiếp từ thông tin người dùng hiện tại
+        console.log('DEBUG: Tải dữ liệu Tổng điểm kinh nghiệm:', currentUser.experiencePoints);
         document.getElementById('total-exp').textContent = (currentUser.experiencePoints || 0).toLocaleString('vi-VN');
         document.getElementById('bonus-exp').textContent = bonusExp.toLocaleString('vi-VN');
         document.getElementById('effort-exp').textContent = effortExp.toLocaleString('vi-VN');
