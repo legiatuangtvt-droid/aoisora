@@ -953,8 +953,8 @@ export async function init() {
         body.addEventListener('click', handleLeaderCellInteraction);
         // Thêm listener để cập nhật thống kê khi vị trí thay đổi
         body.addEventListener('change', (event) => {
-            if (event.target.classList.contains('position-input')) {
-                updateEmployeeStats();
+            if (event.target.classList.contains('position-input')) {                
+                updateEmployeeStats(event.target);
             }
         });
     }
@@ -1020,58 +1020,50 @@ async function loadWorkAssignmentsForWeek() {
  * Tính toán và cập nhật bảng thống kê tỷ lệ vị trí công việc (theo giờ) cho từng nhân viên.
  * Phạm vi tính toán là 2 tháng (1 tháng trước và 1 tháng sau ngày hiện tại).
  */
-async function updateEmployeeStats() {
-    const currentUser = window.currentUser;
-    if (!currentUser || !currentUser.storeId) {
-        console.warn("Không thể xác định cửa hàng của người dùng để cập nhật thống kê.");
-        return;
-    }
+function updateEmployeeStats(changedElement = null) {
 
-    const now = new Date();
-    const startDate = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-    const endDate = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
+    // --- LOGIC MỚI: Đọc trực tiếp từ DOM thay vì Firestore ---
+    // Điều này đảm bảo tính toán được cập nhật ngay khi người dùng thay đổi <select>
 
-    const startDateStr = formatDate(startDate);
-    const endDateStr = formatDate(endDate);
-
-    // 1. Lấy dữ liệu lịch trình của cửa hàng hiện tại trong khoảng thời gian 2 tháng
-    const q = query(collection(db, 'schedules'), 
-        where('storeId', '==', currentUser.storeId),
-        where('date', '>=', startDateStr), 
-        where('date', '<=', endDateStr));
-    const querySnapshot = await getDocs(q);
-
-    // 2. Xử lý dữ liệu và tính toán số lượng cho mỗi nhân viên
     const employeePositionHours = new Map(); // Map<employeeId, Map<positionName, totalHours>>
+    const employeeRows = document.querySelectorAll('#assignment-table-body tr[data-employee-id]');
 
-    querySnapshot.forEach(doc => {
-        const schedule = doc.data();
-        const { employeeId, positionId, shift } = schedule;
-
-        if (!employeeId || !positionId || !shift) return;
-
-        // Tìm thông tin ca làm để lấy số giờ (duration)
-        const shiftInfo = shiftCodes.find(sc => sc.shiftCode === shift);
-        if (!shiftInfo || !shiftInfo.duration) return; // Bỏ qua nếu không tìm thấy ca hoặc ca không có số giờ
-
-        // Tìm tên vị trí từ ID
-        const positionInfo = workPositions.find(p => p.id === positionId);
-        if (!positionInfo) return;
-        const positionName = positionInfo.name;
-
+    employeeRows.forEach(row => {
+        const employeeId = row.dataset.employeeId;
         if (!employeePositionHours.has(employeeId)) {
             const positionMap = new Map();
             workPositions.forEach(p => positionMap.set(p.name, 0));
             employeePositionHours.set(employeeId, positionMap);
         }
 
-        const currentHoursMap = employeePositionHours.get(employeeId);
-        if (currentHoursMap.has(positionName)) {
-            currentHoursMap.set(positionName, currentHoursMap.get(positionName) + shiftInfo.duration);
-        }
-    });
+        const positionSelects = row.querySelectorAll('.position-input');
+        positionSelects.forEach(select => {
+            const positionId = select.value;
+            if (!positionId) return; // Bỏ qua nếu chưa chọn vị trí
 
-    const employeeRows = document.querySelectorAll('#assignment-table-body tr[data-employee-id]');
+            // Tìm ca làm việc tương ứng với select này
+            const shiftIndex = parseInt(select.dataset.shiftIndex, 10);
+            const date = select.closest('td[data-date]').dataset.date;
+            const availability = allAvailabilities.find(a => a.employeeId === employeeId && a.date === date);
+            const registration = availability?.registrations?.[shiftIndex];
+            const shiftCode = registration?.shiftCode;
+
+            if (!shiftCode) return; // Bỏ qua nếu không có ca làm việc tương ứng
+
+            // Tìm thông tin ca làm để lấy số giờ (duration)
+            const shiftInfo = shiftCodes.find(sc => sc.shiftCode === shiftCode);
+            if (!shiftInfo || !shiftInfo.duration) return;
+
+            // Tìm tên vị trí từ ID
+            const positionInfo = workPositions.find(p => p.id === positionId);
+            if (!positionInfo) return;
+            const positionName = positionInfo.name;
+
+            const currentHoursMap = employeePositionHours.get(employeeId);
+            currentHoursMap.set(positionName, (currentHoursMap.get(positionName) || 0) + shiftInfo.duration);
+        });
+    }); // <--- Thêm dấu đóng cho forEach ở trên
+
     employeeRows.forEach(row => {
         const employeeId = row.dataset.employeeId;
         const positionHours = employeePositionHours.get(employeeId);

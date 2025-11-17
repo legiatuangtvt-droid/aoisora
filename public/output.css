@@ -939,12 +939,20 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
   bottom: 0.25rem;
 }
 
+.bottom-2 {
+  bottom: 0.5rem;
+}
+
 .left-0 {
   left: 0px;
 }
 
 .right-0 {
   right: 0px;
+}
+
+.right-0\.5 {
+  right: 0.125rem;
 }
 
 .right-1 {
@@ -967,40 +975,12 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
   top: 0.25rem;
 }
 
-.top-4 {
-  top: 1rem;
-}
-
-.bottom-0\.5 {
-  bottom: 0.125rem;
-}
-
-.top-0\.5 {
-  top: 0.125rem;
-}
-
-.bottom-2 {
-  bottom: 0.5rem;
-}
-
 .top-2 {
   top: 0.5rem;
 }
 
-.right-0\.5 {
-  right: 0.125rem;
-}
-
-.right-\[1px\] {
-  right: 1px;
-}
-
-.right-\[0\.5px\] {
-  right: 0.5px;
-}
-
-.right-1\.5 {
-  right: 0.375rem;
+.top-4 {
+  top: 1rem;
 }
 
 .z-0 {
@@ -1017,10 +997,6 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
 
 .z-30 {
   z-index: 30;
-}
-
-.z-\[10000\] {
-  z-index: 10000;
 }
 
 .col-span-1 {
@@ -1384,10 +1360,6 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
   min-width: 110px;
 }
 
-.min-w-\[120px\] {
-  min-width: 120px;
-}
-
 .min-w-\[200px\] {
   min-width: 200px;
 }
@@ -1408,16 +1380,16 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
   min-width: 100%;
 }
 
-.min-w-\[50px\] {
-  min-width: 50px;
-}
-
 .max-w-2xl {
   max-width: 42rem;
 }
 
 .max-w-4xl {
   max-width: 56rem;
+}
+
+.max-w-\[80px\] {
+  max-width: 80px;
 }
 
 .max-w-lg {
@@ -1438,14 +1410,6 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
 
 .max-w-xs {
   max-width: 20rem;
-}
-
-.max-w-\[50px\] {
-  max-width: 50px;
-}
-
-.max-w-\[80px\] {
-  max-width: 80px;
 }
 
 .flex-1 {
@@ -1861,6 +1825,10 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
   border-color: rgb(209 213 219 / var(--tw-border-opacity, 1));
 }
 
+.border-gray-900\/25 {
+  border-color: rgb(17 24 39 / 0.25);
+}
+
 .border-green-200 {
   --tw-border-opacity: 1;
   border-color: rgb(187 247 208 / var(--tw-border-opacity, 1));
@@ -1874,6 +1842,11 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
 .border-indigo-500 {
   --tw-border-opacity: 1;
   border-color: rgb(99 102 241 / var(--tw-border-opacity, 1));
+}
+
+.border-indigo-600 {
+  --tw-border-opacity: 1;
+  border-color: rgb(79 70 229 / var(--tw-border-opacity, 1));
 }
 
 .border-pink-500 {
@@ -1928,15 +1901,6 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
 
 .border-transparent {
   border-color: transparent;
-}
-
-.border-gray-900\/25 {
-  border-color: rgb(17 24 39 / 0.25);
-}
-
-.border-indigo-600 {
-  --tw-border-opacity: 1;
-  border-color: rgb(79 70 229 / var(--tw-border-opacity, 1));
 }
 
 .border-b-black {
@@ -2092,15 +2056,6 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
   background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
 }
 
-.bg-gray-900 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(17 24 39 / var(--tw-bg-opacity, 1));
-}
-
-.bg-opacity-50 {
-  --tw-bg-opacity: 0.5;
-}
-
 .stroke-green-500 {
   stroke: #22c55e;
 }
@@ -2238,6 +2193,10 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
   padding-bottom: 2px;
 }
 
+.pl-1 {
+  padding-left: 0.25rem;
+}
+
 .pl-2 {
   padding-left: 0.5rem;
 }
@@ -2264,10 +2223,6 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
 
 .pt-4 {
   padding-top: 1rem;
-}
-
-.pl-1 {
-  padding-left: 0.25rem;
 }
 
 .text-left {
@@ -2309,6 +2264,10 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
   font-size: 10px;
 }
 
+.text-\[8px\] {
+  font-size: 8px;
+}
+
 .text-base {
   font-size: 1rem;
   line-height: 1.5rem;
@@ -2332,10 +2291,6 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
 .text-xs {
   font-size: 0.75rem;
   line-height: 1rem;
-}
-
-.text-\[8px\] {
-  font-size: 8px;
 }
 
 .font-bold {
@@ -2366,6 +2321,10 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
   line-height: 1.25rem;
 }
 
+.leading-6 {
+  line-height: 1.5rem;
+}
+
 .leading-none {
   line-height: 1;
 }
@@ -2376,10 +2335,6 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
 
 .leading-tight {
   line-height: 1.25;
-}
-
-.leading-6 {
-  line-height: 1.5rem;
 }
 
 .tracking-wider {
@@ -4183,6 +4138,11 @@ tr.edit-mode-active .scheduled-task-item.calendar-day:hover {
   color: rgb(55 65 81 / var(--tw-text-opacity, 1));
 }
 
+.hover\:text-indigo-500:hover {
+  --tw-text-opacity: 1;
+  color: rgb(99 102 241 / var(--tw-text-opacity, 1));
+}
+
 .hover\:text-indigo-600:hover {
   --tw-text-opacity: 1;
   color: rgb(79 70 229 / var(--tw-text-opacity, 1));
@@ -4201,11 +4161,6 @@ tr.edit-mode-active .scheduled-task-item.calendar-day:hover {
 .hover\:text-red-900:hover {
   --tw-text-opacity: 1;
   color: rgb(127 29 29 / var(--tw-text-opacity, 1));
-}
-
-.hover\:text-indigo-500:hover {
-  --tw-text-opacity: 1;
-  color: rgb(99 102 241 / var(--tw-text-opacity, 1));
 }
 
 .hover\:shadow-md:hover {
@@ -4248,10 +4203,6 @@ tr.edit-mode-active .scheduled-task-item.calendar-day:hover {
 
   .sm\:hidden {
     display: none;
-  }
-
-  .sm\:w-auto {
-    width: auto;
   }
 
   .sm\:flex-1 {
