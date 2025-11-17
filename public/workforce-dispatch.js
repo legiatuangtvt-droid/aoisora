@@ -231,39 +231,17 @@ async function fetchSchedulesForCycle() {
 }
 
 /**
- * Render danh sách trạng thái các cửa hàng (phần trên).
- * Sử dụng mock data.
+ * Render phần thân của bảng tổng quan trạng thái các cửa hàng.
  * @param {Array<Date>} cycleDates - Mảng các ngày trong chu kỳ.
  */
 function renderStoreStatusTable(cycleDates) {
-    const header = document.getElementById('store-status-table-header');
     const body = document.getElementById('store-status-table-body');
-    if (!header || !body) return;
+    if (!body) return;
 
-    // 1. Render Header
-    let colgroupHTML = '<colgroup><col style="width: 250px;">';
-    let headerRowHTML = '<tr><th class="min-w-[250px] p-2 border sticky left-0 bg-slate-100 z-30 text-sm font-semibold">Cửa hàng</th>';
-    cycleDates.forEach(date => {
-        const dayOfWeek = date.getDay();
-        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // 0: Sunday, 6: Saturday
-        const weekendClass = isWeekend ? 'bg-amber-100' : '';
+    // 1. Tạo colgroup để đồng bộ chiều rộng cột với bảng chi tiết
+    // colgroup sẽ được tạo bởi hàm renderDispatchTable và chèn vào cả 2 bảng
+    let bodyHTML = '';
 
-        // Giảm chiều rộng cột để hiển thị nhiều hơn
-        colgroupHTML += '<col style="width: 90px;">';
-        headerRowHTML += `
-            <th class="p-1 border text-center min-w-[90px] ${weekendClass}">
-                <div class="font-semibold text-sm">${date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
-                <div class="text-xs font-normal">${date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}</div>
-            </th>`;
-    });
-    colgroupHTML += '</colgroup>';
-    headerRowHTML += '</tr>';
-    header.innerHTML = colgroupHTML + headerRowHTML;
-
-    // 2. Render Body (với mock data)
-    body.innerHTML = ''; // Xóa nội dung cũ
-
-    // Lấy danh sách cửa hàng được quản lý
     const managedStoreIds = getManagedStoreIds(window.currentUser, allStores, allAreas);
     const managedStores = allStores.filter(s => managedStoreIds.includes(s.id));
 
@@ -282,22 +260,19 @@ function renderStoreStatusTable(cycleDates) {
             const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
             const weekendCellClass = isWeekend ? 'bg-amber-50' : '';
 
-            // Render ô dựa trên chênh lệch
+            // Render ô dựa trên chênh lệch, colspan="2" để khớp với bảng dưới
             if (Math.abs(diff) > 0.01) {
                 if (diff > 0) {
-                    // Thừa giờ: màu xanh, mũi tên lên
-                    cellsHTML += `<td class="p-2 border text-center font-bold text-sm text-green-600 ${weekendCellClass}"><i class="fas fa-arrow-up mr-1"></i> ${diff.toFixed(1)}h</td>`;
+                    cellsHTML += `<td colspan="2" class="p-2 border text-center font-bold text-sm text-green-600 ${weekendCellClass}"><i class="fas fa-arrow-up mr-1"></i> ${diff.toFixed(1)}h</td>`;
                 } else {
-                    // Thiếu giờ: màu đỏ, mũi tên xuống
-                    cellsHTML += `<td class="p-2 border text-center font-bold text-sm text-red-600 ${weekendCellClass}"><i class="fas fa-arrow-down mr-1"></i> ${Math.abs(diff).toFixed(1)}h</td>`;
+                    cellsHTML += `<td colspan="2" class="p-2 border text-center font-bold text-sm text-red-600 ${weekendCellClass}"><i class="fas fa-arrow-down mr-1"></i> ${Math.abs(diff).toFixed(1)}h</td>`;
                 }
             } else {
-                // Đủ giờ: icon check
-                cellsHTML += `<td class="p-2 border text-center text-green-600 ${weekendCellClass}"><i class="fas fa-check-circle"></i></td>`;
+                cellsHTML += `<td colspan="2" class="p-2 border text-center text-green-600 ${weekendCellClass}"><i class="fas fa-check-circle"></i></td>`;
             }
         });
 
-        const rowHTML = `
+        bodyHTML += `
             <tr class="bg-white">
                 <td class="p-2 border sticky left-0 bg-white z-10">
                     <div class="font-semibold text-sm">${store.name}</div>
@@ -305,21 +280,25 @@ function renderStoreStatusTable(cycleDates) {
                 ${cellsHTML}
             </tr>
         `;
-        body.innerHTML += rowHTML;
     });
 
     if (managedStores.length === 0) {
-        body.innerHTML = `<tr><td colspan="${cycleDates.length + 1}" class="text-center p-4 text-gray-500">Không có cửa hàng nào để hiển thị.</td></tr>`;
+        bodyHTML = `<tr><td colspan="${cycleDates.length + 1}" class="text-center p-4 text-gray-500">Không có cửa hàng nào để hiển thị.</td></tr>`;
     }
+
+    // Chỉ chèn body vào tbody
+    body.innerHTML = bodyHTML;
 }
+
+
 /**
  * Render toàn bộ bảng điều phối.
  */
 function renderDispatchTable() {
     const header = document.getElementById('dispatch-table-header');
-    const body = document.getElementById('dispatch-table-body');
+    const detailBody = document.getElementById('dispatch-table-body');
     const cycleDisplay = document.getElementById('cycle-range-display');
-    if (!header || !body || !cycleDisplay) return;
+    if (!header || !detailBody || !cycleDisplay) return;
 
     const cycleDates = [];
     for (let d = new Date(currentCycle.start); d <= currentCycle.end; d.setDate(d.getDate() + 1)) {
@@ -328,14 +307,14 @@ function renderDispatchTable() {
 
     cycleDisplay.textContent = `Chu kỳ từ ${currentCycle.start.toLocaleDateString('vi-VN')} đến ${currentCycle.end.toLocaleDateString('vi-VN')}`;
 
-    // Render Header
+    // --- BƯỚC 1: RENDER HEADER CHUNG VÀ COLGROUP ---
     // Sử dụng colgroup để định nghĩa chiều rộng cố định cho các cột
     let colgroupHTML = '<colgroup><col style="width: 250px;">';
     cycleDates.forEach(() => {
         colgroupHTML += '<col style="width: 120px;"><col style="width: 120px;">'; // 2 ca mỗi ngày
     });
     colgroupHTML += '</colgroup>';
-
+    
     let headerRowHTML = '<tr><th class="p-2 border sticky left-0 bg-slate-100 z-30 text-sm font-semibold">Nhân viên</th>';
     cycleDates.forEach(date => {
         const dayOfWeek = date.getDay();
@@ -348,15 +327,21 @@ function renderDispatchTable() {
             </th>`;
     });
     headerRowHTML += '</tr>';
-    // Chèn colgroup, hàng khuôn, và hàng header
+    // Chèn colgroup và header vào thead của bảng trên
     header.innerHTML = colgroupHTML + headerRowHTML;
 
-    // Render Body
-    body.innerHTML = ''; // Xóa nội dung cũ
+    // --- BƯỚC 2: RENDER BODY CỦA BẢNG TỔNG QUAN (BẢNG TRÊN) ---
+    renderStoreStatusTable(cycleDates);
+    // Chèn colgroup vào bảng tổng quan để đồng bộ cột
+    document.querySelector('#store-status-section table').insertAdjacentHTML('afterbegin', colgroupHTML);
+
+
+    // --- BƯỚC 3: RENDER BODY CỦA BẢNG CHI TIẾT (BẢNG DƯỚI) ---
+    detailBody.innerHTML = ''; // Xóa nội dung cũ
     const bodyFragment = document.createDocumentFragment(); // *** TẠO FRAGMENT ***
     const currentUser = window.currentUser;
     const hierarchy = buildHierarchy(currentUser);
-
+    
     hierarchy.forEach(item => {
         // Thay vì nối chuỗi, chúng ta tạo các node và thêm vào fragment
         const rowsHTML = renderRowRecursive(item, 0, cycleDates);
@@ -364,11 +349,10 @@ function renderDispatchTable() {
         tempDiv.innerHTML = `<table><tbody>${rowsHTML}</tbody></table>`;
         Array.from(tempDiv.querySelector('tbody').children).forEach(row => bodyFragment.appendChild(row));
     });
-    body.appendChild(bodyFragment); // *** CHÈN VÀO DOM 1 LẦN DUY NHẤT ***
-
-    // Render thêm phần danh sách trạng thái cửa hàng
-    renderStoreStatusTable(cycleDates);
-
+    detailBody.appendChild(bodyFragment); // *** CHÈN VÀO DOM 1 LẦN DUY NHẤT ***
+    // Chèn colgroup vào bảng chi tiết để đồng bộ cột
+    document.querySelector('#detail-dispatch-section table').insertAdjacentHTML('afterbegin', colgroupHTML);
+    
     // Gắn sự kiện sau khi render
     attachRowEvents();
 }
@@ -529,9 +513,8 @@ function renderSingleRow(item, level, cycleDates, isCollapsed, isHidden) {
             const shifts = shiftsForDay.slice(0, 2);
             cellsHTML += renderEmployeeShiftCell(shifts[0] || {}, allStores, date);
             cellsHTML += renderEmployeeShiftCell(shifts[1] || {}, allStores, date);
-        } else if (item.type === 'store') {
-            cellsHTML += `<td colspan="2" class="p-2 border"></td>`; // Để trống cho dòng cửa hàng
         } else {
+            // Dòng region và area sẽ có ô trống
             cellsHTML += `<td colspan="2" class="p-2 border"></td>`;
         }
     });
