@@ -1124,6 +1124,10 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
   margin-top: auto;
 }
 
+.mr-1\.5 {
+  margin-right: 0.375rem;
+}
+
 .box-border {
   box-sizing: border-box;
 }
