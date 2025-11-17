@@ -286,8 +286,8 @@ function getStoreStatusTableBody(cycleDates) {
         });
 
         bodyHTML += `
-            <tr class="bg-white">
-                <td class="p-2 border sticky left-0 bg-white z-10">
+            <tr class="bg-white store-status-row" data-store-id="${store.id}">
+                <td class="p-2 border sticky left-0 bg-white z-10 cursor-pointer" title="Click để mở/đóng danh sách nhân viên của ${store.name}">
                     <div class="font-semibold text-sm">${store.name}</div>
                 </td>
                 ${cellsHTML}
@@ -545,44 +545,54 @@ function renderSingleRow(item, level, cycleDates, isCollapsed, isHidden) {
  * Gắn sự kiện cho các hàng (thu gọn/mở rộng).
  */
 function attachRowEvents() {
-    document.querySelectorAll('.toggle-btn').forEach(button => {
-        button.addEventListener('click', () => {
-            const row = button.closest('tr');
-            const rowId = row.dataset.id;
+    const tableBody = document.getElementById('dispatch-table-body');
+    if (!tableBody) return;
+
+    // Sử dụng một event listener duy nhất cho toàn bộ tbody để tối ưu hiệu suất
+    tableBody.addEventListener('click', (event) => {
+        const toggleBtn = event.target.closest('.toggle-btn');
+        const storeStatusRow = event.target.closest('.store-status-row');
+
+        // Xử lý click nút mở/đóng
+        if (toggleBtn) {
+            const row = toggleBtn.closest('tr');
             const level = parseInt(row.dataset.level, 10);
-            const isExpanded = !row.classList.contains('collapsed');
+            const isCollapsing = !row.classList.contains('collapsed');
 
-            button.querySelector('i').classList.toggle('fa-chevron-down', !isExpanded);
-            button.querySelector('i').classList.toggle('fa-chevron-right', isExpanded);
-            row.classList.toggle('collapsed', isExpanded);
+            toggleBtn.querySelector('i').classList.toggle('fa-chevron-down', !isCollapsing);
+            toggleBtn.querySelector('i').classList.toggle('fa-chevron-right', isCollapsing);
+            row.classList.toggle('collapsed');
 
-            // Tìm và ẩn/hiện tất cả các hàng con
             let nextRow = row.nextElementSibling;
             while (nextRow && parseInt(nextRow.dataset.level, 10) > level) {
-                if (isExpanded) {
-                    // Nếu đang mở -> đóng lại tất cả các con cháu
+                if (isCollapsing) {
                     nextRow.classList.add('hidden');
                 } else {
-                    // Nếu đang đóng -> chỉ mở cấp con trực tiếp
                     if (parseInt(nextRow.dataset.level, 10) === level + 1) {
-                        // Chỉ hiện hàng con nếu nó không bị ẩn bởi một cấp cha cao hơn nữa
-                        // (Điều này thường không xảy ra với logic hiện tại nhưng để phòng xa)
-                        if (!nextRow.classList.contains('hidden-by-ancestor')) {
-                            nextRow.classList.remove('hidden');
-                            // Nếu hàng con này cũng đang bị thu gọn, thì không mở cháu của nó
-                            if (nextRow.classList.contains('collapsed')) {
-                                let grandChild = nextRow.nextElementSibling;
-                                while(grandChild && parseInt(grandChild.dataset.level, 10) > level + 1) {
-                                    grandChild.classList.add('hidden');
-                                    grandChild = grandChild.nextElementSibling;
-                                }
+                        nextRow.classList.remove('hidden');
+                        // Nếu hàng con này cũng bị thu gọn, các cháu của nó vẫn phải bị ẩn
+                        if (nextRow.classList.contains('collapsed')) {
+                            let grandChild = nextRow.nextElementSibling;
+                            while (grandChild && parseInt(grandChild.dataset.level, 10) > level + 1) {
+                                grandChild.classList.add('hidden');
+                                grandChild = grandChild.nextElementSibling;
                             }
                         }
                     }
                 }
                 nextRow = nextRow.nextElementSibling;
             }
-        });
+        }
+
+        // Xử lý click vào hàng cửa hàng ở bảng trên
+        if (storeStatusRow) {
+            const storeId = storeStatusRow.dataset.storeId;
+            if (storeId) {
+                const hierarchyStoreRow = tableBody.querySelector(`tr[data-id="store-${storeId}"]`);
+                const toggleButton = hierarchyStoreRow?.querySelector('.toggle-btn');
+                toggleButton?.click(); // Tự động click vào nút mở/đóng tương ứng
+            }
+        }
     });
 }
 
