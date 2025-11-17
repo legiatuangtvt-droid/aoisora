@@ -61,7 +61,11 @@ function generateMockAvailabilities(cycleDates) {
                 } else { // Tạo THỪA man-hour
                     // Giữ nguyên, vì thường số nhân viên trong store > 10, tự động sẽ thừa
                 }
-            } else { // Cửa hàng ĐẠT CHUẨN
+            } else { 
+                // Cửa hàng ĐẠT CHUẨN: Lấy đúng 10 nhân viên để đăng ký ca.
+                // Việc này đảm bảo tổng số giờ đăng ký là 80 giờ (10 người * 1 ca * 8 giờ), khớp với mô hình "Test".
+                // QUAN TRỌNG: Thao tác này chỉ ảnh hưởng đến việc tạo dữ liệu đăng ký ca (mock data),
+                // không ảnh hưởng đến danh sách nhân viên đầy đủ được hiển thị trên bảng.
                 staffForDay = staffForDay.slice(0, 10); // Chỉ lấy 10 nhân viên để đăng ký
             }
 
@@ -550,6 +554,13 @@ function buildHierarchy(user) {
     return filteredRegions.map(region => {
         const areasInRegion = filteredAreas.filter(area => area.regionId === region.id);
         return {
+                // Thêm log để kiểm tra xem nhân viên có thuộc AEON MaxValu Điện Biên Phủ không
+                // Mục đích: Theo dõi quá trình tải và hiển thị nhân viên của cửa hàng này.
+                // Lưu ý: Các log này chỉ xuất hiện khi duyệt qua nhân viên của cửa hàng này.
+                ...region, type: 'region',
+
+                // Lọc các khu vực thuộc miền này, sau đó lọc các cửa hàng thuộc khu vực đó,
+                // và cuối cùng lọc TẤT CẢ nhân viên (active/inactive) thuộc cửa hàng đó.
             ...region, type: 'region',
             children: areasInRegion.map(area => ({ ...area, type: 'area', children: filteredStores.filter(store => store.areaId === area.id).map(store => ({ ...store, type: 'store', children: allPersonnel.filter(p => p.storeId === store.id && p.type === 'employee') })) }))
         };
@@ -637,6 +648,8 @@ function renderSingleRow(item, level, cycleDates, isCollapsed, isHidden) {
     let firstColHTML = `
         <div class="flex items-center" style="padding-left: ${indent}px;">
             ${isCollapsible ? `<button class="toggle-btn w-6 h-6 flex-shrink-0 text-gray-500 hover:bg-gray-200 rounded-full"><i class="fas ${isCollapsed ? 'fa-chevron-right' : 'fa-chevron-down'}"></i></button>` : '<div class="w-6 h-6 flex-shrink-0"></div>'}
+            <!-- Hiển thị tên nhân viên và chức vụ. Dòng này được tạo cho MỌI nhân viên trong allPersonnel
+                 (đã được lọc theo quyền truy cập và nhóm theo cửa hàng/khu vực/miền). -->
             <div class="ml-2">
                 <span class="font-semibold text-sm">${item.name}</span>
                 ${item.type === 'employee' && item.roleId ? `<div class="text-xs text-gray-500">${allRoles.find(r => r.id === item.roleId)?.name || item.roleId}</div>` : ''}
