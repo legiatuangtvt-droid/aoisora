@@ -264,7 +264,7 @@ function getStoreStatusTableBody(cycleDates) {
                     cellsHTML += `<td colspan="2" class="p-2 border text-center font-bold text-sm text-red-600 ${weekendCellClass}"><i class="fas fa-arrow-down mr-1"></i> ${Math.abs(diff).toFixed(1)}h</td>`;
                 }
             } else {
-                cellsHTML += `<td colspan="2" class="p-2 border text-center text-green-600 ${weekendCellClass}"><i class="fas fa-check-circle"></i></td>`;
+                cellsHTML += `<td colspan="2" class="p-2 border text-center ${weekendCellClass}"></td>`;
             }
         });
 
