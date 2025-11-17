@@ -877,6 +877,28 @@ function attachRowEvents() {
 }
 
 /**
+ * Xử lý sự kiện khi nhấn nút "Lưu và Gửi".
+ * Mô phỏng việc gửi dữ liệu và hiển thị thông báo toast.
+ */
+async function handleSaveAndSend() {
+    const button = document.getElementById('save-and-send-dispatch-btn');
+    if (!button) return;
+
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Đang gửi...';
+
+    // Mô phỏng cuộc gọi API hoặc quá trình xử lý
+    await new Promise(resolve => setTimeout(resolve, 1500)); // Giả lập độ trễ 1.5 giây
+
+    // Hiển thị thông báo thành công
+    window.showToast('Đã lưu và gửi điều phối thành công!', 'success');
+
+    // Khôi phục trạng thái nút
+    button.disabled = false;
+    button.innerHTML = '<i class="fas fa-paper-plane mr-2"></i> Lưu và Gửi';
+}
+
+/**
  * Chuyển chu kỳ và tải lại dữ liệu.
  */
 async function changeCycle(direction) {
@@ -918,4 +940,27 @@ export async function init() {
 
     document.getElementById('prev-cycle-btn')?.addEventListener('click', () => changeCycle(-1), { signal });
     document.getElementById('next-cycle-btn')?.addEventListener('click', () => changeCycle(1), { signal });
+
+    // Thêm nút "Lưu và Gửi"
+    let dispatchSaveActionsContainer = document.getElementById('dispatch-save-actions');
+    if (!dispatchSaveActionsContainer) {
+        // Fallback: Nếu không tìm thấy container, tạo một cái và thêm vào main content area
+        console.warn("Container #dispatch-save-actions not found. Creating one and appending to main.");
+        dispatchSaveActionsContainer = document.createElement('div');
+        dispatchSaveActionsContainer.id = 'dispatch-save-actions';
+        dispatchSaveActionsContainer.className = 'mt-6 flex justify-end p-4'; // Basic styling
+        const mainElement = document.querySelector('main');
+        if (mainElement) {
+            mainElement.appendChild(dispatchSaveActionsContainer);
+        } else {
+            document.body.appendChild(dispatchSaveActionsContainer); // Ultimate fallback
+        }
+    }
+    const saveAndSendBtn = document.createElement('button');
+    saveAndSendBtn.id = 'save-and-send-dispatch-btn';
+    saveAndSendBtn.className = 'btn btn-indigo'; // Sử dụng màu indigo cho nút chính
+    saveAndSendBtn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i> Lưu và Gửi';
+    dispatchSaveActionsContainer.appendChild(saveAndSendBtn);
+
+    saveAndSendBtn.addEventListener('click', handleSaveAndSend, { signal });
 }
