@@ -34,11 +34,14 @@ function getPayrollCycle(referenceDate) {
     let year = referenceDate.getFullYear();
     let month = referenceDate.getMonth();
 
-    // Nếu ngày hiện tại lớn hơn hoặc bằng ngày bắt đầu chu kỳ,
-    // thì chu kỳ tính toán sẽ bắt đầu từ tháng này.
-    // Ngược lại, nó bắt đầu từ tháng trước.
-    if (referenceDate.getDate() < payrollStartDay) {
-        month -= 1;
+    // Logic mới: Luôn tính chu kỳ KẾ TIẾP để điều phối.
+    // Nếu ngày hiện tại (referenceDate.getDate()) nhỏ hơn ngày bắt đầu chu kỳ (payrollStartDay),
+    // thì chu kỳ tiếp theo sẽ bắt đầu vào ngày payrollStartDay của tháng NÀY.
+    // Ví dụ: Hôm nay là 17/11, payrollStartDay là 26. 17 < 26 -> chu kỳ tiếp theo bắt đầu ngày 26/11.
+    if (referenceDate.getDate() >= payrollStartDay) {
+        // Nếu ngày hiện tại lớn hơn hoặc bằng ngày bắt đầu chu kỳ,
+        // thì chu kỳ tiếp theo sẽ bắt đầu vào ngày payrollStartDay của tháng SAU.
+        month += 1;
     }
     const start = new Date(year, month, payrollStartDay);
     const end = new Date(start.getFullYear(), start.getMonth() + 1, payrollStartDay - 1);
@@ -248,7 +251,7 @@ function renderStoreStatusTable(cycleDates) {
         // Giảm chiều rộng cột để hiển thị nhiều hơn
         colgroupHTML += '<col style="width: 90px;">';
         headerRowHTML += `
-            <th class="p-1 border text-center w-[90px] ${weekendClass}">
+            <th class="p-1 border text-center min-w-[90px] ${weekendClass}">
                 <div class="font-semibold text-sm">${date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
                 <div class="text-xs font-normal">${date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}</div>
             </th>`;
