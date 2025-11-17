@@ -49,30 +49,27 @@ function generateMockAvailabilities(cycleDates, templateManHour) {
         let shortageStoreIds = new Set();
         let surplusStoreIds = new Set();
         let extraVarianceStoreIds = new Set();
+    
+        // Đảm bảo luôn có 3 cửa hàng thừa và 1 cửa hàng thiếu man-hour
+        while (surplusStoreIds.size < 3 && shuffledStores.length > 0) {
+            surplusStoreIds.add(shuffledStores.pop().id);
+        }
+    
+        if (shuffledStores.length > 0) {
+            shortageStoreIds.add(shuffledStores.pop().id);
+        }
 
-        // Ưu tiên 2 ngày đầu chu kỳ
-        if (dateIndex < 2) {
-            // Chọn 2 hoặc 3 cửa hàng để có chênh lệch
-            const varianceCount = 2 + Math.floor(Math.random() * 2); // 2 hoặc 3
-            const storesForVariance = shuffledStores.splice(0, varianceCount);
-
-            // Đảm bảo có ít nhất 1 thừa và 1 thiếu
-            if (storesForVariance.length > 0) surplusStoreIds.add(storesForVariance.pop().id);
-            if (storesForVariance.length > 0) shortageStoreIds.add(storesForVariance.pop().id);
-
-            // Cửa hàng còn lại (nếu có) sẽ là ngẫu nhiên
-            storesForVariance.forEach(store => extraVarianceStoreIds.add(store.id));
-        } else {
-            // Logic cũ cho các ngày còn lại: 1 thừa, 1 thiếu, 0-2 ngẫu nhiên
-            if (shuffledStores.length > 0) shortageStoreIds.add(shuffledStores.pop().id);
-            if (shuffledStores.length > 0) surplusStoreIds.add(shuffledStores.pop().id);
-            const extraVarianceCount = Math.floor(Math.random() * 3);
-            shuffledStores.slice(0, extraVarianceCount).forEach(s => extraVarianceStoreIds.add(s.id));
+        // Các cửa hàng còn lại sẽ được gán ngẫu nhiên
+        while (shuffledStores.length > 0) {
+            extraVarianceStoreIds.add(shuffledStores.pop().id);
         }
 
         allStores.forEach(store => {
             const storeStaff = allPersonnel.filter(p => p.storeId === store.id && p.type === 'employee');
             if (storeStaff.length === 0) return;
+
+            const isShortageStore = shortageStoreIds.has(store.id);
+            const isSurplusStore = surplusStoreIds.has(store.id);
 
             let staffToRegister = [...storeStaff];
             const requiredStaffCount = Math.ceil(templateManHour / 8); // Giả định mỗi ca 8 giờ
@@ -80,7 +77,7 @@ function generateMockAvailabilities(cycleDates, templateManHour) {
             if (shortageStoreIds.has(store.id) && storeStaff.length > 2) {
                 // CHẮC CHẮN THIẾU: Giảm số lượng nhân viên đăng ký
                 staffToRegister = storeStaff.slice(0, Math.max(1, requiredStaffCount - 2));
-            } else if (surplusStoreIds.has(store.id)) {
+            } else if (surplusStoreIds.has(store.id) && storeStaff.length > 2) {
                 // CHẮC CHẮN THỪA: Tăng số lượng nhân viên đăng ký
                 staffToRegister = storeStaff.slice(0, requiredStaffCount + 3);
             } else if (extraVarianceStoreIds.has(store.id)) {
@@ -93,7 +90,7 @@ function generateMockAvailabilities(cycleDates, templateManHour) {
                     staffToRegister = storeStaff.slice(0, requiredStaffCount + 3);
                 }
             } else {
-                // NGÀY CHUẨN: Lấy đúng số lượng nhân viên cần thiết để đủ man-hour
+                // Cửa hàng còn lại: Lấy đúng số lượng nhân viên cần thiết để đủ man-hour
                 staffToRegister = storeStaff.slice(0, requiredStaffCount);
             }
 
@@ -109,6 +106,7 @@ function generateMockAvailabilities(cycleDates, templateManHour) {
             });
         });
     });
+
 }
 /**
  * Định dạng Date thành chuỗi 'YYYY-MM-DD'.
