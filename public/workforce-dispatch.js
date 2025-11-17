@@ -259,11 +259,11 @@ function getStoreStatusTableBody(cycleDates) {
             const dateStr = formatDate(date);
             let diff = 0;
 
-            // Kiểm tra xem cửa hàng này có nằm trong danh sách chênh lệch của ngày hôm đó không
+            // Kiểm tra xem cửa hàng này có nằm trong danh sách được chọn để tạo chênh lệch không
             if (dailyImbalances.get(dateStr)?.includes(store.id)) {
                 // Tạo chênh lệch ngẫu nhiên (thừa hoặc thiếu)
                 if (Math.random() > 0.5) {
-                    diff = - (Math.random() * 8 + 4); // Thiếu từ 4-12 giờ
+                    diff = -(Math.random() * 8 + 4); // Thiếu từ 4-12 giờ
                 } else {
                     diff = Math.random() * 6 + 2; // Thừa từ 2-8 giờ
                 }
@@ -276,9 +276,9 @@ function getStoreStatusTableBody(cycleDates) {
             // Render ô dựa trên chênh lệch, colspan="2" để khớp với bảng dưới
             if (Math.abs(diff) > 0.01) {
                 if (diff > 0) {
-                    cellsHTML += `<td colspan="2" class="p-2 border text-center font-bold text-sm text-green-600 ${weekendCellClass}"><i class="fas fa-arrow-up mr-1"></i> ${diff.toFixed(1)}</td>`;
+                    cellsHTML += `<td colspan="2" class="p-2 border text-center font-bold text-sm text-green-600 ${weekendCellClass}"><i class="fas fa-arrow-up mr-1"></i> ${diff.toFixed(1)}h</td>`;
                 } else {
-                    cellsHTML += `<td colspan="2" class="p-2 border text-center font-bold text-sm text-red-600 ${weekendCellClass}"><i class="fas fa-arrow-down mr-1"></i> ${Math.abs(diff).toFixed(1)}</td>`;
+                    cellsHTML += `<td colspan="2" class="p-2 border text-center font-bold text-sm text-red-600 ${weekendCellClass}"><i class="fas fa-arrow-down mr-1"></i> ${Math.abs(diff).toFixed(1)}h</td>`;
                 }
             } else {
                 cellsHTML += `<td colspan="2" class="p-2 border text-center ${weekendCellClass}"></td>`;
