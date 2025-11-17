@@ -332,7 +332,11 @@ function getOrCalculateStoreAssignment(storeId, dateStr, templateManHour) {
         // 1. Nhân viên này chưa được phân bất kỳ ca nào trong ngày hôm đó.
         // 2. Tổng man-hour đã phân công (smAssignedManHour) chưa vượt quá yêu cầu của template.
         if (!assignedEmployees.has(reg.employeeId) && (smAssignedManHour + shiftDuration) <= templateManHour) {
-            assignments.set(reg.employeeId, { shift: reg.shift, priority: reg.priority });
+            // Thay đổi: assignments giờ là Map<employeeId, Array<shiftInfo>>
+            if (!assignments.has(reg.employeeId)) {
+                assignments.set(reg.employeeId, []);
+            }
+            assignments.get(reg.employeeId).push({ shift: reg.shift, priority: reg.priority });
             assignedEmployees.add(reg.employeeId);
             smAssignedManHour += shiftDuration;
         }
@@ -630,23 +634,15 @@ function renderRowRecursive(item, level, cycleDates, isParentCollapsed = false) 
 /**
  * Render nội dung một ô ca làm việc cho nhân viên.
  */
-function renderEmployeeShiftCell(employeeId, date, managedStores) {
-    const dateStr = formatDate(date);
-    const employee = allPersonnel.find(p => p.id === employeeId);
-    const originalStoreId = employee?.storeId;
-
-    const templateManHour = dailyTemplate?.totalManhour || 80;
-    // Lấy kết quả phân công đã được tính toán và cache lại
-    const assignmentResult = originalStoreId ? getOrCalculateStoreAssignment(originalStoreId, dateStr, templateManHour) : null;
-    const assignedShift = assignmentResult?.assignments.get(employeeId);
-
-    const shiftInfo = assignedShift ? allShiftCodes.find(sc => sc.shiftCode === assignedShift.shift) : null;    
-    const timeRange = shiftInfo ? shiftInfo.timeRange : '---';
-
-    // Nếu không có ca được phân công, trả về ô trống
-    if (!assignedShift) {
+function renderEmployeeShiftCell(assignedShift, originalStoreId, managedStores) {
+    // Nếu không có ca được phân công, trả về một ô trống.
+    // Thay đổi: Bây giờ chúng ta chỉ render 1 ô (<td>) cho mỗi ca, không phải colspan="2".
+    if (!assignedShift || !assignedShift.shift) {
         return `<td class="p-1 border text-xs"></td>`;
     }
+    
+    const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === assignedShift.shift);
+    const timeRange = shiftInfo ? shiftInfo.timeRange : '---';
 
     // Tạo các tùy chọn cho dropdown cửa hàng
     const storeOptions = managedStores.map(store =>
@@ -654,8 +650,8 @@ function renderEmployeeShiftCell(employeeId, date, managedStores) {
     ).join('');
 
     return `
-        <td class="p-1 border text-xs ${assignedShift ? 'bg-green-50' : ''}">
-            <div class="flex flex-col gap-1 h-full justify-center" data-shift-code="${shiftInfo.shiftCode}">
+        <td class="p-1 border text-xs bg-green-50">
+            <div class="flex flex-col gap-1 h-full justify-center" data-shift-code="${shiftInfo?.shiftCode}">
                 <select class="dispatch-store-select form-select form-select-sm w-full text-xs text-center">
                     ${storeOptions}
                 </select>
@@ -695,11 +691,25 @@ function renderSingleRow(item, level, cycleDates, isCollapsed, isHidden) {
     let cellsHTML = '';
     cycleDates.forEach(date => {
         const dateStr = formatDate(date);
+        const availability = mockStaffAvailabilities.get(item.id)?.get(dateStr);
+        const hasRegistration = availability && availability.some(reg => reg.shift);
+
         if (item.type === 'employee') {
-            // CẬP NHẬT: Truyền danh sách cửa hàng được quản lý vào hàm render
-            cellsHTML += renderEmployeeShiftCell(item.id, date, managedStores);
-            // Nhân viên chỉ được phân công 1 ca trong logic mới này, nên ô thứ 2 để trống
-            cellsHTML += `<td class="p-1 border text-xs"></td>`; // Ô trống cho ca thứ 2
+            if (!hasRegistration) {
+                // Nếu không có nguyện vọng, gộp 2 ô và hiển thị thông báo.
+                cellsHTML += `<td colspan="2" class="p-2 border text-center text-xs text-slate-400 italic">Staff không đăng ký nguyện vọng làm việc</td>`;
+            } else {
+                // Nếu có nguyện vọng, kiểm tra phân công
+                const templateManHour = dailyTemplate?.totalManhour || 80;
+                const assignmentResult = item.storeId ? getOrCalculateStoreAssignment(item.storeId, dateStr, templateManHour) : null;
+                const assignedShifts = assignmentResult?.assignments.get(item.id) || [];
+
+                // Render ô cho ca đầu tiên (nếu có)
+                cellsHTML += renderEmployeeShiftCell(assignedShifts[0], item.storeId, managedStores);
+
+                // Render ô cho ca thứ hai (nếu có)
+                cellsHTML += renderEmployeeShiftCell(assignedShifts[1], item.storeId, managedStores);
+            }
         } else if (['store', 'area', 'region'].includes(item.type)) {
             // LOGIC HIỂN THỊ SỐ LƯỢNG: Tính toán và hiển thị số lượng nhân viên được phân công cho các cấp tổng hợp.
             const templateManHour = dailyTemplate?.totalManhour || 80;
