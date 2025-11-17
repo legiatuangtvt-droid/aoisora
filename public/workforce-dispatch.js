@@ -241,17 +241,34 @@ function getStoreStatusTableBody(cycleDates) {
     const managedStoreIds = getManagedStoreIds(window.currentUser, allStores, allAreas);
     const managedStores = allStores.filter(s => managedStoreIds.includes(s.id));
 
+    // --- LOGIC MOCK DATA MỚI ---
+    // Với mỗi ngày, chọn ngẫu nhiên 0, 1, hoặc 2 cửa hàng để tạo chênh lệch giờ.
+    const dailyImbalances = new Map();
+    cycleDates.forEach(date => {
+        const dateStr = formatDate(date);
+        const shuffledStores = [...managedStores].sort(() => 0.5 - Math.random());
+        const imbalanceCount = Math.floor(Math.random() * 3); // 0, 1, hoặc 2
+        const storesWithImbalance = shuffledStores.slice(0, imbalanceCount);
+        dailyImbalances.set(dateStr, storesWithImbalance.map(s => s.id));
+    });
+    // --- KẾT THÚC LOGIC MOCK DATA MỚI ---
+
     managedStores.forEach(store => {
         let cellsHTML = '';
         cycleDates.forEach(date => {
-            // Mock data logic: Tạo chênh lệch ngẫu nhiên cho mỗi ngày
-            const randomFactor = (store.id.charCodeAt(0) + date.getDate()) % 3; // 0, 1, 2
+            const dateStr = formatDate(date);
             let diff = 0;
-            if (randomFactor === 1) {
-                diff = - (Math.random() * 8 + 4); // Thiếu từ 4-12 giờ
-            } else if (randomFactor === 2) {
-                diff = Math.random() * 6 + 2; // Thừa từ 2-8 giờ
+
+            // Kiểm tra xem cửa hàng này có nằm trong danh sách chênh lệch của ngày hôm đó không
+            if (dailyImbalances.get(dateStr)?.includes(store.id)) {
+                // Tạo chênh lệch ngẫu nhiên (thừa hoặc thiếu)
+                if (Math.random() > 0.5) {
+                    diff = - (Math.random() * 8 + 4); // Thiếu từ 4-12 giờ
+                } else {
+                    diff = Math.random() * 6 + 2; // Thừa từ 2-8 giờ
+                }
             }
+
             const dayOfWeek = date.getDay();
             const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
             const weekendCellClass = isWeekend ? 'bg-amber-50' : '';
@@ -259,9 +276,9 @@ function getStoreStatusTableBody(cycleDates) {
             // Render ô dựa trên chênh lệch, colspan="2" để khớp với bảng dưới
             if (Math.abs(diff) > 0.01) {
                 if (diff > 0) {
-                    cellsHTML += `<td colspan="2" class="p-2 border text-center font-bold text-sm text-green-600 ${weekendCellClass}"><i class="fas fa-arrow-up mr-1"></i> ${diff.toFixed(1)}h</td>`;
+                    cellsHTML += `<td colspan="2" class="p-2 border text-center font-bold text-sm text-green-600 ${weekendCellClass}"><i class="fas fa-arrow-up mr-1"></i> ${diff.toFixed(1)}</td>`;
                 } else {
-                    cellsHTML += `<td colspan="2" class="p-2 border text-center font-bold text-sm text-red-600 ${weekendCellClass}"><i class="fas fa-arrow-down mr-1"></i> ${Math.abs(diff).toFixed(1)}h</td>`;
+                    cellsHTML += `<td colspan="2" class="p-2 border text-center font-bold text-sm text-red-600 ${weekendCellClass}"><i class="fas fa-arrow-down mr-1"></i> ${Math.abs(diff).toFixed(1)}</td>`;
                 }
             } else {
                 cellsHTML += `<td colspan="2" class="p-2 border text-center ${weekendCellClass}"></td>`;
