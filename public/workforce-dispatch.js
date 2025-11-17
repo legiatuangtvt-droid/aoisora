@@ -2,7 +2,7 @@ import { db } from './firebase.js';
 import { collection, getDocs, query, where, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 let domController = null;
-let viewStartDate = new Date(); // Ngày đầu tiên của 7 ngày hiển thị
+let currentCycle = { start: new Date(), end: new Date() }; // Chu kỳ hiển thị hiện tại
 
 // Biến lưu trữ dữ liệu
 let allPersonnel = [];
@@ -25,14 +25,24 @@ function formatDate(date) {
 }
 
 /**
- * Lấy ngày bắt đầu hiển thị, luôn là ngày mai.
- * @returns {Date}
+ * Lấy chu kỳ lương dựa trên một ngày tham chiếu.
+ * @param {Date} referenceDate - Ngày tham chiếu để xác định chu kỳ.
+ * @returns {{start: Date, end: Date}} - Đối tượng chứa ngày bắt đầu và kết thúc của chu kỳ.
  */
-function getStartDate() {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
-    return tomorrow; // Bảng sẽ luôn bắt đầu từ ngày mai
+function getPayrollCycle(referenceDate) {
+    const payrollStartDay = 26;
+    let year = referenceDate.getFullYear();
+    let month = referenceDate.getMonth();
+
+    // Nếu ngày hiện tại lớn hơn hoặc bằng ngày bắt đầu chu kỳ,
+    // thì chu kỳ tính toán sẽ bắt đầu từ tháng này.
+    // Ngược lại, nó bắt đầu từ tháng trước.
+    if (referenceDate.getDate() < payrollStartDay) {
+        month -= 1;
+    }
+    const start = new Date(year, month, payrollStartDay);
+    const end = new Date(start.getFullYear(), start.getMonth() + 1, payrollStartDay - 1);
+    return { start, end };
 }
 
 /**
@@ -184,13 +194,11 @@ function getManagedStoreIds(user, stores, areas) {
 /**
  * Tải lịch làm việc cho tuần đang xem.
  */
-async function fetchSchedulesForWeek() {
-    const startDateStr = formatDate(viewStartDate);
-    const endDate = new Date(viewStartDate);
-    endDate.setDate(endDate.getDate() + 6); // Lấy ngày cuối cùng của tuần
-    const endDateStr = formatDate(endDate);
+async function fetchSchedulesForCycle() {
+    const startDateStr = formatDate(currentCycle.start);
+    const endDateStr = formatDate(currentCycle.end);
 
-    // Chỉ tải lịch của các nhân viên thuộc phạm vi quản lý
+    // Chỉ tải lịch của các nhân viên thuộc phạm vi quản lý đã được lọc
     const employeeIds = allPersonnel.map(p => p.id);
     if (employeeIds.length === 0) {
         allSchedules = [];
@@ -220,50 +228,125 @@ async function fetchSchedulesForWeek() {
 }
 
 /**
+ * Render danh sách trạng thái các cửa hàng (phần trên).
+ * Sử dụng mock data.
+ * @param {Array<Date>} cycleDates - Mảng các ngày trong chu kỳ.
+ */
+function renderStoreStatusTable(cycleDates) {
+    const header = document.getElementById('store-status-table-header');
+    const body = document.getElementById('store-status-table-body');
+    if (!header || !body) return;
+
+    // 1. Render Header
+    let colgroupHTML = '<colgroup><col style="width: 250px;">';
+    let headerRowHTML = '<tr><th class="min-w-[250px] p-2 border sticky left-0 bg-slate-100 z-30 text-sm font-semibold">Cửa hàng</th>';
+    cycleDates.forEach(date => {
+        const dayOfWeek = date.getDay();
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // 0: Sunday, 6: Saturday
+        const weekendClass = isWeekend ? 'bg-amber-100' : '';
+
+        // Giảm chiều rộng cột để hiển thị nhiều hơn
+        colgroupHTML += '<col style="width: 90px;">';
+        headerRowHTML += `
+            <th class="p-1 border text-center w-[90px] ${weekendClass}">
+                <div class="font-semibold text-sm">${date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
+                <div class="text-xs font-normal">${date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}</div>
+            </th>`;
+    });
+    colgroupHTML += '</colgroup>';
+    headerRowHTML += '</tr>';
+    header.innerHTML = colgroupHTML + headerRowHTML;
+
+    // 2. Render Body (với mock data)
+    body.innerHTML = ''; // Xóa nội dung cũ
+
+    // Lấy danh sách cửa hàng được quản lý
+    const managedStoreIds = getManagedStoreIds(window.currentUser, allStores, allAreas);
+    const managedStores = allStores.filter(s => managedStoreIds.includes(s.id));
+
+    managedStores.forEach(store => {
+        let cellsHTML = '';
+        cycleDates.forEach(date => {
+            // Mock data logic: Tạo chênh lệch ngẫu nhiên cho mỗi ngày
+            const randomFactor = (store.id.charCodeAt(0) + date.getDate()) % 3; // 0, 1, 2
+            let diff = 0;
+            if (randomFactor === 1) {
+                diff = - (Math.random() * 8 + 4); // Thiếu từ 4-12 giờ
+            } else if (randomFactor === 2) {
+                diff = Math.random() * 6 + 2; // Thừa từ 2-8 giờ
+            }
+            const dayOfWeek = date.getDay();
+            const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+            const weekendCellClass = isWeekend ? 'bg-amber-50' : '';
+
+            // Render ô dựa trên chênh lệch
+            if (Math.abs(diff) > 0.01) {
+                if (diff > 0) {
+                    // Thừa giờ: màu xanh, mũi tên lên
+                    cellsHTML += `<td class="p-2 border text-center font-bold text-sm text-green-600 ${weekendCellClass}"><i class="fas fa-arrow-up mr-1"></i> ${diff.toFixed(1)}h</td>`;
+                } else {
+                    // Thiếu giờ: màu đỏ, mũi tên xuống
+                    cellsHTML += `<td class="p-2 border text-center font-bold text-sm text-red-600 ${weekendCellClass}"><i class="fas fa-arrow-down mr-1"></i> ${Math.abs(diff).toFixed(1)}h</td>`;
+                }
+            } else {
+                // Đủ giờ: icon check
+                cellsHTML += `<td class="p-2 border text-center text-green-600 ${weekendCellClass}"><i class="fas fa-check-circle"></i></td>`;
+            }
+        });
+
+        const rowHTML = `
+            <tr class="bg-white">
+                <td class="p-2 border sticky left-0 bg-white z-10">
+                    <div class="font-semibold text-sm">${store.name}</div>
+                </td>
+                ${cellsHTML}
+            </tr>
+        `;
+        body.innerHTML += rowHTML;
+    });
+
+    if (managedStores.length === 0) {
+        body.innerHTML = `<tr><td colspan="${cycleDates.length + 1}" class="text-center p-4 text-gray-500">Không có cửa hàng nào để hiển thị.</td></tr>`;
+    }
+}
+/**
  * Render toàn bộ bảng điều phối.
  */
 function renderDispatchTable() {
     const header = document.getElementById('dispatch-table-header');
     const body = document.getElementById('dispatch-table-body');
-    const weekDisplay = document.getElementById('week-range-display');
-    if (!header || !body || !weekDisplay) return;
+    const cycleDisplay = document.getElementById('cycle-range-display');
+    if (!header || !body || !cycleDisplay) return;
 
-    const weekDates = Array.from({ length: 7 }, (_, i) => {
-        const d = new Date(viewStartDate);
-        d.setDate(d.getDate() + i);
-        return d;
-    });
+    const cycleDates = [];
+    for (let d = new Date(currentCycle.start); d <= currentCycle.end; d.setDate(d.getDate() + 1)) {
+        cycleDates.push(new Date(d));
+    }
 
-    weekDisplay.textContent = `Tuần từ ${weekDates[0].toLocaleDateString('vi-VN')} đến ${weekDates[6].toLocaleDateString('vi-VN')}`;
+    cycleDisplay.textContent = `Chu kỳ từ ${currentCycle.start.toLocaleDateString('vi-VN')} đến ${currentCycle.end.toLocaleDateString('vi-VN')}`;
 
     // Render Header
     // Sử dụng colgroup để định nghĩa chiều rộng cố định cho các cột
     let colgroupHTML = '<colgroup><col style="width: 250px;">';
-    for (let i = 0; i < 14; i++) { // 7 ngày x 2 ca
-        colgroupHTML += '<col style="width: 120px;">';
-    }
+    cycleDates.forEach(() => {
+        colgroupHTML += '<col style="width: 120px;"><col style="width: 120px;">'; // 2 ca mỗi ngày
+    });
     colgroupHTML += '</colgroup>';
 
-    // Thêm một hàng "khuôn" (spacer row) để ép trình duyệt giữ đúng chiều rộng cột.
-    // Hàng này có chiều cao bằng 0 và không hiển thị.
-    let spacerRowHTML = '<tr class="h-0">';
-    spacerRowHTML += '<td class="p-0 h-0 border-0 w-[250px]"></td>'; // Cột đầu tiên
-    for (let i = 0; i < 14; i++) { // 14 cột ca làm việc
-        spacerRowHTML += '<td class="p-0 h-0 border-0 w-[120px]"></td>';
-    }
-    spacerRowHTML += '</tr>';
-
-    let headerRowHTML = '<tr><th class="p-2 border sticky left-0 bg-slate-100 z-30 text-sm">Nhân viên</th>';
-    weekDates.forEach(date => {
+    let headerRowHTML = '<tr><th class="p-2 border sticky left-0 bg-slate-100 z-30 text-sm font-semibold">Nhân viên</th>';
+    cycleDates.forEach(date => {
+        const dayOfWeek = date.getDay();
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // 0: Sunday, 6: Saturday
+        const weekendClass = isWeekend ? 'bg-amber-100' : '';
         headerRowHTML += `
-            <th colspan="2" class="p-1 border text-center w-[240px]">
+            <th colspan="2" class="p-1 border text-center w-[240px] ${weekendClass}">
                 <div class="font-semibold text-sm">${date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
                 <div class="text-xs font-normal">${date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}</div>
             </th>`;
     });
     headerRowHTML += '</tr>';
     // Chèn colgroup, hàng khuôn, và hàng header
-    header.innerHTML = colgroupHTML + spacerRowHTML + headerRowHTML;
+    header.innerHTML = colgroupHTML + headerRowHTML;
 
     // Render Body
     body.innerHTML = ''; // Xóa nội dung cũ
@@ -273,12 +356,15 @@ function renderDispatchTable() {
 
     hierarchy.forEach(item => {
         // Thay vì nối chuỗi, chúng ta tạo các node và thêm vào fragment
-        const rowsHTML = renderRowRecursive(item, 0, weekDates);
+        const rowsHTML = renderRowRecursive(item, 0, cycleDates);
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = `<table><tbody>${rowsHTML}</tbody></table>`;
         Array.from(tempDiv.querySelector('tbody').children).forEach(row => bodyFragment.appendChild(row));
     });
     body.appendChild(bodyFragment); // *** CHÈN VÀO DOM 1 LẦN DUY NHẤT ***
+
+    // Render thêm phần danh sách trạng thái cửa hàng
+    renderStoreStatusTable(cycleDates);
 
     // Gắn sự kiện sau khi render
     attachRowEvents();
@@ -346,21 +432,21 @@ function buildHierarchy(user) {
  * Render một hàng và các con của nó một cách đệ quy, với trạng thái thu gọn mặc định.
  * @param {object} item - Mục cần render (region, area, store, employee).
  * @param {number} level - Cấp độ của mục trong cây phân cấp.
- * @param {Array<Date>} weekDates - Mảng các ngày trong tuần.
+ * @param {Array<Date>} cycleDates - Mảng các ngày trong chu kỳ.
  * @param {boolean} isParentCollapsed - Trạng thái thu gọn của mục cha.
  * @returns {string} - Chuỗi HTML của hàng và các con của nó.
  */
-function renderRowRecursive(item, level, weekDates, isParentCollapsed = false) {
+function renderRowRecursive(item, level, cycleDates, isParentCollapsed = false) {
     const isCollapsible = item.children?.length > 0;
     // Mặc định, tất cả các cấp có thể thu gọn (level > -1) đều được thu gọn.
     const isCollapsed = isCollapsible && level > -1; 
     const isHidden = isParentCollapsed; // Hàng này bị ẩn nếu cha của nó bị thu gọn.
 
-    let rowHTML = renderSingleRow(item, level, weekDates, isCollapsed, isHidden);
+    let rowHTML = renderSingleRow(item, level, cycleDates, isCollapsed, isHidden);
 
     if (isCollapsible) {
         item.children.forEach(child => { // Luôn render các con, nhưng truyền trạng thái isHidden
-            rowHTML += renderRowRecursive(child, level + 1, weekDates, isCollapsed || isHidden);
+            rowHTML += renderRowRecursive(child, level + 1, cycleDates, isCollapsed || isHidden);
         });
     }
     return rowHTML;
@@ -401,12 +487,12 @@ function renderEmployeeShiftCell(schedule, stores, date) {
  * Render một hàng đơn lẻ trong bảng.
  * @param {object} item - Mục cần render.
  * @param {number} level - Cấp độ của mục.
- * @param {Array<Date>} weekDates - Mảng các ngày.
+ * @param {Array<Date>} cycleDates - Mảng các ngày.
  * @param {boolean} isCollapsed - Hàng này có được thu gọn không.
  * @param {boolean} isHidden - Hàng này có bị ẩn bởi cha không.
  * @returns {string} - Chuỗi HTML của một hàng <tr>.
  */
-function renderSingleRow(item, level, weekDates, isCollapsed, isHidden) {
+function renderSingleRow(item, level, cycleDates, isCollapsed, isHidden) {
     const indent = level * 20;
     const isCollapsible = item.children?.length > 0;
     const rowId = `${item.type}-${item.id}`;
@@ -421,7 +507,7 @@ function renderSingleRow(item, level, weekDates, isCollapsed, isHidden) {
         </div>`;
 
     let cellsHTML = '';
-    weekDates.forEach(date => {
+    cycleDates.forEach(date => {
         const dateStr = formatDate(date);
         if (item.type === 'employee') {
             const shiftsForDay = allSchedules.filter(s => s.employeeId === item.id && s.date === dateStr);
@@ -441,26 +527,7 @@ function renderSingleRow(item, level, weekDates, isCollapsed, isHidden) {
             cellsHTML += renderEmployeeShiftCell(shifts[0] || {}, allStores, date);
             cellsHTML += renderEmployeeShiftCell(shifts[1] || {}, allStores, date);
         } else if (item.type === 'store') {
-            const schedulesInStoreOnDate = allSchedules.filter(s => s.storeId === item.id && s.date === dateStr);
-
-            if (schedulesInStoreOnDate.length === 0) {
-                // Nếu không có lịch, hiển thị thông báo
-                cellsHTML += `<td colspan="2" class="p-2 border text-center text-xs text-gray-400 italic">Chưa phân công lịch làm việc</td>`;
-            } else {
-                // Nếu có lịch, tính toán chênh lệch
-                const actualManHour = schedulesInStoreOnDate.reduce((total, schedule) => {
-                    const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === schedule.shift);
-                    return total + (shiftInfo?.duration || 0);
-                }, 0);
-                const modelManHour = dailyTemplate?.totalManHour || 80;
-                const diff = actualManHour - modelManHour;
-                if (Math.abs(diff) > 0.01) { // Chỉ hiển thị nếu có chênh lệch
-                    let colorClass = diff > 0 ? 'text-green-600' : 'text-red-600';
-                    cellsHTML += `<td colspan="2" class="p-2 border text-center font-bold text-sm ${colorClass}">${diff.toFixed(1)}h</td>`;
-                } else {
-                    cellsHTML += `<td colspan="2" class="p-2 border"></td>`; // Để trống nếu không có chênh lệch
-                }
-            }
+            cellsHTML += `<td colspan="2" class="p-2 border"></td>`; // Để trống cho dòng cửa hàng
         } else {
             cellsHTML += `<td colspan="2" class="p-2 border"></td>`;
         }
@@ -520,12 +587,16 @@ function attachRowEvents() {
 }
 
 /**
- * Chuyển tuần và tải lại dữ liệu.
+ * Chuyển chu kỳ và tải lại dữ liệu.
  */
-async function changeWeek(direction) {
-    viewStartDate.setDate(viewStartDate.getDate() + (direction * 7));
+async function changeCycle(direction) {
+    const newRefDate = new Date(currentCycle.start);
+    // direction = 1 (tới), -1 (lùi)
+    newRefDate.setMonth(newRefDate.getMonth() + direction);
+    currentCycle = getPayrollCycle(newRefDate);
+
     showLoading();
-    await fetchSchedulesForWeek();
+    await fetchSchedulesForCycle();
     renderDispatchTable();
 }
 
@@ -546,15 +617,15 @@ export async function init() {
     domController = new AbortController();
     const { signal } = domController;
 
-    viewStartDate = getStartDate();
+    currentCycle = getPayrollCycle(new Date()); // Lấy chu kỳ hiện tại
     showLoading();
 
     // Tải dữ liệu song song
     await fetchInitialData();
-    await fetchSchedulesForWeek();
+    await fetchSchedulesForCycle();
 
     renderDispatchTable();
 
-    document.getElementById('prev-week-btn')?.addEventListener('click', () => changeWeek(-1), { signal });
-    document.getElementById('next-week-btn')?.addEventListener('click', () => changeWeek(1), { signal });
+    document.getElementById('prev-cycle-btn')?.addEventListener('click', () => changeCycle(-1), { signal });
+    document.getElementById('next-cycle-btn')?.addEventListener('click', () => changeCycle(1), { signal });
 }

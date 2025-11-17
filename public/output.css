@@ -1344,6 +1344,10 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
   width: 100%;
 }
 
+.w-\[90px\] {
+  width: 90px;
+}
+
 .min-w-36 {
   min-width: 9rem;
 }
@@ -1378,6 +1382,10 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
 
 .min-w-full {
   min-width: 100%;
+}
+
+.min-w-\[250px\] {
+  min-width: 250px;
 }
 
 .max-w-2xl {
@@ -1903,6 +1911,16 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
   border-color: transparent;
 }
 
+.border-green-300 {
+  --tw-border-opacity: 1;
+  border-color: rgb(134 239 172 / var(--tw-border-opacity, 1));
+}
+
+.border-red-300 {
+  --tw-border-opacity: 1;
+  border-color: rgb(252 165 165 / var(--tw-border-opacity, 1));
+}
+
 .border-b-black {
   --tw-border-opacity: 1;
   border-bottom-color: rgb(0 0 0 / var(--tw-border-opacity, 1));
@@ -2054,6 +2072,16 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
 .bg-white {
   --tw-bg-opacity: 1;
   background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
+}
+
+.bg-red-50 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(254 242 242 / var(--tw-bg-opacity, 1));
+}
+
+.bg-amber-50 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(255 251 235 / var(--tw-bg-opacity, 1));
 }
 
 .stroke-green-500 {
@@ -4259,6 +4287,10 @@ tr.edit-mode-active .scheduled-task-item.calendar-day:hover {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .lg\:grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
   .lg\:p-8 {
     padding: 2rem;
   }
@@ -4277,6 +4309,10 @@ tr.edit-mode-active .scheduled-task-item.calendar-day:hover {
 @media (min-width: 1280px) {
   .xl\:grid-cols-6 {
     grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .xl\:grid-cols-5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
 
