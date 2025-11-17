@@ -309,22 +309,17 @@ function renderDispatchTable() {
 
     // --- BƯỚC 1: RENDER HEADER CHUNG VÀ COLGROUP ---
     // Sử dụng colgroup để định nghĩa chiều rộng cố định cho các cột
-    // Cột đầu tiên (Store/Nhân viên) có chiều rộng 250px.
-    let colgroupHTML = '<colgroup><col style="width: 250px;">'; 
+    let colgroupHTML = '<colgroup><col style="width: 250px;">';
     cycleDates.forEach(() => {
-        // Mỗi ngày có 2 ca, mỗi ca tương ứng 1 cột rộng 120px trong thân bảng.
         colgroupHTML += '<col style="width: 120px;"><col style="width: 120px;">'; // 2 ca mỗi ngày
     });
     colgroupHTML += '</colgroup>';
     
-    // Cột tiêu đề đầu tiên (Store/Nhân viên)
     let headerRowHTML = '<tr><th class="p-2 border sticky left-0 bg-slate-100 z-30 text-sm font-semibold">Nhân viên</th>';
     cycleDates.forEach(date => {
         const dayOfWeek = date.getDay();
         const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // 0: Sunday, 6: Saturday
         const weekendClass = isWeekend ? 'bg-amber-100' : '';
-        // Mỗi cột tiêu đề ngày sẽ gộp 2 cột (colspan="2") để tương ứng với 2 ca làm việc.
-        // Chiều rộng tối thiểu của cột tiêu đề ngày là 240px (120px * 2).
         headerRowHTML += `
             <th colspan="2" class="p-1 border text-center w-[240px] ${weekendClass}">
                 <div class="font-semibold text-sm">${date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
@@ -357,7 +352,7 @@ function renderDispatchTable() {
     detailBody.appendChild(bodyFragment); // *** CHÈN VÀO DOM 1 LẦN DUY NHẤT ***
     // Chèn colgroup vào bảng chi tiết để đồng bộ cột
     document.querySelector('#detail-dispatch-section table').insertAdjacentHTML('afterbegin', colgroupHTML);
-
+    
     // Gắn sự kiện sau khi render
     attachRowEvents();
 }
@@ -528,7 +523,6 @@ function renderSingleRow(item, level, cycleDates, isCollapsed, isHidden) {
     const hiddenClass = isHidden ? 'hidden' : '';
 
     return `<tr data-id="${rowId}" data-level="${level}" class="bg-white ${collapsedClass} ${hiddenClass}">
-                // Cột đầu tiên của thân bảng, chiều rộng được kiểm soát bởi <colgroup>
                 <td class="p-2 border sticky left-0 bg-white z-10">${firstColHTML}</td>
                 ${cellsHTML}
             </tr>`;
