@@ -232,13 +232,6 @@ function getManagedStoreIds(user, stores, areas) {
  * @returns {{assignments: Map<string, {shift: string, priority: number}>, diff: number}}
  */
 function getOrCalculateStoreAssignment(storeId, dateStr) {
-    // --- DEBUG LOGGING ---
-    const targetStoreName = "AEON MaxValu Điện Biên Phủ";
-    const targetDate = "2025-11-26";
-    const storeInfo = allStores.find(s => s.id === storeId);
-    const isTarget = storeInfo?.name === targetStoreName && dateStr === targetDate;
-    if (isTarget) console.log(`[DEBUG] Bắt đầu tính toán cho ${targetStoreName} vào ngày ${targetDate}`);
-
     // Logic phân công ca làm việc cho nhân viên thuộc một cửa hàng, lấy mẫu "Test" làm tiêu chuẩn.
     // Tiêu chuẩn: Mỗi cửa hàng cần bố trí đủ 10 ca 8 giờ (5 ca V812 và 5 ca V829) để đáp ứng man-hour.
     //
@@ -260,11 +253,7 @@ function getOrCalculateStoreAssignment(storeId, dateStr) {
     // --- Logic tính toán phân công ---
     // Lọc ra các nhân viên thuộc cửa hàng hiện tại.
     const storeStaff = allPersonnel.filter(p => p.storeId === storeId && p.type === 'employee');
-    // SỬA LỖI LOGIC: Man-hour yêu cầu cho mỗi cửa hàng phải là tổng man-hour từ template (ví dụ: 80 giờ),
-    // không phải là giá trị bị chia nhỏ cho tất cả các cửa hàng.
-    // const requiredManHour = (dailyTemplate?.totalManhour || 0) / allStores.length; // Lỗi logic cũ
     const requiredManHour = dailyTemplate?.totalManhour || 0;
-    if (isTarget) console.log(`[DEBUG] Man-hour yêu cầu: ${requiredManHour}, Số lượng nhân viên: ${storeStaff.length}`);
 
     // Lấy tất cả đăng ký của nhân viên trong cửa hàng cho ngày đó
     let allRegistrations = [];
@@ -274,7 +263,6 @@ function getOrCalculateStoreAssignment(storeId, dateStr) {
             allRegistrations.push({ ...reg, employeeId: employee.id });
         });
     });
-    if (isTarget) console.log(`[DEBUG] Tổng số nguyện vọng đăng ký:`, allRegistrations);
 
     // Sắp xếp tất cả các nguyện vọng: ưu tiên nguyện vọng 1 (chắc chắn), sau đó đến nguyện vọng 2 (có thể).
     allRegistrations.sort((a, b) => a.priority - b.priority);
@@ -293,15 +281,12 @@ function getOrCalculateStoreAssignment(storeId, dateStr) {
         // 2. Tổng man-hour đã phân công chưa vượt quá yêu cầu.
         if (!assignedEmployees.has(reg.employeeId) && (assignedManHour + shiftDuration) <= requiredManHour) {
             assignments.set(reg.employeeId, { shift: reg.shift, priority: reg.priority });
-            if (isTarget) console.log(`[DEBUG] ==> Phân công: NV ${reg.employeeId} - Ca ${reg.shift} (${shiftDuration}h). Tổng giờ: ${assignedManHour + shiftDuration}`);
             assignedEmployees.add(reg.employeeId);
             assignedManHour += shiftDuration;
         }
     }
     // Tính toán sự chênh lệch giữa man-hour đã phân công và man-hour yêu cầu.
-
     const diff = assignedManHour - requiredManHour;
-    if (isTarget) console.log(`[DEBUG] Kết quả phân công cho ${targetStoreName}:`, { assignments, diff });
 
     const result = { assignments, diff };
     mockAssignmentsCache.set(cacheKey, result); // Cache kết quả
@@ -568,26 +553,35 @@ function renderRowRecursive(item, level, cycleDates, isParentCollapsed = false) 
 /**
  * Render nội dung một ô ca làm việc cho nhân viên.
  */
-function renderEmployeeShiftCell(employeeId, date) {
+function renderEmployeeShiftCell(employeeId, date, managedStores) {
     const dateStr = formatDate(date);
     const employee = allPersonnel.find(p => p.id === employeeId);
-    const storeId = employee?.storeId;
+    const originalStoreId = employee?.storeId;
+
     // Lấy kết quả phân công đã được tính toán và cache lại
-    const assignmentResult = storeId ? getOrCalculateStoreAssignment(storeId, dateStr) : null;
+    const assignmentResult = originalStoreId ? getOrCalculateStoreAssignment(originalStoreId, dateStr) : null;
     const assignedShift = assignmentResult?.assignments.get(employeeId);
 
     const shiftInfo = assignedShift ? allShiftCodes.find(sc => sc.shiftCode === assignedShift.shift) : null;
     const timeRange = shiftInfo ? shiftInfo.timeRange : '---';
-    const shiftCode = shiftInfo ? shiftInfo.shiftCode : '';
-    const priority = assignedShift ? assignedShift.priority : 0;
-    const priorityIcon = priority === 1 ? '<i class="fas fa-circle text-green-500"></i>' : (priority === 2 ? '<i class="fas fa-triangle-exclamation text-amber-500"></i>' : '');
+
+    // Nếu không có ca được phân công, trả về ô trống
+    if (!assignedShift) {
+        return `<td class="p-1 border text-xs"></td>`;
+    }
+
+    // Tạo các tùy chọn cho dropdown cửa hàng
+    const storeOptions = managedStores.map(store =>
+        `<option value="${store.id}" ${store.id === originalStoreId ? 'selected' : ''}>${store.name}</option>`
+    ).join('');
 
     return `
         <td class="p-1 border text-xs">
-            <div class="flex flex-col gap-1 h-full justify-center">
-                <div class="text-center font-semibold">${shiftCode}</div>
+            <div class="flex flex-col gap-1 h-full justify-center" data-shift-code="${shiftInfo.shiftCode}">
+                <select class="dispatch-store-select form-select form-select-sm w-full text-xs text-center">
+                    ${storeOptions}
+                </select>
                 <div class="text-center text-gray-500 text-[10px] h-4">${timeRange}</div>
-                <div class="text-center h-4" title="${priority === 1 ? 'Nguyện vọng chắc chắn' : (priority === 2 ? 'Nguyện vọng có thể' : '')}">${priorityIcon}</div>
             </div>
         </td>`;
 }
@@ -606,6 +600,9 @@ function renderSingleRow(item, level, cycleDates, isCollapsed, isHidden) {
     const isCollapsible = item.children?.length > 0;
     const rowId = `${item.type}-${item.id}`;
 
+    // Lấy danh sách cửa hàng được quản lý một lần để truyền xuống
+    const managedStores = getManagedStoresForCurrentUser();
+
     let firstColHTML = `
         <div class="flex items-center" style="padding-left: ${indent}px;">
             ${isCollapsible ? `<button class="toggle-btn w-6 h-6 flex-shrink-0 text-gray-500 hover:bg-gray-200 rounded-full"><i class="fas ${isCollapsed ? 'fa-chevron-right' : 'fa-chevron-down'}"></i></button>` : '<div class="w-6 h-6 flex-shrink-0"></div>'}
@@ -619,8 +616,8 @@ function renderSingleRow(item, level, cycleDates, isCollapsed, isHidden) {
     cycleDates.forEach(date => {
         const dateStr = formatDate(date);
         if (item.type === 'employee') {
-            // SỬA LỖI: Gọi lại hàm renderEmployeeShiftCell để hiển thị ca làm việc của nhân viên.
-            cellsHTML += renderEmployeeShiftCell(item.id, date);
+            // CẬP NHẬT: Truyền danh sách cửa hàng được quản lý vào hàm render
+            cellsHTML += renderEmployeeShiftCell(item.id, date, managedStores);
             // Nhân viên chỉ được phân công 1 ca trong logic mới này, nên ô thứ 2 để trống
             cellsHTML += `<td class="p-1 border text-xs"></td>`; // Ô trống cho ca thứ 2
         } else if (['store', 'area', 'region'].includes(item.type)) {
@@ -658,6 +655,27 @@ function renderSingleRow(item, level, cycleDates, isCollapsed, isHidden) {
             </tr>`;
 }
 
+/**
+ * Helper: Lấy danh sách các cửa hàng mà người dùng hiện tại có quyền quản lý.
+ * @returns {Array} - Mảng các đối tượng cửa hàng.
+ */
+function getManagedStoresForCurrentUser() {
+    const user = window.currentUser;
+    if (!user) return [];
+
+    switch (user.roleId) {
+        case 'ADMIN':
+        case 'HQ_STAFF':
+            return allStores;
+        case 'REGIONAL_MANAGER':
+            const areasInRegion = allAreas.filter(a => a.regionId === user.managedRegionId).map(a => a.id);
+            return allStores.filter(s => areasInRegion.includes(s.areaId));
+        case 'AREA_MANAGER':
+            return allStores.filter(s => user.managedAreaIds?.includes(s.areaId));
+        default: // STORE_INCHARGE và các vai trò khác
+            return allStores.filter(s => user.managedStoreIds?.includes(s.id) || s.id === user.storeId);
+    }
+}
 /**
  * Helper: Lấy danh sách nhân viên trong phạm vi của một mục (region, area, store).
  * @param {object} item - Mục region, area, hoặc store.
