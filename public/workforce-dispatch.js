@@ -231,15 +231,11 @@ async function fetchSchedulesForCycle() {
 }
 
 /**
- * Render phần thân của bảng tổng quan trạng thái các cửa hàng.
+ * Lấy chuỗi HTML cho phần thân của bảng tổng quan trạng thái các cửa hàng.
  * @param {Array<Date>} cycleDates - Mảng các ngày trong chu kỳ.
+ * @returns {string} - Chuỗi HTML chứa các thẻ <tr> cho tbody.
  */
-function renderStoreStatusTable(cycleDates) {
-    const body = document.getElementById('store-status-table-body');
-    if (!body) return;
-
-    // 1. Tạo colgroup để đồng bộ chiều rộng cột với bảng chi tiết
-    // colgroup sẽ được tạo bởi hàm renderDispatchTable và chèn vào cả 2 bảng
+function getStoreStatusTableBody(cycleDates) {
     let bodyHTML = '';
 
     const managedStoreIds = getManagedStoreIds(window.currentUser, allStores, allAreas);
@@ -286,8 +282,7 @@ function renderStoreStatusTable(cycleDates) {
         bodyHTML = `<tr><td colspan="${cycleDates.length + 1}" class="text-center p-4 text-gray-500">Không có cửa hàng nào để hiển thị.</td></tr>`;
     }
 
-    // Chỉ chèn body vào tbody
-    body.innerHTML = bodyHTML;
+    return bodyHTML;
 }
 
 
@@ -295,10 +290,11 @@ function renderStoreStatusTable(cycleDates) {
  * Render toàn bộ bảng điều phối.
  */
 function renderDispatchTable() {
-    const header = document.getElementById('dispatch-table-header');
-    const detailBody = document.getElementById('dispatch-table-body');
+    const table = document.getElementById('unified-dispatch-table');
+    const header = table.querySelector('thead');
+    const body = table.querySelector('tbody');
     const cycleDisplay = document.getElementById('cycle-range-display');
-    if (!header || !detailBody || !cycleDisplay) return;
+    if (!table || !header || !body || !cycleDisplay) return;
 
     const cycleDates = [];
     for (let d = new Date(currentCycle.start); d <= currentCycle.end; d.setDate(d.getDate() + 1)) {
@@ -309,7 +305,7 @@ function renderDispatchTable() {
 
     // --- BƯỚC 1: RENDER HEADER CHUNG VÀ COLGROUP ---
     // Sử dụng colgroup để định nghĩa chiều rộng cố định cho các cột
-    let colgroupHTML = '<colgroup><col style="width: 250px;">';
+    let colgroupHTML = '<colgroup><col style="min-width: 300px;">';
     cycleDates.forEach(() => {
         colgroupHTML += '<col style="width: 120px;"><col style="width: 120px;">'; // 2 ca mỗi ngày
     });
@@ -328,31 +324,32 @@ function renderDispatchTable() {
     });
     headerRowHTML += '</tr>';
     // Chèn colgroup và header vào thead của bảng trên
-    header.innerHTML = colgroupHTML + headerRowHTML;
+    header.innerHTML = headerRowHTML; // colgroup sẽ được chèn vào table
 
-    // --- BƯỚC 2: RENDER BODY CỦA BẢNG TỔNG QUAN (BẢNG TRÊN) ---
-    renderStoreStatusTable(cycleDates);
-    // Chèn colgroup vào bảng tổng quan để đồng bộ cột
-    document.querySelector('#store-status-section table').insertAdjacentHTML('afterbegin', colgroupHTML);
-
-
-    // --- BƯỚC 3: RENDER BODY CỦA BẢNG CHI TIẾT (BẢNG DƯỚI) ---
-    detailBody.innerHTML = ''; // Xóa nội dung cũ
+    // --- BƯỚC 2: RENDER TOÀN BỘ BODY (TỔNG QUAN + CHI TIẾT) VÀO MỘT TBODY DUY NHẤT ---
+    body.innerHTML = ''; // Xóa nội dung cũ
     const bodyFragment = document.createDocumentFragment(); // *** TẠO FRAGMENT ***
+
+    // 2.1. Render các hàng tổng quan cửa hàng và thêm vào fragment
+    const storeStatusRowsHTML = getStoreStatusTableBody(cycleDates);
+    const tempStoreDiv = document.createElement('div');
+    tempStoreDiv.innerHTML = `<table><tbody>${storeStatusRowsHTML}</tbody></table>`;
+    Array.from(tempStoreDiv.querySelector('tbody').children).forEach(row => bodyFragment.appendChild(row));
+
+    // 2.2. Render các hàng chi tiết nhân viên và thêm vào fragment
     const currentUser = window.currentUser;
     const hierarchy = buildHierarchy(currentUser);
-    
     hierarchy.forEach(item => {
-        // Thay vì nối chuỗi, chúng ta tạo các node và thêm vào fragment
         const rowsHTML = renderRowRecursive(item, 0, cycleDates);
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = `<table><tbody>${rowsHTML}</tbody></table>`;
         Array.from(tempDiv.querySelector('tbody').children).forEach(row => bodyFragment.appendChild(row));
     });
-    detailBody.appendChild(bodyFragment); // *** CHÈN VÀO DOM 1 LẦN DUY NHẤT ***
-    // Chèn colgroup vào bảng chi tiết để đồng bộ cột
-    document.querySelector('#detail-dispatch-section table').insertAdjacentHTML('afterbegin', colgroupHTML);
-    
+
+    // --- BƯỚC 3: CHÈN COLGROUP VÀ BODY VÀO BẢNG CHÍNH ---
+    table.insertAdjacentHTML('afterbegin', colgroupHTML);
+    body.appendChild(bodyFragment); // *** CHÈN VÀO DOM 1 LẦN DUY NHẤT ***
+
     // Gắn sự kiện sau khi render
     attachRowEvents();
 }
