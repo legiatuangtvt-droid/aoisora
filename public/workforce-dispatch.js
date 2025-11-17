@@ -588,9 +588,37 @@ function attachRowEvents() {
         if (storeStatusRow) {
             const storeId = storeStatusRow.dataset.storeId;
             if (storeId) {
-                const hierarchyStoreRow = tableBody.querySelector(`tr[data-id="store-${storeId}"]`);
-                const toggleButton = hierarchyStoreRow?.querySelector('.toggle-btn');
-                toggleButton?.click(); // Tự động click vào nút mở/đóng tương ứng
+                const storeRow = tableBody.querySelector(`tr[data-id="store-${storeId}"]`);
+                if (!storeRow) return;
+
+                // Hàm helper để mở một hàng nếu nó đang đóng
+                const expandRowIfNeeded = (row) => {
+                    if (row && row.classList.contains('collapsed')) {
+                        row.querySelector('.toggle-btn')?.click();
+                    }
+                };
+
+                // Tìm các hàng cha (khu vực và miền)
+                let areaRow = null;
+                let regionRow = null;
+                let currentRow = storeRow.previousElementSibling;
+
+                while (currentRow && (!areaRow || !regionRow)) {
+                    const level = parseInt(currentRow.dataset.level, 10);
+                    if (level === 1 && !areaRow) {
+                        areaRow = currentRow;
+                    }
+                    if (level === 0 && !regionRow) {
+                        regionRow = currentRow;
+                        break; // Đã tìm thấy cả hai, không cần đi xa hơn
+                    }
+                    currentRow = currentRow.previousElementSibling;
+                }
+
+                // Mở rộng từ trên xuống dưới: Miền -> Khu vực -> Cửa hàng
+                expandRowIfNeeded(regionRow);
+                expandRowIfNeeded(areaRow);
+                expandRowIfNeeded(storeRow);
             }
         }
     });
