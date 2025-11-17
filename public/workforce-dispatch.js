@@ -40,42 +40,44 @@ const mockAssignmentsCache = new Map(); // Map<`${storeId}_${dateStr}`, { assign
  *      Hệ thống sẽ mô phỏng bằng cách tăng số lượng nhân viên đăng ký ca trong ngày đó.
  *    - ĐẠT CHUẨN (= 80h): Các cửa hàng không được chọn sẽ có tổng số giờ đăng ký vừa đủ 80 giờ.
  */
-function generateMockAvailabilities(cycleDates) {
+function generateMockAvailabilities(cycleDates, templateManHour) {
     mockStaffAvailabilities.clear();
 
     cycleDates.forEach(date => {
         const dateStr = formatDate(date);
         // Chọn ngẫu nhiên 1 hoặc 2 cửa hàng để tạo chênh lệch
-        const storesWithVariance = [...allStores].sort(() => 0.5 - Math.random()).slice(0, Math.random() < 0.7 ? 1 : 2);
+        const storesWithVariance = [...allStores].sort(() => 0.5 - Math.random()).slice(0, Math.floor(Math.random() * 3)); // 0, 1, hoặc 2 cửa hàng
         const storesWithVarianceIds = new Set(storesWithVariance.map(s => s.id));
 
         allStores.forEach(store => {
             const storeStaff = allPersonnel.filter(p => p.storeId === store.id && p.type === 'employee');
             if (storeStaff.length === 0) return;
 
-            let staffForDay = [...storeStaff]; // Clone để có thể thay đổi
+            let staffToRegister = [...storeStaff];
+            const requiredStaffCount = Math.ceil(templateManHour / 8); // Giả định mỗi ca 8 giờ
+
             if (storesWithVarianceIds.has(store.id)) {
-                // 50% cơ hội thừa hoặc thiếu
-                if (Math.random() < 0.5) { // Tạo THIẾU man-hour
-                    staffForDay = staffForDay.slice(0, Math.max(1, storeStaff.length - 2)); // Bớt đi 2 nhân viên
-                } else { // Tạo THỪA man-hour
-                    // Giữ nguyên, vì thường số nhân viên trong store > 10, tự động sẽ thừa
+                // 50% cơ hội tạo thừa hoặc thiếu
+                if (Math.random() < 0.5 && storeStaff.length > 2) {
+                    // TẠO THIẾU: Giảm số lượng nhân viên đăng ký
+                    staffToRegister = storeStaff.slice(0, Math.max(1, requiredStaffCount - 2));
+                } else {
+                    // TẠO THỪA: Tăng số lượng nhân viên đăng ký (nếu có thể)
+                    staffToRegister = storeStaff.slice(0, requiredStaffCount + 3);
                 }
-            } else { 
-                // Cửa hàng ĐẠT CHUẨN: Lấy đúng 10 nhân viên để đăng ký ca.
-                // Việc này đảm bảo tổng số giờ đăng ký là 80 giờ (10 người * 1 ca * 8 giờ), khớp với mô hình "Test".
-                // QUAN TRỌNG: Thao tác này chỉ ảnh hưởng đến việc tạo dữ liệu đăng ký ca (mock data),
-                // không ảnh hưởng đến danh sách nhân viên đầy đủ được hiển thị trên bảng.
-                staffForDay = staffForDay.slice(0, 10); // Chỉ lấy 10 nhân viên để đăng ký
+            } else {
+                // NGÀY CHUẨN: Lấy đúng số lượng nhân viên cần thiết để đủ man-hour
+                staffToRegister = storeStaff.slice(0, requiredStaffCount);
             }
 
-            // SỬA LỖI LOGIC: Phân chia đăng ký để đảm bảo có cả ca V812 và V829.
-            // Với 10 nhân viên, 5 người sẽ đăng ký V812, 5 người đăng ký V829.
-            staffForDay.forEach((employee, index) => {
+            // Gán nguyện vọng đăng ký cho các nhân viên đã được chọn
+            staffToRegister.forEach((employee, index) => {
                 if (!mockStaffAvailabilities.has(employee.id)) mockStaffAvailabilities.set(employee.id, new Map());
-                // Dùng index để chia đều, index chẵn đăng ký V812, lẻ đăng ký V829
+
+                // Chia đều đăng ký giữa hai ca V812 và V829
                 const shiftToRegister = (index % 2 === 0) ? 'V812' : 'V829';
                 const standardRegistrations = [{ shift: shiftToRegister, priority: 1 }];
+
                 mockStaffAvailabilities.get(employee.id).set(dateStr, standardRegistrations);
             });
         });
@@ -266,35 +268,23 @@ function getManagedStoreIds(user, stores, areas) {
  * @param {string} dateStr - Chuỗi ngày 'YYYY-MM-DD'.
  * @returns {{assignments: Map<string, {shift: string, priority: number}>, diff: number}}
  */
-function getOrCalculateStoreAssignment(storeId, dateStr) {
-    // Logic phân công ca làm việc cho nhân viên thuộc một cửa hàng, lấy mẫu "Test" làm tiêu chuẩn.
-    // Tiêu chuẩn: Mỗi cửa hàng cần bố trí đủ 10 ca 8 giờ (5 ca V812 và 5 ca V829) để đáp ứng man-hour.
-    //
-    // 1. THIẾU MAN-HOUR (Hiển thị số âm màu đỏ):
-    //    - Xảy ra khi cửa hàng cần bố trí 10 ca theo mẫu "Test" nhưng tổng số ca nhân viên đăng ký không đủ.
-    //    - Ví dụ: Nhân viên chỉ đăng ký đủ để bố trí 9 ca. Chênh lệch sẽ là -8 giờ.
-    //
-    // 2. THỪA MAN-HOUR (Hiển thị số dương màu xanh):
-    //    - Xảy ra khi cửa hàng đã bố trí đủ 10 ca theo mẫu "Test".
-    //    - Tuy nhiên, vẫn còn nhân viên khác đã đăng ký nguyện vọng nhưng không được phân công vì đã hết chỗ.
-    //    - Ví dụ: Đã đủ 10 ca, nhưng vẫn còn 1 nhân viên đăng ký ca 8 giờ. Chênh lệch sẽ là +8 giờ.
-    //    - Con số này thể hiện "lực lượng dự bị" mà cửa hàng có thể huy động nếu cần.
-
+function getOrCalculateStoreAssignment(storeId, dateStr, templateManHour) {
     const cacheKey = `${storeId}_${dateStr}`;
     if (mockAssignmentsCache.has(cacheKey)) {
         return mockAssignmentsCache.get(cacheKey);
     }
 
-    // --- Logic tính toán phân công ---
-    // Lọc ra các nhân viên thuộc cửa hàng hiện tại.
+    // 1. Lấy tất cả nguyện vọng đăng ký của nhân viên trong cửa hàng cho ngày đó
     const storeStaff = allPersonnel.filter(p => p.storeId === storeId && p.type === 'employee');
-    const requiredManHour = dailyTemplate?.totalManhour || 0;
-
-    // Lấy tất cả đăng ký của nhân viên trong cửa hàng cho ngày đó
     let allRegistrations = [];
+    let totalRegisteredManHour = 0;
     storeStaff.forEach(employee => {
         const availability = mockStaffAvailabilities.get(employee.id)?.get(dateStr) || [];
         availability.forEach(reg => {
+            const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === reg.shift);
+            if (shiftInfo) {
+                totalRegisteredManHour += shiftInfo.duration || 0;
+            }
             allRegistrations.push({ ...reg, employeeId: employee.id });
         });
     });
@@ -303,25 +293,30 @@ function getOrCalculateStoreAssignment(storeId, dateStr) {
     allRegistrations.sort((a, b) => a.priority - b.priority);
 
     const assignments = new Map(); // Map<employeeId, {shift, priority}>
-    let assignedManHour = 0;
+    let smAssignedManHour = 0; // Giờ làm việc mà SM phân công
     const assignedEmployees = new Set();
 
-    // Duyệt qua các đăng ký đã sắp xếp để phân công
+    // 2. SM thực hiện phân công dựa trên nguyện vọng, nhưng không vượt quá man-hour của template
     for (const reg of allRegistrations) {
         const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === reg.shift);
         const shiftDuration = shiftInfo?.duration || 0;
 
         // Điều kiện phân công:
         // 1. Nhân viên này chưa được phân bất kỳ ca nào trong ngày hôm đó.
-        // 2. Tổng man-hour đã phân công chưa vượt quá yêu cầu.
-        if (!assignedEmployees.has(reg.employeeId) && (assignedManHour + shiftDuration) <= requiredManHour) {
+        // 2. Tổng man-hour đã phân công (smAssignedManHour) chưa vượt quá yêu cầu của template.
+        if (!assignedEmployees.has(reg.employeeId) && (smAssignedManHour + shiftDuration) <= templateManHour) {
             assignments.set(reg.employeeId, { shift: reg.shift, priority: reg.priority });
             assignedEmployees.add(reg.employeeId);
-            assignedManHour += shiftDuration;
+            smAssignedManHour += shiftDuration;
         }
     }
-    // Tính toán sự chênh lệch giữa man-hour đã phân công và man-hour yêu cầu.
-    const diff = assignedManHour - requiredManHour;
+
+    // 3. Tính toán chênh lệch
+    // - Nếu tổng giờ đăng ký < giờ mẫu => Thiếu. Chênh lệch = Giờ phân công - Giờ mẫu (sẽ ra số âm).
+    // - Nếu tổng giờ đăng ký >= giờ mẫu => Thừa. Chênh lệch = Tổng giờ đăng ký - Giờ phân công (số giờ của NV không được xếp ca).
+    const diff = (totalRegisteredManHour < templateManHour)
+        ? smAssignedManHour - templateManHour // THIẾU
+        : totalRegisteredManHour - smAssignedManHour; // THỪA
 
     const result = { assignments, diff };
     mockAssignmentsCache.set(cacheKey, result); // Cache kết quả
@@ -379,12 +374,13 @@ function getStoreStatusTableBody(cycleDates) {
     managedStores.forEach(store => {
         let cellsHTML = '';
         cycleDates.forEach(date => {
+            const templateManHour = dailyTemplate?.totalManhour || 80;
             const dateStr = formatDate(date);
-            const { diff } = getOrCalculateStoreAssignment(store.id, dateStr);
+            const { diff } = getOrCalculateStoreAssignment(store.id, dateStr, templateManHour);
 
             const dayOfWeek = date.getDay();
             const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-            const weekendCellClass = isWeekend ? 'bg-amber-50' : '';
+            const weekendCellClass = isWeekend ? 'bg-amber-50' : 'bg-white';
 
             // Render ô dựa trên chênh lệch, colspan="2" để khớp với bảng dưới
             if (Math.abs(diff) > 0.01) {
@@ -436,8 +432,9 @@ function renderDispatchTable() {
     // Xóa cache cũ trước khi render lại
     mockAssignmentsCache.clear();
 
+    const templateManHour = dailyTemplate?.totalManhour || 80;
     // BỔ SUNG: Tạo dữ liệu đăng ký ca giả lập cho chu kỳ này
-    generateMockAvailabilities(cycleDates);
+    generateMockAvailabilities(cycleDates, templateManHour);
 
     cycleDisplay.textContent = `Chu kỳ từ ${currentCycle.start.toLocaleDateString('vi-VN')} đến ${currentCycle.end.toLocaleDateString('vi-VN')}`;
 
@@ -453,7 +450,7 @@ function renderDispatchTable() {
     cycleDates.forEach(date => {
         const dayOfWeek = date.getDay();
         const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // 0: Sunday, 6: Saturday
-        const weekendClass = isWeekend ? 'bg-amber-100' : '';
+        const weekendClass = isWeekend ? 'bg-amber-100' : 'bg-slate-100';
         headerRowHTML += `
             <th colspan="2" class="p-1 border text-center w-[240px] ${weekendClass}">
                 <div class="font-semibold text-sm">${date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
@@ -502,7 +499,16 @@ function buildHierarchy(user) {
     // Do đó, đối với AM, chúng ta sẽ bắt đầu cây phân cấp từ cấp Area.
     if (user?.roleId === 'AREA_MANAGER') {
         const managedAreas = allAreas.filter(a => user.managedAreaIds?.includes(a.id));
-        return managedAreas.map(area => ({ ...area, type: 'area', children: allStores.filter(store => store.areaId === area.id).map(store => ({ ...store, type: 'store', children: allPersonnel.filter(p => p.storeId === store.id && p.type === 'employee') })) }));
+        return managedAreas.map(area => ({
+            ...area, type: 'area',
+            children: allStores.filter(store => store.areaId === area.id).map(store => {
+                const storePersonnel = allPersonnel.filter(p => p.storeId === store.id && p.type === 'employee');
+                if (store.name === 'AEON MaxValu Điện Biên Phủ') {
+                    console.log(`[DEBUG] Building hierarchy for store (AM View): ${store.name} (ID: ${store.id}). Found ${storePersonnel.length} employees.`, storePersonnel.map(p => ({ id: p.id, name: p.name, role: p.roleId })));
+                }
+                return { ...store, type: 'store', children: storePersonnel };
+            })
+        }));
     }
 
     // Logic cũ cho các vai trò khác
@@ -554,15 +560,17 @@ function buildHierarchy(user) {
     return filteredRegions.map(region => {
         const areasInRegion = filteredAreas.filter(area => area.regionId === region.id);
         return {
-                // Thêm log để kiểm tra xem nhân viên có thuộc AEON MaxValu Điện Biên Phủ không
-                // Mục đích: Theo dõi quá trình tải và hiển thị nhân viên của cửa hàng này.
-                // Lưu ý: Các log này chỉ xuất hiện khi duyệt qua nhân viên của cửa hàng này.
-                ...region, type: 'region',
-
-                // Lọc các khu vực thuộc miền này, sau đó lọc các cửa hàng thuộc khu vực đó,
-                // và cuối cùng lọc TẤT CẢ nhân viên (active/inactive) thuộc cửa hàng đó.
             ...region, type: 'region',
-            children: areasInRegion.map(area => ({ ...area, type: 'area', children: filteredStores.filter(store => store.areaId === area.id).map(store => ({ ...store, type: 'store', children: allPersonnel.filter(p => p.storeId === store.id && p.type === 'employee') })) }))
+            children: areasInRegion.map(area => ({
+                ...area, type: 'area',
+                children: filteredStores.filter(store => store.areaId === area.id).map(store => {
+                    const storePersonnel = allPersonnel.filter(p => p.storeId === store.id && p.type === 'employee');
+                    if (store.name === 'AEON MaxValu Điện Biên Phủ') {
+                        console.log(`[DEBUG] Building hierarchy for store (General View): ${store.name} (ID: ${store.id}). Found ${storePersonnel.length} employees.`, storePersonnel.map(p => ({ id: p.id, name: p.name, role: p.roleId })));
+                    }
+                    return { ...store, type: 'store', children: storePersonnel };
+                })
+            }))
         };
     });
 }
@@ -600,11 +608,12 @@ function renderEmployeeShiftCell(employeeId, date, managedStores) {
     const employee = allPersonnel.find(p => p.id === employeeId);
     const originalStoreId = employee?.storeId;
 
+    const templateManHour = dailyTemplate?.totalManhour || 80;
     // Lấy kết quả phân công đã được tính toán và cache lại
-    const assignmentResult = originalStoreId ? getOrCalculateStoreAssignment(originalStoreId, dateStr) : null;
+    const assignmentResult = originalStoreId ? getOrCalculateStoreAssignment(originalStoreId, dateStr, templateManHour) : null;
     const assignedShift = assignmentResult?.assignments.get(employeeId);
 
-    const shiftInfo = assignedShift ? allShiftCodes.find(sc => sc.shiftCode === assignedShift.shift) : null;
+    const shiftInfo = assignedShift ? allShiftCodes.find(sc => sc.shiftCode === assignedShift.shift) : null;    
     const timeRange = shiftInfo ? shiftInfo.timeRange : '---';
 
     // Nếu không có ca được phân công, trả về ô trống
@@ -618,7 +627,7 @@ function renderEmployeeShiftCell(employeeId, date, managedStores) {
     ).join('');
 
     return `
-        <td class="p-1 border text-xs">
+        <td class="p-1 border text-xs ${assignedShift ? 'bg-green-50' : ''}">
             <div class="flex flex-col gap-1 h-full justify-center" data-shift-code="${shiftInfo.shiftCode}">
                 <select class="dispatch-store-select form-select form-select-sm w-full text-xs text-center">
                     ${storeOptions}
@@ -666,10 +675,11 @@ function renderSingleRow(item, level, cycleDates, isCollapsed, isHidden) {
             cellsHTML += `<td class="p-1 border text-xs"></td>`; // Ô trống cho ca thứ 2
         } else if (['store', 'area', 'region'].includes(item.type)) {
             // LOGIC HIỂN THỊ SỐ LƯỢNG: Tính toán và hiển thị số lượng nhân viên được phân công cho các cấp tổng hợp.
+            const templateManHour = dailyTemplate?.totalManhour || 80;
             let assignedCount = 0;
             const staffInScope = getStaffInScope(item);
             staffInScope.forEach(employee => {
-                const assignmentResult = getOrCalculateStoreAssignment(employee.storeId, dateStr);
+                const assignmentResult = getOrCalculateStoreAssignment(employee.storeId, dateStr, templateManHour);
                 if (assignmentResult?.assignments.has(employee.id)) {
                     assignedCount++;
                 }
