@@ -2109,6 +2109,11 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
   background-color: rgb(255 251 235 / var(--tw-bg-opacity, 1));
 }
 
+.bg-yellow-50 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(254 252 232 / var(--tw-bg-opacity, 1));
+}
+
 .stroke-green-500 {
   stroke: #22c55e;
 }

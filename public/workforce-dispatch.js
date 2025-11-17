@@ -634,24 +634,28 @@ function renderRowRecursive(item, level, cycleDates, isParentCollapsed = false) 
 /**
  * Render nội dung một ô ca làm việc cho nhân viên.
  */
-function renderEmployeeShiftCell(assignedShift, originalStoreId, managedStores) {
-    // Nếu không có ca được phân công, trả về một ô trống.
-    // Thay đổi: Bây giờ chúng ta chỉ render 1 ô (<td>) cho mỗi ca, không phải colspan="2".
-    if (!assignedShift || !assignedShift.shift) {
-        return `<td class="p-1 border text-xs"></td>`;
+function renderEmployeeShiftCell(shiftRegistration, assignedShift, originalStoreId, managedStores) {
+    // Nếu không có nguyện vọng đăng ký cho ca này, trả về ô trống.
+    if (!shiftRegistration || !shiftRegistration.shift) {
+        return `<td class="p-1 border text-xs"></td>`; // Chỉ render 1 ô cho 1 ca
     }
-    
-    const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === assignedShift.shift);
+
+    const shiftCode = shiftRegistration.shift;
+    const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === shiftCode);
     const timeRange = shiftInfo ? shiftInfo.timeRange : '---';
 
     // Tạo các tùy chọn cho dropdown cửa hàng
     const storeOptions = managedStores.map(store =>
         `<option value="${store.id}" ${store.id === originalStoreId ? 'selected' : ''}>${store.name}</option>`
     ).join('');
-
+    
+    // Nếu nhân viên được phân công, ô sẽ có màu xanh.
+    // Nếu chỉ đăng ký mà chưa được phân công (chờ điều phối), ô sẽ có màu vàng nhạt.
+    const cellClass = assignedShift ? 'bg-green-50' : 'bg-yellow-50';
+    
     return `
-        <td class="p-1 border text-xs bg-green-50">
-            <div class="flex flex-col gap-1 h-full justify-center" data-shift-code="${shiftInfo?.shiftCode}">
+        <td class="p-1 border text-xs ${cellClass}">
+            <div class="flex flex-col gap-1 h-full justify-center" data-shift-code="${shiftCode}">
                 <select class="dispatch-store-select form-select form-select-sm w-full text-xs text-center">
                     ${storeOptions}
                 </select>
@@ -702,13 +706,15 @@ function renderSingleRow(item, level, cycleDates, isCollapsed, isHidden) {
                 // Nếu có nguyện vọng, kiểm tra phân công
                 const templateManHour = dailyTemplate?.totalManhour || 80;
                 const assignmentResult = item.storeId ? getOrCalculateStoreAssignment(item.storeId, dateStr, templateManHour) : null;
+                const registeredShifts = availability || [];
                 const assignedShifts = assignmentResult?.assignments.get(item.id) || [];
 
-                // Render ô cho ca đầu tiên (nếu có)
-                cellsHTML += renderEmployeeShiftCell(assignedShifts[0], item.storeId, managedStores);
-
-                // Render ô cho ca thứ hai (nếu có)
-                cellsHTML += renderEmployeeShiftCell(assignedShifts[1], item.storeId, managedStores);
+                // Render 2 ô ca, dựa trên nguyện vọng đăng ký.
+                // Ô sẽ hiển thị ngay cả khi chưa được phân công (để chờ điều phối).
+                const reg1 = registeredShifts[0];
+                const reg2 = registeredShifts[1];
+                cellsHTML += renderEmployeeShiftCell(reg1, assignedShifts.find(s => s.shift === reg1?.shift), item.storeId, managedStores);
+                cellsHTML += renderEmployeeShiftCell(reg2, assignedShifts.find(s => s.shift === reg2?.shift), item.storeId, managedStores);
             }
         } else if (['store', 'area', 'region'].includes(item.type)) {
             // LOGIC HIỂN THỊ SỐ LƯỢNG: Tính toán và hiển thị số lượng nhân viên được phân công cho các cấp tổng hợp.
