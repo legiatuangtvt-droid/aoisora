@@ -29,21 +29,52 @@ const mockAssignmentsCache = new Map(); // Map<`${storeId}_${dateStr}`, { assign
 
 
 /**
- * BỔ SUNG: Tạo dữ liệu đăng ký ca giả lập cho tất cả nhân viên.
+ * BỔ SUNG: Tạo dữ liệu đăng ký ca giả lập cho tất cả nhân viên trong chu kỳ.
+ * QUY TẮC TẠO CHÊNH LỆCH MAN-HOUR NGẪU NHIÊN:
+ * 1. Phạm vi: Mỗi ngày, chỉ có 1 đến 2 cửa hàng được chọn ngẫu nhiên để có sự chênh lệch man-hour.
+ * 2. Tiêu chuẩn: Model man-hour chuẩn cho mỗi cửa hàng là 80 giờ/ngày.
+ * 3. Logic chênh lệch:
+ *    - THIẾU MAN-HOUR (< 80h): Xảy ra khi tổng số giờ đăng ký của nhân viên trong cửa hàng nhỏ hơn 80 giờ.
+ *      Hệ thống sẽ mô phỏng bằng cách giảm bớt số lượng nhân viên đăng ký ca trong ngày đó.
+ *    - THỪA MAN-HOUR (> 80h): Xảy ra khi tổng số giờ đăng ký của nhân viên lớn hơn 80 giờ.
+ *      Hệ thống sẽ mô phỏng bằng cách tăng số lượng nhân viên đăng ký ca trong ngày đó.
+ *    - ĐẠT CHUẨN (= 80h): Các cửa hàng không được chọn sẽ có tổng số giờ đăng ký vừa đủ 80 giờ.
  */
 function generateMockAvailabilities(cycleDates) {
     mockStaffAvailabilities.clear();
-    const staff = allPersonnel.filter(p => p.type === 'employee');
-    staff.forEach((employee, empIndex) => {
-        const availabilityByDate = new Map();
-        cycleDates.forEach((date, dateIndex) => {
-            const dateStr = formatDate(date);
-            const profileIndex = (empIndex + dateIndex) % mockStaffProfiles.length;
-            const dayProfile = mockStaffProfiles[profileIndex];
-            const registrations = Object.entries(dayProfile).map(([shift, priority]) => ({ shift, priority }));
-            availabilityByDate.set(dateStr, registrations);
+
+    cycleDates.forEach(date => {
+        const dateStr = formatDate(date);
+        // Chọn ngẫu nhiên 1 hoặc 2 cửa hàng để tạo chênh lệch
+        const storesWithVariance = [...allStores].sort(() => 0.5 - Math.random()).slice(0, Math.random() < 0.7 ? 1 : 2);
+        const storesWithVarianceIds = new Set(storesWithVariance.map(s => s.id));
+
+        allStores.forEach(store => {
+            const storeStaff = allPersonnel.filter(p => p.storeId === store.id && p.type === 'employee');
+            if (storeStaff.length === 0) return;
+
+            let staffForDay = [...storeStaff]; // Clone để có thể thay đổi
+            if (storesWithVarianceIds.has(store.id)) {
+                // 50% cơ hội thừa hoặc thiếu
+                if (Math.random() < 0.5) { // Tạo THIẾU man-hour
+                    staffForDay = staffForDay.slice(0, Math.max(1, storeStaff.length - 2)); // Bớt đi 2 nhân viên
+                } else { // Tạo THỪA man-hour
+                    // Giữ nguyên, vì thường số nhân viên trong store > 10, tự động sẽ thừa
+                }
+            } else { // Cửa hàng ĐẠT CHUẨN
+                staffForDay = staffForDay.slice(0, 10); // Chỉ lấy 10 nhân viên để đăng ký
+            }
+
+            // SỬA LỖI LOGIC: Phân chia đăng ký để đảm bảo có cả ca V812 và V829.
+            // Với 10 nhân viên, 5 người sẽ đăng ký V812, 5 người đăng ký V829.
+            staffForDay.forEach((employee, index) => {
+                if (!mockStaffAvailabilities.has(employee.id)) mockStaffAvailabilities.set(employee.id, new Map());
+                // Dùng index để chia đều, index chẵn đăng ký V812, lẻ đăng ký V829
+                const shiftToRegister = (index % 2 === 0) ? 'V812' : 'V829';
+                const standardRegistrations = [{ shift: shiftToRegister, priority: 1 }];
+                mockStaffAvailabilities.get(employee.id).set(dateStr, standardRegistrations);
+            });
         });
-        mockStaffAvailabilities.set(employee.id, availabilityByDate);
     });
 }
 /**
