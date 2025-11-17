@@ -307,7 +307,7 @@ function renderDispatchTable() {
     // Sử dụng colgroup để định nghĩa chiều rộng cố định cho các cột
     let colgroupHTML = '<colgroup><col style="min-width: 300px;">';
     cycleDates.forEach(() => {
-        colgroupHTML += '<col style="width: 120px;"><col style="width: 120px;">'; // 2 ca mỗi ngày
+        colgroupHTML += '<col style="min-width: 120px;"><col style="min-width: 120px;">'; // 2 ca mỗi ngày
     });
     colgroupHTML += '</colgroup>';
     
