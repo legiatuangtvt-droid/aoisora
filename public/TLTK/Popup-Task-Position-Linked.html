@@ -326,7 +326,11 @@
 
                 console.log('Các vị trí đã chọn:', selectedPositions);
 
-                hidePopup();
+                // Lưu kết quả vào sessionStorage để trang trước có thể đọc
+                sessionStorage.setItem('selectedTaskPositionsLinked', JSON.stringify(selectedPositions));
+
+                // Quay lại trang trước đó (Edit-RE-Task.html)
+                window.history.back();
             });
         });
     </script>

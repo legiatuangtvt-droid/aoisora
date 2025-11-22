@@ -234,6 +234,83 @@
         .position-item-checkbox input[type="checkbox"] {
             margin-right: 12px;
         }
+
+        /* CSS cho toggle switch */
+        .task-toggle-container {
+            display: flex;
+            justify-content: center;
+            padding: 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        /* CSS cho phần chọn task khác */
+        #differentTaskContainer {
+            padding: 16px;
+            border-bottom: 1px solid #e5e7eb;
+            display: none; /* Ẩn mặc định */
+        }
+
+        /* CSS cho cấu trúc lồng nhau trong Position Linked */
+        .position-item-container {
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .position-item-container:last-child {
+            border-bottom: none;
+        }
+
+        .linked-task-options {
+            padding: 10px 16px 16px 40px; /* Thụt vào để trực quan */
+            background-color: #f9fafb;
+            display: none; /* Ẩn mặc định */
+        }
+        .linked-task-options .task-toggle-container {
+            padding: 0 0 16px 0;
+            border-bottom: none;
+            justify-content: flex-start;
+        }
+        .linked-task-options .different-task-container {
+            padding: 0;
+            border-bottom: none;
+        }
+
+        /* Bố cục mới cho Position Linked, giống file mẫu Popup-Task-Position-Linked.html */
+        #positionLinkedList .position-item-container {
+            padding: 12px 8px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        #positionLinkedList .position-item-container:last-child {
+            border-bottom: none;
+        }
+        #positionLinkedList .position-item-container.selected .linked-task-options {
+            display: block;
+            width: 100%;
+            padding: 16px 0 10px 30px; /* Thụt vào so với checkbox */
+        }
+        #positionLinkedList .position-item-container input[type="checkbox"] {
+            margin-right: 12px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        #positionLinkedList .position-item-container label {
+            flex-grow: 1;
+            cursor: pointer;
+        }
+        .linked-task-options .different-task-container-inner {
+            display: none; /* Ẩn mặc định */
+            margin-top: 12px;
+        }
+        .linked-task-options .different-task-container-inner.visible {
+            display: block;
+        }
+        .linked-task-options .task-toggle-btn.active {
+            background-color: #4338ca;
+            color: white;
+            border-color: #4338ca;
+        }
     </style>
 </head>
 <body>
@@ -295,7 +372,7 @@
                     <!-- Row 4 -->
                     <div class="form-group">
                         <label for="timeframe">Timeframe</label>
-                        <input type="text" id="timeframe" name="timeframe">
+                        <button type="button" id="timeframe" class="btn">Select Timeframe</button>
                     </div>
                     <div class="form-group">
                         <label for="taskPosition">Task Position</label>
@@ -348,6 +425,24 @@
         </div>
     </div>
 
+    <!-- Popup chọn Timeframe -->
+    <div id="timeframeSelectModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Select Timeframe</h2>
+                <button id="closeTimeframeSelectBtn" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 0;">
+                <ul id="timeframeList" class="position-list">
+                    <!-- Danh sách timeframe sẽ được chèn vào đây -->
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button id="confirmTimeframeBtn" class="btn btn-primary">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Popup chọn Task Position Linked (chọn nhiều) -->
     <div id="positionLinkedSelectModal" class="modal-overlay">
         <div class="modal-content" style="max-width: 400px;">
@@ -386,6 +481,13 @@
             const manhourBudgetInput = document.getElementById('manhourFormula');
 
 
+            // --- Elements for Timeframe Select Popup ---
+            const timeframeSelectModal = document.getElementById('timeframeSelectModal');
+            const openTimeframeSelectBtn = document.getElementById('timeframe');
+            const closeTimeframeSelectBtn = document.getElementById('closeTimeframeSelectBtn');
+            const confirmTimeframeBtn = document.getElementById('confirmTimeframeBtn');
+            const timeframeList = document.getElementById('timeframeList');
+
 
             // --- Elements for Position Select Popup ---
             const positionSelectModal = document.getElementById('positionSelectModal');
@@ -402,8 +504,11 @@
             const positionLinkedList = document.getElementById('positionLinkedList');
             
             let workPositions = [];
-            let selectedPositionId = null;
-            let selectedPositionLinkedIds = [];
+            let taskGroupsData = []; // Biến lưu trữ task_groups từ data.json
+            let selectedPositionIds = [];
+            let selectedPositionLinked = {}; // { positionId: { isDifferent: false, group: null, task: null } }
+            let selectedTimeframe = null;
+
 
             // --- Mock Data (moved to higher scope) ---
             const mockStoreParameters = [
@@ -429,6 +534,22 @@
                 { name: 'Yearly', coeff: (1/365).toFixed(4) }
             ];
 
+            const mockTimeframes = [
+                "Morning (5:00 - 12:00)",
+                "Afternoon (12:00 - 18:00)",
+                "Evening (18:00 - 22:00)",
+                "Night (22:00 - 5:00)",
+                "All Day"
+            ];
+
+            const mockWorkPositions = [
+                { id: '1', name: 'Leader' },
+                { id: '2', name: 'POS' },
+                { id: '3', name: 'Ngành hàng' },
+                { id: '4', name: 'MMD' },
+                { id: '5', name: 'Aeon Cafe' }
+            ];
+
 
             // --- Data Loading ---
             async function fetchData() {
@@ -452,14 +573,18 @@
                 // Cập nhật công thức Manhour ban đầu
                 updateManhourFormula();
 
+                // Đổ dữ liệu cho popup chọn timeframe
+                populateTimeframeList();
 
                 try {
-                    // Vẫn fetch data.json để lấy work_positions
-                    const response = await fetch('/data.json');
+                    const response = await fetch('../data.json');
                     const data = await response.json();
 
-                    // Đổ dữ liệu cho các popup chọn vị trí
-                    workPositions = data.work_positions;
+                    // Lưu trữ task_groups
+                    taskGroupsData = data.task_groups;
+
+                    // Sử dụng mock data cho Task Position (theo yêu cầu trước)
+                    workPositions = mockWorkPositions;
                     populatePositionList();
                     populatePositionLinkedList();
                 } catch (error) {
@@ -478,36 +603,118 @@
                 });
             }
 
-            function populatePositionList() {
-                positionList.innerHTML = ''; // Clear existing list
-                workPositions.forEach(position => {
+            function populateTimeframeList() {
+                timeframeList.innerHTML = ''; // Clear existing list
+                mockTimeframes.forEach(timeframe => {
                     const listItem = document.createElement('li');
                     listItem.className = 'position-item';
-                    listItem.textContent = position.name;
-                    listItem.dataset.id = position.id;
-                    positionList.appendChild(listItem);
+                    listItem.textContent = timeframe;
+                    listItem.dataset.value = timeframe;
+                    timeframeList.appendChild(listItem);
                 });
             }
 
-            function populatePositionLinkedList() {
-                positionLinkedList.innerHTML = ''; // Clear existing list
+            function populatePositionList() {
+                positionList.innerHTML = ''; // Clear existing list
                 workPositions.forEach(position => {
                     const listItem = document.createElement('li');
                     listItem.className = 'position-item-checkbox';
 
                     const checkbox = document.createElement('input');
                     checkbox.type = 'checkbox';
-                    checkbox.id = `pos-linked-${position.id}`;
+                    checkbox.id = `pos-${position.id}`;
                     checkbox.dataset.id = position.id;
+                    // Kiểm tra xem position này đã được chọn trước đó chưa
+                    checkbox.checked = selectedPositionIds.includes(position.id);
+
 
                     const label = document.createElement('label');
-                    label.htmlFor = `pos-linked-${position.id}`;
+                    label.htmlFor = `pos-${position.id}`;
                     label.textContent = position.name;
                     
                     listItem.append(checkbox, label);
-                    positionLinkedList.appendChild(listItem);
+                    positionList.appendChild(listItem);
                 });
             }
+
+            function populatePositionLinkedList() {
+                positionLinkedList.innerHTML = ''; // Clear existing list
+                workPositions.forEach(pos => {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'position-item-container';
+
+                    // Phần checkbox
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = `pos-linked-${pos.id}`;
+                    checkbox.value = pos.id;
+                    checkbox.dataset.id = pos.id;
+                    checkbox.dataset.name = pos.name;
+
+                    const label = document.createElement('label');
+                    label.htmlFor = `pos-linked-${pos.id}`;
+                    label.textContent = pos.name;
+
+                    // Container cho các điều khiển task (ẩn)
+                    const optionsDiv = document.createElement('div');
+                    optionsDiv.className = 'linked-task-options';
+
+                    const taskToggleBtn = document.createElement('button');
+                    taskToggleBtn.type = 'button';
+                    taskToggleBtn.className = 'btn task-toggle-btn';
+                    taskToggleBtn.textContent = 'Task giống với vị trí chính';
+
+                    const differentTaskContainerInner = document.createElement('div');
+                    differentTaskContainerInner.className = 'different-task-container-inner';
+                    differentTaskContainerInner.innerHTML = `
+                        <div class="form-group">
+                            <label>Chọn Group</label>
+                            <select class="linked-task-group-select" data-id="${pos.id}"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Chọn Task</label>
+                            <select class="linked-task-select" data-id="${pos.id}"></select>
+                        </div>`;
+
+                    optionsDiv.append(taskToggleBtn, differentTaskContainerInner);
+                    listItem.append(checkbox, label, optionsDiv);
+                    positionLinkedList.appendChild(listItem);
+
+                    // --- Logic cho từng item ---
+                    const groupSelect = listItem.querySelector('.linked-task-group-select');
+                    const taskSelect = listItem.querySelector('.linked-task-select');
+
+                    // Đổ dữ liệu dropdown
+                    populateDropdown(groupSelect, taskGroupsData.map(g => ({ value: g.id, text: g.code })));
+                    populateLinkedTasks(groupSelect, taskSelect);
+                    groupSelect.addEventListener('change', () => populateLinkedTasks(groupSelect, taskSelect));
+
+                    // Sự kiện cho checkbox để hiển thị/ẩn phần task
+                    checkbox.addEventListener('change', () => {
+                        listItem.classList.toggle('selected', checkbox.checked);
+                    });
+
+                    // Sự kiện cho nút toggle
+                    taskToggleBtn.addEventListener('click', () => {
+                        const isDifferentTask = taskToggleBtn.classList.toggle('active');
+                        differentTaskContainerInner.classList.toggle('visible', isDifferentTask);
+                        taskToggleBtn.textContent = isDifferentTask ? 'Task khác' : 'Task giống với vị trí chính';
+                    });
+                });
+            }
+
+            function populateLinkedTasks(groupSelect, taskSelect) {
+                const selectedGroupId = groupSelect.value;
+                const selectedGroup = taskGroupsData.find(group => group.id === selectedGroupId);
+                
+                if (selectedGroup && selectedGroup.tasks) {
+                    const options = selectedGroup.tasks.map(task => ({ value: task.manual_number, text: task.name }));
+                    populateDropdown(taskSelect, options);
+                } else {
+                    taskSelect.innerHTML = ''; // Xóa danh sách task nếu không tìm thấy group
+                }
+            }
+
 
             function updateCoeffValue() {
                 const selectedTypeName = frequencyTypeSelect.value;
@@ -554,9 +761,24 @@
             updateBtn.addEventListener('click', () => {
                 const formData = new FormData(editTaskForm);
                 const data = Object.fromEntries(formData.entries());
-                // Thêm cả position đã chọn vào dữ liệu
-                data.taskPosition = selectedPositionId;
-                data.taskPositionLinked = selectedPositionLinkedIds;
+
+                // Thu thập dữ liệu từ các position linked đã chọn (nếu popup được dùng nội bộ)
+                const checkedItems = positionLinkedList.querySelectorAll('.position-item-container.selected');
+                if (checkedItems.length > 0) {
+                    selectedPositionLinked = {}; // Reset
+                    checkedItems.forEach(item => {
+                        const checkbox = item.querySelector('input[type="checkbox"]');
+                        const positionId = checkbox.dataset.id;
+                        const taskToggleBtn = item.querySelector('.task-toggle-btn');
+                        const isDifferent = taskToggleBtn.classList.contains('active');
+                        selectedPositionLinked[positionId] = { isDifferent: isDifferent, group: isDifferent ? item.querySelector('.linked-task-group-select').value : null, task: isDifferent ? item.querySelector('.linked-task-select').value : null };
+                    });
+                }
+
+                data.taskPosition = selectedPositionIds;
+                data.taskPositionLinked = selectedPositionLinked;
+                data.timeframe = selectedTimeframe;
+
                 console.log('Dữ liệu form:', data);
                 hidePopup();
             });
@@ -570,29 +792,63 @@
             reUnitInput.addEventListener('input', updateManhourFormula);
             storeParameterSelect.addEventListener('change', updateManhourFormula);
 
+            // --- Timeframe Select Popup Logic ---
+            const showTimeframePopup = () => timeframeSelectModal.classList.add('visible');
+            const hideTimeframePopup = () => timeframeSelectModal.classList.remove('visible');
+
+            openTimeframeSelectBtn.addEventListener('click', showTimeframePopup);
+            closeTimeframeSelectBtn.addEventListener('click', hideTimeframePopup);
+
+            confirmTimeframeBtn.addEventListener('click', () => {
+                if (selectedTimeframe) {
+                    openTimeframeSelectBtn.textContent = selectedTimeframe;
+                }
+                hideTimeframePopup();
+            });
+
+            timeframeList.addEventListener('click', (event) => {
+                if (event.target.tagName === 'LI') {
+                    // Bỏ chọn tất cả các item khác
+                    timeframeList.querySelectorAll('li').forEach(li => li.style.backgroundColor = '');
+                    // Tô nền item được chọn
+                    event.target.style.backgroundColor = '#e0e7ff';
+                    selectedTimeframe = event.target.dataset.value;
+                }
+            });
 
             // --- Position Select Popup Logic ---
             const showPositionPopup = () => positionSelectModal.classList.add('visible');
             const hidePositionPopup = () => positionSelectModal.classList.remove('visible');
 
-            openPositionSelectBtn.addEventListener('click', showPositionPopup);
+            openPositionSelectBtn.addEventListener('click', () => {
+                window.location.href = 'Popup-Task-Position.html';
+            });
             closePositionSelectBtn.addEventListener('click', hidePositionPopup);
             confirmPositionBtn.addEventListener('click', () => {
-                if (selectedPositionId) {
-                    const selectedPosition = workPositions.find(p => p.id === selectedPositionId);
-                    openPositionSelectBtn.textContent = selectedPosition.name;
+                const count = selectedPositionIds.length;
+                if (count === 0) {
+                    openPositionSelectBtn.textContent = 'Select Position';
+                } else {
+                    const selectedNames = selectedPositionIds.map(id => {
+                        const position = workPositions.find(p => p.id === id);
+                        return position ? position.name : '';
+                    }).filter(name => name); // Lọc ra các tên hợp lệ
+                    openPositionSelectBtn.textContent = selectedNames.join(', ');
                 }
                 hidePositionPopup();
             });
 
             // Logic chọn item trong danh sách
-            positionList.addEventListener('click', (event) => {
-                if (event.target.tagName === 'LI') {
-                    // Bỏ chọn tất cả các item khác
-                    positionList.querySelectorAll('li').forEach(li => li.style.backgroundColor = '');
-                    // Tô nền item được chọn
-                    event.target.style.backgroundColor = '#e0e7ff';
-                    selectedPositionId = event.target.dataset.id;
+            positionList.addEventListener('change', (event) => {
+                if (event.target.type === 'checkbox') {
+                    const positionId = event.target.dataset.id;
+                    if (event.target.checked) {
+                        if (!selectedPositionIds.includes(positionId)) {
+                            selectedPositionIds.push(positionId);
+                        }
+                    } else {
+                        selectedPositionIds = selectedPositionIds.filter(id => id !== positionId);
+                    }
                 }
             });
             
@@ -600,37 +856,39 @@
             const showPositionLinkedPopup = () => positionLinkedSelectModal.classList.add('visible');
             const hidePositionLinkedPopup = () => positionLinkedSelectModal.classList.remove('visible');
 
-            openPositionLinkedSelectBtn.addEventListener('click', showPositionLinkedPopup);
+            openPositionLinkedSelectBtn.addEventListener('click', () => {
+                window.location.href = 'Popup-Task-Position-Linked.html';
+            });
             closePositionLinkedSelectBtn.addEventListener('click', hidePositionLinkedPopup);
 
-            positionLinkedList.addEventListener('change', (event) => {
-                if (event.target.type === 'checkbox') {
-                    const positionId = event.target.dataset.id;
-                    if (event.target.checked) {
-                        if (!selectedPositionLinkedIds.includes(positionId)) {
-                            selectedPositionLinkedIds.push(positionId);
-                        }
-                    } else {
-                        selectedPositionLinkedIds = selectedPositionLinkedIds.filter(id => id !== positionId);
-                    }
-                }
-            });
-
+            // Cập nhật dữ liệu và hiển thị khi nhấn "Xác nhận"
             confirmPositionLinkedBtn.addEventListener('click', () => {
-                const count = selectedPositionLinkedIds.length;
+                const selectedPositions = [];
+                const checkedItems = positionLinkedList.querySelectorAll('.position-item-container.selected');
+
+                checkedItems.forEach(item => {
+                    const checkbox = item.querySelector('input[type="checkbox"]');
+                    selectedPositions.push(checkbox.dataset.name);
+                });
+
+                const count = selectedPositions.length;
                 if (count === 0) {
                     openPositionLinkedSelectBtn.textContent = 'Select Linked Position';
                 } else {
-                    openPositionLinkedSelectBtn.textContent = `${count} position(s) selected`;
+                    // Hiển thị tên các position đã chọn
+                    openPositionLinkedSelectBtn.textContent = selectedPositions.join(', ');
                 }
+
                 hidePositionLinkedPopup();
             });
-
 
             // --- Initial Load ---
             fetchData();
             // Để test, hiển thị popup chính ngay khi tải
             modalOverlay.classList.add('visible');
+
+            // Kiểm tra dữ liệu trả về từ các trang popup
+            checkDataFromPopup();
         });
     </script>
 </body>
