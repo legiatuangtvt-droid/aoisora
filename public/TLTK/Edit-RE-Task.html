@@ -289,8 +289,8 @@
 
                     <!-- Row 5 -->
                     <div class="form-group full-width">
-                        <label for="manhourFormula">Manhour Budget Formula (hour)</label>
-                        <input type="text" id="manhourFormula" name="manhourFormula" disabled>
+                        <label for="manhourFormula">Manhour Budget (hour)</label>
+                        <input type="text" id="manhourFormula" name="manhourBudget" disabled>
                     </div>
 
                     <!-- Row 6 -->
@@ -383,6 +383,11 @@
             const taskTypeSelect = document.getElementById('taskType');
             const frequencyTypeSelect = document.getElementById('frequencyType');
             const frequencyCoeffInput = document.getElementById('frequencyCoeff');
+            const storeParameterSelect = document.getElementById('storeParameter');
+            const frequencyCountInput = document.getElementById('frequencyCount');
+            const reUnitInput = document.getElementById('reUnit');
+            const manhourBudgetInput = document.getElementById('manhourFormula');
+
 
 
             // --- Elements for Position Select Popup ---
@@ -403,6 +408,22 @@
             let selectedPositionId = null;
             let selectedPositionLinkedIds = [];
 
+            // --- Mock Data (moved to higher scope) ---
+            const mockStoreParameters = [
+                { name: "Store Code", simulatedValue: "S001" },
+                { name: "Store Name", simulatedValue: "AEON Binh Tan" },
+                { name: "Size", simulatedValue: 25000 },
+                { name: "Fulltime HC", simulatedValue: 150 },
+                { name: "Partime HC", simulatedValue: 300 },
+                { name: "Total CTM Number", simulatedValue: 1280 },
+                { name: "Hourly CTM Number", simulatedValue: 150 },
+                { name: "Receving Dry Caton", simulatedValue: 500 },
+                { name: "Dry Oricon", simulatedValue: 800 },
+                { name: "Supplier Number perish", simulatedValue: 45 },
+                { name: "GE Number", simulatedValue: 20 },
+                { name: "Gondola Number", simulatedValue: 300 },
+                { name: "Number of product (Perish)", simulatedValue: 1200 }
+            ];
             // --- Mock Data ---
             const mockFrequencyTypes = [
                 { name: 'Daily', coeff: 1 },
@@ -418,19 +439,27 @@
                 const mockGroups = ["POS", "PERI", "DRY", "MMD", "LEADER", "QC-FSH", "DELICA", "D&D", "OTHER"];
                 populateDropdown(taskGroupSelect, mockGroups.map(g => ({ value: g, text: g })));
 
+                // Sử dụng mock data cho Task Type
+                const mockTaskTypes = ["CTM", "Fixed", "Product"];
+                populateDropdown(taskTypeSelect, mockTaskTypes.map(t => ({ value: t, text: t })));
+
                 // Sử dụng mock data cho Frequency Type
                 populateDropdown(frequencyTypeSelect, mockFrequencyTypes.map(f => ({ value: f.name, text: f.name })));
                 
+                // Sử dụng mock data cho Store Parameter
+                populateDropdown(storeParameterSelect, mockStoreParameters.map(p => ({ value: p.name, text: p.name })));
+
                 // Cập nhật giá trị Coeff ban đầu
                 updateCoeffValue();
+
+                // Cập nhật công thức Manhour ban đầu
+                updateManhourFormula();
 
 
                 try {
                     // Vẫn fetch data.json để lấy work_positions
                     const response = await fetch('/data.json');
                     const data = await response.json();
-
-                    // Tạm thời bỏ qua việc đổ dữ liệu cho Task Type và Task Name
 
                     // Đổ dữ liệu cho các popup chọn vị trí
                     workPositions = data.work_positions;
@@ -490,6 +519,25 @@
                     frequencyCoeffInput.value = selectedType.coeff;
                 }
             }
+
+            function updateManhourFormula() {
+                const coeff = frequencyCoeffInput.value || 0;
+                const count = frequencyCountInput.value || 0;
+                const reUnit = reUnitInput.value || 0;
+                const param = storeParameterSelect.value;
+                
+                // Tính toán kết quả số thực
+                const selectedParam = mockStoreParameters.find(p => p.name === param);
+                if (selectedParam && typeof selectedParam.simulatedValue === 'number') {
+                    const paramValue = selectedParam.simulatedValue;
+                    // Tính tổng số phút, sau đó chia cho 60 để ra số giờ
+                    const result = (parseFloat(coeff) * parseFloat(count) * parseFloat(reUnit) * paramValue) / 60;
+                    manhourBudgetInput.value = result.toFixed(2); // Làm tròn đến 2 chữ số thập phân
+                } else {
+                    // Nếu tham số không có giá trị số (ví dụ: Store Code), hiển thị 0
+                    manhourBudgetInput.value = (0).toFixed(2);
+                }
+            }
  
             // --- Main Popup Logic ---
             const hidePopup = () => {
@@ -517,7 +565,13 @@
             });
 
             // --- Form Field Logic ---
-            frequencyTypeSelect.addEventListener('change', updateCoeffValue);
+            frequencyTypeSelect.addEventListener('change', () => {
+                updateCoeffValue();
+                updateManhourFormula(); // Cập nhật lại công thức khi Coeff thay đổi
+            });
+            frequencyCountInput.addEventListener('input', updateManhourFormula);
+            reUnitInput.addEventListener('input', updateManhourFormula);
+            storeParameterSelect.addEventListener('change', updateManhourFormula);
 
 
             // --- Position Select Popup Logic ---
