@@ -447,7 +447,7 @@
                 populateDropdown(frequencyTypeSelect, mockFrequencyTypes.map(f => ({ value: f.name, text: f.name })));
                 
                 // Sử dụng mock data cho Store Parameter
-                populateDropdown(storeParameterSelect, mockStoreParameters.map(p => ({ value: p.name, text: p.name })));
+                populateDropdown(storeParameterSelect, mockStoreParameters.map(p => ({ value: p.name, text: `${p.name} (${p.simulatedValue})` })));
 
                 // Cập nhật giá trị Coeff ban đầu
                 updateCoeffValue();
