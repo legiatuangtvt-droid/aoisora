@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chỉnh sửa RE Task</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f5f7;
+        }
+ 
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+        }
+ 
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Thêm style để ẩn popup chọn vị trí ban đầu */
+        #positionSelectModal {
+            z-index: 1100; /* Đảm bảo popup này nổi trên popup chính */
+        }
+
+        #positionLinkedSelectModal {
+            z-index: 1100;
+        }
+
+ 
+        .modal-content {
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 600px;
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+            border: 1px solid #e5e7eb;
+        }
+ 
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 16px 24px;
+        }
+
+        .modal-overlay.visible .modal-content {
+            transform: scale(1);
+        }
+ 
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #111827;
+        }
+ 
+        .close-btn {
+            font-size: 24px;
+            font-weight: bold;
+            color: #6b7280;
+            cursor: pointer;
+            background: transparent;
+            border: none;
+        }
+ 
+        .modal-body {
+            padding: 16px 24px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+ 
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+ 
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+ 
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+ 
+        .form-group label {
+            margin-bottom: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+        }
+ 
+        .form-group input,
+        .form-group select,
+        .form-group textarea,
+        .form-group .btn {
+            width: 100%;
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background-color: #fff;
+            box-sizing: border-box;
+        }
+ 
+        .form-group input:disabled {
+            background-color: #f3f4f6;
+            cursor: not-allowed;
+        }
+ 
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+ 
+        .form-group .btn {
+            background-color: #f3f4f6;
+            cursor: pointer;
+            text-align: left;
+            color: #374151;
+            font-weight: 500;
+        }
+ 
+        .form-group .btn:hover {
+            background-color: #e5e7eb;
+        }
+ 
+        .frequency-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            align-items: flex-end;
+        }
+ 
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 16px 24px;
+            border-top: 1px solid #e5e7eb;
+        }
+ 
+        .btn {
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+ 
+        .btn-primary {
+            background-color: #4f46e5;
+            color: #fff;
+        }
+ 
+        .btn-primary:hover {
+            background-color: #4338ca;
+        }
+ 
+        .btn-secondary {
+            background-color: #fff;
+            color: #374151;
+            border-color: #d1d5db;
+        }
+ 
+        .btn-secondary:hover {
+            background-color: #f9fafb;
+        }
+
+        /* CSS cho popup chọn vị trí */
+        .position-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 40vh;
+            overflow-y: auto;
+        }
+
+        .position-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            font-size: 16px;
+        }
+
+        .position-item:hover {
+            background-color: #f9fafb;
+        }
+
+        .position-item:last-child {
+            border-bottom: none;
+        }
+
+        /* CSS cho mục có checkbox */
+        .position-item-checkbox {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+        }
+
+        .position-item-checkbox input[type="checkbox"] {
+            margin-right: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div id="editTaskModal" class="modal-overlay visible">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Chỉnh sửa RE Task</h2>
+                <button id="closePopupBtn" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editTaskForm" class="form-grid">
+                    <!-- Row 1 -->
+                    <div class="form-group">
+                        <label for="taskGroup">Group</label>
+                        <select id="taskGroup" name="taskGroup"></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="taskType">Task Type</label>
+                        <select id="taskType" name="taskType"></select>
+                    </div>
+
+                    <!-- Row 2: Task Name -->
+                    <div class="form-group full-width">
+                        <label for="taskName">Task Name</label>
+                        <input type="text" id="taskName" name="taskName">
+                    </div>
+
+
+                    <!-- Row 3 -->
+                    <div class="form-group full-width">
+                        <label>Frequency</label>
+                        <div class="frequency-group">
+                            <div class="form-group">
+                                <label for="frequencyType">Type</label>
+                                <select id="frequencyType" name="frequencyType"></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="frequencyCoeff">Coeff</label>
+                                <input type="number" id="frequencyCoeff" name="frequencyCoeff" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label for="frequencyCount">Count</label>
+                                <input type="number" id="frequencyCount" name="frequencyCount">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 4 -->
+                    <div class="form-group">
+                        <label for="reUnit">RE Unit (min)</label>
+                        <input type="number" id="reUnit" name="reUnit">
+                    </div>
+                    <div class="form-group">
+                        <label for="storeParameter">Store Parameter</label>
+                        <select id="storeParameter" name="storeParameter"></select>
+                    </div>
+
+                    <!-- Row 5 -->
+                    <div class="form-group full-width">
+                        <label for="manhourFormula">Manhour Budget Formula (hour)</label>
+                        <input type="text" id="manhourFormula" name="manhourFormula" disabled>
+                    </div>
+
+                    <!-- Row 6 -->
+                    <div class="form-group">
+                        <label for="taskPosition">Task Position</label>
+                        <button type="button" id="taskPosition" class="btn">Select Position</button>
+                    </div>
+                    <div class="form-group">
+                        <label for="taskPositionLinked">Task Position Linked</label>
+                        <button type="button" id="taskPositionLinked" class="btn">Select Linked Position</button>
+                    </div>
+
+                    <!-- Row 7 -->
+                    <div class="form-group">
+                        <label for="timeframe">Timeframe</label>
+                        <input type="text" id="timeframe" name="timeframe">
+                    </div>
+                    <div class="form-group">
+                        <label for="manualNumber">Manual Number</label>
+                        <input type="text" id="manualNumber" name="manualNumber">
+                    </div>
+
+                    <!-- Row 8 -->
+                    <div class="form-group full-width">
+                        <label for="manualLink">Manual Link</label>
+                        <input type="url" id="manualLink" name="manualLink">
+                    </div>
+
+                    <!-- Row 9 -->
+                    <div class="form-group full-width">
+                        <label for="taskDescription">Task Description</label>
+                        <textarea id="taskDescription" name="taskDescription"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelBtn" class="btn btn-secondary">Hủy</button>
+                <button id="updateBtn" class="btn btn-primary">Cập nhật</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popup chọn Task Position -->
+    <div id="positionSelectModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Select Task Position</h2>
+                <button id="closePositionSelectBtn" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 0;">
+                <ul id="positionList" class="position-list">
+                    <!-- Danh sách vị trí sẽ được chèn vào đây -->
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button id="confirmPositionBtn" class="btn btn-primary">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popup chọn Task Position Linked (chọn nhiều) -->
+    <div id="positionLinkedSelectModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Select Task Position Linked</h2>
+                <button id="closePositionLinkedSelectBtn" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 0;">
+                <ul id="positionLinkedList" class="position-list">
+                    <!-- Danh sách vị trí với checkbox sẽ được chèn vào đây -->
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button id="confirmPositionLinkedBtn" class="btn btn-primary">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // --- Elements for Main Popup ---
+            const modalOverlay = document.getElementById('editTaskModal');
+            const closePopupBtn = document.getElementById('closePopupBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+            const updateBtn = document.getElementById('updateBtn');
+            const editTaskForm = document.getElementById('editTaskForm');
+
+            // --- Elements for Form Fields ---
+            const taskGroupSelect = document.getElementById('taskGroup');
+            const taskTypeSelect = document.getElementById('taskType');
+            const frequencyTypeSelect = document.getElementById('frequencyType');
+            const frequencyCoeffInput = document.getElementById('frequencyCoeff');
+
+
+            // --- Elements for Position Select Popup ---
+            const positionSelectModal = document.getElementById('positionSelectModal');
+            const openPositionSelectBtn = document.getElementById('taskPosition');
+            const closePositionSelectBtn = document.getElementById('closePositionSelectBtn');
+            const confirmPositionBtn = document.getElementById('confirmPositionBtn');
+            const positionList = document.getElementById('positionList');
+
+            // --- Elements for Position Linked Select Popup ---
+            const positionLinkedSelectModal = document.getElementById('positionLinkedSelectModal');
+            const openPositionLinkedSelectBtn = document.getElementById('taskPositionLinked');
+            const closePositionLinkedSelectBtn = document.getElementById('closePositionLinkedSelectBtn');
+            const confirmPositionLinkedBtn = document.getElementById('confirmPositionLinkedBtn');
+            const positionLinkedList = document.getElementById('positionLinkedList');
+            
+            let workPositions = [];
+            let selectedPositionId = null;
+            let selectedPositionLinkedIds = [];
+
+            // --- Mock Data ---
+            const mockFrequencyTypes = [
+                { name: 'Daily', coeff: 1 },
+                { name: 'Weekly', coeff: (1/7).toFixed(4) },
+                { name: 'Monthly', coeff: (1/30).toFixed(4) },
+                { name: 'Yearly', coeff: (1/365).toFixed(4) }
+            ];
+
+
+            // --- Data Loading ---
+            async function fetchData() {
+                // Sử dụng mock data cho Group
+                const mockGroups = ["POS", "PERI", "DRY", "MMD", "LEADER", "QC-FSH", "DELICA", "D&D", "OTHER"];
+                populateDropdown(taskGroupSelect, mockGroups.map(g => ({ value: g, text: g })));
+
+                // Sử dụng mock data cho Frequency Type
+                populateDropdown(frequencyTypeSelect, mockFrequencyTypes.map(f => ({ value: f.name, text: f.name })));
+                
+                // Cập nhật giá trị Coeff ban đầu
+                updateCoeffValue();
+
+
+                try {
+                    // Vẫn fetch data.json để lấy work_positions
+                    const response = await fetch('/data.json');
+                    const data = await response.json();
+
+                    // Tạm thời bỏ qua việc đổ dữ liệu cho Task Type và Task Name
+
+                    // Đổ dữ liệu cho các popup chọn vị trí
+                    workPositions = data.work_positions;
+                    populatePositionList();
+                    populatePositionLinkedList();
+                } catch (error) {
+                    console.error('Error fetching data.json:', error);
+                }
+            }
+
+            // --- UI Population Functions ---
+            function populateDropdown(selectElement, options) {
+                selectElement.innerHTML = '';
+                options.forEach(opt => {
+                    const option = document.createElement('option');
+                    option.value = opt.value;
+                    option.textContent = opt.text;
+                    selectElement.appendChild(option);
+                });
+            }
+
+            function populatePositionList() {
+                positionList.innerHTML = ''; // Clear existing list
+                workPositions.forEach(position => {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'position-item';
+                    listItem.textContent = position.name;
+                    listItem.dataset.id = position.id;
+                    positionList.appendChild(listItem);
+                });
+            }
+
+            function populatePositionLinkedList() {
+                positionLinkedList.innerHTML = ''; // Clear existing list
+                workPositions.forEach(position => {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'position-item-checkbox';
+
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = `pos-linked-${position.id}`;
+                    checkbox.dataset.id = position.id;
+
+                    const label = document.createElement('label');
+                    label.htmlFor = `pos-linked-${position.id}`;
+                    label.textContent = position.name;
+                    
+                    listItem.append(checkbox, label);
+                    positionLinkedList.appendChild(listItem);
+                });
+            }
+
+            function updateCoeffValue() {
+                const selectedTypeName = frequencyTypeSelect.value;
+                const selectedType = mockFrequencyTypes.find(f => f.name === selectedTypeName);
+                if (selectedType) {
+                    frequencyCoeffInput.value = selectedType.coeff;
+                }
+            }
+ 
+            // --- Main Popup Logic ---
+            const hidePopup = () => {
+                modalOverlay.classList.remove('visible');
+                console.log("Popup is closing.");
+            };
+ 
+            closePopupBtn.addEventListener('click', hidePopup);
+            cancelBtn.addEventListener('click', hidePopup);
+ 
+            modalOverlay.addEventListener('click', (event) => {
+                if (event.target === modalOverlay) {
+                    hidePopup();
+                }
+            });
+ 
+            updateBtn.addEventListener('click', () => {
+                const formData = new FormData(editTaskForm);
+                const data = Object.fromEntries(formData.entries());
+                // Thêm cả position đã chọn vào dữ liệu
+                data.taskPosition = selectedPositionId;
+                data.taskPositionLinked = selectedPositionLinkedIds;
+                console.log('Dữ liệu form:', data);
+                hidePopup();
+            });
+
+            // --- Form Field Logic ---
+            frequencyTypeSelect.addEventListener('change', updateCoeffValue);
+
+
+            // --- Position Select Popup Logic ---
+            const showPositionPopup = () => positionSelectModal.classList.add('visible');
+            const hidePositionPopup = () => positionSelectModal.classList.remove('visible');
+
+            openPositionSelectBtn.addEventListener('click', showPositionPopup);
+            closePositionSelectBtn.addEventListener('click', hidePositionPopup);
+            confirmPositionBtn.addEventListener('click', () => {
+                if (selectedPositionId) {
+                    const selectedPosition = workPositions.find(p => p.id === selectedPositionId);
+                    openPositionSelectBtn.textContent = selectedPosition.name;
+                }
+                hidePositionPopup();
+            });
+
+            // Logic chọn item trong danh sách
+            positionList.addEventListener('click', (event) => {
+                if (event.target.tagName === 'LI') {
+                    // Bỏ chọn tất cả các item khác
+                    positionList.querySelectorAll('li').forEach(li => li.style.backgroundColor = '');
+                    // Tô nền item được chọn
+                    event.target.style.backgroundColor = '#e0e7ff';
+                    selectedPositionId = event.target.dataset.id;
+                }
+            });
+            
+            // --- Position Linked Select Popup Logic ---
+            const showPositionLinkedPopup = () => positionLinkedSelectModal.classList.add('visible');
+            const hidePositionLinkedPopup = () => positionLinkedSelectModal.classList.remove('visible');
+
+            openPositionLinkedSelectBtn.addEventListener('click', showPositionLinkedPopup);
+            closePositionLinkedSelectBtn.addEventListener('click', hidePositionLinkedPopup);
+
+            positionLinkedList.addEventListener('change', (event) => {
+                if (event.target.type === 'checkbox') {
+                    const positionId = event.target.dataset.id;
+                    if (event.target.checked) {
+                        if (!selectedPositionLinkedIds.includes(positionId)) {
+                            selectedPositionLinkedIds.push(positionId);
+                        }
+                    } else {
+                        selectedPositionLinkedIds = selectedPositionLinkedIds.filter(id => id !== positionId);
+                    }
+                }
+            });
+
+            confirmPositionLinkedBtn.addEventListener('click', () => {
+                const count = selectedPositionLinkedIds.length;
+                if (count === 0) {
+                    openPositionLinkedSelectBtn.textContent = 'Select Linked Position';
+                } else {
+                    openPositionLinkedSelectBtn.textContent = `${count} position(s) selected`;
+                }
+                hidePositionLinkedPopup();
+            });
+
+
+            // --- Initial Load ---
+            fetchData();
+            // Để test, hiển thị popup chính ngay khi tải
+            modalOverlay.classList.add('visible');
+        });
+    </script>
+</body>
+</html>
