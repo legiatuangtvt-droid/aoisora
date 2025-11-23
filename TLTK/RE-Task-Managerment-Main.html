@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Màn hình chính: RE Task List Management</title>
+    <style>
+        /* CSS Cơ sở và Reset */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f4f4f9;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        /* --- Header và Versioning Status --- */
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background-color: white;
+            border-bottom: 1px solid #ddd;
+            border-radius: 8px 8px 0 0;
+            margin-bottom: 15px;
+        }
+
+        .title-group h2 {
+            margin: 0 0 5px 0;
+            color: #333;
+        }
+
+        .version-status {
+            font-size: 14px;
+            color: #007bff;
+            font-weight: 600;
+        }
+
+        .version-status.locked {
+            color: #dc3545;
+        }
+
+        /* --- Action Buttons (P00-T1, P00-T2) --- */
+        .action-bar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 10px 18px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            border: none;
+            transition: background-color 0.2s;
+        }
+
+        .btn-add { /* Thêm Task (P00-T1) */
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-apply { /* Áp dụng Version (P00-T2) */
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            color: #666;
+        }
+
+        /* --- Grid Table --- */
+        .task-grid-container {
+            background-color: white;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .task-grid {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        .task-grid th, .task-grid td {
+            padding: 12px 15px;
+            border: 1px solid #eee;
+            text-align: left;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .task-grid th {
+            background-color: #f1f1f1;
+            font-weight: 600;
+            color: #333;
+            position: sticky;
+            top: 0;
+        }
+
+        .task-grid tbody tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        .col-task-name { width: 25%; }
+        .col-group, .col-type { width: 10%; }
+        .col-freq, .col-re-unit { width: 8%; text-align: right; }
+        .col-actions { width: 10%; text-align: center; }
+
+        .btn-action {
+            padding: 5px 8px;
+            font-size: 12px;
+            margin: 0 2px;
+            border-radius: 3px;
+            background-color: #ffc107;
+            color: #333;
+        }
+        
+        .btn-action.delete {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        /* --- Scrollbar cho Bảng --- */
+        .scrollable-table {
+            max-height: 500px; /* Chiều cao tối đa cho bảng */
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <div class="header-section">
+            <div class="title-group">
+                <h2>Quản lý Danh sách Nhiệm vụ Bán lẻ (RE Task List)</h2>
+                <span id="versionStatus" class="version-status">
+                    Phiên bản hiện tại: DRAFT (HQ Staff: Alice)
+                </span>
+            </div>
+            
+            <div class="version-info">
+                <button class="btn btn-secondary">Xem Phiên bản Đã Áp dụng</button>
+            </div>
+        </div>
+
+        <div class="action-bar">
+            <button class="btn btn-add" id="btnAddTask" onclick="openAddTaskModal()" title="P00-T1">
+                + Thêm Task Mới
+            </button>
+            <button class="btn btn-apply" id="btnApplyVersion" onclick="applyVersion()" title="P00-T2">
+                Áp dụng Version
+            </button>
+        </div>
+
+        <div class="task-grid-container">
+            <div class="scrollable-table">
+                <table class="task-grid">
+                    <thead>
+                        <tr>
+                            <th class="col-group">Group (P01)</th>
+                            <th class="col-type">Type Task (P02)</th>
+                            <th class="col-task-name">Task Name (P03)</th>
+                            <th class="col-freq">Frequency Type (P04)</th>
+                            <th class="col-freq">F. Number (P06)</th>
+                            <th class="col-re-unit">RE Unit (min) (P07)</th>
+                            <th class="col-re-unit">Manual Number (P13)</th>
+                            <th class="col-actions">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="taskTableBody">
+                        <tr data-task-id="T001">
+                            <td>A. Opening</td>
+                            <td>Daily Task</td>
+                            <td>Open POS, Check Float and Safe</td>
+                            <td>Daily</td>
+                            <td style="text-align: right;">1</td>
+                            <td style="text-align: right;">15</td>
+                            <td>OP-V1.2</td>
+                            <td class="col-actions">
+                                <button class="btn-action edit" onclick="editTask('T001')">Edit</button>
+                                <button class="btn-action delete" onclick="deleteTask('T001')">Delete</button>
+                            </td>
+                        </tr>
+                        <tr data-task-id="T002">
+                            <td>B. Midday</td>
+                            <td>Weekly Task</td>
+                            <td>Clean Display and Shelf</td>
+                            <td>Weekly</td>
+                            <td style="text-align: right;">1</td>
+                            <td style="text-align: right;">45</td>
+                            <td>CL-S2.0</td>
+                            <td class="col-actions">
+                                <button class="btn-action edit" onclick="editTask('T002')">Edit</button>
+                                <button class="btn-action delete" onclick="deleteTask('T002')">Delete</button>
+                            </td>
+                        </tr>
+                        <tr data-task-id="T003">
+                            <td>C. Closing</td>
+                            <td>Monthly Task</td>
+                            <td>Inventory Check (Random)</td>
+                            <td>Monthly</td>
+                            <td style="text-align: right;">1</td>
+                            <td style="text-align: right;">120</td>
+                            <td>INV-M1.1</td>
+                            <td class="col-actions">
+                                <button class="btn-action edit" onclick="editTask('T003')">Edit</button>
+                                <button class="btn-action delete" onclick="deleteTask('T003')">Delete</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mặc định, Draft Version của Alice, có thể chỉnh sửa
+        let currentVersionID = 0; 
+        const currentHQStaff = 'Alice';
+        let isLocked = false; 
+
+        // Hàm kiểm tra trạng thái khóa (Versioning Lock - P16 Logic)
+        function checkLockStatus() {
+            // Logic: isLocked = (currentVersionID > 0);
+            
+            const btnAdd = document.getElementById('btnAddTask');
+            const btnApply = document.getElementById('btnApplyVersion');
+            const versionStatusElement = document.getElementById('versionStatus');
+            const editButtons = document.querySelectorAll('.btn-action.edit');
+            const deleteButtons = document.querySelectorAll('.btn-action.delete');
+
+            if (isLocked) {
+                // Tình huống: Đang xem một Applied Version (Read-only)
+                btnAdd.disabled = true;
+                btnApply.disabled = true;
+                versionStatusElement.textContent = `Phiên bản: Applied Version V${currentVersionID} (Read-only)`;
+                versionStatusElement.classList.add('locked');
+                editButtons.forEach(btn => btn.disabled = true);
+                deleteButtons.forEach(btn => btn.disabled = true);
+                
+                // Nút Apply lúc này có thể là "Áp dụng cho Model khác"
+                btnApply.textContent = 'Áp dụng cho Model khác';
+            } else {
+                // Tình huống: Đang xem Draft Version của bản thân (Editable)
+                btnAdd.disabled = false;
+                btnApply.disabled = false;
+                versionStatusElement.textContent = `Phiên bản hiện tại: DRAFT (HQ Staff: ${currentHQStaff})`;
+                versionStatusElement.classList.remove('locked');
+                editButtons.forEach(btn => btn.disabled = false);
+                deleteButtons.forEach(btn => btn.disabled = false);
+                btnApply.textContent = 'Áp dụng Version';
+            }
+        }
+
+        // Mô phỏng mở Popup Thêm Task (P00-T1)
+        function openAddTaskModal() {
+            alert("Mở Popup Chi tiết Task (P00) để thêm Task mới.");
+        }
+
+        // Mô phỏng chỉnh sửa Task
+        function editTask(taskId) {
+            alert(`Mở Popup Chi tiết Task (P00) để chỉnh sửa Task: ${taskId}`);
+        }
+
+        // Mô phỏng xóa Task
+        function deleteTask(taskId) {
+            if (confirm(`Bạn có chắc chắn muốn xóa Task ${taskId} không?`)) {
+                alert(`Đã xóa Task ${taskId}.`);
+                // Logic xóa hàng khỏi bảng
+            }
+        }
+
+        // Mô phỏng Áp dụng Version (P00-T2)
+        function applyVersion() {
+            if (isLocked) {
+                alert("Mở hộp thoại để áp dụng phiên bản Read-only này cho một Model khác.");
+                return;
+            }
+            
+            if (confirm("Xác nhận Áp dụng Draft Version này cho Model cửa hàng? Thao tác này sẽ KHÓA chỉnh sửa phiên bản này và tạo bản nháp mới.")) {
+                // Giả lập Backend gán Version ID mới và nhân bản
+                alert("Áp dụng thành công! Version mới được gán ID: 1. Đã tạo Draft Version mới.");
+                
+                // Chuyển sang chế độ Read-only (Mô phỏng xem Version 1 đã được Applied)
+                currentVersionID = 1;
+                isLocked = true; 
+                checkLockStatus();
+            }
+        }
+        
+        // Khởi tạo trạng thái ban đầu khi tải trang
+        checkLockStatus();
+        
+        // Ví dụ: Bật chế độ Read-only để mô phỏng xem Version Đã Áp dụng
+        // isLocked = true; currentVersionID = 5; checkLockStatus();
+    </script>
+</body>
+</html>
