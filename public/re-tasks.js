@@ -1,14 +1,13 @@
 import { db } from './firebase.js';
 import { collection, getDocs, doc, updateDoc, getDoc, writeBatch } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
-
-
 let activeListeners = [];
 let currentEditId = null;
 let domController = null;
 
 // --- Pagination State ---
 let allTasks = [];
+let allGroupCodes = []; // Lưu trữ danh sách các group code
 let filteredTasks = [];
 let currentPage = 1;
 const itemsPerPage = 25; // Hiển thị cố định 10 dòng trên mỗi trang
@@ -19,6 +18,7 @@ const itemsPerPage = 25; // Hiển thị cố định 10 dòng trên mỗi trang
 async function listenForTaskChanges() {
     allTasks = [];
     const taskGroupsSnapshot = await getDocs(collection(db, 'task_groups'));
+    allGroupCodes = taskGroupsSnapshot.docs.map(doc => doc.id); // Lấy và lưu tất cả group code
     const taskGroups = taskGroupsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
     // Lặp qua từng nhóm công việc và thu thập các task
@@ -149,14 +149,35 @@ function openTaskModal(task = null) {
     const modalTitle = document.getElementById('re-task-modal-title');
     const form = document.getElementById('re-task-form');
     const submitButton = form.querySelector('button[type="submit"]');
+    const groupContainer = document.getElementById('task-group-container');
+
+    // Defensive check to ensure all required modal elements are present
+    if (!modal || !modalTitle || !form || !submitButton) {
+        console.error('One or more essential modal elements are missing from the DOM.');
+        window.showToast('Lỗi: Không thể mở form. Giao diện người dùng bị thiếu.', 'error');
+        return;
+    }
+
     form.reset();
+    if (groupContainer) groupContainer.innerHTML = ''; // Xóa nội dung cũ của container
 
     if (task) { // Chế độ Sửa
+        const groupContainer = document.getElementById('task-group-container');
+        if (groupContainer) groupContainer.innerHTML = ''; // Xóa nội dung cũ
         currentEditId = task.id;
         modalTitle.textContent = 'Chỉnh Sửa RE Task';
         submitButton.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Cập nhật';
 
-        document.getElementById('task-group-code').value = task.groupCode || '';
+        // Tạo input chỉ đọc cho chế độ sửa
+        if (groupContainer) {
+            groupContainer.innerHTML = `
+                <label for="task-group-code" class="block text-sm font-medium text-gray-700 mb-1">Group</label>
+                <input type="text" id="task-group-code" name="groupCode" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-gray-100 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" readonly>
+            `;
+            const groupCodeInput = document.getElementById('task-group-code');
+            if (groupCodeInput) groupCodeInput.value = task.groupCode || '';
+        }
+
         document.getElementById('task-type').value = task.typeTask || '';
         document.getElementById('task-name').value = task.name || '';        
         document.getElementById('task-frequency').value = task.frequency || '';        
@@ -169,6 +190,20 @@ function openTaskModal(task = null) {
         currentEditId = null;
         modalTitle.textContent = 'Thêm RE Task Mới';
         submitButton.innerHTML = '<i class="fas fa-plus-circle mr-2"></i>Thêm Task';
+
+        // Tạo select dropdown cho chế độ thêm mới
+        const groupContainer = document.getElementById('task-group-container');
+        const options = allGroupCodes.map(code => `<option value="${code}">${code}</option>`).join('');
+        console.log('Available group codes for selection:', allGroupCodes);
+        if (groupContainer) {
+            groupContainer.innerHTML = `
+                <label for="task-group-code" class="block text-sm font-medium text-gray-700 mb-1">Group<span class="text-red-500">*</span></label>
+                <select id="task-group-code" name="groupCode" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <option value="" disabled selected>-- Chọn Group --</option>
+                    ${options}
+                </select>
+            `;
+        }
     }
 
     modal.classList.remove('hidden');
@@ -191,47 +226,73 @@ async function handleFormSubmit(e) {
 
     try {
         if (isEditMode) {
-            // Logic cập nhật task (đã có)
+            // Logic cập nhật task
+            const [groupCode, originalOrderStr] = currentEditId.split('-');
+            const originalOrder = parseInt(originalOrderStr, 10);
+
+            if (!groupCode || isNaN(originalOrder)) {
+                throw new Error("ID của task không hợp lệ.");
+            }
+
+            const groupDocRef = doc(db, 'task_groups', groupCode);
+            const docSnap = await getDoc(groupDocRef);
+
+            if (!docSnap.exists()) {
+                throw new Error(`Không tìm thấy nhóm công việc với mã: ${groupCode}`);
+            }
+
+            let tasks = docSnap.data().tasks || [];
+            const taskIndex = tasks.findIndex(t => t.order == originalOrder);
+
+            if (taskIndex === -1) {
+                throw new Error(`Không tìm thấy task với order ${originalOrder} trong nhóm.`);
+            }
+
+            tasks[taskIndex].name = document.getElementById('task-name').value;
+            tasks[taskIndex].typeTask = document.getElementById('task-type').value;
+            tasks[taskIndex].frequency = document.getElementById('task-frequency').value;
+            tasks[taskIndex].frequencyNumber = document.getElementById('task-frequency-number').value;
+            tasks[taskIndex].reUnit = document.getElementById('task-re-unit').value;
+            tasks[taskIndex].manual_number = document.getElementById('task-manual-number').value;
+            tasks[taskIndex].manualLink = document.getElementById('task-manual-link').value;
+            tasks[taskIndex].note = document.getElementById('task-note').value;
+
+            await updateDoc(groupDocRef, { tasks: tasks });
+            window.showToast('Đã cập nhật task thành công!', 'success');
+        } else {
+            // Logic thêm task mới
+            const groupCode = document.getElementById('task-group-code').value;
+            if (!groupCode) {
+                throw new Error("Mã nhóm không được để trống.");
+            }
+
+            const groupDocRef = doc(db, 'task_groups', groupCode);
+            const docSnap = await getDoc(groupDocRef);
+
+            if (!docSnap.exists()) {
+                throw new Error(`Nhóm công việc với mã "${groupCode}" không tồn tại.`);
+            }
+
+            let tasks = docSnap.data().tasks || [];
+            const newOrder = tasks.length > 0 ? Math.max(...tasks.map(t => t.order)) + 1 : 1;
+
+            const newTask = {
+                order: newOrder,
+                name: document.getElementById('task-name').value,
+                typeTask: document.getElementById('task-type').value,
+                frequency: document.getElementById('task-frequency').value,
+                frequencyNumber: document.getElementById('task-frequency-number').value,
+                reUnit: document.getElementById('task-re-unit').value,
+                manual_number: document.getElementById('task-manual-number').value,
+                manualLink: document.getElementById('task-manual-link').value,
+                note: document.getElementById('task-note').value,
+            };
+
+            tasks.push(newTask);
+            await updateDoc(groupDocRef, { tasks: tasks });
+            window.showToast('Đã thêm task mới thành công!', 'success');
         }
 
-        // Tách groupCode và order từ currentEditId
-        const [groupCode, originalOrderStr] = currentEditId.split('-');
-        const originalOrder = parseInt(originalOrderStr, 10);
-
-        if (!groupCode || isNaN(originalOrder)) {
-            throw new Error("ID của task không hợp lệ.");
-        }
-
-        const groupDocRef = doc(db, 'task_groups', groupCode);
-        const docSnap = await getDoc(groupDocRef);
-
-        if (!docSnap.exists()) {
-            throw new Error(`Không tìm thấy nhóm công việc với mã: ${groupCode}`);
-        }
-
-        let tasks = docSnap.data().tasks || [];
-        // Sử dụng so sánh lỏng (==) để xử lý trường hợp `order` trong Firestore là string
-        // trong khi `originalOrder` là number.
-        const taskIndex = tasks.findIndex(t => t.order == originalOrder);
-
-        if (taskIndex === -1) {
-            throw new Error(`Không tìm thấy task với order ${originalOrder} trong nhóm.`);
-        }
-
-        // Cập nhật các trường của task
-        tasks[taskIndex].name = document.getElementById('task-name').value;
-        tasks[taskIndex].typeTask = document.getElementById('task-type').value;
-        tasks[taskIndex].frequency = document.getElementById('task-frequency').value;
-        tasks[taskIndex].frequencyNumber = document.getElementById('task-frequency-number').value;
-        tasks[taskIndex].reUnit = document.getElementById('task-re-unit').value;
-        tasks[taskIndex].manual_number = document.getElementById('task-manual-number').value;
-        tasks[taskIndex].manualLink = document.getElementById('task-manual-link').value;
-        tasks[taskIndex].note = document.getElementById('task-note').value;
-
-        // Ghi lại toàn bộ mảng tasks đã được cập nhật
-        await updateDoc(groupDocRef, { tasks: tasks });
-
-        window.showToast('Đã cập nhật task thành công!', 'success');
         hideModal();
         listenForTaskChanges(); // Tải lại dữ liệu để làm mới bảng
 
@@ -474,6 +535,12 @@ export function cleanup() {
 export function init() {
     domController = new AbortController();
     const { signal } = domController;
+
+    // Nút thêm mới
+     document.getElementById('add-task-btn')?.addEventListener('click', () => {
+        openTaskModal(null);
+     }, { signal });
+
 
     listenForTaskChanges();
 
