@@ -4010,7 +4010,7 @@ tr.edit-mode-active .scheduled-task-item.calendar-day:hover {
   }
 }
 
-.btn-purple {
+.btn-auto-gradient {
   /* Tạo một dải màu gradient đẹp mắt */
   background: linear-gradient(-45deg, #8e44ad, #c0392b, #2980b9, #f1c40f);
   /* Kích thước nền lớn hơn 4 lần để có không gian cho animation */
