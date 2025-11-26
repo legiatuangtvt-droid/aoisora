@@ -375,6 +375,9 @@ export async function init() {
     // Khởi tạo tính năng kéo-nhân-bản
     initializeTaskCloning();
 
+    // Khởi tạo modal "Auto Generate"
+    initializeAutoGenerateModal(signal);
+
     const currentUser = window.currentUser;
 
     if (currentUser && (currentUser.roleId === 'REGIONAL_MANAGER' || currentUser.roleId === 'AREA_MANAGER')) {
@@ -516,6 +519,39 @@ export async function init() {
 
     // Gọi lần đầu để đảm bảo các tay nắm được hiển thị đúng khi tải trang
     updateAllResizeHandlesVisibility();
+}
+/**
+ * Khởi tạo các trình xử lý sự kiện cho modal "Auto Generate".
+ * @param {AbortSignal} signal - Signal để hủy các event listener khi cần.
+ */
+function initializeAutoGenerateModal(signal) {
+    const autoGenerateBtn = document.getElementById('auto-generate-btn');
+    const autoGenerateModal = document.getElementById('auto-generate-modal');
+
+    if (!autoGenerateBtn || !autoGenerateModal) return;
+
+    const closeBtn = autoGenerateModal.querySelector('.modal-close-btn');
+    const cancelBtn = autoGenerateModal.querySelector('.modal-cancel-btn');
+
+    const openModal = () => {
+        autoGenerateModal.classList.remove('hidden');
+        autoGenerateModal.classList.add('flex');
+        setTimeout(() => autoGenerateModal.classList.add('show'), 10);
+    };
+
+    const closeModal = () => {
+        autoGenerateModal.classList.remove('show');
+        autoGenerateModal.addEventListener('transitionend', () => autoGenerateModal.classList.add('hidden'), { once: true });
+    };
+
+    autoGenerateBtn.addEventListener('click', openModal, { signal });
+    closeBtn.addEventListener('click', closeModal, { signal });
+    cancelBtn.addEventListener('click', closeModal, { signal });
+    autoGenerateModal.addEventListener('click', (e) => {
+        if (e.target === autoGenerateModal) {
+            closeModal();
+        }
+    }, { signal });
 }
 
 export function cleanup() {

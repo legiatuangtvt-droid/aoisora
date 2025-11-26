@@ -260,6 +260,36 @@
         </div>
     </div>
 
+    <!-- Modal Tự động tạo lịch trình -->
+    <div id="auto-generate-modal" class="modal-overlay hidden">
+        <div class="modal-content max-w-md w-full">
+            <form id="auto-generate-form">
+                <div class="modal-header">
+                    <h3 class="modal-title">Thông số cho Auto Generate</h3>
+                    <button type="button" class="modal-close-btn">&times;</button>
+                </div>
+                <div class="modal-body space-y-4">
+                    <div>
+                        <label for="open-time" class="block text-sm font-medium text-gray-700">Thời gian mở cửa</label>
+                        <input type="time" id="open-time" name="open-time" class="form-input mt-1 w-full" step="1800" value="06:00" required>
+                    </div>
+                    <div>
+                        <label for="close-time" class="block text-sm font-medium text-gray-700">Thời gian đóng cửa</label>
+                        <input type="time" id="close-time" name="close-time" class="form-input mt-1 w-full" step="1800" value="22:00" required>
+                    </div>
+                    <div>
+                        <label for="target-man-hours" class="block text-sm font-medium text-gray-700">Tổng giờ công mong muốn</label>
+                        <input type="number" id="target-man-hours" name="target-man-hours" class="form-input mt-1 w-full" placeholder="Ví dụ: 80" min="1" step="0.5" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary modal-cancel-btn">Hủy</button>
+                    <button type="submit" class="btn btn-indigo"><i class="fas fa-cogs mr-2"></i>Tạo lịch</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <!-- Tải script layout trước để định nghĩa hàm initializeLayout() -->
     <!-- Script entry point, sẽ tự động chọn app phù hợp -->
