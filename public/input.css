@@ -1115,5 +1115,5 @@ html, body {
     background-size: 400% 400%;
     color: white; /* Màu chữ trắng để tương phản */
     /* Áp dụng animation */
-    animation: gradient-animation 10s ease infinite;
+    animation: gradient-animation 5s ease infinite;
 }

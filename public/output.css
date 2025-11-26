@@ -4018,7 +4018,7 @@ tr.edit-mode-active .scheduled-task-item.calendar-day:hover {
   color: white;
   /* Màu chữ trắng để tương phản */
   /* Áp dụng animation */
-  animation: gradient-animation 10s ease infinite;
+  animation: gradient-animation 5s ease infinite;
 }
 
 .placeholder\:text-gray-400::-moz-placeholder {
