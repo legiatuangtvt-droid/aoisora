@@ -3994,6 +3994,33 @@ tr.edit-mode-active .scheduled-task-item.calendar-day:hover {
   /* Lớp này được sử dụng bởi JS để chuyển đổi chế độ xem, không cần @apply block ở đây vì đã có flex ở trên */
 }
 
+/* Keyframes để tạo hiệu ứng chuyển động cho gradient */
+
+@keyframes gradient-animation {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.btn-purple {
+  /* Tạo một dải màu gradient đẹp mắt */
+  background: linear-gradient(-45deg, #8e44ad, #c0392b, #2980b9, #f1c40f);
+  /* Kích thước nền lớn hơn 4 lần để có không gian cho animation */
+  background-size: 400% 400%;
+  color: white;
+  /* Màu chữ trắng để tương phản */
+  /* Áp dụng animation */
+  animation: gradient-animation 10s ease infinite;
+}
+
 .placeholder\:text-gray-400::-moz-placeholder {
   --tw-text-opacity: 1;
   color: rgb(156 163 175 / var(--tw-text-opacity, 1));

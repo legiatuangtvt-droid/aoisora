@@ -404,6 +404,7 @@ export async function init() {
         document.getElementById('new-template-btn')?.classList.remove('hidden');
         document.getElementById('delete-template-btn')?.classList.remove('hidden');
         document.getElementById('toggle-view-btn')?.classList.remove('hidden');
+        document.getElementById('auto-generate-btn')?.classList.remove('hidden');
         // Đặt trạng thái mặc định là "Tạo Mẫu Mới"
         await fetchAndRenderTemplates();
         switchToCreateNewMode();
