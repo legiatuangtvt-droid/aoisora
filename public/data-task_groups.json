@@ -225,11 +225,16 @@
         "tailwind_bg": "bg-red-200", "tailwind_text": "text-red-800", "tailwind_border": "border-red-500"
       },
       "tasks": [
-        { "order": "1", "name": "Lên hàng D&D", "typeTask": "Product", "frequency": "Daily", "frequencyNumber": 2, "reUnit": 30, "manual_number": "DND-001", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 2, "startTime": "", "endTime": "", "allowedPositions": ["Ngành hàng", "Leader"] },
-        { "order": "2", "name": "Kéo mặt D&D", "typeTask": "Product", "frequency": "Daily", "frequencyNumber": 2, "reUnit": 15, "manual_number": "DND-002", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 2, "startTime": "", "endTime": "", "allowedPositions": ["Ngành hàng", "Leader"] },
-        { "order": "3", "name": "Kiểm tra HSD D&D", "typeTask": "Product", "frequency": "Daily", "frequencyNumber": 2, "reUnit": 15, "manual_number": "DND-003", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 1, "startTime": "", "endTime": "", "allowedPositions": ["Ngành hàng", "Leader"] },
-        { "order": "4", "name": "Đặt hàng D&D", "typeTask": "Product", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 20, "manual_number": "DND-004", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 1, "startTime": "", "endTime": "", "allowedPositions": ["Ngành hàng", "Leader"] },
-        { "order": "5", "name": "Làm PC/POP D&D", "typeTask": "Product", "frequency": "Weekly", "frequencyNumber": 1, "reUnit": 30, "manual_number": "DND-005", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 1, "startTime": "", "endTime": "", "allowedPositions": ["Ngành hàng", "Leader"] }
+        { "order": "1", "name": "Lên hàng D&D", "typeTask": "Product", "frequency": "Daily", "frequencyNumber": 2, "reUnit": 30, "manual_number": "DND-001", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 2, "allowedPositions": ["Ngành hàng", "Leader"],
+          "timeWindows": [ { "startTime": "10:00", "endTime": "11:00" } ] },
+        { "order": "2", "name": "Kéo mặt D&D", "typeTask": "Product", "frequency": "Daily", "frequencyNumber": 2, "reUnit": 15, "manual_number": "DND-002", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 2, "allowedPositions": ["Ngành hàng", "Leader"],
+          "timeWindows": [ { "startTime": "07:00", "endTime": "07:15" }, { "startTime": "15:00", "endTime": "15:15" }, { "startTime": "20:00", "endTime": "20:15" } ] },
+        { "order": "3", "name": "Kiểm tra HSD D&D", "typeTask": "Product", "frequency": "Daily", "frequencyNumber": 2, "reUnit": 15, "manual_number": "DND-003", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 1, "allowedPositions": ["Ngành hàng", "Leader"],
+          "timeWindows": [ { "startTime": "20:00", "endTime": "21:00" } ] },
+        { "order": "4", "name": "Đặt hàng D&D", "typeTask": "Product", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 20, "manual_number": "DND-004", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 1, "allowedPositions": ["Ngành hàng", "Leader"],
+          "timeWindows": [ { "startTime": "10:00", "endTime": "11:00" } ] },
+        { "order": "5", "name": "Làm PC/POP D&D", "typeTask": "Product", "frequency": "Weekly", "frequencyNumber": 1, "reUnit": 30, "manual_number": "DND-005", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 1, "allowedPositions": ["Ngành hàng", "Leader"],
+          "timeWindows": [ { "startTime": "15:00", "endTime": "15:15" } ] }
       ]},
     { "id": "OTHER", "order": 9, "code": "OTHER", 
       "color": {
