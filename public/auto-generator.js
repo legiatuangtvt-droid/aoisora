@@ -46,7 +46,9 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
     }
 
     // Sử dụng mã ca đầu tiên có sẵn hoặc một mã mặc định
-    const defaultShiftCode = allShiftCodes.length > 0 ? allShiftCodes[0].code : 'S1';
+    // SỬA LỖI: Đảm bảo defaultShiftCode không bao giờ là undefined.
+    // Nếu allShiftCodes rỗng hoặc phần tử đầu tiên không có 'code', sẽ dùng 'S1' làm giá trị dự phòng.
+    const defaultShiftCode = (allShiftCodes && allShiftCodes.length > 0 && allShiftCodes[0].code) ? allShiftCodes[0].code : 'S1';
 
     // Quy tắc 2: Phân bổ các task dựa trên RE đã tính toán.
     // 1. Tính toán số lượng slot (15 phút) cần thiết cho mỗi task dựa trên RE
