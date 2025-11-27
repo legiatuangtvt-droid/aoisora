@@ -73,8 +73,12 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
                 const taskHours = calculateREForTask(task, groupInfo, reParameters);
                 const numSlots = Math.round(taskHours * 4); // 1 slot = 0.25 giờ
                 if (numSlots > 0) {
+                    // SỬA ĐỔI: Tạo taskCode theo quy tắc mới: 1 + [group.order] + [task.order]
+                    const groupOrder = String(groupInfo.order || '0');
+                    const taskOrder = String(task.order || '0').padStart(2, '0');
+                    const newTaskCode = `1${groupOrder}${taskOrder}`;
                     taskSlotsToPlace.push({
-                        taskCode: task.manual_number || task.code || '', // Ưu tiên manual_number
+                        taskCode: newTaskCode,
                         taskName: task.name,
                         groupId: groupInfo.id, // Lấy id từ chính groupInfo
                         numSlotsRemaining: numSlots,
