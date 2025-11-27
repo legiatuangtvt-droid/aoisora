@@ -173,7 +173,8 @@ export async function updateTemplateFromDOM(manualScheduleData = null, manualShi
             const selectedPositionId = row.querySelector('.work-position-selector')?.value;
             if (shiftId) {
                 // SỬA LỖI: Đảm bảo không có giá trị `undefined` được gửi đến Firestore.
-                // Nếu không có giá trị được chọn, gán một chuỗi rỗng thay vì `undefined`.
+                // Nếu không có giá trị được chọn (ví dụ: khi một dòng mới được thêm vào),
+                // gán một chuỗi rỗng thay vì `undefined`.
                 shiftMappings[shiftId] = { shiftCode: selectedShiftCode || '', positionId: selectedPositionId || '' };
             }
         });
@@ -779,6 +780,11 @@ export async function handleAutoGenerate(openTime, closeTime, targetManHours) {
 
     // Lấy thông tin mẫu hiện tại và các tham số RE
     const currentTemplate = allTemplates.find(t => t.id === currentTemplateId);
+    // SỬA LỖI: Kiểm tra xem mẫu có tồn tại không trước khi tiếp tục
+    if (!currentTemplate) {
+        throw new Error("Không thể tìm thấy dữ liệu mẫu hiện tại để tiến hành tạo lịch.");
+    }
+
     const reParameters = currentTemplate?.reParameters || {};
 
     // 1. Gọi hàm generateSchedule để lấy dữ liệu lịch trình mới

@@ -545,7 +545,7 @@ function initializeAutoGenerateModal(signal) {
         if (currentTemplate && currentTemplate.totalManhour) {
             document.getElementById('target-man-hours').value = currentTemplate.totalManhour;
         } else {
-            document.getElementById('target-man-hours').value = '40';
+            document.getElementById('target-man-hours').value = '80';
         }
 
         autoGenerateModal.classList.remove('hidden');

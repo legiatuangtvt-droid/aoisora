@@ -59,7 +59,7 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
                 const numSlots = Math.round(taskHours * 4); // 1 slot = 0.25 giờ
                 if (numSlots > 0) {
                     taskSlotsToPlace.push({
-                        taskCode: task.code,
+                        taskCode: task.code || '', // SỬA LỖI: Đảm bảo taskCode không phải là undefined
                         taskName: task.name,
                         groupId: groupId,
                         numSlotsRemaining: numSlots,
