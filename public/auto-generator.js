@@ -176,31 +176,28 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
     const concurrentTaskCount = {}; // { "startTime_taskCode": count }
 
     for (const shift of plannedShifts) { // Sửa lỗi: Lặp qua plannedShifts thay vì allAvailableGridSlots
-        // Xáo trộn các slot trong ca này để phân bổ task ngẫu nhiên (Quy tắc 5)
-        const shuffledSlotsInShift = [...shift.availableSlots].sort(() => Math.random() - 0.5);
+        // Xáo trộn các slot trong ca để phân bổ task ngẫu nhiên (Quy tắc 5)
+        const shuffledSlots = [...shift.availableSlots].sort(() => Math.random() - 0.5);
 
-        for (const slot of shuffledSlotsInShift) {
-            if (currentTaskIndex >= taskSlotsToPlace.length) break; // Dừng nếu đã xếp hết task
+        for (const slot of shuffledSlots) {
+            // Lặp qua danh sách các task đã sắp xếp để tìm task phù hợp cho slot này
+            for (let i = 0; i < taskSlotsToPlace.length; i++) {
+                const taskToAssign = taskSlotsToPlace[i];
 
-            let taskToAssign = taskSlotsToPlace[currentTaskIndex];
+                // Bỏ qua nếu task này đã được xếp đủ
+                if (taskToAssign.numSlotsRemaining <= 0) {
+                    continue;
+                }
 
-            // Tìm task tiếp theo còn slot để xếp
-            while (taskToAssign && taskToAssign.numSlotsRemaining <= 0) {
-                currentTaskIndex++;
-                taskToAssign = taskSlotsToPlace[currentTaskIndex];
-            }
-
-            if (taskToAssign) {
-                // --- LOGIC MỚI: Kiểm tra giới hạn concurrentPerformers ---
+                // Kiểm tra giới hạn concurrentPerformers
                 const taskKey = `${slot.startTime}_${taskToAssign.taskCode}`;
                 const currentCount = concurrentTaskCount[taskKey] || 0;
 
-                // Tìm thông tin chi tiết của task để lấy giá trị concurrentPerformers
                 const taskGroup = taskGroupsArray.find(g => g.id === taskToAssign.groupId);
                 const taskInfo = taskGroup?.tasks.find(t => (t.manual_number || t.code) === taskToAssign.taskCode);
                 const limit = taskInfo?.concurrentPerformers;
 
-                // Nếu limit là 0 (không giới hạn) hoặc số lượng hiện tại chưa đạt giới hạn
+                // Nếu có thể xếp task này (không giới hạn hoặc chưa đạt giới hạn)
                 if (limit === 0 || limit === undefined || currentCount < limit) {
                     // Gán task vào slot
                     newScheduleData[slot.shiftId].push({
@@ -210,15 +207,13 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
                         groupId: taskToAssign.groupId
                     });
                     taskToAssign.numSlotsRemaining--;
-
-                    // Tăng bộ đếm cho task này tại thời điểm này
                     concurrentTaskCount[taskKey] = currentCount + 1;
+
+                    // Đã tìm thấy task cho slot này, thoát vòng lặp task và chuyển sang slot tiếp theo
+                    break; 
                 }
-                // Nếu đã đạt giới hạn, không làm gì cả, vòng lặp sẽ chuyển sang slot tiếp theo
-                // và thử lại với cùng một task (hoặc task tiếp theo nếu task hiện tại đã hết slot).
             }
         }
-        if (currentTaskIndex >= taskSlotsToPlace.length) break;
     }
 
     // Cập nhật lại newShiftMappings từ các ca đã được lên kế hoạch
