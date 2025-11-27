@@ -90,7 +90,7 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
                     const newTaskCode = `1${groupOrder}${taskOrder}`;
                     taskSlotsToPlace.push({
                         taskCode: newTaskCode,
-                        taskName: task.name,
+                        taskName: task.name || `Unnamed Task ${newTaskCode}`, // Đảm bảo taskName luôn có giá trị
                         groupId: groupInfo.id, // Lấy id từ chính groupInfo
                         numSlotsRemaining: numSlots,
                         originalNumSlots: numSlots, // Giữ lại số slot gốc để sắp xếp
@@ -227,7 +227,7 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
                     if (availableShift) {
                         newScheduleData[availableShift.shiftId].push({
                             taskCode: pos1Task.taskCode,
-                            taskName: pos1Task.name,
+                            taskName: pos1Task.name || `Unnamed Task ${pos1Task.taskCode}`, // Đảm bảo taskName luôn có giá trị
                             startTime: startTime,
                             groupId: posGroup.id
                         });
@@ -310,7 +310,7 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
                     if (taskToAdd) {
                         newScheduleData[availableShift.shiftId].push({
                             taskCode: taskToAdd.taskCode,
-                            taskName: taskToAdd.name,
+                            taskName: taskToAdd.name || `Unnamed Task ${taskToAdd.taskCode}`, // Đảm bảo taskName luôn có giá trị
                             startTime: startTime,
                             groupId: posGroup.id
                         });
@@ -373,7 +373,7 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
                     if (limit === 0 || limit === undefined || currentCount < limit) {
                         newScheduleData[slot.shiftId].push({
                             taskCode: taskToAssign.taskCode,
-                            taskName: taskToAssign.taskName,
+                            taskName: taskToAssign.taskName || `Unnamed Task ${taskToAssign.taskCode}`, // Đảm bảo taskName luôn có giá trị
                             startTime: slot.startTime,
                             groupId: taskToAssign.groupId
                         });
@@ -391,24 +391,51 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
     scheduleTaskType(taskSlotsToPlace.filter(t => t.typeTask === 'CTM'));
     scheduleTaskType(taskSlotsToPlace.filter(t => t.typeTask === 'Product'));
 
-    // --- GIAI ĐOẠN 3: LẤP ĐẦY CÁC SLOT CÒN TRỐNG ---
-    const fillerTask = {
-        taskCode: '99999',
-        taskName: 'Hỗ trợ khu vực',
-        groupId: 'OTHER' // Giả định có group 'OTHER' cho các task chung
-    };
+    // --- GIAI ĐOẠN 3: LẤP ĐẦY CÁC SLOT CÒN TRỐNG BẰNG CÁC TASK "DAILY" ---
+
+    // 1. Tạo một "bể chứa" các task "Daily" để lấp đầy
+    const scheduledTaskNames = new Set(taskSlotsToPlace.map(t => t.taskName));
+    const dailyFillerTasks = [];
+    taskGroupsArray.forEach(group => {
+        group.tasks?.forEach(task => {
+            // Điều kiện 1: Task phải có frequency là 'Daily'
+            // Điều kiện 2: Task không nằm trong danh sách đã được xếp lịch ở các giai đoạn trước
+            if (task.frequency === 'Daily' && !scheduledTaskNames.has(task.name)) {
+                // EDIT: Thêm điều kiện kiểm tra RE.
+                // Chỉ thêm task vào danh sách lấp đầy nếu RE tính ra lớn hơn 0 slot.
+                const taskHours = calculateREForTask(task, group, reParameters);
+                const numSlots = Math.round(taskHours * 4);
+                if (numSlots > 0) {
+                    dailyFillerTasks.push({
+                        ...task,
+                        taskCode: `1${group.order}${String(task.order).padStart(2, '0')}`,
+                        groupId: group.id
+                    });
+                }
+            }
+        });
+    });
 
     for (const shift of plannedShifts) {
         for (const slot of shift.availableSlots) {
             const isSlotFilled = newScheduleData[shift.shiftId].some(t => t.startTime === slot.startTime);
             if (!isSlotFilled) {
-                // Lấp đầy slot trống bằng task "filler"
-                newScheduleData[shift.shiftId].push({
-                    taskCode: fillerTask.taskCode,
-                    taskName: fillerTask.taskName,
-                    startTime: slot.startTime,
-                    groupId: fillerTask.groupId
-                });
+                const shiftPositionName = positionIdToNameMap[shift.positionId];
+
+                // 3. Tìm một task "Daily" chưa được xếp lịch phù hợp với vị trí công việc
+                const taskToFill = dailyFillerTasks.find(task =>
+                    (task.allowedPositions || []).includes(shiftPositionName)
+                );
+
+                // 4. Chỉ lấp đầy slot nếu tìm thấy một task phù hợp. Nếu không, slot sẽ được để trống.
+                if (taskToFill) {
+                    newScheduleData[shift.shiftId].push({
+                        taskCode: taskToFill.taskCode,
+                        taskName: taskToFill.taskName || `Unnamed Task ${taskToFill.taskCode}`, // Đảm bảo taskName luôn có giá trị
+                        startTime: slot.startTime,
+                        groupId: taskToFill.groupId
+                    });
+                }
             }
         }
     }
