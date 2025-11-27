@@ -45,10 +45,11 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
         throw new Error("Không tìm thấy vị trí công việc 'Staff' mặc định.");
     }
 
-    // Sử dụng mã ca đầu tiên có sẵn hoặc một mã mặc định
-    // SỬA LỖI: Đảm bảo defaultShiftCode không bao giờ là undefined.
-    // Nếu allShiftCodes rỗng hoặc phần tử đầu tiên không có 'code', sẽ dùng 'S1' làm giá trị dự phòng.
-    const defaultShiftCode = (allShiftCodes && allShiftCodes.length > 0 && allShiftCodes[0].code) ? allShiftCodes[0].code : 'S1';
+    // SỬA LỖI & CẢI TIẾN: Chuẩn bị danh sách mã ca để sử dụng lần lượt.
+    // Nếu không có mã ca nào trong hệ thống, sử dụng 'S1' làm giá trị dự phòng duy nhất.
+    const availableShiftCodes = (allShiftCodes && allShiftCodes.length > 0)
+        ? allShiftCodes.map(sc => sc.shiftCode).filter(Boolean) // Lấy danh sách các mã ca hợp lệ
+        : ['S1'];
 
     // Quy tắc 2: Phân bổ các task dựa trên RE đã tính toán.
     // 1. Tính toán số lượng slot (15 phút) cần thiết cho mỗi task dựa trên RE
@@ -94,7 +95,9 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
         const shiftId = `shift-${shiftNum}`;
         // Quy tắc 1: Vị trí công việc trên cùng luôn là Leader
         const positionId = (shiftNum === 1) ? leaderWorkPositionId : defaultStaffWorkPositionId;
-        newShiftMappings[shiftId] = { shiftCode: defaultShiftCode, positionId: positionId };
+        // Lấy mã ca lần lượt từ danh sách có sẵn, quay vòng nếu cần.
+        const shiftCodeForThisRow = availableShiftCodes[(shiftNum - 1) % availableShiftCodes.length];
+        newShiftMappings[shiftId] = { shiftCode: shiftCodeForThisRow, positionId: positionId };
         newScheduleData[shiftId] = [];
 
         for (let currentMinute = openMinutes; currentMinute < closeMinutes; currentMinute += 15) {
