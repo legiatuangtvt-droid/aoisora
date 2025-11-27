@@ -70,6 +70,11 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
     for (const groupInfo of taskGroupsArray) {
         if (groupInfo.tasks && Array.isArray(groupInfo.tasks)) {
             groupInfo.tasks.forEach(task => {
+                // BỎ QUA: Các task POS đặc biệt sẽ được xử lý riêng
+                if (task.name === 'POS 1' || task.name === 'POS 2' || task.name === 'POS 3') {
+                    return;
+                }
+
                 const taskHours = calculateREForTask(task, groupInfo, reParameters);
                 const numSlots = Math.round(taskHours * 4); // 1 slot = 0.25 giờ
                 if (numSlots > 0) {
@@ -153,90 +158,233 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
     }
     // --- KẾT THÚC LOGIC MỚI ---
 
-    // --- LOGIC MỚI: Lập kế hoạch số ca tối thiểu để đạt targetManHours ---
-    // 1. Tính tổng số slot 15 phút cần lấp đầy.
-    const totalSlotsNeeded = Math.ceil(targetManHours * 4);
-
-    // 2. Lấy thông tin về thời lượng của từng mã ca có sẵn.
-    const availableShiftsWithDuration = allShiftCodes.map(sc => {
-        if (!sc.timeRange) return null;
-        const [startStr, endStr] = sc.timeRange.split('~').map(s => s.trim());
-        const startMinutes = timeToMinutes(startStr);
-        const endMinutes = timeToMinutes(endStr);
-        if (startMinutes === null || endMinutes === null || endMinutes <= startMinutes) return null;
-        return {
-            shiftCode: sc.shiftCode,
-            durationSlots: (endMinutes - startMinutes) / 15
+    // --- LOGIC MỚI: BỐ TRÍ CÁC TASK POS 1, 2, 3 DỰA TRÊN NHU CẦU MANHOUR (ƯU TIÊN ĐẦU TIÊN) ---
+    const posGroup = taskGroupsArray.find(g => g.code === 'POS');
+    if (posGroup) {
+        const posTasksInfo = {
+            'POS 1': posGroup.tasks.find(t => t.name === 'POS 1'),
+            'POS 2': posGroup.tasks.find(t => t.name === 'POS 2'),
+            'POS 3': posGroup.tasks.find(t => t.name === 'POS 3')
         };
-    }).filter(Boolean);
 
-    // Fallback nếu không có ca nào được định nghĩa
-    if (availableShiftsWithDuration.length === 0) {
-        availableShiftsWithDuration.push({ shiftCode: 'S1', durationSlots: 32 }); // Mặc định ca 8 tiếng
-    }
+        // Tạo taskCode cho các task POS
+        if (posTasksInfo['POS 1']) posTasksInfo['POS 1'].taskCode = `1${posGroup.order}${String(posTasksInfo['POS 1'].order).padStart(2, '0')}`;
+        if (posTasksInfo['POS 2']) posTasksInfo['POS 2'].taskCode = `1${posGroup.order}${String(posTasksInfo['POS 2'].order).padStart(2, '0')}`;
+        if (posTasksInfo['POS 3']) posTasksInfo['POS 3'].taskCode = `1${posGroup.order}${String(posTasksInfo['POS 3'].order).padStart(2, '0')}`;
 
-    // 3. Lặp và thêm từng ca cho đến khi tổng thời lượng đủ.
-    // --- TOÀN BỘ LOGIC LẬP KẾ HOẠCH CA CŨ ĐÃ ĐƯỢC THAY THẾ BẰNG LOGIC MOCK DATA Ở TRÊN ---
+        // Lặp qua từng giờ hoạt động của cửa hàng
+        for (let hour = openMinutes / 60; hour < closeMinutes / 60; hour++) {
+            // --- LOGIC MỚI: GIAI ĐOẠN 1A - BỐ TRÍ POS 1 (BẮT BUỘC) ---
+            const pos1Task = posTasksInfo['POS 1'];
+            if (pos1Task && pos1Task.startTime && pos1Task.endTime) {
+                const pos1StartMinutes = timeToMinutes(pos1Task.startTime);
+                const pos1EndMinutes = timeToMinutes(pos1Task.endTime);
 
-    // 4. Điền các task vào các slot đã chuẩn bị
-    let currentTaskIndex = 0;
-    // Lặp qua từng ca đã được lập kế hoạch
+                for (let minute = pos1StartMinutes; minute < pos1EndMinutes; minute += 15) {
+                    const h = Math.floor(minute / 60);
+                    const m = minute % 60;
+                    const startTime = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 
-    // --- LOGIC MỚI: Theo dõi số lượng task đồng thời ---
-    const concurrentTaskCount = {}; // { "startTime_taskCode": count }
+                    // --- FIX: KIỂM TRA concurrentPerformers CHO POS 1 ---
+                    // Đếm xem đã có bao nhiêu task POS 1 được xếp vào thời điểm này trên TẤT CẢ các ca.
+                    let existingPos1Count = 0;
+                    for (const shiftId in newScheduleData) {
+                        if (newScheduleData[shiftId].some(t => t.startTime === startTime && t.taskCode === pos1Task.taskCode)) {
+                            existingPos1Count++;
+                        }
+                    }
 
-    for (const shift of plannedShifts) { // Sửa lỗi: Lặp qua plannedShifts thay vì allAvailableGridSlots
-        // Xáo trộn các slot trong ca để phân bổ task ngẫu nhiên (Quy tắc 5)
-        const shuffledSlots = [...shift.availableSlots].sort(() => Math.random() - 0.5);
+                    // Nếu số lượng hiện tại đã đạt hoặc vượt giới hạn, bỏ qua slot này.
+                    if (existingPos1Count >= (pos1Task.concurrentPerformers || 1)) {
+                        continue;
+                    }
 
-        for (const slot of shuffledSlots) {
-            // Lặp qua danh sách các task đã sắp xếp để tìm task phù hợp cho slot này
-            for (let i = 0; i < taskSlotsToPlace.length; i++) {
-                const taskToAssign = taskSlotsToPlace[i];
+                    // Tìm một ca làm việc có slot trống tại thời điểm này
+                    const availableShift = plannedShifts.find(shift => {
+                        // Ca phải bao gồm thời điểm này và slot phải còn trống
+                        return minute >= shift.startMinutes && minute < shift.endMinutes && !newScheduleData[shift.shiftId].some(t => t.startTime === startTime);
+                    });
 
-                // Bỏ qua nếu task này đã được xếp đủ
-                if (taskToAssign.numSlotsRemaining <= 0) {
-                    continue;
-                }
-
-                // Lấy thông tin chi tiết của task để kiểm tra các quy tắc
-                const taskGroup = taskGroupsArray.find(g => g.id === taskToAssign.groupId);
-                const taskInfo = taskGroup?.tasks.find(t => (t.manual_number || t.code) === taskToAssign.taskCode);
-
-                // QUY TẮC MỚI: Kiểm tra xem slot hiện tại có nằm trong khung giờ cho phép của task không.
-                if (taskInfo && taskInfo.startTime && taskInfo.endTime) {
-                    const slotMinutes = timeToMinutes(slot.startTime);
-                    const taskStartMinutes = timeToMinutes(taskInfo.startTime);
-                    const taskEndMinutes = timeToMinutes(taskInfo.endTime);
-
-                    if (slotMinutes < taskStartMinutes || slotMinutes >= taskEndMinutes) {
-                        continue; // Slot này nằm ngoài giờ cho phép của task, thử task khác.
+                    if (availableShift) {
+                        newScheduleData[availableShift.shiftId].push({
+                            taskCode: pos1Task.taskCode,
+                            taskName: pos1Task.name,
+                            startTime: startTime,
+                            groupId: posGroup.id
+                        });
+                    } else {
+                        // Ghi log nếu không tìm thấy ca trống cho một slot bắt buộc
+                        // console.warn(`Không tìm thấy ca làm việc trống để bố trí POS 1 tại ${startTime}`);
                     }
                 }
+            }
 
-                // Kiểm tra giới hạn concurrentPerformers
-                const taskKey = `${slot.startTime}_${taskToAssign.taskCode}`;
-                const currentCount = concurrentTaskCount[taskKey] || 0;
+            // --- GIAI ĐOẠN 1B - BỐ TRÍ POS 2, 3 (NẾU CẦN) ---
+            const hourKey = String(hour).padStart(2, '0');
 
-                const limit = taskInfo?.concurrentPerformers;
 
-                // Nếu có thể xếp task này (không giới hạn hoặc chưa đạt giới hạn)
-                if (limit === 0 || limit === undefined || currentCount < limit) {
-                    // Gán task vào slot
-                    newScheduleData[slot.shiftId].push({
-                        taskCode: taskToAssign.taskCode,
-                        taskName: taskToAssign.taskName,
-                        startTime: slot.startTime,
-                        groupId: taskToAssign.groupId
-                    });
-                    taskToAssign.numSlotsRemaining--;
-                    concurrentTaskCount[taskKey] = currentCount + 1;
+            // 1. Tính toán man-hour POS tiêu chuẩn cho giờ này
+            const hourlyCustomerCount = reParameters.customerCountByHour?.[hourKey] || 0;
+            const standardPosManhour = Math.ceil((hourlyCustomerCount / 60) * 4) / 4;
+            const requiredPosSlots = standardPosManhour * 4;
 
-                    // Đã tìm thấy task cho slot này, thoát vòng lặp task và chuyển sang slot tiếp theo
-                    break; 
+            if (requiredPosSlots <= 0) continue;
+
+            // 2. Đếm số slot POS đã được phân bổ trong giờ này (từ các task POS khác nếu có)
+            let actualPosSlots = 0;
+            for (const shiftId in newScheduleData) {
+                newScheduleData[shiftId].forEach(task => {
+                    const taskHour = parseInt(task.startTime.split(':')[0], 10);
+                    if (task.groupId === posGroup.id && taskHour === hour) {
+                        actualPosSlots++;
+                    }
+                });
+            }
+
+
+            // 3. Tính toán số slot POS cần bổ sung
+            let slotsToFill = requiredPosSlots - actualPosSlots;
+            if (slotsToFill <= 0) continue;
+
+            // 4. Lặp qua 4 quarter của giờ hiện tại để lấp đầy các slot còn thiếu
+            for (let q = 0; q < 4; q++) {
+
+                if (slotsToFill <= 0) break;
+
+                const quarter = q * 15;
+                const startTime = `${hourKey}:${String(quarter).padStart(2, '0')}`;
+
+                // Tìm một ca làm việc có slot trống tại thời điểm này
+                const availableShift = plannedShifts.find(shift => {
+                    const slotMinutes = timeToMinutes(startTime);
+                    // Ca phải bao gồm thời điểm này
+                    if (slotMinutes < shift.startMinutes || slotMinutes >= shift.endMinutes) {
+                        return false;
+                    }
+                    // Slot phải còn trống
+                    return !newScheduleData[shift.shiftId].some(t => t.startTime === startTime);
+                });
+
+                if (availableShift) {
+
+                    // Xác định task POS cần thêm (chỉ POS 2 hoặc 3)
+                    let taskToAdd = null;
+                    // Đếm lại số slot POS thực tế trong giờ này để quyết định thêm POS 2 hay 3
+                    let currentPosSlotsInHour = 0;
+                    for (const shiftId in newScheduleData) {
+                        newScheduleData[shiftId].forEach(task => {
+                            if (task.groupId === posGroup.id && parseInt(task.startTime.split(':')[0], 10) === hour) {
+                                currentPosSlotsInHour++;
+                            }
+                        });
+                    }
+                    if (currentPosSlotsInHour < 8 && posTasksInfo['POS 2']) { // Nếu có dưới 2 người (8 slots) thì thêm POS 2
+                        taskToAdd = posTasksInfo['POS 2'];
+                    } else if (posTasksInfo['POS 3']) {
+                        taskToAdd = posTasksInfo['POS 3'];
+                    }
+
+                    if (taskToAdd) {
+                        newScheduleData[availableShift.shiftId].push({
+                            taskCode: taskToAdd.taskCode,
+                            taskName: taskToAdd.name,
+                            startTime: startTime,
+                            groupId: posGroup.id
+                        });
+                        slotsToFill--;
+                    }
                 }
             }
         }
+
+    }
+    // --- KẾT THÚC LOGIC POS ---
+
+    // --- GIAI ĐOẠN 2: BỐ TRÍ CÁC TASK CHÍNH THEO THỨ TỰ ƯU TIÊN ---
+    const concurrentTaskCount = {}; // { "startTime_taskCode": count }
+
+    /**
+     * Hàm phụ trợ để xếp lịch cho một danh sách task cụ thể.
+     * @param {Array} tasks - Danh sách các task cần xếp.
+     */
+    const scheduleTaskType = (tasks) => {
+        for (const shift of plannedShifts) {
+            const shuffledSlots = [...shift.availableSlots].sort(() => Math.random() - 0.5);
+
+            for (const slot of shuffledSlots) {
+                // Bỏ qua slot đã được lấp đầy
+                if (newScheduleData[slot.shiftId].some(t => t.startTime === slot.startTime)) {
+                    continue;
+                }
+
+                // Tìm task phù hợp trong danh sách được cung cấp
+                for (const taskToAssign of tasks) {
+                    if (taskToAssign.numSlotsRemaining <= 0) {
+                        continue;
+                    }
+
+                    const taskGroup = taskGroupsArray.find(g => g.id === taskToAssign.groupId);
+                    const taskInfo = taskGroup?.tasks.find(t => t.name === taskToAssign.taskName);
+
+                    if (taskInfo && taskInfo.startTime && taskInfo.endTime) {
+                        const slotMinutes = timeToMinutes(slot.startTime);
+                        const taskStartMinutes = timeToMinutes(taskInfo.startTime);
+                        const taskEndMinutes = timeToMinutes(taskInfo.endTime);
+                        if (slotMinutes < taskStartMinutes || slotMinutes >= taskEndMinutes) {
+                            continue;
+                        }
+                    }
+
+                    const taskKey = `${slot.startTime}_${taskToAssign.taskCode}`;
+                    const currentCount = concurrentTaskCount[taskKey] || 0;
+                    const limit = taskInfo?.concurrentPerformers;
+
+                    if (limit === 0 || limit === undefined || currentCount < limit) {
+                        newScheduleData[slot.shiftId].push({
+                            taskCode: taskToAssign.taskCode,
+                            taskName: taskToAssign.taskName,
+                            startTime: slot.startTime,
+                            groupId: taskToAssign.groupId
+                        });
+                        taskToAssign.numSlotsRemaining--;
+                        concurrentTaskCount[taskKey] = currentCount + 1;
+                        break;
+                    }
+                }
+            }
+        }
+    };
+
+    // Thực hiện xếp lịch theo từng giai đoạn (dựa trên typeTask)
+    scheduleTaskType(taskSlotsToPlace.filter(t => t.typeTask === 'Fixed'));
+    scheduleTaskType(taskSlotsToPlace.filter(t => t.typeTask === 'CTM'));
+    scheduleTaskType(taskSlotsToPlace.filter(t => t.typeTask === 'Product'));
+
+    // --- GIAI ĐOẠN 3: LẤP ĐẦY CÁC SLOT CÒN TRỐNG ---
+    const fillerTask = {
+        taskCode: '99999',
+        taskName: 'Hỗ trợ khu vực',
+        groupId: 'OTHER' // Giả định có group 'OTHER' cho các task chung
+    };
+
+    for (const shift of plannedShifts) {
+        for (const slot of shift.availableSlots) {
+            const isSlotFilled = newScheduleData[shift.shiftId].some(t => t.startTime === slot.startTime);
+            if (!isSlotFilled) {
+                // Lấp đầy slot trống bằng task "filler"
+                newScheduleData[shift.shiftId].push({
+                    taskCode: fillerTask.taskCode,
+                    taskName: fillerTask.taskName,
+                    startTime: slot.startTime,
+                    groupId: fillerTask.groupId
+                });
+            }
+        }
+    }
+
+    // Sắp xếp lại các task trong mỗi ca theo thời gian bắt đầu để đảm bảo thứ tự
+    for (const shiftId in newScheduleData) {
+        newScheduleData[shiftId].sort((a, b) => a.startTime.localeCompare(b.startTime));
     }
 
     // Cập nhật lại newShiftMappings từ các ca đã được lên kế hoạch
