@@ -357,13 +357,35 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
                         continue;
                     }
 
-                    if (taskInfo && taskInfo.startTime && taskInfo.endTime) {
+                    // --- LOGIC MỚI: Xử lý cả startTime/endTime và timeWindows ---
+                    if (taskInfo) {
                         const slotMinutes = timeToMinutes(slot.startTime);
-                        const taskStartMinutes = timeToMinutes(taskInfo.startTime);
-                        const taskEndMinutes = timeToMinutes(taskInfo.endTime);
-                        if (slotMinutes < taskStartMinutes || slotMinutes >= taskEndMinutes) {
-                            continue;
+                        const slotEndMinutes = slotMinutes + 15;
+                        let isSlotInValidTimeWindow = false;
+
+                        // Ưu tiên kiểm tra mảng timeWindows trước
+                        if (Array.isArray(taskInfo.timeWindows) && taskInfo.timeWindows.length > 0) {
+                            // Kiểm tra xem slot có nằm trong BẤT KỲ khung giờ nào không
+                            isSlotInValidTimeWindow = taskInfo.timeWindows.some(window => {
+                                const windowStartMinutes = timeToMinutes(window.startTime);
+                                const windowEndMinutes = timeToMinutes(window.endTime);
+                                // Điều kiện giao nhau: !(slot kết thúc trước khi window bắt đầu || slot bắt đầu sau khi window kết thúc)
+                                return !(slotEndMinutes <= windowStartMinutes || slotMinutes >= windowEndMinutes);
+                            });
+                        } 
+                        // Nếu không có timeWindows, kiểm tra startTime/endTime cũ
+                        else if (taskInfo.startTime && taskInfo.endTime) {
+                            const taskStartMinutes = timeToMinutes(taskInfo.startTime);
+                            const taskEndMinutes = timeToMinutes(taskInfo.endTime);
+                            isSlotInValidTimeWindow = !(slotEndMinutes <= taskStartMinutes || slotMinutes >= taskEndMinutes);
                         }
+                        // Nếu không có định nghĩa thời gian nào, coi như hợp lệ
+                        else {
+                            isSlotInValidTimeWindow = true; 
+                        }
+
+                        // Nếu slot không nằm trong bất kỳ khung giờ hợp lệ nào, bỏ qua
+                        if (!isSlotInValidTimeWindow) continue;
                     }
 
                     const taskKey = `${slot.startTime}_${taskToAssign.taskCode}`;
@@ -379,6 +401,7 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
                         });
                         taskToAssign.numSlotsRemaining--;
                         concurrentTaskCount[taskKey] = currentCount + 1;
+
                         break;
                     }
                 }
