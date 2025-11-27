@@ -177,7 +177,7 @@ export function renderGrid(templateData = null) {
     const container = document.getElementById('template-builder-grid-container');
     if (!container) return;
 
-    const timeSlots = Array.from({ length: 18 }, (_, i) => `${i + 6}:00`);
+    const timeSlots = Array.from({ length: 19 }, (_, i) => `${String(i + 5).padStart(2, '0')}:00`); // Từ 05:00 đến 23:00
 
     const table = document.createElement('table');
     table.className = 'min-w-full border-collapse border border-slate-200 table-fixed';

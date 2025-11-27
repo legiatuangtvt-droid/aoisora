@@ -65,7 +65,7 @@ export function addShiftRow(tbody, shiftNumber) {
     const isManager = currentUser && (currentUser.roleId === 'REGIONAL_MANAGER' || currentUser.roleId === 'AREA_MANAGER');
     const disabledAttr = isManager ? 'disabled' : '';
 
-    const timeSlots = Array.from({ length: 18 }, (_, i) => `${i + 6}:00`);
+    const timeSlots = Array.from({ length: 19 }, (_, i) => `${String(i + 5).padStart(2, '0')}:00`);
     const shiftId = `shift-${shiftNumber}`;
     const newRow = document.createElement('tr');
     newRow.dataset.shiftId = shiftId;

@@ -185,7 +185,7 @@ export function renderScheduleGrid() {
             const storeName = selectedStore ? selectedStore.name : 'Cửa hàng này';
             const formattedDate = new Date(selectedDate).toLocaleDateString('vi-VN');
             tbody.innerHTML = `<tr>
-                <td colspan="${25}" class="text-center p-10">
+                <td colspan="${timeSlots.length + 1}" class="text-center p-10">
                     <div class="flex flex-col items-center justify-center text-gray-500">
                         <i class="fas fa-calendar-times fa-3x mb-4 text-gray-400"></i>
                         <p class="font-semibold text-lg">Chưa có dữ liệu</p>
@@ -309,12 +309,6 @@ export function renderScheduleGrid() {
             });
             tbody.appendChild(row);
 
-            // Ẩn các ô không thuộc khung giờ 05:30 - 23:00
-            const firstHourSlots = row.querySelectorAll('.quarter-hour-slot[data-time="05:00"]');
-            if (firstHourSlots.length >= 2) {
-                firstHourSlots[0].style.visibility = 'hidden';
-                firstHourSlots[1].style.visibility = 'hidden';
-            }
         });
     }
     table.appendChild(tbody);
