@@ -55,6 +55,12 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
     //     throw new Error("Không tìm thấy vị trí công việc 'Staff' mặc định.");
     // }
 
+    // Tạo một map để tra cứu tên vị trí công việc từ ID cho hiệu quả
+    const positionIdToNameMap = allWorkPositions.reduce((acc, pos) => {
+        acc[pos.id] = pos.name;
+        return acc;
+    }, {});
+
     // SỬA LỖI: Khởi tạo lại biến availableShiftCodes đã bị thiếu.
     // Chuẩn bị danh sách mã ca để sử dụng lần lượt.
     const availableShiftCodes = (allShiftCodes && allShiftCodes.length > 0)
@@ -202,7 +208,11 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
                     // Tìm một ca làm việc có slot trống tại thời điểm này
                     const availableShift = plannedShifts.find(shift => {
                         // Ca phải bao gồm thời điểm này và slot phải còn trống
-                        return minute >= shift.startMinutes && minute < shift.endMinutes && !newScheduleData[shift.shiftId].some(t => t.startTime === startTime);
+                        const shiftPositionName = positionIdToNameMap[shift.positionId];
+                        const isAllowed = pos1Task.allowedPositions?.includes(shiftPositionName);
+                        return isAllowed &&
+                               minute >= shift.startMinutes && minute < shift.endMinutes &&
+                               !newScheduleData[shift.shiftId].some(t => t.startTime === startTime);
                     });
 
                     if (availableShift) {
@@ -257,11 +267,15 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
                 // Tìm một ca làm việc có slot trống tại thời điểm này
                 const availableShift = plannedShifts.find(shift => {
                     const slotMinutes = timeToMinutes(startTime);
+                    const shiftPositionName = positionIdToNameMap[shift.positionId];
+
                     // Ca phải bao gồm thời điểm này
                     if (slotMinutes < shift.startMinutes || slotMinutes >= shift.endMinutes) {
                         return false;
                     }
-                    // Slot phải còn trống
+                    // Slot phải còn trống và vị trí công việc phải được phép
+                    // (Giả định POS2/3 có cùng allowedPositions)
+                    if (!posTasksInfo['POS 2']?.allowedPositions?.includes(shiftPositionName)) return false;
                     return !newScheduleData[shift.shiftId].some(t => t.startTime === startTime);
                 });
 
@@ -325,6 +339,14 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
 
                     const taskGroup = taskGroupsArray.find(g => g.id === taskToAssign.groupId);
                     const taskInfo = taskGroup?.tasks.find(t => t.name === taskToAssign.taskName);
+
+                    // QUY TẮC MỚI: Kiểm tra xem vị trí công việc của ca có được phép thực hiện task này không
+                    const shiftPositionName = positionIdToNameMap[shift.positionId];
+                    const allowed = taskInfo?.allowedPositions;
+                    // Nếu mảng allowedPositions tồn tại và không chứa vị trí công việc của ca, bỏ qua task này
+                    if (Array.isArray(allowed) && allowed.length > 0 && !allowed.includes(shiftPositionName)) {
+                        continue;
+                    }
 
                     if (taskInfo && taskInfo.startTime && taskInfo.endTime) {
                         const slotMinutes = timeToMinutes(slot.startTime);
