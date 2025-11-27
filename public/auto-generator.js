@@ -189,12 +189,25 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
                     continue;
                 }
 
+                // Lấy thông tin chi tiết của task để kiểm tra các quy tắc
+                const taskGroup = taskGroupsArray.find(g => g.id === taskToAssign.groupId);
+                const taskInfo = taskGroup?.tasks.find(t => (t.manual_number || t.code) === taskToAssign.taskCode);
+
+                // QUY TẮC MỚI: Kiểm tra xem slot hiện tại có nằm trong khung giờ cho phép của task không.
+                if (taskInfo && taskInfo.startTime && taskInfo.endTime) {
+                    const slotMinutes = timeToMinutes(slot.startTime);
+                    const taskStartMinutes = timeToMinutes(taskInfo.startTime);
+                    const taskEndMinutes = timeToMinutes(taskInfo.endTime);
+
+                    if (slotMinutes < taskStartMinutes || slotMinutes >= taskEndMinutes) {
+                        continue; // Slot này nằm ngoài giờ cho phép của task, thử task khác.
+                    }
+                }
+
                 // Kiểm tra giới hạn concurrentPerformers
                 const taskKey = `${slot.startTime}_${taskToAssign.taskCode}`;
                 const currentCount = concurrentTaskCount[taskKey] || 0;
 
-                const taskGroup = taskGroupsArray.find(g => g.id === taskToAssign.groupId);
-                const taskInfo = taskGroup?.tasks.find(t => (t.manual_number || t.code) === taskToAssign.taskCode);
                 const limit = taskInfo?.concurrentPerformers;
 
                 // Nếu có thể xếp task này (không giới hạn hoặc chưa đạt giới hạn)
