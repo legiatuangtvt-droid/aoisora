@@ -205,15 +205,24 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
                         continue;
                     }
 
-                    // Tìm một ca làm việc có slot trống tại thời điểm này
-                    const availableShift = plannedShifts.find(shift => {
-                        // Ca phải bao gồm thời điểm này và slot phải còn trống
-                        const shiftPositionName = positionIdToNameMap[shift.positionId];
-                        const isAllowed = pos1Task.allowedPositions?.includes(shiftPositionName);
-                        return isAllowed &&
-                               minute >= shift.startMinutes && minute < shift.endMinutes &&
-                               !newScheduleData[shift.shiftId].some(t => t.startTime === startTime);
-                    });
+                    // SỬA ĐỔI: Tìm ca làm việc theo thứ tự ưu tiên trong allowedPositions
+                    let availableShift = null;
+                    const prioritizedPositions = pos1Task.allowedPositions || [];
+
+                    for (const positionName of prioritizedPositions) {
+                        const foundShift = plannedShifts.find(shift => {
+                            const shiftPositionName = positionIdToNameMap[shift.positionId];
+                            // Điều kiện: đúng vị trí công việc, ca còn hoạt động, và slot còn trống
+                            return shiftPositionName === positionName &&
+                                   minute >= shift.startMinutes && minute < shift.endMinutes &&
+                                   !newScheduleData[shift.shiftId].some(t => t.startTime === startTime);
+                        });
+
+                        if (foundShift) {
+                            availableShift = foundShift;
+                            break; // Đã tìm thấy ca phù hợp với vị trí ưu tiên, dừng tìm kiếm
+                        }
+                    }
 
                     if (availableShift) {
                         newScheduleData[availableShift.shiftId].push({
