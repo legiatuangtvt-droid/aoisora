@@ -1,0 +1,6 @@
+{
+  "employee_statuses": [
+    { "id": "ACTIVE", "name": "Đang hoạt động", "color": "green" },
+    { "id": "INACTIVE", "name": "Ngừng hoạt động", "color": "red" }
+  ]
+}

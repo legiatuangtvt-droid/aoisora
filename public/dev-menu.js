@@ -417,11 +417,30 @@ function initializeDevMenu() {
         window.showToast('Bắt đầu nhập dữ liệu mô phỏng...', 'info');
 
         try {
-            const response = await fetch('data.json');
-            if (!response.ok) throw new Error('Không thể tải file data.json');
-            
-            const data = await response.json();
+            const dataFiles = [
+                'data-roles.json',
+                'data-employee.json',
+                'data-area_managers.json',
+                'data-regional_managers.json',
+                'data-stores.json',
+                'data-areas.json',
+                'data-regions.json',
+                'data-employee_statuses.json',
+                'data-store_statuses.json',
+                'data-work_positions.json',
+                'data-daily_templates.json',
+                'data-task_groups.json'
+            ];
 
+            const fetchPromises = dataFiles.map(file =>
+                fetch(file).then(res => {
+                    if (!res.ok) throw new Error(`Không thể tải tệp ${file}`);
+                    return res.json();
+                })
+            );
+
+            const allDataArray = await Promise.all(fetchPromises);
+            const data = allDataArray.reduce((acc, current) => ({ ...acc, ...current }), {});
             // --- Bước 1: Xóa dữ liệu cũ ---
             window.showToast('Bước 1/2: Đang xóa dữ liệu cũ...', 'info');
             const collectionsToDelete = [

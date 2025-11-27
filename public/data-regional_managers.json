@@ -1,0 +1,7 @@
+{
+  "regional_managers": [
+    { "id": "RM_SOUTH_01", "name": "Nguyễn Hoàng Việt", "roleId": "REGIONAL_MANAGER", "storeId": null, "managedRegionId": "SOUTH", "phone": "0991000001", "status": "ACTIVE" },
+    { "id": "RM_NORTH_01", "name": "Lê Thị Thuý", "roleId": "REGIONAL_MANAGER", "storeId": null, "managedRegionId": "NORTH", "phone": "0992000001", "status": "ACTIVE" },
+    { "id": "RM_CENTRAL_01", "name": "Đặng Minh Hải", "roleId": "REGIONAL_MANAGER", "storeId": null, "managedRegionId": "CENTRAL", "phone": "0993000001", "status": "ACTIVE" }
+  ]
+}

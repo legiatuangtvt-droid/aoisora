@@ -1,0 +1,18 @@
+{
+  "areas": [
+    { "id": "HCM_CENTRAL", "name": "HCM - Khu vực trung tâm", "regionId": "SOUTH" },
+    { "id": "HCM_EAST", "name": "HCM - Khu vực phía Đông", "regionId": "SOUTH" },
+    { "id": "HCM_WEST", "name": "HCM - Khu vực phía Tây", "regionId": "SOUTH" },
+    { "id": "CT_NKI", "name": "Cần Thơ - Ninh Kiều", "regionId": "SOUTH" },
+    { "id": "BD_TDM", "name": "Bình Dương - Thủ Dầu Một", "regionId": "SOUTH" },
+    { "id": "HN_DDA", "name": "Hà Nội - Đống Đa", "regionId": "NORTH" },
+    { "id": "HN_HBT", "name": "Hà Nội - Hai Bà Trưng", "regionId": "NORTH" },
+    { "id": "HN_CGI", "name": "Hà Nội - Cầu Giấy", "regionId": "NORTH" },
+    { "id": "HP_LCH", "name": "Hải Phòng - Lê Chân", "regionId": "NORTH" },
+    { "id": "QN_HLG", "name": "Quảng Ninh - Hạ Long", "regionId": "NORTH" },
+    { "id": "DN_HCH", "name": "Đà Nẵng - Hải Châu", "regionId": "CENTRAL" },
+    { "id": "DN_ST", "name": "Đà Nẵng - Sơn Trà", "regionId": "CENTRAL" },
+    { "id": "HUE_TP", "name": "Huế - Thành phố Huế", "regionId": "CENTRAL" },
+    { "id": "KH_NTR", "name": "Khánh Hòa - Nha Trang", "regionId": "CENTRAL" }
+  ]
+}
