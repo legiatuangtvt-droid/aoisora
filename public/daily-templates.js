@@ -574,7 +574,7 @@ function initializeAutoGenerateModal(signal) {
 
             // Nếu đang ở chế độ tạo mới (chưa có templateId)
             if (!templateId) {
-                const newTemplateName = await window.showPrompt('Bạn đang tạo lịch cho một mẫu mới. Vui lòng đặt tên cho mẫu này:', 'Đặt tên cho Mẫu mới', 'Mẫu mới - ' + new Date().toLocaleDateString('vi-VN'));
+                const newTemplateName = await window.showPrompt('Bạn đang tạo lịch cho một mẫu mới. Vui lòng đặt tên cho mẫu này:', 'Đặt tên cho Mẫu mới', 'Auto Generate Model');
                 if (!newTemplateName || !newTemplateName.trim()) {
                     window.showToast('Đã hủy thao tác vì chưa đặt tên cho mẫu.', 'info');
                     return;
