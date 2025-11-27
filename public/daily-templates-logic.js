@@ -4,12 +4,14 @@ import { calculateREForGroup } from './re-calculator.js';
 import { showTaskLibrary } from './task-library.js';
 import { initRELogicView } from './re-logic.js';
 import { toggleTemplateBuilderLock, updateRowAppearance, renderGrid, renderPlanTracker, updateShiftTimeDisplay, getCurrentView, updateGridHeaderStats} from './daily-templates-ui.js';
-import { allTemplates, currentTemplateId, currentMonthlyPlan, originalTemplateData, allWorkPositions, allTaskGroups, fetchAndRenderTemplates, setCurrentTemplateId, setOriginalTemplateData, loadTemplateData, setCurrentMonthlyPlan } from './daily-templates-data.js';
+import { allTemplates, currentTemplateId, currentMonthlyPlan, originalTemplateData, allWorkPositions, allTaskGroups, fetchAndRenderTemplates, setCurrentTemplateId, setOriginalTemplateData, loadTemplateData, setCurrentMonthlyPlan, allShiftCodes } from './daily-templates-data.js';
 import { initializeDragAndDrop } from './daily-templates.js';
+import { generateSchedule } from './auto-generator.js';
 import { timeToMinutes, formatDate } from './utils.js';
 
 // Map các trạng thái kế hoạch tháng sang chuỗi hiển thị thân thiện
 const planStatusMessages = {
+
     'HQ_APPLIED': 'HQ đã triển khai tới RM',
     'RM_AWAITING_APPROVAL': 'RM đang chờ HQ phê duyệt',
     'HQ_REJECTED_RM_CHANGES': 'HQ đã từ chối thay đổi của RM',
@@ -20,6 +22,7 @@ const planStatusMessages = {
     'AM_DISPATCHED': 'AM đã điều phối',
     'RM_DISPATCHED': 'RM đã điều phối',
     'HQ_CONFIRMED': 'HQ đã xác nhận',
+
     // Thêm các trạng thái khác nếu có
 };
 
@@ -124,13 +127,13 @@ export function addShiftRow(tbody, shiftNumber) {
 /**
  * Thu thập dữ liệu từ DOM và cập nhật mẫu hiện tại trong Firestore.
  */
-export async function updateTemplateFromDOM() {
+export async function updateTemplateFromDOM(manualScheduleData = null, manualShiftMappings = null, manualTotalManhour = null) {
     const currentUser = window.currentUser;
     const isPrivilegedUser = currentUser && (currentUser.roleId === 'HQ_STAFF' || currentUser.roleId === 'ADMIN');
 
     checkTemplateChangesAndToggleResetButton();
 
-    if (!currentTemplateId) {
+    if (!currentTemplateId && !manualScheduleData) { // Allow saving new template if manual data is provided
         return;
     }
 
@@ -138,37 +141,43 @@ export async function updateTemplateFromDOM() {
         return;
     }
 
-    const scheduleData = {};
-    const shiftMappings = {};
-    const totalManhour = parseFloat(document.getElementById('template-manhour-input').value) || 0;
+    const scheduleData = manualScheduleData || {};
+    const shiftMappings = manualShiftMappings || {};
+    const totalManhour = manualTotalManhour !== null ? manualTotalManhour : (parseFloat(document.getElementById('template-manhour-input').value) || 0);
     const hourlyManhours = {}; // --- NEW: Đối tượng để lưu manhour theo giờ ---
 
-    document.querySelectorAll('#template-builder-grid-container .scheduled-task-item').forEach(taskItem => {
-        const slot = taskItem.closest('.quarter-hour-slot');
-        if (!slot) return;
+    if (!manualScheduleData) { // If not provided manually, read from DOM
+        document.querySelectorAll('#template-builder-grid-container .scheduled-task-item').forEach(taskItem => {
+            const slot = taskItem.closest('.quarter-hour-slot');
+            if (!slot) return;
 
-        const shiftId = slot.dataset.shiftId;
-        const taskName = taskItem.querySelector('span.overflow-hidden').textContent;
-        const taskCode = taskItem.dataset.taskCode;
-        const groupId = taskItem.dataset.groupId;
-        const time = slot.dataset.time;
-        const quarter = slot.dataset.quarter;
-        const startTime = `${time.split(':')[0].padStart(2, '0')}:${quarter}`;
+            const shiftId = slot.dataset.shiftId;
+            const taskName = taskItem.querySelector('span.overflow-hidden').textContent;
+            const taskCode = taskItem.dataset.taskCode;
+            const groupId = taskItem.dataset.groupId;
+            const time = slot.dataset.time;
+            const quarter = slot.dataset.quarter;
+            const startTime = `${time.split(':')[0].padStart(2, '0')}:${quarter}`;
 
-        if (!scheduleData[shiftId]) {
-            scheduleData[shiftId] = [];
-        }
-        scheduleData[shiftId].push({ taskCode, taskName, startTime, groupId });
-    });
+            if (!scheduleData[shiftId]) {
+                scheduleData[shiftId] = [];
+            }
+            scheduleData[shiftId].push({ taskCode, taskName, startTime, groupId });
+        });
+    }
 
-    document.querySelectorAll('#template-builder-grid-container tbody tr').forEach(row => {
-        const shiftId = row.dataset.shiftId;
-        const selectedShiftCode = row.querySelector('.shift-code-selector')?.value;
-        const selectedPositionId = row.querySelector('.work-position-selector')?.value;
-        if (shiftId) {
-            shiftMappings[shiftId] = { shiftCode: selectedShiftCode, positionId: selectedPositionId };
-        }
-    });
+    if (!manualShiftMappings) { // If not provided manually, read from DOM
+        document.querySelectorAll('#template-builder-grid-container tbody tr').forEach(row => {
+            const shiftId = row.dataset.shiftId;
+            const selectedShiftCode = row.querySelector('.shift-code-selector')?.value;
+            const selectedPositionId = row.querySelector('.work-position-selector')?.value;
+            if (shiftId) {
+                // SỬA LỖI: Đảm bảo không có giá trị `undefined` được gửi đến Firestore.
+                // Nếu không có giá trị được chọn, gán một chuỗi rỗng thay vì `undefined`.
+                shiftMappings[shiftId] = { shiftCode: selectedShiftCode || '', positionId: selectedPositionId || '' };
+            }
+        });
+    }
 
     // --- NEW: Lấy dữ liệu manhour theo giờ từ header của bảng ---
     document.querySelectorAll('#template-builder-grid-container thead th[data-hour]').forEach(headerCell => {
@@ -755,4 +764,50 @@ export function updateTemplateStats() {
 
     const scheduledHoursValueEl = document.getElementById('scheduled-hours-value');
     if (scheduledHoursValueEl) scheduledHoursValueEl.textContent = newTotalTime.toFixed(2);
+}
+
+/**
+ * Tự động gán task vào bảng lịch trình dựa trên các tham số đầu vào.
+ * @param {string} openTime - Thời gian mở cửa (ví dụ: "06:00").
+ * @param {string} closeTime - Thời gian đóng cửa (ví dụ: "22:00").
+ * @param {number} targetManHours - Tổng giờ công mong muốn.
+ */
+export async function handleAutoGenerate(openTime, closeTime, targetManHours) {
+    // Đối tượng chứa dữ liệu lịch trình mới và ánh xạ ca làm việc
+    const newScheduleData = {};
+    const newShiftMappings = {};
+
+    // Lấy thông tin mẫu hiện tại và các tham số RE
+    const currentTemplate = allTemplates.find(t => t.id === currentTemplateId);
+    const reParameters = currentTemplate?.reParameters || {};
+
+    // 1. Gọi hàm generateSchedule để lấy dữ liệu lịch trình mới
+    const {
+        schedule: generatedSchedule,
+        shiftMappings: generatedShiftMappings,
+        totalManhour: generatedTotalManhour
+    } = generateSchedule(openTime, closeTime, targetManHours);
+
+    // 5. Cập nhật giao diện và lưu vào Firestore
+    const updatedTemplateData = {
+        ...currentTemplate, // Giữ lại các thông tin khác của template hiện tại
+        schedule: generatedSchedule,
+        shiftMappings: generatedShiftMappings,
+        totalManhour: generatedTotalManhour, // Cập nhật tổng manhour theo giá trị nhập vào
+        hourlyManhours: {} // Sẽ được tính toán lại bởi updateTemplateFromDOM từ DOM sau khi render
+    };
+
+    // Cập nhật biến global `allTemplates` để `renderGrid` và các hàm khác sử dụng dữ liệu mới nhất
+    const currentTemplateIndex = allTemplates.findIndex(t => t.id === currentTemplateId);
+    if (currentTemplateIndex !== -1) {
+        allTemplates[currentTemplateIndex] = updatedTemplateData;
+    }
+
+    renderGrid(updatedTemplateData); // Render lại lưới với dữ liệu lịch trình mới
+    updateTemplateStats(); // Cập nhật bảng thống kê group task
+    updateGridHeaderStats(); // Cập nhật thống kê header của lưới
+    initializeDragAndDrop(); // Khởi tạo lại chức năng kéo-thả cho các task mới
+
+    // Lưu các thay đổi vào Firestore. Truyền trực tiếp dữ liệu đã tạo để tránh đọc lại từ DOM ngay lập tức.
+    await updateTemplateFromDOM(generatedSchedule, generatedShiftMappings, generatedTotalManhour);
 }

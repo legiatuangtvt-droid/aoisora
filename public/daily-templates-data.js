@@ -1,5 +1,5 @@
 import { db } from './firebase.js';
-import { collection, getDocs, query, orderBy, doc, getDoc, where } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { collection, getDocs, query, orderBy, doc, getDoc, where, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
 export let allTemplates = [];
 export let currentTemplateId = null;
@@ -150,6 +150,48 @@ export async function loadTemplateData(templateId) {
         console.error("Lỗi khi tải chi tiết mẫu:", error);
         window.showToast('Không thể tải dữ liệu cho mẫu này.', 'error');
         return null;
+    }
+}
+
+/**
+ * Tạo một mẫu mới trong Firestore và trả về ID của nó.
+ * @param {string} name - Tên của mẫu mới.
+ * @returns {Promise<string>} ID của mẫu vừa được tạo.
+ */
+export async function createNewTemplate(name) {
+    try {
+        const newTemplateData = {
+            name: name,
+            schedule: {},
+            shiftMappings: {},
+            totalManhour: 0,
+            hourlyManhours: {},
+            // Thêm các thông số RE mặc định để chức năng Auto Generate có thể hoạt động
+            reParameters: {
+                posCount: 1,
+                areaSize: 100,
+                employeeCount: 5,
+                dryGoodsVolume: 10,
+                vegetableWeight: 20,
+                customerCountByHour: { "06": 10, "07": 20, "08": 30, "09": 40, "10": 50, "11": 60, "12": 50, "13": 40, "14": 30, "15": 30, "16": 40, "17": 50, "18": 70, "19": 80, "20": 60, "21": 40, "22": 20 },
+                customerCount: 780
+            },
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+        };
+
+        const docRef = await addDoc(collection(db, 'daily_templates'), newTemplateData);
+        
+        // Tải lại danh sách mẫu và tự động chọn mẫu vừa tạo
+        await fetchAndRenderTemplates();
+        const templateSelector = document.getElementById('template-selector');
+        if (templateSelector) {
+            templateSelector.value = docRef.id;
+        }
+        return docRef.id;
+    } catch (error) {
+        console.error("Lỗi khi tạo mẫu mới:", error);
+        throw new Error("Không thể tạo mẫu mới trên cơ sở dữ liệu.");
     }
 }
 

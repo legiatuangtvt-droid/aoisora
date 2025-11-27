@@ -1,4 +1,4 @@
-import { fetchInitialData, fetchAndRenderTemplates, renderMonthlyPlansForManager, allTemplates, allTaskGroups, allWorkPositions } from './daily-templates-data.js';
+import { fetchInitialData, fetchAndRenderTemplates, renderMonthlyPlansForManager, allTemplates, currentTemplateId, allTaskGroups, allWorkPositions, createNewTemplate, setCurrentTemplateId } from './daily-templates-data.js';
 import { renderGrid, updateRowAppearance, toggleBuilderView, createShiftCodeDatalist, updateGridHeaderStats } from './daily-templates-ui.js';
 import { 
     addShiftRow,
@@ -8,7 +8,8 @@ import {
     handleResetTemplate,
     applyTemplateForHq,
     loadAppliedPlanForManager,
-    updateTemplateStats,
+    updateTemplateStats, 
+    handleAutoGenerate,
     checkTemplateChangesAndToggleResetButton,
     loadTemplate
 } from './daily-templates-logic.js';
@@ -528,12 +529,25 @@ function initializeAutoGenerateModal(signal) {
     const autoGenerateBtn = document.getElementById('auto-generate-btn');
     const autoGenerateModal = document.getElementById('auto-generate-modal');
 
-    if (!autoGenerateBtn || !autoGenerateModal) return;
+    if (!autoGenerateBtn || !autoGenerateModal) {
+        return;
+    }
 
     const closeBtn = autoGenerateModal.querySelector('.modal-close-btn');
     const cancelBtn = autoGenerateModal.querySelector('.modal-cancel-btn');
+    const autoGenerateForm = document.getElementById('auto-generate-form');
 
     const openModal = () => {
+        // Pre-fill values
+        document.getElementById('open-time').value = '06:00';
+        document.getElementById('close-time').value = '22:00';
+        const currentTemplate = allTemplates.find(t => t.id === currentTemplateId);
+        if (currentTemplate && currentTemplate.totalManhour) {
+            document.getElementById('target-man-hours').value = currentTemplate.totalManhour;
+        } else {
+            document.getElementById('target-man-hours').value = '40';
+        }
+
         autoGenerateModal.classList.remove('hidden');
         autoGenerateModal.classList.add('flex');
         setTimeout(() => autoGenerateModal.classList.add('show'), 10);
@@ -552,6 +566,47 @@ function initializeAutoGenerateModal(signal) {
             closeModal();
         }
     }, { signal });
+
+    if (autoGenerateForm) {
+        autoGenerateForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            let templateId = currentTemplateId;
+
+            // Nếu đang ở chế độ tạo mới (chưa có templateId)
+            if (!templateId) {
+                const newTemplateName = await window.showPrompt('Bạn đang tạo lịch cho một mẫu mới. Vui lòng đặt tên cho mẫu này:', 'Đặt tên cho Mẫu mới', 'Mẫu mới - ' + new Date().toLocaleDateString('vi-VN'));
+                if (!newTemplateName || !newTemplateName.trim()) {
+                    window.showToast('Đã hủy thao tác vì chưa đặt tên cho mẫu.', 'info');
+                    return;
+                }
+                try {
+                    templateId = await createNewTemplate(newTemplateName.trim());
+                    setCurrentTemplateId(templateId); // Cập nhật ID mẫu hiện tại
+                } catch (error) {
+                    window.showToast(`Lỗi khi tạo mẫu mới: ${error.message}`, 'error');
+                    return;
+                }
+            }
+
+            const openTime = document.getElementById('open-time').value;
+            const closeTime = document.getElementById('close-time').value;
+            const targetManHours = parseFloat(document.getElementById('target-man-hours').value);
+
+            const submitBtn = autoGenerateForm.querySelector('button[type="submit"]');
+            if (submitBtn) submitBtn.disabled = true;
+
+            try {
+                await handleAutoGenerate(openTime, closeTime, targetManHours);
+                window.showToast('Đã tự động tạo lịch trình thành công!', 'success');
+            } catch (error) {
+                console.error("Lỗi khi tự động tạo lịch trình:", error);
+                window.showToast(`Đã xảy ra lỗi: ${error.message}`, 'error');
+            } finally {
+                closeModal();
+                if (submitBtn) submitBtn.disabled = false;
+            }
+        }, { signal });
+    }
 }
 
 export function cleanup() {
