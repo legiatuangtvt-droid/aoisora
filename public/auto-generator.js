@@ -20,12 +20,6 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
     // --- START: MOCK DATA CHO VỊ TRÍ CÔNG VIỆC VÀ CA LÀM VIỆC ---
     // (Dữ liệu này sẽ được thay thế bằng thuật toán trong tương lai)
 
-    // Dữ liệu giả cho các ca làm việc
-    const mockShiftCodes = [
-        { shiftCode: 'V812', timeRange: '08:00 ~ 16:00' },
-        { shiftCode: 'V829', timeRange: '14:00 ~ 22:00' }
-    ];
-
     // Quy tắc: 5 ca V812 và 5 ca V829, mỗi nhóm có các vị trí theo thứ tự
     const positionOrder = ['Leader', 'POS', 'MMD', 'Ngành hàng', 'Aeon Cafe'];
     const shiftCodeOrder = ['V812', 'V812', 'V812', 'V812', 'V812', 'V829', 'V829', 'V829', 'V829', 'V829'];
@@ -114,7 +108,8 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
             continue;
         }
 
-        const shiftInfo = mockShiftCodes.find(sc => sc.shiftCode === shiftCodeForThisRow);
+        // SỬA: Tra cứu thông tin ca làm việc từ `allShiftCodes` thay vì mock data
+        const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === shiftCodeForThisRow);
         if (!shiftInfo || !shiftInfo.timeRange) {
             console.warn(`Không tìm thấy thông tin hoặc timeRange cho mã ca: ${shiftCodeForThisRow}. Bỏ qua ca này.`);
             continue;
