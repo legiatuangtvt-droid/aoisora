@@ -17,6 +17,30 @@ import { timeToMinutes } from './utils.js';
  * @returns {object} Một đối tượng chứa { schedule, shiftMappings, totalManhour }.
  */
 export function generateSchedule(openTime, closeTime, targetManHours) {
+    // --- START: MOCK DATA CHO VỊ TRÍ CÔNG VIỆC VÀ CA LÀM VIỆC ---
+    // (Dữ liệu này sẽ được thay thế bằng thuật toán trong tương lai)
+
+    // Dữ liệu giả cho các vị trí công việc
+    const mockWorkPositions = [
+        { id: 'leader-pos', name: 'Leader' },
+        { id: 'pos-pos', name: 'POS' },
+        { id: 'mmd-pos', name: 'MMD' },
+        { id: 'nganhhang-pos', name: 'Ngành hàng' },
+        { id: 'aeoncafe-pos', name: 'Aeon Cafe' }
+    ];
+
+    // Dữ liệu giả cho các ca làm việc
+    const mockShiftCodes = [
+        { shiftCode: 'V812', timeRange: '08:00 ~ 16:00' },
+        { shiftCode: 'V829', timeRange: '14:00 ~ 22:00' }
+    ];
+
+    // Quy tắc: 5 ca V812 và 5 ca V829, mỗi nhóm có các vị trí theo thứ tự
+    const positionOrder = ['Leader', 'POS', 'MMD', 'Ngành hàng', 'Aeon Cafe'];
+    const shiftCodeOrder = ['V812', 'V812', 'V812', 'V812', 'V812', 'V829', 'V829', 'V829', 'V829', 'V829'];
+
+    // --- END: MOCK DATA ---
+
     // QUY TẮC:
     // 1. Vị trí công việc trên cùng trong bảng lịch trình luôn là Leader.
     // 2. Phân bổ các task dựa trên RE (Recommended Effort) đã tính toán.
@@ -32,19 +56,19 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
     const reParameters = currentTemplate?.reParameters || {};
 
     // Tìm ID của vị trí công việc 'Leader' và một vị trí 'Staff' mặc định
-    const leaderWorkPosition = allWorkPositions.find(pos => pos.name === 'Leader');
+    const leaderWorkPosition = mockWorkPositions.find(pos => pos.name === 'Leader'); // SỬA: Dùng mock data
     const leaderWorkPositionId = leaderWorkPosition ? leaderWorkPosition.id : null;
-    const defaultStaffWorkPosition = allWorkPositions.find(pos => pos.name !== 'Leader');
+    const defaultStaffWorkPosition = mockWorkPositions.find(pos => pos.name !== 'Leader'); // SỬA: Dùng mock data
     const defaultStaffWorkPositionId = defaultStaffWorkPosition ? defaultStaffWorkPosition.id : null;
 
     if (!leaderWorkPositionId) {
         console.warn("Không tìm thấy vị trí công việc 'Leader'. Vui lòng cấu hình.");
         throw new Error("Không tìm thấy vị trí công việc 'Leader'.");
     }
-    if (!defaultStaffWorkPositionId) {
-        console.warn("Không tìm thấy vị trí công việc 'Staff' mặc định. Vui lòng cấu hình.");
-        throw new Error("Không tìm thấy vị trí công việc 'Staff' mặc định.");
-    }
+    // if (!defaultStaffWorkPositionId) { // Tạm thời vô hiệu hóa vì logic đã thay đổi
+    //     console.warn("Không tìm thấy vị trí công việc 'Staff' mặc định. Vui lòng cấu hình.");
+    //     throw new Error("Không tìm thấy vị trí công việc 'Staff' mặc định.");
+    // }
 
     // SỬA LỖI: Khởi tạo lại biến availableShiftCodes đã bị thiếu.
     // Chuẩn bị danh sách mã ca để sử dụng lần lượt.
@@ -85,6 +109,49 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
     const openMinutes = timeToMinutes(openTime);
     const closeMinutes = timeToMinutes(closeTime);
 
+    // --- LOGIC MỚI: Lập kế hoạch ca làm việc dựa trên MOCK DATA ---
+    const plannedShifts = [];
+    for (let i = 0; i < shiftCodeOrder.length; i++) {
+        const shiftId = `shift-${i + 1}`;
+        const shiftCodeForThisRow = shiftCodeOrder[i];
+        // Vị trí công việc được xác định theo thứ tự lặp lại cho mỗi nhóm 5 ca
+        const positionName = positionOrder[i % 5];
+        const position = mockWorkPositions.find(p => p.name === positionName);
+
+        if (!position) {
+            console.warn(`Không tìm thấy vị trí công việc '${positionName}' trong mock data.`);
+            continue;
+        }
+
+        const shiftInfo = mockShiftCodes.find(sc => sc.shiftCode === shiftCodeForThisRow);
+        if (!shiftInfo || !shiftInfo.timeRange) {
+            console.warn(`Không tìm thấy thông tin hoặc timeRange cho mã ca: ${shiftCodeForThisRow}. Bỏ qua ca này.`);
+            continue;
+        }
+
+        const [startStr, endStr] = shiftInfo.timeRange.split('~').map(s => s.trim());
+        const shiftStartMinutes = timeToMinutes(startStr);
+        const shiftEndMinutes = timeToMinutes(endStr);
+
+        plannedShifts.push({
+            shiftId,
+            shiftCode: shiftCodeForThisRow,
+            positionId: position.id,
+            startMinutes: shiftStartMinutes,
+            endMinutes: shiftEndMinutes,
+            availableSlots: []
+        });
+
+        for (let currentMinute = shiftStartMinutes; currentMinute < shiftEndMinutes; currentMinute += 15) {
+            const hour = Math.floor(currentMinute / 60);
+            const minute = currentMinute % 60;
+            const startTime = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+            plannedShifts.find(p => p.shiftId === shiftId).availableSlots.push({ shiftId, startTime });
+        }
+        newScheduleData[shiftId] = [];
+    }
+    // --- KẾT THÚC LOGIC MỚI ---
+
     // --- LOGIC MỚI: Lập kế hoạch số ca tối thiểu để đạt targetManHours ---
     // 1. Tính tổng số slot 15 phút cần lấp đầy.
     const totalSlotsNeeded = Math.ceil(targetManHours * 4);
@@ -108,51 +175,7 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
     }
 
     // 3. Lặp và thêm từng ca cho đến khi tổng thời lượng đủ.
-    const plannedShifts = [];
-    let slotsAccountedFor = 0;
-    let shiftNum = 0;
-    const MAX_SHIFTS_DISPLAY = 10; // Giới hạn số ca tối đa để tránh vòng lặp vô tận
-
-    while (slotsAccountedFor < totalSlotsNeeded && shiftNum < MAX_SHIFTS_DISPLAY) {
-        shiftNum++;
-        const shiftId = `shift-${shiftNum}`;
-        // Quy tắc 1: Vị trí công việc trên cùng luôn là Leader
-        const positionId = (shiftNum === 1) ? leaderWorkPositionId : defaultStaffWorkPositionId;
-        // Lấy mã ca lần lượt từ danh sách có sẵn, quay vòng nếu cần.
-        const shiftCodeForThisRow = availableShiftsWithDuration[(shiftNum - 1) % availableShiftsWithDuration.length].shiftCode;
-
-        const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === shiftCodeForThisRow);
-        if (!shiftInfo || !shiftInfo.timeRange) {
-            console.warn(`Không tìm thấy thông tin hoặc timeRange cho mã ca: ${shiftCodeForThisRow}. Bỏ qua ca này.`);
-            continue; // Bỏ qua nếu mã ca không hợp lệ
-        }
-
-        const [startStr, endStr] = shiftInfo.timeRange.split('~').map(s => s.trim());
-        const shiftStartMinutes = timeToMinutes(startStr);
-        const shiftEndMinutes = timeToMinutes(endStr);
-
-        // Lưu lại kế hoạch cho ca này
-        plannedShifts.push({
-            shiftId,
-            shiftCode: shiftCodeForThisRow,
-            positionId,
-            startMinutes: shiftStartMinutes,
-            endMinutes: shiftEndMinutes,
-            availableSlots: [] // Mảng chứa các slot 15 phút hợp lệ của riêng ca này
-        });
-
-        // Cộng dồn số slot của ca vừa thêm vào tổng
-        slotsAccountedFor += (shiftEndMinutes - shiftStartMinutes) / 15;
-
-        // Điền các slot hợp lệ vào cho ca vừa lập kế hoạch
-        for (let currentMinute = shiftStartMinutes; currentMinute < shiftEndMinutes; currentMinute += 15) {
-            const hour = Math.floor(currentMinute / 60);
-            const minute = currentMinute % 60;
-            const startTime = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-            plannedShifts.find(p => p.shiftId === shiftId).availableSlots.push({ shiftId, startTime });
-        }
-        newScheduleData[shiftId] = [];
-    }
+    // --- TOÀN BỘ LOGIC LẬP KẾ HOẠCH CA CŨ ĐÃ ĐƯỢC THAY THẾ BẰNG LOGIC MOCK DATA Ở TRÊN ---
 
     // 4. Điền các task vào các slot đã chuẩn bị
     let currentTaskIndex = 0;
