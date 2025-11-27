@@ -76,13 +76,19 @@
         "tailwind_bg": "bg-amber-200", "tailwind_text": "text-amber-800", "tailwind_border": "border-amber-500"
       },
       "tasks": [
-        { "order": "1", "name": "Nhận hàng Peri", "typeTask": "Product", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 60, "manual_number": "MMD-001", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 2, "startTime": "06:00", "endTime": "11:00", "allowedPositions": ["MMD", "Leader"] },
-        { "order": "2", "name": "Nhận hàng Delica", "typeTask": "Product", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 30, "manual_number": "MMD-002", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 1, "startTime": "06:55", "endTime": "10:05", "allowedPositions": ["MMD", "Leader"] },
-        { "order": "3", "name": "Nhận hàng RDC Dry", "typeTask": "Product", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 90, "manual_number": "MMD-003", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 2, "startTime": "11:00", "endTime": "15:00", "allowedPositions": ["MMD", "Leader"] },
-        { "order": "4", "name": "Nhận hàng RDC D&D", "typeTask": "Product", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 45, "manual_number": "MMD-004", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 2, "startTime": "09:30", "endTime": "09:45", "allowedPositions": ["MMD", "Leader"] },
-        { "order": "5", "name": "Nhận hàng D&D từ NCC", "typeTask": "Product", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 45, "manual_number": "MMD-005", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 2, "startTime": "07:00", "endTime": "08:00", "allowedPositions": ["MMD", "Leader"] },
+        { "order": "1", "name": "Nhận hàng Peri", "typeTask": "Product", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 60, "manual_number": "MMD-001", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 2, "allowedPositions": ["MMD", "Leader"],
+          "timeWindows": [ { "startTime": "06:00", "endTime": "11:00" } ] },
+        { "order": "2", "name": "Nhận hàng Delica", "typeTask": "Product", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 30, "manual_number": "MMD-002", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 1, "allowedPositions": ["MMD", "Leader"],
+          "timeWindows": [ { "startTime": "06:55", "endTime": "07:00" }, { "startTime": "10:00", "endTime": "10:05" } ] },
+        { "order": "3", "name": "Nhận hàng RDC Dry", "typeTask": "Product", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 90, "manual_number": "MMD-003", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 2, "allowedPositions": ["MMD", "Leader"],
+          "timeWindows": [ { "startTime": "11:00", "endTime": "15:00" } ] },
+        { "order": "4", "name": "Nhận hàng RDC D&D", "typeTask": "Product", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 45, "manual_number": "MMD-004", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 2, "allowedPositions": ["MMD", "Leader"],
+          "timeWindows": [ { "startTime": "09:30", "endTime": "09:45" } ] },
+        { "order": "5", "name": "Nhận hàng D&D từ NCC", "typeTask": "Product", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 45, "manual_number": "MMD-005", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 2, "allowedPositions": ["MMD", "Leader"],
+          "timeWindows": [ { "startTime": "07:00", "endTime": "08:00" } ] },
         { "order": "6", "name": "Làm báo cáo hóa đơn MMD", "typeTask": "Fixed", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 30, "manual_number": "MMD-006", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 1, "startTime": "", "endTime": "", "allowedPositions": ["MMD", "Leader"] },
-        { "order": "7", "name": "Xử lý và update GTN/GRN", "typeTask": "Fixed", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 60, "manual_number": "MMD-007", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 1, "startTime": "13:00", "endTime": "13:10", "allowedPositions": ["MMD", "Leader"] }
+        { "order": "7", "name": "Xử lý và update GTN/GRN", "typeTask": "Fixed", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 60, "manual_number": "MMD-007", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 1, "allowedPositions": ["MMD", "Leader"],
+          "timeWindows": [ { "startTime": "13:00", "endTime": "13:10" } ] }
       ]},
     { "id": "LEADER", "order": 5, "code": "LEADER", 
       "color": {
