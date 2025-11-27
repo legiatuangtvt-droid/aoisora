@@ -20,15 +20,6 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
     // --- START: MOCK DATA CHO VỊ TRÍ CÔNG VIỆC VÀ CA LÀM VIỆC ---
     // (Dữ liệu này sẽ được thay thế bằng thuật toán trong tương lai)
 
-    // Dữ liệu giả cho các vị trí công việc
-    const mockWorkPositions = [
-        { id: 'leader-pos', name: 'Leader' },
-        { id: 'pos-pos', name: 'POS' },
-        { id: 'mmd-pos', name: 'MMD' },
-        { id: 'nganhhang-pos', name: 'Ngành hàng' },
-        { id: 'aeoncafe-pos', name: 'Aeon Cafe' }
-    ];
-
     // Dữ liệu giả cho các ca làm việc
     const mockShiftCodes = [
         { shiftCode: 'V812', timeRange: '08:00 ~ 16:00' },
@@ -56,9 +47,9 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
     const reParameters = currentTemplate?.reParameters || {};
 
     // Tìm ID của vị trí công việc 'Leader' và một vị trí 'Staff' mặc định
-    const leaderWorkPosition = mockWorkPositions.find(pos => pos.name === 'Leader'); // SỬA: Dùng mock data
+    const leaderWorkPosition = allWorkPositions.find(pos => pos.name === 'Leader'); // SỬA: Dùng dữ liệu thật
     const leaderWorkPositionId = leaderWorkPosition ? leaderWorkPosition.id : null;
-    const defaultStaffWorkPosition = mockWorkPositions.find(pos => pos.name !== 'Leader'); // SỬA: Dùng mock data
+    const defaultStaffWorkPosition = allWorkPositions.find(pos => pos.name !== 'Leader'); // SỬA: Dùng dữ liệu thật
     const defaultStaffWorkPositionId = defaultStaffWorkPosition ? defaultStaffWorkPosition.id : null;
 
     if (!leaderWorkPositionId) {
@@ -116,7 +107,7 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
         const shiftCodeForThisRow = shiftCodeOrder[i];
         // Vị trí công việc được xác định theo thứ tự lặp lại cho mỗi nhóm 5 ca
         const positionName = positionOrder[i % 5];
-        const position = mockWorkPositions.find(p => p.name === positionName);
+        const position = allWorkPositions.find(p => p.name === positionName);
 
         if (!position) {
             console.warn(`Không tìm thấy vị trí công việc '${positionName}' trong mock data.`);
