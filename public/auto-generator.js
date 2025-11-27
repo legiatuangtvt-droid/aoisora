@@ -79,7 +79,8 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
                         groupId: groupInfo.id, // Lấy id từ chính groupInfo
                         numSlotsRemaining: numSlots,
                         originalNumSlots: numSlots, // Giữ lại số slot gốc để sắp xếp
-                        priority: groupInfo.priority || 0 // Giả định group có thể có thuộc tính priority
+                        priority: groupInfo.priority || 0, // Giả định group có thể có thuộc tính priority
+                        typeTask: task.typeTask // BỔ SUNG: Lưu lại typeTask để sắp xếp
                         // concurrentPerformers được lấy động bên dưới
                     });
                 }
@@ -87,8 +88,18 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
         }
     }
 
-    // Quy tắc 3: Ưu tiên các task có RE cao hơn hoặc các task quan trọng (theo priority của group).
-    taskSlotsToPlace.sort((a, b) => b.priority - a.priority || b.originalNumSlots - a.originalNumSlots);
+    // Quy tắc 3: Ưu tiên bố trí task theo typeTask (Fixed > CTM > Product), sau đó là priority của group và RE.
+    const typeTaskPriority = {
+        'Fixed': 1,
+        'CTM': 2,
+        'Product': 3
+    };
+
+    taskSlotsToPlace.sort((a, b) => {
+        const priorityA = typeTaskPriority[a.typeTask] || 99;
+        const priorityB = typeTaskPriority[b.typeTask] || 99;
+        return priorityA - priorityB || b.priority - a.priority || b.originalNumSlots - a.originalNumSlots;
+    });
 
     // 2. Xác định khung giờ hoạt động và số lượng ca cần thiết
     const openMinutes = timeToMinutes(openTime);
