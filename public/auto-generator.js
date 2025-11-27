@@ -22,7 +22,7 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
 
     // Quy tắc: 5 ca V812 và 5 ca V829, mỗi nhóm có các vị trí theo thứ tự
     const positionOrder = ['Leader', 'POS', 'MMD', 'Ngành hàng', 'Aeon Cafe'];
-    const shiftCodeOrder = ['V812', 'V812', 'V812', 'V812', 'V812', 'V829', 'V829', 'V829', 'V829', 'V829'];
+    const shiftCodeOrder = ['V911', 'V911', 'V911', 'V911', 'V911', 'V829', 'V829', 'V829', 'V829', 'V829'];
 
     // --- END: MOCK DATA ---
 
