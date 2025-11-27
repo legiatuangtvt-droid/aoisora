@@ -55,20 +55,23 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
     // Quy tắc 2: Phân bổ các task dựa trên RE đã tính toán.
     // 1. Tính toán số lượng slot (15 phút) cần thiết cho mỗi task dựa trên RE
     const taskSlotsToPlace = [];
-    for (const groupId in allTaskGroups) {
-        const groupInfo = allTaskGroups[groupId];
+    // CHỈNH SỬA: Chuyển đổi allTaskGroups thành mảng để sử dụng nhất quán
+    const taskGroupsArray = Object.values(allTaskGroups);
+
+    for (const groupInfo of taskGroupsArray) {
         if (groupInfo.tasks && Array.isArray(groupInfo.tasks)) {
             groupInfo.tasks.forEach(task => {
                 const taskHours = calculateREForTask(task, groupInfo, reParameters);
                 const numSlots = Math.round(taskHours * 4); // 1 slot = 0.25 giờ
                 if (numSlots > 0) {
                     taskSlotsToPlace.push({
-                        taskCode: task.code || '', // SỬA LỖI: Đảm bảo taskCode không phải là undefined
+                        taskCode: task.manual_number || task.code || '', // Ưu tiên manual_number
                         taskName: task.name,
-                        groupId: groupId,
+                        groupId: groupInfo.id, // Lấy id từ chính groupInfo
                         numSlotsRemaining: numSlots,
                         originalNumSlots: numSlots, // Giữ lại số slot gốc để sắp xếp
                         priority: groupInfo.priority || 0 // Giả định group có thể có thuộc tính priority
+                        // concurrentPerformers được lấy động bên dưới
                     });
                 }
             });
@@ -154,6 +157,10 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
     // 4. Điền các task vào các slot đã chuẩn bị
     let currentTaskIndex = 0;
     // Lặp qua từng ca đã được lập kế hoạch
+
+    // --- LOGIC MỚI: Theo dõi số lượng task đồng thời ---
+    const concurrentTaskCount = {}; // { "startTime_taskCode": count }
+
     for (const shift of plannedShifts) { // Sửa lỗi: Lặp qua plannedShifts thay vì allAvailableGridSlots
         // Xáo trộn các slot trong ca này để phân bổ task ngẫu nhiên (Quy tắc 5)
         const shuffledSlotsInShift = [...shift.availableSlots].sort(() => Math.random() - 0.5);
@@ -170,13 +177,31 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
             }
 
             if (taskToAssign) {
-                newScheduleData[slot.shiftId].push({
-                    taskCode: taskToAssign.taskCode,
-                    taskName: taskToAssign.taskName,
-                    startTime: slot.startTime,
-                    groupId: taskToAssign.groupId
-                });
-                taskToAssign.numSlotsRemaining--;
+                // --- LOGIC MỚI: Kiểm tra giới hạn concurrentPerformers ---
+                const taskKey = `${slot.startTime}_${taskToAssign.taskCode}`;
+                const currentCount = concurrentTaskCount[taskKey] || 0;
+
+                // Tìm thông tin chi tiết của task để lấy giá trị concurrentPerformers
+                const taskGroup = taskGroupsArray.find(g => g.id === taskToAssign.groupId);
+                const taskInfo = taskGroup?.tasks.find(t => (t.manual_number || t.code) === taskToAssign.taskCode);
+                const limit = taskInfo?.concurrentPerformers;
+
+                // Nếu limit là 0 (không giới hạn) hoặc số lượng hiện tại chưa đạt giới hạn
+                if (limit === 0 || limit === undefined || currentCount < limit) {
+                    // Gán task vào slot
+                    newScheduleData[slot.shiftId].push({
+                        taskCode: taskToAssign.taskCode,
+                        taskName: taskToAssign.taskName,
+                        startTime: slot.startTime,
+                        groupId: taskToAssign.groupId
+                    });
+                    taskToAssign.numSlotsRemaining--;
+
+                    // Tăng bộ đếm cho task này tại thời điểm này
+                    concurrentTaskCount[taskKey] = currentCount + 1;
+                }
+                // Nếu đã đạt giới hạn, không làm gì cả, vòng lặp sẽ chuyển sang slot tiếp theo
+                // và thử lại với cùng một task (hoặc task tiếp theo nếu task hiện tại đã hết slot).
             }
         }
         if (currentTaskIndex >= taskSlotsToPlace.length) break;
