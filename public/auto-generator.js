@@ -182,58 +182,58 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
         for (let hour = openMinutes / 60; hour < closeMinutes / 60; hour++) {
             // --- LOGIC MỚI: GIAI ĐOẠN 1A - BỐ TRÍ POS 1 (BẮT BUỘC) ---
             const pos1Task = posTasksInfo['POS 1'];
-            if (pos1Task && pos1Task.startTime && pos1Task.endTime) {
-                const pos1StartMinutes = timeToMinutes(pos1Task.startTime);
-                const pos1EndMinutes = timeToMinutes(pos1Task.endTime);
+            // SỬA LỖI: Kiểm tra mảng timeWindows thay vì startTime/endTime không tồn tại
+            if (pos1Task && Array.isArray(pos1Task.timeWindows) && pos1Task.timeWindows.length > 0) {
+                // Lặp qua từng khung giờ được định nghĩa cho POS 1
+                for (const window of pos1Task.timeWindows) {
+                    const pos1StartMinutes = timeToMinutes(window.startTime);
+                    const pos1EndMinutes = timeToMinutes(window.endTime);
 
-                for (let minute = pos1StartMinutes; minute < pos1EndMinutes; minute += 15) {
-                    const h = Math.floor(minute / 60);
-                    const m = minute % 60;
-                    const startTime = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                    for (let minute = pos1StartMinutes; minute < pos1EndMinutes; minute += 15) {
+                        const h = Math.floor(minute / 60);
+                        const m = minute % 60;
+                        const startTime = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 
-                    // --- FIX: KIỂM TRA concurrentPerformers CHO POS 1 ---
-                    // Đếm xem đã có bao nhiêu task POS 1 được xếp vào thời điểm này trên TẤT CẢ các ca.
-                    let existingPos1Count = 0;
-                    for (const shiftId in newScheduleData) {
-                        if (newScheduleData[shiftId].some(t => t.startTime === startTime && t.taskCode === pos1Task.taskCode)) {
-                            existingPos1Count++;
+                        // Đếm xem đã có bao nhiêu task POS 1 được xếp vào thời điểm này trên TẤT CẢ các ca.
+                        let existingPos1Count = 0;
+                        for (const shiftId in newScheduleData) {
+                            if (newScheduleData[shiftId].some(t => t.startTime === startTime && t.taskCode === pos1Task.taskCode)) {
+                                existingPos1Count++;
+                            }
                         }
-                    }
 
-                    // Nếu số lượng hiện tại đã đạt hoặc vượt giới hạn, bỏ qua slot này.
-                    if (existingPos1Count >= (pos1Task.concurrentPerformers || 1)) {
-                        continue;
-                    }
-
-                    // SỬA ĐỔI: Tìm ca làm việc theo thứ tự ưu tiên trong allowedPositions
-                    let availableShift = null;
-                    const prioritizedPositions = pos1Task.allowedPositions || [];
-
-                    for (const positionName of prioritizedPositions) {
-                        const foundShift = plannedShifts.find(shift => {
-                            const shiftPositionName = positionIdToNameMap[shift.positionId];
-                            // Điều kiện: đúng vị trí công việc, ca còn hoạt động, và slot còn trống
-                            return shiftPositionName === positionName &&
-                                   minute >= shift.startMinutes && minute < shift.endMinutes &&
-                                   !newScheduleData[shift.shiftId].some(t => t.startTime === startTime);
-                        });
-
-                        if (foundShift) {
-                            availableShift = foundShift;
-                            break; // Đã tìm thấy ca phù hợp với vị trí ưu tiên, dừng tìm kiếm
+                        // Nếu số lượng hiện tại đã đạt hoặc vượt giới hạn, bỏ qua slot này.
+                        if (existingPos1Count >= (pos1Task.concurrentPerformers || 1)) {
+                            continue;
                         }
-                    }
 
-                    if (availableShift) {
-                        newScheduleData[availableShift.shiftId].push({
-                            taskCode: pos1Task.taskCode,
-                            taskName: pos1Task.name || `Unnamed Task ${pos1Task.taskCode}`, // Đảm bảo taskName luôn có giá trị
-                            startTime: startTime,
-                            groupId: posGroup.id
-                        });
-                    } else {
-                        // Ghi log nếu không tìm thấy ca trống cho một slot bắt buộc
-                        // console.warn(`Không tìm thấy ca làm việc trống để bố trí POS 1 tại ${startTime}`);
+                        // Tìm ca làm việc theo thứ tự ưu tiên trong allowedPositions
+                        let availableShift = null;
+                        const prioritizedPositions = pos1Task.allowedPositions || [];
+
+                        for (const positionName of prioritizedPositions) {
+                            const foundShift = plannedShifts.find(shift => {
+                                const shiftPositionName = positionIdToNameMap[shift.positionId];
+                                // Điều kiện: đúng vị trí công việc, ca còn hoạt động, và slot còn trống
+                                return shiftPositionName === positionName &&
+                                       minute >= shift.startMinutes && minute < shift.endMinutes &&
+                                       !newScheduleData[shift.shiftId].some(t => t.startTime === startTime);
+                            });
+
+                            if (foundShift) {
+                                availableShift = foundShift;
+                                break; // Đã tìm thấy ca phù hợp với vị trí ưu tiên, dừng tìm kiếm
+                            }
+                        }
+
+                        if (availableShift) {
+                            newScheduleData[availableShift.shiftId].push({
+                                taskCode: pos1Task.taskCode,
+                                taskName: pos1Task.name || `Unnamed Task ${pos1Task.taskCode}`,
+                                startTime: startTime,
+                                groupId: posGroup.id
+                            });
+                        }
                     }
                 }
             }
@@ -357,30 +357,21 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
                         continue;
                     }
 
-                    // --- LOGIC MỚI: Xử lý cả startTime/endTime và timeWindows ---
+                    // CẬP NHẬT: Logic chỉ xử lý timeWindows vì đây là tiêu chuẩn mới
                     if (taskInfo) {
                         const slotMinutes = timeToMinutes(slot.startTime);
                         const slotEndMinutes = slotMinutes + 15;
                         let isSlotInValidTimeWindow = false;
 
-                        // Ưu tiên kiểm tra mảng timeWindows trước
+                        // Nếu task có định nghĩa timeWindows, kiểm tra xem slot có nằm trong khung giờ hợp lệ không.
+                        // Nếu không có, coi như task có thể được xếp vào bất kỳ lúc nào.
                         if (Array.isArray(taskInfo.timeWindows) && taskInfo.timeWindows.length > 0) {
-                            // Kiểm tra xem slot có nằm trong BẤT KỲ khung giờ nào không
                             isSlotInValidTimeWindow = taskInfo.timeWindows.some(window => {
                                 const windowStartMinutes = timeToMinutes(window.startTime);
                                 const windowEndMinutes = timeToMinutes(window.endTime);
-                                // Điều kiện giao nhau: !(slot kết thúc trước khi window bắt đầu || slot bắt đầu sau khi window kết thúc)
                                 return !(slotEndMinutes <= windowStartMinutes || slotMinutes >= windowEndMinutes);
                             });
-                        } 
-                        // Nếu không có timeWindows, kiểm tra startTime/endTime cũ
-                        else if (taskInfo.startTime && taskInfo.endTime) {
-                            const taskStartMinutes = timeToMinutes(taskInfo.startTime);
-                            const taskEndMinutes = timeToMinutes(taskInfo.endTime);
-                            isSlotInValidTimeWindow = !(slotEndMinutes <= taskStartMinutes || slotMinutes >= taskEndMinutes);
-                        }
-                        // Nếu không có định nghĩa thời gian nào, coi như hợp lệ
-                        else {
+                        } else {
                             isSlotInValidTimeWindow = true; 
                         }
 
