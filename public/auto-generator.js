@@ -76,11 +76,6 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
     for (const groupInfo of taskGroupsArray) {
         if (groupInfo.tasks && Array.isArray(groupInfo.tasks)) {
             groupInfo.tasks.forEach(task => {
-                // BỎ QUA: Các task POS đặc biệt sẽ được xử lý riêng
-                if (task.name === 'POS 1' || task.name === 'POS 2' || task.name === 'POS 3') {
-                    return;
-                }
-
                 const taskHours = calculateREForTask(task, groupInfo, reParameters);
                 const numSlots = Math.round(taskHours * 4); // 1 slot = 0.25 giờ
                 if (numSlots > 0) {
@@ -88,15 +83,15 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
                     const groupOrder = String(groupInfo.order || '0');
                     const taskOrder = String(task.order || '0').padStart(2, '0');
                     const newTaskCode = `1${groupOrder}${taskOrder}`;
+                    // SỬA LỖI: Sao chép toàn bộ thuộc tính của task gốc (...)
+                    // để đảm bảo các logic sau đó (như shiftPlacement) có đủ thông tin.
                     taskSlotsToPlace.push({
+                        ...task, // <-- Dòng quan trọng được thêm vào
                         taskCode: newTaskCode,
-                        taskName: task.name || `Unnamed Task ${newTaskCode}`, // Đảm bảo taskName luôn có giá trị
-                        groupId: groupInfo.id, // Lấy id từ chính groupInfo
+                        taskName: task.name || `Unnamed Task ${newTaskCode}`, // SỬA LỖI: Thêm lại taskName một cách tường minh
+                        groupId: groupInfo.id, // SỬA LỖI: Thêm groupId vào đối tượng task
                         numSlotsRemaining: numSlots,
-                        originalNumSlots: numSlots, // Giữ lại số slot gốc để sắp xếp
-                        priority: groupInfo.priority || 0, // Giả định group có thể có thuộc tính priority
-                        typeTask: task.typeTask // BỔ SUNG: Lưu lại typeTask để sắp xếp
-                        // concurrentPerformers được lấy động bên dưới
+                        originalNumSlots: numSlots
                     });
                 }
             });
@@ -164,6 +159,120 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
     }
     // --- KẾT THÚC LOGIC MỚI ---
 
+    // --- GIAI ĐOẠN 1A: BỐ TRÍ CÁC TASK CÓ YÊU CẦU VỊ TRÍ ĐẶC BIỆT (shiftPlacement) ---
+    // Đảo lên trước để ưu tiên cao nhất
+    const placementTasks = taskSlotsToPlace.filter(t => t.shiftPlacement);
+    if (placementTasks.length > 0) { // Lấy task từ danh sách chính
+        // 1. Xác định ca đầu tiên và cuối cùng trong ngày cho mỗi vị trí công việc
+        const positionShifts = {};
+        plannedShifts.forEach(shift => {
+            const positionName = positionIdToNameMap[shift.positionId];
+            if (!positionShifts[positionName]) {
+                positionShifts[positionName] = [];
+            }
+            positionShifts[positionName].push(shift);
+        });
+
+        // Sắp xếp các ca trong mỗi vị trí theo thời gian bắt đầu
+        for (const posName in positionShifts) {
+            positionShifts[posName].sort((a, b) => a.startMinutes - b.startMinutes);
+        }
+
+        // 2. Hàm trợ giúp để xếp một task vào slot
+        const placeTaskInSlot = (shift, startTime, task) => {
+            // Kiểm tra xem slot đã có task chưa
+            if (newScheduleData[shift.shiftId].some(t => t.startTime === startTime)) {
+                // console.warn(`Slot ${startTime} trong ca ${shift.shiftId} đã có task, không thể xếp "${task.name}".`);
+                return false;
+            }
+            newScheduleData[shift.shiftId].push({
+                taskCode: task.taskCode,
+                taskName: task.name,
+                startTime: startTime,
+                groupId: task.groupId
+            });
+            task.numSlotsRemaining = 0; // Đánh dấu task này đã được xếp xong
+            return true;
+        };
+
+        // 3. Xử lý các loại placement
+        const placementHandlers = {
+            'firstOfDay': (task) => {
+                (task.allowedPositions || []).forEach(posName => {
+                    const shiftsForPos = positionShifts[posName];
+                    if (shiftsForPos && shiftsForPos.length > 0) {
+                        const firstShift = shiftsForPos[0];
+                        const startTime = `${String(Math.floor(firstShift.startMinutes / 60)).padStart(2, '0')}:${String(firstShift.startMinutes % 60).padStart(2, '0')}`;
+                        placeTaskInSlot(firstShift, startTime, task);
+                    }
+                });
+            },
+            'lastOfDay': (task) => {
+                (task.allowedPositions || []).forEach(posName => {
+                    const shiftsForPos = positionShifts[posName];
+                    if (shiftsForPos && shiftsForPos.length > 0) {
+                        const lastShift = shiftsForPos[shiftsForPos.length - 1];
+                        // Tính slot cuối cùng của ca (end - 15 phút)
+                        const lastSlotMinutes = lastShift.endMinutes - 15;
+                        const startTime = `${String(Math.floor(lastSlotMinutes / 60)).padStart(2, '0')}:${String(lastSlotMinutes % 60).padStart(2, '0')}`;
+                        placeTaskInSlot(lastShift, startTime, task);
+                    }
+                });
+            },
+            'firstOfShift': (task) => {
+                plannedShifts.forEach(shift => {
+                    const shiftPositionName = positionIdToNameMap[shift.positionId];
+                    if ((task.allowedPositions || []).includes(shiftPositionName)) {
+                        // Lặp qua các khung giờ cho phép của task
+                        (task.timeWindows || [{ startTime: shift.startMinutes, endTime: shift.endMinutes }]).forEach(window => {
+                            const windowStartMinutes = typeof window.startTime === 'string' ? timeToMinutes(window.startTime) : window.startTime;
+                            // Tìm slot đầu tiên của ca nằm trong khung giờ cho phép
+                            if (shift.startMinutes >= windowStartMinutes) {
+                                const startTime = `${String(Math.floor(shift.startMinutes / 60)).padStart(2, '0')}:${String(shift.startMinutes % 60).padStart(2, '0')}`;
+                                placeTaskInSlot(shift, startTime, task);
+                            }
+                        });
+                    }
+                });
+            },
+            'lastOfShift': (task) => {
+                plannedShifts.forEach(shift => {
+                    const shiftPositionName = positionIdToNameMap[shift.positionId];
+                    if ((task.allowedPositions || []).includes(shiftPositionName)) {
+                        const lastSlotMinutes = shift.endMinutes - 15;
+                        // Lặp qua các khung giờ cho phép của task
+                        (task.timeWindows || [{ startTime: 0, endTime: 9999 }]).forEach(window => {
+                            const windowEndMinutes = typeof window.endTime === 'string' ? timeToMinutes(window.endTime) : window.endTime;
+                            // Tìm slot cuối cùng của ca nằm trong khung giờ cho phép
+                            if (shift.endMinutes <= windowEndMinutes) {
+                                const startTime = `${String(Math.floor(lastSlotMinutes / 60)).padStart(2, '0')}:${String(lastSlotMinutes % 60).padStart(2, '0')}`;
+                                placeTaskInSlot(shift, startTime, task);
+                            }
+                        });
+                    }
+                });
+            }
+        };
+
+        // 4. Sắp xếp các task ưu tiên (ngày trước, ca sau) và thực thi
+        placementTasks.sort((a, b) => {
+            const aIsDay = a.shiftPlacement.type.includes('OfDay');
+            const bIsDay = b.shiftPlacement.type.includes('OfDay');
+            if (aIsDay && !bIsDay) return -1;
+            if (!aIsDay && bIsDay) return 1;
+            return 0;
+        });
+
+        placementTasks.forEach(task => {
+            const handler = placementHandlers[task.shiftPlacement.type];
+            if (handler) {
+                handler(task);
+            } else {
+                console.warn(`Không tìm thấy handler cho shiftPlacement type: "${task.shiftPlacement.type}"`);
+            }
+        });
+    }
+
     // --- LOGIC MỚI: BỐ TRÍ CÁC TASK POS 1, 2, 3 DỰA TRÊN NHU CẦU MANHOUR (ƯU TIÊN ĐẦU TIÊN) ---
     const posGroup = taskGroupsArray.find(g => g.code === 'POS');
     if (posGroup) {
@@ -180,7 +289,7 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
 
         // Lặp qua từng giờ hoạt động của cửa hàng
         for (let hour = openMinutes / 60; hour < closeMinutes / 60; hour++) {
-            // --- LOGIC MỚI: GIAI ĐOẠN 1A - BỐ TRÍ POS 1 (BẮT BUỘC) ---
+            // --- GIAI ĐOẠN 1B - BỐ TRÍ POS 1 (BẮT BUỘC) ---
             const pos1Task = posTasksInfo['POS 1'];
             // SỬA LỖI: Kiểm tra mảng timeWindows thay vì startTime/endTime không tồn tại
             if (pos1Task && Array.isArray(pos1Task.timeWindows) && pos1Task.timeWindows.length > 0) {
@@ -238,7 +347,7 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
                 }
             }
 
-            // --- GIAI ĐOẠN 1B - BỐ TRÍ POS 2, 3 (NẾU CẦN) ---
+            // --- GIAI ĐOẠN 1C - BỐ TRÍ POS 2, 3 (NẾU CẦN) ---
             const hourKey = String(hour).padStart(2, '0');
 
 
@@ -327,7 +436,7 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
     const concurrentTaskCount = {}; // { "startTime_taskCode": count }
 
     /**
-     * Hàm phụ trợ để xếp lịch cho một danh sách task cụ thể.
+     * Hàm phụ trợ để xếp lịch cho các task còn lại.
      * @param {Array} tasks - Danh sách các task cần xếp.
      */
     const scheduleTaskType = (tasks) => {
@@ -342,7 +451,8 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
 
                 // Tìm task phù hợp trong danh sách được cung cấp
                 for (const taskToAssign of tasks) {
-                    if (taskToAssign.numSlotsRemaining <= 0) {
+                    // Bỏ qua các task đã được xếp (bao gồm cả placement tasks)
+                    if (taskToAssign.numSlotsRemaining <= 0 || taskToAssign.shiftPlacement) {
                         continue;
                     }
 
@@ -401,9 +511,7 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
     };
 
     // Thực hiện xếp lịch theo từng giai đoạn (dựa trên typeTask)
-    scheduleTaskType(taskSlotsToPlace.filter(t => t.typeTask === 'Fixed'));
-    scheduleTaskType(taskSlotsToPlace.filter(t => t.typeTask === 'CTM'));
-    scheduleTaskType(taskSlotsToPlace.filter(t => t.typeTask === 'Product'));
+    scheduleTaskType(taskSlotsToPlace); // Truyền toàn bộ danh sách vào
 
     // --- GIAI ĐOẠN 3: LẤP ĐẦY CÁC SLOT CÒN TRỐNG BẰNG CÁC TASK "DAILY" ---
 
