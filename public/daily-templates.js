@@ -541,11 +541,14 @@ function initializeAutoGenerateModal(signal) {
         // Pre-fill values
         document.getElementById('open-time').value = '06:00';
         document.getElementById('close-time').value = '22:00';
-        const currentTemplate = allTemplates.find(t => t.id === currentTemplateId);
-        if (currentTemplate && currentTemplate.totalManhour) {
-            document.getElementById('target-man-hours').value = currentTemplate.totalManhour;
-        } else {
-            document.getElementById('target-man-hours').value = '80';
+        const targetManHoursInput = document.getElementById('target-man-hours');
+        if (targetManHoursInput) {
+            const currentTemplate = allTemplates.find(t => t.id === currentTemplateId);
+            if (currentTemplate && currentTemplate.totalManhour) {
+                targetManHoursInput.value = currentTemplate.totalManhour;
+            } else {
+                targetManHoursInput.value = '80';
+            }
         }
 
         autoGenerateModal.classList.remove('hidden');

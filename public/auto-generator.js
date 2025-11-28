@@ -13,10 +13,9 @@ import { timeToMinutes } from './utils.js';
  *
  * @param {string} openTime - Thời gian mở cửa (ví dụ: "06:00").
  * @param {string} closeTime - Thời gian đóng cửa (ví dụ: "22:00").
- * @param {number} targetManHours - Tổng giờ công mong muốn.
  * @returns {object} Một đối tượng chứa { schedule, shiftMappings, totalManhour }.
  */
-export function generateSchedule(openTime, closeTime, targetManHours) {
+export function generateSchedule(openTime, closeTime) {
     // --- START: MOCK DATA CHO VỊ TRÍ CÔNG VIỆC VÀ CA LÀM VIỆC ---
     // (Dữ liệu này sẽ được thay thế bằng thuật toán trong tương lai)
 
@@ -604,6 +603,6 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
     return {
         schedule: newScheduleData,
         shiftMappings: newShiftMappings,
-        totalManhour: targetManHours
+        totalManhour: currentTemplate?.totalManhour || 0
     };
 }
