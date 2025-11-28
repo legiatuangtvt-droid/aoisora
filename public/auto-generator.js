@@ -222,33 +222,47 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
             'firstOfShift': (task) => {
                 plannedShifts.forEach(shift => {
                     const shiftPositionName = positionIdToNameMap[shift.positionId];
-                    if ((task.allowedPositions || []).includes(shiftPositionName)) {
-                        // Lặp qua các khung giờ cho phép của task
-                        (task.timeWindows || [{ startTime: shift.startMinutes, endTime: shift.endMinutes }]).forEach(window => {
-                            const windowStartMinutes = typeof window.startTime === 'string' ? timeToMinutes(window.startTime) : window.startTime;
-                            // Tìm slot đầu tiên của ca nằm trong khung giờ cho phép
-                            if (shift.startMinutes >= windowStartMinutes) {
-                                const startTime = `${String(Math.floor(shift.startMinutes / 60)).padStart(2, '0')}:${String(shift.startMinutes % 60).padStart(2, '0')}`;
-                                placeTaskInSlot(shift, startTime, task);
+                    const isAllowedPosition = (task.allowedPositions || []).includes(shiftPositionName);
+
+                    // SỬA LOGIC: Nếu đây là ca đầu tiên trong ngày của một vị trí,
+                    // và slot đầu tiên đã có task (ví dụ: "Mở kho" của Leader),
+                    // thì không cần xếp task "BRF Đầu ca" cho ca này nữa.
+                    const firstShiftOfDayForPosition = positionShifts[shiftPositionName]?.[0];
+                    if (firstShiftOfDayForPosition?.shiftId === shift.shiftId) {
+                        const firstSlotStartTime = `${String(Math.floor(shift.startMinutes / 60)).padStart(2, '0')}:${String(shift.startMinutes % 60).padStart(2, '0')}`;
+                        if (newScheduleData[shift.shiftId].some(t => t.startTime === firstSlotStartTime)) {
+                            return; // SỬA LỖI: Dùng 'return' thay cho 'continue' trong forEach.
+                        }
+                    }
+
+                    if (isAllowedPosition) {
+                        // CẬP NHẬT: Tìm slot trống đầu tiên trong ca. Không cần kiểm tra timeWindows nữa.
+                        for (let minute = shift.startMinutes; minute < shift.endMinutes; minute += 15) {
+                            const h = Math.floor(minute / 60);
+                            const m = minute % 60;
+                            const startTime = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                            if (placeTaskInSlot(shift, startTime, task)) {
+                                break; // Đã xếp thành công, thoát khỏi vòng lặp tìm slot
                             }
-                        });
+                        }
                     }
                 });
             },
             'lastOfShift': (task) => {
                 plannedShifts.forEach(shift => {
                     const shiftPositionName = positionIdToNameMap[shift.positionId];
-                    if ((task.allowedPositions || []).includes(shiftPositionName)) {
-                        const lastSlotMinutes = shift.endMinutes - 15;
-                        // Lặp qua các khung giờ cho phép của task
-                        (task.timeWindows || [{ startTime: 0, endTime: 9999 }]).forEach(window => {
-                            const windowEndMinutes = typeof window.endTime === 'string' ? timeToMinutes(window.endTime) : window.endTime;
-                            // Tìm slot cuối cùng của ca nằm trong khung giờ cho phép
-                            if (shift.endMinutes <= windowEndMinutes) {
-                                const startTime = `${String(Math.floor(lastSlotMinutes / 60)).padStart(2, '0')}:${String(lastSlotMinutes % 60).padStart(2, '0')}`;
-                                placeTaskInSlot(shift, startTime, task);
+                    const isAllowedPosition = (task.allowedPositions || []).includes(shiftPositionName);
+
+                    if (isAllowedPosition) {
+                        // CẬP NHẬT: Tìm slot trống cuối cùng trong ca. Không cần kiểm tra timeWindows.
+                        for (let minute = shift.endMinutes - 15; minute >= shift.startMinutes; minute -= 15) {
+                            const h = Math.floor(minute / 60);
+                            const m = minute % 60;
+                            const startTime = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                            if (placeTaskInSlot(shift, startTime, task)) {
+                                break; // Đã xếp thành công, thoát khỏi vòng lặp
                             }
-                        });
+                        }
                     }
                 });
             }
