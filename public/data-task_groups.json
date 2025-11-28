@@ -19,7 +19,7 @@
         { "order": "6", "name": "Thế cơm POS -Leader", "typeTask": "Fixed", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 30, "manual_number": "POS-005", "manual_link": "", "note": "Tính theo số lượng POS", "concurrentPerformers": 1, "allowedPositions": ["POS", "Leader"],
           "timeWindows": [ { "startTime": "10:00", "endTime": "10:10" }, { "startTime": "11:00", "endTime": "11:10" }, { "startTime": "16:00", "endTime": "16:10" }, { "startTime": "17:00", "endTime": "17:10" } ] },
         { "order": "7", "name": "Hỗ trợ POS", "typeTask": "CTM", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 60, "manual_number": "POS-006", "manual_link": "", "note": "Tính theo số lượng POS", "concurrentPerformers": 2, "allowedPositions": ["POS", "Leader", "Ngành hàng", "Aeon Cafe"],
-          "timeWindows": [ { "startTime": "10:00", "endTime": "11:00" }, { "startTime": "17:00", "endTime": "18:00" } ] },
+          "timeWindows": [ { "startTime": "06:00", "endTime": "22:00" } ] },
         { "order": "8", "name": "Kết ca", "typeTask": "Fixed", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 15, "manual_number": "POS-007", "manual_link": "", "note": "Tính theo số lượng POS", "concurrentPerformers": 1, "allowedPositions": ["POS", "Leader"],
           "timeWindows": [ { "startTime": "22:00", "endTime": "22:20" } ] },
         { "order": "9", "name": "Giao ca", "typeTask": "Fixed", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 10, "manual_number": "POS-008", "manual_link": "", "note": "Tính theo số lượng POS", "concurrentPerformers": 1, "allowedPositions": ["POS", "Leader"],
@@ -128,10 +128,7 @@
         { "order": "3", "name": "Hủy hàng và update hệ thống", "typeTask": "Product", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 30, "manual_number": "LEA-003", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 1, "startTime": "13:55", "endTime": "22:15", "allowedPositions": ["Leader"] },
         { "order": "4", "name": "Đặt văn phòng phẩm", "typeTask": "Fixed", "frequency": "Weekly", "frequencyNumber": 1, "reUnit": 15, "manual_number": "LEA-004", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 1, "startTime": "15:00", "endTime": "15:10", "allowedPositions": ["Leader"] },
         { "order": "5", "name": "Balancing", "typeTask": "Fixed", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 20, "manual_number": "LEA-005", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 1, 
-          "timeWindows": [
-            { "startTime": "13:30", "endTime": "13:40" },
-            { "startTime": "21:00", "endTime": "21:10" }
-          ],
+          "timeWindows": [ { "startTime": "13:30", "endTime": "13:40" }, { "startTime": "21:00", "endTime": "21:10" }],
           "allowedPositions": ["Leader"] 
         },
         { "order": "6", "name": "Kiểm tra HSD Tươi sống-Quản lý", "typeTask": "Product", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 15, "manual_number": "LEA-006", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 1, "startTime": "", "endTime": "", "allowedPositions": ["Leader"] },
@@ -140,7 +137,7 @@
         { "order": "9", "name": "Tạo và chỉnh sửa DWS", "typeTask": "Fixed", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 30, "manual_number": "LEA-009", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 1, "startTime": "", "endTime": "", "allowedPositions": ["Leader"] },
         { "order": "10", "name": "Bàn giao tiền cho ngân hàng", "typeTask": "Fixed", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 15, "manual_number": "LEA-010", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 1, "startTime": "14:00", "endTime": "16:00", "allowedPositions": ["Leader"] },
         { "order": "11", "name": "Giảm giá Peri/Dry", "typeTask": "Product", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 30, "manual_number": "LEA-011", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 1, "startTime": "19:00", "endTime": "22:00", "allowedPositions": ["Leader"] },
-        { "order": "12", "name": "Kiểm tra DWS", "typeTask": "Fixed", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 15, "manual_number": "LEA-012", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 0, "allowedPositions": ["Leader", "POS", "Ngành hàng", "Aeon Cafe", "MMD"], "shiftPlacement": { "type": "lastOfShift" },
+        { "order": "12", "name": "Kiểm tra DWS", "typeTask": "Fixed", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 15, "manual_number": "LEA-012", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 1, "allowedPositions": ["Leader"], "shiftPlacement": { "type": "lastOfShift" },
           "timeWindows": [] },
         { "order": "13", "name": "Xử lý công việc quản lý", "typeTask": "Fixed", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 120, "manual_number": "LEA-013", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 1, "startTime": "", "endTime": "", "allowedPositions": ["Leader"] }
       ]},
@@ -261,8 +258,8 @@
           "timeWindows": [ { "startTime": "20:30", "endTime": "21:00" } ] },
         { "order": "10", "name": "Break Time", "typeTask": "Fixed", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 60, "manual_number": "OTH-010", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 0, "allowedPositions": ["Leader", "POS", "Ngành hàng", "Aeon Cafe", "MMD"],
           "timeWindows": [ { "startTime": "10:00", "endTime": "12:00" }, { "startTime": "16:00", "endTime": "19:00" } ] },
-        { "order": "11", "name": "Kiểm tra DWS", "typeTask": "Fixed", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 15, "manual_number": "OTH-011", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 1, "allowedPositions": ["Leader"],
-          "timeWindows": [ { "startTime": "06:00", "endTime": "06:05" }, { "startTime": "13:55", "endTime": "14:00" }, { "startTime": "14:25", "endTime": "14:30" }, { "startTime": "22:25", "endTime": "22:30" } ] },
+        { "order": "11", "name": "Kiểm tra DWS", "typeTask": "Fixed", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 15, "manual_number": "OTH-011", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 0, "allowedPositions": ["POS", "Ngành hàng", "Aeon Cafe", "MMD"], "shiftPlacement": { "type": "lastOfShift" }, 
+          "timeWindows": [] },
         { "order": "12", "name": "Sampling", "typeTask": "CTM", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 60, "manual_number": "OTH-012", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 1, "startTime": "", "endTime": "", "allowedPositions": ["Ngành hàng", "Aeon Cafe", "Leader"] },
         { "order": "13", "name": "Trưng POP Member Day", "typeTask": "Product", "frequency": "Monthly", "frequencyNumber": 1, "reUnit": 60, "manual_number": "OTH-013", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 2, "allowedPositions": ["Ngành hàng", "Leader"],
           "timeWindows": [ { "startTime": "21:45", "endTime": "22:00" } ] },
