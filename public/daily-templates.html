@@ -303,7 +303,10 @@
                             <input type="number" id="ag-vegetable-weight" class="form-input mt-1 w-full" placeholder="VD: 20" required>
                         </div>
                         <div class="md:col-span-2">
-                            <label for="ag-total-customers" class="block text-sm font-medium text-gray-700">Tổng số khách hàng (ngày)</label>
+                            <div class="flex justify-between items-center">
+                                <label for="ag-total-customers" class="block text-sm font-medium text-gray-700">Tổng số khách hàng (ngày)</label>
+                                <button type="button" id="customize-customer-distribution-btn" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold">Tùy chỉnh phân bổ</button>
+                            </div>
                             <input type="number" id="ag-total-customers" name="total-customers" class="form-input mt-1 w-full" placeholder="VD: 800" required>
                         </div>
                     </div>
@@ -311,6 +314,42 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary modal-cancel-btn">Hủy</button>
                     <button type="submit" class="btn btn-indigo"><i class="fas fa-cogs mr-2"></i>Tạo lịch</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Tùy chỉnh Phân bổ Khách hàng -->
+    <div id="customer-distribution-modal" class="modal-overlay hidden">
+        <div class="modal-content max-w-lg w-full">
+            <form id="customer-distribution-form">
+                <div class="modal-header">
+                    <h3 class="modal-title">Tùy chỉnh Phân bổ Khách hàng (%)</h3>
+                    <button type="button" class="modal-close-btn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-sm text-gray-600 mb-4">Nhập tỷ lệ phần trăm khách hàng cho mỗi giờ. Tổng cộng phải bằng 100%.</p>
+                    <!-- NEW: Table container -->
+                    <div class="max-h-80 overflow-y-auto border rounded-md">
+                        <table class="w-full text-sm">
+                            <thead class="sticky top-0 bg-slate-100">
+                                <tr>
+                                    <th class="p-2 border-b text-center font-semibold text-slate-600">Khung giờ</th>
+                                    <th class="p-2 border-b text-center font-semibold text-slate-600">Tỷ lệ (%)</th>
+                                    <th class="p-2 border-b text-center font-semibold text-slate-600">Số khách hàng</th>
+                                </tr>
+                            </thead>
+                            <tbody id="distribution-table-body"></tbody>
+                        </table>
+                    </div>
+                    <div class="mt-2 text-right font-bold">
+                        Tổng cộng: <span id="distribution-total-percentage">0</span>%
+                    </div>
+                    <div id="distribution-error-message" class="text-red-600 text-sm mt-2 text-center hidden"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary modal-cancel-btn">Hủy</button>
+                    <button type="submit" class="btn btn-indigo"><i class="fas fa-save mr-2"></i>Lưu Tùy chỉnh</button>
                 </div>
             </form>
         </div>

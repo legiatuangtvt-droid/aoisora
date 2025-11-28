@@ -1240,6 +1240,10 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
   height: 100vh;
 }
 
+.h-64 {
+  height: 16rem;
+}
+
 .max-h-48 {
   max-height: 12rem;
 }
@@ -1334,6 +1338,10 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
 
 .w-full {
   width: 100%;
+}
+
+.w-\[75\%\] {
+  width: 75%;
 }
 
 .min-w-36 {
@@ -1580,6 +1588,10 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
 
 .gap-y-1 {
   row-gap: 0.25rem;
+}
+
+.gap-y-3 {
+  row-gap: 0.75rem;
 }
 
 .-space-x-px > :not([hidden]) ~ :not([hidden]) {
@@ -2058,6 +2070,11 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
   background-color: rgb(254 252 232 / var(--tw-bg-opacity, 1));
 }
 
+.bg-indigo-400 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(129 140 248 / var(--tw-bg-opacity, 1));
+}
+
 .stroke-green-500 {
   stroke: #22c55e;
 }
@@ -2113,6 +2130,10 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
 
 .p-8 {
   padding: 2rem;
+}
+
+.p-0\.5 {
+  padding: 0.125rem;
 }
 
 .px-1 {
@@ -4157,6 +4178,11 @@ tr.edit-mode-active .scheduled-task-item.calendar-day:hover {
   background-color: rgb(15 118 110 / var(--tw-bg-opacity, 1));
 }
 
+.hover\:bg-indigo-500:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(99 102 241 / var(--tw-bg-opacity, 1));
+}
+
 .hover\:text-blue-600:hover {
   --tw-text-opacity: 1;
   color: rgb(37 99 235 / var(--tw-text-opacity, 1));
@@ -4175,6 +4201,11 @@ tr.edit-mode-active .scheduled-task-item.calendar-day:hover {
 .hover\:text-indigo-600:hover {
   --tw-text-opacity: 1;
   color: rgb(79 70 229 / var(--tw-text-opacity, 1));
+}
+
+.hover\:text-indigo-800:hover {
+  --tw-text-opacity: 1;
+  color: rgb(55 48 163 / var(--tw-text-opacity, 1));
 }
 
 .hover\:text-indigo-900:hover {

@@ -529,6 +529,12 @@ function initializeAutoGenerateModal(signal) {
     const autoGenerateBtn = document.getElementById('auto-generate-btn');
     const autoGenerateModal = document.getElementById('auto-generate-modal');
 
+    // --- LOGIC MỚI: Modal tùy chỉnh phân bổ khách hàng ---
+    const distributionModal = document.getElementById('customer-distribution-modal');
+    const openDistributionBtn = document.getElementById('customize-customer-distribution-btn');
+    let customDistributionProfile = null; // Biến tạm để lưu hồ sơ tùy chỉnh
+    // ----------------------------------------------------
+
     if (!autoGenerateBtn || !autoGenerateModal) {
         return;
     }
@@ -556,7 +562,7 @@ function initializeAutoGenerateModal(signal) {
         // Tính và điền tổng số khách hàng từ dữ liệu theo giờ
         const customerCountByHour = storeInfo.customerCountByHour || {};
         const totalCustomers = Object.values(customerCountByHour).reduce((sum, count) => sum + (parseInt(count, 10) || 0), 0);
-        document.getElementById('ag-total-customers').value = totalCustomers > 0 ? totalCustomers : '1300';
+        document.getElementById('ag-total-customers').value = totalCustomers > 0 ? totalCustomers : '800';
 
 
         // Xóa các giá trị khách hàng theo giờ nếu có
@@ -584,6 +590,97 @@ function initializeAutoGenerateModal(signal) {
         }
     }, { signal });
 
+    // --- LOGIC MỚI: Xử lý modal tùy chỉnh phân bổ khách hàng ---
+    if (distributionModal && openDistributionBtn) {
+        const distributionForm = document.getElementById('customer-distribution-form');
+        const tableBody = document.getElementById('distribution-table-body');
+        const totalPercentageSpan = document.getElementById('distribution-total-percentage');
+        const errorMessageDiv = document.getElementById('distribution-error-message');
+
+        const defaultProfile = {
+            "06": 2, "07": 4, "08": 5, "09": 6, "10": 7, "11": 8, "12": 7, "13": 5, 
+            "14": 4, "15": 5, "16": 6, "17": 8, "18": 10, "19": 11, "20": 8, "21": 4, "22": 0
+        };
+
+        const updateDistributionTable = () => {
+            let total = 0;
+            const totalCustomers = parseInt(document.getElementById('ag-total-customers').value, 10) || 0;
+
+            tableBody.querySelectorAll('tr').forEach(row => {
+                const input = row.querySelector('.distribution-input');
+                const percentage = parseInt(input.value, 10) || 0;
+                total += percentage;
+
+                const customerCountCell = row.querySelector('.customer-count-output');
+                const calculatedCustomers = Math.round(totalCustomers * (percentage / 100));
+                customerCountCell.textContent = calculatedCustomers.toLocaleString('vi-VN');
+            });
+
+            totalPercentageSpan.textContent = total;
+            totalPercentageSpan.classList.toggle('text-red-600', total !== 100);
+            totalPercentageSpan.classList.toggle('text-green-600', total === 100);
+        };
+
+        const openDistributionModal = () => {
+            const profileToLoad = customDistributionProfile || defaultProfile;
+            tableBody.innerHTML = '';
+            errorMessageDiv.classList.add('hidden');
+
+            Object.keys(profileToLoad).sort().forEach(hour => {
+                const value = profileToLoad[hour];
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-slate-50';
+                row.innerHTML = `
+                    <td class="p-2 border-b text-center font-medium">${hour}:00 - ${hour}:59</td>
+                    <td class="p-2 border-b text-center">
+                        <input type="number" min="0" max="100" value="${value}" data-hour="${hour}" class="form-input form-input-min w-20 text-center p-1 distribution-input">
+                    </td>
+                    <td class="p-2 border-b text-center customer-count-output">0</td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            tableBody.querySelectorAll('.distribution-input').forEach(input => {
+                input.addEventListener('input', updateDistributionTable, { signal });
+            });
+            updateDistributionTable();
+            distributionModal.classList.remove('hidden');
+            distributionModal.classList.add('flex');
+            setTimeout(() => distributionModal.classList.add('show'), 10);
+        };
+
+        const closeDistributionModal = () => {
+            distributionModal.classList.remove('show');
+            distributionModal.addEventListener('transitionend', () => distributionModal.classList.add('hidden'), { once: true });
+        };
+
+        openDistributionBtn.addEventListener('click', openDistributionModal, { signal });
+        distributionModal.querySelector('.modal-close-btn').addEventListener('click', closeDistributionModal, { signal });
+        distributionModal.querySelector('.modal-cancel-btn').addEventListener('click', closeDistributionModal, { signal });
+
+        distributionForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            let total = 0;
+            const newProfile = {};
+            tableBody.querySelectorAll('.distribution-input').forEach(input => {
+                const value = parseInt(input.value, 10) || 0;
+                total += value;
+                newProfile[input.dataset.hour] = value;
+            });
+
+            if (total !== 100) {
+                errorMessageDiv.textContent = 'Tổng tỷ lệ phải bằng 100%.';
+                errorMessageDiv.classList.remove('hidden');
+                return;
+            }
+
+            customDistributionProfile = newProfile; // Lưu hồ sơ tùy chỉnh vào biến tạm
+            window.showToast('Đã lưu hồ sơ phân bổ tùy chỉnh.', 'success');
+            closeDistributionModal();
+        }, { signal });
+    }
+    // ----------------------------------------------------------
+
     if (autoGenerateForm) {
         autoGenerateForm.addEventListener('submit', async (event) => {
             event.preventDefault();
@@ -610,8 +707,8 @@ function initializeAutoGenerateModal(signal) {
             const targetManHours = parseFloat(document.getElementById('ag-target-man-hours').value);
             const totalCustomers = parseInt(document.getElementById('ag-total-customers').value, 10) || 0;
             
-            // Hồ sơ phân bổ khách hàng theo giờ (tỷ lệ %) - có thể được cấu hình ở nơi khác trong tương lai
-            const customerDistributionProfile = {
+            // LOGIC MỚI: Sử dụng hồ sơ tùy chỉnh nếu có, nếu không thì dùng mặc định
+            const customerDistributionProfile = customDistributionProfile || {
                 "06": 2, "07": 4, "08": 5, "09": 6, "10": 7, "11": 8, "12": 7, "13": 5, 
                 "14": 4, "15": 5, "16": 6, "17": 8, "18": 10, "19": 11, "20": 8, "21": 4, "22": 0
             };
