@@ -39,8 +39,8 @@ export function generateSchedule(openTime, closeTime, targetManHours, reParamete
     for (const groupInfo of taskGroupsArray) {
         if (groupInfo.tasks && Array.isArray(groupInfo.tasks)) {
             groupInfo.tasks.forEach(task => {
-                // Bỏ qua các task POS 1,2,3 ở bước này, chúng sẽ được xử lý riêng
-                if (task.name === 'POS 1' || task.name === 'POS 2' || task.name === 'POS 3') {
+                // Bỏ qua các task POS 1,2,3 và Hỗ trợ POS ở bước này, chúng sẽ được xử lý riêng
+                if (task.name === 'POS 1' || task.name === 'POS 2' || task.name === 'POS 3' || task.name === 'Hỗ trợ POS') {
                     return;
                 }
                 const taskHours = calculateREForTask(task, groupInfo, reParameters);
@@ -219,7 +219,8 @@ export function generateSchedule(openTime, closeTime, targetManHours, reParamete
         const posTasks = {
             'POS 1': posGroup.tasks.find(t => t.name === 'POS 1'),
             'POS 2': posGroup.tasks.find(t => t.name === 'POS 2'),
-            'POS 3': posGroup.tasks.find(t => t.name === 'POS 3')
+            'POS 3': posGroup.tasks.find(t => t.name === 'POS 3'),
+            'Hỗ trợ POS': posGroup.tasks.find(t => t.name === 'Hỗ trợ POS') // Thêm task "Hỗ trợ POS"
         };
 
         // Lấy khung giờ hoạt động của cửa hàng
@@ -278,6 +279,8 @@ export function generateSchedule(openTime, closeTime, targetManHours, reParamete
                     // Nếu vẫn còn yêu cầu giờ công sau khi đã xếp POS 1, tiếp tục xếp POS 2, POS 3...
                     if (requiredPosSlots > 0) findAndPlacePosTask('POS 2', ["POS", "Leader"]);
                     if (requiredPosSlots > 0) findAndPlacePosTask('POS 3', ["POS", "Leader"]);
+                    // Nếu vẫn còn thiếu, sử dụng "Hỗ trợ POS" làm phương án dự phòng
+                    if (requiredPosSlots > 0) findAndPlacePosTask('Hỗ trợ POS', ["POS", "Leader", "Ngành hàng", "Aeon Cafe"]);
                 }
             }
             if (scheduledManHours >= flexibleTargetManHours) break;
