@@ -215,6 +215,7 @@ export function generateSchedule(openTime, closeTime, targetManHours, reParamete
     // 5. Bố trí các task POS (POS 1, 2, 3) theo nhu cầu khách hàng
     // Logic này có độ ưu tiên cao, chạy ngay sau các task cố định (placement tasks).
     const posGroup = taskGroupsArray.find(g => g.id === 'POS');
+    const posPositions = ["POS", "Leader"]; // Thứ tự ưu tiên cho vị trí POS
     if (posGroup && reParameters.customerCountByHour) {
         const posTasks = {
             'POS 1': posGroup.tasks.find(t => t.name === 'POS 1'),
@@ -230,11 +231,14 @@ export function generateSchedule(openTime, closeTime, targetManHours, reParamete
         for (let hour = openHour; hour < closeHour; hour++) {
             const hourKey = String(hour).padStart(2, '0');
             const hourlyCustomerCount = reParameters.customerCountByHour[hourKey] || 0;
-
             // Quy tắc 3: Tính toán số giờ POS yêu cầu trong giờ này.
             // Công thức: (Số khách hàng mỗi giờ * 1 phút/khách) / 60 phút = số giờ công POS cần thiết.
             const requiredPosManhour = hourlyCustomerCount / 60;
+
+            // Tính số lượng POS cần thiết (POS 1 đã được tính là 1)
+            let requiredPosStaff = Math.ceil(requiredPosManhour) - 1;
             // Chuyển đổi giờ công thành số lượng slot 15 phút cần lấp đầy.
+
             // Ví dụ: 1.5 giờ công cần -> 6 slot 15 phút.
             let requiredPosSlots = Math.ceil(requiredPosManhour * 4);
 
@@ -243,14 +247,13 @@ export function generateSchedule(openTime, closeTime, targetManHours, reParamete
                 if (scheduledManHours >= flexibleTargetManHours) break;
 
                 const startTime = `${hourKey}:${String(quarter).padStart(2, '0')}`;
-
                 // Hàm trợ giúp để tìm một ca làm việc còn trống và phù hợp
                 const findAndPlacePosTask = (taskName, preferredPositions) => {
                     const taskInfo = posTasks[taskName];
                     if (!taskInfo) return false;
 
                     // Lặp qua danh sách vị trí ưu tiên (ví dụ: ["POS", "Leader"])
-                    for (const posName of preferredPositions) {
+                    for (let posName of preferredPositions) {
                         const availableShift = plannedShifts.find(shift => {
                         const shiftPositionName = positionIdToNameMap[shift.positionId];
                         // Chỉ tìm trong các ca có vị trí đang được ưu tiên
@@ -269,15 +272,25 @@ export function generateSchedule(openTime, closeTime, targetManHours, reParamete
                             return true; // Đã tìm thấy và xếp lịch thành công
                         }
                     }
+
                     return false; // Không tìm thấy ca phù hợp cho vị trí ưu tiên này
                 };
 
                 // Quy tắc 2: Luôn cố gắng bố trí POS 1 cho mỗi slot thời gian.
                 // Quy tắc 1 được áp dụng bên trong hàm findAndPlacePosTask thông qua mảng ["POS", "Leader"].
                 if (findAndPlacePosTask('POS 1', ["POS", "Leader"])) {
-                    // Nếu vẫn còn yêu cầu giờ công sau khi đã xếp POS 1, tiếp tục xếp POS 2, POS 3...
-                    if (requiredPosSlots > 0) findAndPlacePosTask('POS 2', ["POS", "Leader"]);
-                    if (requiredPosSlots > 0) findAndPlacePosTask('POS 3', ["POS", "Leader"]);
+                    // Nếu vẫn còn yêu cầu nhân viên sau khi đã xếp POS 1, tiếp tục xếp POS 2, POS 3...
+                    if (requiredPosStaff > 0) {
+                        if (findAndPlacePosTask('POS 2', ["POS", "Leader"])) {
+                            requiredPosStaff--;
+                        }
+                    }
+
+                     if (requiredPosStaff > 0) {
+                        if (findAndPlacePosTask('POS 3', ["POS", "Leader"])) {
+                            requiredPosStaff--;
+                        }
+                    }
                 }
             }
             if (scheduledManHours >= flexibleTargetManHours) break;

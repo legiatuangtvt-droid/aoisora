@@ -1,0 +1,117 @@
+--- /dev/null
++++ b/auto-generator.txt
+@@ -0,0 +1,245 @@
+## Thuyết minh Thuật toán Auto Generate (auto-generator.js)
+ 
+Thuật toán `generateSchedule` trong file `auto-generator.js` có nhiệm vụ tự động tạo ra một lịch trình làm việc (schedule) cho cửa hàng dựa trên các tham số đầu vào. Mục tiêu là tối ưu hóa việc phân bổ công việc vào các ca làm việc, tuân thủ các quy tắc ưu tiên, ràng buộc về thời gian và ngân sách giờ công.
+ 
+### 1. Các tham số đầu vào chính:
+- `openTime`: Thời gian mở cửa của cửa hàng (ví dụ: "06:00").
+- `closeTime`: Thời gian đóng cửa của cửa hàng (ví dụ: "22:00").
+- `targetManHours`: Tổng giờ công mong muốn (ngân sách giờ công) mà người dùng đặt ra.
+- `reParameters`: Các tham số tính toán giờ công đề xuất (RE Parameters) của cửa hàng (ví dụ: số lượng khách hàng theo giờ, số POS, diện tích, v.v.).
+ 
+### 2. Khởi tạo và Chuẩn bị dữ liệu:
+- **Dữ liệu giả lập (Mock Data):** `positionOrder` và `shiftCodeOrder` được sử dụng để tạo ra các ca làm việc mẫu. Trong một hệ thống thực tế, dữ liệu này sẽ được lấy từ cơ sở dữ liệu.
+- `newScheduleData`: Một đối tượng sẽ lưu trữ lịch trình cuối cùng, với key là `shiftId` và value là một mảng các task được xếp lịch trong ca đó.
+- `newShiftMappings`: Một đối tượng lưu trữ ánh xạ giữa `shiftId` và thông tin ca (mã ca, ID vị trí).
+- `taskGroupsArray`: Mảng chứa thông tin của tất cả các nhóm công việc (`task_groups`).
+- `positionIdToNameMap`: Ánh xạ từ ID vị trí công việc sang tên vị trí để dễ dàng truy cập.
+- `scheduledManHours`: Biến đếm tổng số giờ công đã được xếp lịch.
+- `flexibilityFactor`: Hệ số linh hoạt (hiện tại là 1.10, cho phép vượt ngân sách 10% nếu cần).
+- `flexibleTargetManHours`: Ngân sách giờ công tối đa cho phép (targetManHours * flexibilityFactor).
+ 
+### 3. Bước 1: Tính toán và Chuẩn bị danh sách Task cần xếp lịch (`taskSlotsToPlace`)
+- Thuật toán duyệt qua từng `groupInfo` trong `taskGroupsArray`.
+- Với mỗi `task` trong `groupInfo`:
+    - **Bỏ qua Task POS:** Các task có tên 'POS 1', 'POS 2', 'POS 3' được bỏ qua ở bước này vì chúng sẽ được xử lý riêng với logic ưu tiên cao hơn dựa trên nhu cầu khách hàng.
+    - `taskHours`: Tính toán giờ công đề xuất cho task đó bằng hàm `calculateREForTask` (từ `re-calculator.js`).
+    - `totalRequiredRE`: Cộng dồn `taskHours` vào tổng giờ công đề xuất của toàn bộ cửa hàng.
+    - `numSlots`: Chuyển đổi `taskHours` thành số lượng slot 15 phút cần thiết (`Math.round(taskHours * 4)`).
+    - Nếu `numSlots > 0`, tạo một đối tượng task chi tiết và thêm vào mảng `taskSlotsToPlace`. Đối tượng này bao gồm:
+        - Các thuộc tính gốc của task.
+        - `taskCode`: Mã task được tạo theo quy tắc `1 + [group.order] + [task.order]`.
+        - `groupPriority`: Độ ưu tiên của nhóm chứa task (được lấy từ `data-task_groups.json`).
+        - `taskName`, `groupId`.
+        - `numSlotsRemaining`: Số slot còn lại cần xếp cho task này (ban đầu bằng `numSlots`).
+        - `originalNumSlots`: Số slot ban đầu của task.
+ 
+### 4. Bước 2: Sắp xếp các Task theo độ ưu tiên
+- Mảng `taskSlotsToPlace` được sắp xếp theo các tiêu chí sau (từ cao đến thấp):
+    1.  **`typeTask`**: `Fixed` (cố định) > `CTM` (Customer Traffic) > `Product` (sản phẩm).
+    2.  **`groupPriority`**: Task thuộc nhóm có độ ưu tiên cao hơn (ví dụ: POS, LEADER) sẽ được xếp trước.
+    3.  **`originalNumSlots`**: Task có số slot ban đầu lớn hơn (tốn nhiều thời gian hơn) sẽ được xếp trước.
+- Việc sắp xếp này đảm bảo các công việc quan trọng và tốn thời gian được ưu tiên xử lý trước.
+ 
+### 5. Bước 3: Lập kế hoạch Ca làm việc (`plannedShifts`)
+- Thuật toán tạo ra một danh sách các ca làm việc (`plannedShifts`) dựa trên `shiftCodeOrder` và `positionOrder` (dữ liệu giả lập).
+- Mỗi `shiftData` bao gồm: `shiftId`, `shiftCode`, `positionId`, `startMinutes`, `endMinutes`, và một mảng `availableSlots` (các ô 15 phút trong ca).
+- `newScheduleData[shiftId]` được khởi tạo là một mảng rỗng cho mỗi ca.
+ 
+### 6. Bước 4: Xử lý các Task có vị trí cố định (Placement Tasks)
+- Các task có thuộc tính `shiftPlacement` (ví dụ: `firstOfDay`, `lastOfShift`) được xác định.
+- `positionShifts`: Một đối tượng ánh xạ tên vị trí công việc tới danh sách các ca làm việc của vị trí đó, được sắp xếp theo thời gian bắt đầu.
+- `placeTaskInSlot` (hàm trợ giúp): Đặt một task vào một slot cụ thể của một ca, cập nhật `newScheduleData` và `scheduledManHours`.
+- `placementHandlers`: Một đối tượng chứa các hàm xử lý cho từng loại `shiftPlacement`:
+    - `firstOfDay`: Xếp task vào slot đầu tiên của ca đầu tiên trong ngày của vị trí đó.
+    - `lastOfDay`: Xếp task vào slot cuối cùng của ca cuối cùng trong ngày của vị trí đó.
+    - `firstOfShift`: Xếp task vào slot đầu tiên của mỗi ca phù hợp.
+    - `lastOfShift`: **(Đã cải tiến)** Duyệt qua từng ca làm việc, tìm task `lastOfShift` phù hợp với vị trí của ca đó (ví dụ: "Kiểm tra DWS" của Leader khác với của POS), sau đó xếp vào slot cuối cùng của ca.
+- `handlerOrder`: Đảm bảo các handler được gọi theo một thứ tự nhất định (ví dụ: `firstOfDay` trước `lastOfShift`). Mỗi handler chỉ được gọi một lần.
+ 
+### 7. Bước 5: Bố trí các Task POS (POS 1, 2, 3) theo nhu cầu khách hàng
+- Đây là một giai đoạn ưu tiên cao, chạy ngay sau các task cố định.
+- `posGroup`: Tìm nhóm task POS.
+- `posTasks`: Lấy các task 'POS 1', 'POS 2', 'POS 3' từ nhóm POS.
+- Duyệt qua từng giờ (`hour`) trong khung giờ hoạt động của cửa hàng:
+    - `hourlyCustomerCount`: Lấy số lượng khách hàng dự kiến cho giờ đó từ `reParameters.customerCountByHour`.
+    - `requiredPosManhour`: Tính toán giờ công POS cần thiết cho giờ đó (ví dụ: `hourlyCustomerCount / 60` nếu 1 khách mất 1 phút).
+    - `requiredPosSlots`: Chuyển đổi `requiredPosManhour` thành số slot 15 phút cần lấp đầy.
+    - Duyệt qua từng slot 15 phút (`quarter`) trong giờ hiện tại:
+        - `findAndPlacePosTask` (hàm trợ giúp):
+            - Nhận `taskName` (ví dụ: 'POS 1') và `preferredPositions` (ví dụ: `["POS", "Leader"]`).
+            - **Quy tắc 1 (Ưu tiên vị trí):** Lặp qua `preferredPositions` theo đúng thứ tự. Tìm một ca làm việc còn trống và có vị trí phù hợp với vị trí ưu tiên hiện tại.
+            - Nếu tìm thấy, xếp task vào, giảm `requiredPosSlots`, tăng `scheduledManHours`.
+        - **Quy tắc 2 (POS 1 duy nhất):** Luôn cố gắng bố trí `POS 1` trước cho mỗi slot 15 phút.
+        - **Quy tắc 3 (POS 2, 3 theo nhu cầu):** Nếu sau khi xếp `POS 1` mà `requiredPosSlots` vẫn còn > 0, tiếp tục cố gắng xếp `POS 2`, và sau đó là `POS 3` nếu vẫn cần, cho đến khi `requiredPosSlots` về 0 hoặc không còn ca trống.
+- `totalRequiredRE` được cập nhật để bao gồm cả giờ công POS đã xếp.
+ 
+### 8. Bước 6: Bố trí các Task còn lại
+- `concurrentTaskCount`: Theo dõi số lượng người đang thực hiện cùng một task tại cùng một thời điểm để tuân thủ `concurrentPerformers`.
+- `getAllAvailableSlots` (hàm trợ giúp): Thu thập tất cả các ô 15 phút còn trống từ TẤT CẢ các ca làm việc và xáo trộn chúng.
+- **Vòng lặp "tham lam" (`while (slotsFilledInLastPass !== 0)`):**
+    - Vòng lặp này là cốt lõi để đảm bảo thuật toán cố gắng lấp đầy lịch trình một cách tối đa. Nó sẽ lặp lại cho đến khi không còn bất kỳ slot nào được lấp đầy trong một lượt chạy.
+    - Trong mỗi lượt chạy:
+        - Duyệt qua `taskSlotsToPlace` (các task còn lại, đã được sắp xếp theo ưu tiên).
+        - Nếu task đã xếp đủ slot (`numSlotsRemaining <= 0`) hoặc đã là `placementTask` (đã xử lý ở bước 4), bỏ qua.
+        - Nếu `scheduledManHours` đã đạt `flexibleTargetManHours`, dừng.
+        - **Quy tắc ưu tiên vị trí trong `allowedPositions` (Đã cải tiến):**
+            - Lấy `preferredPositions` từ `taskInfo.allowedPositions`.
+            - Duyệt qua `preferredPositions` theo đúng thứ tự.
+            - Với mỗi `positionName` ưu tiên, lọc ra các `slotsForPosition` (các ô trống thuộc ca của vị trí đó).
+            - Duyệt qua các `slot` trong `slotsForPosition` (đã xáo trộn để phân bổ đều hơn).
+            - Tại mỗi `slot`, kiểm tra các ràng buộc:
+                - Slot đã có task chưa?
+                - Slot có nằm trong `timeWindows` của task không?
+                - Số người đang làm task này tại thời điểm đó có vượt quá `concurrentPerformers` không?
+            - Nếu tất cả các điều kiện đều thỏa mãn, xếp task vào slot đó, giảm `numSlotsRemaining`, tăng `scheduledManHours` và `slotsFilledInLastPass`.
+ 
+### 9. Bước 7: Hoàn thiện và Trả về kết quả
+- Sắp xếp lại các task trong mỗi ca (`newScheduleData`) theo thời gian bắt đầu (`startTime`) để đảm bảo thứ tự hiển thị.
+- Tạo `newShiftMappings` để ánh xạ `shiftId` với thông tin ca.
+- Trả về một đối tượng chứa:
+    - `schedule`: Lịch trình đã tạo.
+    - `shiftMappings`: Ánh xạ các ca.
+    - `finalScheduledManHours`: Tổng giờ công thực tế đã xếp lịch.
+    - `totalRequiredRE`: Tổng giờ công đề xuất ban đầu.
+    - `budgetManHours`: Ngân sách giờ công mong muốn.
+ 
+### Tóm tắt Logic Tối ưu hóa:
+Thuật toán này sử dụng một phương pháp "tham lam" (greedy approach) kết hợp với các cấp độ ưu tiên rõ ràng:
+1.  **Task cố định (Placement Tasks):** Luôn được xếp đầu tiên.
+2.  **Task POS:** Ưu tiên cao thứ hai, được xếp dựa trên nhu cầu khách hàng theo giờ và ưu tiên vị trí `POS` trước `Leader`.
+3.  **Các task còn lại:** Được sắp xếp theo `typeTask`, `groupPriority`, và `originalNumSlots`.
+4.  **Lấp đầy tối đa:** Vòng lặp `while (slotsFilledInLastPass !== 0)` đảm bảo thuật toán cố gắng lấp đầy lịch trình cho đến khi không còn slot trống hợp lệ hoặc đã đạt đến `flexibleTargetManHours`.
+5.  **Linh hoạt ngân sách:** Cho phép vượt ngân sách `targetManHours` một chút (theo `flexibilityFactor`) để đảm bảo hoàn thành các công việc quan trọng.
+ 
+Mục tiêu là tạo ra một lịch trình cân bằng giữa việc đáp ứng nhu cầu vận hành (giờ đề xuất) và tuân thủ ngân sách giờ công, đồng thời cung cấp thông báo rõ ràng cho người dùng nếu có sự chênh lệch.
