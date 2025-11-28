@@ -253,6 +253,18 @@ export function generateSchedule(openTime, closeTime, targetManHours) {
                     const shiftPositionName = positionIdToNameMap[shift.positionId];
                     const isAllowedPosition = (task.allowedPositions || []).includes(shiftPositionName);
 
+                    // SỬA LOGIC: Nếu đây là ca cuối cùng trong ngày của một vị trí,
+                    // và slot cuối cùng đã có task (ví dụ: "Đóng kho" của Leader),
+                    // thì không cần xếp task "Kiểm tra DWS" cho ca này nữa.
+                    const lastShiftOfDayForPosition = positionShifts[shiftPositionName]?.[positionShifts[shiftPositionName].length - 1];
+                    if (lastShiftOfDayForPosition?.shiftId === shift.shiftId) {
+                        const lastSlotMinutes = shift.endMinutes - 15;
+                        const lastSlotStartTime = `${String(Math.floor(lastSlotMinutes / 60)).padStart(2, '0')}:${String(lastSlotMinutes % 60).padStart(2, '0')}`;
+                        if (newScheduleData[shift.shiftId].some(t => t.startTime === lastSlotStartTime)) {
+                            return; // Bỏ qua, không xếp "Kiểm tra DWS" cho ca này.
+                        }
+                    }
+
                     if (isAllowedPosition) {
                         // CẬP NHẬT: Tìm slot trống cuối cùng trong ca. Không cần kiểm tra timeWindows.
                         for (let minute = shift.endMinutes - 15; minute >= shift.startMinutes; minute -= 15) {
