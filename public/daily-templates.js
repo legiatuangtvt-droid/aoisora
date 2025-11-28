@@ -539,16 +539,30 @@ function initializeAutoGenerateModal(signal) {
 
     const openModal = () => {
         // Pre-fill values
-        document.getElementById('open-time').value = '06:00';
-        document.getElementById('close-time').value = '22:00';
-        const targetManHoursInput = document.getElementById('target-man-hours');
-        if (targetManHoursInput) {
-            const currentTemplate = allTemplates.find(t => t.id === currentTemplateId);
-            if (currentTemplate && currentTemplate.totalManhour) {
-                targetManHoursInput.value = currentTemplate.totalManhour;
-            } else {
-                targetManHoursInput.value = '80';
-            }
+        document.getElementById('ag-open-time').value = '06:00';
+        document.getElementById('ag-close-time').value = '22:00';
+
+        const currentTemplate = allTemplates.find(t => t.id === currentTemplateId);
+        const storeInfo = currentTemplate?.storeInfo || {};
+
+        // Điền giá trị từ template hoặc giá trị mặc định
+        document.getElementById('ag-target-man-hours').value = currentTemplate?.totalManhour || '80';
+        document.getElementById('ag-pos-count').value = storeInfo.posCount || '3';
+        document.getElementById('ag-area-size').value = storeInfo.areaSize || '200';
+        document.getElementById('ag-employee-count').value = storeInfo.employeeCount || '10';
+        document.getElementById('ag-dry-goods-volume').value = storeInfo.dryGoodsVolume || '5';
+        document.getElementById('ag-vegetable-weight').value = storeInfo.vegetableWeight || '20';
+        
+        // Tính và điền tổng số khách hàng từ dữ liệu theo giờ
+        const customerCountByHour = storeInfo.customerCountByHour || {};
+        const totalCustomers = Object.values(customerCountByHour).reduce((sum, count) => sum + (parseInt(count, 10) || 0), 0);
+        document.getElementById('ag-total-customers').value = totalCustomers > 0 ? totalCustomers : '1300';
+
+
+        // Xóa các giá trị khách hàng theo giờ nếu có
+        const customerDataInput = document.getElementById('ag-customer-data');
+        if (customerDataInput) {
+            customerDataInput.value = '';
         }
 
         autoGenerateModal.classList.remove('hidden');
@@ -591,15 +605,42 @@ function initializeAutoGenerateModal(signal) {
                 }
             }
 
-            const openTime = document.getElementById('open-time').value;
-            const closeTime = document.getElementById('close-time').value;
-            const targetManHours = parseFloat(document.getElementById('target-man-hours').value);
+            const openTime = document.getElementById('ag-open-time').value;
+            const closeTime = document.getElementById('ag-close-time').value;
+            const targetManHours = parseFloat(document.getElementById('ag-target-man-hours').value);
+            const totalCustomers = parseInt(document.getElementById('ag-total-customers').value, 10) || 0;
+            
+            // Hồ sơ phân bổ khách hàng theo giờ (tỷ lệ %) - có thể được cấu hình ở nơi khác trong tương lai
+            const customerDistributionProfile = {
+                "06": 2, "07": 4, "08": 5, "09": 6, "10": 7, "11": 8, "12": 7, "13": 5, 
+                "14": 4, "15": 5, "16": 6, "17": 8, "18": 10, "19": 11, "20": 8, "21": 4, "22": 0
+            };
+
+            // Tạo lại đối tượng customerCountByHour từ tổng số khách hàng
+            const newCustomerCountByHour = {};
+            for (const hour in customerDistributionProfile) {
+                const percentage = customerDistributionProfile[hour];
+                newCustomerCountByHour[hour] = Math.round(totalCustomers * (percentage / 100));
+            }
+
+            // Thu thập các thông số cửa hàng từ form
+            const storeParams = {
+                posCount: parseInt(document.getElementById('ag-pos-count').value, 10),
+                areaSize: parseInt(document.getElementById('ag-area-size').value, 10),
+                employeeCount: parseInt(document.getElementById('ag-employee-count').value, 10),
+                dryGoodsVolume: parseInt(document.getElementById('ag-dry-goods-volume').value, 10),
+                vegetableWeight: parseInt(document.getElementById('ag-vegetable-weight').value, 10),
+                // Ghi đè dữ liệu khách hàng bằng dữ liệu mới được phân bổ
+                customerCountByHour: newCustomerCountByHour,
+                // Cập nhật lại tổng số khách hàng để nhất quán
+                customerCount: totalCustomers
+            };
 
             const submitBtn = autoGenerateForm.querySelector('button[type="submit"]');
             if (submitBtn) submitBtn.disabled = true;
 
             try {
-                await handleAutoGenerate(openTime, closeTime, targetManHours);
+                await handleAutoGenerate(openTime, closeTime, targetManHours, storeParams);
                 window.showToast('Đã tự động tạo lịch trình thành công!', 'success');
             } catch (error) {
                 console.error("Lỗi khi tự động tạo lịch trình:", error);

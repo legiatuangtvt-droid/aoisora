@@ -1,6 +1,6 @@
 {
   "task_groups": [
-    { "id": "POS", "order": 1, "code": "POS", 
+    { "id": "POS", "order": 1, "code": "POS", "priority": 100,
       "color": {
         "name": "slate", "bg": "#e2e8f0", "text": "#1e293b", "border": "#94a3b8", "hover": "#cbd5e1",
         "tailwind_bg": "bg-slate-200", "tailwind_text": "text-slate-800", "tailwind_border": "border-slate-500"
@@ -33,7 +33,7 @@
         { "order": "13", "name": "Thế cơm Leader", "typeTask": "Fixed", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 30, "manual_number": "POS-012", "manual_link": "", "note": "Tính theo số lượng POS", "concurrentPerformers": 1, "allowedPositions": ["POS", "Leader"],
           "timeWindows": [ { "startTime": "10:00", "endTime": "10:10" }, { "startTime": "11:00", "endTime": "11:10" }, { "startTime": "16:00", "endTime": "16:10" }, { "startTime": "17:00", "endTime": "17:10" } ] }
       ]},
-    { "id": "PERI", "order": 2, "code": "PERI", 
+    { "id": "PERI", "order": 2, "code": "PERI", "priority": 80,
       "color": {
         "name": "green", "bg": "#bbf7d0", "text": "#166534", "border": "#4ade80", "hover": "#86efac",
         "tailwind_bg": "bg-green-200", "tailwind_text": "text-green-800", "tailwind_border": "border-green-500"
@@ -64,7 +64,7 @@
         { "order": "12", "name": "Lọc hàng Tươi sống", "typeTask": "Product", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 15, "manual_number": "PER-012", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 2, "allowedPositions": ["Ngành hàng", "Leader"],
           "timeWindows": [ { "startTime": "09:00", "endTime": "09:30" }, { "startTime": "15:00", "endTime": "15:30" }, { "startTime": "20:00", "endTime": "20:30" } ] }
       ]},
-    { "id": "DRY", "order": 3, "code": "DRY", 
+    { "id": "DRY", "order": 3, "code": "DRY", "priority": 70,
       "color": {
         "name": "blue", "bg": "#bfdbfe", "text": "#1e40af", "border": "#60a5fa", "hover": "#93c5fd",
         "tailwind_bg": "bg-blue-200", "tailwind_text": "text-blue-800", "tailwind_border": "border-blue-500"
@@ -97,7 +97,7 @@
         { "order": "13", "name": "Chuẩn bị kiểm kê năm", "typeTask": "Fixed", "frequency": "Yearly", "frequencyNumber": 1, "reUnit": 480, "manual_number": "DRY-013", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 0, "allowedPositions": ["Ngành hàng", "Leader"],
           "timeWindows": [ { "startTime": "15:00", "endTime": "16:00" } ] }
       ]},
-    { "id": "MMD", "order": 4, "code": "MMD", 
+    { "id": "MMD", "order": 4, "code": "MMD", "priority": 90,
       "color": {
         "name": "amber", "bg": "#fde68a", "text": "#92400e", "border": "#facc15", "hover": "#fcd34d",
         "tailwind_bg": "bg-amber-200", "tailwind_text": "text-amber-800", "tailwind_border": "border-amber-500"
@@ -117,7 +117,7 @@
         { "order": "7", "name": "Xử lý và update GTN/GRN", "typeTask": "Fixed", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 60, "manual_number": "MMD-007", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 1, "allowedPositions": ["MMD", "Leader"],
           "timeWindows": [ { "startTime": "13:00", "endTime": "13:10" } ] }
       ]},
-    { "id": "LEADER", "order": 5, "code": "LEADER", 
+    { "id": "LEADER", "order": 5, "code": "LEADER", "priority": 95,
       "color": {
         "name": "teal", "bg": "#99f6e4", "text": "#134e4a", "border": "#2dd4bf", "hover": "#5eead4",
         "tailwind_bg": "bg-teal-200", "tailwind_text": "text-teal-800", "tailwind_border": "border-teal-500"
@@ -144,7 +144,7 @@
           "timeWindows": [] },
         { "order": "13", "name": "Xử lý công việc quản lý", "typeTask": "Fixed", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 120, "manual_number": "LEA-013", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 1, "startTime": "", "endTime": "", "allowedPositions": ["Leader"] }
       ]},
-    { "id": "QC-FSH", "order": 6, "code": "QC-FSH", 
+    { "id": "QC-FSH", "order": 6, "code": "QC-FSH", "priority": 50,
       "color": {
         "name": "purple", "bg": "#e9d5ff", "text": "#6b21a8", "border": "#c084fc", "hover": "#d8b4fe",
         "tailwind_bg": "bg-purple-200", "tailwind_text": "text-purple-800", "tailwind_border": "border-purple-500"
@@ -189,7 +189,7 @@
         { "order": "19", "name": "Quét lau sàn", "typeTask": "Fixed", "frequency": "Daily", "frequencyNumber": 3, "reUnit": 20, "manual_number": "QCF-019", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 2, "allowedPositions": ["POS", "Ngành hàng", "Aeon Cafe", "MMD", "Leader"],
           "timeWindows": [ { "startTime": "13:00", "endTime": "14:30" } ] }
       ]},
-    { "id": "DELICA", "order": 7, "code": "DELICA", 
+    { "id": "DELICA", "order": 7, "code": "DELICA", "priority": 75,
       "color": {
         "name": "indigo", "bg": "#c7d2fe", "text": "#3730a3", "border": "#818cf8", "hover": "#a5b4fc",
         "tailwind_bg": "bg-indigo-200", "tailwind_text": "text-indigo-800", "tailwind_border": "border-indigo-500"
@@ -220,7 +220,7 @@
         { "order": "12", "name": "Kiểm kê Delica", "typeTask": "Product", "frequency": "Monthly", "frequencyNumber": 1, "reUnit": 20, "manual_number": "DEL-012", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 1, "allowedPositions": ["Aeon Cafe", "Leader"],
           "timeWindows": [ { "startTime": "15:00", "endTime": "17:00" } ] }
       ]},
-    { "id": "DND", "order": 8, "code": "D&D", 
+    { "id": "DND", "order": 8, "code": "D&D", "priority": 60,
       "color": {
         "name": "red", "bg": "#fecaca", "text": "#991b1b", "border": "#f87171", "hover": "#fca5a5",
         "tailwind_bg": "bg-red-200", "tailwind_text": "text-red-800", "tailwind_border": "border-red-500"
@@ -237,7 +237,7 @@
         { "order": "5", "name": "Làm PC/POP D&D", "typeTask": "Product", "frequency": "Weekly", "frequencyNumber": 1, "reUnit": 30, "manual_number": "DND-005", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 1, "allowedPositions": ["Ngành hàng", "Leader"],
           "timeWindows": [ { "startTime": "15:00", "endTime": "15:15" } ] }
       ]},
-    { "id": "OTHER", "order": 9, "code": "OTHER", 
+    { "id": "OTHER", "order": 9, "code": "OTHER", "priority": 30,
       "color": {
         "name": "pink", "bg": "#fbcfe8", "text": "#9d174d", "border": "#f472b6", "hover": "#f9a8d4",
         "tailwind_bg": "bg-pink-200", "tailwind_text": "text-pink-800", "tailwind_border": "border-pink-500"

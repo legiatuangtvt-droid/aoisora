@@ -773,7 +773,7 @@ export function updateTemplateStats() {
  * @param {string} closeTime - Thời gian đóng cửa (ví dụ: "22:00").
  * @param {number} targetManHours - Tổng giờ công mong muốn.
  */
-export async function handleAutoGenerate(openTime, closeTime, targetManHours) {
+export async function handleAutoGenerate(openTime, closeTime, targetManHours, storeParams) {
     // Đối tượng chứa dữ liệu lịch trình mới và ánh xạ ca làm việc
     const newScheduleData = {};
     const newShiftMappings = {};
@@ -785,21 +785,42 @@ export async function handleAutoGenerate(openTime, closeTime, targetManHours) {
         throw new Error("Không thể tìm thấy dữ liệu mẫu hiện tại để tiến hành tạo lịch.");
     }
 
-    const reParameters = currentTemplate?.reParameters || {};
+    // Cập nhật reParameters của template với dữ liệu từ form
+    const reParameters = {
+        ...(currentTemplate?.reParameters || {}),
+        ...storeParams
+    };
+
+    // Cập nhật lại reParameters trong đối tượng template hiện tại để các hàm khác có thể sử dụng
+    const currentTemplateIndexForUpdate = allTemplates.findIndex(t => t.id === currentTemplateId);
+    if (currentTemplateIndexForUpdate !== -1) {
+        allTemplates[currentTemplateIndexForUpdate].reParameters = reParameters;
+    }
 
     // 1. Gọi hàm generateSchedule để lấy dữ liệu lịch trình mới
     const {
         schedule: generatedSchedule,
         shiftMappings: generatedShiftMappings,
-        totalManhour: generatedTotalManhour
-    } = generateSchedule(openTime, closeTime, targetManHours);
+        finalScheduledManHours,
+        totalRequiredRE,
+        budgetManHours
+    } = generateSchedule(openTime, closeTime, targetManHours, reParameters);
+
+    // 2. Kiểm tra và hiển thị cảnh báo nếu cần
+    if (totalRequiredRE > budgetManHours) {
+        window.showToast(
+            `Cảnh báo: Ngân sách giờ công (${budgetManHours.toFixed(2)}h) không đủ để hoàn thành toàn bộ công việc yêu cầu (${totalRequiredRE.toFixed(2)}h). Lịch trình đã được tạo bằng cách ưu tiên các công việc quan trọng nhất.`,
+            'warning',
+            10000 // Hiển thị trong 10 giây
+        );
+    }
 
     // 5. Cập nhật giao diện và lưu vào Firestore
     const updatedTemplateData = {
         ...currentTemplate, // Giữ lại các thông tin khác của template hiện tại
         schedule: generatedSchedule,
         shiftMappings: generatedShiftMappings,
-        totalManhour: generatedTotalManhour, // Cập nhật tổng manhour theo giá trị nhập vào
+        totalManhour: budgetManHours, // Lưu lại ngân sách đã nhập
         hourlyManhours: {} // Sẽ được tính toán lại bởi updateTemplateFromDOM từ DOM sau khi render
     };
 
@@ -815,5 +836,5 @@ export async function handleAutoGenerate(openTime, closeTime, targetManHours) {
     initializeDragAndDrop(); // Khởi tạo lại chức năng kéo-thả cho các task mới
 
     // Lưu các thay đổi vào Firestore. Truyền trực tiếp dữ liệu đã tạo để tránh đọc lại từ DOM ngay lập tức.
-    await updateTemplateFromDOM(generatedSchedule, generatedShiftMappings, generatedTotalManhour);
+    await updateTemplateFromDOM(generatedSchedule, generatedShiftMappings, budgetManHours);
 }

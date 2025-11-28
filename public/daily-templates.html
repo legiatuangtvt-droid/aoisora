@@ -269,13 +269,43 @@
                     <button type="button" class="modal-close-btn">&times;</button>
                 </div>
                 <div class="modal-body space-y-4">
-                    <div>
-                        <label for="open-time" class="block text-sm font-medium text-gray-700">Thời gian mở cửa</label>
-                        <input type="time" id="open-time" name="open-time" class="form-input mt-1 w-full" step="1800" value="06:00" required>
-                    </div>
-                    <div>
-                        <label for="close-time" class="block text-sm font-medium text-gray-700">Thời gian đóng cửa</label>
-                        <input type="time" id="close-time" name="close-time" class="form-input mt-1 w-full" step="1800" value="22:00" required>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="ag-open-time" class="block text-sm font-medium text-gray-700">Thời gian mở cửa</label>
+                            <input type="time" id="ag-open-time" name="open-time" class="form-input mt-1 w-full" step="1800" value="06:00" required>
+                        </div>
+                        <div>
+                            <label for="ag-close-time" class="block text-sm font-medium text-gray-700">Thời gian đóng cửa</label>
+                            <input type="time" id="ag-close-time" name="close-time" class="form-input mt-1 w-full" step="1800" value="22:00" required>
+                        </div>
+                        <div>
+                            <label for="ag-target-man-hours" class="block text-sm font-medium text-gray-700">Tổng giờ công</label>
+                            <input type="number" id="ag-target-man-hours" name="target-man-hours" class="form-input mt-1 w-full" placeholder="VD: 80" required>
+                        </div>
+                        <div>
+                            <label for="ag-pos-count" class="block text-sm font-medium text-gray-700">Số lượng POS</label>
+                            <input type="number" id="ag-pos-count" class="form-input mt-1 w-full" placeholder="VD: 3" required>
+                        </div>
+                        <div>
+                            <label for="ag-area-size" class="block text-sm font-medium text-gray-700">Diện tích (m²)</label>
+                            <input type="number" id="ag-area-size" class="form-input mt-1 w-full" placeholder="VD: 200" required>
+                        </div>
+                        <div>
+                            <label for="ag-employee-count" class="block text-sm font-medium text-gray-700">Số nhân viên</label>
+                            <input type="number" id="ag-employee-count" class="form-input mt-1 w-full" placeholder="VD: 10" required>
+                        </div>
+                        <div>
+                            <label for="ag-dry-goods-volume" class="block text-sm font-medium text-gray-700">Hàng khô (kiện)</label>
+                            <input type="number" id="ag-dry-goods-volume" class="form-input mt-1 w-full" placeholder="VD: 5" required>
+                        </div>
+                        <div>
+                            <label for="ag-vegetable-weight" class="block text-sm font-medium text-gray-700">Rau củ (kg)</label>
+                            <input type="number" id="ag-vegetable-weight" class="form-input mt-1 w-full" placeholder="VD: 20" required>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label for="ag-total-customers" class="block text-sm font-medium text-gray-700">Tổng số khách hàng (ngày)</label>
+                            <input type="number" id="ag-total-customers" name="total-customers" class="form-input mt-1 w-full" placeholder="VD: 800" required>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">

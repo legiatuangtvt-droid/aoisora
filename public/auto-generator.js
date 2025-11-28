@@ -13,9 +13,10 @@ import { timeToMinutes } from './utils.js';
  *
  * @param {string} openTime - Thời gian mở cửa (ví dụ: "06:00").
  * @param {string} closeTime - Thời gian đóng cửa (ví dụ: "22:00").
+ * @param {number} targetManHours - Giờ công mục tiêu (ngân sách).
  * @returns {object} Một đối tượng chứa { schedule, shiftMappings, totalManhour }.
  */
-export function generateSchedule(openTime, closeTime) {
+export function generateSchedule(openTime, closeTime, targetManHours) {
     // --- START: MOCK DATA CHO VỊ TRÍ CÔNG VIỆC VÀ CA LÀM VIỆC ---
     // (Dữ liệu này sẽ được thay thế bằng thuật toán trong tương lai)
 
@@ -71,11 +72,13 @@ export function generateSchedule(openTime, closeTime) {
     const taskSlotsToPlace = [];
     // CHỈNH SỬA: Chuyển đổi allTaskGroups thành mảng để sử dụng nhất quán
     const taskGroupsArray = Object.values(allTaskGroups);
+    let totalRequiredRE = 0; // Biến mới để tính tổng RE
 
     for (const groupInfo of taskGroupsArray) {
         if (groupInfo.tasks && Array.isArray(groupInfo.tasks)) {
             groupInfo.tasks.forEach(task => {
                 const taskHours = calculateREForTask(task, groupInfo, reParameters);
+                totalRequiredRE += taskHours; // Cộng dồn vào tổng RE
                 const numSlots = Math.round(taskHours * 4); // 1 slot = 0.25 giờ
                 if (numSlots > 0) {
                     // SỬA ĐỔI: Tạo taskCode theo quy tắc mới: 1 + [group.order] + [task.order]
@@ -87,6 +90,7 @@ export function generateSchedule(openTime, closeTime) {
                     taskSlotsToPlace.push({
                         ...task, // <-- Dòng quan trọng được thêm vào
                         taskCode: newTaskCode,
+                        groupPriority: groupInfo.priority || 0, // Thêm độ ưu tiên của group vào task
                         taskName: task.name || `Unnamed Task ${newTaskCode}`, // SỬA LỖI: Thêm lại taskName một cách tường minh
                         groupId: groupInfo.id, // SỬA LỖI: Thêm groupId vào đối tượng task
                         numSlotsRemaining: numSlots,
@@ -107,7 +111,11 @@ export function generateSchedule(openTime, closeTime) {
     taskSlotsToPlace.sort((a, b) => {
         const priorityA = typeTaskPriority[a.typeTask] || 99;
         const priorityB = typeTaskPriority[b.typeTask] || 99;
-        return priorityA - priorityB || b.priority - a.priority || b.originalNumSlots - a.originalNumSlots;
+        // Quy tắc sắp xếp mới:
+        // 1. Ưu tiên theo loại task (Fixed > CTM > Product)
+        // 2. Ưu tiên theo độ ưu tiên của Group (cao hơn trước)
+        // 3. Ưu tiên theo độ lớn của task (RE cao hơn trước)
+        return priorityA - priorityB || b.groupPriority - a.groupPriority || b.originalNumSlots - a.originalNumSlots;
     });
 
     // 2. Xác định khung giờ hoạt động và số lượng ca cần thiết
@@ -460,6 +468,9 @@ export function generateSchedule(openTime, closeTime) {
     // --- GIAI ĐOẠN 2: BỐ TRÍ CÁC TASK CHÍNH THEO THỨ TỰ ƯU TIÊN ---
     const concurrentTaskCount = {}; // { "startTime_taskCode": count }
 
+    let scheduledManHours = 0; // Biến đếm giờ công đã xếp
+    const targetSlots = targetManHours * 4; // Chuyển ngân sách giờ công thành số slot
+
     /**
      * Hàm phụ trợ để xếp lịch cho các task còn lại.
      * @param {Array} tasks - Danh sách các task cần xếp.
@@ -471,6 +482,9 @@ export function generateSchedule(openTime, closeTime) {
             for (const slot of shuffledSlots) {
                 // Bỏ qua slot đã được lấp đầy
                 if (newScheduleData[slot.shiftId].some(t => t.startTime === slot.startTime)) {
+                    continue;
+                }
+                if (scheduledManHours >= targetManHours) { // Nếu đã dùng hết ngân sách, dừng lại
                     continue;
                 }
 
@@ -527,6 +541,7 @@ export function generateSchedule(openTime, closeTime) {
                         });
                         taskToAssign.numSlotsRemaining--;
                         concurrentTaskCount[taskKey] = currentCount + 1;
+                        scheduledManHours += 0.25; // Tăng giờ công đã xếp
 
                         break;
                     }
@@ -566,6 +581,10 @@ export function generateSchedule(openTime, closeTime) {
     for (const shift of plannedShifts) {
         for (const slot of shift.availableSlots) {
             const isSlotFilled = newScheduleData[shift.shiftId].some(t => t.startTime === slot.startTime);
+            if (scheduledManHours >= targetManHours) { // Dừng lại nếu hết ngân sách
+                break;
+            }
+
             if (!isSlotFilled) {
                 const shiftPositionName = positionIdToNameMap[shift.positionId];
 
@@ -582,8 +601,12 @@ export function generateSchedule(openTime, closeTime) {
                         startTime: slot.startTime,
                         groupId: taskToFill.groupId
                     });
+                    scheduledManHours += 0.25; // Tăng giờ công đã xếp
                 }
             }
+        }
+        if (scheduledManHours >= targetManHours) { // Dừng lại nếu hết ngân sách
+            break;
         }
     }
 
@@ -603,6 +626,8 @@ export function generateSchedule(openTime, closeTime) {
     return {
         schedule: newScheduleData,
         shiftMappings: newShiftMappings,
-        totalManhour: currentTemplate?.totalManhour || 0
+        finalScheduledManHours: scheduledManHours,
+        totalRequiredRE: totalRequiredRE,
+        budgetManHours: targetManHours
     };
 }
