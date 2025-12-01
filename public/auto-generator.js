@@ -150,6 +150,62 @@ export function generateSchedule(openTime, closeTime, targetManHours, reParamete
                     });
                 });
             },
+            'breakTime': () => {
+                const breakTask = placementTasks.find(t => t.name === 'Break Time');
+                if (!breakTask) return;
+
+                // Định nghĩa các khung giờ nghỉ (theo phút)
+                const breakWindows = {
+                    lunch: {
+                        'Leader': { start: timeToMinutes('11:30'), end: timeToMinutes('12:30') },
+                        'POS': { start: timeToMinutes('10:00'), end: timeToMinutes('11:00') },
+                        'MMD': { start: timeToMinutes('10:00'), end: timeToMinutes('11:00') },
+                        'Ngành hàng': { start: timeToMinutes('11:00'), end: timeToMinutes('12:00') },
+                        'Aeon Cafe': { start: timeToMinutes('11:00'), end: timeToMinutes('12:00') },
+                    },
+                    dinner: {
+                        'Leader': { start: timeToMinutes('18:00'), end: timeToMinutes('19:00') },
+                        'POS': { start: timeToMinutes('16:00'), end: timeToMinutes('17:00') },
+                        'MMD': { start: timeToMinutes('16:00'), end: timeToMinutes('17:00') },
+                        'Ngành hàng': { start: timeToMinutes('17:00'), end: '18:00' },
+                        'Aeon Cafe': { start: timeToMinutes('17:00'), end: timeToMinutes('18:00') },
+                    }
+                };
+
+                // Hàm để xếp lịch nghỉ cho một ca và một loại bữa ăn
+                const scheduleBreakForShift = (shift, mealType) => {
+                    const positionName = positionIdToNameMap[shift.positionId];
+                    const window = breakWindows[mealType][positionName];
+                    if (!window) return; // Bỏ qua nếu vị trí không có giờ nghỉ quy định
+
+                    // Tìm 4 slot 15 phút liên tiếp còn trống trong khung giờ quy định
+                    for (let startMinute = window.start; startMinute <= window.end - 60; startMinute += 15) {
+                        const slotsNeeded = [];
+                        let canPlace = true;
+                        for (let i = 0; i < 4; i++) {
+                            const slotMinute = startMinute + i * 15;
+                            const startTime = `${String(Math.floor(slotMinute / 60)).padStart(2, '0')}:${String(slotMinute % 60).padStart(2, '0')}`;
+                            if (newScheduleData[shift.shiftId].some(t => t.startTime === startTime)) {
+                                canPlace = false;
+                                break;
+                            }
+                            slotsNeeded.push(startTime);
+                        }
+
+                        if (canPlace) {
+                            // Nếu tìm được, xếp lịch và thoát khỏi vòng lặp cho ca này
+                            slotsNeeded.forEach(startTime => placeTaskInSlot(shift, startTime, breakTask));
+                            break;
+                        }
+                    }
+                };
+
+                // Lặp qua tất cả các ca đã lên kế hoạch để xếp lịch nghỉ trưa và nghỉ chiều
+                plannedShifts.forEach(shift => {
+                    scheduleBreakForShift(shift, 'lunch');
+                    scheduleBreakForShift(shift, 'dinner');
+                });
+            },
             'lastOfDay': () => {
                 const tasks = placementTasks.filter(t => t.shiftPlacement.type === 'lastOfDay');
                 tasks.forEach(task => {
@@ -207,7 +263,7 @@ export function generateSchedule(openTime, closeTime, targetManHours, reParamete
             }
         };
 
-        const handlerOrder = ['firstOfDay', 'lastOfDay', 'firstOfShift', 'lastOfShift'];
+        const handlerOrder = ['firstOfDay', 'lastOfDay', 'breakTime', 'firstOfShift', 'lastOfShift'];
         handlerOrder.forEach(handlerType => {
             const hasTaskForHandler = placementTasks.some(t => t.shiftPlacement.type === handlerType);
             if (hasTaskForHandler) {
