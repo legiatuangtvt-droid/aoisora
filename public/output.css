@@ -1268,6 +1268,10 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
   height: 100vh;
 }
 
+.h-80 {
+  height: 20rem;
+}
+
 .max-h-48 {
   max-height: 12rem;
 }

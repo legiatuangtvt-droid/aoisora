@@ -87,6 +87,24 @@
 
                 <!-- Khu vực 3: Phân tích Chi tiết & Lộ trình Đào tạo (Main Content) -->
                 <div id="detail-analysis-panel" class="flex-1 bg-white rounded-lg shadow-md p-6 overflow-y-auto">
+                    <!-- Initial state: Prompt to select an item -->
+                    <div id="initial-prompt" class="flex flex-col items-center justify-center h-full text-center text-gray-500">
+                        <i class="fas fa-mouse-pointer fa-3x mb-4"></i>
+                        <h3 class="text-lg font-semibold">Chọn một mục từ Bảng Xếp Hạng</h3>
+                        <p>để xem phân tích chi tiết.</p>
+                    </div>
+
+                    <!-- Store Detailed view (hidden by default) -->
+                    <div id="store-detail-view" class="hidden">
+                        <h2 id="store-detail-name" class="text-2xl font-bold mb-1">Tên Cửa Hàng</h2>
+                        <p id="store-detail-xp" class="text-gray-500 mb-6">Tổng điểm: <span class="font-bold text-indigo-600">0 XP</span></p>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div id="store-employee-list-container" class="space-y-2"></div>
+                            <div id="store-contribution-chart-container" class="h-80"></div>
+                        </div>
+                    </div>
+                <!-- Khu vực 3: Phân tích Chi tiết & Lộ trình Đào tạo (Main Content) -->
+                <div id="detail-analysis-panel" class="flex-1 bg-white rounded-lg shadow-md p-6 overflow-y-auto">
                     <!-- Initial state: Prompt to select an employee -->
                     <div id="initial-prompt" class="flex flex-col items-center justify-center h-full text-center text-gray-500">
                         <i class="fas fa-user-check fa-3x mb-4"></i>

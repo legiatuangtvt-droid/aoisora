@@ -8,9 +8,10 @@ let allRoles = {};
 let allTaskGroups = {};
 let skillRadarChartInstance = null; // Instance biểu đồ radar
 let xpCompositionChartInstance = null; // Instance biểu đồ cột chồng
+let storeContributionChartInstance = null; // Instance biểu đồ tròn của cửa hàng
 
 // DOM Elements
-let leaderboardListEmployee, leaderboardListStore, initialPrompt, employeeDetailView;
+let leaderboardListEmployee, leaderboardListStore, initialPrompt, employeeDetailView, storeDetailView;
 
 // Dữ liệu mô phỏng cố định cho chi tiết nhân viên
 const mockEmployeeDetailsData = {
@@ -133,12 +134,14 @@ function populateStoreFilter() {
  * @returns {Array} - Mảng các đối tượng cửa hàng với tổng XP.
  */
 function aggregateStoreXP() {
+    console.log('[Debug] aggregateStoreXP: Bắt đầu tính tổng XP cho cửa hàng.');
     const storeXP = {};
 
     // Khởi tạo điểm cho tất cả cửa hàng là 0
     for (const storeId in allStores) {
         storeXP[storeId] = {
             ...allStores[storeId],
+            id: storeId, // Thêm dòng này để đảm bảo ID được gán vào đối tượng
             totalXP: 0,
             employeeCount: 0
         };
@@ -152,8 +155,10 @@ function aggregateStoreXP() {
         }
     });
 
+    const result = Object.values(storeXP).sort((a, b) => b.totalXP - a.totalXP);
+    console.log('[Debug] aggregateStoreXP: Tính toán hoàn tất. Dữ liệu:', result);
     // Chuyển object thành mảng và sắp xếp theo totalXP giảm dần
-    return Object.values(storeXP).sort((a, b) => b.totalXP - a.totalXP);
+    return result;
 }
 
 /**
@@ -161,16 +166,28 @@ function aggregateStoreXP() {
  * @param {Array} stores - Danh sách cửa hàng đã được tính tổng XP.
  */
 function renderStoreLeaderboard(stores) {
+    console.log('[Debug] renderStoreLeaderboard: Bắt đầu render BXH cửa hàng với dữ liệu:', stores);
     leaderboardListStore.innerHTML = '';
     stores.forEach((store, index) => {
         const storeCard = document.createElement('div');
-        storeCard.className = 'p-3 rounded-lg border flex items-center justify-between';
+        // Thêm cursor-pointer và các lớp hover để cho biết nó có thể được nhấp
+        storeCard.className = 'p-3 rounded-lg border flex items-center justify-between cursor-pointer hover:bg-indigo-50 transition-colors';
+        storeCard.dataset.storeId = store.id;
         storeCard.innerHTML = `
             <div class="font-semibold text-sm">${index + 1}. ${store.name}</div>
             <div class="font-bold text-indigo-600">${store.totalXP.toLocaleString()} XP</div>`;
+        
+        // Gắn listener để xử lý khi nhấp vào một cửa hàng
+        console.log(`[Debug] renderStoreLeaderboard: Thêm event listener cho cửa hàng ID: ${store.id}`);
+        storeCard.addEventListener('click', () => {
+            console.log(`[Debug] Event: Click vào cửa hàng ID: ${store.id}`);
+            displayStoreDetails(store.id);
+        });
+
         leaderboardListStore.appendChild(storeCard);
     });
 }
+
 /**
  * Áp dụng các bộ lọc hiện tại và render lại bảng xếp hạng.
  */
@@ -425,6 +442,101 @@ async function drawXpCompositionChart(employeeId) {
 }
 
 /**
+ * Hiển thị chi tiết thông tin của một cửa hàng được chọn.
+ * @param {string} storeId - ID của cửa hàng.
+ */
+function displayStoreDetails(storeId) {
+    console.log(`[Debug] displayStoreDetails: Bắt đầu hiển thị chi tiết cho cửa hàng ID: ${storeId}`);
+    const store = allStores[storeId];
+    if (!store) {
+        console.error(`[Debug] displayStoreDetails: Không tìm thấy cửa hàng với ID: ${storeId}`);
+        return;
+    }
+
+    // Ẩn các view khác và hiển thị view chi tiết cửa hàng
+    initialPrompt.classList.add('hidden');
+    employeeDetailView.classList.add('hidden');
+    storeDetailView.classList.remove('hidden');
+
+    // Highlight mục được chọn trong danh sách
+    document.querySelectorAll('#leaderboard-list-store > div').forEach(child => {
+        child.classList.remove('bg-indigo-100', 'border-indigo-400');
+        if (child.dataset.storeId === storeId) {
+            child.classList.add('bg-indigo-100', 'border-indigo-400');
+        }
+    });
+
+    // Cập nhật thông tin cơ bản của cửa hàng
+    const totalXP = allEmployees
+        .filter(e => e.storeId === storeId)
+        .reduce((sum, e) => sum + (e.experiencePoints || 0), 0);
+
+    document.getElementById('store-detail-name').textContent = store.name;
+    document.getElementById('store-detail-xp').querySelector('span').textContent = `${totalXP.toLocaleString()} XP`;
+
+    // Lấy và hiển thị danh sách nhân viên của cửa hàng
+    const storeEmployees = allEmployees
+        .filter(e => e.storeId === storeId)
+        .sort((a, b) => (b.experiencePoints || 0) - (a.experiencePoints || 0));
+    console.log('[Debug] displayStoreDetails: Danh sách nhân viên của cửa hàng:', storeEmployees);
+
+    const employeeListContainer = document.getElementById('store-employee-list-container');
+    employeeListContainer.innerHTML = '<h4 class="font-semibold mb-2">Xếp hạng nhân viên trong cửa hàng</h4>';
+    if (storeEmployees.length > 0) {
+        storeEmployees.forEach((emp, index) => {
+            const empDiv = document.createElement('div');
+            empDiv.className = 'flex justify-between items-center text-sm p-2 rounded-md ' + (index % 2 === 0 ? 'bg-gray-50' : '');
+            empDiv.innerHTML = `
+                <span class="font-medium">${index + 1}. ${emp.name}</span>
+                <span class="font-semibold text-indigo-600">${(emp.experiencePoints || 0).toLocaleString()} XP</span>
+            `;
+            employeeListContainer.appendChild(empDiv);
+        });
+    } else {
+        employeeListContainer.innerHTML += '<p class="text-gray-500 text-sm">Chưa có dữ liệu nhân viên.</p>';
+    }
+
+    // Vẽ biểu đồ đóng góp
+    console.log('[Debug] displayStoreDetails: Chuẩn bị vẽ biểu đồ đóng góp.');
+    drawStoreContributionChart(storeEmployees, totalXP);
+}
+
+/**
+ * Vẽ biểu đồ tròn thể hiện sự đóng góp XP của nhân viên trong cửa hàng.
+ * @param {Array} storeEmployees - Danh sách nhân viên của cửa hàng.
+ * @param {number} totalXP - Tổng XP của cửa hàng.
+ */
+function drawStoreContributionChart(storeEmployees, totalXP) {
+    const container = document.getElementById('store-contribution-chart-container');
+    container.innerHTML = '<h4 class="font-semibold mb-2">Tỷ lệ đóng góp XP</h4><canvas id="store-contribution-canvas"></canvas>';
+    const ctx = document.getElementById('store-contribution-canvas')?.getContext('2d');
+    if (!ctx) return;
+
+    if (storeContributionChartInstance) {
+        storeContributionChartInstance.destroy();
+    }
+
+    const topN = 5;
+    const topEmployees = storeEmployees.slice(0, topN);
+    const topXP = topEmployees.reduce((sum, e) => sum + (e.experiencePoints || 0), 0);
+    const otherXP = totalXP - topXP;
+
+    const labels = topEmployees.map(e => e.name);
+    const data = topEmployees.map(e => e.experiencePoints || 0);
+
+    if (otherXP > 0) {
+        labels.push('Nhân viên khác');
+        data.push(otherXP);
+    }
+
+    storeContributionChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: { labels, datasets: [{ data, backgroundColor: ['#4f46e5', '#6366f1', '#818cf8', '#a5b4fc', '#c7d2fe', '#e0e7ff'] }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { padding: 15, boxWidth: 12 } } } }
+    });
+}
+
+/**
  * Dọn dẹp các event listener khi rời khỏi trang.
  */
 export function cleanup() {
@@ -434,6 +546,7 @@ export function cleanup() {
     }
     if (skillRadarChartInstance) skillRadarChartInstance.destroy();
     if (xpCompositionChartInstance) xpCompositionChartInstance.destroy();
+    if (storeContributionChartInstance) storeContributionChartInstance.destroy();
 }
 
 /**
@@ -447,6 +560,7 @@ export async function init() {
     leaderboardListStore = document.getElementById('leaderboard-list-store');
     initialPrompt = document.getElementById('initial-prompt');
     employeeDetailView = document.getElementById('employee-detail-view');
+    storeDetailView = document.getElementById('store-detail-view');
 
     // Bắt đầu chuỗi xử lý
     const employees = await fetchPerformanceData();
@@ -460,10 +574,13 @@ export async function init() {
     const storeTab = document.querySelector('.leaderboard-tab[data-tab="stores"]');
 
     employeeTab.addEventListener('click', () => {
+        console.log('[Debug] Event: Click vào tab Nhân viên.');
         employeeTab.classList.add('active');
         storeTab.classList.remove('active');
         leaderboardListEmployee.classList.remove('hidden');
         leaderboardListStore.classList.add('hidden');
+        storeDetailView.classList.add('hidden'); // Ẩn chi tiết cửa hàng
+
         // Khi chuyển về tab nhân viên, hiển thị lại chi tiết
         if (allEmployees.length > 0) {
             displayEmployeeDetails(allEmployees[0].id);
@@ -471,13 +588,20 @@ export async function init() {
     }, { signal: domController.signal });
 
     storeTab.addEventListener('click', () => {
+        console.log('[Debug] Event: Click vào tab Cửa hàng.');
         storeTab.classList.add('active');
         employeeTab.classList.remove('active');
         leaderboardListStore.classList.remove('hidden');
         leaderboardListEmployee.classList.add('hidden');
+        
         // Khi xem BXH cửa hàng, ẩn chi tiết nhân viên và hiện prompt ban đầu
-        initialPrompt.classList.remove('hidden');
         employeeDetailView.classList.add('hidden');
+        initialPrompt.classList.remove('hidden');
+
+        // Bỏ highlight tất cả các mục cửa hàng
+        document.querySelectorAll('#leaderboard-list-store > div').forEach(child => {
+            child.classList.remove('bg-indigo-100', 'border-indigo-400');
+        });
     }, { signal: domController.signal });
 
     // Render bảng xếp hạng nhân viên
