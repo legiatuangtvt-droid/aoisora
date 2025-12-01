@@ -249,20 +249,22 @@ function renderLeaderboard(employees) {
         employeeCard.dataset.employeeId = employee.id;
 
         employeeCard.innerHTML = `
-            <div class="rank-indicator">${rankContent}</div>
-            <div class="flex-1">
-                <div class="flex items-center gap-3">
-                <div class="relative">
-                    <img src="https://placehold.co/48x48/E2E8F0/4A5568?text=${employee.name.charAt(0)}" class="w-12 h-12 rounded-full">
-                    <span class="level-badge absolute -bottom-1 -right-1">Lv.${levelInfo.level}</span>
-                </div>
+            <div class="rank-content-wrapper">
+                <div class="rank-indicator">${rankContent}</div>
                 <div class="flex-1">
-                    <p class="font-bold text-sm">${employee.name}</p>
-                    <div class="mt-2 h-1.5 w-full bg-gray-200 rounded-full" title="Tiến độ công việc hôm nay">
-                        <div class="bg-green-500 h-1.5 rounded-full" style="width: ${mockData.dailyProgress}%"></div>
+                    <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <img src="https://placehold.co/48x48/E2E8F0/4A5568?text=${employee.name.charAt(0)}" class="w-12 h-12 rounded-full">
+                        <span class="level-badge absolute -bottom-1 -right-1">Lv.${levelInfo.level}</span>
                     </div>
+                    <div class="flex-1">
+                        <p class="font-bold text-sm">${employee.name}</p>
+                        <div class="mt-2 h-1.5 w-full bg-gray-200 rounded-full" title="Tiến độ công việc hôm nay">
+                            <div class="bg-green-500 h-1.5 rounded-full" style="width: ${mockData.dailyProgress}%"></div>
+                        </div>
+                    </div>
+                    <span class="font-bold text-indigo-600">${(employee.experiencePoints || 0).toLocaleString()} XP</span>
                 </div>
-                <span class="font-bold text-indigo-600">${(employee.experiencePoints || 0).toLocaleString()} XP</span>
             </div>
         `;
 

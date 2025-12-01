@@ -1007,10 +1007,6 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
   z-index: 30;
 }
 
-.z-50 {
-  z-index: 50;
-}
-
 .col-span-1 {
   grid-column: span 1 / span 1;
 }
@@ -4244,6 +4240,28 @@ tr.edit-mode-active .scheduled-task-item.calendar-day:hover {
   border: 1px solid #A0522D;
 }
 
+/* Thêm hiệu ứng đổ bóng để làm nổi bật icon vương miện */
+
+.rank-1 .fa-crown, .rank-2 .fa-crown, .rank-3 .fa-crown {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  font-size: 1.1em;
+  /* Tăng nhẹ kích thước để nổi bật hơn */
+}
+
+/* Lớp bao bọc nội dung để đảm bảo nó nổi lên trên hiệu ứng hạt */
+
+.rank-content-wrapper {
+  position: relative;
+  /* Tạo stacking context mới */
+  z-index: 2;
+  /* Đặt lớp nội dung lên trên */
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  /* Tương đương gap-3 của Tailwind */
+  width: 100%;
+}
+
 /* 4. Hiệu ứng hạt (Sử dụng pseudo-element ::after) */
 
 .rank-1::after, .rank-2::after {
@@ -4256,6 +4274,8 @@ tr.edit-mode-active .scheduled-task-item.calendar-day:hover {
   width: 300%;
   /* Tăng chiều rộng để khi xoay không thấy cạnh */
   height: 150px;
+  z-index: 1;
+  /* Đặt lớp hiệu ứng hạt ở dưới nội dung */
   animation-name: particles-float;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
