@@ -5,6 +5,7 @@ let domController = null;
 let allEmployees = [];
 let allRoles = {};
 let allTaskGroups = {};
+let skillRadarChartInstance = null; // Biến để lưu trữ instance của biểu đồ radar
 
 // DOM Elements
 let leaderboardList, initialPrompt, employeeDetailView;
@@ -119,6 +120,60 @@ function renderLeaderboard(employees) {
 }
 
 /**
+ * Mô phỏng việc lấy dữ liệu kỹ năng cho một nhân viên.
+ * Trong tương lai, hàm này sẽ truy vấn Firestore để lấy dữ liệu thật.
+ * @param {string} employeeId - ID của nhân viên.
+ * @returns {Promise<object>} - Dữ liệu cho biểu đồ radar.
+ */
+async function getSkillDataForEmployee(employeeId) {
+    // Giả lập: Các nhóm kỹ năng chính
+    const skillLabels = ['POS', 'Leader', 'Ngành hàng', 'MMD', 'Aeon Cafe', 'QC-FSH'];
+    
+    // Giả lập điểm số ngẫu nhiên cho mỗi kỹ năng
+    const skillData = skillLabels.map(() => Math.floor(Math.random() * (100 - 40 + 1)) + 40);
+
+    return {
+        labels: skillLabels,
+        datasets: [{
+            label: 'Điểm Kỹ năng',
+            data: skillData,
+            backgroundColor: 'rgba(79, 70, 229, 0.2)',
+            borderColor: 'rgba(79, 70, 229, 1)',
+            borderWidth: 2,
+            pointBackgroundColor: 'rgba(79, 70, 229, 1)',
+            pointBorderColor: '#fff',
+            pointHoverBackgroundColor: '#fff',
+            pointHoverBorderColor: 'rgba(79, 70, 229, 1)'
+        }]
+    };
+}
+
+/**
+ * Vẽ biểu đồ Radar kỹ năng cho nhân viên được chọn.
+ * @param {string} employeeId - ID của nhân viên.
+ */
+async function drawSkillRadarChart(employeeId) {
+    const data = await getSkillDataForEmployee(employeeId);
+    const ctx = document.getElementById('skill-radar-chart-canvas')?.getContext('2d');
+    if (!ctx) return;
+
+    // Hủy biểu đồ cũ nếu nó tồn tại để tránh vẽ chồng chéo
+    if (skillRadarChartInstance) {
+        skillRadarChartInstance.destroy();
+    }
+
+    skillRadarChartInstance = new Chart(ctx, {
+        type: 'radar',
+        data: data,
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: { r: { angleLines: { display: false }, suggestedMin: 0, suggestedMax: 100, pointLabels: { font: { size: 12 } } } },
+            plugins: { legend: { display: false } }
+        }
+    });
+}
+
+/**
  * Hiển thị chi tiết thông tin của một nhân viên được chọn.
  * @param {string} employeeId - ID của nhân viên.
  */
@@ -141,7 +196,8 @@ function displayEmployeeDetails(employeeId) {
     document.querySelector('#employee-detail-view .text-xs.text-right').textContent = `${currentXP.toLocaleString()} / ${levelInfo.xpForNextLevel.toLocaleString()} XP để lên cấp`;
 
     // B. Phân tích Điểm kinh nghiệm (Placeholder for charts)
-    document.getElementById('skill-radar-chart-container').innerHTML = `<p class="text-center text-gray-400 text-xs pt-4">Biểu đồ Radar cho ${employee.name} sẽ được hiển thị ở đây.</p>`;
+    // Gọi hàm để vẽ biểu đồ radar
+    drawSkillRadarChart(employeeId);
     document.getElementById('xp-composition-chart-container').innerHTML = `<p class="text-center text-gray-400 text-xs pt-4">Biểu đồ cột chồng cho ${employee.name} sẽ được hiển thị ở đây.</p>`;
 
     // C. Hiệu suất làm việc (Dữ liệu giả lập)
