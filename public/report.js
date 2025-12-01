@@ -5,10 +5,55 @@ let domController = null;
 let allEmployees = [];
 let allRoles = {};
 let allTaskGroups = {};
-let skillRadarChartInstance = null; // Biến để lưu trữ instance của biểu đồ radar
+let skillRadarChartInstance = null; // Instance biểu đồ radar
+let xpCompositionChartInstance = null; // Instance biểu đồ cột chồng
 
 // DOM Elements
 let leaderboardList, initialPrompt, employeeDetailView;
+
+// Dữ liệu mô phỏng cố định cho chi tiết nhân viên
+const mockEmployeeDetailsData = {
+    // Dữ liệu mặc định nếu không tìm thấy ID nhân viên
+    default: {
+        dailyProgress: 85,
+        skills: [75, 80, 70, 85, 60, 90],
+        performance: { dailyCompletion: 95, monthlyCompletion: 92, lateTasks: 3, earlyTasks: 10, trend: 'stable' },
+        strengths: "Hoàn thành tốt các công việc được giao.",
+        weaknesses: "Cần chủ động hơn trong việc học hỏi kỹ năng mới.",
+        recommendations: "Tham gia các buổi training nội bộ."
+    },
+    // Dữ liệu cho các nhân viên cụ thể (ID sẽ được thay bằng ID thật từ Firestore)
+    // Ví dụ: '2qWAw22a25aQ1b2b3c4d': { ... }
+};
+
+/**
+ * Lấy dữ liệu chi tiết mô phỏng cho một nhân viên.
+ * @param {string} employeeId - ID của nhân viên.
+ * @returns {object} - Dữ liệu chi tiết mô phỏng.
+ */
+function getMockDetails(employeeId) {
+    // Tạo dữ liệu giả ổn định dựa trên ID nhân viên để không bị ngẫu nhiên
+    if (!mockEmployeeDetailsData[employeeId]) {
+        const idHash = employeeId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        mockEmployeeDetailsData[employeeId] = {
+            dailyProgress: 70 + (idHash % 31), // 70-100
+            skills: Array.from({length: 6}, (_, i) => 40 + ((idHash + i*5) % 61)), // 40-100
+            performance: {
+                dailyCompletion: 90 + (idHash % 11), // 90-100
+                monthlyCompletion: 88 + (idHash % 13), // 88-100
+                lateTasks: idHash % 5, // 0-4
+                earlyTasks: 5 + (idHash % 15), // 5-19
+            },
+            xpComposition: {
+                task: Array.from({length: 7}, (_, i) => 10 + ((idHash + i*2) % 21)), // 10-30
+                ontime: Array.from({length: 7}, (_, i) => 5 + ((idHash + i*3) % 6)),  // 5-10
+                support: Array.from({length: 7}, (_, i) => 0 + ((idHash + i*5) % 16)), // 0-15
+                bonus: Array.from({length: 7}, (_, i) => (idHash + i) % 7 === 0 ? 20 : 0), // 0 or 20
+            }
+        };
+    }
+    return mockEmployeeDetailsData[employeeId] || mockEmployeeDetailsData.default;
+}
 
 /**
  * Tính toán cấp độ (level) dựa trên điểm kinh nghiệm (XP).
@@ -76,7 +121,7 @@ function renderLeaderboard(employees) {
 
     employees.forEach((employee, index) => {
         const levelInfo = calculateLevel(employee.experiencePoints || 0);
-        const dailyProgress = Math.floor(Math.random() * (100 - 70 + 1)) + 70; // Giả lập tiến độ ngày
+        const mockData = getMockDetails(employee.id);
 
         const employeeCard = document.createElement('div');
         employeeCard.className = 'p-3 rounded-lg hover:bg-indigo-50 cursor-pointer border border-transparent hover:border-indigo-300 transition-all';
@@ -104,7 +149,7 @@ function renderLeaderboard(employees) {
                 <span class="font-bold text-indigo-600">${(employee.experiencePoints || 0).toLocaleString()} XP</span>
             </div>
             <div class="mt-2 h-1.5 w-full bg-gray-200 rounded-full" title="Tiến độ công việc hôm nay">
-                <div class="bg-green-500 h-1.5 rounded-full" style="width: ${dailyProgress}%"></div>
+                <div class="bg-green-500 h-1.5 rounded-full" style="width: ${mockData.dailyProgress}%"></div>
             </div>
         `;
 
@@ -121,22 +166,21 @@ function renderLeaderboard(employees) {
 
 /**
  * Mô phỏng việc lấy dữ liệu kỹ năng cho một nhân viên.
- * Trong tương lai, hàm này sẽ truy vấn Firestore để lấy dữ liệu thật.
  * @param {string} employeeId - ID của nhân viên.
  * @returns {Promise<object>} - Dữ liệu cho biểu đồ radar.
  */
 async function getSkillDataForEmployee(employeeId) {
     // Giả lập: Các nhóm kỹ năng chính
     const skillLabels = ['POS', 'Leader', 'Ngành hàng', 'MMD', 'Aeon Cafe', 'QC-FSH'];
-    
-    // Giả lập điểm số ngẫu nhiên cho mỗi kỹ năng
-    const skillData = skillLabels.map(() => Math.floor(Math.random() * (100 - 40 + 1)) + 40);
+
+    // Lấy dữ liệu kỹ năng cố định từ mock data
+    const mockData = getMockDetails(employeeId);
 
     return {
         labels: skillLabels,
         datasets: [{
             label: 'Điểm Kỹ năng',
-            data: skillData,
+            data: mockData.skills,
             backgroundColor: 'rgba(79, 70, 229, 0.2)',
             borderColor: 'rgba(79, 70, 229, 1)',
             borderWidth: 2,
@@ -187,6 +231,7 @@ function displayEmployeeDetails(employeeId) {
     const currentXP = employee.experiencePoints || 0;
     const levelInfo = calculateLevel(currentXP);
     const xpProgress = ((currentXP - levelInfo.currentLevelXP) / (levelInfo.xpForNextLevel - levelInfo.currentLevelXP)) * 100;
+    const mockData = getMockDetails(employeeId);
 
     // A. Hồ sơ năng lực
     document.getElementById('employee-name').textContent = employee.name;
@@ -196,32 +241,93 @@ function displayEmployeeDetails(employeeId) {
     document.querySelector('#employee-detail-view .text-xs.text-right').textContent = `${currentXP.toLocaleString()} / ${levelInfo.xpForNextLevel.toLocaleString()} XP để lên cấp`;
 
     // B. Phân tích Điểm kinh nghiệm (Placeholder for charts)
-    // Gọi hàm để vẽ biểu đồ radar
     drawSkillRadarChart(employeeId);
-    document.getElementById('xp-composition-chart-container').innerHTML = `<p class="text-center text-gray-400 text-xs pt-4">Biểu đồ cột chồng cho ${employee.name} sẽ được hiển thị ở đây.</p>`;
+    drawXpCompositionChart(employeeId);
 
     // C. Hiệu suất làm việc (Dữ liệu giả lập)
     const performanceStatsContainer = document.querySelector('#employee-detail-view .p-4.border.rounded-lg .grid');
+    const trendIcon = mockData.performance.trend === 'improve' ? 'fa-arrow-up text-green-500' : 'fa-arrow-down text-red-500';
+    const trendText = mockData.performance.trend === 'improve' ? 'Cải thiện' : 'Giảm sút';
     performanceStatsContainer.innerHTML = `
-        <div><span class="font-medium">Hoàn thành (Ngày):</span> <span class="font-bold text-green-600">${Math.floor(Math.random() * 11) + 90}%</span></div>
-        <div><span class="font-medium">Hoàn thành (Tháng):</span> <span class="font-bold text-green-600">${Math.floor(Math.random() * 11) + 88}%</span></div>
-        <div><span class="font-medium">Task trễ hạn:</span> <span class="font-bold text-red-600">${Math.floor(Math.random() * 5)}</span></div>
-        <div><span class="font-medium">Task hoàn thành sớm:</span> <span class="font-bold text-blue-600">${Math.floor(Math.random() * 20)}</span></div>
-        <div class="col-span-2"><span class="font-medium">Xu hướng (vs Tuần trước):</span> <i class="fas fa-arrow-up text-green-500"></i> <span class="font-bold text-green-600">Cải thiện</span></div>
+        <div><span class="font-medium">Hoàn thành (Ngày):</span> <span class="font-bold text-green-600">${mockData.performance.dailyCompletion}%</span></div>
+        <div><span class="font-medium">Hoàn thành (Tháng):</span> <span class="font-bold text-green-600">${mockData.performance.monthlyCompletion}%</span></div>
+        <div><span class="font-medium">Task trễ hạn:</span> <span class="font-bold text-red-600">${mockData.performance.lateTasks}</span></div>
+        <div><span class="font-medium">Task hoàn thành sớm:</span> <span class="font-bold text-blue-600">${mockData.performance.earlyTasks}</span></div>
+        <div class="col-span-2"><span class="font-medium">Xu hướng (vs Tuần trước):</span> <i class="fas ${trendIcon}"></i> <span class="font-bold text-green-600">${trendText}</span></div>
     `;
 
     // D. Trung tâm Đào tạo & Đề xuất (Dữ liệu giả lập)
     const recommendationContainer = document.querySelector('#employee-detail-view .bg-indigo-50 .text-sm.space-y-3');
     recommendationContainer.innerHTML = `
         <div>
-            <p><strong><i class="fas fa-thumbs-up text-green-600"></i> Ưu điểm:</strong> Khả năng xử lý POS xuất sắc, tích cực hỗ trợ đồng đội.</p>
-            <p><strong><i class="fas fa-thumbs-down text-red-600"></i> Khuyết điểm:</strong> Cần cải thiện tốc độ xử lý công việc kho.</p>
+            <p><strong><i class="fas fa-thumbs-up text-green-600"></i> Ưu điểm:</strong> ${mockData.strengths || 'Nhanh nhẹn, hoạt bát.'}</p>
+            <p><strong><i class="fas fa-thumbs-down text-red-600"></i> Khuyết điểm:</strong> ${mockData.weaknesses || 'Cần cải thiện kỹ năng báo cáo.'}</p>
         </div>
         <div class="border-t border-indigo-200 pt-3">
             <p class="font-semibold">Đề xuất Đào tạo:</p>
-            <p>Tham gia khóa: "Tối ưu hóa quy trình quản lý kho" và "Kỹ năng bán hàng nâng cao".</p>
+            <p>${mockData.recommendations || 'Tham gia khóa "Kỹ năng báo cáo cơ bản".'}</p>
         </div>
     `;
+}
+
+/**
+ * Vẽ biểu đồ cột chồng thể hiện cấu trúc điểm thưởng.
+ * @param {string} employeeId - ID của nhân viên.
+ */
+async function drawXpCompositionChart(employeeId) {
+    const mockData = getMockDetails(employeeId);
+    const ctx = document.getElementById('xp-composition-chart-canvas')?.getContext('2d');
+    if (!ctx) return;
+
+    if (xpCompositionChartInstance) {
+        xpCompositionChartInstance.destroy();
+    }
+
+    const labels = Array.from({ length: 7 }, (_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() - (6 - i));
+        return `${d.getDate()}/${d.getMonth() + 1}`;
+    });
+
+    xpCompositionChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Hoàn thành Task',
+                    data: mockData.xpComposition.task,
+                    backgroundColor: '#4f46e5', // Indigo-600
+                },
+                {
+                    label: 'Đúng giờ',
+                    data: mockData.xpComposition.ontime,
+                    backgroundColor: '#34d399', // Emerald-400
+                },
+                {
+                    label: 'Hỗ trợ',
+                    data: mockData.xpComposition.support,
+                    backgroundColor: '#fbbf24', // Amber-400
+                },
+                {
+                    label: 'Bonus',
+                    data: mockData.xpComposition.bonus,
+                    backgroundColor: '#f87171', // Red-400
+                }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+                tooltip: { mode: 'index', intersect: false }
+            },
+            scales: {
+                x: { stacked: true, grid: { display: false } },
+                y: { stacked: true, beginAtZero: true }
+            }
+        }
+    });
 }
 
 /**
@@ -232,6 +338,8 @@ export function cleanup() {
         domController.abort();
         domController = null;
     }
+    if (skillRadarChartInstance) skillRadarChartInstance.destroy();
+    if (xpCompositionChartInstance) xpCompositionChartInstance.destroy();
 }
 
 /**

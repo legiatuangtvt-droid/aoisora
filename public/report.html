@@ -78,7 +78,7 @@
                     <div id="leaderboard-list" class="overflow-y-auto p-2 space-y-2">
                         <!-- JS sẽ render danh sách nhân viên vào đây -->
                         <!-- Template for a leaderboard item -->
-                        <div class="p-3 rounded-lg hover:bg-indigo-50 cursor-pointer border border-transparent hover:border-indigo-300 transition-all">
+                        <div class="leaderboard-item p-3 rounded-lg hover:bg-indigo-50 cursor-pointer border border-transparent hover:border-indigo-300 transition-all">
                             <div class="flex items-center gap-3">
                                 <div class="relative">
                                     <img src="https://placehold.co/48x48/E2E8F0/4A5568?text=AV" class="w-12 h-12 rounded-full">
@@ -141,7 +141,9 @@
                                 </div>
                                 <div class="p-4 border rounded-lg">
                                     <h4 class="font-semibold mb-2">Cấu trúc Điểm thưởng (7 ngày gần nhất)</h4>
-                                    <div id="xp-composition-chart-container" class="h-64"><p class="text-center text-gray-400 text-xs pt-4">Stacked Bar chart placeholder</p></div>
+                                    <div id="xp-composition-chart-container" class="h-64 relative">
+                                        <canvas id="xp-composition-chart-canvas"></canvas>
+                                    </div>
                                 </div>
                             </div>
 
@@ -225,6 +227,38 @@
                             x: { display: false }, // Ẩn trục X
                             y: { display: false }  // Ẩn trục Y
                         }
+                    }
+                });
+            }
+
+            // === Logic tương tác Bảng Xếp Hạng ===
+            const leaderboardList = document.getElementById('leaderboard-list');
+            const initialPrompt = document.getElementById('initial-prompt');
+            const employeeDetailView = document.getElementById('employee-detail-view');
+
+            if (leaderboardList && initialPrompt && employeeDetailView) {
+                // Sử dụng event delegation để xử lý click hiệu quả hơn
+                leaderboardList.addEventListener('click', function(event) {
+                    const clickedItem = event.target.closest('.leaderboard-item');
+
+                    if (clickedItem) {
+                        // 1. Bỏ chọn mục đang được chọn trước đó (nếu có)
+                        const currentSelected = leaderboardList.querySelector('.bg-indigo-100');
+                        if (currentSelected) {
+                            currentSelected.classList.remove('bg-indigo-100', 'border-indigo-400');
+                            currentSelected.classList.add('hover:bg-indigo-50', 'hover:border-indigo-300');
+                        }
+
+                        // 2. Đánh dấu mục vừa được nhấp là đang được chọn
+                        clickedItem.classList.add('bg-indigo-100', 'border-indigo-400');
+                        clickedItem.classList.remove('hover:bg-indigo-50', 'hover:border-indigo-300');
+
+                        // 3. Ẩn thông báo ban đầu và hiển thị chi tiết nhân viên
+                        initialPrompt.classList.add('hidden');
+                        employeeDetailView.classList.remove('hidden');
+
+                        // TODO: Ở bước tiếp theo, chúng ta sẽ lấy dữ liệu thực tế của nhân viên
+                        // được nhấp và cập nhật vào các trường trong #employee-detail-view.
                     }
                 });
             }
