@@ -1117,3 +1117,14 @@ html, body {
     /* Áp dụng animation */
     animation: gradient-animation 5s ease infinite;
 }
+/* Custom styles for gamification elements */
+.xp-bar-container { background-color: #e5e7eb; border-radius: 9999px; overflow: hidden; }
+.xp-bar { background: linear-gradient(90deg, #4f46e5, #818cf8); height: 100%; transition: width 0.5s ease-in-out; }
+.level-badge {
+    background-color: #4f46e5; color: white;
+    border-radius: 50%; width: 40px; height: 40px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 0.75rem;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
