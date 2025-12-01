@@ -556,7 +556,7 @@ function initializeAutoGenerateModal(signal) {
         document.getElementById('ag-pos-count').value = storeInfo.posCount || '3';
         document.getElementById('ag-area-size').value = storeInfo.areaSize || '200';
         document.getElementById('ag-employee-count').value = storeInfo.employeeCount || '10';
-        document.getElementById('ag-dry-goods-volume').value = storeInfo.dryGoodsVolume || '5';
+        document.getElementById('ag-dry-goods-volume').value = storeInfo.dryGoodsVolume || '70';
         document.getElementById('ag-vegetable-weight').value = storeInfo.vegetableWeight || '20';
         
         // Tính và điền tổng số khách hàng từ dữ liệu theo giờ
