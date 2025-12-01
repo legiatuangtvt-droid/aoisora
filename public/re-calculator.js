@@ -52,8 +52,14 @@ export function calculateREForTask(task, groupInfo, reParameters) {
                 case 'Thế cơm POS Staff':
                     taskHours = (reUnit * posCount * frequencyNumber) / 60;
                     break;
-                case 'POS 1': case 'POS 2': case 'POS 3':
+                case 'POS 1':
+                    // Chỉ POS 1 được tính RE dựa trên tổng số khách hàng.
+                    // Các task POS 2, POS 3 sẽ được xếp lịch tự động dựa trên nhu cầu mỗi giờ, không tính vào RE tổng ở đây.
                     taskHours = (reUnit * totalCustomerCount * frequencyNumber) / 60;
+                    break;
+                case 'POS 2': case 'POS 3':
+                    // Giờ đề xuất cho POS 2 và POS 3 là 0 vì chúng phụ thuộc vào logic phân bổ theo giờ, không phải là một con số cố định.
+                    taskHours = 0;
                     break;
             }
             break;

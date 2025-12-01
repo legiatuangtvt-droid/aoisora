@@ -33,21 +33,23 @@ function renderREView(allTaskGroups, reParameters) {
 
         const taskRows = tasksInCategory
             .filter(task => {
-                // Lọc ra các task không đủ điều kiện để không render
-                const posCount = reParameters?.posCount || 0;
-                if (task.name === 'POS 2' && posCount < 2) return false;
-                if (task.name === 'POS 3' && posCount < 3) return false;
+                // --- LOGIC MỚI: Luôn ẩn POS 2 và POS 3 khỏi bảng RE ---
+                // Việc phân bổ các task này đã được xử lý trong logic auto-generate.
+                if (task.name === 'POS 2' || task.name === 'POS 3') return false;
                 return true;
             })
             .map((task, index) => {
                 let calculatedDailyHours = 0;
+                // --- LOGIC MỚI: Đổi tên hiển thị cho POS 1 ---
+                let displayName = task.name === 'POS 1' ? 'POS (POS 1, POS 2, POS 3)' : task.name;
+
                 if (reParameters) {
                     const rawHours = calculateREForTask(task, group, reParameters);
                     calculatedDailyHours = Math.ceil(rawHours * 4) / 4; // Làm tròn lên 15 phút gần nhất
                 }
 
                 return `<tr><td class="p-2 border text-center">${index + 1}</td>
-                <td class="p-2 border text-left">${task.name}</td>
+                <td class="p-2 border text-left">${displayName}</td>
                 <td class="p-2 border text-center">${task.frequency || '-'}</td>
                 <td class="p-2 border text-center">${task.frequencyNumber || '-'}</td>
                 <td class="p-2 border text-center">${task.reUnit || '-'}</td>
