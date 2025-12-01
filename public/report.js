@@ -3,13 +3,14 @@ import { collection, getDocs, doc, getDoc } from "https://www.gstatic.com/fireba
 
 let domController = null;
 let allEmployees = [];
+let allStores = {};
 let allRoles = {};
 let allTaskGroups = {};
 let skillRadarChartInstance = null; // Instance biểu đồ radar
 let xpCompositionChartInstance = null; // Instance biểu đồ cột chồng
 
 // DOM Elements
-let leaderboardList, initialPrompt, employeeDetailView;
+let leaderboardListEmployee, leaderboardListStore, initialPrompt, employeeDetailView;
 
 // Dữ liệu mô phỏng cố định cho chi tiết nhân viên
 const mockEmployeeDetailsData = {
@@ -87,12 +88,14 @@ function calculateLevel(xp) {
 async function fetchPerformanceData() {
     try {
         // Tải song song để tăng tốc độ
-        const [employeesSnap, rolesSnap, taskGroupsSnap] = await Promise.all([
+        const [employeesSnap, rolesSnap, taskGroupsSnap, storesSnap] = await Promise.all([
             getDocs(collection(db, 'employee')),
             getDocs(collection(db, 'roles')),
-            getDocs(collection(db, 'task_groups'))
+            getDocs(collection(db, 'task_groups')),
+            getDocs(collection(db, 'stores'))
         ]);
 
+        storesSnap.forEach(doc => allStores[doc.id] = doc.data());
         allEmployees = employeesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         rolesSnap.forEach(doc => allRoles[doc.id] = doc.data());
         taskGroupsSnap.forEach(doc => allTaskGroups[doc.id] = doc.data());
@@ -109,13 +112,104 @@ async function fetchPerformanceData() {
 }
 
 /**
+ * Điền các tùy chọn vào bộ lọc cửa hàng.
+ */
+function populateStoreFilter() {
+    const storeFilter = document.getElementById('store-filter');
+    if (!storeFilter) return;
+
+    const sortedStores = Object.values(allStores).sort((a, b) => a.name.localeCompare(b.name));
+
+    sortedStores.forEach(store => {
+        const option = document.createElement('option');
+        option.value = store.id;
+        option.textContent = store.name;
+        storeFilter.appendChild(option);
+    });
+}
+
+/**
+ * Tính toán tổng điểm XP cho mỗi cửa hàng.
+ * @returns {Array} - Mảng các đối tượng cửa hàng với tổng XP.
+ */
+function aggregateStoreXP() {
+    const storeXP = {};
+
+    // Khởi tạo điểm cho tất cả cửa hàng là 0
+    for (const storeId in allStores) {
+        storeXP[storeId] = {
+            ...allStores[storeId],
+            totalXP: 0,
+            employeeCount: 0
+        };
+    }
+
+    // Cộng dồn XP từ mỗi nhân viên
+    allEmployees.forEach(employee => {
+        if (employee.storeId && storeXP[employee.storeId]) {
+            storeXP[employee.storeId].totalXP += (employee.experiencePoints || 0);
+            storeXP[employee.storeId].employeeCount++;
+        }
+    });
+
+    // Chuyển object thành mảng và sắp xếp theo totalXP giảm dần
+    return Object.values(storeXP).sort((a, b) => b.totalXP - a.totalXP);
+}
+
+/**
+ * Hiển thị danh sách cửa hàng lên bảng xếp hạng.
+ * @param {Array} stores - Danh sách cửa hàng đã được tính tổng XP.
+ */
+function renderStoreLeaderboard(stores) {
+    leaderboardListStore.innerHTML = '';
+    stores.forEach((store, index) => {
+        const storeCard = document.createElement('div');
+        storeCard.className = 'p-3 rounded-lg border flex items-center justify-between';
+        storeCard.innerHTML = `
+            <div class="font-semibold text-sm">${index + 1}. ${store.name}</div>
+            <div class="font-bold text-indigo-600">${store.totalXP.toLocaleString()} XP</div>`;
+        leaderboardListStore.appendChild(storeCard);
+    });
+}
+/**
+ * Áp dụng các bộ lọc hiện tại và render lại bảng xếp hạng.
+ */
+function applyFiltersAndRender() {
+    const storeFilterValue = document.getElementById('store-filter').value;
+    const searchInputValue = document.getElementById('employee-search-input').value.toLowerCase();
+
+    let filteredEmployees = allEmployees;
+
+    // Lọc theo cửa hàng
+    if (storeFilterValue !== 'all') {
+        filteredEmployees = filteredEmployees.filter(emp => emp.storeId === storeFilterValue);
+    }
+
+    // Lọc theo tên nhân viên
+    if (searchInputValue) {
+        filteredEmployees = filteredEmployees.filter(emp => emp.name.toLowerCase().includes(searchInputValue));
+    }
+
+    renderLeaderboard(filteredEmployees);
+
+    // Sau khi render, nếu có nhân viên trong danh sách đã lọc, hiển thị chi tiết người đầu tiên.
+    // Nếu không, hiển thị lại thông báo ban đầu.
+    if (filteredEmployees.length > 0) {
+        displayEmployeeDetails(filteredEmployees[0].id);
+    } else {
+        initialPrompt.classList.remove('hidden');
+        employeeDetailView.classList.add('hidden');
+    }
+}
+
+/**
  * Hiển thị danh sách nhân viên lên bảng xếp hạng.
  * @param {Array} employees - Danh sách nhân viên.
  */
 function renderLeaderboard(employees) {
-    leaderboardList.innerHTML = ''; // Xóa placeholder
+    leaderboardListEmployee.innerHTML = ''; // Xóa placeholder
     if (employees.length === 0) {
-        leaderboardList.innerHTML = `<p class="p-4 text-gray-500">Không có dữ liệu nhân viên.</p>`;
+        leaderboardListEmployee.innerHTML = `<p class="p-4 text-gray-500">Không có dữ liệu nhân viên.</p>`;
         return;
     }
 
@@ -156,11 +250,11 @@ function renderLeaderboard(employees) {
         employeeCard.addEventListener('click', () => {
             displayEmployeeDetails(employee.id);
             // Highlight a selection
-            document.querySelectorAll('#leaderboard-list > div').forEach(child => child.classList.remove('bg-indigo-100'));
+            document.querySelectorAll('#leaderboard-list-employee > div').forEach(child => child.classList.remove('bg-indigo-100'));
             employeeCard.classList.add('bg-indigo-100');
         });
 
-        leaderboardList.appendChild(employeeCard);
+        leaderboardListEmployee.appendChild(employeeCard);
     });
 }
 
@@ -349,18 +443,50 @@ export async function init() {
     domController = new AbortController();
 
     // Lấy các element chính
-    leaderboardList = document.getElementById('leaderboard-list');
+    leaderboardListEmployee = document.getElementById('leaderboard-list-employee');
+    leaderboardListStore = document.getElementById('leaderboard-list-store');
     initialPrompt = document.getElementById('initial-prompt');
     employeeDetailView = document.getElementById('employee-detail-view');
 
     // Bắt đầu chuỗi xử lý
     const employees = await fetchPerformanceData();
+
+    // Tính toán và render bảng xếp hạng cửa hàng
+    const storesWithXP = aggregateStoreXP();
+    renderStoreLeaderboard(storesWithXP);
+
+    // Xử lý chuyển tab
+    const employeeTab = document.querySelector('.leaderboard-tab[data-tab="employees"]');
+    const storeTab = document.querySelector('.leaderboard-tab[data-tab="stores"]');
+
+    employeeTab.addEventListener('click', () => {
+        employeeTab.classList.add('active');
+        storeTab.classList.remove('active');
+        leaderboardListEmployee.classList.remove('hidden');
+        leaderboardListStore.classList.add('hidden');
+        // Khi chuyển về tab nhân viên, hiển thị lại chi tiết
+        if (allEmployees.length > 0) {
+            displayEmployeeDetails(allEmployees[0].id);
+        }
+    }, { signal: domController.signal });
+
+    storeTab.addEventListener('click', () => {
+        storeTab.classList.add('active');
+        employeeTab.classList.remove('active');
+        leaderboardListStore.classList.remove('hidden');
+        leaderboardListEmployee.classList.add('hidden');
+        // Khi xem BXH cửa hàng, ẩn chi tiết nhân viên và hiện prompt ban đầu
+        initialPrompt.classList.remove('hidden');
+        employeeDetailView.classList.add('hidden');
+    }, { signal: domController.signal });
+
+    // Render bảng xếp hạng nhân viên
     renderLeaderboard(employees);
 
     // Tự động chọn nhân viên đầu tiên để hiển thị chi tiết
     if (employees.length > 0) {
         displayEmployeeDetails(employees[0].id);
-        const firstEmployeeCard = leaderboardList.querySelector(`[data-employee-id="${employees[0].id}"]`);
+        const firstEmployeeCard = leaderboardListEmployee.querySelector(`[data-employee-id="${employees[0].id}"]`);
         if(firstEmployeeCard) {
             firstEmployeeCard.classList.add('bg-indigo-100');
         }

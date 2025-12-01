@@ -9,19 +9,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="output.css">
-    <style>
-        /* Custom styles for gamification elements */
-        .xp-bar-container { background-color: #e5e7eb; border-radius: 9999px; overflow: hidden; }
-        .xp-bar { background: linear-gradient(90deg, #4f46e5, #818cf8); height: 100%; transition: width 0.5s ease-in-out; }
-        .level-badge {
-            background-color: #4f46e5; color: white;
-            border-radius: 50%; width: 40px; height: 40px;
-            display: inline-flex; align-items: center; justify-content: center;
-            font-weight: bold; font-size: 0.75rem;
-            border: 2px solid white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-    </style>
 </head>
 <body class="flex h-screen text-gray-800 bg-gray-50">
 
@@ -75,36 +62,26 @@
             <div class="flex-1 flex gap-6 overflow-hidden">
                 <!-- Khu vực 2: Bảng Xếp hạng (Left Sidebar) -->
                 <aside id="leaderboard-panel" class="w-1/3 lg:w-1/4 bg-white rounded-lg shadow-md flex flex-col">
-                    <div class="p-4 border-b flex justify-between items-center">
-                        <h3 class="font-semibold text-lg">Bảng Xếp Hạng</h3>
-                        <select class="form-input form-input-min text-xs">
-                            <option>Tháng này</option>
-                            <option>Toàn thời gian</option>
-                        </select>
-                    </div>
-                    <div id="leaderboard-list" class="overflow-y-auto p-2 space-y-2">
-                        <!-- JS sẽ render danh sách nhân viên vào đây -->
-                        <!-- Template for a leaderboard item -->
-                        <div class="leaderboard-item p-3 rounded-lg hover:bg-indigo-50 cursor-pointer border border-transparent hover:border-indigo-300 transition-all">
-                            <div class="flex items-center gap-3">
-                                <div class="relative">
-                                    <img src="https://placehold.co/48x48/E2E8F0/4A5568?text=AV" class="w-12 h-12 rounded-full">
-                                    <span class="level-badge absolute -bottom-1 -right-1">Lv.15</span>
-                                </div>
-                                <div class="flex-1">
-                                    <p class="font-bold text-sm">Nguyễn Văn A</p>
-                                    <div class="flex items-center gap-2 mt-1">
-                                        <i class="fas fa-hands-helping text-purple-500" title="Ong Chăm Chỉ"></i>
-                                        <i class="fas fa-bolt text-yellow-500" title="Thần Tốc"></i>
-                                    </div>
-                                </div>
-                                <span class="font-bold text-indigo-600">1,250 XP</span>
-                            </div>
-                            <div class="mt-2 h-1.5 w-full bg-gray-200 rounded-full">
-                                <div class="bg-green-500 h-1.5 rounded-full" style="width: 95%"></div>
-                            </div>
+                    <div class="p-4 border-b space-y-4">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-semibold text-lg">Bảng Xếp Hạng</h3>
+                            <select id="leaderboard-period-filter" class="form-input form-input-min text-xs">
+                                <option value="monthly">Tháng này</option>
+                                <option value="alltime">Toàn thời gian</option>
+                            </select>
                         </div>
-                        <!-- End of template item -->
+                        <div class="p-1 bg-gray-100 rounded-lg flex">
+                            <button class="leaderboard-tab active" data-tab="employees">Nhân viên</button>
+                            <button class="leaderboard-tab" data-tab="stores">Cửa hàng</button>
+                        </div>
+                    </div>
+
+                    <!-- Leaderboard Lists -->
+                    <div id="leaderboard-list-employee" class="overflow-y-auto p-2 space-y-2">
+                        <!-- JS sẽ render danh sách nhân viên vào đây -->
+                    </div>
+                    <div id="leaderboard-list-store" class="overflow-y-auto p-2 space-y-2 hidden">
+                        <!-- JS sẽ render danh sách cửa hàng vào đây -->
                     </div>
                 </aside>
 
@@ -239,18 +216,17 @@
             }
 
             // === Logic tương tác Bảng Xếp Hạng ===
-            const leaderboardList = document.getElementById('leaderboard-list');
+            const leaderboardListEmployee = document.getElementById('leaderboard-list-employee');
             const initialPrompt = document.getElementById('initial-prompt');
             const employeeDetailView = document.getElementById('employee-detail-view');
 
-            if (leaderboardList && initialPrompt && employeeDetailView) {
+            if (leaderboardListEmployee && initialPrompt && employeeDetailView) {
                 // Sử dụng event delegation để xử lý click hiệu quả hơn
-                leaderboardList.addEventListener('click', function(event) {
+                leaderboardListEmployee.addEventListener('click', function(event) {
                     const clickedItem = event.target.closest('.leaderboard-item');
 
                     if (clickedItem) {
-                        // 1. Bỏ chọn mục đang được chọn trước đó (nếu có)
-                        const currentSelected = leaderboardList.querySelector('.bg-indigo-100');
+                        const currentSelected = leaderboardListEmployee.querySelector('.bg-indigo-100');
                         if (currentSelected) {
                             currentSelected.classList.remove('bg-indigo-100', 'border-indigo-400');
                             currentSelected.classList.add('hover:bg-indigo-50', 'hover:border-indigo-300');

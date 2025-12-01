@@ -1128,3 +1128,11 @@ html, body {
     border: 2px solid white;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
+/* Custom styles for tabs */
+.leaderboard-tab {
+    @apply w-1/2 text-center py-1.5 px-1 text-sm font-semibold text-gray-500 rounded-md transition-colors duration-200;
+}
+.leaderboard-tab.active {
+    /* Thêm shadow-sm để tạo hiệu ứng nổi nhẹ */
+    @apply bg-white text-indigo-700 shadow-sm;
+}
