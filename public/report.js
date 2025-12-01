@@ -235,10 +235,10 @@ function renderLeaderboard(employees) {
         // Thêm icon vương miện và class đặc biệt cho top 3
         if (index === 0) {
             rankContent = '<i class="fas fa-crown text-yellow-500"></i>';
-            rankClasses = 'bg-yellow-50 border-yellow-400';
+            rankClasses = 'bg-yellow-50 border-yellow-400 rank-1';
         } else if (index === 1) {
             rankContent = '<i class="fas fa-crown text-gray-400"></i>';
-            rankClasses = 'bg-gray-50 border-gray-300';
+            rankClasses = 'bg-gray-50 border-gray-300 rank-2';
         } else if (index === 2) {
             rankContent = '<i class="fas fa-crown text-orange-400"></i>';
             rankClasses = 'bg-orange-50 border-orange-300';

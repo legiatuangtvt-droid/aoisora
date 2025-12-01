@@ -1136,3 +1136,46 @@ html, body {
     /* Thêm shadow-sm để tạo hiệu ứng nổi nhẹ */
     @apply bg-white text-indigo-700 shadow-sm;
 }
+/* Định nghĩa animation cho hiệu ứng lấp lánh */
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%) skewX(-30deg);
+    }
+    100% {
+        transform: translateX(200%) skewX(-30deg);
+    }
+}
+
+/* Áp dụng hiệu ứng cho top 1 (Vàng) */
+.rank-1 {
+    position: relative;
+    overflow: hidden;
+}
+.rank-1::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.5) 50%, rgba(255, 255, 255, 0) 100%);
+    animation: shimmer 3s infinite;
+    z-index: 1;
+}
+
+/* Áp dụng hiệu ứng cho top 2 (Bạc) */
+.rank-2 {
+    position: relative;
+    overflow: hidden;
+}
+.rank-2::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 40%;
+    height: 100%;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0) 100%);
+    animation: shimmer 3.5s infinite;
+    z-index: 1;
+}
