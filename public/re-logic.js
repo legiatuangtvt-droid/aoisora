@@ -158,13 +158,31 @@ function openStoreInfoModal(reParameters = {}) {
 }
 
 /**
+ * Đóng popup chỉnh sửa thông tin cửa hàng.
+ */
+function closeStoreInfoModal() {
+    const modal = document.getElementById('re-store-info-modal');
+    if (modal) {
+        modal.classList.remove('show');
+        // Chờ cho transition kết thúc rồi mới ẩn hoàn toàn
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }, 300); // 300ms khớp với duration của transition
+    }
+}
+
+/**
  * Xử lý khi submit form thông tin cửa hàng từ popup.
  * @param {Event} e - Sự kiện submit.
  * @param {string} currentTemplateId - ID của template hiện tại.
+ * @param {Array} allTemplates - Danh sách tất cả templates.
  * @param {object} allTaskGroups - Dữ liệu các nhóm task.
  */
-export async function handleStoreInfoFormSubmit(e, currentTemplateId, allTaskGroups) {
+export async function handleStoreInfoFormSubmit(e, currentTemplateId, allTemplates, allTaskGroups) {
     e.preventDefault();
+    const btn = document.getElementById('re-store-info-form-submit-btn');
+
     if (!currentTemplateId) {
         window.showToast('Vui lòng chọn một mẫu trước khi lưu.', 'warning');
         return;
@@ -188,8 +206,27 @@ export async function handleStoreInfoFormSubmit(e, currentTemplateId, allTaskGro
         customerCount: Object.values(newCustomerCountByHour).reduce((sum, count) => sum + count, 0)
     };
 
-    // Lưu dữ liệu
-    await saveREParameters(currentTemplateId, newReParameters);
+    try {
+        if (btn) btn.disabled = true;
+        // Lưu dữ liệu
+        const success = await saveREParameters(currentTemplateId, newReParameters);
+
+        if (success) {
+            // Đóng popup
+            closeStoreInfoModal();
+
+            // Cập nhật lại reParameters trong template object để render lại cho đúng
+            const currentTemplate = allTemplates.find(t => t.id === currentTemplateId);
+            if (currentTemplate) {
+                currentTemplate.reParameters = newReParameters;
+            }
+
+            // Render lại toàn bộ view với dữ liệu mới
+            await initRELogicView(currentTemplateId, allTemplates, allTaskGroups);
+        }
+    } finally {
+        if (btn) btn.disabled = false;
+    }
 }
 
 /**
@@ -238,7 +275,7 @@ function addEventListeners(currentTemplateId, allTemplates, allTaskGroups) {
     // Gắn sự kiện cho form trong popup
     const storeInfoForm = document.getElementById('re-store-info-form');
     if (storeInfoForm) {
-        storeInfoForm.addEventListener('submit', (e) => handleStoreInfoFormSubmit(e, currentTemplateId, allTaskGroups));
+        storeInfoForm.addEventListener('submit', (e) => handleStoreInfoFormSubmit(e, currentTemplateId, allTemplates, allTaskGroups));
     }
 }
 
@@ -246,9 +283,10 @@ function addEventListeners(currentTemplateId, allTemplates, allTaskGroups) {
  * Lưu các tham số RE vào template hiện tại trên Firestore.
  * @param {string} currentTemplateId - ID của template đang được chỉnh sửa.
  * @param {object} reParameters - Đối tượng chứa các tham số RE.
+ * @returns {Promise<boolean>} - Trả về true nếu lưu thành công, ngược lại false.
  */
 async function saveREParameters(currentTemplateId, reParameters) {
-    if (!currentTemplateId) return;
+    if (!currentTemplateId) return false;
 
     const btn = document.getElementById('re-store-info-form-submit-btn'); // Nút trong popup
     try {
@@ -256,9 +294,11 @@ async function saveREParameters(currentTemplateId, reParameters) {
         const templateRef = doc(db, 'daily_templates', currentTemplateId);
         await updateDoc(templateRef, { reParameters });
         window.showToast('Đã lưu các tham số RE thành công!', 'success');
+        return true;
     } catch (error) {
         console.error('Lỗi khi lưu tham số RE:', error);
         window.showToast('Không thể lưu tham số RE.', 'error');
+        return false;
     } finally {
         if (btn) btn.innerHTML = `<i class="fas fa-save mr-1"></i>Lưu thay đổi`;
     }
