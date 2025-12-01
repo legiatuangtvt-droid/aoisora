@@ -1260,6 +1260,14 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
   height: 100vh;
 }
 
+.h-0\.5 {
+  height: 0.125rem;
+}
+
+.h-1 {
+  height: 0.25rem;
+}
+
 .max-h-48 {
   max-height: 12rem;
 }
@@ -1590,6 +1598,10 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
 
 .gap-8 {
   gap: 2rem;
+}
+
+.gap-1\.5 {
+  gap: 0.375rem;
 }
 
 .gap-x-1 {
@@ -2111,6 +2123,11 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
 .bg-orange-50 {
   --tw-bg-opacity: 1;
   background-color: rgb(255 247 237 / var(--tw-bg-opacity, 1));
+}
+
+.bg-indigo-300 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(165 180 252 / var(--tw-bg-opacity, 1));
 }
 
 .stroke-green-500 {
