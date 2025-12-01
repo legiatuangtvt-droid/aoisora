@@ -620,14 +620,16 @@ export async function init() {
         leaderboardListStore.classList.remove('hidden'); // Hiển thị bảng cửa hàng
         leaderboardListEmployee.classList.add('hidden'); // Ẩn bảng nhân viên
         
-        // Khi xem BXH cửa hàng, ẩn chi tiết nhân viên và hiện prompt ban đầu
+        // Khi xem BXH cửa hàng, ẩn chi tiết nhân viên và hiển thị chi tiết của cửa hàng top 1
         employeeDetailView.classList.add('hidden');
-        initialPrompt.classList.remove('hidden');
-
-        // Bỏ highlight tất cả các mục cửa hàng
-        document.querySelectorAll('#leaderboard-list-store > div').forEach(child => {
-            child.classList.remove('bg-indigo-100', 'border-indigo-400');
-        });
+        const storesWithXP = aggregateStoreXP();
+        if (storesWithXP.length > 0) {
+            // Tự động hiển thị chi tiết cửa hàng top 1
+            displayStoreDetails(storesWithXP[0].id);
+        } else {
+            // Nếu không có cửa hàng nào, hiển thị prompt
+            initialPrompt.classList.remove('hidden');
+        }
     }, { signal: domController.signal });
 
     // Render bảng xếp hạng nhân viên
