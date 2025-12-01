@@ -3,31 +3,6 @@ import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.1/fireba
 import { calculateREForGroup, calculateREForTask } from './re-calculator.js';
 
 /**
- * Tải dữ liệu RE tasks từ Firestore.
- * @param {object} allTaskGroups - Dữ liệu các nhóm task được truyền từ module daily-templates.
- * @returns {Promise<void>}
- */
-async function processRETasks(allTaskGroups) {
-    // Hàm này không còn cần thiết vì logic tính toán đã được chuyển đi
-    try {
-        const tasks = [];
-        for (const groupId in allTaskGroups) {
-            const group = allTaskGroups[groupId];
-            if (group.tasks && Array.isArray(group.tasks)) {
-                group.tasks.forEach(task => {
-                    // Thêm groupCode vào mỗi task và đẩy vào mảng chung
-                    tasks.push({ ...task, category: group.code });
-                });
-            }
-        }
-        // Sắp xếp lại toàn bộ task theo category (group code) rồi đến tên task
-    } catch (error) {
-        window.showToast("Failed to process RE logic data.", "error");
-        console.error("Error processing RE tasks:", error);
-    }
-}
-
-/**
  * Render nội dung chính của RE Logic view.
  * @param {object} allTaskGroups - Dữ liệu các nhóm task được truyền từ module daily-templates.
  * @param {object} reParameters - Các tham số RE của cửa hàng (customerCount, posCount, etc.).
