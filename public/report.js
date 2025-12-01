@@ -579,6 +579,16 @@ export async function init() {
     employeeDetailView = document.getElementById('employee-detail-view');
     storeDetailView = document.getElementById('store-detail-view');
 
+    // --- LOGIC MỚI: Tạo container cho hiệu ứng chuyển tab ---
+    const leaderboardContainer = document.querySelector('.leaderboard-content-container');
+    if (leaderboardContainer) {
+        // Thêm class `leaderboard-pane` vào các danh sách
+        leaderboardListEmployee.classList.add('leaderboard-pane');
+        leaderboardListStore.classList.add('leaderboard-pane');
+        // Mặc định ẩn bảng xếp hạng cửa hàng
+        leaderboardListStore.classList.add('hidden');
+    }
+
     // Bắt đầu chuỗi xử lý
     const employees = await fetchPerformanceData();
 
@@ -591,10 +601,10 @@ export async function init() {
     const storeTab = document.querySelector('.leaderboard-tab[data-tab="stores"]');
 
     employeeTab.addEventListener('click', () => {
-        employeeTab.classList.add('active');
-        storeTab.classList.remove('active');
-        leaderboardListEmployee.classList.remove('hidden');
-        leaderboardListStore.classList.add('hidden');
+        employeeTab.classList.add('active'); // Kích hoạt tab nhân viên
+        storeTab.classList.remove('active'); // Tắt tab cửa hàng
+        leaderboardListEmployee.classList.remove('hidden'); // Hiển thị bảng nhân viên
+        leaderboardListStore.classList.add('hidden'); // Ẩn bảng cửa hàng
         storeDetailView.classList.add('hidden'); // Ẩn chi tiết cửa hàng
 
         // Khi chuyển về tab nhân viên, hiển thị lại chi tiết
@@ -604,10 +614,10 @@ export async function init() {
     }, { signal: domController.signal });
 
     storeTab.addEventListener('click', () => {
-        storeTab.classList.add('active');
-        employeeTab.classList.remove('active');
-        leaderboardListStore.classList.remove('hidden');
-        leaderboardListEmployee.classList.add('hidden');
+        storeTab.classList.add('active'); // Kích hoạt tab cửa hàng
+        employeeTab.classList.remove('active'); // Tắt tab nhân viên
+        leaderboardListStore.classList.remove('hidden'); // Hiển thị bảng cửa hàng
+        leaderboardListEmployee.classList.add('hidden'); // Ẩn bảng nhân viên
         
         // Khi xem BXH cửa hàng, ẩn chi tiết nhân viên và hiện prompt ban đầu
         employeeDetailView.classList.add('hidden');

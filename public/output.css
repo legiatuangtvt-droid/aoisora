@@ -4008,6 +4008,14 @@ tr.edit-mode-active .scheduled-task-item.calendar-day:hover {
   display: none;
 }
 
+.leaderboard-pane.mobile-active #sidebar-placeholder,.leaderboard-pane
+.mobile-active #header-placeholder {
+  opacity: 0;
+  transform: translateX(100%);
+  pointer-events: none;
+  /* Ngăn tương tác với tab đã ẩn */
+}
+
 .mobile-active #sidebar-placeholder,
 .mobile-active #header-placeholder {
   /* Ẩn sidebar và header */
@@ -4062,6 +4070,13 @@ tr.edit-mode-active .scheduled-task-item.calendar-day:hover {
 
 #task-library-container.mobile-active #desktop-view {
   display: none;
+}
+
+.leaderboard-pane.mobile-active #desktop-view {
+  opacity: 0;
+  transform: translateX(100%);
+  pointer-events: none;
+  /* Ngăn tương tác với tab đã ẩn */
 }
 
 /* Hide mobile view when desktop is active */
@@ -4155,6 +4170,34 @@ tr.edit-mode-active .scheduled-task-item.calendar-day:hover {
   --tw-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --tw-shadow-colored: 0 1px 2px 0 var(--tw-shadow-color);
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+/* --- Hiệu ứng chuyển tab cho Leaderboard --- */
+
+.leaderboard-content-container {
+  position: relative;
+  min-height: 400px;
+  /* Đặt chiều cao tối thiểu để tránh co giật layout */
+  overflow: hidden;
+  /* Ẩn nội dung bị trượt ra ngoài */
+}
+
+.leaderboard-pane {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+  transform: translateX(0);
+}
+
+.leaderboard-pane.hidden {
+  opacity: 0;
+  transform: translateX(100%);
+  pointer-events: none;
+  /* Ngăn tương tác với tab đã ẩn */
 }
 
 /* --- HIỆU ỨNG BẢNG XẾP HẠNG "NĂNG LƯỢNG BÙNG NỔ" --- */
