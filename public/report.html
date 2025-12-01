@@ -50,8 +50,7 @@
                 <div class="bg-white p-4 rounded-lg shadow-md">
                     <p class="text-sm font-medium text-gray-500">Hoàn thành Tháng này (so với tháng trước)</p>
                     <div id="monthly-completion-chart-container" class="h-20">
-                        <!-- Placeholder for Line chart -->
-                        <p class="text-center text-gray-400 text-xs pt-4">Line chart placeholder</p>
+                        <canvas id="monthlyCompletionChart"></canvas>
                     </div>
                 </div>
                 <div class="bg-white p-4 rounded-lg shadow-md flex items-center justify-between">
@@ -185,5 +184,51 @@
     </div>
 
     <script type="module" src="bootstrapper.js" defer></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // === Biểu đồ Hoàn thành Tháng ===
+            const monthlyCtx = document.getElementById('monthlyCompletionChart');
+            if (monthlyCtx) {
+                new Chart(monthlyCtx, {
+                    type: 'line',
+                    data: {
+                        // Giả sử dữ liệu được lấy theo 4 tuần trong tháng
+                        labels: ['Tuần 1', 'Tuần 2', 'Tuần 3', 'Tuần 4'],
+                        datasets: [
+                            {
+                                label: 'Tháng trước',
+                                data: [85, 88, 86, 90], // Dữ liệu ví dụ
+                                borderColor: '#a5b4fc', // Indigo-300
+                                borderWidth: 2,
+                                tension: 0.4,
+                                pointRadius: 0, // Ẩn điểm trên đường
+                            },
+                            {
+                                label: 'Tháng này',
+                                data: [88, 92, 95, 94], // Dữ liệu ví dụ
+                                borderColor: '#4f46e5', // Indigo-600
+                                borderWidth: 3,
+                                tension: 0.4,
+                                pointRadius: 0, // Ẩn điểm trên đường
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false // Ẩn chú thích để tiết kiệm không gian
+                            },
+                        },
+                        scales: {
+                            x: { display: false }, // Ẩn trục X
+                            y: { display: false }  // Ẩn trục Y
+                        }
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>
