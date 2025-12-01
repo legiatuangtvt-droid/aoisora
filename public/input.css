@@ -1118,74 +1118,148 @@ html, body {
     animation: gradient-animation 5s ease infinite;
 }
 /* Custom styles for gamification elements */
-.xp-bar-container { background-color: #e5e7eb; border-radius: 9999px; overflow: hidden; }
-.xp-bar { background: linear-gradient(90deg, #4f46e5, #818cf8); height: 100%; transition: width 0.5s ease-in-out; }
+.xp-bar-container {
+  background-color: #e5e7eb;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+.xp-bar {
+  background: linear-gradient(90deg, #4f46e5, #818cf8);
+  height: 100%;
+  transition: width 0.5s ease-in-out;
+}
 .level-badge {
-    background-color: #4f46e5; color: white;
-    border-radius: 50%; width: 40px; height: 40px;
-    display: inline-flex; align-items: center; justify-content: center;
-    font-weight: bold; font-size: 0.75rem;
-    border: 2px solid white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background-color: #4f46e5;
+  color: white;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.75rem;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 /* Custom styles for tabs */
 .leaderboard-tab {
-    @apply w-1/2 text-center py-1.5 px-1 text-sm font-semibold text-gray-500 rounded-md transition-colors duration-200;
+  @apply w-1/2 text-center py-1.5 px-1 text-sm font-semibold text-gray-500 rounded-md transition-colors duration-200;
 }
 .leaderboard-tab.active {
-    /* Thêm shadow-sm để tạo hiệu ứng nổi nhẹ */
-    @apply bg-white text-indigo-700 shadow-sm;
-}
-/* Định nghĩa animation cho hiệu ứng lấp lánh */
-@keyframes shimmer {
-    0% {
-        transform: translateX(-100%) skewX(-30deg);
-    }
-    100% {
-        transform: translateX(200%) skewX(-30deg);
-    }
+  /* Thêm shadow-sm để tạo hiệu ứng nổi nhẹ */
+  @apply bg-white text-indigo-700 shadow-sm;
 }
 
-/* Áp dụng hiệu ứng cho top 1 (Vàng) */
+/* --- HIỆU ỨNG BẢNG XẾP HẠNG "NĂNG LƯỢNG BÙNG NỔ" --- */
+
+/* 1. Keyframes cho các animation */
+
+/* Nền gradient chuyển động (đã có ở trên, nhưng định nghĩa lại để gom nhóm) */
+@keyframes animated-gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Viền neon nhấp nháy cho Hạng 1 */
+@keyframes neon-pulse-gold {
+  0%, 100% {
+    box-shadow: 0 0 2px #fff, 0 0 5px #fff, 0 0 8px #ffc107, 0 0 12px #ffc107,
+      inset 0 0 4px rgba(255, 215, 0, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 4px #fff, 0 0 8px #fff, 0 0 12px #ffeb3b, 0 0 18px #ffeb3b,
+      inset 0 0 6px rgba(255, 235, 59, 0.6);
+  }
+}
+
+/* Hiệu ứng hạt bay lên */
+@keyframes particles-float {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-150px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* 2. Style chung cho các thẻ xếp hạng */
 .rank-1, .rank-2, .rank-3 {
   position: relative;
   overflow: hidden;
+  background-size: 200% 200%;
+  animation: animated-gradient 15s ease infinite;
 }
 
-.rank-1::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 70%; /* Tăng độ rộng của vệt sáng */
-  height: 100%;
-  background: linear-gradient(to right, rgba(255, 235, 150, 0) 0%, rgba(255, 235, 150, 0.6) 50%, rgba(255, 235, 150, 0) 100%); /* Màu vàng óng */
-  animation: shimmer 2.5s infinite; /* Nhanh hơn và nổi bật hơn */
-  z-index: 1;
+/* 3. Style riêng cho từng hạng */
+
+/* Hạng 1 (Vàng Kim) */
+.rank-1 {
+  background-image: linear-gradient(135deg, #ffdf70, #fbb03b, #ffd700, #fde221);
+  animation: animated-gradient 15s ease infinite, neon-pulse-gold 2s ease-in-out infinite;
+  border: 1px solid #FFC107;
 }
 
-/* Áp dụng hiệu ứng cho top 2 (Bạc) */
-.rank-2::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 50%;
-  height: 100%;
-  background: linear-gradient(to right, rgba(220, 220, 220, 0) 0%, rgba(220, 220, 220, 0.4) 50%, rgba(220, 220, 220, 0) 100%); /* Màu bạc */
-  animation: shimmer 3.5s infinite;
-  z-index: 1;
+/* Hạng 2 (Bạc Bạch Kim) */
+.rank-2 {
+  background-image: linear-gradient(135deg, #e0e7ef, #c8d3e0, #f0f4f8, #ffffff);
+  box-shadow: 0 0 2px #fff, 0 0 4px #d4d4d4, 0 0 6px #b0bec5, inset 0 0 3px rgba(255, 255, 255, 0.5);
+  border: 1px solid #CFD8DC;
 }
 
-/* Áp dụng hiệu ứng cho top 3 (Đồng) */
-.rank-3::before {
-  content: '';
+/* Hạng 3 (Đồng Đỏ) */
+.rank-3 {
+  background-image: linear-gradient(135deg, #d7a17b, #a0522d, #d2691e, #e59866);
+  box-shadow: 0 0 3px rgba(139, 69, 19, 0.7), inset 0 0 2px rgba(229, 152, 102, 0.4);
+  border: 1px solid #A0522D;
+}
+
+/* 4. Hiệu ứng hạt (Sử dụng pseudo-element ::after) */
+
+.rank-1::after, .rank-2::after {
+  content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 40%;
-  height: 100%;
-  background: linear-gradient(to right, rgba(205, 127, 50, 0) 0%, rgba(205, 127, 50, 0.35) 50%, rgba(205, 127, 50, 0) 100%); /* Màu đồng */
-  animation: shimmer 4.5s infinite; /* Chậm hơn một chút */
-  z-index: 1;
+  bottom: -150px; /* Bắt đầu từ dưới */
+  left: -100%; /* Dịch sang trái để khối rộng hơn nằm ở giữa */
+  width: 300%; /* Tăng chiều rộng để khi xoay không thấy cạnh */
+  height: 150px;
+  animation-name: particles-float;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+/* Hạt vàng cho Hạng 1 */
+.rank-1::after {
+  background: transparent;
+  animation-duration: 5s;
+  box-shadow: 10px -40px 2px #ffeb3b, 30px -80px 1px #ffd700, 50px -20px 2px #fff,
+    70px -120px 1px #ffc107, 90px -60px 2px #ffeb3b, 110px -10px 1px #fff,
+    130px -90px 2px #ffd700, 150px -30px 1px #ffc107, 170px -110px 2px #fff,
+    190px -50px 1px #ffeb3b, 210px -130px 2px #ffd700, 230px -70px 1px #fff,
+    250px -10px 2px #ffc107, 270px -140px 1px #ffeb3b, 290px -40px 2px #fff;
+}
+
+/* Hạt bạc cho Hạng 2 */
+.rank-2::after {
+  background: transparent;
+  animation-duration: 8s;
+  animation-delay: 1s;
+  box-shadow: 20px -50px 1px #ffffff, 60px -100px 1px #e0e0e0,
+    100px -30px 1px #f5f5f5, 140px -130px 1px #ffffff,
+    180px -70px 1px #e0e0e0, 220px -20px 1px #f5f5f5,
+    260px -110px 1px #ffffff, 300px -60px 1px #e0e0e0;
+}
+
+/* Ghi đè lại ::before để không bị xung đột nếu có */
+.rank-1::before, .rank-2::before, .rank-3::before {
+  content: none;
 }
