@@ -1883,11 +1883,6 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
   border-color: rgb(79 70 229 / var(--tw-border-opacity, 1));
 }
 
-.border-orange-300 {
-  --tw-border-opacity: 1;
-  border-color: rgb(253 186 116 / var(--tw-border-opacity, 1));
-}
-
 .border-pink-500 {
   --tw-border-opacity: 1;
   border-color: rgb(236 72 153 / var(--tw-border-opacity, 1));
@@ -2049,11 +2044,6 @@ tr.edit-mode-active .scheduled-task-item.cursor-pointer:hover {
 .bg-indigo-600 {
   --tw-bg-opacity: 1;
   background-color: rgb(79 70 229 / var(--tw-bg-opacity, 1));
-}
-
-.bg-orange-50 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(255 247 237 / var(--tw-bg-opacity, 1));
 }
 
 .bg-pink-200 {
@@ -4278,9 +4268,12 @@ tr.edit-mode-active .scheduled-task-item.calendar-day:hover {
 /* Hạng 3 (Đồng Đỏ) */
 
 .rank-3 {
-  background-image: linear-gradient(135deg, #d7a17b, #a0522d, #d2691e, #e59866);
-  box-shadow: 0 0 3px rgba(139, 69, 19, 0.7), inset 0 0 2px rgba(229, 152, 102, 0.4);
-  border: 1px solid #A0522D;
+  background-image: linear-gradient(135deg, #f3e9d2, #e1cda9, #e9d8b8, #faf3e0);
+  /* Gradient màu đồng rất nhạt */
+  box-shadow: 0 0 2px rgba(200, 168, 118, 0.4), inset 0 0 2px rgba(217, 193, 154, 0.3);
+  /* Đổ bóng rất nhẹ */
+  border: 1px solid #e1cda9;
+  /* Viền rất nhạt */
 }
 
 /* Thêm hiệu ứng đổ bóng để làm nổi bật icon vương miện */
