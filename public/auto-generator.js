@@ -1,5 +1,5 @@
 import { allTemplates, currentTemplateId, allWorkPositions, allShiftCodes, allTaskGroups } from './daily-templates-data.js';
-import { calculateREForTask } from './re-calculator.js';
+import { calculateREForTask, calculateREForGroup, roundUpToNearest15Minutes } from './re-calculator.js';
 import { timeToMinutes } from './utils.js';
 
 /**
@@ -33,8 +33,14 @@ export function generateSchedule(openTime, closeTime, targetManHours, reParamete
     }, {});
 
     // 1. Tính toán số lượng slot (15 phút) cần thiết cho mỗi task dựa trên RE
-    const taskSlotsToPlace = [];
+    // --- NEW LOGIC: Calculate totalRequiredRE using calculateREForGroup logic ---
     let totalRequiredRE = 0;
+    for (const groupInfo of taskGroupsArray) {
+        totalRequiredRE += calculateREForGroup(groupInfo, reParameters);
+    }
+    // --- END NEW LOGIC ---
+
+    const taskSlotsToPlace = [];
 
     for (const groupInfo of taskGroupsArray) {
         if (groupInfo.tasks && Array.isArray(groupInfo.tasks)) {
@@ -44,7 +50,6 @@ export function generateSchedule(openTime, closeTime, targetManHours, reParamete
                     return;
                 }
                 const taskHours = calculateREForTask(task, groupInfo, reParameters);
-                totalRequiredRE += taskHours;
                 const numSlots = Math.round(taskHours * 4);
                 if (numSlots > 0) {
                     const groupOrder = String(groupInfo.order || '0');
@@ -285,9 +290,6 @@ export function generateSchedule(openTime, closeTime, targetManHours, reParamete
             }
             if (scheduledManHours >= flexibleTargetManHours) break;
         }
-        // Cập nhật lại tổng RE sau khi tính POS
-        const posManHours = scheduledManHours - placementTasks.length * 0.25; // Giờ POS đã xếp
-        totalRequiredRE += posManHours;
     }
 
 

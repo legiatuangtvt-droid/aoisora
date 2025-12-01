@@ -8,7 +8,7 @@
  * @param {number} hours - Số giờ cần làm tròn.
  * @returns {number} Số giờ đã làm tròn.
  */
-function roundUpToNearest15Minutes(hours) {
+export function roundUpToNearest15Minutes(hours) {
     if (typeof hours !== 'number' || isNaN(hours)) return 0;
     return Math.ceil(hours * 4) / 4;
 }
