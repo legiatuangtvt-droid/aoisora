@@ -166,13 +166,30 @@ function aggregateStoreXP() {
 function renderStoreLeaderboard(stores) {
     leaderboardListStore.innerHTML = '';
     stores.forEach((store, index) => {
+        let rankClasses = '';
+        let rankIndicator = `<span class="rank-number">${index + 1}</span>`;
+
+        // Áp dụng class và icon cho top 3 cửa hàng
+        if (index === 0) {
+            rankClasses = 'rank-1';
+            rankIndicator = '<i class="fas fa-crown text-yellow-500"></i>';
+        } else if (index === 1) {
+            rankClasses = 'rank-2';
+            rankIndicator = '<i class="fas fa-crown text-gray-400"></i>';
+        } else if (index === 2) {
+            rankClasses = 'rank-3'; // Sử dụng rank-3 cho hiệu ứng đồng
+            rankIndicator = '<i class="fas fa-crown text-orange-400"></i>';
+        }
+
         const storeCard = document.createElement('div');
-        // Thêm cursor-pointer và các lớp hover để cho biết nó có thể được nhấp
-        storeCard.className = 'p-3 rounded-lg border flex items-center justify-between cursor-pointer hover:bg-indigo-50 transition-colors';
+        storeCard.className = `p-3 rounded-lg border flex items-center gap-3 cursor-pointer hover:bg-indigo-50 transition-colors ${rankClasses}`;
         storeCard.dataset.storeId = store.id;
         storeCard.innerHTML = `
-            <div class="font-semibold text-sm">${index + 1}. ${store.name}</div>
-            <div class="font-bold text-indigo-600">${store.totalXP.toLocaleString()} XP</div>`;
+            <div class="rank-content-wrapper justify-between">
+                <div class="rank-indicator">${rankIndicator}</div>
+                <div class="font-semibold text-sm flex-1">${store.name}</div>
+                <div class="font-bold text-indigo-600">${store.totalXP.toLocaleString()} XP</div>
+            </div>`;
         
         // Gắn listener để xử lý khi nhấp vào một cửa hàng
         storeCard.addEventListener('click', () => {
