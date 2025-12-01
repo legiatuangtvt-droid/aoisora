@@ -134,7 +134,6 @@ function populateStoreFilter() {
  * @returns {Array} - Mảng các đối tượng cửa hàng với tổng XP.
  */
 function aggregateStoreXP() {
-    console.log('[Debug] aggregateStoreXP: Bắt đầu tính tổng XP cho cửa hàng.');
     const storeXP = {};
 
     // Khởi tạo điểm cho tất cả cửa hàng là 0
@@ -156,7 +155,6 @@ function aggregateStoreXP() {
     });
 
     const result = Object.values(storeXP).sort((a, b) => b.totalXP - a.totalXP);
-    console.log('[Debug] aggregateStoreXP: Tính toán hoàn tất. Dữ liệu:', result);
     // Chuyển object thành mảng và sắp xếp theo totalXP giảm dần
     return result;
 }
@@ -166,7 +164,6 @@ function aggregateStoreXP() {
  * @param {Array} stores - Danh sách cửa hàng đã được tính tổng XP.
  */
 function renderStoreLeaderboard(stores) {
-    console.log('[Debug] renderStoreLeaderboard: Bắt đầu render BXH cửa hàng với dữ liệu:', stores);
     leaderboardListStore.innerHTML = '';
     stores.forEach((store, index) => {
         const storeCard = document.createElement('div');
@@ -178,9 +175,7 @@ function renderStoreLeaderboard(stores) {
             <div class="font-bold text-indigo-600">${store.totalXP.toLocaleString()} XP</div>`;
         
         // Gắn listener để xử lý khi nhấp vào một cửa hàng
-        console.log(`[Debug] renderStoreLeaderboard: Thêm event listener cho cửa hàng ID: ${store.id}`);
         storeCard.addEventListener('click', () => {
-            console.log(`[Debug] Event: Click vào cửa hàng ID: ${store.id}`);
             displayStoreDetails(store.id);
         });
 
@@ -446,10 +441,8 @@ async function drawXpCompositionChart(employeeId) {
  * @param {string} storeId - ID của cửa hàng.
  */
 function displayStoreDetails(storeId) {
-    console.log(`[Debug] displayStoreDetails: Bắt đầu hiển thị chi tiết cho cửa hàng ID: ${storeId}`);
     const store = allStores[storeId];
     if (!store) {
-        console.error(`[Debug] displayStoreDetails: Không tìm thấy cửa hàng với ID: ${storeId}`);
         return;
     }
 
@@ -478,7 +471,6 @@ function displayStoreDetails(storeId) {
     const storeEmployees = allEmployees
         .filter(e => e.storeId === storeId)
         .sort((a, b) => (b.experiencePoints || 0) - (a.experiencePoints || 0));
-    console.log('[Debug] displayStoreDetails: Danh sách nhân viên của cửa hàng:', storeEmployees);
 
     const employeeListContainer = document.getElementById('store-employee-list-container');
     employeeListContainer.innerHTML = '<h4 class="font-semibold mb-2">Xếp hạng nhân viên trong cửa hàng</h4>';
@@ -497,7 +489,6 @@ function displayStoreDetails(storeId) {
     }
 
     // Vẽ biểu đồ đóng góp
-    console.log('[Debug] displayStoreDetails: Chuẩn bị vẽ biểu đồ đóng góp.');
     drawStoreContributionChart(storeEmployees, totalXP);
 }
 
@@ -574,7 +565,6 @@ export async function init() {
     const storeTab = document.querySelector('.leaderboard-tab[data-tab="stores"]');
 
     employeeTab.addEventListener('click', () => {
-        console.log('[Debug] Event: Click vào tab Nhân viên.');
         employeeTab.classList.add('active');
         storeTab.classList.remove('active');
         leaderboardListEmployee.classList.remove('hidden');
@@ -588,7 +578,6 @@ export async function init() {
     }, { signal: domController.signal });
 
     storeTab.addEventListener('click', () => {
-        console.log('[Debug] Event: Click vào tab Cửa hàng.');
         storeTab.classList.add('active');
         employeeTab.classList.remove('active');
         leaderboardListStore.classList.remove('hidden');
