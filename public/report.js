@@ -258,7 +258,8 @@ function renderLeaderboard(employees) {
             rankClasses = 'bg-gray-50 border-gray-300 rank-2';
         } else if (index === 2) {
             rankContent = '<i class="fas fa-crown text-orange-400"></i>';
-            rankClasses = 'bg-orange-50 border-orange-300';
+            // Sửa lỗi: Thêm class 'rank-3' và loại bỏ các class nền/viền không cần thiết
+            rankClasses = 'rank-3';
         }
 
         const employeeCard = document.createElement('div');
