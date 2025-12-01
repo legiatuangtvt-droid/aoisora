@@ -178,8 +178,12 @@ export function generateSchedule(openTime, closeTime, targetManHours, reParamete
                     const window = breakWindows[mealType][positionName];
                     if (!window) return; // Bỏ qua nếu vị trí không có giờ nghỉ quy định
 
+                    // Giới hạn khung giờ tìm kiếm trong khoảng giao giữa ca làm việc và khung giờ nghỉ
+                    const searchStart = Math.max(shift.startMinutes, window.start);
+                    const searchEnd = Math.min(shift.endMinutes, window.end);
+
                     // Tìm 4 slot 15 phút liên tiếp còn trống trong khung giờ quy định
-                    for (let startMinute = window.start; startMinute <= window.end - 60; startMinute += 15) {
+                    for (let startMinute = searchStart; startMinute <= searchEnd - 60; startMinute += 15) {
                         const slotsNeeded = [];
                         let canPlace = true;
                         for (let i = 0; i < 4; i++) {
