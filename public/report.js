@@ -229,33 +229,40 @@ function renderLeaderboard(employees) {
         const levelInfo = calculateLevel(employee.experiencePoints || 0);
         const mockData = getMockDetails(employee.id);
 
+        let rankContent = `<span class="rank-number">${index + 1}</span>`;
+        let rankClasses = '';
+
+        // Thêm icon vương miện và class đặc biệt cho top 3
+        if (index === 0) {
+            rankContent = '<i class="fas fa-crown text-yellow-500"></i>';
+            rankClasses = 'bg-yellow-50 border-yellow-400';
+        } else if (index === 1) {
+            rankContent = '<i class="fas fa-crown text-gray-400"></i>';
+            rankClasses = 'bg-gray-50 border-gray-300';
+        } else if (index === 2) {
+            rankContent = '<i class="fas fa-crown text-orange-400"></i>';
+            rankClasses = 'bg-orange-50 border-orange-300';
+        }
+
         const employeeCard = document.createElement('div');
-        employeeCard.className = 'p-3 rounded-lg hover:bg-indigo-50 cursor-pointer border border-transparent hover:border-indigo-300 transition-all';
+        employeeCard.className = `p-3 rounded-lg hover:bg-indigo-50 cursor-pointer border hover:border-indigo-300 transition-all flex items-center gap-3 ${rankClasses}`;
         employeeCard.dataset.employeeId = employee.id;
 
-        // Thêm viền vàng/bạc/đồng cho top 3
-        if (index === 0) employeeCard.classList.add('border-yellow-400', 'bg-yellow-50');
-        else if (index === 1) employeeCard.classList.add('border-gray-300', 'bg-gray-50');
-        else if (index === 2) employeeCard.classList.add('border-orange-300', 'bg-orange-50');
-
-
         employeeCard.innerHTML = `
-            <div class="flex items-center gap-3">
+            <div class="rank-indicator">${rankContent}</div>
+            <div class="flex-1">
+                <div class="flex items-center gap-3">
                 <div class="relative">
                     <img src="https://placehold.co/48x48/E2E8F0/4A5568?text=${employee.name.charAt(0)}" class="w-12 h-12 rounded-full">
                     <span class="level-badge absolute -bottom-1 -right-1">Lv.${levelInfo.level}</span>
                 </div>
                 <div class="flex-1">
                     <p class="font-bold text-sm">${employee.name}</p>
-                    <div class="flex items-center gap-2 mt-1 text-gray-400">
-                        ${index < 5 ? '<i class="fas fa-hands-helping text-purple-500" title="Ong Chăm Chỉ"></i>' : ''}
-                        ${index % 2 === 0 ? '<i class="fas fa-bolt text-yellow-500" title="Thần Tốc"></i>' : ''}
+                    <div class="mt-2 h-1.5 w-full bg-gray-200 rounded-full" title="Tiến độ công việc hôm nay">
+                        <div class="bg-green-500 h-1.5 rounded-full" style="width: ${mockData.dailyProgress}%"></div>
                     </div>
                 </div>
                 <span class="font-bold text-indigo-600">${(employee.experiencePoints || 0).toLocaleString()} XP</span>
-            </div>
-            <div class="mt-2 h-1.5 w-full bg-gray-200 rounded-full" title="Tiến độ công việc hôm nay">
-                <div class="bg-green-500 h-1.5 rounded-full" style="width: ${mockData.dailyProgress}%"></div>
             </div>
         `;
 
