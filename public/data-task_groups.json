@@ -106,7 +106,7 @@
         { "order": "1", "name": "Nhận hàng Peri", "typeTask": "Product", "frequency": "Daily", "frequencyNumber": 41, "reUnit": 10, "manual_number": "MMD-001", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 2, "allowedPositions": ["MMD", "Leader"],
           "timeWindows": [ { "startTime": "06:00", "endTime": "11:00" } ] },
         { "order": "2", "name": "Nhận hàng Delica", "typeTask": "Product", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 30, "manual_number": "MMD-002", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 1, "allowedPositions": ["MMD", "Leader"],
-          "timeWindows": [ { "startTime": "06:55", "endTime": "07:00" }, { "startTime": "10:00", "endTime": "10:05" } ] },
+          "timeWindows": [ { "startTime": "06:45", "endTime": "07:00" }, { "startTime": "10:00", "endTime": "10:05" } ] },
         { "order": "3", "name": "Nhận hàng RDC Dry", "typeTask": "Product", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 90, "manual_number": "MMD-003", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 2, "allowedPositions": ["MMD", "Leader"],
           "timeWindows": [ { "startTime": "11:00", "endTime": "15:00" } ] },
         { "order": "4", "name": "Nhận hàng RDC D&D", "typeTask": "Product", "frequency": "Daily", "frequencyNumber": 1, "reUnit": 45, "manual_number": "MMD-004", "manual_link": "", "note": "Tính theo lần", "concurrentPerformers": 2, "allowedPositions": ["MMD", "Leader"],
