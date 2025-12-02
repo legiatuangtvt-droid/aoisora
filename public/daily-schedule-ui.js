@@ -1,34 +1,44 @@
-import { allEmployees, allStores, allTaskGroups, allWorkPositions, currentScheduleData, allShiftCodes, viewStartDate, changeDay, dailyTemplate } from './daily-schedule-logic.js';
-import { formatDate, getMonday, timeToMinutes } from './utils.js';
+import {
+  allEmployees,
+  allStores,
+  allTaskGroups,
+  allWorkPositions,
+  currentScheduleData,
+  allShiftCodes,
+  viewStartDate,
+  changeDay,
+  dailyTemplate,
+} from './daily-schedule-logic.js'
+import { formatDate, timeToMinutes } from './utils.js'
 
-let isInitialLoad = true;
+let isInitialLoad = true
 
 //#region LOADING_SPINNER
 /**
  * Hiển thị spinner tải dữ liệu trong container chính.
  */
 export function showLoadingSpinner() {
-    const container = document.getElementById('schedule-grid-container');
-    if (container) {
-        container.innerHTML = `
+  const container = document.getElementById('schedule-grid-container')
+  if (container) {
+    container.innerHTML = `
             <div class="flex items-center justify-center h-full text-gray-500">
                 <div class="text-center">
                     <i class="fas fa-spinner fa-spin fa-2x"></i>
                     <p class="mt-2 text-sm">Đang tải dữ liệu...</p>
                 </div>
             </div>
-        `;
-    }
+        `
+  }
 }
 
 /**
  * Ẩn spinner tải dữ liệu (bằng cách xóa nội dung container).
  */
 export function hideLoadingSpinner() {
-    const container = document.getElementById('schedule-grid-container');
-    if (container) {
-        container.innerHTML = '';
-    }
+  const container = document.getElementById('schedule-grid-container')
+  if (container) {
+    container.innerHTML = ''
+  }
 }
 //#endregion
 
@@ -37,107 +47,139 @@ export function hideLoadingSpinner() {
  * Tự động cuộn đến nhân viên đang trong ca làm việc tại thời điểm hiện tại.
  */
 function scrollToCurrentEmployee() {
-    const now = new Date();
-    const targetTime = new Date(now.getTime() - 30 * 60 * 1000); // Lùi lại 30 phút
-    const targetMinutes = targetTime.getHours() * 60 + targetTime.getMinutes();
+  const now = new Date()
+  const targetTime = new Date(now.getTime() - 30 * 60 * 1000) // Lùi lại 30 phút
+  const targetMinutes = targetTime.getHours() * 60 + targetTime.getMinutes()
 
-    // Tìm TẤT CẢ nhân viên có ca làm việc chứa giờ hiện tại
-    const activeEmployees = currentScheduleData.filter(schedule => {
-        const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === schedule.shift);
-        if (!shiftInfo || !shiftInfo.timeRange) return false;
+  // Tìm TẤT CẢ nhân viên có ca làm việc chứa giờ hiện tại
+  const activeEmployees = currentScheduleData.filter(schedule => {
+    const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === schedule.shift)
+    if (!shiftInfo || !shiftInfo.timeRange) return false
 
-        const [startStr, endStr] = shiftInfo.timeRange.split('~').map(s => s.trim());
-        const startMinutes = timeToMinutes(startStr);
-        const endMinutes = timeToMinutes(endStr);
-        
-        return startMinutes !== null && endMinutes !== null && targetMinutes >= startMinutes && targetMinutes < endMinutes;
-    });
+    const [startStr, endStr] = shiftInfo.timeRange.split('~').map(s => s.trim())
+    const startMinutes = timeToMinutes(startStr)
+    const endMinutes = timeToMinutes(endStr)
 
-    // Nếu có nhân viên đang làm việc, cuộn đến người cuối cùng trong danh sách
-    if (activeEmployees.length > 0) {
-        const lastActiveEmployee = activeEmployees[activeEmployees.length - 1];
-        const employeeRow = document.querySelector(`tr[data-employee-id="${lastActiveEmployee.employeeId}"]`);
-        employeeRow?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
+    return (
+      startMinutes !== null &&
+      endMinutes !== null &&
+      targetMinutes >= startMinutes &&
+      targetMinutes < endMinutes
+    )
+  })
+
+  // Nếu có nhân viên đang làm việc, cuộn đến người cuối cùng trong danh sách
+  if (activeEmployees.length > 0) {
+    const lastActiveEmployee = activeEmployees[activeEmployees.length - 1]
+    const employeeRow = document.querySelector(
+      `tr[data-employee-id="${lastActiveEmployee.employeeId}"]`
+    )
+    employeeRow?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }
 }
 
 /**
  * Tự động cuộn ngang đến cột giờ hiện tại và tô màu cột 15 phút hiện tại.
  */
 export function updateTimeIndicator() {
-    const now = new Date();
-    const scrollTargetTime = new Date(now.getTime() - 30 * 60 * 1000); // Thời gian để cuộn: lùi lại 30 phút
-    
-    const scrollTargetHour = scrollTargetTime.getHours();
-    
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
+  const now = new Date()
+  const scrollTargetTime = new Date(now.getTime() - 30 * 60 * 1000) // Thời gian để cuộn: lùi lại 30 phút
 
-    const container = document.getElementById('schedule-grid-container');
-    if (!container) return;
+  const scrollTargetHour = scrollTargetTime.getHours()
 
-    // --- 1. Cuộn ngang đến cột giờ mục tiêu (30 phút trước) ---
-    const headerCell = container.querySelector(`th[data-hour="${scrollTargetHour}"]`);
-    if (headerCell) {
-        const containerRect = container.getBoundingClientRect();
-        const cellRect = headerCell.getBoundingClientRect();
-        const scrollLeft = cellRect.left - containerRect.left + container.scrollLeft;
-        container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
-    }
+  const currentHour = now.getHours()
+  const currentMinute = now.getMinutes()
 
-    // --- 2. Tô màu cột 15 phút tại thời điểm hiện tại ---
-    // Xóa highlight cũ trên toàn bộ bảng
-    document.querySelectorAll('.current-time-slot').forEach(el => el.classList.remove('current-time-slot', 'bg-amber-100'));
+  const container = document.getElementById('schedule-grid-container')
+  if (!container) return
 
-    // Xác định quarter tại thời điểm hiện tại
-    const quarter = currentMinute < 15 ? '00' : currentMinute < 30 ? '15' : currentMinute < 45 ? '30' : '45';
-    const timeString = `${String(currentHour).padStart(2, '0')}:00`;
+  // --- 1. Cuộn ngang đến cột giờ mục tiêu (30 phút trước) ---
+  const headerCell = container.querySelector(
+    `th[data-hour="${scrollTargetHour}"]`
+  )
+  if (headerCell) {
+    const containerRect = container.getBoundingClientRect()
+    const cellRect = headerCell.getBoundingClientRect()
+    const scrollLeft = cellRect.left - containerRect.left + container.scrollLeft
+    container.scrollTo({ left: scrollLeft, behavior: 'smooth' })
+  }
 
-    // Tìm và tô màu các ô trong cột quarter hiện tại
-    const slotsToHighlight = container.querySelectorAll(`.quarter-hour-slot[data-time="${timeString}"][data-quarter="${quarter}"]`);
-    slotsToHighlight.forEach(slot => slot.classList.add('current-time-slot', 'bg-amber-100'));
+  // --- 2. Tô màu cột 15 phút tại thời điểm hiện tại ---
+  // Xóa highlight cũ trên toàn bộ bảng
+  document
+    .querySelectorAll('.current-time-slot')
+    .forEach(el => el.classList.remove('current-time-slot', 'bg-amber-100'))
+
+  // Xác định quarter tại thời điểm hiện tại
+  const quarter =
+    currentMinute < 15
+      ? '00'
+      : currentMinute < 30
+        ? '15'
+        : currentMinute < 45
+          ? '30'
+          : '45'
+  const timeString = `${String(currentHour).padStart(2, '0')}:00`
+
+  // Tìm và tô màu các ô trong cột quarter hiện tại
+  const slotsToHighlight = container.querySelectorAll(
+    `.quarter-hour-slot[data-time="${timeString}"][data-quarter="${quarter}"]`
+  )
+  slotsToHighlight.forEach(slot =>
+    slot.classList.add('current-time-slot', 'bg-amber-100')
+  )
 }
 //#endregion
 
 //#region RENDERING
 const defaultColor = {
-    bg: '#e2e8f0', text: '#1e293b', border: '#94a3b8'
-};
+  bg: '#e2e8f0',
+  text: '#1e293b',
+  border: '#94a3b8',
+}
 
 export function renderScheduleGrid() {
-    const container = document.getElementById('schedule-grid-container');
-    if (!container) return;
+  const container = document.getElementById('schedule-grid-container')
+  if (!container) return
 
-    // --- FIX: Lưu lại trạng thái của các hàng đang ở chế độ chỉnh sửa ---
-    const activeEmployeeIds = new Set();
-    container.querySelectorAll('tr.edit-mode-active').forEach(row => {
-        activeEmployeeIds.add(row.dataset.employeeId);
-    });
+  // --- FIX: Lưu lại trạng thái của các hàng đang ở chế độ chỉnh sửa ---
+  const activeEmployeeIds = new Set()
+  container.querySelectorAll('tr.edit-mode-active').forEach(row => {
+    activeEmployeeIds.add(row.dataset.employeeId)
+  })
 
-    hideLoadingSpinner(); // Ẩn spinner trước khi render lưới
-    const timeSlots = Array.from({ length: 19 }, (_, i) => `${String(i + 5).padStart(2, '0')}:00`); // Từ 05:00 đến 23:00
+  hideLoadingSpinner() // Ẩn spinner trước khi render lưới
+  const timeSlots = Array.from(
+    { length: 19 },
+    (_, i) => `${String(i + 5).padStart(2, '0')}:00`
+  ) // Từ 05:00 đến 23:00
 
-    const table = document.createElement('table');
-    table.className = 'min-w-full border-collapse border border-slate-200 table-fixed';
+  const table = document.createElement('table')
+  table.className =
+    'min-w-full border-collapse border border-slate-200 table-fixed'
 
-    // --- Tạo Header ---
-    const thead = document.createElement('thead');
-    thead.className = 'bg-slate-100 border-2 border-b-black sticky top-0 z-20'; // Tăng z-index để header nổi trên các ô sticky
-    
-    // Calculate overall store completion rate
-    let overallTotalTasks = 0;
-    let overallCompletedTasks = 0;
-    currentScheduleData.forEach(schedule => {
-        (schedule.tasks || []).forEach(task => {
-            overallTotalTasks++;
-            if (task.isComplete === 1) { // Sửa lỗi: Chỉ đếm task đã hoàn thành
-                overallCompletedTasks++;
-            }
-        });
-    });
-    const overallCompletionRate = overallTotalTasks > 0 ? Math.round((overallCompletedTasks / overallTotalTasks) * 100) : 0;
+  // --- Tạo Header ---
+  const thead = document.createElement('thead')
+  thead.className = 'bg-slate-100 border-2 border-b-black sticky top-0 z-20' // Tăng z-index để header nổi trên các ô sticky
 
-    let headerRowHtml = `
+  // Calculate overall store completion rate
+  let overallTotalTasks = 0
+  let overallCompletedTasks = 0
+  currentScheduleData.forEach(schedule => {
+    ;(schedule.tasks || []).forEach(task => {
+      overallTotalTasks++
+      if (task.isComplete === 1) {
+        // Sửa lỗi: Chỉ đếm task đã hoàn thành
+        overallCompletedTasks++
+      }
+    })
+  })
+  const overallCompletionRate =
+    overallTotalTasks > 0
+      ? Math.round((overallCompletedTasks / overallTotalTasks) * 100)
+      : 0
+
+  let headerRowHtml = `
         <th class="p-2 border border-black w-40 min-w-40 sticky left-0 bg-slate-100 z-30">
             <div class="relative w-full h-full flex items-center justify-center" title="Tỷ lệ hoàn thành của cửa hàng">
                 <svg class="w-16 h-16" viewBox="0 0 36 36">
@@ -147,44 +189,48 @@ export function renderScheduleGrid() {
                 <div class="absolute inset-0 flex items-center justify-center text-base font-bold text-indigo-600">${overallCompletionRate}%</div>
             </div>
         </th>
-    `;
+    `
 
-    timeSlots.forEach(time => {
-        const hourKey = time.split(':')[0];
-        const tasksInHour = currentScheduleData.flatMap(s => s.tasks || []).filter(t => t.startTime.startsWith(hourKey));
-        const positionCount = (tasksInHour.length * 0.25).toFixed(2);
+  timeSlots.forEach(time => {
+    const hourKey = time.split(':')[0]
+    const tasksInHour = currentScheduleData
+      .flatMap(s => s.tasks || [])
+      .filter(t => t.startTime.startsWith(hourKey))
+    const positionCount = (tasksInHour.length * 0.25).toFixed(2)
 
-        const reParameters = dailyTemplate?.reParameters || {};
-        const hourlyCustomerCount = reParameters.customerCountByHour?.[hourKey] || 0;
-        const rawPosManhour = hourlyCustomerCount / 60;
-        const posManhour = (Math.ceil(rawPosManhour * 4) / 4).toFixed(2);
+    const reParameters = dailyTemplate?.reParameters || {}
+    const hourlyCustomerCount = reParameters.customerCountByHour?.[hourKey] || 0
+    const rawPosManhour = hourlyCustomerCount / 60
+    const posManhour = (Math.ceil(rawPosManhour * 4) / 4).toFixed(2)
 
-        headerRowHtml += `
+    headerRowHtml += `
             <th class="p-2 border border-black min-w-[310px] text-center font-semibold text-slate-700" data-hour="${hourKey}">
                 <div class="flex justify-between items-center">
                     <span><i class="fas fa-users text-blue-600"> <span class="hourly-position-count text-xs">${positionCount}</span></i></span>
                     <span class="text-2xl">${time}</span>
                     <span><i class="fas fa-cash-register text-green-600"></i> <span class="hourly-pos-manhour text-sm">${posManhour}</span></span>
                 </div>
-            </th>`;
-    });
-    thead.innerHTML = `<tr>${headerRowHtml}</tr>`;
-    table.appendChild(thead);
+            </th>`
+  })
+  thead.innerHTML = `<tr>${headerRowHtml}</tr>`
+  table.appendChild(thead)
 
-    // --- Tạo Body ---
-    const tbody = document.createElement('tbody');
-    if (currentScheduleData.length === 0) {
-        const selectedDate = document.querySelector('.day-selector-btn.active')?.dataset.date || formatDate(new Date());
-        const storeFilter = document.getElementById('store-filter'); // Lấy phần tử select
-        const selectedStoreId = storeFilter ? storeFilter.value : 'all'; // Lấy giá trị được chọn
+  // --- Tạo Body ---
+  const tbody = document.createElement('tbody')
+  if (currentScheduleData.length === 0) {
+    const selectedDate =
+      document.querySelector('.day-selector-btn.active')?.dataset.date ||
+      formatDate(new Date())
+    const storeFilter = document.getElementById('store-filter') // Lấy phần tử select
+    const selectedStoreId = storeFilter ? storeFilter.value : 'all' // Lấy giá trị được chọn
 
-        if (selectedStoreId === 'all') {
-            tbody.innerHTML = `<tr><td colspan="${timeSlots.length + 1}" class="text-center p-10 text-gray-500">Vui lòng chọn cửa hàng để xem lịch làm việc.</td></tr>`;
-        } else {
-            const selectedStore = allStores.find(s => s.id === selectedStoreId); // Tìm cửa hàng trong danh sách đã tải
-            const storeName = selectedStore ? selectedStore.name : 'Cửa hàng này';
-            const formattedDate = new Date(selectedDate).toLocaleDateString('vi-VN');
-            tbody.innerHTML = `<tr>
+    if (selectedStoreId === 'all') {
+      tbody.innerHTML = `<tr><td colspan="${timeSlots.length + 1}" class="text-center p-10 text-gray-500">Vui lòng chọn cửa hàng để xem lịch làm việc.</td></tr>`
+    } else {
+      const selectedStore = allStores.find(s => s.id === selectedStoreId) // Tìm cửa hàng trong danh sách đã tải
+      const storeName = selectedStore ? selectedStore.name : 'Cửa hàng này'
+      const formattedDate = new Date(selectedDate).toLocaleDateString('vi-VN')
+      tbody.innerHTML = `<tr>
                 <td colspan="${timeSlots.length + 1}" class="text-center p-10">
                     <div class="flex flex-col items-center justify-center text-gray-500">
                         <i class="fas fa-calendar-times fa-3x mb-4 text-gray-400"></i>
@@ -192,39 +238,55 @@ export function renderScheduleGrid() {
                         <p>Cửa hàng <span class="font-bold text-gray-600">${storeName}</span> chưa có lịch làm việc cho ngày <span class="font-bold text-gray-600">${formattedDate}</span>.</p>
                     </div>
                 </td>
-            </tr>`;
-        }
-    } else { 
-        currentScheduleData.forEach(schedule => {
-            // Tìm khung giờ tương ứng với mã ca
-            const shiftInfo = allShiftCodes.find(sc => sc.shiftCode === schedule.shift);
-            const timeRange = shiftInfo ? shiftInfo.timeRange : '';
+            </tr>`
+    }
+  } else {
+    currentScheduleData.forEach(schedule => {
+      // Tìm khung giờ tương ứng với mã ca
+      const shiftInfo = allShiftCodes.find(
+        sc => sc.shiftCode === schedule.shift
+      )
+      const timeRange = shiftInfo ? shiftInfo.timeRange : ''
 
-            const row = document.createElement('tr');
-            row.className = 'border-b-2 border-black';
-            // Tô màu nền cho dòng của người dùng hiện tại
-            if (schedule.employeeId === window.currentUser?.id) {
-                row.classList.add('bg-green-50');
-            }
-            row.dataset.employeeId = schedule.employeeId; // Thêm ID để dễ dàng truy vấn
-            const positionInfo = allWorkPositions.find(p => p.id === schedule.positionId);
-            const positionName = positionInfo ? positionInfo.name : (schedule.positionId || '');
+      const row = document.createElement('tr')
+      row.className = 'border-b-2 border-black'
+      // Tô màu nền cho dòng của người dùng hiện tại
+      if (schedule.employeeId === window.currentUser?.id) {
+        row.classList.add('bg-green-50')
+      }
+      row.dataset.employeeId = schedule.employeeId // Thêm ID để dễ dàng truy vấn
+      const positionInfo = allWorkPositions.find(
+        p => p.id === schedule.positionId
+      )
+      const positionName = positionInfo
+        ? positionInfo.name
+        : schedule.positionId || ''
 
-            // --- TÍNH TOÁN DỮ LIỆU CHO BIỂU ĐỒ ---
-            const totalTasks = (schedule.tasks || []).length;
-            const completedTasksArray = (schedule.tasks || []).filter(task => task.isComplete === 1);
-            const completionRate = totalTasks > 0 ? Math.round((completedTasksArray.length / totalTasks) * 100) : 0;
-            // --- FIX: Tính toán lại dailyExp để bao gồm cả công việc làm thay ---
-            // Duyệt qua TOÀN BỘ lịch làm việc của ngày hôm đó để tìm các task mà nhân viên này đã hoàn thành.
-            const dailyExp = currentScheduleData.reduce((sum, otherSchedule) => {
-                const tasksCompletedByThisEmployee = (otherSchedule.tasks || []).filter(
-                    task => task.isComplete === 1 && task.completingUserId === schedule.employeeId
-                );
-                const pointsFromThisSchedule = tasksCompletedByThisEmployee.reduce((taskSum, task) => taskSum + (task.awardedPoints || 0), 0);
-                return sum + pointsFromThisSchedule;
-            }, 0);
+      // --- TÍNH TOÁN DỮ LIỆU CHO BIỂU ĐỒ ---
+      const totalTasks = (schedule.tasks || []).length
+      const completedTasksArray = (schedule.tasks || []).filter(
+        task => task.isComplete === 1
+      )
+      const completionRate =
+        totalTasks > 0
+          ? Math.round((completedTasksArray.length / totalTasks) * 100)
+          : 0
+      // --- FIX: Tính toán lại dailyExp để bao gồm cả công việc làm thay ---
+      // Duyệt qua TOÀN BỘ lịch làm việc của ngày hôm đó để tìm các task mà nhân viên này đã hoàn thành.
+      const dailyExp = currentScheduleData.reduce((sum, otherSchedule) => {
+        const tasksCompletedByThisEmployee = (otherSchedule.tasks || []).filter(
+          task =>
+            task.isComplete === 1 &&
+            task.completingUserId === schedule.employeeId
+        )
+        const pointsFromThisSchedule = tasksCompletedByThisEmployee.reduce(
+          (taskSum, task) => taskSum + (task.awardedPoints || 0),
+          0
+        )
+        return sum + pointsFromThisSchedule
+      }, 0)
 
-            let rowHtml = `
+      let rowHtml = `
                 <td data-action="toggle-edit" 
                     data-employee-id="${schedule.employeeId}" 
                     class="h-[106px] align-middle group border-l-2 border-r-2 border-black sticky left-0 bg-white z-10 min-w-52 flex flex-col transition-all duration-200 ease-in-out editable-row-cell" 
@@ -262,10 +324,10 @@ export function renderScheduleGrid() {
                     </div>
                     <!-- Dòng 3, Ô 4: Sub-tasks -->
                     <div class="border-t pb-[2px] border-black text-xs"><strong>Sub-tasks:</strong> Lên hàng, kiểm kê...</div>
-                </td>`;
+                </td>`
 
-            timeSlots.forEach(time => {
-                rowHtml += `
+      timeSlots.forEach(time => {
+        rowHtml += `
                     <td class="p-0 border border-black align-middle">
                         <div class="grid grid-cols-4 h-[104px] ">
                             <div class="quarter-hour-slot border-r border-dashed border-slate-200 flex justify-center items-center" data-time="${time}" data-quarter="00"></div>
@@ -273,93 +335,107 @@ export function renderScheduleGrid() {
                             <div class="quarter-hour-slot border-r border-dashed border-slate-200 flex justify-center items-center" data-time="${time}" data-quarter="30"></div>
                             <div class="quarter-hour-slot flex justify-center items-center" data-time="${time}" data-quarter="45"></div>
                         </div>
-                    </td>`;
-            });
-            row.innerHTML = rowHtml;
+                    </td>`
+      })
+      row.innerHTML = rowHtml
 
-            // Điền các task vào các ô
-            (schedule.tasks || []).forEach((task, index) => {
-                const [hour, quarter] = task.startTime.split(':');
-                const time = `${hour}:00`;
-                const slot = row.querySelector(`.quarter-hour-slot[data-time="${time}"][data-quarter="${quarter}"]`);
-                if (slot) {
-                    const group = allTaskGroups[task.groupId] || {};
-                    const color = (group.color && group.color.bg) ? group.color : defaultColor;
-                    const isOwner = window.currentUser?.id === schedule.employeeId;
-                    const isCompleted = task.isComplete === 1;
+      // Điền các task vào các ô
+      ;(schedule.tasks || []).forEach((task, index) => {
+        const [hour, quarter] = task.startTime.split(':')
+        const time = `${hour}:00`
+        const slot = row.querySelector(
+          `.quarter-hour-slot[data-time="${time}"][data-quarter="${quarter}"]`
+        )
+        if (slot) {
+          const group = allTaskGroups[task.groupId] || {}
+          const color =
+            group.color && group.color.bg ? group.color : defaultColor
+          const isOwner = window.currentUser?.id === schedule.employeeId
+          const isCompleted = task.isComplete === 1
 
-                    const taskItem = document.createElement('div');
-                    // Áp dụng style giống trang daily-templates
-                    taskItem.className = `scheduled-task-item relative group w-[70px] h-[100px] border-2 text-xs p-1 rounded-md shadow-sm flex flex-col justify-between items-center text-center ${isOwner ? 'cursor-pointer' : ''} ${isCompleted ? 'task-completed' : ''}`;
-                    taskItem.dataset.scheduleId = schedule.id;
-                    taskItem.dataset.taskIndex = index;
-                    taskItem.dataset.employeeId = schedule.employeeId;
-                    taskItem.dataset.groupId = task.groupId; // <-- THÊM DÒNG NÀY
+          const taskItem = document.createElement('div')
+          // Áp dụng style giống trang daily-templates
+          taskItem.className = `scheduled-task-item relative group w-[70px] h-[100px] border-2 text-xs p-1 rounded-md shadow-sm flex flex-col justify-between items-center text-center ${isOwner ? 'cursor-pointer' : ''} ${isCompleted ? 'task-completed' : ''}`
+          taskItem.dataset.scheduleId = schedule.id
+          taskItem.dataset.taskIndex = index
+          taskItem.dataset.employeeId = schedule.employeeId
+          taskItem.dataset.groupId = task.groupId // <-- THÊM DÒNG NÀY
 
-                    taskItem.style.backgroundColor = color.bg;
-                    taskItem.style.color = color.text;
-                    taskItem.style.borderColor = color.border;
-                    taskItem.title = `${task.name} (${task.taskCode})`;
-                    taskItem.innerHTML = `
+          taskItem.style.backgroundColor = color.bg
+          taskItem.style.color = color.text
+          taskItem.style.borderColor = color.border
+          taskItem.title = `${task.name} (${task.taskCode})`
+          taskItem.innerHTML = `
                         <div class="task-content flex-grow flex flex-col justify-center"><span class="overflow-hidden text-ellipsis">${task.name}</span></div>
                         <span class="task-content font-semibold mt-auto">${task.taskCode}</span>
-                    `;
-                    slot.appendChild(taskItem);
-                }
-            });
-            tbody.appendChild(row);
-
-        });
-    }
-    table.appendChild(tbody);
-
-    container.innerHTML = '';
-    container.appendChild(table);
-
-    // --- FIX: Áp dụng lại trạng thái "chế độ chỉnh sửa" cho các hàng đã lưu ---
-    if (activeEmployeeIds.size > 0) {
-        activeEmployeeIds.forEach(employeeId => {
-            container.querySelector(`tr[data-employee-id="${employeeId}"]`)?.classList.add('edit-mode-active');
-        });
-    }
-    // Áp dụng hiệu ứng chú ý ngay sau khi render xong
-    applyAttentionAnimation(() => currentScheduleData);
-
-    // --- HIGHLIGHT CURRENT TIME SLOT ---
-    // Xác định quarter tại thời điểm hiện tại
-    const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-    const quarter = currentMinute < 15 ? '00' : currentMinute < 30 ? '15' : currentMinute < 45 ? '30' : '45';
-    const timeString = `${String(currentHour).padStart(2, '0')}:00`;
-
-    // Tìm và tô màu các ô trong cột quarter hiện tại
-    const slotsToHighlight = container.querySelectorAll(`.quarter-hour-slot[data-time="${timeString}"][data-quarter="${quarter}"]`);
-    slotsToHighlight.forEach(slot => slot.classList.add('current-time-slot', 'bg-amber-100'));
-
-
-
-    // Thêm một khoảng trễ nhỏ để đảm bảo trình duyệt đã render xong trước khi cuộn.
-    // Điều này khắc phục vấn đề không cuộn đúng vị trí khi tải lại trang (F5).
-    setTimeout(() => {
-        if (currentScheduleData.length > 0) {
-            // Nếu có dữ liệu, cuộn đến giờ và nhân viên hiện tại
-            if (isInitialLoad) {
-                updateTimeIndicator(); // Hàm này cũng bao gồm cuộn ngang
-                scrollToCurrentEmployee(); // Chỉ cuộn dọc khi tải lần đầu
-                isInitialLoad = false; // Đặt lại cờ sau lần cuộn đầu tiên
-            }
-        } else {
-            // Nếu không có dữ liệu, cuộn ra giữa để thấy thông báo
-            // Dùng setTimeout để đảm bảo DOM đã được render trước khi cuộn
-            const gridContainer = document.getElementById('schedule-grid-container');
-            if (gridContainer) {
-                // Tính toán vị trí cuộn để nội dung thông báo ở giữa màn hình
-                const scrollLeft = (gridContainer.scrollWidth - gridContainer.clientWidth) / 2;
-                gridContainer.scrollTo({ left: scrollLeft, behavior: 'smooth' });
-            }
+                    `
+          slot.appendChild(taskItem)
         }
-    }, 100);
+      })
+      tbody.appendChild(row)
+    })
+  }
+  table.appendChild(tbody)
+
+  container.innerHTML = ''
+  container.appendChild(table)
+
+  // --- FIX: Áp dụng lại trạng thái "chế độ chỉnh sửa" cho các hàng đã lưu ---
+  if (activeEmployeeIds.size > 0) {
+    activeEmployeeIds.forEach(employeeId => {
+      container
+        .querySelector(`tr[data-employee-id="${employeeId}"]`)
+        ?.classList.add('edit-mode-active')
+    })
+  }
+  // Áp dụng hiệu ứng chú ý ngay sau khi render xong
+  applyAttentionAnimation(() => currentScheduleData)
+
+  // --- HIGHLIGHT CURRENT TIME SLOT ---
+  // Xác định quarter tại thời điểm hiện tại
+  const now = new Date()
+  const currentHour = now.getHours()
+  const currentMinute = now.getMinutes()
+  const quarter =
+    currentMinute < 15
+      ? '00'
+      : currentMinute < 30
+        ? '15'
+        : currentMinute < 45
+          ? '30'
+          : '45'
+  const timeString = `${String(currentHour).padStart(2, '0')}:00`
+
+  // Tìm và tô màu các ô trong cột quarter hiện tại
+  const slotsToHighlight = container.querySelectorAll(
+    `.quarter-hour-slot[data-time="${timeString}"][data-quarter="${quarter}"]`
+  )
+  slotsToHighlight.forEach(slot =>
+    slot.classList.add('current-time-slot', 'bg-amber-100')
+  )
+
+  // Thêm một khoảng trễ nhỏ để đảm bảo trình duyệt đã render xong trước khi cuộn.
+  // Điều này khắc phục vấn đề không cuộn đúng vị trí khi tải lại trang (F5).
+  setTimeout(() => {
+    if (currentScheduleData.length > 0) {
+      // Nếu có dữ liệu, cuộn đến giờ và nhân viên hiện tại
+      if (isInitialLoad) {
+        updateTimeIndicator() // Hàm này cũng bao gồm cuộn ngang
+        scrollToCurrentEmployee() // Chỉ cuộn dọc khi tải lần đầu
+        isInitialLoad = false // Đặt lại cờ sau lần cuộn đầu tiên
+      }
+    } else {
+      // Nếu không có dữ liệu, cuộn ra giữa để thấy thông báo
+      // Dùng setTimeout để đảm bảo DOM đã được render trước khi cuộn
+      const gridContainer = document.getElementById('schedule-grid-container')
+      if (gridContainer) {
+        // Tính toán vị trí cuộn để nội dung thông báo ở giữa màn hình
+        const scrollLeft =
+          (gridContainer.scrollWidth - gridContainer.clientWidth) / 2
+        gridContainer.scrollTo({ left: scrollLeft, behavior: 'smooth' })
+      }
+    }
+  }, 100)
 }
 
 /**
@@ -368,137 +444,152 @@ export function renderScheduleGrid() {
  * @param {number} points - Số điểm được cộng.
  */
 export function triggerCompletionEffects(taskElement, points) {
-    // 1. Xác định icon dựa trên nhóm công việc
-    const taskGroupIcons = {
-        'DELICA': 'fas fa-coffee',          // Đồ ăn chế biến sẵn, cafe
-        'DND': 'fas fa-cheese',             // Delicatessen & Dairy - Phô mai, sữa
-        'DRY': 'fas fa-box-open',           // Dry Goods - Hàng khô
-        'LEADER': 'fas fa-user-tie',         // Công việc quản lý
-        'MMD': 'fas fa-truck-loading',      // Merchandising/Receiving - Nhận hàng
-        'OTHER': 'fas fa-star',             // Các công việc khác
-        'PERI': 'fas fa-apple-alt',         // Perishables - Hàng tươi sống
-        'POS': 'fas fa-cash-register',      // Point of Sale - Thu ngân
-        'QC-FSH': 'fas fa-broom',            // Quality Control/Fresh - Vệ sinh
-    };
-    const groupId = taskElement.dataset.groupId;
-    const iconClass = taskGroupIcons[groupId] || 'fas fa-star'; // Mặc định là ngôi sao
-    // 1. Hiệu ứng âm thanh
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // A5 note
-    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.5);
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.5);
+  // 1. Xác định icon dựa trên nhóm công việc
+  const taskGroupIcons = {
+    DELICA: 'fas fa-coffee', // Đồ ăn chế biến sẵn, cafe
+    DND: 'fas fa-cheese', // Delicatessen & Dairy - Phô mai, sữa
+    DRY: 'fas fa-box-open', // Dry Goods - Hàng khô
+    LEADER: 'fas fa-user-tie', // Công việc quản lý
+    MMD: 'fas fa-truck-loading', // Merchandising/Receiving - Nhận hàng
+    OTHER: 'fas fa-star', // Các công việc khác
+    PERI: 'fas fa-apple-alt', // Perishables - Hàng tươi sống
+    POS: 'fas fa-cash-register', // Point of Sale - Thu ngân
+    'QC-FSH': 'fas fa-broom', // Quality Control/Fresh - Vệ sinh
+  }
+  const groupId = taskElement.dataset.groupId
+  const iconClass = taskGroupIcons[groupId] || 'fas fa-star' // Mặc định là ngôi sao
+  // 1. Hiệu ứng âm thanh
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)()
+  const oscillator = audioContext.createOscillator()
+  const gainNode = audioContext.createGain()
+  oscillator.connect(gainNode)
+  gainNode.connect(audioContext.destination)
+  oscillator.type = 'sine'
+  oscillator.frequency.setValueAtTime(880, audioContext.currentTime) // A5 note
+  gainNode.gain.setValueAtTime(0.2, audioContext.currentTime)
+  gainNode.gain.exponentialRampToValueAtTime(
+    0.00001,
+    audioContext.currentTime + 0.5
+  )
+  oscillator.start(audioContext.currentTime)
+  oscillator.stop(audioContext.currentTime + 0.5)
 
-    // 2. Hiệu ứng "+5" bay lên
-    const pointsEl = document.createElement('div');
-    pointsEl.className = `floating-points-animation ${points > 0 ? 'text-amber-500' : 'text-red-500'}`;
-    pointsEl.textContent = `+${points}`;
-    taskElement.appendChild(pointsEl);
-    setTimeout(() => pointsEl.remove(), 1000);
- 
-    // 3. Hiệu ứng icon nhóm bay lên (NEU)
-    const groupIconEl = document.createElement('i');
-    // Sử dụng biến iconClass đã được khai báo
-    groupIconEl.className = `${iconClass} flying-group-icon-animation`;
-    // Gán màu sắc tương ứng với nhóm
-    const group = allTaskGroups[groupId] || {};
-    const color = (group.color && group.color.text) ? group.color.text : '#f59e0b'; // Mặc định màu vàng
-    groupIconEl.style.color = color;
-    document.body.appendChild(groupIconEl);
-    const taskRect = taskElement.getBoundingClientRect();
-    groupIconEl.style.left = `${taskRect.left + taskRect.width / 2}px`;
-    groupIconEl.style.top = `${taskRect.top + taskRect.height / 2}px`;
-    setTimeout(() => groupIconEl.remove(), 2000); // Tự xóa sau 2 giây
- 
-    // 4. Hiệu ứng sao bay (giữ nguyên)
-    const starEl = document.createElement('i');
-    starEl.className = 'fas fa-star flying-star-animation'; document.body.appendChild(starEl);
+  // 2. Hiệu ứng "+5" bay lên
+  const pointsEl = document.createElement('div')
+  pointsEl.className = `floating-points-animation ${points > 0 ? 'text-amber-500' : 'text-red-500'}`
+  pointsEl.textContent = `+${points}`
+  taskElement.appendChild(pointsEl)
+  setTimeout(() => pointsEl.remove(), 1000)
 
-    const startRect = taskElement.getBoundingClientRect();
-    const totalExpEl = taskElement.closest('tr').querySelector('.fa-star'); // Tìm ngôi sao của điểm tổng
-    const endRect = totalExpEl.getBoundingClientRect();
+  // 3. Hiệu ứng icon nhóm bay lên (NEU)
+  const groupIconEl = document.createElement('i')
+  // Sử dụng biến iconClass đã được khai báo
+  groupIconEl.className = `${iconClass} flying-group-icon-animation`
+  // Gán màu sắc tương ứng với nhóm
+  const group = allTaskGroups[groupId] || {}
+  const color = group.color && group.color.text ? group.color.text : '#f59e0b' // Mặc định màu vàng
+  groupIconEl.style.color = color
+  document.body.appendChild(groupIconEl)
+  const taskRect = taskElement.getBoundingClientRect()
+  groupIconEl.style.left = `${taskRect.left + taskRect.width / 2}px`
+  groupIconEl.style.top = `${taskRect.top + taskRect.height / 2}px`
+  setTimeout(() => groupIconEl.remove(), 2000) // Tự xóa sau 2 giây
 
-    // Đặt vị trí ban đầu của ngôi sao
-    starEl.style.left = `${startRect.left + startRect.width / 2}px`;
-    starEl.style.top = `${startRect.top + startRect.height / 2}px`;
+  // 4. Hiệu ứng sao bay (giữ nguyên)
+  const starEl = document.createElement('i')
+  starEl.className = 'fas fa-star flying-star-animation'
+  document.body.appendChild(starEl)
 
-    // Dùng requestAnimationFrame để đảm bảo trình duyệt đã áp dụng style ban đầu
-    requestAnimationFrame(() => {
-        // Đặt vị trí cuối cùng để kích hoạt transition
-        starEl.style.transform = `translate(${endRect.left - startRect.left}px, ${endRect.top - startRect.top}px) scale(0.5)`;
-        starEl.style.opacity = '0';
-    });
+  const startRect = taskElement.getBoundingClientRect()
+  const totalExpEl = taskElement.closest('tr').querySelector('.fa-star') // Tìm ngôi sao của điểm tổng
+  const endRect = totalExpEl.getBoundingClientRect()
 
-    // Xóa ngôi sao sau khi animation kết thúc
-    setTimeout(() => starEl.remove(), 2000); // Tăng thời gian để khớp với hiệu ứng mới
+  // Đặt vị trí ban đầu của ngôi sao
+  starEl.style.left = `${startRect.left + startRect.width / 2}px`
+  starEl.style.top = `${startRect.top + startRect.height / 2}px`
 
-    // 4. Hiệu ứng trên điểm tổng
-    totalExpEl.parentElement.classList.add('animate-pulse-once');
-    setTimeout(() => {
-        totalExpEl.parentElement.classList.remove('animate-pulse-once');
-    }, 700);
+  // Dùng requestAnimationFrame để đảm bảo trình duyệt đã áp dụng style ban đầu
+  requestAnimationFrame(() => {
+    // Đặt vị trí cuối cùng để kích hoạt transition
+    starEl.style.transform = `translate(${endRect.left - startRect.left}px, ${endRect.top - startRect.top}px) scale(0.5)`
+    starEl.style.opacity = '0'
+  })
+
+  // Xóa ngôi sao sau khi animation kết thúc
+  setTimeout(() => starEl.remove(), 2000) // Tăng thời gian để khớp với hiệu ứng mới
+
+  // 4. Hiệu ứng trên điểm tổng
+  totalExpEl.parentElement.classList.add('animate-pulse-once')
+  setTimeout(() => {
+    totalExpEl.parentElement.classList.remove('animate-pulse-once')
+  }, 700)
 }
 
 /**
  * Render các nút điều khiển tuần và ngày.
  */
 export function renderWeekControls(activeDate) {
-    const dayContainer = document.querySelector('#daily-schedule-controls > div');
-    if (!dayContainer) return;
+  const dayContainer = document.querySelector('#daily-schedule-controls > div')
+  if (!dayContainer) return
 
-    const weekDates = [];
-    for (let i = 0; i < 7; i++) {
-        const date = new Date(viewStartDate);
-        date.setDate(date.getDate() + i);
-        weekDates.push(date);
-    }
+  const weekDates = []
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(viewStartDate)
+    date.setDate(date.getDate() + i)
+    weekDates.push(date)
+  }
 
-    // Render các nút ngày
-    const todayString = formatDate(new Date());
-    const selectedDateString = activeDate || document.querySelector('.day-selector-btn.active')?.dataset.date;
+  // Render các nút ngày
+  const todayString = formatDate(new Date())
+  const selectedDateString =
+    activeDate ||
+    document.querySelector('.day-selector-btn.active')?.dataset.date
 
-    // Xóa các nút ngày cũ trước khi render lại
-    dayContainer.querySelectorAll('.day-selector-btn').forEach(btn => btn.remove());
+  // Xóa các nút ngày cũ trước khi render lại
+  dayContainer
+    .querySelectorAll('.day-selector-btn')
+    .forEach(btn => btn.remove())
 
-    const dayButtonsHTML = weekDates.map((date, index) => {
-        const dateString = formatDate(date);
-        const dayName = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'][index];
-        const dayAndMonth = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
-        const isToday = dateString === todayString;
-        const isActive = dateString === selectedDateString;
+  const dayButtonsHTML = weekDates
+    .map((date, index) => {
+      const dateString = formatDate(date)
+      const dayName = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'][index]
+      const dayAndMonth = date.toLocaleDateString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+      })
+      const isToday = dateString === todayString
+      const isActive = dateString === selectedDateString
 
-        let classes = 'day-selector-btn btn-base px-3 h-auto text-xs font-semibold text-gray-700 hover:bg-gray-100 relative leading-tight text-center transition-colors duration-150';
-        
-        if (isActive) {
-            // Ngày đang được chọn sẽ có màu nổi bật nhất
-            classes += ' bg-indigo-600 text-white hover:bg-indigo-700';
-        } else if (isToday) { // Nếu là ngày hôm nay nhưng không được chọn, chỉ gạch chân
-            classes += ' border-b-2 border-indigo-500';
-        }
+      let classes =
+        'day-selector-btn btn-base px-3 h-auto text-xs font-semibold text-gray-700 hover:bg-gray-100 relative leading-tight text-center transition-colors duration-150'
 
-        return `
+      if (isActive) {
+        // Ngày đang được chọn sẽ có màu nổi bật nhất
+        classes += ' bg-indigo-600 text-white hover:bg-indigo-700'
+      } else if (isToday) {
+        // Nếu là ngày hôm nay nhưng không được chọn, chỉ gạch chân
+        classes += ' border-b-2 border-indigo-500'
+      }
+
+      return `
             <button class="${classes}" data-date="${dateString}" title="${date.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}">
                 <span class="text-sm">${dayName}</span>
                 <br>
                 <span class="font-normal">${dayAndMonth}</span>
             </button>
-        `;
-    }).join('');
+        `
+    })
+    .join('')
 
-    // Chèn các nút ngày vào giữa hai nút điều hướng tuần
-    const prevBtn = document.getElementById('prev-week-btn');
-    prevBtn.insertAdjacentHTML('afterend', dayButtonsHTML);
+  // Chèn các nút ngày vào giữa hai nút điều hướng tuần
+  const prevBtn = document.getElementById('prev-week-btn')
+  prevBtn.insertAdjacentHTML('afterend', dayButtonsHTML)
 
-    // Gắn lại sự kiện cho các nút ngày vừa tạo
-    dayContainer.querySelectorAll('.day-selector-btn').forEach(btn => {
-        btn.addEventListener('click', () => changeDay(btn.dataset.date));
-    });
+  // Gắn lại sự kiện cho các nút ngày vừa tạo
+  dayContainer.querySelectorAll('.day-selector-btn').forEach(btn => {
+    btn.addEventListener('click', () => changeDay(btn.dataset.date))
+  })
 }
 
 //#endregion
@@ -508,136 +599,153 @@ export function renderWeekControls(activeDate) {
  * Tạo và điền dữ liệu cho bộ lọc cửa hàng.
  */
 export function createStoreFilter(initialDateString) {
-    const container = document.getElementById('store-filter-container');
-    if (!container) return;
-    
-    const currentUser = window.currentUser;
-    const dateToLoad = initialDateString || formatDate(new Date());
+  const container = document.getElementById('store-filter-container')
+  if (!container) return
 
-    if (currentUser && (
-        currentUser.roleId === 'STAFF' || 
-        currentUser.roleId === 'STORE_LEADER_G2' || 
-        currentUser.roleId === 'STORE_LEADER_G3'
-    )) {
-        const staffStore = allStores.find(s => s.id === currentUser.storeId);
-        if (staffStore) {
-            // Hiển thị tên cửa hàng nhưng không cho phép thay đổi
-            container.innerHTML = `
+  const currentUser = window.currentUser
+  const dateToLoad = initialDateString || formatDate(new Date())
+
+  if (
+    currentUser &&
+    (currentUser.roleId === 'STAFF' ||
+      currentUser.roleId === 'STORE_LEADER_G2' ||
+      currentUser.roleId === 'STORE_LEADER_G3')
+  ) {
+    const staffStore = allStores.find(s => s.id === currentUser.storeId)
+    if (staffStore) {
+      // Hiển thị tên cửa hàng nhưng không cho phép thay đổi
+      container.innerHTML = `
                 <div class="flex-1 max-w-xs">
                     <label for="store-filter" class="sr-only">Cửa hàng</label>
                     <select id="store-filter" class="form-select w-full" disabled>
                         <option value="${staffStore.id}" selected>${staffStore.name}</option>
                     </select>
                 </div>
-            `;
-            // Tự động tải lịch cho cửa hàng của nhân viên
-            changeDay(dateToLoad, true);
-        } else {
-            container.innerHTML = `<div class="flex-1 max-w-xs text-sm text-gray-500">Bạn chưa được gán vào cửa hàng nào.</div>`;
-        }
+            `
+      // Tự động tải lịch cho cửa hàng của nhân viên
+      changeDay(dateToLoad, true)
     } else {
-        const accessibleStoreIds = [...new Set(allEmployees.map(emp => emp.storeId).filter(Boolean))];
-        const accessibleStores = allStores
-            .filter(store => accessibleStoreIds.includes(store.id))
-            .sort((a, b) => a.name.localeCompare(b.name));
-        
-        if (accessibleStores.length === 0) {
-            container.innerHTML = `<div class="flex-1 max-w-xs text-sm text-gray-500">Không có cửa hàng nào được quản lý.</div>`;
-            renderScheduleGrid();
-            return;
-        }
+      container.innerHTML = `<div class="flex-1 max-w-xs text-sm text-gray-500">Bạn chưa được gán vào cửa hàng nào.</div>`
+    }
+  } else {
+    const accessibleStoreIds = [
+      ...new Set(allEmployees.map(emp => emp.storeId).filter(Boolean)),
+    ]
+    const accessibleStores = allStores
+      .filter(store => accessibleStoreIds.includes(store.id))
+      .sort((a, b) => a.name.localeCompare(b.name))
 
-        const optionsHTML = accessibleStores.map(store => `<option value="${store.id}">${store.name}</option>`).join('');
-        container.innerHTML = `
+    if (accessibleStores.length === 0) {
+      container.innerHTML = `<div class="flex-1 max-w-xs text-sm text-gray-500">Không có cửa hàng nào được quản lý.</div>`
+      renderScheduleGrid()
+      return
+    }
+
+    const optionsHTML = accessibleStores
+      .map(store => `<option value="${store.id}">${store.name}</option>`)
+      .join('')
+    container.innerHTML = `
             <div class="flex-1 max-w-xs">
                 <label for="store-filter" class="sr-only">Lọc theo cửa hàng</label>
                 <select id="store-filter" class="form-select w-full">${optionsHTML}</select>
             </div>
-        `;
-        
-        const storeFilter = document.getElementById('store-filter');
-        storeFilter?.addEventListener('change', () => {
-            const selectedDate = document.querySelector('.day-selector-btn.active')?.dataset.date || dateToLoad;
-            changeDay(selectedDate, false);
-        });
+        `
 
-        // Tải lịch cho cửa hàng đầu tiên trong danh sách
-        changeDay(dateToLoad, true);
-    }
+    const storeFilter = document.getElementById('store-filter')
+    storeFilter?.addEventListener('change', () => {
+      const selectedDate =
+        document.querySelector('.day-selector-btn.active')?.dataset.date ||
+        dateToLoad
+      changeDay(selectedDate, false)
+    })
+
+    // Tải lịch cho cửa hàng đầu tiên trong danh sách
+    changeDay(dateToLoad, true)
+  }
 }
 //#endregion
 
 export function setIsInitialLoad(value) {
-    isInitialLoad = value;
+  isInitialLoad = value
 }
 
 //#region ATTENTION_ANIMATION
-let attentionInterval = null;
+let attentionInterval = null
 
 /**
  * Áp dụng hiệu ứng "nhảy" cho các task sắp đến hạn của người dùng hiện tại.
  */
 function applyAttentionAnimation(getCurrentScheduleData) {
-    const currentUser = window.currentUser;
-    if (!currentUser) {
-        return;
+  const currentUser = window.currentUser
+  if (!currentUser) {
+    return
+  }
+
+  const now = new Date()
+  const oneHour = 60 * 60 * 1000
+  const lowerBound = new Date(now.getTime() - oneHour) // 1 giờ trước
+  const upperBound = new Date(now.getTime() + oneHour) // 1 giờ sau
+
+  const currentScheduleData = getCurrentScheduleData() // Lấy dữ liệu mới nhất
+  const allTaskItems = document.querySelectorAll(
+    `.scheduled-task-item[data-employee-id="${currentUser.id}"]`
+  )
+
+  if (allTaskItems.length === 0) {
+    return
+  }
+
+  let attentionTaskCounter = 0 // Biến đếm để áp dụng delay tuần tự
+
+  allTaskItems.forEach(taskItem => {
+    // Luôn xóa animation cũ để reset trạng thái
+    taskItem.className = taskItem.className
+      .replace(/\btask-attention-?\S*\b/g, '')
+      .trim()
+
+    // Nếu task đã hoàn thành, bỏ qua
+    if (taskItem.classList.contains('task-completed')) {
+      return
     }
 
-    const now = new Date();
-    const oneHour = 60 * 60 * 1000;
-    const lowerBound = new Date(now.getTime() - oneHour); // 1 giờ trước
-    const upperBound = new Date(now.getTime() + oneHour); // 1 giờ sau
+    const scheduleId = taskItem.dataset.scheduleId
+    const taskIndex = parseInt(taskItem.dataset.taskIndex, 10)
 
-    const currentScheduleData = getCurrentScheduleData(); // Lấy dữ liệu mới nhất
-    const allTaskItems = document.querySelectorAll(`.scheduled-task-item[data-employee-id="${currentUser.id}"]`);
-    
-    if (allTaskItems.length === 0) {
-        return;
+    const schedule = currentScheduleData.find(s => s.id === scheduleId)
+    if (!schedule || !schedule.tasks || !schedule.tasks[taskIndex]) return
+
+    const task = schedule.tasks[taskIndex]
+    const [year, month, day] = schedule.date.split('-').map(Number)
+    const [hour, minute] = task.startTime.split(':').map(Number)
+    const taskStartDateTime = new Date(year, month - 1, day, hour, minute)
+
+    // Kiểm tra xem task có nằm trong khoảng thời gian cần chú ý không
+    if (taskStartDateTime >= lowerBound && taskStartDateTime <= upperBound) {
+      // Áp dụng class gốc và class delay
+      const delayIndex = attentionTaskCounter % 5 // Lặp lại delay từ 0 đến 4
+      taskItem.classList.add(
+        'task-attention',
+        `task-attention-delay-${delayIndex}`
+      )
+      attentionTaskCounter++
     }
-
-    let attentionTaskCounter = 0; // Biến đếm để áp dụng delay tuần tự
-
-    allTaskItems.forEach(taskItem => {
-        // Luôn xóa animation cũ để reset trạng thái
-        taskItem.className = taskItem.className.replace(/\btask-attention-?\S*\b/g, '').trim();
-
-        // Nếu task đã hoàn thành, bỏ qua
-        if (taskItem.classList.contains('task-completed')) {
-            return;
-        }
-
-        const scheduleId = taskItem.dataset.scheduleId;
-        const taskIndex = parseInt(taskItem.dataset.taskIndex, 10);
-
-        const schedule = currentScheduleData.find(s => s.id === scheduleId);
-        if (!schedule || !schedule.tasks || !schedule.tasks[taskIndex]) return;
-
-        const task = schedule.tasks[taskIndex];
-        const [year, month, day] = schedule.date.split('-').map(Number);
-        const [hour, minute] = task.startTime.split(':').map(Number);
-        const taskStartDateTime = new Date(year, month - 1, day, hour, minute);
-
-        // Kiểm tra xem task có nằm trong khoảng thời gian cần chú ý không
-        if (taskStartDateTime >= lowerBound && taskStartDateTime <= upperBound) {
-            // Áp dụng class gốc và class delay
-            const delayIndex = attentionTaskCounter % 5; // Lặp lại delay từ 0 đến 4
-            taskItem.classList.add('task-attention', `task-attention-delay-${delayIndex}`);
-            attentionTaskCounter++;
-        }
-    });
+  })
 }
 
 /**
  * Bắt đầu một interval để cập nhật hiệu ứng chú ý cho các task.
  */
 export function startAttentionAnimationInterval(getCurrentScheduleData) {
-    // Dừng interval cũ nếu có để tránh chạy nhiều lần
-    if (attentionInterval) {
-        clearInterval(attentionInterval);
-    }
-    // Chạy lần đầu ngay lập tức (đã được chuyển vào renderScheduleGrid)
-    // applyAttentionAnimation(getCurrentScheduleData);
-    // Thiết lập interval chạy mỗi phút
-    attentionInterval = setInterval(() => applyAttentionAnimation(getCurrentScheduleData), 60 * 1000);
+  // Dừng interval cũ nếu có để tránh chạy nhiều lần
+  if (attentionInterval) {
+    clearInterval(attentionInterval)
+  }
+  // Chạy lần đầu ngay lập tức (đã được chuyển vào renderScheduleGrid)
+  // applyAttentionAnimation(getCurrentScheduleData);
+  // Thiết lập interval chạy mỗi phút
+  attentionInterval = setInterval(
+    () => applyAttentionAnimation(getCurrentScheduleData),
+    60 * 1000
+  )
 }
 //#endregion
