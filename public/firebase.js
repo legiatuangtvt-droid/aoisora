@@ -7,13 +7,13 @@ import { getFirestore } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: 'AIzaSyCCqF3nDxn2iZM7H7-faqbE4wj504fUhq4',
-  authDomain: 'groovy-form-475007-a0.firebaseapp.com',
-  projectId: 'groovy-form-475007-a0',
-  storageBucket: 'groovy-form-475007-a0.firebasestorage.app',
-  messagingSenderId: '892553827299',
-  appId: '1:892553827299:web:abd3290e5988c0793e06d6',
-  measurementId: 'G-V4NCH9WSHP',
+  apiKey: 'AIzaSyALtlRjftwnm5EuE8u18wKYffAX2q9eypY',
+  authDomain: 'aoisorademo.firebaseapp.com',
+  projectId: 'aoisorademo',
+  storageBucket: 'aoisorademo.firebasestorage.app',
+  messagingSenderId: '299970670646',
+  appId: '1:299970670646:web:ef7106bff089d21e6aa897',
+  measurementId: 'G-P4P0NB18V3',
 }
 
 // Initialize Firebase
