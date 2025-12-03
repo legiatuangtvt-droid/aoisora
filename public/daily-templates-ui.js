@@ -331,7 +331,7 @@ export function renderGrid(templateData = null) {
                 : { bg: '#e2e8f0', text: '#1e293b', border: '#94a3b8' }
             taskItemHtml = `
                             <div class="scheduled-task-item relative group w-[70px] h-[100px] border-2 text-xs p-1 rounded-md shadow-sm flex flex-col justify-between items-center text-center"
-                                 data-task-code="${task.taskCode}" data-group-id="${task.groupId}"
+                                 data-task-code="${task.taskCode || ''}" data-group-id="${task.groupId}"
                                  style="background-color: ${color.bg}; color: ${color.text}; border-color: ${color.border};">
                                 <!-- Tay nắm để kéo nhân bản task -->
                                 <div class="resize-handle resize-handle-left" data-direction="left"></div>

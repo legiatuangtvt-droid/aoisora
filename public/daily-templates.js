@@ -530,12 +530,12 @@ export async function init() {
           currentUser.roleId === 'AREA_MANAGER')
 
       if (isManager) {
-        // Đối với RM/AM, giá trị là planId. Cần tìm templateId từ plan đó.
-        const plan = allTemplates.find(p => p.id === selectedValue) // allTemplates bây giờ chứa plans cho RM
-        if (plan) {
-          await loadTemplate(plan.templateId)
-        }
+        // Đối với RM/AM, giá trị là planId.
+        // Khi họ chọn một plan khác từ dropdown, chúng ta chỉ cần tải lại plan đó.
+        // Hàm loadAppliedPlanForManager đã có sẵn logic để xử lý việc này.
+        await loadAppliedPlanForManager(selectedValue)
       } else {
+        // Logic cho HQ/Admin không đổi
         await loadTemplate(selectedValue)
       }
     },

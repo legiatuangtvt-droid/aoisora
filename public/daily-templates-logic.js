@@ -33,6 +33,7 @@ import {
   originalTemplateData,
   allWorkPositions,
   allTaskGroups,
+  allShiftCodes,
   fetchAndRenderTemplates,
   setCurrentTemplateId,
   setOriginalTemplateData,
@@ -40,6 +41,7 @@ import {
   setCurrentMonthlyPlan,
 } from './daily-templates-data.js'
 import { initializeDragAndDrop } from './daily-templates.js'
+import { timeToMinutes } from './utils.js'
 import { generateSchedule } from './auto-generator.js'
 import { formatDate } from './utils.js'
 import './confirmation-modal.js'
@@ -442,41 +444,72 @@ export async function deleteCurrentTemplate() {
  * So sánh mẫu hiện tại với mẫu gốc và hiển thị/ẩn nút Reset.
  */
 export function checkTemplateChangesAndToggleResetButton() {
+  console.log('[ChangeCheck] Running change detection for RM/AM...')
   const currentUser = window.currentUser
   if (
     !currentUser ||
     currentUser.roleId === 'HQ_STAFF' ||
     currentUser.roleId === 'ADMIN' ||
-    !originalTemplateData
+    !originalTemplateData // Bỏ qua nếu không có dữ liệu gốc để so sánh
   ) {
+    console.log('[ChangeCheck] Skipped: Not a manager or no original data.')
     return
   }
 
+  // --- LOGIC SỬA LỖI: Chỉ tính toán các slot hợp lệ ---
   const createTaskMap = schedule => {
     const map = new Map()
     if (!schedule) return map
+
+    // Lấy thông tin shiftMappings từ bản gốc để biết mã ca của từng dòng
+    const originalShiftMappings = originalTemplateData?.shiftMappings || {}
+
     for (const shiftId in schedule) {
+      const shiftMapping = originalShiftMappings[shiftId]
+      if (!shiftMapping || !shiftMapping.shiftCode) continue // Bỏ qua nếu dòng không có mã ca
+
+      // Tìm thông tin chi tiết của ca làm việc
+      const shiftInfo = allShiftCodes.find(
+        sc => sc.shiftCode === shiftMapping.shiftCode
+      )
+      if (!shiftInfo || !shiftInfo.timeRange) continue // Bỏ qua nếu không có thông tin giờ làm việc
+
+      const [startStr, endStr] = shiftInfo.timeRange.split('~').map(s => s.trim())
+      const shiftStartMinutes = timeToMinutes(startStr)
+      const shiftEndMinutes = timeToMinutes(endStr)
+
       for (const task of schedule[shiftId]) {
-        const [hour, quarter] = task.startTime.split(':')
-        const time = `${parseInt(hour, 10)}:00`
-        const key = `${shiftId}_${time}_${quarter}`
-        map.set(key, task.taskCode)
+        const taskStartMinutes = timeToMinutes(task.startTime)
+
+        // Chỉ thêm task vào map nếu nó nằm trong khung giờ làm việc hợp lệ của ca
+        if (taskStartMinutes >= shiftStartMinutes && taskStartMinutes < shiftEndMinutes) {
+          const [hour, quarter] = task.startTime.split(':')
+          // SỬA LỖI: Đảm bảo giờ luôn có 2 chữ số (e.g., "06:00") để nhất quán với key từ DOM.
+          const time = `${hour.padStart(2, '0')}:00`
+          const key = `${shiftId}_${time}_${quarter}`
+          map.set(key, task.taskCode)
+        }
       }
     }
     return map
   }
 
   const originalTaskMap = createTaskMap(originalTemplateData.schedule)
+  console.log('originalTaskMap:', originalTaskMap)
 
+  // Tạo bản đồ các task từ trạng thái hiện tại của lưới trên giao diện (DOM)
   const currentTaskMap = new Map()
+  console.log('currentTaskMap trước khi build từ DOM:', currentTaskMap)
+  console.log('[ChangeCheck-Build-Current] Building current task map from DOM...')
   document
     .querySelectorAll('#template-builder-grid-container .scheduled-task-item')
     .forEach(taskItem => {
       const slot = taskItem.closest('.quarter-hour-slot')
       if (!slot) return
-      const key = `${slot.dataset.shiftId}_${slot.dataset.time}_${slot.dataset.quarter}`
+      const key = `${slot.dataset.shiftId}_${slot.dataset.time}_${slot.dataset.quarter}`      
       currentTaskMap.set(key, taskItem.dataset.taskCode)
     })
+  console.log('currentTaskMap sau khi build từ DOM:', currentTaskMap)
 
   let changedSlotCount = 0
   const allSlotKeys = new Set([
@@ -484,12 +517,53 @@ export function checkTemplateChangesAndToggleResetButton() {
     ...currentTaskMap.keys(),
   ])
 
+  let firstChangeLogged = false // Cờ để chỉ log sự thay đổi đầu tiên
+  console.log('[ChangeCheck] Comparing slots...')
   allSlotKeys.forEach(key => {
     const originalTaskCode = originalTaskMap.get(key)
     const currentTaskCode = currentTaskMap.get(key)
 
     if (originalTaskCode !== currentTaskCode) {
       changedSlotCount++
+
+      // Chỉ log chi tiết cho sự thay đổi đầu tiên tìm thấy
+      if (!firstChangeLogged) {
+        // --- LOG GỠ LỖI NÂNG CAO ---
+        // Phân tích key để lấy thông tin chi tiết hơn
+        console.log('[ChangeCheck] Detected first change at slot key:', key)
+        const [shiftId, hour, quarter] = key.split('_')
+        const fullTime = `${hour.split(':')[0]}:${quarter}`
+
+        // Lấy thông tin về ca và vị trí từ dữ liệu gốc
+        const shiftMapping = originalTemplateData?.shiftMappings?.[shiftId] || {}
+        const positionInfo = allWorkPositions.find(
+          p => p.id === shiftMapping.positionId
+        )
+        const shiftInfo = allShiftCodes.find(
+          sc => sc.shiftCode === shiftMapping.shiftCode
+        )
+
+        const positionName = positionInfo?.name || 'Chưa xác định'
+        const shiftCode = shiftInfo?.shiftCode || 'Chưa có ca'
+
+        // DEBUG: Log the element itself for inspection
+        const slotElement = document.querySelector(`.quarter-hour-slot[data-shift-id="${shiftId}"][data-time="${hour}"][data-quarter="${quarter}"]`)
+        const taskElementInSlot = slotElement ? slotElement.querySelector('.scheduled-task-item') : null
+
+        console.log(
+          `[ChangeCheck] First change found at: %c${fullTime}%c | Vị trí: %c${positionName}%c (Ca: ${shiftCode}) | Original: ${originalTaskCode || 'empty'} | Current: ${currentTaskCode || 'empty'}`,
+          'font-weight: bold; color: blue;', // Style cho thời gian
+          'font-weight: normal; color: black;', // Reset style
+          'font-weight: bold; color: green;', // Style cho vị trí
+          'font-weight: normal; color: black;' // Reset style
+        )
+        console.log('[ChangeCheck-Inspect] The task element in the DOM for this slot is:', taskElementInSlot)
+        if (taskElementInSlot) {
+          console.log('[ChangeCheck-Inspect] Its data-task-code attribute is:', taskElementInSlot.dataset.taskCode)
+        }
+
+        firstChangeLogged = true // Đánh dấu đã log, không log thêm nữa
+      }
     }
   })
 
@@ -500,6 +574,11 @@ export function checkTemplateChangesAndToggleResetButton() {
       : changedSlotCount > 0
         ? 100
         : 0
+
+  console.log('[ChangeCheck] Total changed slots:', changedSlotCount)
+  console.log('[ChangeCheck] Total original slots:', totalOriginalSlots)
+  console.log('[ChangeCheck] Calculated change percentage:', changePercentage)
+  console.log('-----------------------------------------')
 
   const resetButton = document.getElementById('reset-template-btn')
   const percentageDisplay = document.getElementById('reset-percentage-display')
@@ -775,7 +854,10 @@ async function fetchAllRegions() {
 /**
  * (Dành cho RM/AM) Tải kế hoạch và mẫu được áp dụng gần nhất.
  */
-export async function loadAppliedPlanForManager() {
+export async function loadAppliedPlanForManager(selectedPlanId = null) {
+  // Hàm này giờ có thể nhận một planId cụ thể (khi người dùng chọn từ dropdown)
+  // hoặc tự động tìm plan gần nhất (khi tải trang lần đầu).
+
   const currentUser = window.currentUser // Sửa lỗi: Thêm khai báo currentUser
   if (!currentUser) {
     return
@@ -839,11 +921,44 @@ export async function loadAppliedPlanForManager() {
     // Render danh sách kế hoạch vào dropdown
     await window.renderMonthlyPlansForManager(allPlansForRegion)
 
-    // Tự động chọn và tải kế hoạch gần nhất (đầu tiên trong danh sách đã sắp xếp)
-    const latestPlan = allPlansForRegion[0]
-    setCurrentMonthlyPlan(latestPlan)
-    document.getElementById('template-selector').value = latestPlan.id
-    await loadTemplate(latestPlan.templateId)
+    // --- LOGIC MỚI: Xác định plan nào cần tải ---
+    // Nếu có planId được truyền vào (từ dropdown), tìm nó.
+    // Nếu không, mặc định lấy plan gần nhất (đầu tiên trong danh sách).
+    const planToLoad = selectedPlanId
+      ? allPlansForRegion.find(p => p.id === selectedPlanId)
+      : allPlansForRegion[0]
+
+    if (!planToLoad) {
+      window.showToast('Không tìm thấy kế hoạch được chọn.', 'error')
+      return
+    }
+    // --- LOGIC SỬA LỖI ---
+    // Bước 1: Tải dữ liệu mẫu gốc từ `daily_templates` và lưu nó vào `originalTemplateData`.
+    // `loadTemplateData` sẽ thực hiện việc này.
+    const originalData = await loadTemplateData(planToLoad.templateId)
+
+    if (!originalData) {
+      window.showToast('Không thể tải dữ liệu mẫu gốc.', 'error')
+      renderGrid() // Render lưới trống nếu có lỗi
+      return
+    }
+
+    // Bước 2: Tạo một bản sao của dữ liệu gốc để áp dụng các thay đổi của RM.
+    let dataToRender = JSON.parse(JSON.stringify(originalData))
+
+    // Bước 3: Nếu có thay đổi từ RM được lưu trong plan, hợp nhất chúng vào `dataToRender`.
+    if (planToLoad.rmChanges) {
+      // Ghi đè schedule và shiftMappings bằng dữ liệu đã lưu của RM
+      dataToRender.schedule = planToLoad.rmChanges.schedule || dataToRender.schedule
+      dataToRender.shiftMappings = planToLoad.rmChanges.shiftMappings || dataToRender.shiftMappings
+    }
+
+    // Bước 4: Render lưới với dữ liệu đã được hợp nhất. `originalTemplateData` vẫn là bản gốc.
+    setCurrentTemplateId(planToLoad.templateId)
+    renderGrid(dataToRender)
+    toggleTemplateBuilderLock(true) // Khóa giao diện cho RM
+    updateTemplateStats()
+    checkTemplateChangesAndToggleResetButton() // Bây giờ việc so sánh sẽ chính xác
 
     // Cập nhật dòng trạng thái cho RM/AM
     const statusContainer = document.getElementById(
@@ -853,17 +968,20 @@ export async function loadAppliedPlanForManager() {
     if (statusContainer && statusDisplay) {
       statusContainer.classList.remove('hidden')
       const statusText =
-        planStatusMessages[latestPlan.status] ||
-        `Trạng thái: ${latestPlan.status}`
-      // Sửa lỗi: Kiểm tra xem cycleStartDate có phải là Timestamp không trước khi gọi toDate()
-      const cycleDate = latestPlan.cycleStartDate.toDate
-        ? latestPlan.cycleStartDate.toDate()
-        : new Date(latestPlan.cycleStartDate)
+        planStatusMessages[planToLoad.status] ||
+        `Trạng thái: ${planToLoad.status}`
+      const cycleDate = planToLoad.cycleStartDate.toDate
+        ? planToLoad.cycleStartDate.toDate()
+        : new Date(planToLoad.cycleStartDate)
       statusDisplay.textContent = `Kế hoạch chu kỳ ${cycleDate.toLocaleDateString('vi-VN')}. ${statusText}`
     }
 
-    // FIX: Gọi renderPlanTracker để cập nhật nội dung modal theo dõi tiến độ ngay khi tải trang
-    await renderPlanTracker(latestPlan)
+    await renderPlanTracker(planToLoad)
+
+    // Chọn đúng plan trong dropdown
+    document.getElementById('template-selector').value = planToLoad.id
+    // Cập nhật plan hiện tại vào biến toàn cục
+    setCurrentMonthlyPlan(planToLoad)
   }
 }
 
