@@ -444,7 +444,6 @@ export async function deleteCurrentTemplate() {
  * So sánh mẫu hiện tại với mẫu gốc và hiển thị/ẩn nút Reset.
  */
 export function checkTemplateChangesAndToggleResetButton() {
-  console.log('[ChangeCheck] Running change detection for RM/AM...')
   const currentUser = window.currentUser
   if (
     !currentUser ||
@@ -452,7 +451,6 @@ export function checkTemplateChangesAndToggleResetButton() {
     currentUser.roleId === 'ADMIN' ||
     !originalTemplateData // Bỏ qua nếu không có dữ liệu gốc để so sánh
   ) {
-    console.log('[ChangeCheck] Skipped: Not a manager or no original data.')
     return
   }
 
@@ -495,12 +493,9 @@ export function checkTemplateChangesAndToggleResetButton() {
   }
 
   const originalTaskMap = createTaskMap(originalTemplateData.schedule)
-  console.log('originalTaskMap:', originalTaskMap)
 
   // Tạo bản đồ các task từ trạng thái hiện tại của lưới trên giao diện (DOM)
   const currentTaskMap = new Map()
-  console.log('currentTaskMap trước khi build từ DOM:', currentTaskMap)
-  console.log('[ChangeCheck-Build-Current] Building current task map from DOM...')
   document
     .querySelectorAll('#template-builder-grid-container .scheduled-task-item')
     .forEach(taskItem => {
@@ -509,7 +504,6 @@ export function checkTemplateChangesAndToggleResetButton() {
       const key = `${slot.dataset.shiftId}_${slot.dataset.time}_${slot.dataset.quarter}`      
       currentTaskMap.set(key, taskItem.dataset.taskCode)
     })
-  console.log('currentTaskMap sau khi build từ DOM:', currentTaskMap)
 
   let changedSlotCount = 0
   const allSlotKeys = new Set([
@@ -517,53 +511,12 @@ export function checkTemplateChangesAndToggleResetButton() {
     ...currentTaskMap.keys(),
   ])
 
-  let firstChangeLogged = false // Cờ để chỉ log sự thay đổi đầu tiên
-  console.log('[ChangeCheck] Comparing slots...')
   allSlotKeys.forEach(key => {
     const originalTaskCode = originalTaskMap.get(key)
     const currentTaskCode = currentTaskMap.get(key)
 
     if (originalTaskCode !== currentTaskCode) {
       changedSlotCount++
-
-      // Chỉ log chi tiết cho sự thay đổi đầu tiên tìm thấy
-      if (!firstChangeLogged) {
-        // --- LOG GỠ LỖI NÂNG CAO ---
-        // Phân tích key để lấy thông tin chi tiết hơn
-        console.log('[ChangeCheck] Detected first change at slot key:', key)
-        const [shiftId, hour, quarter] = key.split('_')
-        const fullTime = `${hour.split(':')[0]}:${quarter}`
-
-        // Lấy thông tin về ca và vị trí từ dữ liệu gốc
-        const shiftMapping = originalTemplateData?.shiftMappings?.[shiftId] || {}
-        const positionInfo = allWorkPositions.find(
-          p => p.id === shiftMapping.positionId
-        )
-        const shiftInfo = allShiftCodes.find(
-          sc => sc.shiftCode === shiftMapping.shiftCode
-        )
-
-        const positionName = positionInfo?.name || 'Chưa xác định'
-        const shiftCode = shiftInfo?.shiftCode || 'Chưa có ca'
-
-        // DEBUG: Log the element itself for inspection
-        const slotElement = document.querySelector(`.quarter-hour-slot[data-shift-id="${shiftId}"][data-time="${hour}"][data-quarter="${quarter}"]`)
-        const taskElementInSlot = slotElement ? slotElement.querySelector('.scheduled-task-item') : null
-
-        console.log(
-          `[ChangeCheck] First change found at: %c${fullTime}%c | Vị trí: %c${positionName}%c (Ca: ${shiftCode}) | Original: ${originalTaskCode || 'empty'} | Current: ${currentTaskCode || 'empty'}`,
-          'font-weight: bold; color: blue;', // Style cho thời gian
-          'font-weight: normal; color: black;', // Reset style
-          'font-weight: bold; color: green;', // Style cho vị trí
-          'font-weight: normal; color: black;' // Reset style
-        )
-        console.log('[ChangeCheck-Inspect] The task element in the DOM for this slot is:', taskElementInSlot)
-        if (taskElementInSlot) {
-          console.log('[ChangeCheck-Inspect] Its data-task-code attribute is:', taskElementInSlot.dataset.taskCode)
-        }
-
-        firstChangeLogged = true // Đánh dấu đã log, không log thêm nữa
-      }
     }
   })
 
@@ -574,11 +527,6 @@ export function checkTemplateChangesAndToggleResetButton() {
       : changedSlotCount > 0
         ? 100
         : 0
-
-  console.log('[ChangeCheck] Total changed slots:', changedSlotCount)
-  console.log('[ChangeCheck] Total original slots:', totalOriginalSlots)
-  console.log('[ChangeCheck] Calculated change percentage:', changePercentage)
-  console.log('-----------------------------------------')
 
   const resetButton = document.getElementById('reset-template-btn')
   const percentageDisplay = document.getElementById('reset-percentage-display')
