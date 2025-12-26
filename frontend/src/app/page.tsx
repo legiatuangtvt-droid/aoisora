@@ -39,46 +39,123 @@ export default function Home() {
           <p className="text-xl text-gray-600">Work Schedule and Dispatch Work Schedule Management System</p>
         </div>
 
-        <div className={`p-6 rounded-xl border-2 mb-8 ${backendStatus ? 'bg-green-50 border-green-300' : loading ? 'bg-yellow-50 border-yellow-300' : 'bg-red-50 border-red-300'}`}>
-          <div className="flex items-center gap-3 mb-3">
-            <div className={`w-4 h-4 rounded-full ${backendStatus ? 'bg-green-500' : loading ? 'bg-yellow-500' : 'bg-red-500'}`} />
-            <span className="text-lg font-semibold">
-              Backend API: {backendStatus ? '✅ Connected' : loading ? '⏳ Connecting...' : '❌ Disconnected'}
+        {/* Backend Status */}
+        <div className={`p-4 rounded-xl border-2 mb-8 ${backendStatus ? 'bg-green-50 border-green-300' : loading ? 'bg-yellow-50 border-yellow-300' : 'bg-red-50 border-red-300'}`}>
+          <div className="flex items-center gap-3">
+            <div className={`w-3 h-3 rounded-full ${backendStatus ? 'bg-green-500' : loading ? 'bg-yellow-500 animate-pulse' : 'bg-red-500'}`} />
+            <span className="font-medium">
+              Backend: {backendStatus ? 'Connected' : loading ? 'Connecting...' : 'Disconnected'}
+              {backendStatus && <span className="text-gray-500 ml-2">v{backendStatus.version}</span>}
             </span>
           </div>
-          {backendStatus && (
-            <div className="p-4 bg-white rounded-lg border">
-              <p><strong>Message:</strong> {backendStatus.message}</p>
-              <p><strong>Version:</strong> {backendStatus.version}</p>
-              <p><strong>Status:</strong> {backendStatus.status}</p>
-            </div>
-          )}
-          {error && (
-            <div className="mt-3 p-4 bg-red-100 rounded-lg">
-              <p className="text-red-800">{error}</p>
-            </div>
-          )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="p-6 border rounded-lg bg-white">
-            <h2 className="text-2xl font-semibold mb-4">WS - Work Schedule</h2>
-            <ul className="space-y-2 text-gray-700">
-              <li>✓ Task Management</li>
-              <li>✓ Checklist System</li>
-              <li>✓ Notifications</li>
-              <li>✓ Reporting</li>
-            </ul>
+        {/* DWS Section */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-4 text-indigo-700">DWS - Dispatch Work Schedule</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Link href="/dws/daily-schedule" className="block p-6 border-2 rounded-xl bg-white hover:border-indigo-400 hover:shadow-lg transition-all group">
+              <div className="flex items-center gap-4 mb-3">
+                <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
+                  <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800">Lich Hang Ngay</h3>
+                  <p className="text-sm text-gray-500">Daily Schedule</p>
+                </div>
+              </div>
+              <p className="text-gray-600 text-sm">Xem va quan ly lich lam viec hang ngay cua nhan vien theo tung ca.</p>
+            </Link>
+
+            <Link href="/dws/workforce-dispatch" className="block p-6 border-2 rounded-xl bg-white hover:border-indigo-400 hover:shadow-lg transition-all group">
+              <div className="flex items-center gap-4 mb-3">
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800">Dieu Phoi Nhan Luc</h3>
+                  <p className="text-sm text-gray-500">Workforce Dispatch</p>
+                </div>
+              </div>
+              <p className="text-gray-600 text-sm">Dieu phoi nhan luc giua cac cua hang theo chu ky luong.</p>
+            </Link>
+
+            <Link href="/dws/shift-codes" className="block p-6 border-2 rounded-xl bg-white hover:border-indigo-400 hover:shadow-lg transition-all group">
+              <div className="flex items-center gap-4 mb-3">
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800">Quan Ly Ma Ca</h3>
+                  <p className="text-sm text-gray-500">Shift Codes</p>
+                </div>
+              </div>
+              <p className="text-gray-600 text-sm">Quan ly cac ma ca lam viec va khung gio tuong ung.</p>
+            </Link>
           </div>
-          <div className="p-6 border rounded-lg bg-white">
-            <h2 className="text-2xl font-semibold mb-4">DWS - Dispatch Work Schedule</h2>
-            <ul className="space-y-2 text-gray-700">
-              <li>✓ Shift Management</li>
-              <li>✓ Staff Assignment</li>
-              <li>✓ Schedule Templates</li>
-              <li>✓ Monthly Planning</li>
-            </ul>
+        </div>
+
+        {/* WS Section */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-4 text-teal-700">WS - Work Schedule</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Link href="/tasks" className="block p-6 border-2 rounded-xl bg-white hover:border-teal-400 hover:shadow-lg transition-all group">
+              <div className="flex items-center gap-4 mb-3">
+                <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center group-hover:bg-teal-200 transition-colors">
+                  <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800">Quan Ly Cong Viec</h3>
+                  <p className="text-sm text-gray-500">Task Management</p>
+                </div>
+              </div>
+              <p className="text-gray-600 text-sm">Theo doi va quan ly cong viec hang ngay.</p>
+            </Link>
+
+            <div className="p-6 border-2 border-dashed rounded-xl bg-gray-50">
+              <div className="flex items-center gap-4 mb-3">
+                <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-400">Thong Bao</h3>
+                  <p className="text-sm text-gray-400">Notifications</p>
+                </div>
+              </div>
+              <p className="text-gray-400 text-sm">Dang phat trien...</p>
+            </div>
+
+            <div className="p-6 border-2 border-dashed rounded-xl bg-gray-50">
+              <div className="flex items-center gap-4 mb-3">
+                <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-400">Bao Cao</h3>
+                  <p className="text-sm text-gray-400">Reports</p>
+                </div>
+              </div>
+              <p className="text-gray-400 text-sm">Dang phat trien...</p>
+            </div>
           </div>
+        </div>
+
+        {/* Footer Info */}
+        <div className="text-center text-sm text-gray-500 mt-8 pt-8 border-t">
+          <p>OptiChain WS & DWS - Work Schedule Management System</p>
+          {error && <p className="text-red-500 mt-2">{error}</p>}
         </div>
       </div>
     </main>
