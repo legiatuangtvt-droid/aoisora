@@ -89,7 +89,8 @@ git push origin develop_WS_DWS_ver1
 ### Documentation
 
 **🆓 Deploy Miễn Phí (Recommended cho Testing):**
-- [FREE Deployment Guide](docs/DEPLOY-FREE-ALTERNATIVES.md) - Railway + Vercel + Supabase ($0/tháng)
+- [Option 1: Railway + Vercel + Supabase](docs/DEPLOY-FREE-ALTERNATIVES.md) - Không sleep, 500 giờ/tháng
+- [Option 2: Render + Netlify + Neon](docs/DEPLOY-RENDER-NETLIFY-NEON.md) - FREE vĩnh viễn, có sleep
 
 **💰 Deploy Production (Khi có budget):**
 - [Backend → Cloud Run](docs/DEPLOY-BACKEND-CLOUDRUN.md) - Step-by-step deploy Backend
