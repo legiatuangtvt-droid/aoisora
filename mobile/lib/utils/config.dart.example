@@ -1,0 +1,60 @@
+/// OptiChain Mobile App Configuration
+/// Copy this file to config.dart and update with your backend URLs
+
+class Config {
+  // ===========================================
+  // OPTION 1: Render + Netlify + Neon (FREE Forever)
+  // ===========================================
+  static const String renderApiUrl =
+      'https://optichain-backend.onrender.com/api/v1';
+
+  // ===========================================
+  // OPTION 2: Railway + Vercel + Supabase (FREE 500 hours)
+  // ===========================================
+  static const String railwayApiUrl =
+      'https://optichain-backend-production.up.railway.app/api/v1';
+
+  // ===========================================
+  // OPTION 3: Cloud Run + Firebase (Production - Paid)
+  // ===========================================
+  static const String cloudRunApiUrl =
+      'https://optichain-backend-abc123-uc.a.run.app/api/v1';
+
+  // ===========================================
+  // Local Development
+  // ===========================================
+  static const String localApiUrl = 'http://10.0.2.2:8000/api/v1'; // Android Emulator
+  // static const String localApiUrl = 'http://localhost:8000/api/v1'; // iOS Simulator
+
+  // ===========================================
+  // CURRENT CONFIGURATION
+  // ===========================================
+  // Change this to switch between environments
+  static const String apiUrl = renderApiUrl; // <-- CHANGE THIS
+
+  // Environment detection (optional)
+  static String get currentApiUrl {
+    // You can add logic here for different build flavors
+    const environment = String.fromEnvironment('ENV', defaultValue: 'production');
+
+    switch (environment) {
+      case 'local':
+        return localApiUrl;
+      case 'render':
+        return renderApiUrl;
+      case 'railway':
+        return railwayApiUrl;
+      case 'production':
+        return cloudRunApiUrl;
+      default:
+        return apiUrl;
+    }
+  }
+
+  // API Timeout
+  static const Duration apiTimeout = Duration(seconds: 60); // Longer for Render wake-up
+
+  // App Info
+  static const String appName = 'OptiChain';
+  static const String appVersion = '1.0.0';
+}
