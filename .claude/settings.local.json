@@ -10,7 +10,9 @@
       "Bash(tar:*)",
       "Bash(mv:*)",
       "Bash(find:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }

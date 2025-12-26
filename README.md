@@ -65,6 +65,31 @@ Xem hướng dẫn chi tiết trong từng thư mục:
 - **Schema**: Xem [database/schema.sql](database/schema.sql)
 - **Migrations**: Alembic (Python)
 
+## Deployment
+
+### Production Stack
+- **Backend**: Google Cloud Run (FastAPI + Python)
+- **Frontend**: Firebase Hosting (Next.js Static)
+- **Mobile**: Codemagic CI/CD (iOS + Android)
+- **Database**: Cloud SQL PostgreSQL
+
+### Quick Deploy
+
+```bash
+# Deploy backend to Cloud Run
+./scripts/deploy-backend.sh
+
+# Deploy frontend to Firebase
+./scripts/deploy-frontend.sh
+
+# Mobile: Push to GitHub triggers Codemagic build
+git push origin develop_WS_DWS_ver1
+```
+
+### Documentation
+- [Deployment Guide](docs/DEPLOYMENT.md) - Chi tiết deployment cho production
+- [Codemagic Config](codemagic.yaml) - CI/CD configuration cho mobile app
+
 ## License
 
 Proprietary - Aoi Sora Project

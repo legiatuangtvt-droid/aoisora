@@ -1,0 +1,97 @@
+workflows:
+  ios-android-workflow:
+    name: iOS & Android Workflow
+    max_build_duration: 120
+    instance_type: mac_mini_m1
+    
+    environment:
+      groups:
+        # Add your environment variable groups here
+        - app_credentials
+      vars:
+        FLUTTER_VERSION: "3.16.0"
+        XCODE_WORKSPACE: "Runner.xcworkspace"
+        XCODE_SCHEME: "Runner"
+      
+      flutter: $FLUTTER_VERSION
+      xcode: latest
+      cocoapods: default
+    
+    scripts:
+      - name: Get Flutter packages
+        script: |
+          cd mobile
+          flutter packages pub get
+      
+      - name: Flutter analyze
+        script: |
+          cd mobile
+          flutter analyze
+      
+      - name: Build Android APK
+        script: |
+          cd mobile
+          flutter build apk --release
+      
+      - name: Build Android App Bundle
+        script: |
+          cd mobile
+          flutter build appbundle --release
+      
+      - name: Build iOS (unsigned)
+        script: |
+          cd mobile
+          flutter build ios --release --no-codesign
+    
+    artifacts:
+      - mobile/build/**/outputs/**/*.apk
+      - mobile/build/**/outputs/**/*.aab
+      - mobile/build/ios/ipa/*.ipa
+      - mobile/build/**/outputs/**/mapping.txt
+    
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com
+        notify:
+          success: true
+          failure: true
+      
+      # Uncomment to publish to Google Play
+      # google_play:
+      #   credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+      #   track: internal
+      
+      # Uncomment to publish to App Store
+      # app_store_connect:
+      #   api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+      #   key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+      #   issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+
+  # Separate workflow for Android only
+  android-workflow:
+    name: Android Build
+    max_build_duration: 60
+    instance_type: linux_x2
+    
+    environment:
+      flutter: $FLUTTER_VERSION
+      
+    scripts:
+      - name: Get Flutter packages
+        script: |
+          cd mobile
+          flutter packages pub get
+      
+      - name: Build APK
+        script: |
+          cd mobile
+          flutter build apk --release
+    
+    artifacts:
+      - mobile/build/**/outputs/**/*.apk
+    
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com
