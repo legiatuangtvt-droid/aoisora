@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(claude auth status:*)",
+      "Bash(echo $ANTHROPIC_API_KEY)",
+      "Bash(git ls-tree:*)",
+      "Bash(git checkout:*)",
+      "Bash(mkdir:*)",
+      "Bash(git archive:*)",
+      "Bash(tar:*)",
+      "Bash(mv:*)",
+      "Bash(find:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}

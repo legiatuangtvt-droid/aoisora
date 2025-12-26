@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>   
+  <link rel="icon" href="logo.png" type="image/png"> 
+  <title>AOI SORA</title>
+  <style>
+    :root{
+      --blue:#2366b1;
+      --blue-600:#2366b1;
+      --blue-700:#1a4a91;
+      --ink:#0f172a;
+      --muted:#6b7280;
+      --ring: rgba(35,102,177,.35);
+      --card-bg: rgba(255,255,255,.78);
+      --shadow: 0 14px 32px rgba(2,6,23,.16);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui,-apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial;
+      color:var(--ink);
+      background: linear-gradient(180deg, #bfe7ff 0%, #9cd6ff 40%, #e9f7ff 100%);
+      min-height:100%;
+      padding:clamp(18px,4vw,28px);
+      overflow-x:hidden;
+    }
+    .shell{ max-width:980px; margin:0 auto }
+    .header{ display:flex; align-items:center; gap:16px; justify-content:flex-start; }
+    .brand-title{
+      font-size: clamp(32px, 6vw, 56px);
+      font-weight: 900; letter-spacing:.3px;
+      margin: 6px 0 10px 0; color: var(--blue);
+      text-shadow: 0 1px 0 rgba(255,255,255,.65);
+    }
+    .card{
+      backdrop-filter: blur(8px);
+      background: var(--card-bg);
+      border:1px solid rgba(255,255,255,.7);
+      box-shadow: var(--shadow);
+      border-radius:24px;
+      padding: clamp(18px, 4vw, 28px);
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(220px, 1fr));
+      gap: clamp(14px, 3vw, 22px);
+      align-items:stretch;
+      justify-items:stretch;
+    }
+    @media (min-width: 820px){
+      .grid{ grid-template-columns: repeat(3, minmax(220px, 1fr)); }
+    }
+    .tile{
+      position:relative;
+      border-radius:18px;
+      padding:22px 18px;
+      background: linear-gradient(165deg, var(--blue-700), var(--blue-600));
+      color:white;
+      border:1px solid rgba(255,255,255,.22);
+      box-shadow: 0 8px 18px rgba(30,58,138, .25);
+      transition: transform .18s ease, box-shadow .18s ease;
+      cursor:pointer;
+      display:flex; flex-direction:column; gap:10px; justify-content:space-between;
+      min-height:110px;
+      overflow:visible; /* so badge can sit outside */
+    }
+    .tile:hover{ transform: translateY(-3px); box-shadow: 0 16px 30px rgba(30,58,138,.35) }
+    .tile:focus-visible{ outline:4px solid var(--ring); outline-offset:3px }
+    .tile .title{ font-size: clamp(18px, 2.4vw, 20px); font-weight:800; letter-spacing:.3px }
+    .tile .desc{ font-size:13px; opacity:.9}
+    .chip{ display:inline-flex; align-items:center; gap:8px; font-size:12px; font-weight:600;
+           color: white; background: rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.25);
+           padding:.3rem .55rem; border-radius:999px; width:max-content; }
+    .footer{ margin-top:14px; color:var(--muted); font-size:12px; text-align:center }
+
+    a.reset{ color:inherit; text-decoration:none; display:contents }
+    .icon{ width:28px; height:28px; opacity:.95 }
+    .tile-head{ display:flex; align-items:center; gap:10px }
+
+    /* iOS-like badge */
+    .badge{
+      position:absolute; top:-14px; right:-14px;
+      min-width:26px; height:26px; padding:0 8px;
+      display:grid; place-items:center;
+      background:#ff3b30; color:#fff;
+      font-weight:800; font-size:12px; line-height:1;
+      border-radius:999px; z-index:4;
+      border:3px solid #fff;
+      box-shadow: 0 6px 16px rgba(255,59,48,.35);
+      transform-origin:center;
+    }
+
+    /* Click-triggered strong pulse for the whole tile */
+    .pulse-active { animation: burst 900ms cubic-bezier(.2,.7,.2,1) 1; }
+    .badge.burst { animation: badgeBoom 900ms ease-out 1; }
+    @keyframes burst {
+      0%   { transform: scale(1) }
+      18%  { transform: scale(1.2) }
+      42%  { transform: scale(1.06) }
+      66%  { transform: scale(1.25) }
+      100% { transform: scale(1) }
+    }
+    @keyframes badgeBoom {
+      0%   { transform: scale(1) }
+      25%  { transform: scale(1.5) }
+      60%  { transform: scale(1.15) }
+      100% { transform: scale(1) }
+    }
+
+    /* Modal / POP */
+    .modal{ position:fixed; inset:0; display:none; place-items:center; background: rgba(2,6,23,.45); z-index:50; padding:18px }
+    .modal[aria-hidden="false"]{ display:grid }
+    .modal-card{ width:min(520px, 92vw); background:white; border-radius:18px; padding:22px 20px; box-shadow: var(--shadow); border:1px solid #e5e7eb }
+    .modal-title{ font-size:18px; font-weight:800; margin:0 0 8px }
+    .modal-body{ color:#475569; font-size:14px; line-height:1.5; }
+    .actions{ margin-top:14px; display:flex; justify-content:flex-end; gap:10px }
+    .btn{ border-radius:12px; padding:10px 14px; font-weight:700; border:1px solid transparent; cursor:pointer }
+    .btn-primary{ background: linear-gradient(135deg, var(--blue-600), var(--blue-700)); color:white }
+    .btn-outline{ background:white; color:var(--blue-700); border-color: #bfdbfe }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="header"><h1 class="brand-title">AOI SORA</h1></div>
+
+    <section class="card" aria-label="Main shortcuts">
+      <div class="grid">
+        <a class="reset" href="/index.html" target="_blank" rel="noopener noreferrer">
+          <div class="tile" role="link" tabindex="0">
+            <div class="tile-head">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5l2 2h9a2 2 0 0 1 2 2z"/>
+                <path d="m9 14 2 2 4-4"/>
+              </svg>
+              <div class="title">DWS</div>
+            </div>
+            <div class="desc">Daily Work Schedule</div>
+            <span class="chip">Opens new tab</span>
+          </div>
+        </a>
+
+        <a class="reset" href="https://auraorientalis.vn/auraProject/index.html" target="_blank" rel="noopener noreferrer">
+          <div class="tile" role="link" tabindex="0">
+            <div class="tile-head">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="3" width="7" height="7" rx="1"/>
+                <rect x="14" y="3" width="7" height="7" rx="1"/>
+                <rect x="14" y="14" width="7" height="7" rx="1"/>
+                <rect x="3" y="14" width="7" height="7" rx="1"/>
+              </svg>
+              <div class="title">Task from HQ</div>
+            </div>
+            <div class="desc">Assignments & status</div>
+            <span class="chip">Opens new tab</span>
+          </div>
+        </a>
+
+        <div class="tile pop" data-name="FAQ" tabindex="0" role="button" aria-label="FAQ – under development">
+          <div class="tile-head">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M9.09 9a3 3 0 1 1 5.82 1c0 2-3 2-3 4"/>
+              <line x1="12" y1="17" x2="12" y2="17"/>
+            </svg>
+            <div class="title">FAQ</div>
+          </div>
+          <div class="desc">Frequently Asked Questions</div>
+          <span class="chip">Under development</span>
+        </div>
+
+        <a class="reset" href="https://teachme.jp/124700/folders?page=1&sortKey=displayName&sortOrder=asc&displayType=all&keywordKind=full_text" target="_blank" rel="noopener noreferrer">
+          <div class="tile" role="link" tabindex="0">
+            <div class="tile-head">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20"/>
+                <path d="M20 2H6.5A2.5 2.5 0 0 0 4 4.5v15"/>
+                <path d="M8 6h9"/>
+              </svg>
+              <div class="title">MANUAL</div>
+            </div>
+            <div class="desc">Teachme Biz knowledge base</div>
+            <span class="chip">Opens new tab</span>
+          </div>
+        </a>
+
+        <div class="tile pop" data-name="Check QTT" tabindex="0" role="button" aria-label="Check QTT – under development">
+          <div class="tile-head">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+            <div class="title">Check Quality Perishable</div>
+          </div>
+          <div class="desc">Quality Through Time</div>
+          <span class="chip">Under development</span>
+        </div>
+
+        <div class="tile pop" data-name="Training" id="training-tile" tabindex="0" role="button" aria-label="Training – under development">
+          <span class="badge" id="training-badge" aria-label="new">5</span>
+          <div class="tile-head">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M22 10L12 5 2 10l10 5 10-5z"/>
+              <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+            </svg>
+            <div class="title">Training</div>
+          </div>
+          <div class="desc">Learning & upskilling</div>
+          <span class="chip">Under development</span>
+        </div>
+      </div>
+
+      <div class="footer">Tip: Right–click a tile to copy its link or open in a new tab.</div>
+    </section>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal" id="modal" aria-hidden="true" aria-modal="true" role="dialog">
+    <div class="modal-card" role="document">
+      <h3 class="modal-title" id="modal-title">Feature under development</h3>
+      <div class="modal-body" id="modal-body">
+        This feature is under development. Please check back later.
+      </div>
+      <div class="actions">
+        <button class="btn btn-outline" id="close">Close</button>
+        <button class="btn btn-primary" id="ok">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const modal = document.getElementById('modal');
+      const title = document.getElementById('modal-title');
+      const body = document.getElementById('modal-body');
+      const close = document.getElementById('close');
+      const ok = document.getElementById('ok');
+      function openModal(name){
+        title.textContent = 'Feature under development';
+        body.textContent = (name || 'This') + ': This feature is under development. Please check back later.';
+        modal.setAttribute('aria-hidden','false');
+      }
+      function hide(){ modal.setAttribute('aria-hidden','true') }
+
+      // POP for tiles without links
+      document.querySelectorAll('.tile.pop').forEach(t => {
+        t.addEventListener('click', () => openModal(t.dataset.name));
+        t.addEventListener('keydown', (e)=>{
+          if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openModal(t.dataset.name); }
+        });
+      });
+      [close, ok, modal].forEach(el => el.addEventListener('click', (e)=>{
+        if(e.target === el) hide();
+      }));
+      document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') hide() });
+
+      // Strong pulse only when clicking Training
+      const trainingTile = document.getElementById('training-tile');
+      const trainingBadge = document.getElementById('training-badge');
+      if (trainingTile) {
+        trainingTile.addEventListener('click', () => {
+          trainingTile.classList.remove('pulse-active');
+          trainingBadge.classList.remove('burst');
+          // force reflow to restart animation
+          void trainingTile.offsetWidth;
+          void trainingBadge.offsetWidth;
+          trainingTile.classList.add('pulse-active');
+          trainingBadge.classList.add('burst');
+        });
+        trainingTile.addEventListener('animationend', () => trainingTile.classList.remove('pulse-active'));
+      }
+    })();
+  </script>
+</body>
+</html>

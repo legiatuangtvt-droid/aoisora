@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+  <title>Do Task</title>
+  <script>
+      (function() {
+          const v = new Date().getTime();
+          document.write(`<link rel="icon" href="img/logo.png?v=${v}">`);
+          document.write(`<link rel="stylesheet" href="css/styles.css?v=${v}">`);
+          document.write(`<link rel="stylesheet" href="css/do-task.css?v=${v}">`);
+      })();
+  </script>
+</head>
+<body>
+  <div class="ipad-frame">
+    <div class="top-bar header-top-row">
+      <button id="back-button" style="background-color: #007bff; color: white; padding: 10px 20px; border: none; cursor: pointer; border-radius: 5px;" data-i18n-key="back-to-list">Back to List</button>
+      <!-- Display Current User Info -->
+      <div id="user-info-display" class="user-info-display"></div>
+    </div>
+
+    <!-- Task Header -->
+    <div class="task-fixed-header">
+      <div class="task-left">
+        <div id="task-index" class="task-index">...</div>
+        <div class="task-icon">
+          <div id="dept-square" class="dept-square"></div>
+          <div id="user-circle" class="user-circle"></div>
+        </div>
+        <div>
+          <div id="task-name" class="task-name" data-i18n-key="task-name-placeholder">Loading Task...</div>
+          <div id="task-meta" class="task-meta" data-i18n-key="task-meta-placeholder">...</div>
+        </div>
+      </div>
+      <div class="task-links">
+        <div><span data-i18n-key="teachme-link">📘 Teachme:</span> <a id="teachme-link" href="#" target="_blank">...</a></div>
+        <div><span data-i18n-key="file-link">📎 File:</span> <a id="file-link" href="#" target="_blank">...</a></div>
+      </div>
+    </div>
+
+    <!-- Content Scroll -->
+    <div class="content-scroll" id="action-form">
+        <!-- Checklist Section (hidden by default) -->
+        <section id="checklist-container" class="action-section" style="display: none;">
+            <h3>Checklist</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>No.</th>
+                            <th>Checklist Item</th>
+                            <th>Status</th>
+                            <th>Completed At</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="can-complete-section" class="action-section">
+            <h3>Can this task be completed?</h3>
+            <div class="action-group">
+                <input type="radio" id="can-complete-yes" name="can-complete" value="yes" checked>
+                <label for="can-complete-yes" data-i18n-key="yes">Yes</label>
+                <input type="radio" id="can-complete-no" name="can-complete" value="no">
+                <label for="can-complete-no" data-i18n-key="no">No</label>
+            </div>
+        </section>
+
+        <section class="action-section">
+            <h3 id="responsible-person-title">Responsible Person</h3>
+            <!-- Container này sẽ chứa select (cho quản lý) hoặc p (cho nhân viên) -->
+            <div id="responsible-person-container" class="action-group">
+                <!-- Nội dung sẽ được JS chèn vào đây -->
+            </div>
+        </section>
+
+        <section class="action-section">
+            <h3>Comment</h3>
+            <div class="comment-box">
+              <textarea id="comment-input" data-i18n-key="comment-placeholder" placeholder="Write comments here..."></textarea>
+            </div>
+        </section>
+
+        <section class="action-section">
+            <h3>Photos</h3>
+            <div class="photo-container">
+              <label class="photo-slot" for="img0"><input type="file" accept="image/*" capture="environment" id="img0" onchange="previewImage(this)"><span class="add-icon">+</span></label>
+              <label class="photo-slot" for="img1"><input type="file" accept="image/*" capture="environment" id="img1" onchange="previewImage(this)"><span class="add-icon">+</span></label>
+              <label class="photo-slot" for="img2"><input type="file" accept="image/*" capture="environment" id="img2" onchange="previewImage(this)"><span class="add-icon">+</span></label>
+            </div>
+        </section>
+
+        <button id="register-button" class="register-button">Register</button>
+        <button id="confirm-checklist-button" class="register-button" style="display: none;">Confirm Checklist</button>
+    </div>
+  </div>
+
+  <script defer src="js/do-task.js"></script>
+</body>
+</html>

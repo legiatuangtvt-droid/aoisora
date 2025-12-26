@@ -1,0 +1,96 @@
+## TÀI LIỆU THUYẾT MINH DỰ ÁN "AOISORA" - HỆ THỐNG QUẢN LÝ LỊCH LÀM VIỆC
+
+**Phiên bản:** 1.1 (Tự động tạo)
+**Ngày cập nhật:** 2025-10-14
+
+### 1. TỔNG QUAN DỰ ÁN
+
+**AoiSora** là một ứng dụng web quản lý và phân công lịch làm việc cho nhân viên.
+
+### 2. PHÂN TÍCH CÁC TRANG
+
+#### 2.1. Trang: index.html (Lịch Hàng Ngày - AoiSora)
+- **Mô tả:** Trang dùng để "Lịch Hàng Ngày - AoiSora".
+- **JavaScript nội tuyến:** Có.
+- **CSS nội tuyến:** Không.
+- **Liên kết đến:** month.html, store.html, staff.html, main-tasks.html, task-groups.html, intro.html
+
+#### 2.2. Trang: intro.html (Giới Thiệu Dự Án - AoiSora)
+- **Mô tả:** Trang dùng để "Giới Thiệu Dự Án - AoiSora".
+- **JavaScript nội tuyến:** Không.
+- **CSS nội tuyến:** Không.
+- **Liên kết đến:** index.html, month.html, store.html, staff.html, main-tasks.html, task-groups.html
+
+#### 2.3. Trang: main-tasks.html (Công Việc Chính - AoiSora)
+- **Mô tả:** Trang dùng để "Công Việc Chính - AoiSora".
+- **JavaScript nội tuyến:** Có.
+- **CSS nội tuyến:** Không.
+- **Liên kết đến:** index.html, month.html, store.html, staff.html, main-tasks.html, task-groups.html
+
+#### 2.4. Trang: month.html (Lịch Làm Việc Hàng Tháng)
+- **Mô tả:** Trang dùng để "Lịch Làm Việc Hàng Tháng".
+- **JavaScript nội tuyến:** Có.
+- **CSS nội tuyến:** Không.
+- **Liên kết đến:** index.html, month.html, store.html, staff.html, main-tasks.html, task-groups.html
+
+#### 2.5. Trang: staff.html (Quản Lý Nhân Viên)
+- **Mô tả:** Trang dùng để "Quản Lý Nhân Viên".
+- **JavaScript nội tuyến:** Không.
+- **CSS nội tuyến:** Không.
+- **Liên kết đến:** index.html, month.html, store.html, staff.html, main-tasks.html
+
+#### 2.6. Trang: store.html (Quản Lý Cửa Hàng)
+- **Mô tả:** Trang dùng để "Quản Lý Cửa Hàng".
+- **JavaScript nội tuyến:** Không.
+- **CSS nội tuyến:** Không.
+- **Liên kết đến:** index.html, month.html, store.html, staff.html, main-tasks.html, task-groups.html
+
+#### 2.7. Trang: task-groups.html (Nhóm Công Việc - AoiSora)
+- **Mô tả:** Trang dùng để "Nhóm Công Việc - AoiSora".
+- **JavaScript nội tuyến:** Có.
+- **CSS nội tuyến:** Không.
+- **Liên kết đến:** index.html, month.html, store.html, staff.html, main-tasks.html, task-groups.html
+
+### 3. QUAN HỆ TƯƠNG TÁC GIỮA CÁC TRANG
+
+- Từ `index.html` có thể điều hướng tới `month.html`.
+- Từ `index.html` có thể điều hướng tới `store.html`.
+- Từ `index.html` có thể điều hướng tới `staff.html`.
+- Từ `index.html` có thể điều hướng tới `main-tasks.html`.
+- Từ `index.html` có thể điều hướng tới `task-groups.html`.
+- Từ `index.html` có thể điều hướng tới `intro.html`.
+- Từ `intro.html` có thể điều hướng tới `index.html`.
+- Từ `intro.html` có thể điều hướng tới `month.html`.
+- Từ `intro.html` có thể điều hướng tới `store.html`.
+- Từ `intro.html` có thể điều hướng tới `staff.html`.
+- Từ `intro.html` có thể điều hướng tới `main-tasks.html`.
+- Từ `intro.html` có thể điều hướng tới `task-groups.html`.
+- Từ `main-tasks.html` có thể điều hướng tới `index.html`.
+- Từ `main-tasks.html` có thể điều hướng tới `month.html`.
+- Từ `main-tasks.html` có thể điều hướng tới `store.html`.
+- Từ `main-tasks.html` có thể điều hướng tới `staff.html`.
+- Từ `main-tasks.html` có thể điều hướng tới `main-tasks.html`.
+- Từ `main-tasks.html` có thể điều hướng tới `task-groups.html`.
+- Từ `month.html` có thể điều hướng tới `index.html`.
+- Từ `month.html` có thể điều hướng tới `month.html`.
+- Từ `month.html` có thể điều hướng tới `store.html`.
+- Từ `month.html` có thể điều hướng tới `staff.html`.
+- Từ `month.html` có thể điều hướng tới `main-tasks.html`.
+- Từ `month.html` có thể điều hướng tới `task-groups.html`.
+- Từ `staff.html` có thể điều hướng tới `index.html`.
+- Từ `staff.html` có thể điều hướng tới `month.html`.
+- Từ `staff.html` có thể điều hướng tới `store.html`.
+- Từ `staff.html` có thể điều hướng tới `staff.html`.
+- Từ `staff.html` có thể điều hướng tới `main-tasks.html`.
+- Từ `store.html` có thể điều hướng tới `index.html`.
+- Từ `store.html` có thể điều hướng tới `month.html`.
+- Từ `store.html` có thể điều hướng tới `store.html`.
+- Từ `store.html` có thể điều hướng tới `staff.html`.
+- Từ `store.html` có thể điều hướng tới `main-tasks.html`.
+- Từ `store.html` có thể điều hướng tới `task-groups.html`.
+- Từ `task-groups.html` có thể điều hướng tới `index.html`.
+- Từ `task-groups.html` có thể điều hướng tới `month.html`.
+- Từ `task-groups.html` có thể điều hướng tới `store.html`.
+- Từ `task-groups.html` có thể điều hướng tới `staff.html`.
+- Từ `task-groups.html` có thể điều hướng tới `main-tasks.html`.
+- Từ `task-groups.html` có thể điều hướng tới `task-groups.html`.
