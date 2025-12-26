@@ -1,54 +1,59 @@
 workflows:
-  ios-android-workflow:
-    name: iOS & Android Workflow
+  # iOS Workflow - For real devices (requires Apple Developer account)
+  ios-workflow:
+    name: iOS Build (Real Device)
     max_build_duration: 120
     instance_type: mac_mini_m1
-    
+
     environment:
       groups:
-        # Add your environment variable groups here
-        - app_credentials
+        # Create these in Codemagic UI: App settings → Environment variables
+        - app_store_credentials  # Contains: APP_STORE_CONNECT_PRIVATE_KEY, etc.
+        - ios_credentials        # Contains: CERTIFICATE_PRIVATE_KEY, etc.
+
       vars:
         FLUTTER_VERSION: "3.16.0"
         XCODE_WORKSPACE: "Runner.xcworkspace"
         XCODE_SCHEME: "Runner"
-      
+        BUNDLE_ID: "com.aoisora.optichain"  # Change this to your bundle ID
+        APP_STORE_ID: "your-app-id"         # Get from App Store Connect
+
       flutter: $FLUTTER_VERSION
       xcode: latest
       cocoapods: default
-    
+
+      # iOS code signing setup
+      ios_signing:
+        distribution_type: app_store  # or: ad_hoc, development, enterprise
+        bundle_identifier: $BUNDLE_ID
+
     scripts:
+      - name: Set up code signing settings on Xcode project
+        script: |
+          cd mobile/ios
+          xcode-project use-profiles
+
       - name: Get Flutter packages
         script: |
           cd mobile
           flutter packages pub get
-      
-      - name: Flutter analyze
+
+      - name: Install CocoaPods dependencies
+        script: |
+          cd mobile/ios
+          pod install
+
+      - name: Flutter build iOS
         script: |
           cd mobile
-          flutter analyze
-      
-      - name: Build Android APK
-        script: |
-          cd mobile
-          flutter build apk --release
-      
-      - name: Build Android App Bundle
-        script: |
-          cd mobile
-          flutter build appbundle --release
-      
-      - name: Build iOS (unsigned)
-        script: |
-          cd mobile
-          flutter build ios --release --no-codesign
-    
+          flutter build ipa --release \
+            --export-options-plist=/Users/builder/export_options.plist
+
     artifacts:
-      - mobile/build/**/outputs/**/*.apk
-      - mobile/build/**/outputs/**/*.aab
       - mobile/build/ios/ipa/*.ipa
-      - mobile/build/**/outputs/**/mapping.txt
-    
+      - /tmp/xcodebuild_logs/*.log
+      - mobile/build/ios/archive/Runner.xcarchive
+
     publishing:
       email:
         recipients:
@@ -56,42 +61,269 @@ workflows:
         notify:
           success: true
           failure: true
-      
-      # Uncomment to publish to Google Play
-      # google_play:
-      #   credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
-      #   track: internal
-      
-      # Uncomment to publish to App Store
-      # app_store_connect:
-      #   api_key: $APP_STORE_CONNECT_PRIVATE_KEY
-      #   key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
-      #   issuer_id: $APP_STORE_CONNECT_ISSUER_ID
 
-  # Separate workflow for Android only
+      # Auto-publish to TestFlight
+      app_store_connect:
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        submit_to_testflight: true
+        beta_groups:
+          - Internal Testers
+        submit_to_app_store: false
+
+  # iOS Ad-Hoc Build - For testing on specific devices (no App Store)
+  ios-adhoc-workflow:
+    name: iOS Ad-Hoc Build
+    max_build_duration: 120
+    instance_type: mac_mini_m1
+
+    environment:
+      groups:
+        - ios_credentials
+
+      vars:
+        FLUTTER_VERSION: "3.16.0"
+        XCODE_WORKSPACE: "Runner.xcworkspace"
+        XCODE_SCHEME: "Runner"
+        BUNDLE_ID: "com.aoisora.optichain"
+
+      flutter: $FLUTTER_VERSION
+      xcode: latest
+      cocoapods: default
+
+      ios_signing:
+        distribution_type: ad_hoc  # For installing on registered devices
+        bundle_identifier: $BUNDLE_ID
+
+    scripts:
+      - name: Set up code signing
+        script: |
+          cd mobile/ios
+          xcode-project use-profiles
+
+      - name: Get Flutter packages
+        script: |
+          cd mobile
+          flutter packages pub get
+
+      - name: Install CocoaPods
+        script: |
+          cd mobile/ios
+          pod install
+
+      - name: Build iOS Ad-Hoc
+        script: |
+          cd mobile
+          flutter build ipa --release \
+            --export-options-plist=/Users/builder/export_options.plist
+
+    artifacts:
+      - mobile/build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com
+        notify:
+          success: true
+          failure: true
+
+  # Android + iOS Combined Workflow
+  ios-android-workflow:
+    name: iOS & Android Workflow
+    max_build_duration: 120
+    instance_type: mac_mini_m1
+
+    environment:
+      groups:
+        - app_store_credentials
+        - ios_credentials
+        - android_credentials  # For Google Play signing
+
+      vars:
+        FLUTTER_VERSION: "3.16.0"
+        XCODE_WORKSPACE: "Runner.xcworkspace"
+        XCODE_SCHEME: "Runner"
+        BUNDLE_ID: "com.aoisora.optichain"
+
+      flutter: $FLUTTER_VERSION
+      xcode: latest
+      cocoapods: default
+
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: $BUNDLE_ID
+
+      android_signing:
+        - keystore_reference  # Reference to uploaded keystore in Codemagic
+
+    scripts:
+      - name: Set up iOS code signing
+        script: |
+          cd mobile/ios
+          xcode-project use-profiles
+
+      - name: Get Flutter packages
+        script: |
+          cd mobile
+          flutter packages pub get
+
+      - name: Install CocoaPods
+        script: |
+          cd mobile/ios
+          pod install
+
+      - name: Flutter analyze
+        script: |
+          cd mobile
+          flutter analyze
+
+      - name: Build Android APK
+        script: |
+          cd mobile
+          flutter build apk --release
+
+      - name: Build Android App Bundle
+        script: |
+          cd mobile
+          flutter build appbundle --release
+
+      - name: Build iOS IPA
+        script: |
+          cd mobile
+          flutter build ipa --release \
+            --export-options-plist=/Users/builder/export_options.plist
+
+    artifacts:
+      - mobile/build/**/outputs/**/*.apk
+      - mobile/build/**/outputs/**/*.aab
+      - mobile/build/ios/ipa/*.ipa
+      - mobile/build/**/outputs/**/mapping.txt
+
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com
+        notify:
+          success: true
+          failure: true
+
+      # Publish Android to Google Play (Internal Testing)
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
+        submit_as_draft: true
+
+      # Publish iOS to TestFlight
+      app_store_connect:
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        submit_to_testflight: true
+        beta_groups:
+          - Internal Testers
+
+  # Android Only Workflow (No iOS signing needed)
   android-workflow:
     name: Android Build
     max_build_duration: 60
     instance_type: linux_x2
-    
+
     environment:
+      groups:
+        - android_credentials
+
+      vars:
+        FLUTTER_VERSION: "3.16.0"
+
       flutter: $FLUTTER_VERSION
-      
+
+      android_signing:
+        - keystore_reference
+
     scripts:
       - name: Get Flutter packages
         script: |
           cd mobile
           flutter packages pub get
-      
+
       - name: Build APK
         script: |
           cd mobile
           flutter build apk --release
-    
+
+      - name: Build App Bundle
+        script: |
+          cd mobile
+          flutter build appbundle --release
+
     artifacts:
       - mobile/build/**/outputs/**/*.apk
-    
+      - mobile/build/**/outputs/**/*.aab
+
     publishing:
       email:
         recipients:
           - your-email@example.com
+        notify:
+          success: true
+          failure: true
+
+      # Optional: Auto-publish to Google Play
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
+        submit_as_draft: true
+
+  # Development Build - Quick test (no signing)
+  dev-workflow:
+    name: Development Build (Unsigned)
+    max_build_duration: 60
+    instance_type: mac_mini_m1
+
+    environment:
+      vars:
+        FLUTTER_VERSION: "3.16.0"
+
+      flutter: $FLUTTER_VERSION
+      xcode: latest
+      cocoapods: default
+
+    scripts:
+      - name: Get Flutter packages
+        script: |
+          cd mobile
+          flutter packages pub get
+
+      - name: Flutter analyze
+        script: |
+          cd mobile
+          flutter analyze
+
+      - name: Run tests
+        script: |
+          cd mobile
+          flutter test
+
+      - name: Build Android APK (debug)
+        script: |
+          cd mobile
+          flutter build apk --debug
+
+      - name: Build iOS (no codesign)
+        script: |
+          cd mobile
+          flutter build ios --release --no-codesign
+
+    artifacts:
+      - mobile/build/**/outputs/**/*.apk
+
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com
+        notify:
+          success: false
+          failure: true
