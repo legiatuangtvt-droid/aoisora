@@ -1,4 +1,67 @@
 workflows:
+  # Sideloadly Workflow - Build IPA for Sideloadly (NO Apple Developer needed!)
+  sideloadly-workflow:
+    name: iOS IPA for Sideloadly
+    max_build_duration: 60
+    instance_type: mac_mini_m1
+
+    environment:
+      vars:
+        FLUTTER_VERSION: "3.16.0"
+        BUNDLE_ID: "com.aoisora.optichain"
+
+      flutter: $FLUTTER_VERSION
+      xcode: latest
+      cocoapods: default
+
+    scripts:
+      - name: Get Flutter packages
+        script: |
+          cd mobile
+          flutter packages pub get
+
+      - name: Install CocoaPods dependencies
+        script: |
+          cd mobile/ios
+          pod install
+
+      - name: Build unsigned iOS app
+        script: |
+          cd mobile
+          flutter build ios --release --no-codesign
+
+      - name: Create IPA manually for Sideloadly
+        script: |
+          cd mobile
+
+          # Create Payload directory
+          mkdir -p build/ios/iphoneos/Payload
+
+          # Copy .app to Payload
+          cp -r build/ios/iphoneos/Runner.app build/ios/iphoneos/Payload/
+
+          # Create IPA (it's just a zip file)
+          cd build/ios/iphoneos
+          zip -r OptiChain-Sideloadly.ipa Payload
+
+          # Move to easier location
+          mv OptiChain-Sideloadly.ipa ../../OptiChain-Sideloadly.ipa
+
+          echo "✅ IPA created successfully for Sideloadly!"
+          ls -lh ../../OptiChain-Sideloadly.ipa
+
+    artifacts:
+      - mobile/build/OptiChain-Sideloadly.ipa
+      - mobile/build/ios/iphoneos/Runner.app
+
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com
+        notify:
+          success: true
+          failure: true
+
   # iOS Workflow - For real devices (requires Apple Developer account)
   ios-workflow:
     name: iOS Build (Real Device)

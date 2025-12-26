@@ -99,6 +99,8 @@ git push origin develop_WS_DWS_ver1
 
 **📱 Mobile:**
 - [Codemagic Config](codemagic.yaml) - CI/CD configuration cho iOS & Android
+- [iOS Setup Guide](docs/CODEMAGIC-IOS-SETUP.md) - Hướng dẫn setup iOS với Apple Developer Account
+- [Sideloadly Guide](docs/SIDELOADLY-GUIDE.md) - ⭐ Cài app lên iPhone MIỄN PHÍ (không cần Apple Developer Account)
 
 ## License
 
