@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
-from typing import List
+from typing import List, Union
+from pydantic import field_validator
 
 
 class Settings(BaseSettings):
@@ -17,8 +18,20 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
-    # CORS
-    ALLOWED_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:5173"]
+    # CORS - Can be string (comma-separated) or list
+    ALLOWED_ORIGINS: Union[str, List[str]] = ["http://localhost:3000", "http://localhost:5173"]
+
+    @field_validator('ALLOWED_ORIGINS', mode='before')
+    @classmethod
+    def parse_origins(cls, v):
+        """Parse ALLOWED_ORIGINS from string or list"""
+        if isinstance(v, str):
+            # Handle comma-separated string
+            if ',' in v:
+                return [origin.strip() for origin in v.split(',')]
+            # Handle single origin or wildcard
+            return [v.strip()]
+        return v
 
     class Config:
         env_file = ".env"
