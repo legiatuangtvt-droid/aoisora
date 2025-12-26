@@ -87,8 +87,17 @@ git push origin develop_WS_DWS_ver1
 ```
 
 ### Documentation
-- [Deployment Guide](docs/DEPLOYMENT.md) - Chi tiết deployment cho production
-- [Codemagic Config](codemagic.yaml) - CI/CD configuration cho mobile app
+
+**🆓 Deploy Miễn Phí (Recommended cho Testing):**
+- [FREE Deployment Guide](docs/DEPLOY-FREE-ALTERNATIVES.md) - Railway + Vercel + Supabase ($0/tháng)
+
+**💰 Deploy Production (Khi có budget):**
+- [Backend → Cloud Run](docs/DEPLOY-BACKEND-CLOUDRUN.md) - Step-by-step deploy Backend
+- [Frontend → Firebase](docs/DEPLOY-FRONTEND-FIREBASE.md) - Step-by-step deploy Frontend
+- [Full Stack Guide](docs/DEPLOYMENT.md) - Tổng quan deployment
+
+**📱 Mobile:**
+- [Codemagic Config](codemagic.yaml) - CI/CD configuration cho iOS & Android
 
 ## License
 
