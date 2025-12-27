@@ -308,6 +308,7 @@ export default function DailySchedulePage() {
                 <span className="text-xs text-gray-500">
                   {backendOnline ? 'Online' : 'Offline (Demo)'}
                 </span>
+                <span className="text-[10px] text-gray-400 ml-1">v12</span>
               </div>
             </div>
           </div>
