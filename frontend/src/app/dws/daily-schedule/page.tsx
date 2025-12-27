@@ -246,6 +246,13 @@ export default function DailySchedulePage() {
     }
   };
 
+  // Check if this is the first hour of shift (to show label)
+  const isFirstHourOfShift = (hour: number, shiftCode: ShiftCode | null | undefined): boolean => {
+    if (!shiftCode || shiftCode.shift_code === 'OFF') return false;
+    const startHour = parseInt(shiftCode.start_time.split(':')[0]);
+    return hour === startHour;
+  };
+
   // Get shift color
   const getShiftColor = (shiftCode: ShiftCode | null | undefined): string => {
     if (!shiftCode || !shiftCode.color_code) return '#E5E7EB';
@@ -452,6 +459,7 @@ export default function DailySchedulePage() {
                         {/* Time Slots */}
                         {timeSlots.map(slot => {
                           const isActive = isWithinShift(slot.hour, row.shiftCode);
+                          const isFirstHour = isFirstHourOfShift(slot.hour, row.shiftCode);
                           const now = new Date();
                           const isCurrentHour = slot.hour === now.getHours() && formatDate(selectedDate) === formatDate(now);
 
@@ -462,9 +470,15 @@ export default function DailySchedulePage() {
                             >
                               {isActive && (
                                 <div
-                                  className="h-6 rounded-sm"
-                                  style={{ backgroundColor: `${shiftColor}60` }}
-                                />
+                                  className="h-6 rounded-sm flex items-center justify-start px-1"
+                                  style={{ backgroundColor: `${shiftColor}90` }}
+                                >
+                                  {isFirstHour && (
+                                    <span className="text-[9px] font-bold text-white truncate drop-shadow-sm">
+                                      {row.shiftCode?.shift_code}
+                                    </span>
+                                  )}
+                                </div>
                               )}
                             </td>
                           );
