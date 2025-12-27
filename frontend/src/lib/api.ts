@@ -229,7 +229,7 @@ export async function getStores(params?: {
     });
   }
   const query = searchParams.toString();
-  return fetchApi<Store[]>(`/staff/stores${query ? `?${query}` : ''}`);
+  return fetchApi<Store[]>(`/staff/stores/${query ? `?${query}` : ''}`);
 }
 
 export async function getStoreById(id: number): Promise<Store> {
@@ -329,7 +329,7 @@ export async function getCodeMaster(codeType?: string): Promise<CodeMaster[]> {
 // Shift Codes
 export async function getShiftCodes(activeOnly?: boolean): Promise<ShiftCode[]> {
   const query = activeOnly !== undefined ? `?is_active=${activeOnly}` : '';
-  return fetchApi<ShiftCode[]>(`/shifts/codes/${query}`);
+  return fetchApi<ShiftCode[]>(`/shifts/codes${query}`);
 }
 
 export async function getShiftCodeById(id: number): Promise<ShiftCode> {
@@ -379,7 +379,7 @@ export async function getShiftAssignments(params?: {
     });
   }
   const query = searchParams.toString();
-  return fetchApi<ShiftAssignment[]>(`/shifts/assignments${query ? `?${query}` : ''}`);
+  return fetchApi<ShiftAssignment[]>(`/shifts/assignments/${query ? `?${query}` : ''}`);
 }
 
 export async function getShiftAssignmentById(id: number): Promise<ShiftAssignment> {
