@@ -328,8 +328,8 @@ export async function getCodeMaster(codeType?: string): Promise<CodeMaster[]> {
 
 // Shift Codes
 export async function getShiftCodes(activeOnly?: boolean): Promise<ShiftCode[]> {
-  const query = activeOnly !== undefined ? `?active_only=${activeOnly}` : '';
-  return fetchApi<ShiftCode[]>(`/shifts/codes${query}`);
+  const query = activeOnly !== undefined ? `?is_active=${activeOnly}` : '';
+  return fetchApi<ShiftCode[]>(`/shifts/codes/${query}`);
 }
 
 export async function getShiftCodeById(id: number): Promise<ShiftCode> {
