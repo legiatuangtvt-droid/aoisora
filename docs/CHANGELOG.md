@@ -8,6 +8,17 @@ System design changes and feature updates.
 
 ### Changes
 
+#### 5. User Switcher Bubble (Testing Feature)
+- **Floating Bubble**: Fixed position at bottom-right corner
+- **Quick Role Switch**: Click to open user selection panel
+- **Mock Users**: 4 predefined users with different roles
+  - Manager: Full access to all features
+  - Supervisor: Access to team management features
+  - Staff: Access to personal tasks and schedules
+- **Visual Indicators**: Color-coded by role (purple=Manager, blue=Supervisor, green=Staff)
+- **Persistence**: Selected user saved to localStorage
+- **Purpose**: Enable testing without login system
+
 #### 1. DWS Shift Codes Page
 - **Auto-generator Form**: Inline form (not modal) with:
   - Letter input (single A-Z character)

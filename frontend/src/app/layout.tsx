@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { UserProvider } from "@/contexts/UserContext";
+import UserSwitcherBubble from "@/components/UserSwitcherBubble";
 
 export const metadata: Metadata = {
   title: "OptiChain WS & DWS",
@@ -16,7 +18,10 @@ export default function RootLayout({
     <html lang="vi" suppressHydrationWarning>
       <body>
         <LanguageProvider>
-          {children}
+          <UserProvider>
+            {children}
+            <UserSwitcherBubble />
+          </UserProvider>
         </LanguageProvider>
       </body>
     </html>
