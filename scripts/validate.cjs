@@ -207,7 +207,80 @@ function checkFrontendLint() {
 }
 
 // ============================================
-// Check 5: Backend Syntax Check
+// Check 5: Database Schema Changes
+// ============================================
+
+function checkDatabaseChanges() {
+  header('Database Schema Check');
+
+  try {
+    // Check if database files were modified
+    const status = execSync('git status --porcelain', {
+      cwd: PROJECT_ROOT,
+      encoding: 'utf-8',
+    }).trim();
+
+    const dbFiles = [
+      'database/',
+      'backend/app/models/',
+      'schema',
+      '.sql',
+      'migration',
+      'alembic',
+    ];
+
+    const changedDbFiles = status.split('\n').filter(line => {
+      return dbFiles.some(pattern => line.toLowerCase().includes(pattern.toLowerCase()));
+    });
+
+    if (changedDbFiles.length > 0) {
+      log('', 'yellow');
+      log('  ╔══════════════════════════════════════════════════════════╗', 'yellow');
+      log('  ║  ⚠ DATABASE SCHEMA CHANGES DETECTED                      ║', 'yellow');
+      log('  ╠══════════════════════════════════════════════════════════╣', 'yellow');
+      log('  ║  Please ensure you have:                                 ║', 'yellow');
+      log('  ║  1. Run the SQL migration on Neon database               ║', 'yellow');
+      log('  ║  2. Tested the changes locally                           ║', 'yellow');
+      log('  ║  3. Updated DATABASE_STRUCTURE.md if needed              ║', 'yellow');
+      log('  ╚══════════════════════════════════════════════════════════╝', 'yellow');
+      log('', 'yellow');
+      info('Changed database-related files:');
+      changedDbFiles.forEach(f => console.log(`    ${f}`));
+      warning('Database changes detected - verify migration to Neon');
+    } else {
+      success('No database schema changes detected');
+    }
+
+    // Also check staged files
+    const stagedStatus = execSync('git diff --cached --name-only', {
+      cwd: PROJECT_ROOT,
+      encoding: 'utf-8',
+    }).trim();
+
+    const stagedDbFiles = stagedStatus.split('\n').filter(line => {
+      return dbFiles.some(pattern => line.toLowerCase().includes(pattern.toLowerCase()));
+    });
+
+    if (stagedDbFiles.length > 0) {
+      log('', 'yellow');
+      log('  ╔══════════════════════════════════════════════════════════╗', 'yellow');
+      log('  ║  ⚠ STAGED DATABASE FILES WILL BE PUSHED                  ║', 'yellow');
+      log('  ╠══════════════════════════════════════════════════════════╣', 'yellow');
+      log('  ║  Make sure Neon DB is updated BEFORE pushing!            ║', 'yellow');
+      log('  ╚══════════════════════════════════════════════════════════╝', 'yellow');
+      info('Staged database files:');
+      stagedDbFiles.forEach(f => console.log(`    ${f}`));
+    }
+
+    return true;
+  } catch (err) {
+    warning('Could not check database changes');
+    return true;
+  }
+}
+
+// ============================================
+// Check 6: Backend Syntax Check
 // ============================================
 
 function checkBackendSyntax() {
@@ -273,6 +346,7 @@ async function main() {
 
   // Run all checks
   checkGitStatus();
+  checkDatabaseChanges();  // Check DB changes FIRST before other checks
   const buildOk = checkFrontendBuild();
   checkFrontendTypeScript();
   checkFrontendLint();
