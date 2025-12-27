@@ -1,10 +1,16 @@
 {
-  "name": "wbs",
+  "name": "optichain-workspace",
   "version": "1.0.0",
-  "description": "",
+  "description": "OptiChain WS & DWS - Work Schedule and Dispatch Work Schedule Management System",
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "validate": "node scripts/validate.cjs",
+    "check": "node scripts/validate.cjs",
+    "pre-push": "node scripts/validate.cjs",
+    "fe:dev": "cd frontend && npm run dev",
+    "fe:build": "cd frontend && npm run build",
+    "fe:lint": "cd frontend && npm run lint",
     "build-css": "tailwindcss -i ./public/input.css -o ./public/output.css --watch",
     "lint": "eslint . --ext .js,.jsx",
     "lint:fix": "eslint . --ext .js,.jsx --fix"
