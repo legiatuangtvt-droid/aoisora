@@ -235,18 +235,24 @@ function checkDatabaseChanges() {
 
     if (changedDbFiles.length > 0) {
       log('', 'yellow');
-      log('  ╔══════════════════════════════════════════════════════════╗', 'yellow');
-      log('  ║  ⚠ DATABASE SCHEMA CHANGES DETECTED                      ║', 'yellow');
-      log('  ╠══════════════════════════════════════════════════════════╣', 'yellow');
-      log('  ║  Please ensure you have:                                 ║', 'yellow');
-      log('  ║  1. Run the SQL migration on Neon database               ║', 'yellow');
-      log('  ║  2. Tested the changes locally                           ║', 'yellow');
-      log('  ║  3. Updated DATABASE_STRUCTURE.md if needed              ║', 'yellow');
-      log('  ╚══════════════════════════════════════════════════════════╝', 'yellow');
+      log('  ╔════════════════════════════════════════════════════════════════╗', 'yellow');
+      log('  ║  ⚠ DATABASE SCHEMA CHANGES DETECTED                            ║', 'yellow');
+      log('  ╠════════════════════════════════════════════════════════════════╣', 'yellow');
+      log('  ║  BEFORE PUSHING, you MUST run this SQL file on Neon:           ║', 'yellow');
+      log('  ║                                                                ║', 'yellow');
+      log('  ║    database/schema_full.sql                                    ║', 'yellow');
+      log('  ║                                                                ║', 'yellow');
+      log('  ║  Steps:                                                        ║', 'yellow');
+      log('  ║  1. Open Neon Console: https://console.neon.tech               ║', 'yellow');
+      log('  ║  2. Go to SQL Editor                                           ║', 'yellow');
+      log('  ║  3. Run database/schema_full.sql                               ║', 'yellow');
+      log('  ║  4. Verify tables are updated                                  ║', 'yellow');
+      log('  ║  5. Then push code                                             ║', 'yellow');
+      log('  ╚════════════════════════════════════════════════════════════════╝', 'yellow');
       log('', 'yellow');
       info('Changed database-related files:');
       changedDbFiles.forEach(f => console.log(`    ${f}`));
-      warning('Database changes detected - verify migration to Neon');
+      warning('Database changes detected - run schema_full.sql on Neon FIRST!');
     } else {
       success('No database schema changes detected');
     }
@@ -262,12 +268,13 @@ function checkDatabaseChanges() {
     });
 
     if (stagedDbFiles.length > 0) {
-      log('', 'yellow');
-      log('  ╔══════════════════════════════════════════════════════════╗', 'yellow');
-      log('  ║  ⚠ STAGED DATABASE FILES WILL BE PUSHED                  ║', 'yellow');
-      log('  ╠══════════════════════════════════════════════════════════╣', 'yellow');
-      log('  ║  Make sure Neon DB is updated BEFORE pushing!            ║', 'yellow');
-      log('  ╚══════════════════════════════════════════════════════════╝', 'yellow');
+      log('', 'red');
+      log('  ╔════════════════════════════════════════════════════════════════╗', 'red');
+      log('  ║  🚨 STAGED DATABASE FILES WILL BE PUSHED                       ║', 'red');
+      log('  ╠════════════════════════════════════════════════════════════════╣', 'red');
+      log('  ║  Have you run database/schema_full.sql on Neon?                ║', 'red');
+      log('  ║  If NOT, run it NOW before pushing!                            ║', 'red');
+      log('  ╚════════════════════════════════════════════════════════════════╝', 'red');
       info('Staged database files:');
       stagedDbFiles.forEach(f => console.log(`    ${f}`));
     }
