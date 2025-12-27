@@ -5,6 +5,7 @@ import { TaskGroup, DateMode, TaskFilters } from '@/types/tasks';
 import { mockTaskGroups } from '@/data/mockTasks';
 import StatusPill from '@/components/ui/StatusPill';
 import SearchBar from '@/components/ui/SearchBar';
+import FilterModal from '@/components/tasks/FilterModal';
 
 export default function TaskListPage() {
   // State management
@@ -12,6 +13,13 @@ export default function TaskListPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [tasks, setTasks] = useState<TaskGroup[]>(mockTaskGroups);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [filters, setFilters] = useState<TaskFilters>({
+    viewScope: 'All team',
+    departments: [],
+    status: [],
+    hqCheck: [],
+  });
 
   // Toggle accordion
   const toggleRow = (taskId: string) => {
@@ -24,12 +32,37 @@ export default function TaskListPage() {
     setExpandedRows(newExpanded);
   };
 
-  // Filter tasks based on search
-  const filteredTasks = tasks.filter(
-    (task) =>
+  // Apply filters handler
+  const handleApplyFilters = (newFilters: TaskFilters) => {
+    setFilters(newFilters);
+  };
+
+  // Filter tasks based on search and filters
+  const filteredTasks = tasks.filter((task) => {
+    // Search filter
+    const matchesSearch =
       task.taskGroupName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      task.dept.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      task.dept.toLowerCase().includes(searchQuery.toLowerCase());
+
+    // Department filter
+    const matchesDept =
+      filters.departments.length === 0 ||
+      filters.departments.some((deptId) => {
+        // Check if task.dept matches any selected department code
+        const deptCode = deptId.split('-').pop()?.toUpperCase();
+        return task.dept === deptCode || deptId.includes(task.dept.toLowerCase());
+      });
+
+    // Status filter
+    const matchesStatus =
+      filters.status.length === 0 || filters.status.includes(task.status);
+
+    // HQ Check filter
+    const matchesHQCheck =
+      filters.hqCheck.length === 0 || filters.hqCheck.includes(task.hqCheck);
+
+    return matchesSearch && matchesDept && matchesStatus && matchesHQCheck;
+  });
 
   return (
     <div className="min-h-screen bg-white p-8">
@@ -64,11 +97,19 @@ export default function TaskListPage() {
               </svg>
             </div>
 
-            <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium">
+            <button
+              onClick={() => setIsFilterOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium"
+            >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
               </svg>
               Filter
+              {(filters.departments.length > 0 || filters.status.length > 0 || filters.hqCheck.length > 0) && (
+                <span className="ml-1 px-2 py-0.5 bg-blue-500 text-white text-xs rounded-full">
+                  {filters.departments.length + filters.status.length + filters.hqCheck.length}
+                </span>
+              )}
             </button>
 
             <button className="flex items-center gap-2 px-5 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm font-medium">
@@ -250,6 +291,14 @@ export default function TaskListPage() {
           </div>
         </div>
       </div>
+
+      {/* Filter Modal */}
+      <FilterModal
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        filters={filters}
+        onApplyFilters={handleApplyFilters}
+      />
     </div>
   );
 }
