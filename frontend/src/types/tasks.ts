@@ -46,7 +46,7 @@ export interface TaskFilters {
 }
 
 // Date Mode Types
-export type DateMode = 'TODAY' | 'WEEK' | 'CUSTOM';
+export type DateMode = 'TODAY' | 'YESTERDAY' | 'CUSTOM';
 
 export interface DateRange {
   from: Date | null;

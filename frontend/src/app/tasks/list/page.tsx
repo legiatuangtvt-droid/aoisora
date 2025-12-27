@@ -7,10 +7,12 @@ import { mockTaskGroups } from '@/data/mockTasks';
 import StatusPill from '@/components/ui/StatusPill';
 import SearchBar from '@/components/ui/SearchBar';
 import FilterModal from '@/components/tasks/FilterModal';
+import DatePicker from '@/components/ui/DatePicker';
 
 export default function TaskListPage() {
   // State management
   const [dateMode, setDateMode] = useState<DateMode>('TODAY');
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState('');
   const [tasks, setTasks] = useState<TaskGroup[]>(mockTaskGroups);
   const [expandedRows, setExpandedRows] = useState<string | null>(null);
@@ -35,6 +37,12 @@ export default function TaskListPage() {
   // Apply filters handler
   const handleApplyFilters = (newFilters: TaskFilters) => {
     setFilters(newFilters);
+  };
+
+  // Date change handler
+  const handleDateChange = (mode: DateMode, date?: Date) => {
+    setDateMode(mode);
+    setSelectedDate(date);
   };
 
   // Filter tasks based on search and filters
@@ -85,14 +93,11 @@ export default function TaskListPage() {
         {/* Date Display & Actions */}
         <div className="flex items-center justify-between gap-4 mb-6">
           {/* Date Picker */}
-          <div className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg bg-white">
-            <span className="text-sm font-medium text-gray-700">
-              TODAY: December 12, 2025
-            </span>
-            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-          </div>
+          <DatePicker
+            dateMode={dateMode}
+            selectedDate={selectedDate}
+            onDateChange={handleDateChange}
+          />
 
           {/* Search & Actions */}
           <div className="flex items-center gap-3 flex-1 justify-end">
