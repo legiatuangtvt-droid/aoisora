@@ -1,0 +1,255 @@
+'use client';
+
+import { useState } from 'react';
+import { TaskGroup, DateMode, TaskFilters } from '@/types/tasks';
+import { mockTaskGroups } from '@/data/mockTasks';
+import StatusPill from '@/components/ui/StatusPill';
+import SearchBar from '@/components/ui/SearchBar';
+
+export default function TaskListPage() {
+  // State management
+  const [dateMode, setDateMode] = useState<DateMode>('TODAY');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [tasks, setTasks] = useState<TaskGroup[]>(mockTaskGroups);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  // Toggle accordion
+  const toggleRow = (taskId: string) => {
+    const newExpanded = new Set(expandedRows);
+    if (newExpanded.has(taskId)) {
+      newExpanded.delete(taskId);
+    } else {
+      newExpanded.add(taskId);
+    }
+    setExpandedRows(newExpanded);
+  };
+
+  // Filter tasks based on search
+  const filteredTasks = tasks.filter(
+    (task) =>
+      task.taskGroupName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      task.dept.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  return (
+    <div className="min-h-screen bg-white p-8">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">List tasks</h1>
+
+        {/* Date Display & Actions */}
+        <div className="flex items-center justify-between gap-4 mb-6">
+          {/* Date Picker */}
+          <div className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg bg-white">
+            <span className="text-sm font-medium text-gray-700">
+              TODAY: December 12, 2025
+            </span>
+            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+
+          {/* Search & Actions */}
+          <div className="flex items-center gap-3 flex-1 justify-end">
+            <div className="relative w-96">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              />
+              <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+
+            <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+              Filter
+            </button>
+
+            <button className="flex items-center gap-2 px-5 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm font-medium">
+              <span className="text-lg">+</span>
+              ADD NEW
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Body - Table */}
+      <div className="border border-gray-200 rounded-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-pink-50">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">
+                  No
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">
+                  <div className="flex items-center gap-2">
+                    Dept
+                    <svg className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                  </div>
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">
+                  Task Group
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">
+                  Start → End
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">
+                  Progress
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">
+                  Unable
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">
+                  <div className="flex items-center gap-2">
+                    Status
+                    <svg className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                  </div>
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">
+                  <div className="flex items-center gap-2">
+                    HQ Check
+                    <svg className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                  </div>
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-100">
+              {filteredTasks.map((task) => (
+                <>
+                  {/* Parent Row */}
+                  <tr key={task.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                      {task.no}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 rounded-full bg-gray-700 flex items-center justify-center">
+                          <span className="text-[10px] text-white font-bold">
+                            {task.dept.charAt(0)}
+                          </span>
+                        </div>
+                        <span className="font-medium text-gray-900">{task.dept}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => toggleRow(task.id)}
+                          className="flex items-center justify-center w-5 h-5 hover:bg-gray-200 rounded transition-colors"
+                        >
+                          <svg
+                            className={`w-4 h-4 text-gray-600 transition-transform ${
+                              expandedRows.has(task.id) ? 'rotate-180' : ''
+                            }`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 9l-7 7-7-7"
+                            />
+                          </svg>
+                        </button>
+                        <span className="text-gray-900">{task.taskGroupName}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                      {task.startDate} → {task.endDate}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                      {task.progress.completed}/{task.progress.total}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-center">
+                      {task.unable}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm">
+                      <StatusPill status={task.status} />
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm">
+                      <StatusPill status={task.hqCheck} />
+                    </td>
+                  </tr>
+
+                  {/* Sub Tasks (Accordion) */}
+                  {expandedRows.has(task.id) && task.subTasks && (
+                    <>
+                      {task.subTasks.map((subTask) => (
+                        <tr key={subTask.id} className="bg-gray-50 border-t border-gray-100">
+                          <td className="px-4 py-2"></td>
+                          <td className="px-4 py-2"></td>
+                          <td className="px-4 py-2 text-sm text-gray-700">
+                            <div className="pl-8 flex items-start gap-2">
+                              <span className="text-gray-400">•</span>
+                              <span>
+                                {subTask.name}
+                                {subTask.assignee && (
+                                  <span className="ml-2 text-gray-500 text-xs">
+                                    ({subTask.assignee})
+                                  </span>
+                                )}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-2 text-sm text-gray-500">{task.startDate} → {task.endDate}</td>
+                          <td className="px-4 py-2"></td>
+                          <td className="px-4 py-2"></td>
+                          <td className="px-4 py-2">
+                            <StatusPill status={subTask.status} />
+                          </td>
+                          <td className="px-4 py-2"></td>
+                        </tr>
+                      ))}
+                    </>
+                  )}
+                </>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Footer - Pagination */}
+        <div className="bg-white px-4 py-3 border-t border-gray-200">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-600">
+              Total: <span className="font-semibold text-gray-900">{filteredTasks.length}</span> tasks group
+            </div>
+            <div className="flex items-center gap-1">
+              <button className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-50">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <button className="w-8 h-8 flex items-center justify-center bg-black text-white rounded font-medium text-sm">
+                1
+              </button>
+              <button className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-50 text-sm">
+                2
+              </button>
+              <button className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-50">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
