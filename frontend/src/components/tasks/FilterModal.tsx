@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { TaskFilters, TaskStatus, HQCheckStatus, Department } from '@/types/tasks';
 import { mockDepartments } from '@/data/mockTasks';
 
+type FilterSection = 'department' | 'status' | 'hqCheck' | null;
+
 interface FilterModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -21,8 +23,14 @@ export default function FilterModal({
   const [selectedDepts, setSelectedDepts] = useState<Set<string>>(
     new Set(filters.departments)
   );
+  const [expandedSection, setExpandedSection] = useState<FilterSection>(null);
 
   if (!isOpen) return null;
+
+  // Toggle section - only one can be open at a time
+  const toggleSection = (section: FilterSection) => {
+    setExpandedSection(expandedSection === section ? null : section);
+  };
 
   // Handle department checkbox - with parent-child logic
   const handleDeptToggle = (dept: Department) => {
@@ -112,7 +120,7 @@ export default function FilterModal({
         </div>
 
         {/* Body */}
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-4">
           {/* View Scope */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -132,12 +140,39 @@ export default function FilterModal({
             </select>
           </div>
 
-          {/* Department - Hierarchical Checkboxes */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Department
-            </label>
-            <div className="space-y-2">
+          {/* Department - Accordion Section */}
+          <div className="border border-gray-200 rounded-lg">
+            <button
+              onClick={() => toggleSection('department')}
+              className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
+            >
+              <span className="text-sm font-medium text-gray-700">
+                Department
+                {selectedDepts.size > 0 && (
+                  <span className="ml-2 px-2 py-0.5 bg-blue-500 text-white text-xs rounded-full">
+                    {selectedDepts.size}
+                  </span>
+                )}
+              </span>
+              <svg
+                className={`w-5 h-5 text-gray-400 transition-transform ${
+                  expandedSection === 'department' ? 'rotate-180' : ''
+                }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+
+            {expandedSection === 'department' && (
+              <div className="px-4 pb-4 space-y-2 border-t border-gray-200 pt-3">
               {mockDepartments.map((dept) => (
                 <div key={dept.id}>
                   {/* Level 1 - Parent */}
@@ -176,15 +211,44 @@ export default function FilterModal({
                   )}
                 </div>
               ))}
-            </div>
+              </div>
+            )}
           </div>
 
-          {/* Status - Multi-select Chips */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Status
-            </label>
-            <div className="flex flex-wrap gap-2">
+          {/* Status - Accordion Section */}
+          <div className="border border-gray-200 rounded-lg">
+            <button
+              onClick={() => toggleSection('status')}
+              className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
+            >
+              <span className="text-sm font-medium text-gray-700">
+                Status
+                {localFilters.status.length > 0 && (
+                  <span className="ml-2 px-2 py-0.5 bg-blue-500 text-white text-xs rounded-full">
+                    {localFilters.status.length}
+                  </span>
+                )}
+              </span>
+              <svg
+                className={`w-5 h-5 text-gray-400 transition-transform ${
+                  expandedSection === 'status' ? 'rotate-180' : ''
+                }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+
+            {expandedSection === 'status' && (
+              <div className="px-4 pb-4 border-t border-gray-200 pt-3">
+                <div className="flex flex-wrap gap-2">
               {(['NOT_YET', 'DONE', 'DRAFT'] as TaskStatus[]).map((status) => (
                 <button
                   key={status}
@@ -198,15 +262,45 @@ export default function FilterModal({
                   {status === 'NOT_YET' ? 'Not Yet' : status.charAt(0) + status.slice(1).toLowerCase()}
                 </button>
               ))}
-            </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* HQ Check - Multi-select Chips */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              HQ Check
-            </label>
-            <div className="flex flex-wrap gap-2">
+          {/* HQ Check - Accordion Section */}
+          <div className="border border-gray-200 rounded-lg">
+            <button
+              onClick={() => toggleSection('hqCheck')}
+              className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
+            >
+              <span className="text-sm font-medium text-gray-700">
+                HQ Check
+                {localFilters.hqCheck.length > 0 && (
+                  <span className="ml-2 px-2 py-0.5 bg-blue-500 text-white text-xs rounded-full">
+                    {localFilters.hqCheck.length}
+                  </span>
+                )}
+              </span>
+              <svg
+                className={`w-5 h-5 text-gray-400 transition-transform ${
+                  expandedSection === 'hqCheck' ? 'rotate-180' : ''
+                }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+
+            {expandedSection === 'hqCheck' && (
+              <div className="px-4 pb-4 border-t border-gray-200 pt-3">
+                <div className="flex flex-wrap gap-2">
               {(['NOT_YET', 'DONE', 'DRAFT'] as HQCheckStatus[]).map((hqCheck) => (
                 <button
                   key={hqCheck}
@@ -220,7 +314,9 @@ export default function FilterModal({
                   {hqCheck === 'NOT_YET' ? 'Not Yet' : hqCheck.charAt(0) + hqCheck.slice(1).toLowerCase()}
                 </button>
               ))}
-            </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
