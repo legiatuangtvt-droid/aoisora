@@ -146,46 +146,46 @@ export default function DatePicker({ dateMode, selectedDate, onDateChange }: Dat
     return (
       <div className="flex-1">
         {/* Calendar Header */}
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-4">
           <button
             onClick={() => navigateMonth(-1)}
-            className="w-6 h-6 flex items-center justify-center hover:bg-gray-100 rounded"
+            className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <span className="text-sm font-semibold">{monthNames[month]} {year}</span>
+          <span className="text-base font-bold text-gray-900">{monthNames[month]} {year}</span>
           <button
             onClick={() => navigateMonth(1)}
-            className="w-6 h-6 flex items-center justify-center hover:bg-gray-100 rounded"
+            className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
         </div>
 
         {/* Days of week */}
-        <div className="grid grid-cols-7 gap-1 mb-2">
+        <div className="grid grid-cols-7 gap-2 mb-3">
           {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) => (
-            <div key={day} className="text-center text-xs font-medium text-gray-500 py-1">
+            <div key={day} className="text-center text-sm font-semibold text-gray-600 py-2">
               {day}
             </div>
           ))}
         </div>
 
         {/* Calendar days */}
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-2">
           {days.map((day, index) => (
             <div key={index} className="aspect-square">
               {day ? (
                 <button
                   onClick={() => handleDayClick(day)}
-                  className={`w-full h-full flex items-center justify-center text-sm rounded-full ${
+                  className={`w-full h-full flex items-center justify-center text-base rounded-full transition-colors ${
                     isSelected(day)
-                      ? 'bg-pink-500 text-white font-semibold'
-                      : 'hover:bg-gray-100 text-gray-700'
+                      ? 'bg-pink-500 text-white font-bold'
+                      : 'hover:bg-gray-100 text-gray-700 font-medium'
                   }`}
                 >
                   {day}
@@ -204,30 +204,30 @@ export default function DatePicker({ dateMode, selectedDate, onDateChange }: Dat
     const weeks = Array.from({ length: 53 }, (_, i) => i + 1);
 
     return (
-      <div className="p-4">
+      <div>
         {/* Year selector */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-center gap-12 mb-6">
           <button
             onClick={() => setSelectedYear(selectedYear - 1)}
-            className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded"
+            className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <span className="text-xl font-bold">{selectedYear}</span>
+          <span className="text-3xl font-bold text-gray-900">{selectedYear}</span>
           <button
             onClick={() => setSelectedYear(selectedYear + 1)}
-            className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded"
+            className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
         </div>
 
         {/* Week range display */}
-        <div className="text-center mb-4 text-sm text-gray-600">
+        <div className="text-center mb-6 text-base text-gray-600 font-medium">
           {(() => {
             const weekRange = getWeekRange(selectedYear, selectedWeek);
             return `${weekRange.from.toLocaleDateString('en-US', { month: 'short', day: '2-digit' })} -- ${weekRange.to.toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}`;
@@ -235,14 +235,14 @@ export default function DatePicker({ dateMode, selectedDate, onDateChange }: Dat
         </div>
 
         {/* Week grid */}
-        <div className="grid grid-cols-6 gap-2 max-h-64 overflow-y-auto">
+        <div className="grid grid-cols-9 gap-3 max-h-80 overflow-y-auto px-4">
           {weeks.map((week) => (
             <button
               key={week}
               onClick={() => setSelectedWeek(week)}
-              className={`px-3 py-2 text-sm rounded hover:bg-gray-100 ${
+              className={`px-4 py-3 text-base rounded-lg hover:bg-gray-100 transition-colors ${
                 selectedWeek === week
-                  ? 'border-b-2 border-pink-500 font-semibold text-gray-900'
+                  ? 'border-b-2 border-pink-500 font-semibold text-gray-900 bg-pink-50'
                   : 'text-gray-700'
               }`}
             >
@@ -271,7 +271,7 @@ export default function DatePicker({ dateMode, selectedDate, onDateChange }: Dat
 
       {/* Dropdown Modal */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+        <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50" style={{ width: '841px', height: '582px' }}>
           {/* Tabs */}
           <div className="flex border-b border-gray-200">
             <button
@@ -307,11 +307,11 @@ export default function DatePicker({ dateMode, selectedDate, onDateChange }: Dat
           </div>
 
           {/* Tab Content */}
-          <div className="p-6">
+          <div className="p-8 overflow-y-auto" style={{ height: 'calc(582px - 112px)' }}>
             {activeTab === 'TODAY' && (
-              <div className="text-center py-8">
-                <p className="text-lg font-semibold text-gray-900 mb-2">Today</p>
-                <p className="text-sm text-gray-600">{formatDate(new Date())}</p>
+              <div className="text-center py-16">
+                <p className="text-2xl font-semibold text-gray-900 mb-3">Today</p>
+                <p className="text-lg text-gray-600">{formatDate(new Date())}</p>
               </div>
             )}
 
@@ -320,29 +320,29 @@ export default function DatePicker({ dateMode, selectedDate, onDateChange }: Dat
             {activeTab === 'CUSTOM' && (
               <div>
                 {/* Date inputs */}
-                <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="grid grid-cols-2 gap-6 mb-6">
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">From</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">From</label>
                     <input
                       type="date"
                       value={customFromDate.toISOString().split('T')[0]}
                       onChange={(e) => setCustomFromDate(new Date(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-sm"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-base"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">To</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">To</label>
                     <input
                       type="date"
                       value={customToDate.toISOString().split('T')[0]}
                       onChange={(e) => setCustomToDate(new Date(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-sm"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-base"
                     />
                   </div>
                 </div>
 
                 {/* Dual Calendar */}
-                <div className="flex gap-6">
+                <div className="flex gap-8">
                   {renderCalendar(customFromDate, true)}
                   {renderCalendar(customToDate, false)}
                 </div>
@@ -351,16 +351,16 @@ export default function DatePicker({ dateMode, selectedDate, onDateChange }: Dat
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200">
+          <div className="flex items-center justify-end gap-4 px-8 py-5 border-t border-gray-200">
             <button
               onClick={handleCancel}
-              className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-8 py-3 text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleApply}
-              className="px-6 py-2 text-sm font-medium text-white bg-pink-600 rounded-lg hover:bg-pink-700 transition-colors"
+              className="px-8 py-3 text-base font-medium text-white bg-pink-600 rounded-lg hover:bg-pink-700 transition-colors"
               style={{ backgroundColor: '#C5055B' }}
             >
               Apply
