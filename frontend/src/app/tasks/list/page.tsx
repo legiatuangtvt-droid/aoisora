@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { TaskGroup, DateMode, TaskFilters } from '@/types/tasks';
 import { mockTaskGroups } from '@/data/mockTasks';
 import StatusPill from '@/components/ui/StatusPill';
@@ -13,7 +13,7 @@ export default function TaskListPage() {
   const [dateMode, setDateMode] = useState<DateMode>('TODAY');
   const [searchQuery, setSearchQuery] = useState('');
   const [tasks, setTasks] = useState<TaskGroup[]>(mockTaskGroups);
-  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [expandedRows, setExpandedRows] = useState<string | null>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filters, setFilters] = useState<TaskFilters>({
     viewScope: 'All team',
@@ -22,54 +22,14 @@ export default function TaskListPage() {
     hqCheck: [],
   });
 
-  // Pagination state
+  // Pagination state - fixed 10 items per page
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const tableRef = useRef<HTMLDivElement>(null);
+  const itemsPerPage = 10; // Fixed number of items per page
 
-  // Calculate dynamic items per page based on viewport height
-  useEffect(() => {
-    const calculateItemsPerPage = () => {
-      // Get viewport height
-      const viewportHeight = window.innerHeight;
-
-      // Estimated heights (in pixels)
-      const headerHeight = 280; // Page header + search bar + date picker
-      const tableHeaderHeight = 44; // Table header row
-      const paginationHeight = 60; // Pagination footer
-      const padding = 64; // Top and bottom padding (p-8)
-      const rowHeight = 50; // Approximate height of each table row
-
-      // Calculate available height for table body
-      const availableHeight = viewportHeight - headerHeight - tableHeaderHeight - paginationHeight - padding;
-
-      // Calculate how many rows can fit
-      const calculatedItems = Math.floor(availableHeight / rowHeight);
-
-      // Set minimum of 5 items and maximum of 20 items per page
-      const newItemsPerPage = Math.max(5, Math.min(20, calculatedItems));
-
-      setItemsPerPage(newItemsPerPage);
-    };
-
-    // Calculate on mount
-    calculateItemsPerPage();
-
-    // Recalculate on window resize
-    window.addEventListener('resize', calculateItemsPerPage);
-
-    return () => window.removeEventListener('resize', calculateItemsPerPage);
-  }, []);
-
-  // Toggle accordion
+  // Toggle accordion - only one row can be expanded at a time
   const toggleRow = (taskId: string) => {
-    const newExpanded = new Set(expandedRows);
-    if (newExpanded.has(taskId)) {
-      newExpanded.delete(taskId);
-    } else {
-      newExpanded.add(taskId);
-    }
-    setExpandedRows(newExpanded);
+    // If clicking on already expanded row, close it. Otherwise, open the new one (closing any previously opened)
+    setExpandedRows(expandedRows === taskId ? null : taskId);
   };
 
   // Apply filters handler
@@ -116,7 +76,8 @@ export default function TaskListPage() {
   }, [searchQuery, filters]);
 
   return (
-    <div className="min-h-screen bg-white p-8">
+    <div className="min-h-screen bg-white">
+      <div className="p-8">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">List tasks</h1>
@@ -171,48 +132,47 @@ export default function TaskListPage() {
         </div>
       </div>
 
-      {/* Body - Table */}
-      <div className="border border-gray-200 rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-pink-50">
+      {/* Body - Table Container */}
+      <div className="border border-gray-200 rounded-lg overflow-hidden mb-6">
+        <table className="w-full">
+          <thead className="bg-pink-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
                   No
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">
-                  <div className="flex items-center gap-2">
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
+                  <div className="flex items-center justify-center gap-2">
                     Dept
                     <svg className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18v3l-7 7v6l-4 2v-8L3 7V4z" />
                     </svg>
                   </div>
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
                   Task Group
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
                   Start → End
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
                   Progress
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
                   Unable
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">
-                  <div className="flex items-center gap-2">
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
+                  <div className="flex items-center justify-center gap-2">
                     Status
                     <svg className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18v3l-7 7v6l-4 2v-8L3 7V4z" />
                     </svg>
                   </div>
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700">
-                  <div className="flex items-center gap-2">
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 bg-pink-50">
+                  <div className="flex items-center justify-center gap-2">
                     HQ Check
                     <svg className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18v3l-7 7v6l-4 2v-8L3 7V4z" />
                     </svg>
                   </div>
                 </th>
@@ -223,11 +183,11 @@ export default function TaskListPage() {
                 <React.Fragment key={task.id}>
                   {/* Parent Row */}
                   <tr className="hover:bg-gray-50">
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-center border-r border-gray-200">
                       {task.no}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      <div className="flex items-center gap-2">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm border-r border-gray-200">
+                      <div className="flex items-center justify-start gap-2">
                         <div className="w-5 h-5 rounded-full bg-gray-700 flex items-center justify-center">
                           <span className="text-[10px] text-white font-bold">
                             {task.dept.charAt(0)}
@@ -236,15 +196,15 @@ export default function TaskListPage() {
                         <span className="font-medium text-gray-900">{task.dept}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm">
-                      <div className="flex items-center gap-2">
+                    <td className="px-4 py-3 text-sm border-r border-gray-200">
+                      <div className="flex items-center justify-start gap-2">
                         <button
                           onClick={() => toggleRow(task.id)}
                           className="flex items-center justify-center w-5 h-5 hover:bg-gray-200 rounded transition-colors"
                         >
                           <svg
                             className={`w-4 h-4 text-gray-600 transition-transform ${
-                              expandedRows.has(task.id) ? 'rotate-180' : ''
+                              expandedRows === task.id ? 'rotate-180' : ''
                             }`}
                             fill="none"
                             stroke="currentColor"
@@ -261,31 +221,35 @@ export default function TaskListPage() {
                         <span className="text-gray-900">{task.taskGroupName}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-center border-r border-gray-200">
                       {task.startDate} → {task.endDate}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-center border-r border-gray-200">
                       {task.progress.completed}/{task.progress.total}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-center">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-center border-r border-gray-200">
                       {task.unable}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      <StatusPill status={task.status} />
+                    <td className="px-4 py-3 whitespace-nowrap text-sm border-r border-gray-200">
+                      <div className="flex items-center justify-center">
+                        <StatusPill status={task.status} />
+                      </div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      <StatusPill status={task.hqCheck} />
+                      <div className="flex items-center justify-center">
+                        <StatusPill status={task.hqCheck} />
+                      </div>
                     </td>
                   </tr>
 
                   {/* Sub Tasks (Accordion) */}
-                  {expandedRows.has(task.id) && task.subTasks && (
+                  {expandedRows === task.id && task.subTasks && (
                     <>
                       {task.subTasks.map((subTask) => (
                         <tr key={subTask.id} className="bg-gray-50 border-t border-gray-100">
-                          <td className="px-4 py-2"></td>
-                          <td className="px-4 py-2"></td>
-                          <td className="px-4 py-2 text-sm text-gray-700">
+                          <td className="px-4 py-2 text-center border-r border-gray-200"></td>
+                          <td className="px-4 py-2 border-r border-gray-200"></td>
+                          <td className="px-4 py-2 text-sm text-gray-700 border-r border-gray-200">
                             <div className="pl-8 flex items-start gap-2">
                               <span className="text-gray-400">•</span>
                               <span>
@@ -298,11 +262,13 @@ export default function TaskListPage() {
                               </span>
                             </div>
                           </td>
-                          <td className="px-4 py-2 text-sm text-gray-500">{task.startDate} → {task.endDate}</td>
-                          <td className="px-4 py-2"></td>
-                          <td className="px-4 py-2"></td>
-                          <td className="px-4 py-2">
-                            <StatusPill status={subTask.status} />
+                          <td className="px-4 py-2 text-sm text-gray-500 text-center border-r border-gray-200">{task.startDate} → {task.endDate}</td>
+                          <td className="px-4 py-2 text-center border-r border-gray-200"></td>
+                          <td className="px-4 py-2 text-center border-r border-gray-200"></td>
+                          <td className="px-4 py-2 border-r border-gray-200">
+                            <div className="flex items-center justify-center">
+                              <StatusPill status={subTask.status} />
+                            </div>
                           </td>
                           <td className="px-4 py-2"></td>
                         </tr>
@@ -313,9 +279,8 @@ export default function TaskListPage() {
               ))}
             </tbody>
           </table>
-        </div>
 
-        {/* Footer - Pagination */}
+        {/* Pagination */}
         <div className="bg-white px-4 py-3 border-t border-gray-200">
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-600">
@@ -370,6 +335,7 @@ export default function TaskListPage() {
         filters={filters}
         onApplyFilters={handleApplyFilters}
       />
+      </div>
     </div>
   );
 }
