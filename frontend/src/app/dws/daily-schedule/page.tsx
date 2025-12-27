@@ -290,11 +290,11 @@ export default function DailySchedulePage() {
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 rounded-full">
                   <div className="w-6 h-6 bg-indigo-500 rounded-full flex items-center justify-center">
                     <span className="text-white text-xs font-bold">
-                      {currentUser.name.charAt(0)}
+                      {currentUser.staff_name.charAt(0)}
                     </span>
                   </div>
                   <div className="text-xs">
-                    <div className="font-medium text-gray-800">{currentUser.name}</div>
+                    <div className="font-medium text-gray-800">{currentUser.staff_name}</div>
                     <div className="text-gray-500">{currentUser.role}</div>
                   </div>
                 </div>
@@ -308,7 +308,7 @@ export default function DailySchedulePage() {
                 <span className="text-xs text-gray-500">
                   {backendOnline ? 'Online' : 'Offline (Demo)'}
                 </span>
-                <span className="text-[10px] text-gray-400 ml-1">v12</span>
+                <span className="text-[10px] text-gray-400 ml-1">v13</span>
               </div>
             </div>
           </div>
