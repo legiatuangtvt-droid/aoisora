@@ -1,5 +1,6 @@
 import { en, ja, vi } from './locales';
-import { Locale, Translations, LOCALES, DEFAULT_LOCALE, LocaleInfo } from './types';
+import type { Locale, Translations, LocaleInfo } from './types';
+import { LOCALES, DEFAULT_LOCALE } from './types';
 
 // All translations
 const translations: Record<Locale, Translations> = {
@@ -183,4 +184,5 @@ export function getDayNames(locale?: Locale, short: boolean = false): string[] {
 }
 
 // Re-export types and constants
-export { Locale, Translations, LOCALES, DEFAULT_LOCALE, LocaleInfo } from './types';
+export { LOCALES, DEFAULT_LOCALE };
+export type { Locale, Translations, LocaleInfo };

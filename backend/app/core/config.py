@@ -13,6 +13,20 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str
 
+    @field_validator('DATABASE_URL', mode='before')
+    @classmethod
+    def clean_database_url(cls, v):
+        """Clean DATABASE_URL - remove accidental prefixes like 'psql '"""
+        if isinstance(v, str):
+            v = v.strip()
+            # Remove accidental 'psql ' prefix if present
+            if v.startswith("psql "):
+                v = v[5:].strip()
+            # Remove surrounding quotes if present
+            if (v.startswith("'") and v.endswith("'")) or (v.startswith('"') and v.endswith('"')):
+                v = v[1:-1]
+        return v
+
     # Security
     SECRET_KEY: str
     ALGORITHM: str = "HS256"

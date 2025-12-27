@@ -1,0 +1,12 @@
+{
+  "roles": [
+    { "id": "STAFF", "name": "Staff", "level": 1 },
+    { "id": "STORE_LEADER_G2", "name": "Store Leader G2 (Phó cửa hàng)", "level": 10 },
+    { "id": "STORE_LEADER_G3", "name": "Store Leader G3 (Trưởng cửa hàng)", "level": 11 },
+    { "id": "STORE_INCHARGE", "name": "Store In-charge (SI)", "level": 12 },
+    { "id": "AREA_MANAGER", "name": "Area Manager", "level": 20 },
+    { "id": "REGIONAL_MANAGER", "name": "Regional Manager", "level": 30 },
+    { "id": "HQ_STAFF", "name": "HQ Staff", "level": 50 },
+    { "id": "ADMIN", "name": "Admin System", "level": 99 }
+  ]
+}

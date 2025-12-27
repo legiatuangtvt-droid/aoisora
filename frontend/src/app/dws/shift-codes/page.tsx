@@ -1,35 +1,36 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useLanguage } from '@/contexts/LanguageContext';
 import {
   checkHealth,
   getShiftCodes,
   createShiftCode,
-  updateShiftCode,
   deleteShiftCode,
-  generateShiftCodes as apiGenerateShiftCodes,
 } from '@/lib/api';
 import type { ShiftCode, ShiftCodeCreate } from '@/types/api';
 
 export default function ShiftCodesPage() {
+  const { t } = useLanguage();
   const [backendOnline, setBackendOnline] = useState(false);
   const [shiftCodes, setShiftCodes] = useState<ShiftCode[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const [showGenerator, setShowGenerator] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editingCode, setEditingCode] = useState<ShiftCode | null>(null);
   const [processing, setProcessing] = useState(false);
 
-  // Manual add form state
-  const [formCode, setFormCode] = useState('');
-  const [formName, setFormName] = useState('');
-  const [formStartTime, setFormStartTime] = useState('');
-  const [formEndTime, setFormEndTime] = useState('');
-  const [formColor, setFormColor] = useState('#4F46E5');
+  // Auto-generator form state
+  const [genChar, setGenChar] = useState('V');
+  const [genDurationMin, setGenDurationMin] = useState(4);
+  const [genDurationMax, setGenDurationMax] = useState(9);
+  const [genStartTime, setGenStartTime] = useState('05:30');
+  const [genEndTime, setGenEndTime] = useState('23:00');
+
+  // Manual add modal state
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [manualCode, setManualCode] = useState('');
+  const [manualStartTime, setManualStartTime] = useState('');
+  const [manualEndTime, setManualEndTime] = useState('');
 
   // Load shift codes
   useEffect(() => {
@@ -46,7 +47,7 @@ export default function ShiftCodesPage() {
       } catch (err) {
         console.error('Failed to load shift codes:', err);
         setBackendOnline(false);
-        setError('Failed to connect to backend.');
+        setError('Không thể kết nối đến server.');
       } finally {
         setLoading(false);
       }
@@ -55,7 +56,7 @@ export default function ShiftCodesPage() {
     loadData();
   }, []);
 
-  // Calculate duration
+  // Calculate duration between two times
   const calculateDuration = (startTime: string, endTime: string): number => {
     const [startH, startM] = startTime.split(':').map(Number);
     const [endH, endM] = endTime.split(':').map(Number);
@@ -71,10 +72,24 @@ export default function ShiftCodesPage() {
     return (endMinutes - startMinutes) / 60;
   };
 
-  // Add shift code
-  const handleAddShiftCode = async () => {
-    if (!formCode || !formName || !formStartTime || !formEndTime) {
-      setError('Please fill in all fields.');
+  // Format time for display
+  const formatTimeRange = (start: string, end: string): string => {
+    const startFormatted = start?.substring(0, 5) || '';
+    const endFormatted = end?.substring(0, 5) || '';
+    return `${startFormatted} - ${endFormatted}`;
+  };
+
+  // Generate shift codes automatically
+  const handleGenerateShiftCodes = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!genChar || genChar.length !== 1 || !/[A-Z]/i.test(genChar)) {
+      setError('Ký tự phải là một chữ cái A-Z.');
+      return;
+    }
+
+    if (genDurationMin >= genDurationMax) {
+      setError('Số giờ tối thiểu phải nhỏ hơn số giờ tối đa.');
       return;
     }
 
@@ -82,32 +97,74 @@ export default function ShiftCodesPage() {
     setError(null);
 
     try {
-      const duration = calculateDuration(formStartTime, formEndTime);
-      const data: ShiftCodeCreate = {
-        shift_code: formCode.toUpperCase(),
-        shift_name: formName,
-        start_time: formStartTime + ':00',
-        end_time: formEndTime + ':00',
-        duration_hours: duration,
-        color_code: formColor,
-      };
+      const generatedCodes: ShiftCode[] = [];
+      const letter = genChar.toUpperCase();
 
-      const newCode = await createShiftCode(data);
-      setShiftCodes(prev => [...prev, newCode]);
-      setShowAddModal(false);
-      resetForm();
+      // Generate codes for each duration from min to max (step 0.5)
+      for (let duration = genDurationMin; duration <= genDurationMax; duration += 0.5) {
+        // Parse start and end times
+        const [startH, startM] = genStartTime.split(':').map(Number);
+        const [endH] = genEndTime.split(':').map(Number);
+
+        // Generate codes for different start times (every 30 minutes)
+        for (let h = startH; h <= endH - duration; h++) {
+          for (let m = (h === startH ? startM : 0); m < 60; m += 30) {
+            // Calculate end time for this shift
+            const shiftEndMinutes = (h * 60 + m) + (duration * 60);
+            const shiftEndH = Math.floor(shiftEndMinutes / 60) % 24;
+            const shiftEndM = shiftEndMinutes % 60;
+
+            // Check if end time is within allowed range
+            if (shiftEndH > endH || (shiftEndH === endH && shiftEndM > 0)) {
+              continue;
+            }
+
+            // Create shift code name: V8.512 = V + 8h + start at 5:12
+            const durationStr = duration % 1 === 0 ? duration.toString() : duration.toFixed(1);
+            const startTimeStr = `${h.toString()}${m === 30 ? '30' : m === 0 ? '' : m.toString().padStart(2, '0')}`;
+            const code = `${letter}${durationStr}.${startTimeStr}`;
+
+            const startTimeFormatted = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+            const endTimeFormatted = `${shiftEndH.toString().padStart(2, '0')}:${shiftEndM.toString().padStart(2, '0')}`;
+
+            // Create via API
+            const data: ShiftCodeCreate = {
+              shift_code: code,
+              shift_name: `Ca ${code}`,
+              start_time: startTimeFormatted + ':00',
+              end_time: endTimeFormatted + ':00',
+              duration_hours: duration,
+              color_code: '#4F46E5',
+            };
+
+            try {
+              const newCode = await createShiftCode(data);
+              generatedCodes.push(newCode);
+            } catch (err) {
+              // Skip duplicates silently
+              console.warn(`Shift code ${code} may already exist, skipping...`);
+            }
+          }
+        }
+      }
+
+      if (generatedCodes.length > 0) {
+        setShiftCodes(prev => [...prev, ...generatedCodes]);
+      }
     } catch (err) {
-      console.error('Failed to add shift code:', err);
-      setError('Failed to add shift code.');
+      console.error('Failed to generate shift codes:', err);
+      setError('Không thể tạo mã ca.');
     } finally {
       setProcessing(false);
     }
   };
 
-  // Edit shift code
-  const handleEditShiftCode = async () => {
-    if (!editingCode || !formCode || !formName || !formStartTime || !formEndTime) {
-      setError('Please fill in all fields.');
+  // Add manual shift code
+  const handleAddManualShiftCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!manualCode || !manualStartTime || !manualEndTime) {
+      setError('Vui lòng điền đầy đủ thông tin.');
       return;
     }
 
@@ -115,34 +172,33 @@ export default function ShiftCodesPage() {
     setError(null);
 
     try {
-      const duration = calculateDuration(formStartTime, formEndTime);
-      const data = {
-        shift_code: formCode.toUpperCase(),
-        shift_name: formName,
-        start_time: formStartTime + ':00',
-        end_time: formEndTime + ':00',
+      const duration = calculateDuration(manualStartTime, manualEndTime);
+      const data: ShiftCodeCreate = {
+        shift_code: manualCode.toUpperCase(),
+        shift_name: `Ca ${manualCode.toUpperCase()}`,
+        start_time: manualStartTime + ':00',
+        end_time: manualEndTime + ':00',
         duration_hours: duration,
-        color_code: formColor,
+        color_code: '#4F46E5',
       };
 
-      const updatedCode = await updateShiftCode(editingCode.shift_code_id, data);
-      setShiftCodes(prev =>
-        prev.map(c => (c.shift_code_id === editingCode.shift_code_id ? updatedCode : c))
-      );
-      setShowEditModal(false);
-      setEditingCode(null);
-      resetForm();
+      const newCode = await createShiftCode(data);
+      setShiftCodes(prev => [...prev, newCode]);
+      setShowAddModal(false);
+      setManualCode('');
+      setManualStartTime('');
+      setManualEndTime('');
     } catch (err) {
-      console.error('Failed to update shift code:', err);
-      setError('Failed to update shift code.');
+      console.error('Failed to add shift code:', err);
+      setError('Không thể thêm mã ca. Mã ca có thể đã tồn tại.');
     } finally {
       setProcessing(false);
     }
   };
 
   // Delete shift code
-  const handleDeleteShiftCode = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this shift code?')) return;
+  const handleDeleteShiftCode = async (id: number, code: string) => {
+    if (!confirm(`Bạn có chắc muốn xóa mã ca "${code}"?`)) return;
 
     setProcessing(true);
     try {
@@ -150,61 +206,16 @@ export default function ShiftCodesPage() {
       setShiftCodes(prev => prev.filter(c => c.shift_code_id !== id));
     } catch (err) {
       console.error('Failed to delete shift code:', err);
-      setError('Failed to delete shift code.');
+      setError('Không thể xóa mã ca.');
     } finally {
       setProcessing(false);
     }
   };
 
-  // Generate default shift codes
-  const handleGenerateDefaults = async () => {
-    setProcessing(true);
-    setError(null);
-
-    try {
-      const generated = await apiGenerateShiftCodes();
-      setShiftCodes(prev => [...prev, ...generated]);
-      setShowGenerator(false);
-    } catch (err) {
-      console.error('Failed to generate shift codes:', err);
-      setError('Failed to generate default shift codes.');
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  // Open edit modal
-  const openEditModal = (code: ShiftCode) => {
-    setEditingCode(code);
-    setFormCode(code.shift_code);
-    setFormName(code.shift_name);
-    setFormStartTime(code.start_time.substring(0, 5));
-    setFormEndTime(code.end_time.substring(0, 5));
-    setFormColor(code.color_code || '#4F46E5');
-    setShowEditModal(true);
-  };
-
-  // Reset form
-  const resetForm = () => {
-    setFormCode('');
-    setFormName('');
-    setFormStartTime('');
-    setFormEndTime('');
-    setFormColor('#4F46E5');
-  };
-
-  // Group shift codes by duration
-  const groupedShiftCodes = useMemo(() => {
-    const groups: Record<number, ShiftCode[]> = {};
-    shiftCodes.forEach(code => {
-      const duration = code.duration_hours || 0;
-      if (!groups[duration]) {
-        groups[duration] = [];
-      }
-      groups[duration].push(code);
-    });
-    return groups;
-  }, [shiftCodes]);
+  // Sort shift codes by code
+  const sortedShiftCodes = [...shiftCodes].sort((a, b) => {
+    return a.shift_code.localeCompare(b.shift_code);
+  });
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -213,41 +224,24 @@ export default function ShiftCodesPage() {
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link href="/" className="text-indigo-600 hover:text-indigo-800">
+              <Link href="/dws" className="text-indigo-600 hover:text-indigo-800">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
               </Link>
-              <h1 className="text-xl font-bold text-gray-800">Quan Ly Ma Ca - Shift Codes</h1>
-              {/* Backend status */}
-              <div
-                className={`w-3 h-3 rounded-full ${backendOnline ? 'bg-green-400' : 'bg-red-400'}`}
-                title={backendOnline ? 'Backend Connected' : 'Backend Offline'}
-              />
+              <h1 className="text-xl font-bold text-gray-800">
+                {t('dws.shiftCodes')} - Quan Ly Ma Ca
+              </h1>
             </div>
 
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => {
-                  resetForm();
-                  setShowAddModal(true);
-                }}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                Add Shift Code
-              </button>
-              <button
-                onClick={() => setShowGenerator(true)}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-2"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                Generate Defaults
-              </button>
+            {/* Backend status indicator */}
+            <div className="flex items-center gap-2">
+              <div
+                className={`w-2.5 h-2.5 rounded-full ${backendOnline ? 'bg-green-500' : 'bg-red-500'}`}
+              />
+              <span className="text-xs text-gray-500">
+                {backendOnline ? 'Online' : 'Offline'}
+              </span>
             </div>
           </div>
         </div>
@@ -256,339 +250,265 @@ export default function ShiftCodesPage() {
       {/* Main Content */}
       <main className="p-6">
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6 flex justify-between">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6 flex justify-between items-center">
             <span>{error}</span>
-            <button onClick={() => setError(null)}>&times;</button>
+            <button onClick={() => setError(null)} className="text-red-700 hover:text-red-900">
+              &times;
+            </button>
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="p-4 border-b bg-slate-50">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-800">
-                Shift Codes List ({shiftCodes.length} codes)
-              </h2>
-              <div className="text-sm text-gray-500">
-                Grouped by duration
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          {/* Auto Generator Form */}
+          <div className="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+            <h3 className="text-lg font-semibold text-gray-700 mb-4">Tao Ma Ca Tu Dong</h3>
+            <form onSubmit={handleGenerateShiftCodes} className="flex flex-wrap items-end gap-4">
+              {/* 1. Letter */}
+              <div className="flex-shrink-0" style={{ maxWidth: '80px' }}>
+                <label className="block text-xs font-medium text-gray-600 mb-1">1. Ky tu</label>
+                <input
+                  type="text"
+                  value={genChar}
+                  onChange={(e) => setGenChar(e.target.value.toUpperCase().slice(0, 1))}
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 uppercase text-center font-bold"
+                  maxLength={1}
+                  placeholder="A-Z"
+                />
               </div>
-            </div>
+
+              {/* 2. Duration Range */}
+              <div className="flex-1 min-w-[200px]">
+                <label className="block text-xs font-medium text-gray-600 mb-1">2. So gio lam (Toi thieu - Toi da)</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={genDurationMin}
+                    onChange={(e) => setGenDurationMin(Number(e.target.value))}
+                    min={1}
+                    max={12}
+                    step={0.5}
+                    className="flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                  <span className="text-gray-500">-</span>
+                  <input
+                    type="number"
+                    value={genDurationMax}
+                    onChange={(e) => setGenDurationMax(Number(e.target.value))}
+                    min={1}
+                    max={12}
+                    step={0.5}
+                    className="flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              {/* 3. Time Range */}
+              <div className="flex-1 min-w-[200px]">
+                <label className="block text-xs font-medium text-gray-600 mb-1">3. Bat dau tu - Ket thuc muon nhat</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="time"
+                    value={genStartTime}
+                    onChange={(e) => setGenStartTime(e.target.value)}
+                    step={1800}
+                    className="flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                  <span className="text-gray-500">-</span>
+                  <input
+                    type="time"
+                    value={genEndTime}
+                    onChange={(e) => setGenEndTime(e.target.value)}
+                    step={1800}
+                    className="flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              {/* Generate Button */}
+              <button
+                type="submit"
+                disabled={processing}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2 flex-shrink-0"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                {processing ? 'Dang tao...' : 'Tao Ma ca'}
+              </button>
+
+              {/* Manual Add Button */}
+              <button
+                type="button"
+                onClick={() => setShowAddModal(true)}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 flex-shrink-0"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Them ma ca
+              </button>
+            </form>
           </div>
 
-          {loading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
-            </div>
-          ) : (
-            <div className="overflow-auto max-h-[calc(100vh-250px)]">
-              <table className="min-w-full">
-                <thead className="bg-slate-100 sticky top-0">
+          {/* Shift Codes Table */}
+          <div className="overflow-x-auto">
+            <h2 className="text-lg font-semibold text-gray-700 mb-4">
+              Danh Sach Ma Ca Lam Viec ({shiftCodes.length} ma ca)
+            </h2>
+
+            {loading ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
+              </div>
+            ) : (
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time Range</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Color</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
+                      STT
+                    </th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Ma Ca Lam Viec
+                    </th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Thoi gian lam viec
+                    </th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Tong gio
+                    </th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
+                      Xoa
+                    </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {Object.entries(groupedShiftCodes)
-                    .sort(([a], [b]) => Number(b) - Number(a))
-                    .map(([duration, codes]) => (
-                      <>
-                        <tr key={`header-${duration}`} className="bg-indigo-50">
-                          <td colSpan={7} className="px-6 py-2 text-sm font-bold text-indigo-700">
-                            {duration}h shifts ({codes.length} codes)
-                          </td>
-                        </tr>
-                        {codes.map((code, index) => (
-                          <tr key={code.shift_code_id} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{index + 1}</td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span
-                                className="px-3 py-1 rounded-full text-sm font-bold"
-                                style={{
-                                  backgroundColor: code.color_code || '#E5E7EB',
-                                  color: '#fff',
-                                }}
-                              >
-                                {code.shift_code}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 font-medium">
-                              {code.shift_name}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                              {code.start_time?.substring(0, 5)} - {code.end_time?.substring(0, 5)}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {code.duration_hours}h
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div
-                                className="w-6 h-6 rounded border"
-                                style={{ backgroundColor: code.color_code || '#E5E7EB' }}
-                              />
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm">
-                              <button
-                                onClick={() => openEditModal(code)}
-                                className="text-indigo-600 hover:text-indigo-800 mr-3"
-                              >
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => handleDeleteShiftCode(code.shift_code_id)}
-                                className="text-red-600 hover:text-red-800"
-                                disabled={processing}
-                              >
-                                Delete
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </>
-                    ))}
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {sortedShiftCodes.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="text-center py-10 text-gray-500">
+                        Chua co ma ca nao duoc tao.
+                      </td>
+                    </tr>
+                  ) : (
+                    sortedShiftCodes.map((code, index) => (
+                      <tr key={code.shift_code_id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
+                          {index + 1}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                          <span className="px-3 py-1 rounded bg-indigo-100 text-indigo-800 font-bold text-sm">
+                            {code.shift_code}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-700">
+                          {formatTimeRange(code.start_time, code.end_time)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium text-gray-900">
+                          {code.duration_hours}h
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                          <button
+                            onClick={() => handleDeleteShiftCode(code.shift_code_id, code.shift_code)}
+                            disabled={processing}
+                            className="text-red-600 hover:text-red-800 disabled:opacity-50"
+                            title="Xoa ma ca"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
-
-              {shiftCodes.length === 0 && (
-                <div className="text-center py-10 text-gray-500">
-                  No shift codes found. Click &quot;Generate Defaults&quot; to create standard codes.
-                </div>
-              )}
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </main>
 
-      {/* Generate Defaults Modal */}
-      {showGenerator && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-800">Generate Default Shift Codes</h3>
-              <button onClick={() => setShowGenerator(false)} className="text-gray-500 hover:text-gray-700">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <p className="text-gray-600 mb-4">
-              This will generate the following default shift codes:
-            </p>
-
-            <ul className="list-disc list-inside text-sm text-gray-600 mb-6 space-y-1">
-              <li><strong>S</strong> - Ca Sáng (Morning) 06:00 - 14:00</li>
-              <li><strong>C</strong> - Ca Chiều (Afternoon) 14:00 - 22:00</li>
-              <li><strong>T</strong> - Ca Tối (Night) 22:00 - 06:00</li>
-              <li><strong>OFF</strong> - Nghỉ (Day Off)</li>
-              <li><strong>FULL</strong> - Ca Toàn Thời (Full Day) 08:00 - 20:00</li>
-            </ul>
-
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowGenerator(false)}
-                className="px-4 py-2 border rounded-lg hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleGenerateDefaults}
-                disabled={processing}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
-              >
-                {processing ? 'Generating...' : 'Generate'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Add Modal */}
+      {/* Manual Add Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-800">Add Shift Code</h3>
-              <button onClick={() => setShowAddModal(false)} className="text-gray-500 hover:text-gray-700">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <form onSubmit={handleAddManualShiftCode}>
+              {/* Modal Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b">
+                <h3 className="text-lg font-bold text-gray-800">Them Ma Ca Thu Cong</h3>
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl leading-none"
+                >
+                  &times;
+                </button>
+              </div>
 
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              {/* Modal Body */}
+              <div className="px-6 py-4 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Code</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Ma Ca (*)</label>
                   <input
                     type="text"
-                    value={formCode}
-                    onChange={e => setFormCode(e.target.value.toUpperCase())}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    placeholder="e.g., S, C, V812"
+                    value={manualCode}
+                    onChange={(e) => setManualCode(e.target.value.toUpperCase())}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 uppercase"
+                    placeholder="Vi du: V8.512"
+                    required
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Color</label>
-                  <input
-                    type="color"
-                    value={formColor}
-                    onChange={e => setFormColor(e.target.value)}
-                    className="w-full h-10 border rounded-lg cursor-pointer"
-                  />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Gio Bat Dau (*)</label>
+                    <input
+                      type="time"
+                      value={manualStartTime}
+                      onChange={(e) => setManualStartTime(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Gio Ket Thuc (*)</label>
+                    <input
+                      type="time"
+                      value={manualEndTime}
+                      onChange={(e) => setManualEndTime(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      required
+                    />
+                  </div>
                 </div>
+
+                {manualStartTime && manualEndTime && (
+                  <div className="text-sm text-gray-500">
+                    Tong gio: {calculateDuration(manualStartTime, manualEndTime)}h
+                  </div>
+                )}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                <input
-                  type="text"
-                  value={formName}
-                  onChange={e => setFormName(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="e.g., Ca Sáng, Morning Shift"
-                />
+              {/* Modal Footer */}
+              <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50">
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="px-4 py-2 border rounded-lg hover:bg-gray-100"
+                >
+                  Huy
+                </button>
+                <button
+                  type="submit"
+                  disabled={processing}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                  </svg>
+                  {processing ? 'Dang luu...' : 'Luu'}
+                </button>
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
-                  <input
-                    type="time"
-                    value={formStartTime}
-                    onChange={e => setFormStartTime(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
-                  <input
-                    type="time"
-                    value={formEndTime}
-                    onChange={e => setFormEndTime(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
-              </div>
-
-              {formStartTime && formEndTime && (
-                <div className="text-sm text-gray-500">
-                  Duration: {calculateDuration(formStartTime, formEndTime)}h
-                </div>
-              )}
-            </div>
-
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="px-4 py-2 border rounded-lg hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAddShiftCode}
-                disabled={processing}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
-              >
-                {processing ? 'Adding...' : 'Add'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Modal */}
-      {showEditModal && editingCode && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-800">Edit Shift Code</h3>
-              <button onClick={() => setShowEditModal(false)} className="text-gray-500 hover:text-gray-700">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Code</label>
-                  <input
-                    type="text"
-                    value={formCode}
-                    onChange={e => setFormCode(e.target.value.toUpperCase())}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Color</label>
-                  <input
-                    type="color"
-                    value={formColor}
-                    onChange={e => setFormColor(e.target.value)}
-                    className="w-full h-10 border rounded-lg cursor-pointer"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                <input
-                  type="text"
-                  value={formName}
-                  onChange={e => setFormName(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
-                  <input
-                    type="time"
-                    value={formStartTime}
-                    onChange={e => setFormStartTime(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
-                  <input
-                    type="time"
-                    value={formEndTime}
-                    onChange={e => setFormEndTime(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
-              </div>
-
-              {formStartTime && formEndTime && (
-                <div className="text-sm text-gray-500">
-                  Duration: {calculateDuration(formStartTime, formEndTime)}h
-                </div>
-              )}
-            </div>
-
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                onClick={() => setShowEditModal(false)}
-                className="px-4 py-2 border rounded-lg hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleEditShiftCode}
-                disabled={processing}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
-              >
-                {processing ? 'Saving...' : 'Save'}
-              </button>
-            </div>
+            </form>
           </div>
         </div>
       )}

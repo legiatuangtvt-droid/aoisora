@@ -1,0 +1,84 @@
+# CHANGELOG - OptiChain WS & DWS
+
+System design changes and feature updates.
+
+---
+
+## [2025-12-27] - DWS Pages Update to Match Legacy Spec
+
+### Changes
+
+#### 1. DWS Shift Codes Page
+- **Auto-generator Form**: Inline form (not modal) with:
+  - Letter input (single A-Z character)
+  - Working hours range (min-max, e.g., 4-9 hours)
+  - Time range (start-end, e.g., 05:30 - 23:00)
+  - "Generate Shift Codes" button
+  - "Add Shift Code" button for manual entry
+- **Manual Add Modal**: Shift Code, Start Time, End Time, auto-calculated duration
+- **Table Display**: Index, Shift Code, Working Time, Total Hours, Delete action
+
+#### 2. DWS Daily Schedule Page
+- **Filter Bar**: Store dropdown, "Check Task" button, Week navigation (Mon-Sun)
+- **Mock Data Support**: 4 sample stores, 10 staff, 5 shift codes (V8.6, V8.14, V6.8, V6.16, OFF)
+- **Auto-generated Assignments**: Demo mode with random shift assignments
+
+#### 3. DWS Workforce Dispatch Page
+- **Cycle Navigation**: Payroll cycle (16th - 15th of month)
+- **Mock Data**: 3 regions, 4 areas, 7 stores, 9 employees
+- **Hierarchy View**: Region > Area > Store > Employee
+- **Legend**: +X.Xh (surplus), -X.Xh (shortage), V8.6 (assigned), KDK (not registered), Yellow (weekend)
+
+#### 4. Backend DATABASE_URL Validator
+- **Added field_validator**: Cleans DATABASE_URL before use
+  - Removes accidental `psql ` prefix
+  - Removes surrounding quotes
+- **Reason**: Cloud Run environment variable may have incorrect format
+
+### Mock Data Reference
+- `data-stores.json` - 58 AEON MaxValu stores
+- `data-employee.json` - Employees by store
+- `data-roles.json` - Roles (Staff, Store Leader G2/G3, Area Manager, etc.)
+- `data-work_positions.json` - 5 work positions (Leader, MMD, POS, Merchandise, Cafe)
+- `data-daily_templates.json` - Daily schedule templates
+
+---
+
+## [2025-12-26] - i18n System
+
+### Added
+- **i18n system**: Support for 3 languages (English, Japanese, Vietnamese)
+- **LanguageContext**: React context for language management
+- **LanguageSwitcher component**: 3 variants (dropdown, buttons, compact)
+- **Translation files**: en.ts, ja.ts, vi.ts
+
+---
+
+## [2025-12-25] - DWS Module
+
+### Added
+- **DWS Landing Page** (`/dws`): Links to Daily Schedule, Workforce Dispatch, Shift Codes
+- **Shift Codes Page**: Basic CRUD interface
+- **Daily Schedule Page**: Weekly calendar view
+- **Workforce Dispatch Page**: Hierarchy-based dispatch view
+
+---
+
+## [2025-12-24] - Phase 1 Backend APIs
+
+### Added
+- Staff CRUD APIs
+- Store CRUD APIs
+- Task CRUD APIs
+- Shift Code CRUD APIs
+- Shift Assignment APIs
+- Notification APIs
+
+---
+
+## Changelog Guidelines
+
+1. **Date**: Format [YYYY-MM-DD]
+2. **Short Description**: Title of change
+3. **Details**: Added, Changed, Fixed, Removed
+4. **Reason** (if needed): Why the change was made

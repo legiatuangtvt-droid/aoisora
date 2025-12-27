@@ -1,0 +1,6 @@
+{
+  "store_statuses": [
+    { "id": "ACTIVE", "name": "Đang hoạt động", "color": "green" },
+    { "id": "INACTIVE", "name": "Tạm đóng cửa", "color": "gray" }
+  ]
+}
