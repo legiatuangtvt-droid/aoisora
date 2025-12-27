@@ -1,9 +1,30 @@
 -- OptiChain WS & DWS Database Schema
--- PostgreSQL Schema exported from Neon
--- Date: 2025-12-26
+-- PostgreSQL Schema for Neon Database
+-- Date: 2025-12-27
+--
+-- USAGE: Run this entire file on Neon SQL Editor to reset/update database structure
+-- WARNING: This will DROP and recreate all tables! Data will be lost!
 
--- Drop existing schema if exists (optional - comment out if not needed)
--- DROP SCHEMA IF EXISTS public CASCADE;
+-- ============================================
+-- DROP ALL EXISTING TABLES (in correct order due to FK constraints)
+-- ============================================
+
+DROP TABLE IF EXISTS "notifications" CASCADE;
+DROP TABLE IF EXISTS "shift_assignments" CASCADE;
+DROP TABLE IF EXISTS "shift_codes" CASCADE;
+DROP TABLE IF EXISTS "task_check_list" CASCADE;
+DROP TABLE IF EXISTS "check_lists" CASCADE;
+DROP TABLE IF EXISTS "tasks" CASCADE;
+DROP TABLE IF EXISTS "manuals" CASCADE;
+DROP TABLE IF EXISTS "code_master" CASCADE;
+DROP TABLE IF EXISTS "staff" CASCADE;
+DROP TABLE IF EXISTS "stores" CASCADE;
+DROP TABLE IF EXISTS "departments" CASCADE;
+DROP TABLE IF EXISTS "regions" CASCADE;
+
+-- ============================================
+-- CREATE SCHEMA
+-- ============================================
 
 CREATE SCHEMA IF NOT EXISTS "public";
 
@@ -236,29 +257,51 @@ ALTER TABLE "notifications" ADD CONSTRAINT "notifications_sender_staff_id_fkey" 
 
 -- Staff Indexes
 CREATE INDEX IF NOT EXISTS "idx_staff_store" ON "staff" ("store_id");
+CREATE INDEX IF NOT EXISTS "idx_staff_email" ON "staff" ("email");
 
 -- Tasks Indexes
 CREATE INDEX IF NOT EXISTS "idx_tasks_status" ON "tasks" ("status_id");
 CREATE INDEX IF NOT EXISTS "idx_tasks_assigned_staff" ON "tasks" ("assigned_staff_id");
+CREATE INDEX IF NOT EXISTS "idx_tasks_assigned_store" ON "tasks" ("assigned_store_id");
+CREATE INDEX IF NOT EXISTS "idx_tasks_dates" ON "tasks" ("start_date", "end_date");
+
+-- Shift Assignments Indexes
+CREATE INDEX IF NOT EXISTS "idx_shift_assignments_staff" ON "shift_assignments" ("staff_id");
+CREATE INDEX IF NOT EXISTS "idx_shift_assignments_date" ON "shift_assignments" ("shift_date");
+CREATE INDEX IF NOT EXISTS "idx_shift_assignments_store" ON "shift_assignments" ("store_id");
 
 -- Notifications Indexes
-CREATE INDEX IF NOT EXISTS "idx_notifications_recipient" ON "notifications" ("recipient_staff_id","is_read");
+CREATE INDEX IF NOT EXISTS "idx_notifications_recipient" ON "notifications" ("recipient_staff_id", "is_read");
 
 -- ============================================
--- SAMPLE DATA
+-- INITIAL DATA - Code Master Values
 -- ============================================
 
--- Insert Code Master Values
-INSERT INTO "code_master" ("code_type", "code", "name", "sort_order") VALUES
-('task_type', 'DAILY', 'Daily Task', 1),
-('task_type', 'WEEKLY', 'Weekly Task', 2),
-('task_type', 'MONTHLY', 'Monthly Task', 3),
-('response_type', 'YES_NO', 'Yes/No', 1),
-('response_type', 'NUMBER', 'Number', 2),
-('status', 'PENDING', 'Pending', 1),
-('status', 'IN_PROGRESS', 'In Progress', 2),
-('status', 'COMPLETED', 'Completed', 3)
-ON CONFLICT (code_type, code) DO NOTHING;
+-- Task Status Codes (status_id: 7-11)
+INSERT INTO "code_master" ("code_master_id", "code_type", "code", "name", "sort_order") VALUES
+(7, 'status', 'NOT_YET', 'Not Yet', 1),
+(8, 'status', 'ON_PROGRESS', 'On Progress', 2),
+(9, 'status', 'DONE', 'Done', 3),
+(10, 'status', 'OVERDUE', 'Overdue', 4),
+(11, 'status', 'REJECT', 'Reject', 5)
+ON CONFLICT (code_type, code) DO UPDATE SET name = EXCLUDED.name, sort_order = EXCLUDED.sort_order;
+
+-- Task Type Codes (task_type_id: 1-3)
+INSERT INTO "code_master" ("code_master_id", "code_type", "code", "name", "sort_order") VALUES
+(1, 'task_type', 'STATISTICS', 'Statistics', 1),
+(2, 'task_type', 'ARRANGE', 'Arrange', 2),
+(3, 'task_type', 'PREPARE', 'Prepare', 3)
+ON CONFLICT (code_type, code) DO UPDATE SET name = EXCLUDED.name, sort_order = EXCLUDED.sort_order;
+
+-- Response Type Codes (response_type_id: 4-6)
+INSERT INTO "code_master" ("code_master_id", "code_type", "code", "name", "sort_order") VALUES
+(4, 'response_type', 'PICTURE', 'Picture', 1),
+(5, 'response_type', 'CHECKLIST', 'Checklist', 2),
+(6, 'response_type', 'YESNO', 'Yes/No', 3)
+ON CONFLICT (code_type, code) DO UPDATE SET name = EXCLUDED.name, sort_order = EXCLUDED.sort_order;
+
+-- Reset sequences to correct values
+SELECT setval('code_master_code_master_id_seq', (SELECT MAX(code_master_id) FROM code_master));
 
 -- ============================================
 -- COMMENTS (for documentation)
@@ -268,11 +311,17 @@ COMMENT ON TABLE "regions" IS 'Geographic regions for store grouping';
 COMMENT ON TABLE "stores" IS 'Store locations and details';
 COMMENT ON TABLE "departments" IS 'Organizational departments';
 COMMENT ON TABLE "staff" IS 'Employees and staff members';
-COMMENT ON TABLE "code_master" IS 'Master lookup table for various code types';
+COMMENT ON TABLE "code_master" IS 'Master lookup table for various code types (status, task_type, response_type)';
 COMMENT ON TABLE "manuals" IS 'Task manuals and documentation';
 COMMENT ON TABLE "tasks" IS 'Work schedule tasks and assignments (WS module)';
 COMMENT ON TABLE "check_lists" IS 'Checklist items library';
 COMMENT ON TABLE "task_check_list" IS 'Many-to-many relationship between tasks and checklists';
-COMMENT ON TABLE "shift_codes" IS 'Shift type definitions - S (sáng), C (chiều), T (tối), OFF, etc. (DWS module)';
+COMMENT ON TABLE "shift_codes" IS 'Shift type definitions - V8.6, V8.14, OFF, etc. (DWS module)';
 COMMENT ON TABLE "shift_assignments" IS 'Staff shift schedule assignments (DWS module)';
 COMMENT ON TABLE "notifications" IS 'System notifications for staff';
+
+-- ============================================
+-- DONE
+-- ============================================
+-- Schema recreation complete!
+-- All tables have been dropped and recreated with the latest structure.

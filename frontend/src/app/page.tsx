@@ -37,23 +37,41 @@ export default function Home() {
   return (
     <main className="min-h-screen p-8 bg-gray-50">
       <div className="max-w-7xl mx-auto">
-        {/* Header with Language Switcher */}
+        {/* Header with Language Switcher and Backend Status */}
         <div className="flex items-start justify-between mb-8">
           <div>
             <h1 className="text-4xl font-bold mb-2">{t.common.appName}</h1>
             <p className="text-xl text-gray-600">{t.common.appDescription}</p>
           </div>
-          <LanguageSwitcher variant="compact" />
-        </div>
-
-        {/* Backend Status */}
-        <div className={`p-4 rounded-xl border-2 mb-8 ${backendStatus ? 'bg-green-50 border-green-300' : loading ? 'bg-yellow-50 border-yellow-300' : 'bg-red-50 border-red-300'}`}>
           <div className="flex items-center gap-3">
-            <div className={`w-3 h-3 rounded-full ${backendStatus ? 'bg-green-500' : loading ? 'bg-yellow-500 animate-pulse' : 'bg-red-500'}`} />
-            <span className="font-medium">
-              Backend: {backendStatus ? t.backend.connected : loading ? t.backend.connecting : t.backend.disconnected}
-              {backendStatus && <span className="text-gray-500 ml-2">v{backendStatus.version}</span>}
-            </span>
+            {/* Backend Status Indicator */}
+            <div
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${
+                backendStatus
+                  ? 'bg-green-100 text-green-700'
+                  : loading
+                    ? 'bg-yellow-100 text-yellow-700'
+                    : 'bg-red-100 text-red-700'
+              }`}
+              title={backendStatus ? `v${backendStatus.version}` : error || ''}
+            >
+              <div className={`w-2 h-2 rounded-full ${
+                backendStatus
+                  ? 'bg-green-500'
+                  : loading
+                    ? 'bg-yellow-500 animate-pulse'
+                    : 'bg-red-500'
+              }`} />
+              <span>
+                {backendStatus
+                  ? 'Running'
+                  : loading
+                    ? 'Connecting'
+                    : 'Disconnected'}
+              </span>
+            </div>
+            {/* Language Switcher */}
+            <LanguageSwitcher variant="compact" />
           </div>
         </div>
 
