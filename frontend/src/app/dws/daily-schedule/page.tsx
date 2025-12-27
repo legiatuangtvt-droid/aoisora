@@ -2,74 +2,56 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { DailySchedule, ScheduledTask, Employee, Store } from '@/types/dws';
-import { defaultShiftCodes, formatDate, getMonday, timeToMinutes, getShiftByCode } from '@/data/shiftCodes';
-import { taskGroups, getTaskGroupColor } from '@/data/taskGroups';
+import {
+  checkHealth,
+  getStores,
+  getStaff,
+  getShiftAssignments,
+  getShiftCodes,
+} from '@/lib/api';
+import type { Store, Staff, ShiftAssignment, ShiftCode } from '@/types/api';
 
-// Mock data for demo
-const mockStores: Store[] = [
-  { id: 'store-1', name: 'AEON MaxValu Dien Bien Phu', areaId: 'area-1' },
-  { id: 'store-2', name: 'AEON MaxValu Tan Phu', areaId: 'area-1' },
-  { id: 'store-3', name: 'AEON MaxValu Go Vap', areaId: 'area-2' },
-];
+// Format date as YYYY-MM-DD
+function formatDate(date: Date): string {
+  return date.toISOString().split('T')[0];
+}
 
-const mockEmployees: Employee[] = [
-  { id: 'emp-1', name: 'Nguyen Van A', storeId: 'store-1', roleId: 'STORE_LEADER', experiencePoints: 1250 },
-  { id: 'emp-2', name: 'Tran Thi B', storeId: 'store-1', roleId: 'STAFF', experiencePoints: 890 },
-  { id: 'emp-3', name: 'Le Van C', storeId: 'store-1', roleId: 'STAFF', experiencePoints: 1100 },
-  { id: 'emp-4', name: 'Pham Thi D', storeId: 'store-1', roleId: 'STAFF', experiencePoints: 750 },
-];
+// Get Monday of the week
+function getMonday(date: Date): Date {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  d.setDate(diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
 
-// Generate mock schedule data
-function generateMockSchedule(date: string, storeId: string): DailySchedule[] {
-  const employees = mockEmployees.filter(e => e.storeId === storeId);
-  const shifts = ['V812', 'V829'];
-  const positions = ['LEADER', 'POS', 'MERCHANDISE', 'CAFE'];
+// Time slot type
+interface TimeSlot {
+  time: string;
+  hour: number;
+}
 
-  return employees.map((emp, index) => {
-    const shift = shifts[index % 2];
-    const position = positions[index % positions.length];
-    const shiftInfo = getShiftByCode(shift);
-    const startHour = shiftInfo ? parseInt(shiftInfo.timeRange.split(':')[0]) : 6;
-
-    // Generate some tasks for each employee
-    const tasks: ScheduledTask[] = [];
-    const taskGroup = taskGroups[index % taskGroups.length];
-
-    for (let i = 0; i < 5; i++) {
-      const hour = startHour + i * 2;
-      if (hour < 22) {
-        const task = taskGroup.tasks[i % taskGroup.tasks.length];
-        tasks.push({
-          taskCode: task.manual_number,
-          name: task.name,
-          groupId: taskGroup.id,
-          startTime: `${String(hour).padStart(2, '0')}:00`,
-          isComplete: Math.random() > 0.5 ? 1 : 0,
-        });
-      }
-    }
-
-    return {
-      id: `schedule-${emp.id}-${date}`,
-      employeeId: emp.id,
-      storeId,
-      date,
-      shift,
-      positionId: position,
-      tasks,
-      name: emp.name,
-      role: emp.roleId,
-      experiencePoints: emp.experiencePoints,
-    };
-  });
+// Schedule row type
+interface ScheduleRow {
+  staff: Staff;
+  assignment: ShiftAssignment | null;
+  shiftCode: ShiftCode | null;
 }
 
 export default function DailySchedulePage() {
+  const [backendOnline, setBackendOnline] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [selectedStoreId, setSelectedStoreId] = useState<string>(mockStores[0].id);
-  const [schedules, setSchedules] = useState<DailySchedule[]>([]);
+  const [selectedStoreId, setSelectedStoreId] = useState<string>('all');
+
+  // Data
+  const [stores, setStores] = useState<Store[]>([]);
+  const [staffList, setStaffList] = useState<Staff[]>([]);
+  const [assignments, setAssignments] = useState<ShiftAssignment[]>([]);
+  const [shiftCodes, setShiftCodes] = useState<ShiftCode[]>([]);
+
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Week dates
   const weekDates = useMemo(() => {
@@ -82,21 +64,90 @@ export default function DailySchedulePage() {
   }, [selectedDate]);
 
   // Time slots from 05:00 to 23:00
-  const timeSlots = useMemo(() => {
-    return Array.from({ length: 19 }, (_, i) => `${String(i + 5).padStart(2, '0')}:00`);
+  const timeSlots: TimeSlot[] = useMemo(() => {
+    return Array.from({ length: 19 }, (_, i) => ({
+      time: `${String(i + 5).padStart(2, '0')}:00`,
+      hour: i + 5,
+    }));
   }, []);
 
-  // Load schedule data
+  // Load initial data
   useEffect(() => {
-    setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      const dateStr = formatDate(selectedDate);
-      const data = generateMockSchedule(dateStr, selectedStoreId);
-      setSchedules(data);
-      setLoading(false);
-    }, 500);
-  }, [selectedDate, selectedStoreId]);
+    async function loadData() {
+      setLoading(true);
+      setError(null);
+
+      try {
+        await checkHealth();
+        setBackendOnline(true);
+
+        const [storesData, staffData, shiftCodesData] = await Promise.all([
+          getStores().catch(() => []),
+          getStaff().catch(() => []),
+          getShiftCodes(true).catch(() => []),
+        ]);
+
+        setStores(storesData);
+        setStaffList(staffData);
+        setShiftCodes(shiftCodesData);
+
+        if (storesData.length > 0) {
+          setSelectedStoreId(String(storesData[0].store_id));
+        }
+      } catch (err) {
+        console.error('Failed to load data:', err);
+        setBackendOnline(false);
+        setError('Failed to connect to backend.');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadData();
+  }, []);
+
+  // Load assignments when date or store changes
+  useEffect(() => {
+    async function loadAssignments() {
+      if (!backendOnline) return;
+
+      try {
+        const dateStr = formatDate(selectedDate);
+        const params: Record<string, unknown> = {
+          start_date: dateStr,
+          end_date: dateStr,
+        };
+
+        if (selectedStoreId !== 'all') {
+          params.store_id = parseInt(selectedStoreId);
+        }
+
+        const data = await getShiftAssignments(params);
+        setAssignments(data);
+      } catch (err) {
+        console.error('Failed to load assignments:', err);
+      }
+    }
+
+    loadAssignments();
+  }, [selectedDate, selectedStoreId, backendOnline]);
+
+  // Build schedule rows
+  const scheduleRows: ScheduleRow[] = useMemo(() => {
+    // Filter staff by store
+    const filteredStaff = selectedStoreId === 'all'
+      ? staffList
+      : staffList.filter(s => s.store_id === parseInt(selectedStoreId));
+
+    return filteredStaff.map(staff => {
+      const assignment = assignments.find(a => a.staff_id === staff.staff_id);
+      const shiftCode = assignment
+        ? shiftCodes.find(sc => sc.shift_code_id === assignment.shift_code_id)
+        : null;
+
+      return { staff, assignment, shiftCode };
+    });
+  }, [staffList, assignments, shiftCodes, selectedStoreId]);
 
   // Navigation functions
   const changeWeek = (direction: number) => {
@@ -109,29 +160,30 @@ export default function DailySchedulePage() {
     setSelectedDate(date);
   };
 
-  // Calculate completion rate
-  const completionRate = useMemo(() => {
-    const allTasks = schedules.flatMap(s => s.tasks);
-    if (allTasks.length === 0) return 0;
-    const completed = allTasks.filter(t => t.isComplete === 1).length;
-    return Math.round((completed / allTasks.length) * 100);
-  }, [schedules]);
+  // Get shift time range for display
+  const getShiftTimeRange = (shiftCode: ShiftCode | null): string => {
+    if (!shiftCode) return '-';
+    return `${shiftCode.start_time.substring(0, 5)} - ${shiftCode.end_time.substring(0, 5)}`;
+  };
 
-  // Toggle task completion
-  const toggleTaskComplete = (scheduleId: string, taskIndex: number) => {
-    setSchedules(prev =>
-      prev.map(schedule => {
-        if (schedule.id === scheduleId) {
-          const newTasks = [...schedule.tasks];
-          newTasks[taskIndex] = {
-            ...newTasks[taskIndex],
-            isComplete: newTasks[taskIndex].isComplete === 1 ? 0 : 1,
-          };
-          return { ...schedule, tasks: newTasks };
-        }
-        return schedule;
-      })
-    );
+  // Check if time is within shift
+  const isWithinShift = (hour: number, shiftCode: ShiftCode | null): boolean => {
+    if (!shiftCode) return false;
+    const startHour = parseInt(shiftCode.start_time.split(':')[0]);
+    const endHour = parseInt(shiftCode.end_time.split(':')[0]);
+
+    if (startHour < endHour) {
+      return hour >= startHour && hour < endHour;
+    } else {
+      // Handle overnight shifts
+      return hour >= startHour || hour < endHour;
+    }
+  };
+
+  // Get shift color
+  const getShiftColor = (shiftCode: ShiftCode | null): string => {
+    if (!shiftCode || !shiftCode.color_code) return '#E5E7EB';
+    return shiftCode.color_code;
   };
 
   return (
@@ -147,6 +199,11 @@ export default function DailySchedulePage() {
                 </svg>
               </Link>
               <h1 className="text-xl font-bold text-gray-800">Lich Hang Ngay - Daily Schedule</h1>
+              {/* Backend status */}
+              <div
+                className={`w-3 h-3 rounded-full ${backendOnline ? 'bg-green-400' : 'bg-red-400'}`}
+                title={backendOnline ? 'Backend Connected' : 'Backend Offline'}
+              />
             </div>
 
             {/* Store Filter */}
@@ -156,8 +213,9 @@ export default function DailySchedulePage() {
                 onChange={(e) => setSelectedStoreId(e.target.value)}
                 className="px-4 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               >
-                {mockStores.map(store => (
-                  <option key={store.id} value={store.id}>{store.name}</option>
+                <option value="all">All Stores</option>
+                {stores.map(store => (
+                  <option key={store.store_id} value={store.store_id}>{store.store_name}</option>
                 ))}
               </select>
 
@@ -166,7 +224,7 @@ export default function DailySchedulePage() {
                 <button
                   onClick={() => changeWeek(-1)}
                   className="p-2 hover:bg-gray-100 rounded-l-lg"
-                  title="Tuan truoc"
+                  title="Previous Week"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -200,7 +258,7 @@ export default function DailySchedulePage() {
                 <button
                   onClick={() => changeWeek(1)}
                   className="p-2 hover:bg-gray-100 rounded-r-lg"
-                  title="Tuan sau"
+                  title="Next Week"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -214,6 +272,12 @@ export default function DailySchedulePage() {
 
       {/* Main Content */}
       <main className="p-6">
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+            {error}
+          </div>
+        )}
+
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           {loading ? (
             <div className="flex items-center justify-center h-96">
@@ -222,17 +286,17 @@ export default function DailySchedulePage() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <p className="text-gray-500">Dang tai du lieu...</p>
+                <p className="text-gray-500">Loading...</p>
               </div>
             </div>
-          ) : schedules.length === 0 ? (
+          ) : scheduleRows.length === 0 ? (
             <div className="flex items-center justify-center h-96">
               <div className="text-center text-gray-500">
                 <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                <p className="text-lg font-medium">Chua co du lieu</p>
-                <p className="text-sm">Chua hang chua co lich lam viec cho ngay nay</p>
+                <p className="text-lg font-medium">No Data</p>
+                <p className="text-sm">No staff schedules for this day</p>
               </div>
             </div>
           ) : (
@@ -241,35 +305,16 @@ export default function DailySchedulePage() {
                 {/* Header */}
                 <thead className="bg-slate-100 sticky top-0 z-20">
                   <tr>
-                    <th className="p-2 border-2 border-black w-48 min-w-48 sticky left-0 bg-slate-100 z-30">
-                      <div className="flex items-center justify-center">
-                        <div className="relative w-16 h-16">
-                          <svg className="w-full h-full" viewBox="0 0 36 36">
-                            <path
-                              className="text-slate-300"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                              fill="none"
-                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                            />
-                            <path
-                              className="text-indigo-500"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                              fill="none"
-                              strokeDasharray={`${completionRate}, 100`}
-                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                            />
-                          </svg>
-                          <div className="absolute inset-0 flex items-center justify-center text-base font-bold text-indigo-600">
-                            {completionRate}%
-                          </div>
-                        </div>
-                      </div>
+                    <th className="p-3 border-2 border-gray-300 w-56 min-w-56 sticky left-0 bg-slate-100 z-30 text-left">
+                      <div className="font-semibold text-gray-700">Staff</div>
+                      <div className="text-xs text-gray-500">{formatDate(selectedDate)}</div>
                     </th>
-                    {timeSlots.map(time => (
-                      <th key={time} className="p-2 border border-black min-w-[310px] text-center font-semibold text-slate-700">
-                        <span className="text-2xl">{time}</span>
+                    <th className="p-3 border border-gray-300 w-32 min-w-32 text-center">
+                      Shift
+                    </th>
+                    {timeSlots.map(slot => (
+                      <th key={slot.time} className="p-2 border border-gray-300 min-w-[60px] text-center font-medium text-gray-600 text-sm">
+                        {slot.time}
                       </th>
                     ))}
                   </tr>
@@ -277,102 +322,59 @@ export default function DailySchedulePage() {
 
                 {/* Body */}
                 <tbody>
-                  {schedules.map(schedule => {
-                    const shiftInfo = getShiftByCode(schedule.shift);
-                    const timeRange = shiftInfo?.timeRange || '';
-                    const totalTasks = schedule.tasks.length;
-                    const completedTasks = schedule.tasks.filter(t => t.isComplete === 1).length;
-                    const employeeCompletionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+                  {scheduleRows.map(row => {
+                    const shiftColor = getShiftColor(row.shiftCode);
 
                     return (
-                      <tr key={schedule.id} className="border-b-2 border-black hover:bg-gray-50">
-                        {/* Employee Info */}
-                        <td className="h-[106px] border-l-2 border-r-2 border-black sticky left-0 bg-white z-10 min-w-48">
-                          <div className="p-2">
-                            <div className="text-center">
-                              <div className="text-sm font-semibold text-slate-800">{schedule.name}</div>
-                              <div className="text-xs text-slate-600">{schedule.positionId}</div>
-                              <div className="text-xs text-amber-600 font-bold mt-1">
-                                <span className="text-amber-500">★</span> {(schedule.experiencePoints || 0).toLocaleString()}
+                      <tr key={row.staff.staff_id} className="border-b hover:bg-gray-50">
+                        {/* Staff Info */}
+                        <td className="p-3 border-l-2 border-r border-gray-300 sticky left-0 bg-white z-10 min-w-56">
+                          <div className="font-medium text-gray-800">{row.staff.staff_name}</div>
+                          <div className="text-xs text-gray-500">{row.staff.role || 'Staff'}</div>
+                          {row.staff.department && (
+                            <div className="text-xs text-gray-400">{row.staff.department.department_name}</div>
+                          )}
+                        </td>
+
+                        {/* Shift Code */}
+                        <td className="p-2 border border-gray-300 text-center">
+                          {row.shiftCode ? (
+                            <div>
+                              <div
+                                className="inline-block px-3 py-1 rounded-full text-sm font-bold"
+                                style={{
+                                  backgroundColor: shiftColor,
+                                  color: shiftColor === '#D3D3D3' ? '#333' : '#fff',
+                                }}
+                              >
+                                {row.shiftCode.shift_code}
+                              </div>
+                              <div className="text-xs text-gray-500 mt-1">
+                                {getShiftTimeRange(row.shiftCode)}
                               </div>
                             </div>
-                            <div className="flex justify-between items-center mt-2 border-t pt-2">
-                              <div className="text-xs">
-                                <div><strong>Plan:</strong> {schedule.shift}: {timeRange}</div>
-                              </div>
-                              <div className="relative w-10 h-10">
-                                <svg className="w-full h-full" viewBox="0 0 36 36">
-                                  <path
-                                    className="text-slate-200"
-                                    stroke="currentColor"
-                                    strokeWidth="4"
-                                    fill="none"
-                                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                  />
-                                  <path
-                                    className="text-green-500"
-                                    stroke="currentColor"
-                                    strokeWidth="4"
-                                    fill="none"
-                                    strokeDasharray={`${employeeCompletionRate}, 100`}
-                                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                  />
-                                </svg>
-                                <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-green-600">
-                                  {employeeCompletionRate}%
-                                </div>
-                              </div>
-                            </div>
-                          </div>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
                         </td>
 
                         {/* Time Slots */}
-                        {timeSlots.map(time => {
-                          const tasksInSlot = schedule.tasks.filter(t => t.startTime === time);
-                          const hour = parseInt(time.split(':')[0]);
+                        {timeSlots.map(slot => {
+                          const isActive = isWithinShift(slot.hour, row.shiftCode);
                           const now = new Date();
-                          const currentHour = now.getHours();
-                          const isCurrentHour = hour === currentHour && formatDate(selectedDate) === formatDate(now);
+                          const isCurrentHour = slot.hour === now.getHours() && formatDate(selectedDate) === formatDate(now);
 
                           return (
                             <td
-                              key={`${schedule.id}-${time}`}
-                              className={`p-1 border border-black align-middle ${isCurrentHour ? 'bg-amber-50' : ''}`}
+                              key={`${row.staff.staff_id}-${slot.time}`}
+                              className={`p-1 border border-gray-200 ${isCurrentHour ? 'bg-amber-100' : ''}`}
                             >
-                              <div className="grid grid-cols-4 h-[100px] gap-1">
-                                {tasksInSlot.map((task, idx) => {
-                                  const taskIndex = schedule.tasks.indexOf(task);
-                                  const color = getTaskGroupColor(task.groupId);
-
-                                  return (
-                                    <div
-                                      key={idx}
-                                      onClick={() => toggleTaskComplete(schedule.id, taskIndex)}
-                                      className={`w-[70px] h-[96px] border-2 text-xs p-1 rounded-md shadow-sm flex flex-col justify-between items-center text-center cursor-pointer transition-all hover:scale-105 ${
-                                        task.isComplete === 1 ? 'opacity-60 line-through' : ''
-                                      }`}
-                                      style={{
-                                        backgroundColor: color.bg,
-                                        color: color.text,
-                                        borderColor: color.border,
-                                      }}
-                                      title={`${task.name} (${task.taskCode})`}
-                                    >
-                                      <div className="flex-grow flex flex-col justify-center overflow-hidden">
-                                        <span className="overflow-hidden text-ellipsis">{task.name}</span>
-                                      </div>
-                                      <span className="font-semibold mt-auto">{task.taskCode}</span>
-                                      {task.isComplete === 1 && (
-                                        <div className="absolute top-1 right-1 text-green-600">
-                                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                          </svg>
-                                        </div>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                              </div>
+                              {isActive && (
+                                <div
+                                  className="h-8 rounded"
+                                  style={{ backgroundColor: `${shiftColor}40` }}
+                                />
+                              )}
                             </td>
                           );
                         })}
@@ -383,6 +385,27 @@ export default function DailySchedulePage() {
               </table>
             </div>
           )}
+        </div>
+
+        {/* Legend */}
+        <div className="mt-4 bg-white rounded-lg shadow p-4">
+          <h3 className="text-sm font-semibold text-gray-600 mb-3">Shift Codes</h3>
+          <div className="flex flex-wrap gap-4">
+            {shiftCodes.map(code => (
+              <div key={code.shift_code_id} className="flex items-center gap-2">
+                <div
+                  className="w-6 h-6 rounded"
+                  style={{ backgroundColor: code.color_code || '#E5E7EB' }}
+                />
+                <span className="text-sm">
+                  <strong>{code.shift_code}</strong> - {code.shift_name}
+                  <span className="text-gray-500 ml-1">
+                    ({code.start_time?.substring(0, 5)} - {code.end_time?.substring(0, 5)})
+                  </span>
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </main>
     </div>

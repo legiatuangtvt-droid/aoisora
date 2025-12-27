@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 // Simple API functions
 async function checkHealth() {
@@ -11,7 +13,8 @@ async function checkHealth() {
 }
 
 export default function Home() {
-  const [backendStatus, setBackendStatus] = useState<any>(null);
+  const { translations: t } = useLanguage();
+  const [backendStatus, setBackendStatus] = useState<{ version?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,9 +37,13 @@ export default function Home() {
   return (
     <main className="min-h-screen p-8 bg-gray-50">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">OptiChain WS & DWS</h1>
-          <p className="text-xl text-gray-600">Work Schedule and Dispatch Work Schedule Management System</p>
+        {/* Header with Language Switcher */}
+        <div className="flex items-start justify-between mb-8">
+          <div>
+            <h1 className="text-4xl font-bold mb-2">{t.common.appName}</h1>
+            <p className="text-xl text-gray-600">{t.common.appDescription}</p>
+          </div>
+          <LanguageSwitcher variant="compact" />
         </div>
 
         {/* Backend Status */}
@@ -44,7 +51,7 @@ export default function Home() {
           <div className="flex items-center gap-3">
             <div className={`w-3 h-3 rounded-full ${backendStatus ? 'bg-green-500' : loading ? 'bg-yellow-500 animate-pulse' : 'bg-red-500'}`} />
             <span className="font-medium">
-              Backend: {backendStatus ? 'Connected' : loading ? 'Connecting...' : 'Disconnected'}
+              Backend: {backendStatus ? t.backend.connected : loading ? t.backend.connecting : t.backend.disconnected}
               {backendStatus && <span className="text-gray-500 ml-2">v{backendStatus.version}</span>}
             </span>
           </div>
@@ -52,7 +59,7 @@ export default function Home() {
 
         {/* DWS Section */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-4 text-indigo-700">DWS - Dispatch Work Schedule</h2>
+          <h2 className="text-2xl font-bold mb-4 text-indigo-700">{t.dws.title}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Link href="/dws/daily-schedule" className="block p-6 border-2 rounded-xl bg-white hover:border-indigo-400 hover:shadow-lg transition-all group">
               <div className="flex items-center gap-4 mb-3">
@@ -62,11 +69,11 @@ export default function Home() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800">Lich Hang Ngay</h3>
+                  <h3 className="text-lg font-semibold text-gray-800">{t.dws.dailySchedule}</h3>
                   <p className="text-sm text-gray-500">Daily Schedule</p>
                 </div>
               </div>
-              <p className="text-gray-600 text-sm">Xem va quan ly lich lam viec hang ngay cua nhan vien theo tung ca.</p>
+              <p className="text-gray-600 text-sm">{t.dws.dailyScheduleDesc}</p>
             </Link>
 
             <Link href="/dws/workforce-dispatch" className="block p-6 border-2 rounded-xl bg-white hover:border-indigo-400 hover:shadow-lg transition-all group">
@@ -77,11 +84,11 @@ export default function Home() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800">Dieu Phoi Nhan Luc</h3>
+                  <h3 className="text-lg font-semibold text-gray-800">{t.dws.workforceDispatch}</h3>
                   <p className="text-sm text-gray-500">Workforce Dispatch</p>
                 </div>
               </div>
-              <p className="text-gray-600 text-sm">Dieu phoi nhan luc giua cac cua hang theo chu ky luong.</p>
+              <p className="text-gray-600 text-sm">{t.dws.workforceDispatchDesc}</p>
             </Link>
 
             <Link href="/dws/shift-codes" className="block p-6 border-2 rounded-xl bg-white hover:border-indigo-400 hover:shadow-lg transition-all group">
@@ -92,18 +99,18 @@ export default function Home() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800">Quan Ly Ma Ca</h3>
+                  <h3 className="text-lg font-semibold text-gray-800">{t.dws.shiftCodes}</h3>
                   <p className="text-sm text-gray-500">Shift Codes</p>
                 </div>
               </div>
-              <p className="text-gray-600 text-sm">Quan ly cac ma ca lam viec va khung gio tuong ung.</p>
+              <p className="text-gray-600 text-sm">{t.dws.shiftCodesDesc}</p>
             </Link>
           </div>
         </div>
 
         {/* WS Section */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-4 text-teal-700">WS - Work Schedule</h2>
+          <h2 className="text-2xl font-bold mb-4 text-teal-700">{t.ws.title}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Link href="/tasks" className="block p-6 border-2 rounded-xl bg-white hover:border-teal-400 hover:shadow-lg transition-all group">
               <div className="flex items-center gap-4 mb-3">
@@ -113,11 +120,11 @@ export default function Home() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800">Quan Ly Cong Viec</h3>
+                  <h3 className="text-lg font-semibold text-gray-800">{t.ws.taskManagement}</h3>
                   <p className="text-sm text-gray-500">Task Management</p>
                 </div>
               </div>
-              <p className="text-gray-600 text-sm">Theo doi va quan ly cong viec hang ngay.</p>
+              <p className="text-gray-600 text-sm">{t.ws.taskManagementDesc}</p>
             </Link>
 
             <div className="p-6 border-2 border-dashed rounded-xl bg-gray-50">
@@ -128,11 +135,11 @@ export default function Home() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-400">Thong Bao</h3>
+                  <h3 className="text-lg font-semibold text-gray-400">{t.ws.notifications}</h3>
                   <p className="text-sm text-gray-400">Notifications</p>
                 </div>
               </div>
-              <p className="text-gray-400 text-sm">Dang phat trien...</p>
+              <p className="text-gray-400 text-sm">{t.ws.inDevelopment}</p>
             </div>
 
             <div className="p-6 border-2 border-dashed rounded-xl bg-gray-50">
@@ -143,18 +150,18 @@ export default function Home() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-400">Bao Cao</h3>
+                  <h3 className="text-lg font-semibold text-gray-400">{t.ws.reports}</h3>
                   <p className="text-sm text-gray-400">Reports</p>
                 </div>
               </div>
-              <p className="text-gray-400 text-sm">Dang phat trien...</p>
+              <p className="text-gray-400 text-sm">{t.ws.inDevelopment}</p>
             </div>
           </div>
         </div>
 
         {/* Footer Info */}
         <div className="text-center text-sm text-gray-500 mt-8 pt-8 border-t">
-          <p>OptiChain WS & DWS - Work Schedule Management System</p>
+          <p>{t.common.appName} - {t.common.appDescription}</p>
           {error && <p className="text-red-500 mt-2">{error}</p>}
         </div>
       </div>
