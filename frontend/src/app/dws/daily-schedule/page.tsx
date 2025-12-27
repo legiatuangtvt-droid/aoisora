@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useUser } from '@/contexts/UserContext';
 import {
   checkHealth,
   getStores,
@@ -89,6 +90,7 @@ interface ScheduleRow {
 
 export default function DailySchedulePage() {
   const { t } = useLanguage();
+  const { currentUser } = useUser();
   const [backendOnline, setBackendOnline] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedStoreId, setSelectedStoreId] = useState<string>('1');
@@ -281,14 +283,32 @@ export default function DailySchedulePage() {
               </h1>
             </div>
 
-            {/* Backend status indicator */}
-            <div className="flex items-center gap-2">
-              <div
-                className={`w-2.5 h-2.5 rounded-full ${backendOnline ? 'bg-green-500' : 'bg-red-500'}`}
-              />
-              <span className="text-xs text-gray-500">
-                {backendOnline ? 'Online' : 'Offline (Demo)'}
-              </span>
+            {/* Backend status indicator + Current User */}
+            <div className="flex items-center gap-4">
+              {/* Current User */}
+              {currentUser && (
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 rounded-full">
+                  <div className="w-6 h-6 bg-indigo-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">
+                      {currentUser.name.charAt(0)}
+                    </span>
+                  </div>
+                  <div className="text-xs">
+                    <div className="font-medium text-gray-800">{currentUser.name}</div>
+                    <div className="text-gray-500">{currentUser.role}</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Backend Status */}
+              <div className="flex items-center gap-2">
+                <div
+                  className={`w-2.5 h-2.5 rounded-full ${backendOnline ? 'bg-green-500' : 'bg-red-500'}`}
+                />
+                <span className="text-xs text-gray-500">
+                  {backendOnline ? 'Online' : 'Offline (Demo)'}
+                </span>
+              </div>
             </div>
           </div>
         </div>
