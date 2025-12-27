@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { TaskFilters, TaskStatus, HQCheckStatus, Department } from '@/types/tasks';
 import { mockDepartments } from '@/data/mockTasks';
 
@@ -24,6 +24,15 @@ export default function FilterModal({
     new Set(filters.departments)
   );
   const [expandedSection, setExpandedSection] = useState<FilterSection>(null);
+
+  // Auto-apply filters whenever they change
+  useEffect(() => {
+    onApplyFilters({
+      ...localFilters,
+      departments: Array.from(selectedDepts),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localFilters, selectedDepts]);
 
   if (!isOpen) return null;
 
@@ -71,7 +80,7 @@ export default function FilterModal({
     setLocalFilters({ ...localFilters, hqCheck: newHQChecks });
   };
 
-  // Reset all filters
+  // Reset all filters (auto-apply via useEffect)
   const handleReset = () => {
     setLocalFilters({
       viewScope: 'All team',
@@ -80,15 +89,6 @@ export default function FilterModal({
       hqCheck: [],
     });
     setSelectedDepts(new Set());
-  };
-
-  // Apply filters
-  const handleApply = () => {
-    onApplyFilters({
-      ...localFilters,
-      departments: Array.from(selectedDepts),
-    });
-    onClose();
   };
 
   return (
@@ -120,9 +120,9 @@ export default function FilterModal({
         </div>
 
         {/* Body */}
-        <div className="p-6 space-y-4">
+        <div>
           {/* View Scope */}
-          <div>
+          <div className="px-6 pt-6 pb-4 border-b border-gray-200">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               View Scope
             </label>
@@ -141,10 +141,10 @@ export default function FilterModal({
           </div>
 
           {/* Department - Accordion Section */}
-          <div className="border border-gray-200 rounded-lg">
+          <div className="border-b border-gray-200">
             <button
               onClick={() => toggleSection('department')}
-              className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
+              className="w-full px-6 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
             >
               <span className="text-sm font-medium text-gray-700">
                 Department
@@ -172,42 +172,48 @@ export default function FilterModal({
             </button>
 
             {expandedSection === 'department' && (
-              <div className="px-4 pb-4 space-y-2 border-t border-gray-200 pt-3">
-              {mockDepartments.map((dept) => (
+              <div className="px-6 pb-4 pt-3">
+              {mockDepartments.map((dept, index) => (
                 <div key={dept.id}>
-                  {/* Level 1 - Parent */}
-                  <label className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
-                    <input
-                      type="checkbox"
-                      checked={selectedDepts.has(dept.id)}
-                      onChange={() => handleDeptToggle(dept)}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <span className="text-sm font-medium text-gray-900">
-                      {dept.name} ({dept.code})
-                    </span>
-                  </label>
+                  <div className="py-3">
+                    {/* Level 1 - Parent */}
+                    <label className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                      <input
+                        type="checkbox"
+                        checked={selectedDepts.has(dept.id)}
+                        onChange={() => handleDeptToggle(dept)}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <span className="text-sm font-medium text-gray-900">
+                        {dept.name}
+                      </span>
+                    </label>
 
-                  {/* Level 2 - Children */}
-                  {dept.children && (
-                    <div className="ml-6 mt-1 space-y-1">
-                      {dept.children.map((child) => (
-                        <label
-                          key={child.id}
-                          className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedDepts.has(child.id)}
-                            onChange={() => handleDeptToggle(child)}
-                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                          />
-                          <span className="text-sm text-gray-700">
-                            {child.name} ({child.code})
-                          </span>
-                        </label>
-                      ))}
-                    </div>
+                    {/* Level 2 - Children as horizontal checkboxes */}
+                    {dept.children && (
+                      <div className="flex flex-wrap gap-x-4 gap-y-2 mt-2">
+                        {dept.children.map((child) => (
+                          <label
+                            key={child.id}
+                            className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 px-2 py-1 rounded"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedDepts.has(child.id)}
+                              onChange={() => handleDeptToggle(child)}
+                              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            />
+                            <span className="text-sm text-gray-700">
+                              {child.name}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {/* Divider between departments */}
+                  {index < mockDepartments.length - 1 && (
+                    <div className="border-t border-gray-200"></div>
                   )}
                 </div>
               ))}
@@ -216,10 +222,10 @@ export default function FilterModal({
           </div>
 
           {/* Status - Accordion Section */}
-          <div className="border border-gray-200 rounded-lg">
+          <div className="border-b border-gray-200">
             <button
               onClick={() => toggleSection('status')}
-              className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
+              className="w-full px-6 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
             >
               <span className="text-sm font-medium text-gray-700">
                 Status
@@ -247,7 +253,7 @@ export default function FilterModal({
             </button>
 
             {expandedSection === 'status' && (
-              <div className="px-4 pb-4 border-t border-gray-200 pt-3">
+              <div className="px-6 pb-4 pt-3">
                 <div className="flex flex-wrap gap-2">
               {(['NOT_YET', 'DONE', 'DRAFT'] as TaskStatus[]).map((status) => (
                 <button
@@ -268,10 +274,10 @@ export default function FilterModal({
           </div>
 
           {/* HQ Check - Accordion Section */}
-          <div className="border border-gray-200 rounded-lg">
+          <div className="border-b border-gray-200">
             <button
               onClick={() => toggleSection('hqCheck')}
-              className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
+              className="w-full px-6 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
             >
               <span className="text-sm font-medium text-gray-700">
                 HQ Check
@@ -299,7 +305,7 @@ export default function FilterModal({
             </button>
 
             {expandedSection === 'hqCheck' && (
-              <div className="px-4 pb-4 border-t border-gray-200 pt-3">
+              <div className="px-6 pb-4 pt-3">
                 <div className="flex flex-wrap gap-2">
               {(['NOT_YET', 'DONE', 'DRAFT'] as HQCheckStatus[]).map((hqCheck) => (
                 <button
@@ -320,19 +326,21 @@ export default function FilterModal({
           </div>
         </div>
 
-        {/* Footer - Action Buttons */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex gap-3">
+        {/* Footer - Reset Button */}
+        <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex justify-end">
           <button
             onClick={handleReset}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            className={`flex items-center gap-2 px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
+              selectedDepts.size > 0 || localFilters.status.length > 0 || localFilters.hqCheck.length > 0
+                ? 'border-[#C5055B] bg-[#C5055B] text-white hover:bg-[#A00449]'
+                : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-100'
+            }`}
           >
+            <svg className="w-4 h-4" viewBox="0 0 24 24">
+              <path fill="currentColor" d="M12 16c1.671 0 3-1.331 3-3s-1.329-3-3-3s-3 1.331-3 3s1.329 3 3 3"/>
+              <path fill="currentColor" d="M20.817 11.186a8.9 8.9 0 0 0-1.355-3.219a9 9 0 0 0-2.43-2.43a9 9 0 0 0-3.219-1.355a9 9 0 0 0-1.838-.18V2L8 5l3.975 3V6.002c.484-.002.968.044 1.435.14a7 7 0 0 1 2.502 1.053a7 7 0 0 1 1.892 1.892A6.97 6.97 0 0 1 19 13a7 7 0 0 1-.55 2.725a7 7 0 0 1-.644 1.188a7 7 0 0 1-.858 1.039a7.03 7.03 0 0 1-3.536 1.907a7.1 7.1 0 0 1-2.822 0a7 7 0 0 1-2.503-1.054a7 7 0 0 1-1.89-1.89A7 7 0 0 1 5 13H3a9 9 0 0 0 1.539 5.034a9.1 9.1 0 0 0 2.428 2.428A8.95 8.95 0 0 0 12 22a9 9 0 0 0 1.814-.183a9 9 0 0 0 3.218-1.355a9 9 0 0 0 1.331-1.099a9 9 0 0 0 1.1-1.332A8.95 8.95 0 0 0 21 13a9 9 0 0 0-.183-1.814"/>
+            </svg>
             RESET
-          </button>
-          <button
-            onClick={handleApply}
-            className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors"
-          >
-            APPLY
           </button>
         </div>
       </div>

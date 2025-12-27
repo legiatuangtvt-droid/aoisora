@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import * as React from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { TaskGroup, DateMode, TaskFilters } from '@/types/tasks';
 import { mockTaskGroups } from '@/data/mockTasks';
 import StatusPill from '@/components/ui/StatusPill';
@@ -20,6 +21,45 @@ export default function TaskListPage() {
     status: [],
     hqCheck: [],
   });
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const tableRef = useRef<HTMLDivElement>(null);
+
+  // Calculate dynamic items per page based on viewport height
+  useEffect(() => {
+    const calculateItemsPerPage = () => {
+      // Get viewport height
+      const viewportHeight = window.innerHeight;
+
+      // Estimated heights (in pixels)
+      const headerHeight = 280; // Page header + search bar + date picker
+      const tableHeaderHeight = 44; // Table header row
+      const paginationHeight = 60; // Pagination footer
+      const padding = 64; // Top and bottom padding (p-8)
+      const rowHeight = 50; // Approximate height of each table row
+
+      // Calculate available height for table body
+      const availableHeight = viewportHeight - headerHeight - tableHeaderHeight - paginationHeight - padding;
+
+      // Calculate how many rows can fit
+      const calculatedItems = Math.floor(availableHeight / rowHeight);
+
+      // Set minimum of 5 items and maximum of 20 items per page
+      const newItemsPerPage = Math.max(5, Math.min(20, calculatedItems));
+
+      setItemsPerPage(newItemsPerPage);
+    };
+
+    // Calculate on mount
+    calculateItemsPerPage();
+
+    // Recalculate on window resize
+    window.addEventListener('resize', calculateItemsPerPage);
+
+    return () => window.removeEventListener('resize', calculateItemsPerPage);
+  }, []);
 
   // Toggle accordion
   const toggleRow = (taskId: string) => {
@@ -63,6 +103,17 @@ export default function TaskListPage() {
 
     return matchesSearch && matchesDept && matchesStatus && matchesHQCheck;
   });
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredTasks.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedTasks = filteredTasks.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, filters]);
 
   return (
     <div className="min-h-screen bg-white p-8">
@@ -168,10 +219,10 @@ export default function TaskListPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100">
-              {filteredTasks.map((task) => (
-                <>
+              {paginatedTasks.map((task) => (
+                <React.Fragment key={task.id}>
                   {/* Parent Row */}
-                  <tr key={task.id} className="hover:bg-gray-50">
+                  <tr className="hover:bg-gray-50">
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                       {task.no}
                     </td>
@@ -258,7 +309,7 @@ export default function TaskListPage() {
                       ))}
                     </>
                   )}
-                </>
+                </React.Fragment>
               ))}
             </tbody>
           </table>
@@ -269,20 +320,40 @@ export default function TaskListPage() {
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-600">
               Total: <span className="font-semibold text-gray-900">{filteredTasks.length}</span> tasks group
+              {filteredTasks.length > 0 && (
+                <span className="ml-2 text-gray-500">
+                  (Showing {startIndex + 1}-{Math.min(endIndex, filteredTasks.length)})
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-1">
-              <button className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-50">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-              <button className="w-8 h-8 flex items-center justify-center bg-black text-white rounded font-medium text-sm">
-                1
-              </button>
-              <button className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-50 text-sm">
-                2
-              </button>
-              <button className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-50">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`w-8 h-8 flex items-center justify-center rounded font-medium text-sm ${
+                    currentPage === page
+                      ? 'bg-black text-white'
+                      : 'border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
