@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useUser } from '@/contexts/UserContext';
 import {
@@ -91,6 +91,7 @@ interface ScheduleRow {
 export default function DailySchedulePage() {
   const { t } = useLanguage();
   const { currentUser } = useUser();
+  const router = useRouter();
   const [backendOnline, setBackendOnline] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedStoreId, setSelectedStoreId] = useState<string>('1');
@@ -273,11 +274,14 @@ export default function DailySchedulePage() {
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link href="/dws" className="text-indigo-600 hover:text-indigo-800">
+              <button
+                onClick={() => router.back()}
+                className="text-indigo-600 hover:text-indigo-800"
+              >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
-              </Link>
+              </button>
               <h1 className="text-xl font-bold text-gray-800">
                 {t('dws.dailySchedule')} - Lich Hang Ngay
               </h1>
@@ -308,7 +312,7 @@ export default function DailySchedulePage() {
                 <span className="text-xs text-gray-500">
                   {backendOnline ? 'Online' : 'Offline (Demo)'}
                 </span>
-                <span className="text-[10px] text-gray-400 ml-1">v13</span>
+                <span className="text-[10px] text-gray-400 ml-1">v14</span>
               </div>
             </div>
           </div>
