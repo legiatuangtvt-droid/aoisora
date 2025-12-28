@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { TaskGroup, DateMode, TaskFilters } from '@/types/tasks';
 import { mockTaskGroups } from '@/data/mockTasks';
 import StatusPill from '@/components/ui/StatusPill';
@@ -19,6 +20,8 @@ interface SortConfig {
 }
 
 export default function TaskListPage() {
+  const router = useRouter();
+
   // State management
   const [dateMode, setDateMode] = useState<DateMode>('TODAY');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
@@ -44,6 +47,11 @@ export default function TaskListPage() {
   const toggleRow = (taskId: string) => {
     // If clicking on already expanded row, close it. Otherwise, open the new one (closing any previously opened)
     setExpandedRows(expandedRows === taskId ? null : taskId);
+  };
+
+  // Navigate to task detail page
+  const handleRowClick = (taskId: string) => {
+    router.push(`/tasks/${taskId}`);
   };
 
   // Apply filters handler
@@ -300,7 +308,10 @@ export default function TaskListPage() {
               {paginatedTasks.map((task) => (
                 <React.Fragment key={task.id}>
                   {/* Parent Row */}
-                  <tr className="hover:bg-gray-50">
+                  <tr
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={() => handleRowClick(task.id)}
+                  >
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-center border-r border-gray-200">
                       {task.no}
                     </td>
@@ -317,7 +328,10 @@ export default function TaskListPage() {
                     <td className="px-4 py-3 text-sm border-r border-gray-200">
                       <div className="flex items-center justify-start gap-2">
                         <button
-                          onClick={() => toggleRow(task.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleRow(task.id);
+                          }}
                           className="flex items-center justify-center w-5 h-5 hover:bg-gray-200 rounded transition-colors"
                         >
                           <svg
