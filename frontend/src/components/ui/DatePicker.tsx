@@ -39,6 +39,15 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
     setActiveTab(dateMode);
   }, [dateMode]);
 
+  // Initialize selected week to current week
+  useEffect(() => {
+    const now = new Date();
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    const days = Math.floor((now.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
+    const currentWeek = Math.ceil((days + startOfYear.getDay() + 1) / 7);
+    setSelectedWeek(Math.min(currentWeek, 53));
+  }, []);
+
   const formatDate = (date: Date): string => {
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
@@ -47,10 +56,19 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
     });
   };
 
+  const formatShortDate = (date: Date): string => {
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: '2-digit'
+    });
+  };
+
   const getWeekRange = (year: number, week: number): { from: Date; to: Date } => {
-    const firstDayOfYear = new Date(year, 0, 1);
-    const daysToFirstMonday = (8 - firstDayOfYear.getDay()) % 7;
-    const firstMonday = new Date(year, 0, 1 + daysToFirstMonday);
+    // ISO week date calculation
+    const jan4 = new Date(year, 0, 4);
+    const dayOfWeek = jan4.getDay() || 7; // Convert Sunday (0) to 7
+    const firstMonday = new Date(jan4);
+    firstMonday.setDate(jan4.getDate() - dayOfWeek + 1);
 
     const weekStart = new Date(firstMonday);
     weekStart.setDate(firstMonday.getDate() + (week - 1) * 7);
@@ -235,59 +253,85 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
   };
 
   const renderWeekPicker = () => {
-    const weeks = Array.from({ length: 53 }, (_, i) => i + 1);
+    // Generate weeks grid - 6 rows x 9 columns = 54 cells (we need 53 weeks)
+    const totalWeeks = 53;
+    const columns = 9;
+    const rows = Math.ceil(totalWeeks / columns);
+
+    const weekRange = getWeekRange(selectedYear, selectedWeek);
 
     return (
-      <div>
-        {/* Year selector */}
-        <div className="flex items-center justify-center gap-12 mb-6">
-          <button
-            onClick={() => setSelectedYear(selectedYear - 1)}
-            className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <span className="text-3xl font-bold text-gray-900">{selectedYear}</span>
-          <button
-            onClick={() => setSelectedYear(selectedYear + 1)}
-            className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        </div>
-
+      <div className="flex-1">
         {/* Week range display */}
-        <div className="text-center mb-6 text-base text-gray-600 font-medium">
-          {(() => {
-            const weekRange = getWeekRange(selectedYear, selectedWeek);
-            return `${weekRange.from.toLocaleDateString('en-US', { month: 'short', day: '2-digit' })} -- ${weekRange.to.toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}`;
-          })()}
+        <div className="text-sm text-gray-600 mb-4">
+          {formatShortDate(weekRange.from)} – {formatShortDate(weekRange.to)}
         </div>
 
         {/* Week grid */}
-        <div className="grid grid-cols-9 gap-3 max-h-80 overflow-y-auto px-4">
-          {weeks.map((week) => {
-            const weekRange = getWeekRange(selectedYear, week);
-            const tooltipText = `${weekRange.from.toLocaleDateString('en-US', { month: 'short', day: '2-digit' })} - ${weekRange.to.toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}`;
+        <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}>
+          {Array.from({ length: rows * columns }, (_, i) => {
+            const week = i + 1;
+            if (week > totalWeeks) return <div key={i} />;
+
             return (
               <button
                 key={week}
                 onClick={() => setSelectedWeek(week)}
-                title={tooltipText}
-                className={`px-4 py-3 text-base rounded-lg hover:bg-gray-100 transition-colors ${
+                className={`px-2 py-2 text-sm rounded transition-colors ${
                   selectedWeek === week
-                    ? 'border-b-2 border-pink-500 font-semibold text-gray-900 bg-pink-50'
-                    : 'text-gray-700'
+                    ? 'bg-[#C5055B] text-white font-medium'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
                 W {week.toString().padStart(2, '0')}
               </button>
             );
           })}
+        </div>
+      </div>
+    );
+  };
+
+  const renderTodayContent = () => {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-xl font-semibold text-gray-900 mb-2">Today</p>
+          <p className="text-base text-gray-600">{formatDate(new Date())}</p>
+        </div>
+      </div>
+    );
+  };
+
+  const renderCustomContent = () => {
+    return (
+      <div className="flex-1">
+        {/* Date inputs */}
+        <div className="grid grid-cols-2 gap-6 mb-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">From</label>
+            <input
+              type="date"
+              value={customFromDate.toISOString().split('T')[0]}
+              onChange={(e) => setCustomFromDate(new Date(e.target.value))}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-base"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">To</label>
+            <input
+              type="date"
+              value={customToDate.toISOString().split('T')[0]}
+              onChange={(e) => setCustomToDate(new Date(e.target.value))}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-base"
+            />
+          </div>
+        </div>
+
+        {/* Dual Calendar */}
+        <div className="flex gap-8">
+          {renderCalendar(customFromDate, true)}
+          {renderCalendar(customToDate, false)}
         </div>
       </div>
     );
@@ -310,100 +354,89 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
 
       {/* Dropdown Modal */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50" style={{ width: '841px', height: '582px' }}>
-          {/* Tabs */}
-          <div className="flex border-b border-gray-200">
+        <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 flex" style={{ minWidth: '580px' }}>
+          {/* Left side - Tabs */}
+          <div className="w-24 border-r border-gray-200 py-4">
             <button
               onClick={() => setActiveTab('TODAY')}
-              className={`flex-1 px-6 py-3 text-sm font-medium ${
+              className={`w-full px-4 py-2 text-left text-sm font-medium transition-colors ${
                 activeTab === 'TODAY'
-                  ? 'border-b-2 border-pink-500 text-pink-600'
-                  : 'text-gray-600 hover:text-gray-800'
+                  ? 'bg-pink-50 text-[#C5055B] border-l-2 border-[#C5055B]'
+                  : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
               TODAY
             </button>
             <button
               onClick={() => setActiveTab('WEEK')}
-              className={`flex-1 px-6 py-3 text-sm font-medium ${
+              className={`w-full px-4 py-2 text-left text-sm font-medium transition-colors ${
                 activeTab === 'WEEK'
-                  ? 'border-b-2 border-pink-500 text-pink-600'
-                  : 'text-gray-600 hover:text-gray-800'
+                  ? 'bg-pink-50 text-[#C5055B] border-l-2 border-[#C5055B]'
+                  : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
               WEEK
             </button>
             <button
               onClick={() => setActiveTab('CUSTOM')}
-              className={`flex-1 px-6 py-3 text-sm font-medium ${
+              className={`w-full px-4 py-2 text-left text-sm font-medium transition-colors ${
                 activeTab === 'CUSTOM'
-                  ? 'border-b-2 border-pink-500 text-pink-600'
-                  : 'text-gray-600 hover:text-gray-800'
+                  ? 'bg-pink-50 text-[#C5055B] border-l-2 border-[#C5055B]'
+                  : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
               Custom
             </button>
           </div>
 
-          {/* Tab Content */}
-          <div className="p-8 overflow-y-auto" style={{ height: 'calc(582px - 112px)' }}>
-            {activeTab === 'TODAY' && (
-              <div className="text-center py-16">
-                <p className="text-2xl font-semibold text-gray-900 mb-3">Today</p>
-                <p className="text-lg text-gray-600">{formatDate(new Date())}</p>
+          {/* Right side - Content */}
+          <div className="flex-1 flex flex-col">
+            {/* Year selector (for WEEK mode) */}
+            {activeTab === 'WEEK' && (
+              <div className="flex items-center justify-end gap-2 px-4 py-3 border-b border-gray-200">
+                <button
+                  onClick={() => setSelectedYear(selectedYear - 1)}
+                  className="w-6 h-6 flex items-center justify-center hover:bg-gray-100 rounded transition-colors"
+                >
+                  <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <span className="text-base font-semibold text-gray-900 min-w-[50px] text-center">{selectedYear}</span>
+                <button
+                  onClick={() => setSelectedYear(selectedYear + 1)}
+                  className="w-6 h-6 flex items-center justify-center hover:bg-gray-100 rounded transition-colors"
+                >
+                  <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
               </div>
             )}
 
-            {activeTab === 'WEEK' && renderWeekPicker()}
+            {/* Content area */}
+            <div className="flex-1 p-4">
+              {activeTab === 'TODAY' && renderTodayContent()}
+              {activeTab === 'WEEK' && renderWeekPicker()}
+              {activeTab === 'CUSTOM' && renderCustomContent()}
+            </div>
 
-            {activeTab === 'CUSTOM' && (
-              <div>
-                {/* Date inputs */}
-                <div className="grid grid-cols-2 gap-6 mb-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">From</label>
-                    <input
-                      type="date"
-                      value={customFromDate.toISOString().split('T')[0]}
-                      onChange={(e) => setCustomFromDate(new Date(e.target.value))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-base"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">To</label>
-                    <input
-                      type="date"
-                      value={customToDate.toISOString().split('T')[0]}
-                      onChange={(e) => setCustomToDate(new Date(e.target.value))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-base"
-                    />
-                  </div>
-                </div>
-
-                {/* Dual Calendar */}
-                <div className="flex gap-8">
-                  {renderCalendar(customFromDate, true)}
-                  {renderCalendar(customToDate, false)}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-4 px-8 py-5 border-t border-gray-200">
-            <button
-              onClick={handleCancel}
-              className="px-8 py-3 text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleApply}
-              className="px-8 py-3 text-base font-medium text-white bg-pink-600 rounded-lg hover:bg-pink-700 transition-colors"
-              style={{ backgroundColor: '#C5055B' }}
-            >
-              Apply
-            </button>
+            {/* Action Buttons */}
+            <div className="flex items-center justify-end gap-3 px-4 py-3 border-t border-gray-200">
+              <button
+                onClick={handleApply}
+                className="px-6 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition-colors"
+                style={{ backgroundColor: '#C5055B' }}
+              >
+                Apply
+              </button>
+              <button
+                onClick={handleCancel}
+                className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}
