@@ -29,7 +29,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const showDevelopingToast = useCallback(() => {
-    showToast('Tinh nang nay dang phat trien', 'info');
+    showToast('This feature is under development', 'info');
   }, [showToast]);
 
   const removeToast = (id: string) => {
