@@ -9,6 +9,7 @@ import StatusPill from '@/components/ui/StatusPill';
 import SearchBar from '@/components/ui/SearchBar';
 import FilterModal from '@/components/tasks/FilterModal';
 import DatePicker from '@/components/ui/DatePicker';
+import ColumnFilterDropdown from '@/components/ui/ColumnFilterDropdown';
 
 // Sorting types
 type SortField = 'no' | 'dept' | 'taskGroupName' | 'startDate' | 'progress' | 'unable' | 'status' | 'hqCheck';
@@ -38,6 +39,16 @@ export default function TaskListPage() {
 
   // Sorting state
   const [sortConfig, setSortConfig] = useState<SortConfig>({ field: null, direction: null });
+
+  // Column filter states
+  const [deptColumnFilter, setDeptColumnFilter] = useState<string[]>([]);
+  const [statusColumnFilter, setStatusColumnFilter] = useState<string[]>([]);
+  const [hqCheckColumnFilter, setHqCheckColumnFilter] = useState<string[]>([]);
+
+  // Get unique values for column filters
+  const uniqueDepts = [...new Set(mockTaskGroups.map((t) => t.dept))];
+  const statusOptions = ['NOT_YET', 'DRAFT', 'DONE'];
+  const hqCheckOptions = ['NOT_YET', 'DRAFT', 'DONE'];
 
   // Pagination state - fixed 10 items per page
   const [currentPage, setCurrentPage] = useState(1);
@@ -100,15 +111,15 @@ export default function TaskListPage() {
     setSelectedDate(date);
   };
 
-  // Filter tasks based on search and filters
+  // Filter tasks based on search, modal filters, and column filters
   const filteredTasks = tasks.filter((task) => {
     // Search filter
     const matchesSearch =
       task.taskGroupName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       task.dept.toLowerCase().includes(searchQuery.toLowerCase());
 
-    // Department filter
-    const matchesDept =
+    // Department filter (modal)
+    const matchesDeptModal =
       filters.departments.length === 0 ||
       filters.departments.some((deptId) => {
         // Check if task.dept matches any selected department code
@@ -116,15 +127,27 @@ export default function TaskListPage() {
         return task.dept === deptCode || deptId.includes(task.dept.toLowerCase());
       });
 
-    // Status filter
-    const matchesStatus =
+    // Department column filter
+    const matchesDeptColumn =
+      deptColumnFilter.length === 0 || deptColumnFilter.includes(task.dept);
+
+    // Status filter (modal)
+    const matchesStatusModal =
       filters.status.length === 0 || filters.status.includes(task.status);
 
-    // HQ Check filter
-    const matchesHQCheck =
+    // Status column filter
+    const matchesStatusColumn =
+      statusColumnFilter.length === 0 || statusColumnFilter.includes(task.status);
+
+    // HQ Check filter (modal)
+    const matchesHQCheckModal =
       filters.hqCheck.length === 0 || filters.hqCheck.includes(task.hqCheck);
 
-    return matchesSearch && matchesDept && matchesStatus && matchesHQCheck;
+    // HQ Check column filter
+    const matchesHQCheckColumn =
+      hqCheckColumnFilter.length === 0 || hqCheckColumnFilter.includes(task.hqCheck);
+
+    return matchesSearch && matchesDeptModal && matchesDeptColumn && matchesStatusModal && matchesStatusColumn && matchesHQCheckModal && matchesHQCheckColumn;
   });
 
   // Sort tasks based on sortConfig
@@ -169,7 +192,7 @@ export default function TaskListPage() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, filters]);
+  }, [searchQuery, filters, deptColumnFilter, statusColumnFilter, hqCheckColumnFilter]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -243,12 +266,22 @@ export default function TaskListPage() {
                   </div>
                 </th>
                 <th
-                  className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50 cursor-pointer hover:bg-pink-100 transition-colors"
-                  onClick={() => handleSort('dept')}
+                  className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50"
                 >
-                  <div className="flex items-center justify-center gap-2">
-                    Dept
+                  <div className="flex items-center justify-center gap-1">
+                    <span
+                      className="cursor-pointer hover:text-pink-600 transition-colors"
+                      onClick={() => handleSort('dept')}
+                    >
+                      Dept
+                    </span>
                     {getSortIcon('dept')}
+                    <ColumnFilterDropdown
+                      options={uniqueDepts}
+                      selectedValues={deptColumnFilter}
+                      onFilterChange={setDeptColumnFilter}
+                      columnName="Dept"
+                    />
                   </div>
                 </th>
                 <th
@@ -288,21 +321,41 @@ export default function TaskListPage() {
                   </div>
                 </th>
                 <th
-                  className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50 cursor-pointer hover:bg-pink-100 transition-colors"
-                  onClick={() => handleSort('status')}
+                  className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50"
                 >
-                  <div className="flex items-center justify-center gap-2">
-                    Status
+                  <div className="flex items-center justify-center gap-1">
+                    <span
+                      className="cursor-pointer hover:text-pink-600 transition-colors"
+                      onClick={() => handleSort('status')}
+                    >
+                      Status
+                    </span>
                     {getSortIcon('status')}
+                    <ColumnFilterDropdown
+                      options={statusOptions}
+                      selectedValues={statusColumnFilter}
+                      onFilterChange={setStatusColumnFilter}
+                      columnName="Status"
+                    />
                   </div>
                 </th>
                 <th
-                  className="px-4 py-3 text-center text-xs font-semibold text-gray-700 bg-pink-50 cursor-pointer hover:bg-pink-100 transition-colors"
-                  onClick={() => handleSort('hqCheck')}
+                  className="px-4 py-3 text-center text-xs font-semibold text-gray-700 bg-pink-50"
                 >
-                  <div className="flex items-center justify-center gap-2">
-                    HQ Check
+                  <div className="flex items-center justify-center gap-1">
+                    <span
+                      className="cursor-pointer hover:text-pink-600 transition-colors"
+                      onClick={() => handleSort('hqCheck')}
+                    >
+                      HQ Check
+                    </span>
                     {getSortIcon('hqCheck')}
+                    <ColumnFilterDropdown
+                      options={hqCheckOptions}
+                      selectedValues={hqCheckColumnFilter}
+                      onFilterChange={setHqCheckColumnFilter}
+                      columnName="HQ Check"
+                    />
                   </div>
                 </th>
               </tr>
