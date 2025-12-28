@@ -13,7 +13,8 @@ from sqlalchemy.orm import Session
 from app.core.database import SessionLocal, engine
 from app.models import (
     Region, Department, Store, Staff,
-    TaskGroup, DailyScheduleTask, ShiftCode, ShiftAssignment
+    TaskGroup, TaskLibrary, DailyTemplate, ShiftTemplate,
+    DailyScheduleTask, ShiftCode, ShiftAssignment
 )
 from app.models.base import Base
 
@@ -163,6 +164,94 @@ def seed_shift_assignments(db: Session):
     print("✓ Shift assignments seeded")
 
 
+def seed_task_library(db: Session):
+    """Seed task library with common tasks"""
+    tasks = [
+        # LEADER tasks
+        TaskLibrary(group_id="LEADER", task_code="1501", task_name="Mở kho", task_type="Fixed", frequency="Daily", re_unit=10, allowed_positions=["LEADER"], time_windows=[{"startTime": "06:00", "endTime": "06:15"}], shift_placement={"type": "firstOfDay"}),
+        TaskLibrary(group_id="LEADER", task_code="1505", task_name="Balancing", task_type="Fixed", frequency="Daily", re_unit=15, allowed_positions=["LEADER"], time_windows=[{"startTime": "06:15", "endTime": "06:30"}]),
+        TaskLibrary(group_id="LEADER", task_code="1510", task_name="Bàn giao tiền", task_type="Fixed", frequency="Daily", re_unit=20, allowed_positions=["LEADER"], time_windows=[{"startTime": "10:00", "endTime": "10:30"}]),
+        TaskLibrary(group_id="LEADER", task_code="1515", task_name="Đóng kho", task_type="Fixed", frequency="Daily", re_unit=10, allowed_positions=["LEADER"], shift_placement={"type": "lastOfDay"}),
+
+        # POS tasks
+        TaskLibrary(group_id="POS", task_code="0101", task_name="Mở POS", task_type="Fixed", frequency="Daily", re_unit=10, allowed_positions=["POS", "LEADER"], time_windows=[{"startTime": "06:30", "endTime": "06:45"}]),
+        TaskLibrary(group_id="POS", task_code="0102", task_name="Hỗ trợ POS", task_type="CTM", frequency="Daily", re_unit=5, allowed_positions=["POS", "LEADER"]),
+        TaskLibrary(group_id="POS", task_code="0105", task_name="Đóng POS", task_type="Fixed", frequency="Daily", re_unit=10, allowed_positions=["POS", "LEADER"], shift_placement={"type": "lastOfShift"}),
+
+        # PERI tasks
+        TaskLibrary(group_id="PERI", task_code="0201", task_name="Lên hàng thịt cá", task_type="Fixed", frequency="Daily", re_unit=15, allowed_positions=["PERI", "LEADER"]),
+        TaskLibrary(group_id="PERI", task_code="0202", task_name="Lên hàng rau củ", task_type="Fixed", frequency="Daily", re_unit=15, allowed_positions=["PERI"]),
+        TaskLibrary(group_id="PERI", task_code="0205", task_name="Cắt gọt", task_type="Product", frequency="Daily", re_unit=10, allowed_positions=["PERI"]),
+        TaskLibrary(group_id="PERI", task_code="0210", task_name="Giảm giá Peri", task_type="Fixed", frequency="Daily", re_unit=10, allowed_positions=["PERI", "LEADER"]),
+
+        # DRY tasks
+        TaskLibrary(group_id="DRY", task_code="0301", task_name="Lên hàng khô", task_type="Fixed", frequency="Daily", re_unit=15, allowed_positions=["DRY"]),
+        TaskLibrary(group_id="DRY", task_code="0302", task_name="Kéo mặt Dry", task_type="Fixed", frequency="Daily", re_unit=10, allowed_positions=["DRY"]),
+        TaskLibrary(group_id="DRY", task_code="0304", task_name="Bắn OOS", task_type="Fixed", frequency="Daily", re_unit=10, allowed_positions=["DRY", "LEADER"]),
+
+        # MMD tasks
+        TaskLibrary(group_id="MMD", task_code="0401", task_name="Nhận hàng Peri", task_type="Fixed", frequency="Daily", re_unit=20, allowed_positions=["MMD"]),
+        TaskLibrary(group_id="MMD", task_code="0403", task_name="Nhận hàng RDC", task_type="Fixed", frequency="Daily", re_unit=25, allowed_positions=["MMD"]),
+        TaskLibrary(group_id="MMD", task_code="0405", task_name="Nhận hàng D&D", task_type="Fixed", frequency="Daily", re_unit=15, allowed_positions=["MMD"]),
+
+        # QC-FSH tasks
+        TaskLibrary(group_id="QC-FSH", task_code="0801", task_name="Cleaning Time", task_type="Fixed", frequency="Daily", re_unit=5, allowed_positions=["ALL"], time_windows=[{"startTime": "09:00", "endTime": "09:15"}]),
+        TaskLibrary(group_id="QC-FSH", task_code="0802", task_name="Kiểm tra VSC", task_type="Fixed", frequency="Daily", re_unit=10, allowed_positions=["LEADER", "QC"]),
+
+        # DELICA tasks
+        TaskLibrary(group_id="DELICA", task_code="0501", task_name="Pha chế Cafe", task_type="CTM", frequency="Daily", re_unit=5, allowed_positions=["DELICA"]),
+        TaskLibrary(group_id="DELICA", task_code="0503", task_name="Lên hàng Delica", task_type="Fixed", frequency="Daily", re_unit=10, allowed_positions=["DELICA"]),
+        TaskLibrary(group_id="DELICA", task_code="0504", task_name="Kéo mặt Delica", task_type="Fixed", frequency="Daily", re_unit=5, allowed_positions=["DELICA"]),
+        TaskLibrary(group_id="DELICA", task_code="0505", task_name="Kiểm tra HSD", task_type="Fixed", frequency="Daily", re_unit=10, allowed_positions=["DELICA", "LEADER"]),
+
+        # D&D tasks
+        TaskLibrary(group_id="DND", task_code="0601", task_name="Lên hàng D&D", task_type="Fixed", frequency="Daily", re_unit=10, allowed_positions=["DND"]),
+        TaskLibrary(group_id="DND", task_code="0602", task_name="Kéo mặt D&D", task_type="Fixed", frequency="Daily", re_unit=5, allowed_positions=["DND"]),
+        TaskLibrary(group_id="DND", task_code="0604", task_name="Đặt hàng D&D", task_type="Fixed", frequency="Daily", re_unit=15, allowed_positions=["DND", "LEADER"]),
+
+        # OTHER tasks
+        TaskLibrary(group_id="OTHER", task_code="1005", task_name="Break Time", task_type="Fixed", frequency="Daily", re_unit=0, allowed_positions=["ALL"]),
+    ]
+
+    for t in tasks:
+        existing = db.query(TaskLibrary).filter(TaskLibrary.task_code == t.task_code).first()
+        if not existing:
+            db.add(t)
+    db.commit()
+    print("✓ Task library seeded")
+
+
+def seed_daily_templates(db: Session):
+    """Seed daily templates with hourly manhour and customer data"""
+    templates = [
+        DailyTemplate(
+            template_code="WEEKDAY",
+            template_name="Ngày thường",
+            store_id=1,
+            hourly_manhours={"6": 5, "7": 5, "8": 5, "9": 4, "10": 4, "11": 5, "12": 6, "13": 5, "14": 4, "15": 4, "16": 5, "17": 6, "18": 7, "19": 6, "20": 5, "21": 4, "22": 3, "23": 2},
+            hourly_customers={"6": 70, "7": 80, "8": 60, "9": 50, "10": 45, "11": 55, "12": 80, "13": 70, "14": 50, "15": 45, "16": 55, "17": 70, "18": 100, "19": 90, "20": 70, "21": 50, "22": 30, "23": 20},
+            re_parameters={"areaSize": 350, "customerCount": 1280, "posCount": 2, "vegetableWeight": 50, "dryGoodsVolume": 60, "employeeCount": 10},
+            total_manhour=80
+        ),
+        DailyTemplate(
+            template_code="WEEKEND",
+            template_name="Cuối tuần",
+            store_id=1,
+            hourly_manhours={"6": 6, "7": 6, "8": 6, "9": 5, "10": 5, "11": 6, "12": 7, "13": 6, "14": 5, "15": 5, "16": 6, "17": 7, "18": 8, "19": 7, "20": 6, "21": 5, "22": 4, "23": 2},
+            hourly_customers={"6": 90, "7": 100, "8": 80, "9": 70, "10": 65, "11": 75, "12": 110, "13": 100, "14": 70, "15": 65, "16": 75, "17": 100, "18": 140, "19": 120, "20": 90, "21": 70, "22": 40, "23": 25},
+            re_parameters={"areaSize": 350, "customerCount": 1600, "posCount": 3, "vegetableWeight": 70, "dryGoodsVolume": 80, "employeeCount": 12},
+            total_manhour=95
+        ),
+    ]
+
+    for t in templates:
+        existing = db.query(DailyTemplate).filter(DailyTemplate.template_code == t.template_code).first()
+        if not existing:
+            db.add(t)
+    db.commit()
+    print("✓ Daily templates seeded")
+
+
 def seed_daily_schedule_tasks(db: Session):
     """Seed daily schedule tasks for staff"""
     today = date.today()
@@ -266,6 +355,8 @@ def main():
         seed_staff(db)
         seed_shift_codes(db)
         seed_task_groups(db)
+        seed_task_library(db)
+        seed_daily_templates(db)
         seed_shift_assignments(db)
         seed_daily_schedule_tasks(db)
 

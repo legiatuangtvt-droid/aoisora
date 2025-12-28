@@ -1,7 +1,170 @@
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from datetime import datetime, date, time
 from decimal import Decimal
+
+
+# ============================================
+# TaskLibrary Schemas (Task Master Data)
+# ============================================
+
+class TimeWindow(BaseModel):
+    startTime: str  # HH:MM
+    endTime: str    # HH:MM
+
+
+class ShiftPlacement(BaseModel):
+    type: str  # firstOfDay, lastOfDay, firstOfShift, lastOfShift, breakTime
+
+
+class TaskLibraryBase(BaseModel):
+    group_id: str
+    task_code: str  # POS-001, PERI-002, etc.
+    task_name: str
+    task_type: str = "Fixed"  # Fixed, CTM, Product
+    frequency: str = "Daily"  # Daily, Weekly, Monthly, Yearly
+    frequency_number: int = 1
+    re_unit: Decimal = Decimal("10")  # Experience points
+    manual_number: Optional[str] = None
+    manual_link: Optional[str] = None
+    note: Optional[str] = None
+    concurrent_performers: int = 1
+    allowed_positions: Optional[List[str]] = None  # ["POS", "Leader", "MMD"]
+    time_windows: Optional[List[Dict[str, str]]] = None
+    shift_placement: Optional[Dict[str, str]] = None
+    is_active: bool = True
+
+
+class TaskLibraryCreate(TaskLibraryBase):
+    pass
+
+
+class TaskLibraryUpdate(BaseModel):
+    task_name: Optional[str] = None
+    task_type: Optional[str] = None
+    frequency: Optional[str] = None
+    frequency_number: Optional[int] = None
+    re_unit: Optional[Decimal] = None
+    manual_number: Optional[str] = None
+    manual_link: Optional[str] = None
+    note: Optional[str] = None
+    concurrent_performers: Optional[int] = None
+    allowed_positions: Optional[List[str]] = None
+    time_windows: Optional[List[Dict[str, str]]] = None
+    shift_placement: Optional[Dict[str, str]] = None
+    is_active: Optional[bool] = None
+
+
+class TaskLibraryResponse(TaskLibraryBase):
+    task_lib_id: int
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class TaskLibraryWithGroup(TaskLibraryResponse):
+    """Task with group info"""
+    task_group: Optional["TaskGroupResponse"] = None
+
+    class Config:
+        from_attributes = True
+
+
+# ============================================
+# DailyTemplate Schemas
+# ============================================
+
+class REParameters(BaseModel):
+    """Store-specific RE calculation parameters"""
+    areaSize: int = 350  # Store area in m2
+    customerCount: int = 1280  # Daily customer count
+    customerCountByHour: Optional[Dict[str, int]] = None  # {"06": 70, "07": 80, ...}
+    dryGoodsVolume: int = 60  # Dry goods volume
+    employeeCount: int = 10
+    posCount: int = 2
+    vegetableWeight: int = 50  # kg
+
+
+class ScheduledTaskItem(BaseModel):
+    """Single task item in shift schedule"""
+    groupId: str
+    startTime: str  # HH:MM
+    taskCode: str
+    taskName: str
+    isComplete: int = 0  # 0 or 1
+
+
+class ShiftMapping(BaseModel):
+    """Mapping between shift key and position/shift code"""
+    positionId: str  # LEADER, POS, MERCHANDISE, MMD, CAFE
+    shiftCode: str   # V812, V829, etc.
+
+
+class DailyTemplateBase(BaseModel):
+    template_code: str  # WEEKDAY, WEEKEND, HOLIDAY
+    template_name: str
+    store_id: Optional[int] = None
+    hourly_manhours: Dict[str, float] = {}  # {"6": 5, "7": 5, ...}
+    hourly_customers: Dict[str, int] = {}   # {"6": 70, "7": 80, ...}
+    re_parameters: Optional[Dict[str, Any]] = None
+    total_manhour: Decimal = Decimal("80")
+    is_active: bool = True
+
+
+class DailyTemplateCreate(DailyTemplateBase):
+    pass
+
+
+class DailyTemplateUpdate(BaseModel):
+    template_name: Optional[str] = None
+    hourly_manhours: Optional[Dict[str, float]] = None
+    hourly_customers: Optional[Dict[str, int]] = None
+    re_parameters: Optional[Dict[str, Any]] = None
+    total_manhour: Optional[Decimal] = None
+    is_active: Optional[bool] = None
+
+
+class DailyTemplateResponse(DailyTemplateBase):
+    template_id: int
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ShiftTemplateBase(BaseModel):
+    template_id: int
+    shift_key: str  # shift-1, shift-2, etc.
+    position_id: Optional[str] = None
+    shift_code: Optional[str] = None
+    scheduled_tasks: List[Dict[str, Any]] = []
+
+
+class ShiftTemplateCreate(ShiftTemplateBase):
+    pass
+
+
+class ShiftTemplateUpdate(BaseModel):
+    position_id: Optional[str] = None
+    shift_code: Optional[str] = None
+    scheduled_tasks: Optional[List[Dict[str, Any]]] = None
+
+
+class ShiftTemplateResponse(ShiftTemplateBase):
+    shift_template_id: int
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class DailyTemplateWithShifts(DailyTemplateResponse):
+    """Template with all shift templates"""
+    shift_templates: List[ShiftTemplateResponse] = []
 
 
 # ============================================

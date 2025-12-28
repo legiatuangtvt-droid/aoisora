@@ -366,6 +366,151 @@ export interface TaskGroupCreate {
 }
 
 // ============================================
+// Task Library Types (Master Task Data)
+// ============================================
+
+export interface TaskLibrary {
+  task_lib_id: number;
+  group_id: string;
+  task_code: string;  // POS-001, PERI-002
+  task_name: string;
+  task_type: 'Fixed' | 'CTM' | 'Product';
+  frequency: 'Daily' | 'Weekly' | 'Monthly' | 'Yearly';
+  frequency_number: number;
+  re_unit: number;  // Experience points
+  manual_number: string | null;
+  manual_link: string | null;
+  note: string | null;
+  concurrent_performers: number;
+  allowed_positions: string[] | null;  // ["POS", "Leader", "MMD"]
+  time_windows: { startTime: string; endTime: string }[] | null;
+  shift_placement: { type: string } | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  task_group?: TaskGroup;
+}
+
+export interface TaskLibraryCreate {
+  group_id: string;
+  task_code: string;
+  task_name: string;
+  task_type?: string;
+  frequency?: string;
+  frequency_number?: number;
+  re_unit?: number;
+  manual_number?: string;
+  manual_link?: string;
+  note?: string;
+  concurrent_performers?: number;
+  allowed_positions?: string[];
+  time_windows?: { startTime: string; endTime: string }[];
+  shift_placement?: { type: string };
+}
+
+export interface TaskLibraryUpdate {
+  task_name?: string;
+  task_type?: string;
+  frequency?: string;
+  frequency_number?: number;
+  re_unit?: number;
+  manual_number?: string;
+  manual_link?: string;
+  note?: string;
+  concurrent_performers?: number;
+  allowed_positions?: string[];
+  time_windows?: { startTime: string; endTime: string }[];
+  shift_placement?: { type: string };
+  is_active?: boolean;
+}
+
+// ============================================
+// Daily Template Types
+// ============================================
+
+export interface REParameters {
+  areaSize: number;
+  customerCount: number;
+  customerCountByHour: Record<string, number>;
+  dryGoodsVolume: number;
+  employeeCount: number;
+  posCount: number;
+  vegetableWeight: number;
+}
+
+export interface ScheduledTaskItem {
+  groupId: string;
+  startTime: string;  // HH:MM
+  taskCode: string;
+  taskName: string;
+  isComplete?: number;  // 0 or 1
+}
+
+export interface ShiftMapping {
+  positionId: string;  // LEADER, POS, MERCHANDISE, MMD, CAFE
+  shiftCode: string;   // V812, V829
+}
+
+export interface DailyTemplate {
+  template_id: number;
+  template_code: string;  // WEEKDAY, WEEKEND, HOLIDAY
+  template_name: string;
+  store_id: number | null;
+  hourly_manhours: Record<string, number>;  // {"6": 5, "7": 5}
+  hourly_customers: Record<string, number>;  // {"6": 70, "7": 80}
+  re_parameters: REParameters | null;
+  total_manhour: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  shift_templates?: ShiftTemplate[];
+}
+
+export interface DailyTemplateCreate {
+  template_code: string;
+  template_name: string;
+  store_id?: number;
+  hourly_manhours?: Record<string, number>;
+  hourly_customers?: Record<string, number>;
+  re_parameters?: REParameters;
+  total_manhour?: number;
+}
+
+export interface DailyTemplateUpdate {
+  template_name?: string;
+  hourly_manhours?: Record<string, number>;
+  hourly_customers?: Record<string, number>;
+  re_parameters?: REParameters;
+  total_manhour?: number;
+  is_active?: boolean;
+}
+
+export interface ShiftTemplate {
+  shift_template_id: number;
+  template_id: number;
+  shift_key: string;  // shift-1, shift-2
+  position_id: string | null;  // LEADER, POS, MERCHANDISE
+  shift_code: string | null;  // V812, V829
+  scheduled_tasks: ScheduledTaskItem[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ShiftTemplateCreate {
+  template_id: number;
+  shift_key: string;
+  position_id?: string;
+  shift_code?: string;
+  scheduled_tasks?: ScheduledTaskItem[];
+}
+
+export interface ShiftTemplateUpdate {
+  position_id?: string;
+  shift_code?: string;
+  scheduled_tasks?: ScheduledTaskItem[];
+}
+
+// ============================================
 // Daily Schedule Task Types (DWS)
 // ============================================
 

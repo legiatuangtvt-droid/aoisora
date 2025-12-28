@@ -14,6 +14,10 @@
 4. [Task Management - WS (Quan ly cong viec)](#4-task-management---ws-quản-lý-công-việc)
 5. [Shift Management - DWS (Quan ly ca lam viec)](#5-shift-management---dws-quản-lý-ca-làm-việc)
 6. [Notifications (Thong bao)](#6-notifications-thông-báo)
+7. [Task Groups (Nhom cong viec)](#7-task-groups-nhóm-công-việc)
+8. [Task Library (Thu vien cong viec)](#8-task-library-thư-viện-công-việc)
+9. [Daily Templates (Mau lich ngay)](#9-daily-templates-mẫu-lịch-ngày)
+10. [Daily Schedule Tasks (Lich cong viec ngay)](#10-daily-schedule-tasks-lịch-công-việc-ngày)
 
 ---
 
@@ -1502,4 +1506,546 @@
 
 ---
 
-*API Version 1.0 - Ngay cap nhat: 2025-12-27*
+## 7. Task Groups (Nhom cong viec)
+
+### 7.1. Lay danh sach nhom (List Task Groups)
+
+| Thuoc tinh | Gia tri |
+|------------|---------|
+| **Chuc nang** | Lay danh sach tat ca nhom cong viec |
+| **Endpoint** | `GET /shifts/task-groups/` |
+| **Phan quyen** | Can token |
+
+**INPUT (Query Parameters):**
+| Truong | Kieu | Bat buoc | Mo ta |
+|--------|------|----------|-------|
+| is_active | boolean | Khong | Loc theo trang thai hoat dong |
+
+**OUTPUT (Thanh cong - 200):**
+```json
+[
+  {
+    "group_id": "POS",
+    "group_code": "POS",
+    "group_name": "Thu ngan",
+    "priority": 10,
+    "sort_order": 1,
+    "color_bg": "#e2e8f0",
+    "color_text": "#1e293b",
+    "color_border": "#94a3b8",
+    "is_active": true,
+    "created_at": "2025-01-01T00:00:00Z"
+  },
+  {
+    "group_id": "PERI",
+    "group_code": "PERI",
+    "group_name": "Tuoi song",
+    "priority": 20,
+    "sort_order": 2,
+    "color_bg": "#bbf7d0",
+    "color_text": "#166534",
+    "color_border": "#4ade80",
+    "is_active": true
+  }
+]
+```
+
+**URL Test:** `http://localhost:8000/api/v1/shifts/task-groups/?is_active=true`
+
+---
+
+### 7.2. Tao nhom cong viec (Create Task Group)
+
+| Thuoc tinh | Gia tri |
+|------------|---------|
+| **Chuc nang** | Tao mot nhom cong viec moi |
+| **Endpoint** | `POST /shifts/task-groups/` |
+| **Phan quyen** | Can token |
+
+**INPUT:**
+| Truong | Kieu | Bat buoc | Mo ta |
+|--------|------|----------|-------|
+| group_id | string | Co | Ma nhom (duy nhat) |
+| group_code | string | Co | Ma code nhom |
+| group_name | string | Khong | Ten nhom |
+| priority | integer | Khong | Uu tien (mac dinh: 50) |
+| sort_order | integer | Khong | Thu tu sap xep |
+| color_bg | string | Khong | Mau nen (hex) |
+| color_text | string | Khong | Mau chu (hex) |
+| color_border | string | Khong | Mau vien (hex) |
+
+```json
+{
+  "group_id": "DELICA",
+  "group_code": "DELICA",
+  "group_name": "Delica",
+  "priority": 60,
+  "sort_order": 7,
+  "color_bg": "#c7d2fe",
+  "color_text": "#3730a3",
+  "color_border": "#818cf8"
+}
+```
+
+---
+
+## 8. Task Library (Thu vien cong viec)
+
+### 8.1. Lay danh sach thu vien cong viec (List Task Library)
+
+| Thuoc tinh | Gia tri |
+|------------|---------|
+| **Chuc nang** | Lay danh sach tat ca cong viec trong thu vien |
+| **Endpoint** | `GET /shifts/task-library/` |
+| **Phan quyen** | Can token |
+
+**INPUT (Query Parameters):**
+| Truong | Kieu | Bat buoc | Mo ta |
+|--------|------|----------|-------|
+| group_id | string | Khong | Loc theo nhom (POS, PERI, DRY, etc.) |
+| task_type | string | Khong | Loc theo loai (Fixed, CTM, Product) |
+| frequency | string | Khong | Loc theo tan suat (Daily, Weekly, Monthly, Yearly) |
+| is_active | boolean | Khong | Loc theo trang thai hoat dong |
+| skip | integer | Khong | Bo qua N ban ghi |
+| limit | integer | Khong | Gioi han so ban ghi (mac dinh: 200) |
+
+**OUTPUT (Thanh cong - 200):**
+```json
+[
+  {
+    "task_lib_id": 1,
+    "group_id": "LEADER",
+    "task_code": "1501",
+    "task_name": "Mo kho",
+    "task_type": "Fixed",
+    "frequency": "Daily",
+    "frequency_number": 1,
+    "re_unit": 10.00,
+    "manual_number": "MAN-001",
+    "manual_link": "https://docs.example.com/manual/1501",
+    "note": "Thuc hien dau ca sang",
+    "concurrent_performers": 1,
+    "allowed_positions": ["LEADER", "POS"],
+    "time_windows": [
+      {"startTime": "06:00", "endTime": "06:30"}
+    ],
+    "shift_placement": {"type": "firstOfDay"},
+    "is_active": true,
+    "task_group": {
+      "group_id": "LEADER",
+      "group_name": "Quan ly",
+      "color_bg": "#99f6e4",
+      "color_text": "#134e4a",
+      "color_border": "#2dd4bf"
+    }
+  }
+]
+```
+
+**URL Test:** `http://localhost:8000/api/v1/shifts/task-library/?group_id=LEADER&is_active=true`
+
+---
+
+### 8.2. Tao cong viec trong thu vien (Create Task Library)
+
+| Thuoc tinh | Gia tri |
+|------------|---------|
+| **Chuc nang** | Tao mot cong viec moi trong thu vien |
+| **Endpoint** | `POST /shifts/task-library/` |
+| **Phan quyen** | Can token |
+
+**INPUT:**
+| Truong | Kieu | Bat buoc | Mo ta |
+|--------|------|----------|-------|
+| group_id | string | Co | Ma nhom cong viec |
+| task_code | string | Co | Ma cong viec (duy nhat) |
+| task_name | string | Co | Ten cong viec |
+| task_type | string | Khong | Loai: Fixed, CTM, Product |
+| frequency | string | Khong | Tan suat: Daily, Weekly, Monthly, Yearly |
+| frequency_number | integer | Khong | So lan thuc hien |
+| re_unit | decimal | Khong | Diem kinh nghiem |
+| manual_number | string | Khong | Ma so tai lieu huong dan |
+| manual_link | string | Khong | Link tai lieu |
+| concurrent_performers | integer | Khong | So nguoi thuc hien cung luc |
+| allowed_positions | array | Khong | Vi tri duoc phep thuc hien |
+| time_windows | array | Khong | Khung gio thuc hien |
+| shift_placement | object | Khong | Vi tri trong ca |
+
+```json
+{
+  "group_id": "POS",
+  "task_code": "0101",
+  "task_name": "Mo POS",
+  "task_type": "Fixed",
+  "frequency": "Daily",
+  "re_unit": 10,
+  "allowed_positions": ["POS", "LEADER"],
+  "time_windows": [
+    {"startTime": "06:00", "endTime": "06:30"}
+  ],
+  "shift_placement": {"type": "firstOfShift"}
+}
+```
+
+---
+
+### 8.3. Cap nhat cong viec (Update Task Library)
+
+| Thuoc tinh | Gia tri |
+|------------|---------|
+| **Chuc nang** | Cap nhat thong tin cong viec trong thu vien |
+| **Endpoint** | `PUT /shifts/task-library/{task_code}` |
+| **Phan quyen** | Can token |
+
+---
+
+### 8.4. Xoa cong viec (Delete Task Library)
+
+| Thuoc tinh | Gia tri |
+|------------|---------|
+| **Chuc nang** | Xoa cong viec (soft delete) |
+| **Endpoint** | `DELETE /shifts/task-library/{task_code}` |
+| **Phan quyen** | Can token |
+
+---
+
+## 9. Daily Templates (Mau lich ngay)
+
+### 9.1. Lay danh sach mau (List Daily Templates)
+
+| Thuoc tinh | Gia tri |
+|------------|---------|
+| **Chuc nang** | Lay danh sach tat ca mau lich ngay |
+| **Endpoint** | `GET /shifts/daily-templates/` |
+| **Phan quyen** | Can token |
+
+**INPUT (Query Parameters):**
+| Truong | Kieu | Bat buoc | Mo ta |
+|--------|------|----------|-------|
+| store_id | integer | Khong | Loc theo cua hang |
+| is_active | boolean | Khong | Loc theo trang thai |
+
+**OUTPUT (Thanh cong - 200):**
+```json
+[
+  {
+    "template_id": 1,
+    "template_code": "WEEKDAY",
+    "template_name": "Ngay thuong",
+    "store_id": 1,
+    "hourly_manhours": {
+      "6": 5.0, "7": 5.0, "8": 5.0, "9": 4.0, "10": 4.0, "11": 5.0,
+      "12": 6.0, "13": 5.0, "14": 4.0, "15": 4.0, "16": 5.0, "17": 6.0,
+      "18": 7.0, "19": 6.0, "20": 5.0, "21": 4.0, "22": 3.0, "23": 2.0
+    },
+    "hourly_customers": {
+      "6": 70, "7": 80, "8": 60, "9": 50, "10": 45, "11": 55,
+      "12": 80, "13": 70, "14": 50, "15": 45, "16": 55, "17": 70,
+      "18": 100, "19": 90, "20": 70, "21": 50, "22": 30, "23": 20
+    },
+    "re_parameters": {
+      "areaSize": 350,
+      "customerCount": 1280,
+      "posCount": 2,
+      "vegetableWeight": 50,
+      "dryGoodsVolume": 60,
+      "employeeCount": 10
+    },
+    "total_manhour": 80.00,
+    "is_active": true
+  }
+]
+```
+
+**URL Test:** `http://localhost:8000/api/v1/shifts/daily-templates/?store_id=1`
+
+---
+
+### 9.2. Lay chi tiet mau theo ID (Get Daily Template)
+
+| Thuoc tinh | Gia tri |
+|------------|---------|
+| **Chuc nang** | Lay chi tiet mau lich voi tat ca shift templates |
+| **Endpoint** | `GET /shifts/daily-templates/{template_id}` |
+| **Phan quyen** | Can token |
+
+**OUTPUT (Thanh cong - 200):**
+```json
+{
+  "template_id": 1,
+  "template_code": "WEEKDAY",
+  "template_name": "Ngay thuong",
+  "hourly_manhours": {...},
+  "hourly_customers": {...},
+  "shift_templates": [
+    {
+      "shift_template_id": 1,
+      "template_id": 1,
+      "shift_key": "shift-1",
+      "position_id": "LEADER",
+      "shift_code": "V812",
+      "scheduled_tasks": [
+        {"groupId": "LEADER", "startTime": "06:00", "taskCode": "1501", "taskName": "Mo kho"},
+        {"groupId": "LEADER", "startTime": "06:15", "taskCode": "1505", "taskName": "Balancing"},
+        {"groupId": "LEADER", "startTime": "06:30", "taskCode": "1502", "taskName": "Kiem tra hang hoa"}
+      ]
+    },
+    {
+      "shift_template_id": 2,
+      "template_id": 1,
+      "shift_key": "shift-2",
+      "position_id": "POS",
+      "shift_code": "V812",
+      "scheduled_tasks": [
+        {"groupId": "POS", "startTime": "06:00", "taskCode": "0101", "taskName": "Mo POS"}
+      ]
+    }
+  ]
+}
+```
+
+---
+
+### 9.3. Lay mau theo ma (Get Daily Template by Code)
+
+| Thuoc tinh | Gia tri |
+|------------|---------|
+| **Chuc nang** | Lay chi tiet mau theo template_code |
+| **Endpoint** | `GET /shifts/daily-templates/by-code/{template_code}` |
+| **Phan quyen** | Can token |
+
+**URL Test:** `http://localhost:8000/api/v1/shifts/daily-templates/by-code/WEEKDAY`
+
+---
+
+### 9.4. Tao mau lich moi (Create Daily Template)
+
+| Thuoc tinh | Gia tri |
+|------------|---------|
+| **Chuc nang** | Tao mot mau lich ngay moi |
+| **Endpoint** | `POST /shifts/daily-templates/` |
+| **Phan quyen** | Can token |
+
+**INPUT:**
+| Truong | Kieu | Bat buoc | Mo ta |
+|--------|------|----------|-------|
+| template_code | string | Co | Ma mau (WEEKDAY, WEEKEND, HOLIDAY) |
+| template_name | string | Co | Ten mau |
+| store_id | integer | Khong | ID cua hang |
+| hourly_manhours | object | Khong | Manhour theo gio |
+| hourly_customers | object | Khong | So khach theo gio |
+| re_parameters | object | Khong | Cac tham so tinh RE |
+| total_manhour | decimal | Khong | Tong manhour ngay |
+
+```json
+{
+  "template_code": "WEEKEND",
+  "template_name": "Cuoi tuan",
+  "store_id": 1,
+  "hourly_manhours": {"6": 6, "7": 6, "8": 6},
+  "hourly_customers": {"6": 100, "7": 120, "8": 110},
+  "total_manhour": 90
+}
+```
+
+---
+
+## 10. Daily Schedule Tasks (Lich cong viec ngay)
+
+### 10.1. Lay danh sach cong viec theo lich (List Schedule Tasks)
+
+| Thuoc tinh | Gia tri |
+|------------|---------|
+| **Chuc nang** | Lay danh sach cong viec da xep lich |
+| **Endpoint** | `GET /shifts/schedule-tasks/` |
+| **Phan quyen** | Can token |
+
+**INPUT (Query Parameters):**
+| Truong | Kieu | Bat buoc | Mo ta |
+|--------|------|----------|-------|
+| store_id | integer | Khong | Loc theo cua hang |
+| staff_id | integer | Khong | Loc theo nhan vien |
+| schedule_date | date | Khong | Loc theo ngay (YYYY-MM-DD) |
+| group_id | string | Khong | Loc theo nhom cong viec |
+| status | string | Khong | Loc theo trang thai (pending, in_progress, completed, skipped) |
+| skip | integer | Khong | Bo qua N ban ghi |
+| limit | integer | Khong | Gioi han so ban ghi (mac dinh: 200) |
+
+**OUTPUT (Thanh cong - 200):**
+```json
+[
+  {
+    "schedule_task_id": 1,
+    "staff_id": 5,
+    "store_id": 1,
+    "schedule_date": "2025-01-15",
+    "group_id": "LEADER",
+    "task_code": "1501",
+    "task_name": "Mo kho",
+    "start_time": "06:00:00",
+    "end_time": "06:15:00",
+    "status": "completed",
+    "completed_at": "2025-01-15T06:10:00Z",
+    "notes": null,
+    "task_group": {
+      "group_id": "LEADER",
+      "group_name": "Quan ly",
+      "color_bg": "#99f6e4",
+      "color_text": "#134e4a",
+      "color_border": "#2dd4bf"
+    }
+  }
+]
+```
+
+**URL Test:** `http://localhost:8000/api/v1/shifts/schedule-tasks/?schedule_date=2025-01-15&store_id=1`
+
+---
+
+### 10.2. Lay lich cong viec cua nhan vien (Get Staff Daily Schedule)
+
+| Thuoc tinh | Gia tri |
+|------------|---------|
+| **Chuc nang** | Lay tat ca cong viec cua mot nhan vien trong ngay |
+| **Endpoint** | `GET /shifts/schedule-tasks/by-staff/{staff_id}` |
+| **Phan quyen** | Can token |
+
+**INPUT (Query Parameters):**
+| Truong | Kieu | Bat buoc | Mo ta |
+|--------|------|----------|-------|
+| schedule_date | date | Co | Ngay lich (YYYY-MM-DD) |
+
+**OUTPUT (Thanh cong - 200):**
+```json
+{
+  "staff_id": 5,
+  "staff_name": "Nguyen Van A",
+  "schedule_date": "2025-01-15",
+  "tasks": [
+    {
+      "schedule_task_id": 1,
+      "task_code": "1501",
+      "task_name": "Mo kho",
+      "group_id": "LEADER",
+      "start_time": "06:00:00",
+      "end_time": "06:15:00",
+      "status": "completed"
+    }
+  ],
+  "total_tasks": 15,
+  "completed_tasks": 10
+}
+```
+
+**URL Test:** `http://localhost:8000/api/v1/shifts/schedule-tasks/by-staff/5?schedule_date=2025-01-15`
+
+---
+
+### 10.3. Tao cong viec moi (Create Schedule Task)
+
+| Thuoc tinh | Gia tri |
+|------------|---------|
+| **Chuc nang** | Tao mot cong viec trong lich ngay |
+| **Endpoint** | `POST /shifts/schedule-tasks/` |
+| **Phan quyen** | Can token |
+
+**INPUT:**
+| Truong | Kieu | Bat buoc | Mo ta |
+|--------|------|----------|-------|
+| staff_id | integer | Co | ID nhan vien |
+| store_id | integer | Khong | ID cua hang |
+| schedule_date | date | Co | Ngay thuc hien (YYYY-MM-DD) |
+| group_id | string | Khong | Ma nhom cong viec |
+| task_code | string | Co | Ma cong viec |
+| task_name | string | Co | Ten cong viec |
+| start_time | time | Co | Gio bat dau (HH:MM:SS) |
+| end_time | time | Co | Gio ket thuc (HH:MM:SS) |
+| status | string | Khong | Trang thai (mac dinh: pending) |
+| notes | string | Khong | Ghi chu |
+
+```json
+{
+  "staff_id": 5,
+  "store_id": 1,
+  "schedule_date": "2025-01-15",
+  "group_id": "LEADER",
+  "task_code": "1501",
+  "task_name": "Mo kho",
+  "start_time": "06:00:00",
+  "end_time": "06:15:00"
+}
+```
+
+---
+
+### 10.4. Danh dau hoan thanh (Complete Schedule Task)
+
+| Thuoc tinh | Gia tri |
+|------------|---------|
+| **Chuc nang** | Danh dau cong viec da hoan thanh |
+| **Endpoint** | `PUT /shifts/schedule-tasks/{task_id}/complete` |
+| **Phan quyen** | Can token |
+
+**INPUT:**
+| Truong | Kieu | Bat buoc | Mo ta |
+|--------|------|----------|-------|
+| task_id | integer | Co | ID cong viec (path param) |
+
+**OUTPUT (Thanh cong - 200):**
+```json
+{
+  "schedule_task_id": 1,
+  "status": "completed",
+  "completed_at": "2025-01-15T06:10:00Z"
+}
+```
+
+**URL Test:** `PUT http://localhost:8000/api/v1/shifts/schedule-tasks/1/complete`
+
+---
+
+## Phu Luc Bo Sung
+
+### F. Bang ma nhom cong viec (Task Groups)
+
+| group_id | group_name | Mau nen | Mo ta |
+|----------|------------|---------|-------|
+| POS | Thu ngan | #e2e8f0 | Cong viec lien quan thu ngan |
+| PERI | Tuoi song | #bbf7d0 | Hang tuoi song (rau cu, thit ca) |
+| DRY | Hang kho | #bfdbfe | Hang kho (thuc pham dong goi) |
+| MMD | Nhan hang | #fde68a | Nhan va kiem tra hang |
+| LEADER | Quan ly | #99f6e4 | Cong viec quan ly |
+| QC-FSH | Ve sinh | #e9d5ff | Ve sinh va kiem tra chat luong |
+| DELICA | Delica | #c7d2fe | Khu vuc Delicatessen |
+| DND | D&D | #fecaca | Display & Decoration |
+| OTHER | Khac | #fbcfe8 | Cong viec khac |
+
+### G. Bang loai cong viec (Task Types)
+
+| Gia tri | Mo ta |
+|---------|-------|
+| Fixed | Cong viec co dinh (thuc hien hang ngay) |
+| CTM | Customer Traffic Management (theo luong khach) |
+| Product | Lien quan san pham (bieu hien theo so luong hang) |
+
+### H. Bang tan suat (Frequency)
+
+| Gia tri | Mo ta |
+|---------|-------|
+| Daily | Hang ngay |
+| Weekly | Hang tuan |
+| Monthly | Hang thang |
+| Yearly | Hang nam |
+
+### I. Bang trang thai cong viec lich (Schedule Task Status)
+
+| Gia tri | Mo ta |
+|---------|-------|
+| pending | Chua bat dau |
+| in_progress | Dang thuc hien |
+| completed | Da hoan thanh |
+| skipped | Bo qua |
+
+---
+
+*API Version 1.1 - Ngay cap nhat: 2025-12-28*

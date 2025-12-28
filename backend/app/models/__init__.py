@@ -1,7 +1,7 @@
 # Core models
 from .staff import Region, Department, Store, Staff
 from .task import CodeMaster, Manual, CheckList, Task, TaskCheckList
-from .shift import TaskGroup, DailyScheduleTask, ShiftCode, ShiftAssignment
+from .shift import TaskGroup, TaskLibrary, DailyTemplate, ShiftTemplate, DailyScheduleTask, ShiftCode, ShiftAssignment
 from .notification import Notification
 
 __all__ = [
@@ -18,6 +18,9 @@ __all__ = [
     "TaskCheckList",
     # Shift Management (DWS)
     "TaskGroup",
+    "TaskLibrary",
+    "DailyTemplate",
+    "ShiftTemplate",
     "DailyScheduleTask",
     "ShiftCode",
     "ShiftAssignment",

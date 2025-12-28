@@ -39,13 +39,16 @@ interface ScheduledTask {
 
 // Mock scheduled tasks per staff (for demo)
 const MOCK_SCHEDULED_TASKS: Record<number, ScheduledTask[]> = {
-  1: [ // Staff ID 1 - Leader
+  1: [ // Staff ID 1 - Leader (with multiple tasks at same time slot for testing)
     { taskCode: '1501', taskName: 'Mở kho', groupId: 'LEADER', startTime: '06:00', endTime: '06:15' },
+    { taskCode: '0101', taskName: 'Mở POS', groupId: 'POS', startTime: '06:00', endTime: '06:15' },
+    { taskCode: '0801', taskName: 'Clean', groupId: 'QC-FSH', startTime: '06:00', endTime: '06:15' },
+    { taskCode: '0201', taskName: 'Check', groupId: 'PERI', startTime: '06:00', endTime: '06:15' },
     { taskCode: '1505', taskName: 'Balancing', groupId: 'LEADER', startTime: '06:15', endTime: '06:30' },
-    { taskCode: '0101', taskName: 'Mở POS', groupId: 'POS', startTime: '06:30', endTime: '06:45' },
-    { taskCode: '0801', taskName: 'Cleaning Time', groupId: 'QC-FSH', startTime: '09:00', endTime: '09:15' },
+    { taskCode: '0102', taskName: 'Mở POS 2', groupId: 'POS', startTime: '06:30', endTime: '06:45' },
+    { taskCode: '0802', taskName: 'Cleaning Time', groupId: 'QC-FSH', startTime: '09:00', endTime: '09:15' },
     { taskCode: '1510', taskName: 'Bàn giao tiền', groupId: 'LEADER', startTime: '10:00', endTime: '10:30' },
-    { taskCode: '0102', taskName: 'Hỗ trợ POS', groupId: 'POS', startTime: '11:00', endTime: '12:00' },
+    { taskCode: '0103', taskName: 'Hỗ trợ POS', groupId: 'POS', startTime: '11:00', endTime: '12:00' },
     { taskCode: '1005', taskName: 'Break Time', groupId: 'OTHER', startTime: '12:00', endTime: '13:00' },
   ],
   2: [ // Staff ID 2
@@ -291,33 +294,15 @@ export default function DailySchedulePage() {
     setSelectedDate(date);
   };
 
-  // Get task for a specific time slot
-  const getTaskForSlot = (staffId: number, hour: number, minute: number): ScheduledTask | null => {
+  // Get ALL tasks that start at this specific time slot (returns array)
+  const getTasksStartingAtSlot = (staffId: number, hour: number, minute: number): ScheduledTask[] => {
     const tasks = MOCK_SCHEDULED_TASKS[staffId];
-    if (!tasks) return null;
+    if (!tasks) return [];
 
-    const slotTime = hour * 60 + minute;
-
-    for (const task of tasks) {
+    return tasks.filter(task => {
       const [startH, startM] = task.startTime.split(':').map(Number);
-      const [endH, endM] = task.endTime.split(':').map(Number);
-      const startMinutes = startH * 60 + startM;
-      const endMinutes = endH * 60 + endM;
-
-      if (slotTime >= startMinutes && slotTime < endMinutes) {
-        return task;
-      }
-    }
-    return null;
-  };
-
-  // Check if this is the first slot of a task (to show task name)
-  const isFirstSlotOfTask = (staffId: number, hour: number, minute: number): boolean => {
-    const task = getTaskForSlot(staffId, hour, minute);
-    if (!task) return false;
-
-    const [startH, startM] = task.startTime.split(':').map(Number);
-    return hour === startH && minute === startM;
+      return startH === hour && startM === minute;
+    });
   };
 
   // Handle Check Task button
@@ -658,9 +643,7 @@ export default function DailySchedulePage() {
                             <div className="grid grid-cols-4 h-[104px]">
                               {[0, 15, 30, 45].map(minute => {
                                 const slotTime = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-                                const task = getTaskForSlot(row.staff.staff_id, hour, minute);
-                                const isFirstTaskSlot = isFirstSlotOfTask(row.staff.staff_id, hour, minute);
-                                const taskColors = task ? TASK_GROUP_COLORS[task.groupId] : null;
+                                const tasksAtSlot = getTasksStartingAtSlot(row.staff.staff_id, hour, minute);
                                 const now = new Date();
                                 const currentHour = now.getHours();
                                 const currentMinute = now.getMinutes();
@@ -670,28 +653,30 @@ export default function DailySchedulePage() {
                                 return (
                                   <div
                                     key={`${slotTime}`}
-                                    className={`quarter-hour-slot border-r border-dashed border-slate-200 last:border-r-0 flex justify-center items-center ${
+                                    className={`quarter-hour-slot border-r border-dashed border-slate-200 last:border-r-0 flex flex-wrap gap-0.5 p-0.5 content-start overflow-hidden ${
                                       isCurrentSlot ? 'bg-amber-100' : ''
                                     }`}
                                     data-time={`${String(hour).padStart(2, '0')}:00`}
                                     data-quarter={String(minute).padStart(2, '0')}
                                   >
-                                    {task && taskColors && isFirstTaskSlot && (
-                                      <div
-                                        className="scheduled-task-item relative w-[70px] h-[100px] border-2 text-xs p-1 rounded-md shadow-sm flex flex-col justify-between items-center text-center cursor-pointer hover:shadow-md transition-shadow"
-                                        style={{
-                                          backgroundColor: taskColors.bg,
-                                          color: taskColors.text,
-                                          borderColor: taskColors.border,
-                                        }}
-                                        title={`${task.taskName} (${task.taskCode})`}
-                                      >
-                                        <div className="task-content flex-grow flex flex-col justify-center">
-                                          <span className="overflow-hidden text-ellipsis text-[10px] leading-tight">{task.taskName}</span>
+                                    {tasksAtSlot.map((task, taskIdx) => {
+                                      const taskColors = TASK_GROUP_COLORS[task.groupId];
+                                      return (
+                                        <div
+                                          key={`${task.taskCode}-${taskIdx}`}
+                                          className="scheduled-task-item flex-shrink-0 w-[34px] h-[48px] border text-[8px] p-0.5 rounded shadow-sm flex flex-col justify-between items-center text-center cursor-pointer hover:shadow-md transition-shadow overflow-hidden"
+                                          style={{
+                                            backgroundColor: taskColors?.bg || '#f1f5f9',
+                                            color: taskColors?.text || '#1e293b',
+                                            borderColor: taskColors?.border || '#94a3b8',
+                                          }}
+                                          title={`${task.taskName} (${task.taskCode})`}
+                                        >
+                                          <span className="w-full overflow-hidden text-ellipsis whitespace-nowrap leading-tight">{task.taskName}</span>
+                                          <span className="font-semibold text-[9px]">{task.taskCode}</span>
                                         </div>
-                                        <span className="task-content font-semibold mt-auto text-[11px]">{task.taskCode}</span>
-                                      </div>
-                                    )}
+                                      );
+                                    })}
                                   </div>
                                 );
                               })}

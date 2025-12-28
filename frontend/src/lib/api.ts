@@ -37,6 +37,15 @@ import type {
   DailyScheduleTaskCreate,
   DailyScheduleTaskUpdate,
   StaffDailySchedule,
+  TaskLibrary,
+  TaskLibraryCreate,
+  TaskLibraryUpdate,
+  DailyTemplate,
+  DailyTemplateCreate,
+  DailyTemplateUpdate,
+  ShiftTemplate,
+  ShiftTemplateCreate,
+  ShiftTemplateUpdate,
 } from '@/types/api';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
@@ -593,6 +602,139 @@ export async function completeScheduleTask(taskId: number): Promise<DailySchedul
 
 export async function deleteScheduleTask(taskId: number): Promise<{ message: string }> {
   return fetchApi<{ message: string }>(`/shifts/schedule-tasks/${taskId}`, {
+    method: 'DELETE',
+  });
+}
+
+// ============================================
+// Task Library API (Master Task Data)
+// ============================================
+
+export async function getTaskLibrary(params?: {
+  group_id?: string;
+  task_type?: string;
+  frequency?: string;
+  is_active?: boolean;
+  skip?: number;
+  limit?: number;
+}): Promise<TaskLibrary[]> {
+  const searchParams = new URLSearchParams();
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        searchParams.append(key, String(value));
+      }
+    });
+  }
+  const query = searchParams.toString();
+  return fetchApi<TaskLibrary[]>(`/shifts/task-library/${query ? `?${query}` : ''}`);
+}
+
+export async function getTaskLibraryByCode(taskCode: string): Promise<TaskLibrary> {
+  return fetchApi<TaskLibrary>(`/shifts/task-library/${taskCode}`);
+}
+
+export async function createTaskLibrary(data: TaskLibraryCreate): Promise<TaskLibrary> {
+  return fetchApi<TaskLibrary>('/shifts/task-library/', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateTaskLibrary(
+  taskCode: string,
+  data: TaskLibraryUpdate
+): Promise<TaskLibrary> {
+  return fetchApi<TaskLibrary>(`/shifts/task-library/${taskCode}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteTaskLibrary(taskCode: string): Promise<{ message: string }> {
+  return fetchApi<{ message: string }>(`/shifts/task-library/${taskCode}`, {
+    method: 'DELETE',
+  });
+}
+
+// ============================================
+// Daily Template API
+// ============================================
+
+export async function getDailyTemplates(params?: {
+  store_id?: number;
+  is_active?: boolean;
+}): Promise<DailyTemplate[]> {
+  const searchParams = new URLSearchParams();
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        searchParams.append(key, String(value));
+      }
+    });
+  }
+  const query = searchParams.toString();
+  return fetchApi<DailyTemplate[]>(`/shifts/daily-templates/${query ? `?${query}` : ''}`);
+}
+
+export async function getDailyTemplateById(templateId: number): Promise<DailyTemplate> {
+  return fetchApi<DailyTemplate>(`/shifts/daily-templates/${templateId}`);
+}
+
+export async function getDailyTemplateByCode(templateCode: string): Promise<DailyTemplate> {
+  return fetchApi<DailyTemplate>(`/shifts/daily-templates/by-code/${templateCode}`);
+}
+
+export async function createDailyTemplate(data: DailyTemplateCreate): Promise<DailyTemplate> {
+  return fetchApi<DailyTemplate>('/shifts/daily-templates/', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateDailyTemplate(
+  templateId: number,
+  data: DailyTemplateUpdate
+): Promise<DailyTemplate> {
+  return fetchApi<DailyTemplate>(`/shifts/daily-templates/${templateId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteDailyTemplate(templateId: number): Promise<{ message: string }> {
+  return fetchApi<{ message: string }>(`/shifts/daily-templates/${templateId}`, {
+    method: 'DELETE',
+  });
+}
+
+// ============================================
+// Shift Template API
+// ============================================
+
+export async function getShiftTemplates(templateId: number): Promise<ShiftTemplate[]> {
+  return fetchApi<ShiftTemplate[]>(`/shifts/shift-templates/${templateId}`);
+}
+
+export async function createShiftTemplate(data: ShiftTemplateCreate): Promise<ShiftTemplate> {
+  return fetchApi<ShiftTemplate>('/shifts/shift-templates/', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateShiftTemplate(
+  shiftTemplateId: number,
+  data: ShiftTemplateUpdate
+): Promise<ShiftTemplate> {
+  return fetchApi<ShiftTemplate>(`/shifts/shift-templates/${shiftTemplateId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteShiftTemplate(shiftTemplateId: number): Promise<{ message: string }> {
+  return fetchApi<{ message: string }>(`/shifts/shift-templates/${shiftTemplateId}`, {
     method: 'DELETE',
   });
 }

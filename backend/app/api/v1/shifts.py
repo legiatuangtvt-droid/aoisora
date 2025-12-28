@@ -6,13 +6,16 @@ from decimal import Decimal
 
 from ...core.database import get_db
 from ...core.security import get_current_user, check_role, MANAGERS_AND_ABOVE
-from ...models import ShiftCode, ShiftAssignment, Staff, Store, Notification, TaskGroup, DailyScheduleTask
+from ...models import ShiftCode, ShiftAssignment, Staff, Store, Notification, TaskGroup, DailyScheduleTask, TaskLibrary, DailyTemplate, ShiftTemplate
 from ...schemas import (
     ShiftCodeCreate, ShiftCodeUpdate, ShiftCodeResponse, ShiftCodeGenerate,
     ShiftAssignmentCreate, ShiftAssignmentUpdate, ShiftAssignmentResponse, ShiftAssignmentWithDetails,
     BulkShiftAssignmentCreate, BulkShiftAssignmentResponse,
     DailySchedule, WeeklyScheduleResponse,
     ManHourSummary, ManHourReport,
+    TaskLibraryCreate, TaskLibraryUpdate, TaskLibraryResponse, TaskLibraryWithGroup,
+    DailyTemplateCreate, DailyTemplateUpdate, DailyTemplateResponse, DailyTemplateWithShifts,
+    ShiftTemplateCreate, ShiftTemplateUpdate, ShiftTemplateResponse,
 )
 from ...schemas.shift import (
     TaskGroupResponse, TaskGroupCreate,
@@ -742,3 +745,326 @@ async def delete_schedule_task(task_id: int, db: Session = Depends(get_db)):
     db.commit()
 
     return {"message": "Scheduled task deleted successfully"}
+
+
+# ============================================
+# Task Library Endpoints
+# ============================================
+
+@router.get("/task-library/", response_model=List[TaskLibraryWithGroup])
+async def get_all_library_tasks(
+    group_id: Optional[str] = Query(None, description="Filter by task group"),
+    task_type: Optional[str] = Query(None, description="Filter by task type (Fixed, CTM, Product)"),
+    frequency: Optional[str] = Query(None, description="Filter by frequency (Daily, Weekly, Monthly, Yearly)"),
+    is_active: Optional[bool] = Query(None, description="Filter by active status"),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(200, ge=1, le=500),
+    db: Session = Depends(get_db),
+):
+    """
+    Get all tasks from the task library.
+    """
+    query = db.query(TaskLibrary).options(
+        joinedload(TaskLibrary.task_group)
+    )
+
+    if group_id:
+        query = query.filter(TaskLibrary.group_id == group_id)
+    if task_type:
+        query = query.filter(TaskLibrary.task_type == task_type)
+    if frequency:
+        query = query.filter(TaskLibrary.frequency == frequency)
+    if is_active is not None:
+        query = query.filter(TaskLibrary.is_active == is_active)
+
+    tasks = query.order_by(TaskLibrary.group_id, TaskLibrary.task_code).offset(skip).limit(limit).all()
+
+    result = []
+    for t in tasks:
+        t_data = TaskLibraryWithGroup.model_validate(t)
+        if t.task_group:
+            t_data.task_group = TaskGroupResponse.model_validate(t.task_group)
+        result.append(t_data)
+
+    return result
+
+
+@router.get("/task-library/{task_code}", response_model=TaskLibraryWithGroup)
+async def get_library_task(task_code: str, db: Session = Depends(get_db)):
+    """
+    Get a specific task from the library by task code.
+    """
+    task = db.query(TaskLibrary).options(
+        joinedload(TaskLibrary.task_group)
+    ).filter(TaskLibrary.task_code == task_code).first()
+
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found in library")
+
+    result = TaskLibraryWithGroup.model_validate(task)
+    if task.task_group:
+        result.task_group = TaskGroupResponse.model_validate(task.task_group)
+
+    return result
+
+
+@router.post("/task-library/", response_model=TaskLibraryResponse)
+async def create_library_task(
+    task_data: TaskLibraryCreate,
+    db: Session = Depends(get_db)
+):
+    """
+    Create a new task in the library.
+    """
+    existing = db.query(TaskLibrary).filter(TaskLibrary.task_code == task_data.task_code).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Task code already exists")
+
+    # Verify group exists
+    group = db.query(TaskGroup).filter(TaskGroup.group_id == task_data.group_id).first()
+    if not group:
+        raise HTTPException(status_code=400, detail="Task group not found")
+
+    task = TaskLibrary(**task_data.model_dump())
+    db.add(task)
+    db.commit()
+    db.refresh(task)
+
+    return TaskLibraryResponse.model_validate(task)
+
+
+@router.put("/task-library/{task_code}", response_model=TaskLibraryResponse)
+async def update_library_task(
+    task_code: str,
+    task_data: TaskLibraryUpdate,
+    db: Session = Depends(get_db)
+):
+    """
+    Update a task in the library.
+    """
+    task = db.query(TaskLibrary).filter(TaskLibrary.task_code == task_code).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found in library")
+
+    update_data = task_data.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(task, field, value)
+
+    db.commit()
+    db.refresh(task)
+
+    return TaskLibraryResponse.model_validate(task)
+
+
+@router.delete("/task-library/{task_code}")
+async def delete_library_task(task_code: str, db: Session = Depends(get_db)):
+    """
+    Delete a task from the library (soft delete by setting is_active=False).
+    """
+    task = db.query(TaskLibrary).filter(TaskLibrary.task_code == task_code).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found in library")
+
+    task.is_active = False
+    db.commit()
+
+    return {"message": "Task deactivated successfully"}
+
+
+# ============================================
+# Daily Template Endpoints
+# ============================================
+
+@router.get("/daily-templates/", response_model=List[DailyTemplateResponse])
+async def get_all_daily_templates(
+    store_id: Optional[int] = Query(None, description="Filter by store"),
+    is_active: Optional[bool] = Query(None, description="Filter by active status"),
+    db: Session = Depends(get_db),
+):
+    """
+    Get all daily templates.
+    """
+    query = db.query(DailyTemplate)
+
+    if store_id:
+        query = query.filter(DailyTemplate.store_id == store_id)
+    if is_active is not None:
+        query = query.filter(DailyTemplate.is_active == is_active)
+
+    templates = query.order_by(DailyTemplate.template_code).all()
+    return [DailyTemplateResponse.model_validate(t) for t in templates]
+
+
+@router.get("/daily-templates/{template_id}", response_model=DailyTemplateWithShifts)
+async def get_daily_template(template_id: int, db: Session = Depends(get_db)):
+    """
+    Get a specific daily template with all shift templates.
+    """
+    template = db.query(DailyTemplate).options(
+        joinedload(DailyTemplate.shift_templates)
+    ).filter(DailyTemplate.template_id == template_id).first()
+
+    if not template:
+        raise HTTPException(status_code=404, detail="Template not found")
+
+    result = DailyTemplateWithShifts.model_validate(template)
+    result.shift_templates = [ShiftTemplateResponse.model_validate(s) for s in template.shift_templates]
+
+    return result
+
+
+@router.get("/daily-templates/by-code/{template_code}", response_model=DailyTemplateWithShifts)
+async def get_daily_template_by_code(template_code: str, db: Session = Depends(get_db)):
+    """
+    Get a specific daily template by code with all shift templates.
+    """
+    template = db.query(DailyTemplate).options(
+        joinedload(DailyTemplate.shift_templates)
+    ).filter(DailyTemplate.template_code == template_code).first()
+
+    if not template:
+        raise HTTPException(status_code=404, detail="Template not found")
+
+    result = DailyTemplateWithShifts.model_validate(template)
+    result.shift_templates = [ShiftTemplateResponse.model_validate(s) for s in template.shift_templates]
+
+    return result
+
+
+@router.post("/daily-templates/", response_model=DailyTemplateResponse)
+async def create_daily_template(
+    template_data: DailyTemplateCreate,
+    db: Session = Depends(get_db)
+):
+    """
+    Create a new daily template.
+    """
+    existing = db.query(DailyTemplate).filter(DailyTemplate.template_code == template_data.template_code).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Template code already exists")
+
+    template = DailyTemplate(**template_data.model_dump())
+    db.add(template)
+    db.commit()
+    db.refresh(template)
+
+    return DailyTemplateResponse.model_validate(template)
+
+
+@router.put("/daily-templates/{template_id}", response_model=DailyTemplateResponse)
+async def update_daily_template(
+    template_id: int,
+    template_data: DailyTemplateUpdate,
+    db: Session = Depends(get_db)
+):
+    """
+    Update a daily template.
+    """
+    template = db.query(DailyTemplate).filter(DailyTemplate.template_id == template_id).first()
+    if not template:
+        raise HTTPException(status_code=404, detail="Template not found")
+
+    update_data = template_data.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(template, field, value)
+
+    db.commit()
+    db.refresh(template)
+
+    return DailyTemplateResponse.model_validate(template)
+
+
+@router.delete("/daily-templates/{template_id}")
+async def delete_daily_template(template_id: int, db: Session = Depends(get_db)):
+    """
+    Delete a daily template (soft delete by setting is_active=False).
+    """
+    template = db.query(DailyTemplate).filter(DailyTemplate.template_id == template_id).first()
+    if not template:
+        raise HTTPException(status_code=404, detail="Template not found")
+
+    template.is_active = False
+    db.commit()
+
+    return {"message": "Template deactivated successfully"}
+
+
+# ============================================
+# Shift Template Endpoints
+# ============================================
+
+@router.get("/shift-templates/{template_id}", response_model=List[ShiftTemplateResponse])
+async def get_shift_templates(template_id: int, db: Session = Depends(get_db)):
+    """
+    Get all shift templates for a daily template.
+    """
+    templates = db.query(ShiftTemplate).filter(
+        ShiftTemplate.template_id == template_id
+    ).order_by(ShiftTemplate.shift_key).all()
+
+    return [ShiftTemplateResponse.model_validate(t) for t in templates]
+
+
+@router.post("/shift-templates/", response_model=ShiftTemplateResponse)
+async def create_shift_template(
+    template_data: ShiftTemplateCreate,
+    db: Session = Depends(get_db)
+):
+    """
+    Create a new shift template.
+    """
+    # Verify daily template exists
+    daily_template = db.query(DailyTemplate).filter(
+        DailyTemplate.template_id == template_data.template_id
+    ).first()
+    if not daily_template:
+        raise HTTPException(status_code=400, detail="Daily template not found")
+
+    template = ShiftTemplate(**template_data.model_dump())
+    db.add(template)
+    db.commit()
+    db.refresh(template)
+
+    return ShiftTemplateResponse.model_validate(template)
+
+
+@router.put("/shift-templates/{shift_template_id}", response_model=ShiftTemplateResponse)
+async def update_shift_template(
+    shift_template_id: int,
+    template_data: ShiftTemplateUpdate,
+    db: Session = Depends(get_db)
+):
+    """
+    Update a shift template.
+    """
+    template = db.query(ShiftTemplate).filter(
+        ShiftTemplate.shift_template_id == shift_template_id
+    ).first()
+    if not template:
+        raise HTTPException(status_code=404, detail="Shift template not found")
+
+    update_data = template_data.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(template, field, value)
+
+    db.commit()
+    db.refresh(template)
+
+    return ShiftTemplateResponse.model_validate(template)
+
+
+@router.delete("/shift-templates/{shift_template_id}")
+async def delete_shift_template(shift_template_id: int, db: Session = Depends(get_db)):
+    """
+    Delete a shift template.
+    """
+    template = db.query(ShiftTemplate).filter(
+        ShiftTemplate.shift_template_id == shift_template_id
+    ).first()
+    if not template:
+        raise HTTPException(status_code=404, detail="Shift template not found")
+
+    db.delete(template)
+    db.commit()
+
+    return {"message": "Shift template deleted successfully"}

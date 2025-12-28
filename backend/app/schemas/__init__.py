@@ -19,6 +19,12 @@ from .task import (
 
 # Shift Management (DWS)
 from .shift import (
+    # TaskLibrary
+    TaskLibraryBase, TaskLibraryCreate, TaskLibraryUpdate, TaskLibraryResponse, TaskLibraryWithGroup,
+    # DailyTemplate
+    DailyTemplateBase, DailyTemplateCreate, DailyTemplateUpdate, DailyTemplateResponse, DailyTemplateWithShifts,
+    ShiftTemplateBase, ShiftTemplateCreate, ShiftTemplateUpdate, ShiftTemplateResponse,
+    # ShiftCode
     ShiftCodeBase, ShiftCodeCreate, ShiftCodeUpdate, ShiftCodeResponse, ShiftCodeGenerate,
     ShiftAssignmentBase, ShiftAssignmentCreate, ShiftAssignmentUpdate,
     ShiftAssignmentResponse, ShiftAssignmentWithDetails,
