@@ -17,9 +17,15 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<DateMode>(dateMode);
   const [customFromDate, setCustomFromDate] = useState<Date>(new Date());
-  const [customToDate, setCustomToDate] = useState<Date>(new Date());
+  const [customToDate, setCustomToDate] = useState<Date>(() => {
+    const date = new Date();
+    date.setDate(date.getDate() + 7);
+    return date;
+  });
   const [selectedWeek, setSelectedWeek] = useState<number>(1);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [leftCalendarMonth, setLeftCalendarMonth] = useState<Date>(new Date());
+  const [rightCalendarMonth, setRightCalendarMonth] = useState<Date>(new Date());
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -54,6 +60,13 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
       month: 'short',
       day: '2-digit'
     });
+  };
+
+  const formatInputDate = (date: Date): string => {
+    const day = date.getDate();
+    const month = date.getMonth() + 1;
+    const year = date.getFullYear();
+    return `${day}/${month.toString().padStart(2, '0')}/${year}`;
   };
 
   const formatShortDate = (date: Date): string => {
@@ -115,138 +128,174 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
     setIsOpen(false);
   };
 
-  // Generate calendar days for a given month/year
+  // Generate calendar days for a given month/year including previous/next month days
   const generateCalendarDays = (year: number, month: number) => {
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
     const startingDayOfWeek = firstDay.getDay();
+    const prevMonthLastDay = new Date(year, month, 0).getDate();
 
-    const days: (number | null)[] = [];
+    const days: { day: number; isCurrentMonth: boolean; date: Date }[] = [];
 
-    // Add empty cells for days before month starts
-    for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(null);
+    // Add days from previous month
+    for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+      const day = prevMonthLastDay - i;
+      days.push({
+        day,
+        isCurrentMonth: false,
+        date: new Date(year, month - 1, day)
+      });
     }
 
     // Add actual days
     for (let i = 1; i <= daysInMonth; i++) {
-      days.push(i);
+      days.push({
+        day: i,
+        isCurrentMonth: true,
+        date: new Date(year, month, i)
+      });
+    }
+
+    // Add days from next month to complete the grid (6 rows)
+    const remainingDays = 42 - days.length;
+    for (let i = 1; i <= remainingDays; i++) {
+      days.push({
+        day: i,
+        isCurrentMonth: false,
+        date: new Date(year, month + 1, i)
+      });
     }
 
     return days;
   };
 
-  const renderCalendar = (date: Date, isFromCalendar: boolean) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
+  const renderCustomCalendar = (calendarDate: Date, setCalendarDate: (date: Date) => void) => {
+    const year = calendarDate.getFullYear();
+    const month = calendarDate.getMonth();
     const days = generateCalendarDays(year, month);
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
                         'July', 'August', 'September', 'October', 'November', 'December'];
 
     const navigateMonth = (direction: number) => {
-      const newDate = new Date(date);
+      const newDate = new Date(calendarDate);
       newDate.setMonth(month + direction);
-      if (isFromCalendar) {
-        setCustomFromDate(new Date(newDate.getFullYear(), newDate.getMonth(), customFromDate.getDate()));
+      setCalendarDate(newDate);
+    };
+
+    const handleDayClick = (date: Date) => {
+      // Determine if clicking should update from or to date
+      const clickedTime = date.getTime();
+      const fromTime = customFromDate.getTime();
+      const toTime = customToDate.getTime();
+
+      if (clickedTime < fromTime) {
+        setCustomFromDate(date);
+      } else if (clickedTime > toTime) {
+        setCustomToDate(date);
       } else {
-        setCustomToDate(new Date(newDate.getFullYear(), newDate.getMonth(), customToDate.getDate()));
+        // Click is between from and to - update the closest one
+        const diffToFrom = Math.abs(clickedTime - fromTime);
+        const diffToTo = Math.abs(clickedTime - toTime);
+        if (diffToFrom <= diffToTo) {
+          setCustomFromDate(date);
+        } else {
+          setCustomToDate(date);
+        }
       }
     };
 
-    const handleDayClick = (day: number) => {
-      const newDate = new Date(year, month, day);
-      if (isFromCalendar) {
-        setCustomFromDate(newDate);
-      } else {
-        setCustomToDate(newDate);
-      }
+    const isRangeStart = (date: Date) => {
+      return date.toDateString() === customFromDate.toDateString();
     };
 
-    const isSelected = (day: number) => {
-      const compareDate = isFromCalendar ? customFromDate : customToDate;
-      return compareDate.getDate() === day &&
-             compareDate.getMonth() === month &&
-             compareDate.getFullYear() === year;
+    const isRangeEnd = (date: Date) => {
+      return date.toDateString() === customToDate.toDateString();
     };
 
-    const isInRange = (day: number) => {
-      const currentDate = new Date(year, month, day);
-      const fromNormalized = new Date(customFromDate.getFullYear(), customFromDate.getMonth(), customFromDate.getDate());
-      const toNormalized = new Date(customToDate.getFullYear(), customToDate.getMonth(), customToDate.getDate());
-      return currentDate > fromNormalized && currentDate < toNormalized;
+    const isInRange = (date: Date) => {
+      const time = date.getTime();
+      const fromTime = new Date(customFromDate.getFullYear(), customFromDate.getMonth(), customFromDate.getDate()).getTime();
+      const toTime = new Date(customToDate.getFullYear(), customToDate.getMonth(), customToDate.getDate()).getTime();
+      return time > fromTime && time < toTime;
     };
 
-    const isRangeStart = (day: number) => {
-      return customFromDate.getDate() === day &&
-             customFromDate.getMonth() === month &&
-             customFromDate.getFullYear() === year;
-    };
-
-    const isRangeEnd = (day: number) => {
-      return customToDate.getDate() === day &&
-             customToDate.getMonth() === month &&
-             customToDate.getFullYear() === year;
+    const isWeekend = (date: Date) => {
+      const day = date.getDay();
+      return day === 0 || day === 6;
     };
 
     return (
       <div className="flex-1">
         {/* Calendar Header */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-3">
           <button
             onClick={() => navigateMonth(-1)}
-            className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors"
+            className="w-6 h-6 flex items-center justify-center hover:bg-gray-100 rounded transition-colors"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <span className="text-base font-bold text-gray-900">{monthNames[month]} {year}</span>
+          <span className="text-sm font-semibold text-gray-900">{monthNames[month]} {year}</span>
           <button
             onClick={() => navigateMonth(1)}
-            className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors"
+            className="w-6 h-6 flex items-center justify-center hover:bg-gray-100 rounded transition-colors"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
         </div>
 
         {/* Days of week */}
-        <div className="grid grid-cols-7 gap-2 mb-3">
-          {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) => (
-            <div key={day} className="text-center text-sm font-semibold text-gray-600 py-2">
+        <div className="grid grid-cols-7 mb-1">
+          {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day, idx) => (
+            <div
+              key={day}
+              className={`text-center text-xs font-medium py-1 ${
+                idx === 0 || idx === 6 ? 'text-[#C5055B]' : 'text-gray-500'
+              }`}
+            >
               {day}
             </div>
           ))}
         </div>
 
         {/* Calendar days */}
-        <div className="grid grid-cols-7 gap-1">
-          {days.map((day, index) => (
-            <div key={index} className="aspect-square">
-              {day ? (
+        <div className="grid grid-cols-7">
+          {days.map((dayInfo, index) => {
+            const isStart = isRangeStart(dayInfo.date);
+            const isEnd = isRangeEnd(dayInfo.date);
+            const inRange = isInRange(dayInfo.date);
+            const weekend = isWeekend(dayInfo.date);
+
+            return (
+              <div
+                key={index}
+                className={`relative h-8 flex items-center justify-center ${
+                  inRange ? 'bg-pink-100' : ''
+                } ${isStart ? 'bg-gradient-to-r from-transparent to-pink-100' : ''} ${
+                  isEnd ? 'bg-gradient-to-l from-transparent to-pink-100' : ''
+                }`}
+              >
                 <button
-                  onClick={() => handleDayClick(day)}
-                  className={`w-full h-full flex items-center justify-center text-base transition-colors ${
-                    isSelected(day)
-                      ? 'bg-pink-500 text-white font-bold rounded-full'
-                      : isRangeStart(day)
-                      ? 'bg-pink-500 text-white font-bold rounded-l-full'
-                      : isRangeEnd(day)
-                      ? 'bg-pink-500 text-white font-bold rounded-r-full'
-                      : isInRange(day)
-                      ? 'bg-pink-100 text-pink-700'
-                      : 'hover:bg-gray-100 text-gray-700 font-medium rounded-full'
+                  onClick={() => handleDayClick(dayInfo.date)}
+                  className={`w-7 h-7 flex items-center justify-center text-xs rounded-full transition-colors ${
+                    isStart || isEnd
+                      ? 'bg-[#C5055B] text-white font-medium'
+                      : !dayInfo.isCurrentMonth
+                      ? 'text-gray-300'
+                      : weekend
+                      ? 'text-[#C5055B] hover:bg-pink-50'
+                      : 'text-gray-700 hover:bg-gray-100'
                   }`}
                 >
-                  {day}
+                  {dayInfo.day}
                 </button>
-              ) : (
-                <div></div>
-              )}
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
       </div>
     );
@@ -303,32 +352,32 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
   const renderCustomContent = () => {
     return (
       <div className="flex-1">
-        {/* Date inputs */}
-        <div className="grid grid-cols-2 gap-6 mb-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">From</label>
+        {/* Date inputs row */}
+        <div className="flex gap-4 mb-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-500">From</span>
             <input
-              type="date"
-              value={customFromDate.toISOString().split('T')[0]}
-              onChange={(e) => setCustomFromDate(new Date(e.target.value))}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-base"
+              type="text"
+              value={formatInputDate(customFromDate)}
+              readOnly
+              className="w-28 px-3 py-1.5 border border-gray-300 rounded text-sm text-center bg-white"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">To</label>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-500">To</span>
             <input
-              type="date"
-              value={customToDate.toISOString().split('T')[0]}
-              onChange={(e) => setCustomToDate(new Date(e.target.value))}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-base"
+              type="text"
+              value={formatInputDate(customToDate)}
+              readOnly
+              className="w-28 px-3 py-1.5 border border-gray-300 rounded text-sm text-center bg-white"
             />
           </div>
         </div>
 
         {/* Dual Calendar */}
-        <div className="flex gap-8">
-          {renderCalendar(customFromDate, true)}
-          {renderCalendar(customToDate, false)}
+        <div className="flex gap-6">
+          {renderCustomCalendar(leftCalendarMonth, setLeftCalendarMonth)}
+          {renderCustomCalendar(rightCalendarMonth, setRightCalendarMonth)}
         </div>
       </div>
     );
@@ -351,12 +400,12 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
 
       {/* Dropdown Modal */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 flex" style={{ minWidth: '580px' }}>
+        <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 flex" style={{ minWidth: activeTab === 'CUSTOM' ? '520px' : '580px' }}>
           {/* Left side - Tabs */}
-          <div className="w-24 border-r border-gray-200 py-4">
+          <div className="w-20 border-r border-gray-200 py-4">
             <button
               onClick={() => setActiveTab('TODAY')}
-              className={`w-full px-4 py-2 text-left text-sm font-medium transition-colors ${
+              className={`w-full px-3 py-2 text-left text-sm font-medium transition-colors ${
                 activeTab === 'TODAY'
                   ? 'bg-pink-50 text-[#C5055B] border-l-2 border-[#C5055B]'
                   : 'text-gray-600 hover:bg-gray-50'
@@ -366,7 +415,7 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
             </button>
             <button
               onClick={() => setActiveTab('WEEK')}
-              className={`w-full px-4 py-2 text-left text-sm font-medium transition-colors ${
+              className={`w-full px-3 py-2 text-left text-sm font-medium transition-colors ${
                 activeTab === 'WEEK'
                   ? 'bg-pink-50 text-[#C5055B] border-l-2 border-[#C5055B]'
                   : 'text-gray-600 hover:bg-gray-50'
@@ -376,7 +425,7 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
             </button>
             <button
               onClick={() => setActiveTab('CUSTOM')}
-              className={`w-full px-4 py-2 text-left text-sm font-medium transition-colors ${
+              className={`w-full px-3 py-2 text-left text-sm font-medium transition-colors ${
                 activeTab === 'CUSTOM'
                   ? 'bg-pink-50 text-[#C5055B] border-l-2 border-[#C5055B]'
                   : 'text-gray-600 hover:bg-gray-50'
