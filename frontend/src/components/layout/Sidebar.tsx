@@ -1,35 +1,38 @@
 'use client';
 
+import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useSidebar } from '@/contexts/SidebarContext';
 import { MenuItem } from '@/types/layout';
 
-// Menu items configuration
+// Menu items configuration with parent-child structure
 const menuItems: MenuItem[] = [
   {
     id: 'hq-store',
     label: 'Task list HQ-Store',
     icon: 'clipboard-list',
-    route: '/tasks/hq-store',
-  },
-  {
-    id: 'list-task',
-    label: 'List task',
-    icon: 'list',
-    route: '/tasks/list',
-  },
-  {
-    id: 'detail',
-    label: 'Detail',
-    icon: 'document',
-    route: '/tasks/detail',
-  },
-  {
-    id: 'message',
-    label: 'Message',
-    icon: 'chat',
-    route: '/messages',
+    route: '/tasks',
+    children: [
+      {
+        id: 'list-task',
+        label: 'List task',
+        icon: 'list',
+        route: '/tasks/list',
+      },
+      {
+        id: 'detail',
+        label: 'Detail',
+        icon: 'document',
+        route: '/tasks/detail',
+      },
+      {
+        id: 'message',
+        label: 'Message',
+        icon: 'chat',
+        route: '/tasks/messages',
+      },
+    ],
   },
   {
     id: 'todo',
@@ -108,11 +111,102 @@ function MenuIcon({ name, className = '' }: { name: string; className?: string }
 export default function Sidebar() {
   const { isExpanded, toggleSidebar } = useSidebar();
   const pathname = usePathname();
+  const [expandedMenus, setExpandedMenus] = useState<string[]>(['hq-store']); // Default expanded
 
   const isActive = (route: string) => {
-    if (route === '/tasks/list' && pathname === '/tasks/list') return true;
-    if (route !== '/tasks/list' && pathname.startsWith(route)) return true;
-    return false;
+    return pathname === route || pathname.startsWith(route + '/');
+  };
+
+  const isChildActive = (item: MenuItem) => {
+    if (!item.children) return false;
+    return item.children.some(child => isActive(child.route));
+  };
+
+  const toggleMenu = (menuId: string) => {
+    setExpandedMenus(prev =>
+      prev.includes(menuId)
+        ? prev.filter(id => id !== menuId)
+        : [...prev, menuId]
+    );
+  };
+
+  const renderMenuItem = (item: MenuItem, isChild = false) => {
+    const hasChildren = item.children && item.children.length > 0;
+    const isMenuExpanded = expandedMenus.includes(item.id);
+    const active = isActive(item.route) || isChildActive(item);
+
+    if (hasChildren) {
+      return (
+        <div key={item.id}>
+          {/* Parent menu item */}
+          <button
+            onClick={() => toggleMenu(item.id)}
+            title={!isExpanded ? item.label : undefined}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+              active
+                ? 'bg-pink-50 dark:bg-pink-900/20 text-[#C5055B] dark:text-pink-400'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+            }`}
+          >
+            <MenuIcon
+              name={item.icon}
+              className={`w-5 h-5 flex-shrink-0 ${active ? 'text-[#C5055B] dark:text-pink-400' : ''}`}
+            />
+            {isExpanded && (
+              <>
+                <span className="text-sm font-medium whitespace-nowrap overflow-hidden flex-1 text-left">
+                  {item.label}
+                </span>
+                <svg
+                  className={`w-4 h-4 transition-transform ${isMenuExpanded ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </>
+            )}
+          </button>
+
+          {/* Children */}
+          {isExpanded && isMenuExpanded && item.children && (
+            <div className="ml-4 mt-1 space-y-1 border-l-2 border-gray-200 dark:border-gray-700">
+              {item.children.map(child => renderMenuItem(child, true))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Regular menu item or child item
+    return (
+      <Link
+        key={item.id}
+        href={item.route}
+        title={!isExpanded ? item.label : undefined}
+        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isChild ? 'ml-2' : ''} ${
+          isActive(item.route)
+            ? 'bg-pink-50 dark:bg-pink-900/20 text-[#C5055B] dark:text-pink-400'
+            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+        }`}
+      >
+        <MenuIcon
+          name={item.icon}
+          className={`w-5 h-5 flex-shrink-0 ${isActive(item.route) ? 'text-[#C5055B] dark:text-pink-400' : ''}`}
+        />
+        {isExpanded && (
+          <span className="text-sm font-medium whitespace-nowrap overflow-hidden">
+            {item.label}
+          </span>
+        )}
+        {item.badge && isExpanded && (
+          <span className="ml-auto px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">
+            {item.badge}
+          </span>
+        )}
+      </Link>
+    );
   };
 
   return (
@@ -138,35 +232,7 @@ export default function Sidebar() {
 
       {/* Menu Items */}
       <nav className="p-3 space-y-1">
-        {menuItems.map((item) => (
-          <Link
-            key={item.id}
-            href={item.route}
-            title={!isExpanded ? item.label : undefined}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
-              isActive(item.route)
-                ? 'bg-pink-50 dark:bg-pink-900/20 text-[#C5055B] dark:text-pink-400'
-                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-            }`}
-          >
-            <MenuIcon
-              name={item.icon}
-              className={`w-5 h-5 flex-shrink-0 ${
-                isActive(item.route) ? 'text-[#C5055B] dark:text-pink-400' : ''
-              }`}
-            />
-            {isExpanded && (
-              <span className="text-sm font-medium whitespace-nowrap overflow-hidden">
-                {item.label}
-              </span>
-            )}
-            {item.badge && isExpanded && (
-              <span className="ml-auto px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">
-                {item.badge}
-              </span>
-            )}
-          </Link>
-        ))}
+        {menuItems.map(item => renderMenuItem(item))}
       </nav>
     </aside>
   );

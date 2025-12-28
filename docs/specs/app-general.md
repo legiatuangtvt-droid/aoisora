@@ -62,24 +62,26 @@ This specification defines the general application layout including Top Bar, Sid
 | Active Item | Highlighted with accent color | ✅ Implemented |
 | Hover Effect | Light background on hover | ✅ Implemented |
 
-**Menu Items:**
+**Menu Items (Hierarchical Structure):**
 
-| Icon | Label | Route | Status |
-|------|-------|-------|--------|
-| 📋 | Task list HQ-Store | /tasks/hq-store | ✅ Menu item added |
-| 📝 | List task | /tasks/list | ✅ Implemented |
-| 📄 | Detail | /tasks/[id] | ✅ Implemented |
-| 💬 | Message | /messages | ✅ Menu item added |
-| ✅ | To-do Task | /todo | ✅ Menu item added |
-| 📚 | Task Library | /library | ✅ Menu item added |
-| 📊 | Report | /reports | ✅ Menu item added |
-| 👥 | User management | /users | ✅ Menu item added |
+| Icon | Label | Route | Parent | Status |
+|------|-------|-------|--------|--------|
+| 📋 | Task list HQ-Store | /tasks | - | ✅ Parent menu |
+| ├─ 📝 | List task | /tasks/list | HQ-Store | ✅ Implemented |
+| ├─ 📄 | Detail | /tasks/detail | HQ-Store | ✅ Implemented |
+| └─ 💬 | Message | /tasks/messages | HQ-Store | ✅ Implemented |
+| ✅ | To-do Task | /todo | - | ✅ Menu item added |
+| 📚 | Task Library | /library | - | ✅ Menu item added |
+| 📊 | Report | /reports | - | ✅ Menu item added |
+| 👥 | User management | /users | - | ✅ Menu item added |
 
 **Behavior:**
 - Expanded mode: Show icon + label
 - Collapsed mode: Show icon only with tooltip on hover
 - State persisted in localStorage
 - Smooth transition animation (300ms)
+- Parent menus are expandable/collapsible with arrow indicator
+- Child items indented with left border line
 
 ### 3.3 User Menu Dropdown
 
