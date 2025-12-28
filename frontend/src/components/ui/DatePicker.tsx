@@ -354,30 +354,34 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
       <div className="flex-1">
         {/* Date inputs row */}
         <div className="flex gap-4 mb-4">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-500">From</span>
+          <div className="flex-1 flex items-center border border-gray-300 rounded overflow-hidden">
+            <span className="px-3 py-2 text-sm text-gray-500 bg-gray-50 border-r border-gray-300">From</span>
             <input
               type="text"
               value={formatInputDate(customFromDate)}
               readOnly
-              className="w-28 px-3 py-1.5 border border-gray-300 rounded text-sm text-center bg-white"
+              className="flex-1 px-3 py-2 text-sm bg-white outline-none"
             />
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-500">To</span>
+          <div className="flex-1 flex items-center border border-gray-300 rounded overflow-hidden">
+            <span className="px-3 py-2 text-sm text-gray-500 bg-gray-50 border-r border-gray-300">To</span>
             <input
               type="text"
               value={formatInputDate(customToDate)}
               readOnly
-              className="w-28 px-3 py-1.5 border border-gray-300 rounded text-sm text-center bg-white"
+              className="flex-1 px-3 py-2 text-sm bg-white outline-none"
             />
           </div>
         </div>
 
         {/* Dual Calendar */}
-        <div className="flex gap-6">
-          {renderCustomCalendar(leftCalendarMonth, setLeftCalendarMonth)}
-          {renderCustomCalendar(rightCalendarMonth, setRightCalendarMonth)}
+        <div className="flex gap-4">
+          <div className="flex-1 border border-gray-200 rounded-lg p-3">
+            {renderCustomCalendar(leftCalendarMonth, setLeftCalendarMonth)}
+          </div>
+          <div className="flex-1 border border-gray-200 rounded-lg p-3">
+            {renderCustomCalendar(rightCalendarMonth, setRightCalendarMonth)}
+          </div>
         </div>
       </div>
     );
