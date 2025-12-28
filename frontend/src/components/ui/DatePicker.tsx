@@ -3,17 +3,21 @@
 import { useState, useRef, useEffect } from 'react';
 import { DateMode } from '@/types/tasks';
 
-interface DatePickerProps {
-  dateMode: DateMode;
-  selectedDate?: Date;
-  onDateChange: (mode: DateMode, date?: Date) => void;
+interface DateRange {
+  from: Date;
+  to: Date;
 }
 
-export default function DatePicker({ dateMode, selectedDate, onDateChange }: DatePickerProps) {
+interface DatePickerProps {
+  dateMode: DateMode;
+  onDateChange: (mode: DateMode, dateRange: DateRange) => void;
+}
+
+export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<DateMode>(dateMode);
-  const [customFromDate, setCustomFromDate] = useState<Date>(selectedDate || new Date());
-  const [customToDate, setCustomToDate] = useState<Date>(selectedDate || new Date());
+  const [customFromDate, setCustomFromDate] = useState<Date>(new Date());
+  const [customToDate, setCustomToDate] = useState<Date>(new Date());
   const [selectedWeek, setSelectedWeek] = useState<number>(1);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -73,12 +77,17 @@ export default function DatePicker({ dateMode, selectedDate, onDateChange }: Dat
 
   const handleApply = () => {
     if (activeTab === 'CUSTOM') {
-      onDateChange('CUSTOM', customFromDate);
+      onDateChange('CUSTOM', { from: customFromDate, to: customToDate });
     } else if (activeTab === 'WEEK') {
       const weekRange = getWeekRange(selectedYear, selectedWeek);
-      onDateChange('WEEK', weekRange.from);
+      onDateChange('WEEK', { from: weekRange.from, to: weekRange.to });
     } else {
-      onDateChange('TODAY');
+      // TODAY: from and to are the same day
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const endOfToday = new Date();
+      endOfToday.setHours(23, 59, 59, 999);
+      onDateChange('TODAY', { from: today, to: endOfToday });
     }
     setIsOpen(false);
   };
@@ -143,6 +152,25 @@ export default function DatePicker({ dateMode, selectedDate, onDateChange }: Dat
              compareDate.getFullYear() === year;
     };
 
+    const isInRange = (day: number) => {
+      const currentDate = new Date(year, month, day);
+      const fromNormalized = new Date(customFromDate.getFullYear(), customFromDate.getMonth(), customFromDate.getDate());
+      const toNormalized = new Date(customToDate.getFullYear(), customToDate.getMonth(), customToDate.getDate());
+      return currentDate > fromNormalized && currentDate < toNormalized;
+    };
+
+    const isRangeStart = (day: number) => {
+      return customFromDate.getDate() === day &&
+             customFromDate.getMonth() === month &&
+             customFromDate.getFullYear() === year;
+    };
+
+    const isRangeEnd = (day: number) => {
+      return customToDate.getDate() === day &&
+             customToDate.getMonth() === month &&
+             customToDate.getFullYear() === year;
+    };
+
     return (
       <div className="flex-1">
         {/* Calendar Header */}
@@ -176,16 +204,22 @@ export default function DatePicker({ dateMode, selectedDate, onDateChange }: Dat
         </div>
 
         {/* Calendar days */}
-        <div className="grid grid-cols-7 gap-2">
+        <div className="grid grid-cols-7 gap-1">
           {days.map((day, index) => (
             <div key={index} className="aspect-square">
               {day ? (
                 <button
                   onClick={() => handleDayClick(day)}
-                  className={`w-full h-full flex items-center justify-center text-base rounded-full transition-colors ${
+                  className={`w-full h-full flex items-center justify-center text-base transition-colors ${
                     isSelected(day)
-                      ? 'bg-pink-500 text-white font-bold'
-                      : 'hover:bg-gray-100 text-gray-700 font-medium'
+                      ? 'bg-pink-500 text-white font-bold rounded-full'
+                      : isRangeStart(day)
+                      ? 'bg-pink-500 text-white font-bold rounded-l-full'
+                      : isRangeEnd(day)
+                      ? 'bg-pink-500 text-white font-bold rounded-r-full'
+                      : isInRange(day)
+                      ? 'bg-pink-100 text-pink-700'
+                      : 'hover:bg-gray-100 text-gray-700 font-medium rounded-full'
                   }`}
                 >
                   {day}
@@ -236,19 +270,24 @@ export default function DatePicker({ dateMode, selectedDate, onDateChange }: Dat
 
         {/* Week grid */}
         <div className="grid grid-cols-9 gap-3 max-h-80 overflow-y-auto px-4">
-          {weeks.map((week) => (
-            <button
-              key={week}
-              onClick={() => setSelectedWeek(week)}
-              className={`px-4 py-3 text-base rounded-lg hover:bg-gray-100 transition-colors ${
-                selectedWeek === week
-                  ? 'border-b-2 border-pink-500 font-semibold text-gray-900 bg-pink-50'
-                  : 'text-gray-700'
-              }`}
-            >
-              W {week.toString().padStart(2, '0')}
-            </button>
-          ))}
+          {weeks.map((week) => {
+            const weekRange = getWeekRange(selectedYear, week);
+            const tooltipText = `${weekRange.from.toLocaleDateString('en-US', { month: 'short', day: '2-digit' })} - ${weekRange.to.toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}`;
+            return (
+              <button
+                key={week}
+                onClick={() => setSelectedWeek(week)}
+                title={tooltipText}
+                className={`px-4 py-3 text-base rounded-lg hover:bg-gray-100 transition-colors ${
+                  selectedWeek === week
+                    ? 'border-b-2 border-pink-500 font-semibold text-gray-900 bg-pink-50'
+                    : 'text-gray-700'
+                }`}
+              >
+                W {week.toString().padStart(2, '0')}
+              </button>
+            );
+          })}
         </div>
       </div>
     );

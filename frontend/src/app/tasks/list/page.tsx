@@ -23,9 +23,21 @@ interface SortConfig {
 export default function TaskListPage() {
   const router = useRouter();
 
+  // Date range state for filtering
+  interface DateRange {
+    from: Date;
+    to: Date;
+  }
+
   // State management
   const [dateMode, setDateMode] = useState<DateMode>('TODAY');
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [dateRange, setDateRange] = useState<DateRange>(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
+    return { from: today, to: endOfToday };
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [tasks, setTasks] = useState<TaskGroup[]>(mockTaskGroups);
   const [expandedRows, setExpandedRows] = useState<string | null>(null);
@@ -106,13 +118,26 @@ export default function TaskListPage() {
   };
 
   // Date change handler
-  const handleDateChange = (mode: DateMode, date?: Date) => {
+  const handleDateChange = (mode: DateMode, newDateRange: DateRange) => {
     setDateMode(mode);
-    setSelectedDate(date);
+    setDateRange(newDateRange);
   };
 
-  // Filter tasks based on search, modal filters, and column filters
+  // Helper function to parse date string (DD/MM format) to Date object
+  const parseTaskDate = (dateStr: string): Date => {
+    const [day, month] = dateStr.split('/').map(Number);
+    const year = new Date().getFullYear(); // Assume current year
+    return new Date(year, month - 1, day);
+  };
+
+  // Filter tasks based on search, modal filters, column filters, and date range
   const filteredTasks = tasks.filter((task) => {
+    // Date range filter - check if task's date range overlaps with selected date range
+    const taskStartDate = parseTaskDate(task.startDate);
+    const taskEndDate = parseTaskDate(task.endDate);
+    const matchesDateRange =
+      taskEndDate >= dateRange.from && taskStartDate <= dateRange.to;
+
     // Search filter
     const matchesSearch =
       task.taskGroupName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -147,7 +172,7 @@ export default function TaskListPage() {
     const matchesHQCheckColumn =
       hqCheckColumnFilter.length === 0 || hqCheckColumnFilter.includes(task.hqCheck);
 
-    return matchesSearch && matchesDeptModal && matchesDeptColumn && matchesStatusModal && matchesStatusColumn && matchesHQCheckModal && matchesHQCheckColumn;
+    return matchesDateRange && matchesSearch && matchesDeptModal && matchesDeptColumn && matchesStatusModal && matchesStatusColumn && matchesHQCheckModal && matchesHQCheckColumn;
   });
 
   // Sort tasks based on sortConfig
@@ -192,7 +217,7 @@ export default function TaskListPage() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, filters, deptColumnFilter, statusColumnFilter, hqCheckColumnFilter]);
+  }, [searchQuery, filters, deptColumnFilter, statusColumnFilter, hqCheckColumnFilter, dateRange]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -206,7 +231,6 @@ export default function TaskListPage() {
           {/* Date Picker */}
           <DatePicker
             dateMode={dateMode}
-            selectedDate={selectedDate}
             onDateChange={handleDateChange}
           />
 
@@ -361,7 +385,7 @@ export default function TaskListPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100">
-              {paginatedTasks.map((task) => (
+              {paginatedTasks.map((task, index) => (
                 <React.Fragment key={task.id}>
                   {/* Parent Row */}
                   <tr
@@ -369,7 +393,7 @@ export default function TaskListPage() {
                     onClick={() => handleRowClick(task.id)}
                   >
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-center border-r border-gray-200">
-                      {task.no}
+                      {startIndex + index + 1}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm border-r border-gray-200">
                       <div className="flex items-center justify-start gap-2">
