@@ -180,7 +180,7 @@ export default function Sidebar() {
 
           {/* Children - show when expanded OR when collapsed but menu is open */}
           {isMenuExpanded && item.children && (
-            <div className={`mt-1 space-y-1 ${isExpanded ? 'ml-4 border-l-2 border-gray-200 dark:border-gray-700' : 'ml-2'}`}>
+            <div className={`mt-1 space-y-1 ${isExpanded ? 'ml-4 border-l-2 border-gray-200 dark:border-gray-700' : 'ml-5'}`}>
               {item.children.map(child => renderMenuItem(child, true))}
             </div>
           )}
