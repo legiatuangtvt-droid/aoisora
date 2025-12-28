@@ -20,7 +20,15 @@
       "Bash(wc:*)",
       "Bash(python:*)",
       "Bash(python3:*)",
-      "Bash(where:*)"
+      "Bash(where:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx next build)",
+      "Bash(npm install:*)",
+      "Bash(/c/Windows/py.exe:*)",
+      "Bash(py -c \"from app.core.config import settings; print\\(''Config loaded OK''\\)\")",
+      "Bash(node scripts/validate.js:*)",
+      "Bash(node scripts/validate.cjs:*)",
+      "Bash(timeout 5 cat:*)"
     ]
   }
 }

@@ -75,10 +75,12 @@ function getMonday(date: Date): Date {
   return d;
 }
 
-// Time slot type
+// Time slot type - now with 15-minute intervals
 interface TimeSlot {
   time: string;
   hour: number;
+  minute: number; // 0, 15, 30, 45
+  isHourStart: boolean; // true if minute is 0
 }
 
 // Schedule row type
@@ -115,12 +117,20 @@ export default function DailySchedulePage() {
     });
   }, [selectedDate]);
 
-  // Time slots from 05:00 to 23:00
+  // Time slots from 05:00 to 23:00 with 15-minute intervals (4 slots per hour)
   const timeSlots: TimeSlot[] = useMemo(() => {
-    return Array.from({ length: 19 }, (_, i) => ({
-      time: `${String(i + 5).padStart(2, '0')}:00`,
-      hour: i + 5,
-    }));
+    const slots: TimeSlot[] = [];
+    for (let hour = 5; hour <= 23; hour++) {
+      for (const minute of [0, 15, 30, 45]) {
+        slots.push({
+          time: `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`,
+          hour,
+          minute,
+          isHourStart: minute === 0,
+        });
+      }
+    }
+    return slots;
   }, []);
 
   // Load initial data
@@ -235,25 +245,30 @@ export default function DailySchedulePage() {
     return `${shiftCode.start_time.substring(0, 5)} - ${shiftCode.end_time.substring(0, 5)}`;
   };
 
-  // Check if time is within shift
-  const isWithinShift = (hour: number, shiftCode: ShiftCode | null | undefined): boolean => {
+  // Check if time slot is within shift (supports 15-minute intervals)
+  const isWithinShift = (hour: number, minute: number, shiftCode: ShiftCode | null | undefined): boolean => {
     if (!shiftCode || shiftCode.shift_code === 'OFF') return false;
-    const startHour = parseInt(shiftCode.start_time.split(':')[0]);
-    const endHour = parseInt(shiftCode.end_time.split(':')[0]);
 
-    if (startHour < endHour) {
-      return hour >= startHour && hour < endHour;
+    const [startH, startM] = shiftCode.start_time.split(':').map(Number);
+    const [endH, endM] = shiftCode.end_time.split(':').map(Number);
+
+    const slotMinutes = hour * 60 + minute;
+    const startMinutes = startH * 60 + startM;
+    const endMinutes = endH * 60 + endM;
+
+    if (startMinutes < endMinutes) {
+      return slotMinutes >= startMinutes && slotMinutes < endMinutes;
     } else {
       // Handle overnight shifts
-      return hour >= startHour || hour < endHour;
+      return slotMinutes >= startMinutes || slotMinutes < endMinutes;
     }
   };
 
-  // Check if this is the first hour of shift (to show label)
-  const isFirstHourOfShift = (hour: number, shiftCode: ShiftCode | null | undefined): boolean => {
+  // Check if this is the first slot of shift (to show label)
+  const isFirstSlotOfShift = (hour: number, minute: number, shiftCode: ShiftCode | null | undefined): boolean => {
     if (!shiftCode || shiftCode.shift_code === 'OFF') return false;
-    const startHour = parseInt(shiftCode.start_time.split(':')[0]);
-    return hour === startHour;
+    const [startH, startM] = shiftCode.start_time.split(':').map(Number);
+    return hour === startH && minute === startM;
   };
 
   // Get shift color
@@ -312,7 +327,7 @@ export default function DailySchedulePage() {
                 <span className="text-xs text-gray-500">
                   {backendOnline ? 'Online' : 'Offline (Demo)'}
                 </span>
-                <span className="text-[10px] text-gray-400 ml-1">v14</span>
+                <span className="text-[10px] text-gray-400 ml-1">v15</span>
               </div>
             </div>
           </div>
@@ -439,8 +454,13 @@ export default function DailySchedulePage() {
                       Ca
                     </th>
                     {timeSlots.map(slot => (
-                      <th key={slot.time} className="p-2 border border-gray-300 min-w-[50px] text-center font-medium text-gray-600 text-xs">
-                        {slot.time}
+                      <th
+                        key={slot.time}
+                        className={`p-1 border border-gray-300 min-w-[22px] w-[22px] text-center font-medium text-gray-600 text-[10px] ${
+                          slot.isHourStart ? 'border-l-2 border-l-gray-400' : ''
+                        }`}
+                      >
+                        {slot.isHourStart ? slot.time.substring(0, 2) : ''}
                       </th>
                     ))}
                   </tr>
@@ -481,25 +501,29 @@ export default function DailySchedulePage() {
                           )}
                         </td>
 
-                        {/* Time Slots */}
+                        {/* Time Slots - 15 minute intervals */}
                         {timeSlots.map(slot => {
-                          const isActive = isWithinShift(slot.hour, row.shiftCode);
-                          const isFirstHour = isFirstHourOfShift(slot.hour, row.shiftCode);
+                          const isActive = isWithinShift(slot.hour, slot.minute, row.shiftCode);
+                          const isFirstSlot = isFirstSlotOfShift(slot.hour, slot.minute, row.shiftCode);
                           const now = new Date();
-                          const isCurrentHour = slot.hour === now.getHours() && formatDate(selectedDate) === formatDate(now);
+                          const currentSlotMinutes = now.getHours() * 60 + Math.floor(now.getMinutes() / 15) * 15;
+                          const slotMinutes = slot.hour * 60 + slot.minute;
+                          const isCurrentSlot = slotMinutes === currentSlotMinutes && formatDate(selectedDate) === formatDate(now);
 
                           return (
                             <td
                               key={`${row.staff.staff_id}-${slot.time}`}
-                              className={`p-0.5 border border-gray-200 ${isCurrentHour ? 'bg-amber-100' : ''}`}
+                              className={`p-0 border border-gray-200 ${
+                                slot.isHourStart ? 'border-l-2 border-l-gray-300' : ''
+                              } ${isCurrentSlot ? 'bg-amber-100' : ''}`}
                             >
                               {isActive && (
                                 <div
-                                  className="h-6 rounded-sm flex items-center justify-start px-1"
+                                  className="h-7 flex items-center justify-center"
                                   style={{ backgroundColor: `${shiftColor}90` }}
                                 >
-                                  {isFirstHour && (
-                                    <span className="text-[9px] font-bold text-white truncate drop-shadow-sm">
+                                  {isFirstSlot && (
+                                    <span className="text-[8px] font-bold text-white truncate drop-shadow-sm">
                                       {row.shiftCode?.shift_code}
                                     </span>
                                   )}
