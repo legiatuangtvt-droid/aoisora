@@ -1,18 +1,23 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
-from datetime import date, timedelta
+from datetime import date, time, timedelta
 from decimal import Decimal
 
 from ...core.database import get_db
 from ...core.security import get_current_user, check_role, MANAGERS_AND_ABOVE
-from ...models import ShiftCode, ShiftAssignment, Staff, Store, Notification
+from ...models import ShiftCode, ShiftAssignment, Staff, Store, Notification, TaskGroup, DailyScheduleTask
 from ...schemas import (
     ShiftCodeCreate, ShiftCodeUpdate, ShiftCodeResponse, ShiftCodeGenerate,
     ShiftAssignmentCreate, ShiftAssignmentUpdate, ShiftAssignmentResponse, ShiftAssignmentWithDetails,
     BulkShiftAssignmentCreate, BulkShiftAssignmentResponse,
     DailySchedule, WeeklyScheduleResponse,
     ManHourSummary, ManHourReport,
+)
+from ...schemas.shift import (
+    TaskGroupResponse, TaskGroupCreate,
+    DailyScheduleTaskCreate, DailyScheduleTaskUpdate, DailyScheduleTaskResponse, DailyScheduleTaskWithGroup,
+    StaffDailySchedule,
 )
 
 router = APIRouter()
@@ -509,3 +514,231 @@ async def get_daily_manhours(
         ))
 
     return result
+
+
+# ============================================
+# Task Group Endpoints
+# ============================================
+
+@router.get("/task-groups/", response_model=List[TaskGroupResponse])
+async def get_all_task_groups(
+    is_active: Optional[bool] = Query(None, description="Filter by active status"),
+    db: Session = Depends(get_db),
+):
+    """
+    Get all task groups with their colors.
+    """
+    query = db.query(TaskGroup)
+
+    if is_active is not None:
+        query = query.filter(TaskGroup.is_active == is_active)
+
+    groups = query.order_by(TaskGroup.sort_order).all()
+    return [TaskGroupResponse.model_validate(g) for g in groups]
+
+
+@router.get("/task-groups/{group_id}", response_model=TaskGroupResponse)
+async def get_task_group(group_id: str, db: Session = Depends(get_db)):
+    """
+    Get task group by ID.
+    """
+    group = db.query(TaskGroup).filter(TaskGroup.group_id == group_id).first()
+    if not group:
+        raise HTTPException(status_code=404, detail="Task group not found")
+
+    return TaskGroupResponse.model_validate(group)
+
+
+@router.post("/task-groups/", response_model=TaskGroupResponse)
+async def create_task_group(
+    group_data: TaskGroupCreate,
+    db: Session = Depends(get_db)
+):
+    """
+    Create a new task group.
+    """
+    existing = db.query(TaskGroup).filter(TaskGroup.group_id == group_data.group_id).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Task group already exists")
+
+    group = TaskGroup(**group_data.model_dump())
+    db.add(group)
+    db.commit()
+    db.refresh(group)
+
+    return TaskGroupResponse.model_validate(group)
+
+
+# ============================================
+# Daily Schedule Task Endpoints
+# ============================================
+
+@router.get("/schedule-tasks/", response_model=List[DailyScheduleTaskWithGroup])
+async def get_schedule_tasks(
+    store_id: Optional[int] = Query(None, description="Filter by store"),
+    staff_id: Optional[int] = Query(None, description="Filter by staff"),
+    schedule_date: Optional[date] = Query(None, description="Filter by specific date"),
+    group_id: Optional[str] = Query(None, description="Filter by task group"),
+    status: Optional[str] = Query(None, description="Filter by status"),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(200, ge=1, le=1000),
+    db: Session = Depends(get_db),
+):
+    """
+    Get daily schedule tasks with filters.
+    Returns tasks with their group color information.
+    """
+    query = db.query(DailyScheduleTask).options(
+        joinedload(DailyScheduleTask.task_group)
+    )
+
+    if store_id:
+        query = query.filter(DailyScheduleTask.store_id == store_id)
+    if staff_id:
+        query = query.filter(DailyScheduleTask.staff_id == staff_id)
+    if schedule_date:
+        query = query.filter(DailyScheduleTask.schedule_date == schedule_date)
+    if group_id:
+        query = query.filter(DailyScheduleTask.group_id == group_id)
+    if status:
+        query = query.filter(DailyScheduleTask.status == status)
+
+    tasks = query.order_by(
+        DailyScheduleTask.schedule_date,
+        DailyScheduleTask.staff_id,
+        DailyScheduleTask.start_time
+    ).offset(skip).limit(limit).all()
+
+    result = []
+    for t in tasks:
+        t_data = DailyScheduleTaskWithGroup.model_validate(t)
+        if t.task_group:
+            t_data.task_group = TaskGroupResponse.model_validate(t.task_group)
+        result.append(t_data)
+
+    return result
+
+
+@router.get("/schedule-tasks/by-staff/{staff_id}", response_model=StaffDailySchedule)
+async def get_staff_daily_schedule(
+    staff_id: int,
+    schedule_date: date = Query(..., description="Schedule date"),
+    db: Session = Depends(get_db),
+):
+    """
+    Get all scheduled tasks for a specific staff member on a given date.
+    """
+    staff = db.query(Staff).filter(Staff.staff_id == staff_id).first()
+    if not staff:
+        raise HTTPException(status_code=404, detail="Staff not found")
+
+    tasks = db.query(DailyScheduleTask).filter(
+        DailyScheduleTask.staff_id == staff_id,
+        DailyScheduleTask.schedule_date == schedule_date
+    ).order_by(DailyScheduleTask.start_time).all()
+
+    completed_count = sum(1 for t in tasks if t.status == "completed")
+
+    return StaffDailySchedule(
+        staff_id=staff_id,
+        staff_name=staff.staff_name,
+        schedule_date=schedule_date,
+        tasks=[DailyScheduleTaskResponse.model_validate(t) for t in tasks],
+        total_tasks=len(tasks),
+        completed_tasks=completed_count
+    )
+
+
+@router.get("/schedule-tasks/{task_id}", response_model=DailyScheduleTaskWithGroup)
+async def get_schedule_task(task_id: int, db: Session = Depends(get_db)):
+    """
+    Get a specific scheduled task by ID.
+    """
+    task = db.query(DailyScheduleTask).options(
+        joinedload(DailyScheduleTask.task_group)
+    ).filter(DailyScheduleTask.schedule_task_id == task_id).first()
+
+    if not task:
+        raise HTTPException(status_code=404, detail="Scheduled task not found")
+
+    result = DailyScheduleTaskWithGroup.model_validate(task)
+    if task.task_group:
+        result.task_group = TaskGroupResponse.model_validate(task.task_group)
+
+    return result
+
+
+@router.post("/schedule-tasks/", response_model=DailyScheduleTaskResponse)
+async def create_schedule_task(
+    task_data: DailyScheduleTaskCreate,
+    db: Session = Depends(get_db)
+):
+    """
+    Create a new scheduled task.
+    """
+    task = DailyScheduleTask(**task_data.model_dump())
+    db.add(task)
+    db.commit()
+    db.refresh(task)
+
+    return DailyScheduleTaskResponse.model_validate(task)
+
+
+@router.put("/schedule-tasks/{task_id}", response_model=DailyScheduleTaskResponse)
+async def update_schedule_task(
+    task_id: int,
+    task_data: DailyScheduleTaskUpdate,
+    db: Session = Depends(get_db)
+):
+    """
+    Update a scheduled task (status, notes, completion time).
+    """
+    task = db.query(DailyScheduleTask).filter(DailyScheduleTask.schedule_task_id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Scheduled task not found")
+
+    update_data = task_data.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(task, field, value)
+
+    db.commit()
+    db.refresh(task)
+
+    return DailyScheduleTaskResponse.model_validate(task)
+
+
+@router.put("/schedule-tasks/{task_id}/complete", response_model=DailyScheduleTaskResponse)
+async def complete_schedule_task(
+    task_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Mark a scheduled task as completed.
+    """
+    from datetime import datetime
+
+    task = db.query(DailyScheduleTask).filter(DailyScheduleTask.schedule_task_id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Scheduled task not found")
+
+    task.status = "completed"
+    task.completed_at = datetime.now()
+    db.commit()
+    db.refresh(task)
+
+    return DailyScheduleTaskResponse.model_validate(task)
+
+
+@router.delete("/schedule-tasks/{task_id}")
+async def delete_schedule_task(task_id: int, db: Session = Depends(get_db)):
+    """
+    Delete a scheduled task.
+    """
+    task = db.query(DailyScheduleTask).filter(DailyScheduleTask.schedule_task_id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Scheduled task not found")
+
+    db.delete(task)
+    db.commit()
+
+    return {"message": "Scheduled task deleted successfully"}

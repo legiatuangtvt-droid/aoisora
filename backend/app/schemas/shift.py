@@ -5,6 +5,88 @@ from decimal import Decimal
 
 
 # ============================================
+# TaskGroup Schemas
+# ============================================
+
+class TaskGroupBase(BaseModel):
+    group_id: str  # POS, PERI, DRY, etc.
+    group_code: str
+    group_name: Optional[str] = None
+    priority: int = 50
+    sort_order: int = 0
+    color_bg: Optional[str] = None  # #e2e8f0
+    color_text: Optional[str] = None  # #1e293b
+    color_border: Optional[str] = None  # #94a3b8
+    is_active: bool = True
+
+
+class TaskGroupCreate(TaskGroupBase):
+    pass
+
+
+class TaskGroupResponse(TaskGroupBase):
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# ============================================
+# DailyScheduleTask Schemas
+# ============================================
+
+class DailyScheduleTaskBase(BaseModel):
+    staff_id: int
+    store_id: Optional[int] = None
+    schedule_date: date
+    group_id: Optional[str] = None
+    task_code: str
+    task_name: str
+    start_time: time
+    end_time: time
+    status: str = "pending"  # pending, in_progress, completed, skipped
+    notes: Optional[str] = None
+
+
+class DailyScheduleTaskCreate(DailyScheduleTaskBase):
+    pass
+
+
+class DailyScheduleTaskUpdate(BaseModel):
+    status: Optional[str] = None
+    notes: Optional[str] = None
+    completed_at: Optional[datetime] = None
+
+
+class DailyScheduleTaskResponse(DailyScheduleTaskBase):
+    schedule_task_id: int
+    completed_at: Optional[datetime] = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class DailyScheduleTaskWithGroup(DailyScheduleTaskResponse):
+    """Task with group color info"""
+    task_group: Optional[TaskGroupResponse] = None
+
+    class Config:
+        from_attributes = True
+
+
+class StaffDailySchedule(BaseModel):
+    """All tasks for a staff member on a specific date"""
+    staff_id: int
+    staff_name: str
+    schedule_date: date
+    tasks: List[DailyScheduleTaskResponse] = []
+    total_tasks: int = 0
+    completed_tasks: int = 0
+
+
+# ============================================
 # ShiftCode Schemas
 # ============================================
 
