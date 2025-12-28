@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useToast } from '@/components/ui/Toast';
 import { Language } from '@/types/layout';
 
 interface UserMenuProps {
@@ -15,7 +16,8 @@ const languages: { code: Language; label: string; flag: string }[] = [
 ];
 
 export default function UserMenu({ onClose }: UserMenuProps) {
-  const { theme, setTheme, isDark } = useTheme();
+  const { setTheme, isDark } = useTheme();
+  const { showDevelopingToast } = useToast();
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState<Language>('vi-VN');
 
@@ -63,8 +65,8 @@ export default function UserMenu({ onClose }: UserMenuProps) {
       {/* My Profile */}
       <button
         onClick={() => {
+          showDevelopingToast();
           onClose();
-          // Navigate to profile
         }}
         className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
       >
@@ -77,8 +79,8 @@ export default function UserMenu({ onClose }: UserMenuProps) {
       {/* Account Settings */}
       <button
         onClick={() => {
+          showDevelopingToast();
           onClose();
-          // Navigate to settings
         }}
         className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
       >
@@ -143,8 +145,8 @@ export default function UserMenu({ onClose }: UserMenuProps) {
       {/* Help / Support */}
       <button
         onClick={() => {
+          showDevelopingToast();
           onClose();
-          // Navigate to help
         }}
         className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
       >
@@ -159,8 +161,8 @@ export default function UserMenu({ onClose }: UserMenuProps) {
       {/* Logout */}
       <button
         onClick={() => {
+          showDevelopingToast();
           onClose();
-          // Handle logout
         }}
         className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-red-600 dark:text-red-400"
       >

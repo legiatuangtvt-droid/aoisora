@@ -3,6 +3,7 @@
 import { ReactNode } from 'react';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { SidebarProvider, useSidebar } from '@/contexts/SidebarContext';
+import { ToastProvider } from '@/components/ui/Toast';
 import TopBar from './TopBar';
 import Sidebar from './Sidebar';
 
@@ -34,7 +35,9 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <ThemeProvider>
       <SidebarProvider>
-        <LayoutContent>{children}</LayoutContent>
+        <ToastProvider>
+          <LayoutContent>{children}</LayoutContent>
+        </ToastProvider>
       </SidebarProvider>
     </ThemeProvider>
   );

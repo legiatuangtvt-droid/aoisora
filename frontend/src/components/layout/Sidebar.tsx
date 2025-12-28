@@ -4,7 +4,11 @@ import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useSidebar } from '@/contexts/SidebarContext';
+import { useToast } from '@/components/ui/Toast';
 import { MenuItem } from '@/types/layout';
+
+// Routes that are implemented
+const implementedRoutes = ['/tasks/list', '/tasks/new'];
 
 // Menu items configuration with parent-child structure
 const menuItems: MenuItem[] = [
@@ -111,10 +115,15 @@ function MenuIcon({ name, className = '' }: { name: string; className?: string }
 export default function Sidebar() {
   const { isExpanded, toggleSidebar } = useSidebar();
   const pathname = usePathname();
+  const { showDevelopingToast } = useToast();
   const [expandedMenus, setExpandedMenus] = useState<string[]>(['hq-store']); // Default expanded
 
   const isActive = (route: string) => {
     return pathname === route || pathname.startsWith(route + '/');
+  };
+
+  const isImplemented = (route: string) => {
+    return implementedRoutes.some(r => route === r || route.startsWith(r + '/'));
   };
 
   const isChildActive = (item: MenuItem) => {
@@ -181,11 +190,20 @@ export default function Sidebar() {
 
     // Regular menu item or child item
     const childCollapsedStyle = isChild && !isExpanded ? 'pl-1' : '';
+    const implemented = isImplemented(item.route);
+
+    const handleClick = (e: React.MouseEvent) => {
+      if (!implemented) {
+        e.preventDefault();
+        showDevelopingToast();
+      }
+    };
 
     return (
       <Link
         key={item.id}
-        href={item.route}
+        href={implemented ? item.route : '#'}
+        onClick={handleClick}
         title={!isExpanded ? item.label : undefined}
         className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isChild && isExpanded ? 'ml-2' : ''} ${childCollapsedStyle} ${
           isActive(item.route)
