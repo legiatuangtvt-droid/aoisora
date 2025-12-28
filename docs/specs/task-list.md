@@ -193,10 +193,33 @@ frontend/src/
 
 ---
 
-## 9. Comparison with Original Spec
+## 9. Comparison with Original Spec (SCR_TASK_LIST)
 
-> **Note**: This section should be updated after comparing with the original Excel spec (SCR_TASK_LIST sheet).
-
-| Spec Item | Original Spec | Current Implementation | Difference |
-|-----------|---------------|------------------------|------------|
-| TBD | TBD | TBD | TBD |
+| Spec Item | Original Spec | Current Implementation | Status |
+|-----------|---------------|------------------------|--------|
+| **A.1 Date Display** |
+| TODAY | Tự động lọc task có hiệu lực trong ngày | ✅ Filter tasks by date overlap | ✅ Fixed |
+| WEEK | Hover hiển thị tooltip khoảng ngày | ✅ Tooltip on hover | ✅ Fixed |
+| CUSTOM | 2 Calendar, highlight màu hồng nhạt | ✅ Dual calendar with pink highlight | ✅ Fixed |
+| **A.2 Search Bar** |
+| Logic | Tìm kiếm theo "Task Group" hoặc "Dept" | ✅ Search by taskGroupName or dept | ✅ OK |
+| Cơ chế | Real-time hoặc nhấn Enter | ✅ Real-time search | ✅ OK |
+| **A.3 Filter Modal** |
+| View Scope | Dropdown "All team" mặc định | ✅ Implemented | ✅ OK |
+| Department | Cấu trúc phân cấp: Level 1 (Khối), Level 2 (Phòng ban) | ✅ Hierarchical checkboxes | ✅ OK |
+| Status | Chips/Tags - Not Yet, Done, Draft | ✅ Chip buttons | ✅ OK |
+| HQ Check | Chips/Tags | ✅ Chip buttons | ✅ OK |
+| Nút RESET | Reset tất cả điều kiện lọc | ✅ RESET button in footer | ✅ OK |
+| **A.4 ADD NEW** |
+| Action | Mở màn hình Add Task | ✅ Navigate to /tasks/new | ✅ OK |
+| **B. Data Grid** |
+| No | Đánh số thứ tự tăng dần theo danh sách hiển thị | ✅ Dynamic index (startIndex + index + 1) | ✅ Fixed |
+| Dept | Icon + tên, có icon phễu lọc | ✅ Icon + name + column filter | ✅ OK |
+| Task Group | Accordion mở rộng/thu gọn sub-tasks | ✅ Expandable rows | ✅ OK |
+| Start -> End | Định dạng DD/MM | ✅ Format DD/MM | ✅ OK |
+| Progress | [Đã xong]/[Tổng] | ✅ completed/total | ✅ OK |
+| Status | Pills màu, có icon phễu | ✅ StatusPill + column filter | ✅ OK |
+| HQ Check | Pills màu, có icon phễu | ✅ StatusPill + column filter | ✅ OK |
+| **C. Pagination** |
+| Tổng số lượng | "Total: [X] tasks group" | ✅ Implemented | ✅ OK |
+| Điều hướng | Các nút phân trang | ✅ Page buttons | ✅ OK |
