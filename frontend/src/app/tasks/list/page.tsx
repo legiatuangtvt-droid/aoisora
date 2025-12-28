@@ -9,6 +9,15 @@ import SearchBar from '@/components/ui/SearchBar';
 import FilterModal from '@/components/tasks/FilterModal';
 import DatePicker from '@/components/ui/DatePicker';
 
+// Sorting types
+type SortField = 'no' | 'dept' | 'taskGroupName' | 'startDate' | 'progress' | 'unable' | 'status' | 'hqCheck';
+type SortDirection = 'asc' | 'desc' | null;
+
+interface SortConfig {
+  field: SortField | null;
+  direction: SortDirection;
+}
+
 export default function TaskListPage() {
   // State management
   const [dateMode, setDateMode] = useState<DateMode>('TODAY');
@@ -24,6 +33,9 @@ export default function TaskListPage() {
     hqCheck: [],
   });
 
+  // Sorting state
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ field: null, direction: null });
+
   // Pagination state - fixed 10 items per page
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10; // Fixed number of items per page
@@ -37,6 +49,41 @@ export default function TaskListPage() {
   // Apply filters handler
   const handleApplyFilters = (newFilters: TaskFilters) => {
     setFilters(newFilters);
+  };
+
+  // Handle column sorting
+  const handleSort = (field: SortField) => {
+    setSortConfig((prev) => {
+      if (prev.field === field) {
+        // Cycle through: asc -> desc -> null
+        if (prev.direction === 'asc') return { field, direction: 'desc' };
+        if (prev.direction === 'desc') return { field: null, direction: null };
+      }
+      return { field, direction: 'asc' };
+    });
+  };
+
+  // Get sort icon based on current sort state
+  const getSortIcon = (field: SortField) => {
+    if (sortConfig.field !== field) {
+      return (
+        <svg className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+        </svg>
+      );
+    }
+    if (sortConfig.direction === 'asc') {
+      return (
+        <svg className="w-4 h-4 text-pink-600 cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+        </svg>
+      );
+    }
+    return (
+      <svg className="w-4 h-4 text-pink-600 cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+      </svg>
+    );
   };
 
   // Date change handler
@@ -72,11 +119,44 @@ export default function TaskListPage() {
     return matchesSearch && matchesDept && matchesStatus && matchesHQCheck;
   });
 
-  // Calculate pagination
-  const totalPages = Math.ceil(filteredTasks.length / itemsPerPage);
+  // Sort tasks based on sortConfig
+  const sortedTasks = [...filteredTasks].sort((a, b) => {
+    if (!sortConfig.field || !sortConfig.direction) return 0;
+
+    const field = sortConfig.field;
+    const direction = sortConfig.direction === 'asc' ? 1 : -1;
+
+    switch (field) {
+      case 'no':
+        return (a.no - b.no) * direction;
+      case 'dept':
+        return a.dept.localeCompare(b.dept) * direction;
+      case 'taskGroupName':
+        return a.taskGroupName.localeCompare(b.taskGroupName) * direction;
+      case 'startDate':
+        return a.startDate.localeCompare(b.startDate) * direction;
+      case 'progress':
+        const aProgress = a.progress.completed / a.progress.total;
+        const bProgress = b.progress.completed / b.progress.total;
+        return (aProgress - bProgress) * direction;
+      case 'unable':
+        return (a.unable - b.unable) * direction;
+      case 'status':
+        const statusOrder = { 'NOT_YET': 0, 'DRAFT': 1, 'DONE': 2 };
+        return (statusOrder[a.status] - statusOrder[b.status]) * direction;
+      case 'hqCheck':
+        const hqOrder = { 'NOT_YET': 0, 'DRAFT': 1, 'DONE': 2 };
+        return (hqOrder[a.hqCheck] - hqOrder[b.hqCheck]) * direction;
+      default:
+        return 0;
+    }
+  });
+
+  // Calculate pagination (use sortedTasks instead of filteredTasks)
+  const totalPages = Math.ceil(sortedTasks.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedTasks = filteredTasks.slice(startIndex, endIndex);
+  const paginatedTasks = sortedTasks.slice(startIndex, endIndex);
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -142,43 +222,76 @@ export default function TaskListPage() {
         <table className="w-full">
           <thead className="bg-pink-50">
               <tr>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
-                  No
+                <th
+                  className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50 cursor-pointer hover:bg-pink-100 transition-colors"
+                  onClick={() => handleSort('no')}
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    No
+                    {getSortIcon('no')}
+                  </div>
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
+                <th
+                  className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50 cursor-pointer hover:bg-pink-100 transition-colors"
+                  onClick={() => handleSort('dept')}
+                >
                   <div className="flex items-center justify-center gap-2">
                     Dept
-                    <svg className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18v3l-7 7v6l-4 2v-8L3 7V4z" />
-                    </svg>
+                    {getSortIcon('dept')}
                   </div>
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
-                  Task Group
+                <th
+                  className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50 cursor-pointer hover:bg-pink-100 transition-colors"
+                  onClick={() => handleSort('taskGroupName')}
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    Task Group
+                    {getSortIcon('taskGroupName')}
+                  </div>
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
-                  Start → End
+                <th
+                  className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50 cursor-pointer hover:bg-pink-100 transition-colors"
+                  onClick={() => handleSort('startDate')}
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    Start → End
+                    {getSortIcon('startDate')}
+                  </div>
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
-                  Progress
+                <th
+                  className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50 cursor-pointer hover:bg-pink-100 transition-colors"
+                  onClick={() => handleSort('progress')}
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    Progress
+                    {getSortIcon('progress')}
+                  </div>
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
-                  Unable
+                <th
+                  className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50 cursor-pointer hover:bg-pink-100 transition-colors"
+                  onClick={() => handleSort('unable')}
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    Unable
+                    {getSortIcon('unable')}
+                  </div>
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
+                <th
+                  className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50 cursor-pointer hover:bg-pink-100 transition-colors"
+                  onClick={() => handleSort('status')}
+                >
                   <div className="flex items-center justify-center gap-2">
                     Status
-                    <svg className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18v3l-7 7v6l-4 2v-8L3 7V4z" />
-                    </svg>
+                    {getSortIcon('status')}
                   </div>
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 bg-pink-50">
+                <th
+                  className="px-4 py-3 text-center text-xs font-semibold text-gray-700 bg-pink-50 cursor-pointer hover:bg-pink-100 transition-colors"
+                  onClick={() => handleSort('hqCheck')}
+                >
                   <div className="flex items-center justify-center gap-2">
                     HQ Check
-                    <svg className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18v3l-7 7v6l-4 2v-8L3 7V4z" />
-                    </svg>
+                    {getSortIcon('hqCheck')}
                   </div>
                 </th>
               </tr>
@@ -289,10 +402,10 @@ export default function TaskListPage() {
         <div className="bg-white px-4 py-3 border-t border-gray-200">
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-600">
-              Total: <span className="font-semibold text-gray-900">{filteredTasks.length}</span> tasks group
-              {filteredTasks.length > 0 && (
+              Total: <span className="font-semibold text-gray-900">{sortedTasks.length}</span> tasks group
+              {sortedTasks.length > 0 && (
                 <span className="ml-2 text-gray-500">
-                  (Showing {startIndex + 1}-{Math.min(endIndex, filteredTasks.length)})
+                  (Showing {startIndex + 1}-{Math.min(endIndex, sortedTasks.length)})
                 </span>
               )}
             </div>
