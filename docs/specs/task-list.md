@@ -1,7 +1,7 @@
 # Task List Screen Specification
 
 > **Status**: Implementation Complete (Frontend Mock)
-> **Last Updated**: 2024-12-28
+> **Last Updated**: 2025-12-28
 > **Screen ID**: SCR_TASK_LIST
 > **Route**: `/tasks/list`
 
@@ -49,9 +49,18 @@ The Task List screen displays a paginated table of task groups with filtering, s
 | Feature | Description | Status |
 |---------|-------------|--------|
 | TODAY tab | Select current date | ✅ Implemented |
-| WEEK tab | Select week number (W01-W53) with year | ✅ Implemented |
-| CUSTOM tab | Dual calendar for date range | ✅ Implemented |
+| WEEK tab | Select week number (W01-W53) with year, tooltip on hover | ✅ Implemented |
+| CUSTOM tab | Dual calendar for date range with left/right click logic | ✅ Implemented |
 | Popup size | 841x582 pixels | ✅ Implemented |
+
+#### CUSTOM Tab - Dual Calendar Logic
+
+| Behavior | Description |
+|----------|-------------|
+| Left calendar click | Always sets start date (From) |
+| Right calendar click | Always sets end date (To) |
+| Validation | Start date must be ≤ End date |
+| Auto-adjust | If selected date violates validation, both dates set to selected date |
 
 ### 3.3 Table Columns
 
@@ -190,6 +199,8 @@ frontend/src/
 | 2024-12-28 | Added ADD NEW navigation |
 | 2024-12-28 | Added task detail navigation |
 | 2024-12-28 | Added sorting for all columns |
+| 2025-12-28 | Updated DatePicker UI: vertical tabs, week grid with tooltips, dual calendar with borders |
+| 2025-12-28 | Added left/right calendar click logic with validation |
 
 ---
 

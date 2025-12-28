@@ -170,7 +170,11 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
     return days;
   };
 
-  const renderCustomCalendar = (calendarDate: Date, setCalendarDate: (date: Date) => void) => {
+  const renderCustomCalendar = (
+    calendarDate: Date,
+    setCalendarDate: (date: Date) => void,
+    calendarType: 'left' | 'right'
+  ) => {
     const year = calendarDate.getFullYear();
     const month = calendarDate.getMonth();
     const days = generateCalendarDays(year, month);
@@ -184,22 +188,24 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
     };
 
     const handleDayClick = (date: Date) => {
-      // Determine if clicking should update from or to date
-      const clickedTime = date.getTime();
-      const fromTime = customFromDate.getTime();
-      const toTime = customToDate.getTime();
-
-      if (clickedTime < fromTime) {
-        setCustomFromDate(date);
-      } else if (clickedTime > toTime) {
-        setCustomToDate(date);
-      } else {
-        // Click is between from and to - update the closest one
-        const diffToFrom = Math.abs(clickedTime - fromTime);
-        const diffToTo = Math.abs(clickedTime - toTime);
-        if (diffToFrom <= diffToTo) {
+      if (calendarType === 'left') {
+        // Left calendar always sets start date
+        // Validate: start date must be <= end date
+        if (date.getTime() <= customToDate.getTime()) {
           setCustomFromDate(date);
         } else {
+          // If selected date > end date, set both to the same date
+          setCustomFromDate(date);
+          setCustomToDate(date);
+        }
+      } else {
+        // Right calendar always sets end date
+        // Validate: end date must be >= start date
+        if (date.getTime() >= customFromDate.getTime()) {
+          setCustomToDate(date);
+        } else {
+          // If selected date < start date, set both to the same date
+          setCustomFromDate(date);
           setCustomToDate(date);
         }
       }
@@ -377,10 +383,10 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
         {/* Dual Calendar */}
         <div className="flex border border-gray-200 rounded-lg gap-4">
           <div className="flex-1 p-3">
-            {renderCustomCalendar(leftCalendarMonth, setLeftCalendarMonth)}
+            {renderCustomCalendar(leftCalendarMonth, setLeftCalendarMonth, 'left')}
           </div>
           <div className="flex-1 p-3">
-            {renderCustomCalendar(rightCalendarMonth, setRightCalendarMonth)}
+            {renderCustomCalendar(rightCalendarMonth, setRightCalendarMonth, 'right')}
           </div>
         </div>
       </div>
