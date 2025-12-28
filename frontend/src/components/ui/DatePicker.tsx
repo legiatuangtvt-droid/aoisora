@@ -26,6 +26,8 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [leftCalendarMonth, setLeftCalendarMonth] = useState<Date>(new Date());
   const [rightCalendarMonth, setRightCalendarMonth] = useState<Date>(new Date());
+  const [selectedDay, setSelectedDay] = useState<Date>(new Date());
+  const [dayCalendarMonth, setDayCalendarMonth] = useState<Date>(new Date());
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -95,14 +97,14 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
   const getDisplayText = (): string => {
     switch (dateMode) {
       case 'DAY':
-        return `DAY: ${formatDate(new Date())}`;
+        return `DAY: ${formatDate(selectedDay)}`;
       case 'WEEK':
         const weekRange = getWeekRange(selectedYear, selectedWeek);
         return `WEEK ${selectedWeek}: ${formatDate(weekRange.from)} - ${formatDate(weekRange.to)}`;
       case 'CUSTOM':
         return `CUSTOM: ${formatDate(customFromDate)} - ${formatDate(customToDate)}`;
       default:
-        return `DAY: ${formatDate(new Date())}`;
+        return `DAY: ${formatDate(selectedDay)}`;
     }
   };
 
@@ -113,12 +115,12 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
       const weekRange = getWeekRange(selectedYear, selectedWeek);
       onDateChange('WEEK', { from: weekRange.from, to: weekRange.to });
     } else {
-      // DAY: from and to are the same day
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const endOfToday = new Date();
-      endOfToday.setHours(23, 59, 59, 999);
-      onDateChange('DAY', { from: today, to: endOfToday });
+      // DAY: from and to are the selected day
+      const dayStart = new Date(selectedDay);
+      dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(selectedDay);
+      dayEnd.setHours(23, 59, 59, 999);
+      onDateChange('DAY', { from: dayStart, to: dayEnd });
     }
     setIsOpen(false);
   };
@@ -345,11 +347,106 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
   };
 
   const renderDayContent = () => {
+    const year = dayCalendarMonth.getFullYear();
+    const month = dayCalendarMonth.getMonth();
+    const days = generateCalendarDays(year, month);
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'];
+
+    const navigateMonth = (direction: number) => {
+      const newDate = new Date(dayCalendarMonth);
+      newDate.setMonth(month + direction);
+      setDayCalendarMonth(newDate);
+    };
+
+    const isSelectedDay = (date: Date) => {
+      return date.toDateString() === selectedDay.toDateString();
+    };
+
+    const isWeekend = (date: Date) => {
+      const day = date.getDay();
+      return day === 0 || day === 6;
+    };
+
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-xl font-semibold text-gray-900 mb-2">Selected Day</p>
-          <p className="text-base text-gray-600">{formatDate(new Date())}</p>
+      <div className="flex-1">
+        {/* Selected date display */}
+        <div className="flex items-center border border-gray-300 rounded overflow-hidden mb-4">
+          <span className="px-3 py-2 text-sm text-gray-500 bg-gray-50 border-r border-gray-300">Date</span>
+          <input
+            type="text"
+            value={formatInputDate(selectedDay)}
+            readOnly
+            className="flex-1 px-3 py-2 text-sm bg-white outline-none"
+          />
+        </div>
+
+        {/* Calendar */}
+        <div className="border border-gray-200 rounded-lg p-3">
+          {/* Calendar Header */}
+          <div className="flex items-center justify-between mb-3">
+            <button
+              onClick={() => navigateMonth(-1)}
+              className="w-6 h-6 flex items-center justify-center hover:bg-gray-100 rounded transition-colors"
+            >
+              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <span className="text-sm font-semibold text-gray-900">{monthNames[month]} {year}</span>
+            <button
+              onClick={() => navigateMonth(1)}
+              className="w-6 h-6 flex items-center justify-center hover:bg-gray-100 rounded transition-colors"
+            >
+              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Days of week */}
+          <div className="grid grid-cols-7 mb-1">
+            {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day, idx) => (
+              <div
+                key={day}
+                className={`text-center text-xs font-medium py-1 ${
+                  idx === 0 || idx === 6 ? 'text-[#C5055B]' : 'text-gray-500'
+                }`}
+              >
+                {day}
+              </div>
+            ))}
+          </div>
+
+          {/* Calendar days */}
+          <div className="grid grid-cols-7">
+            {days.map((dayInfo, index) => {
+              const isSelected = isSelectedDay(dayInfo.date);
+              const weekend = isWeekend(dayInfo.date);
+
+              return (
+                <div
+                  key={index}
+                  className="relative h-8 flex items-center justify-center"
+                >
+                  <button
+                    onClick={() => setSelectedDay(dayInfo.date)}
+                    className={`w-7 h-7 flex items-center justify-center text-xs rounded-full transition-colors ${
+                      isSelected
+                        ? 'bg-[#C5055B] text-white font-medium'
+                        : !dayInfo.isCurrentMonth
+                        ? 'text-gray-300'
+                        : weekend
+                        ? 'text-[#C5055B] hover:bg-pink-50'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    {dayInfo.day}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     );

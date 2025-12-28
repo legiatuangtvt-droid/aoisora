@@ -48,7 +48,7 @@ The Task List screen displays a paginated table of task groups with filtering, s
 
 | Feature | Description | Status |
 |---------|-------------|--------|
-| DAY tab | Select a single day | ✅ Implemented |
+| DAY tab | Select a single day with calendar picker | ✅ Implemented |
 | WEEK tab | Select week number (W01-W53) with year, tooltip on hover | ✅ Implemented |
 | CUSTOM tab | Dual calendar for date range with left/right click logic | ✅ Implemented |
 | Popup size | 841x582 pixels | ✅ Implemented |
@@ -202,6 +202,7 @@ frontend/src/
 | 2025-12-28 | Updated DatePicker UI: vertical tabs, week grid with tooltips, dual calendar with borders |
 | 2025-12-28 | Added left/right calendar click logic with validation |
 | 2025-12-28 | Renamed TODAY tab to DAY for single day selection |
+| 2025-12-28 | Added calendar picker for DAY tab |
 
 ---
 
