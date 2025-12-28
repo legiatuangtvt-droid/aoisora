@@ -311,12 +311,6 @@ export default function DailySchedulePage() {
     setSelectedDate(date);
   };
 
-  // Get shift time range for display
-  const getShiftTimeRange = (shiftCode: ShiftCode | null | undefined): string => {
-    if (!shiftCode) return '-';
-    return `${shiftCode.start_time.substring(0, 5)} - ${shiftCode.end_time.substring(0, 5)}`;
-  };
-
   // Check if time slot is within shift (supports 15-minute intervals)
   const isWithinShift = (hour: number, minute: number, shiftCode: ShiftCode | null | undefined): boolean => {
     if (!shiftCode || shiftCode.shift_code === 'OFF') return false;
@@ -421,7 +415,7 @@ export default function DailySchedulePage() {
                 <span className="text-xs text-gray-500">
                   {backendOnline ? 'Online' : 'Offline (Demo)'}
                 </span>
-                <span className="text-[10px] text-gray-400 ml-1">v16</span>
+                <span className="text-[10px] text-gray-400 ml-1">v17</span>
               </div>
             </div>
           </div>
@@ -540,12 +534,12 @@ export default function DailySchedulePage() {
                 {/* Header */}
                 <thead className="bg-slate-100 sticky top-0 z-20">
                   <tr>
-                    <th className="p-3 border-2 border-gray-300 w-48 min-w-48 sticky left-0 bg-slate-100 z-30 text-left">
+                    <th className="p-2 border-2 border-gray-300 w-52 min-w-52 sticky left-0 bg-slate-100 z-30 text-left">
                       <div className="font-semibold text-gray-700">Nhan vien</div>
                       <div className="text-xs text-gray-500">{formatDate(selectedDate)}</div>
                     </th>
-                    <th className="p-3 border border-gray-300 w-28 min-w-28 text-center">
-                      Ca
+                    <th className="p-2 border border-gray-300 w-24 min-w-24 text-center text-xs font-semibold text-gray-700">
+                      Plan / Actual
                     </th>
                     {timeSlots.map(slot => (
                       <th
@@ -567,31 +561,73 @@ export default function DailySchedulePage() {
 
                     return (
                       <tr key={row.staff.staff_id} className="border-b hover:bg-gray-50">
-                        {/* Staff Info */}
-                        <td className="p-3 border-l-2 border-r border-gray-300 sticky left-0 bg-white z-10 min-w-48">
-                          <div className="font-medium text-gray-800 text-sm">{row.staff.staff_name}</div>
-                          <div className="text-xs text-gray-500">{row.staff.role || 'Staff'}</div>
+                        {/* Staff Info - Left Column (like legacy) */}
+                        <td className="p-2 border-l-2 border-r border-gray-300 sticky left-0 bg-white z-10 min-w-52">
+                          <div className="flex items-start gap-2">
+                            {/* Staff avatar/icon */}
+                            <div
+                              className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold"
+                              style={{
+                                backgroundColor: shiftColor,
+                                color: '#fff',
+                              }}
+                            >
+                              {row.staff.staff_name.charAt(0)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium text-gray-800 text-sm truncate">{row.staff.staff_name}</div>
+                              <div className="flex items-center gap-1 mt-0.5">
+                                {row.shiftCode && (
+                                  <span
+                                    className="px-1.5 py-0.5 rounded text-[10px] font-bold"
+                                    style={{
+                                      backgroundColor: shiftColor,
+                                      color: '#fff',
+                                    }}
+                                  >
+                                    {row.shiftCode.shift_code}
+                                  </span>
+                                )}
+                                <span className="text-[10px] text-gray-500">{row.staff.role || 'Staff'}</span>
+                              </div>
+                            </div>
+                          </div>
                         </td>
 
-                        {/* Shift Code */}
-                        <td className="p-2 border border-gray-300 text-center">
+                        {/* Plan/Actual Column */}
+                        <td className="p-1.5 border border-gray-300 text-center min-w-24">
                           {row.shiftCode ? (
-                            <div>
-                              <div
-                                className="inline-block px-2 py-0.5 rounded text-xs font-bold"
-                                style={{
-                                  backgroundColor: shiftColor,
-                                  color: '#fff',
-                                }}
-                              >
-                                {row.shiftCode.shift_code}
+                            <div className="space-y-0.5">
+                              {/* Plan Time */}
+                              <div className="flex items-center justify-between text-[10px]">
+                                <span className="text-gray-500">Plan:</span>
+                                <span className="font-medium text-gray-700">
+                                  {row.shiftCode.start_time.substring(0, 5)}-{row.shiftCode.end_time.substring(0, 5)}
+                                </span>
                               </div>
-                              <div className="text-[10px] text-gray-500 mt-0.5">
-                                {getShiftTimeRange(row.shiftCode)}
+                              {/* Actual Time (mock - same as plan for demo) */}
+                              <div className="flex items-center justify-between text-[10px]">
+                                <span className="text-gray-500">Actual:</span>
+                                <span className="font-medium text-green-600">
+                                  {row.shiftCode.start_time.substring(0, 5)}-{row.shiftCode.end_time.substring(0, 5)}
+                                </span>
+                              </div>
+                              {/* Progress Bar */}
+                              <div className="mt-1">
+                                <div className="flex items-center justify-between text-[9px] mb-0.5">
+                                  <span className="text-gray-500">Progress</span>
+                                  <span className="font-bold text-blue-600">75%</span>
+                                </div>
+                                <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full bg-blue-500 rounded-full"
+                                    style={{ width: '75%' }}
+                                  />
+                                </div>
                               </div>
                             </div>
                           ) : (
-                            <span className="text-gray-400">-</span>
+                            <span className="text-gray-400 text-xs">OFF</span>
                           )}
                         </td>
 
