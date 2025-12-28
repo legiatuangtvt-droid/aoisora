@@ -20,7 +20,7 @@ export default function TaskListPage() {
   }
 
   // State management
-  const [dateMode, setDateMode] = useState<DateMode>('TODAY');
+  const [dateMode, setDateMode] = useState<DateMode>('DAY');
   const [dateRange, setDateRange] = useState<DateRange>(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);

@@ -39,7 +39,7 @@ The Task List screen displays a paginated table of task groups with filtering, s
 | Component | Description | Status |
 |-----------|-------------|--------|
 | Title | "List tasks" - h1 heading | ✅ Implemented |
-| DatePicker | TODAY/WEEK/CUSTOM date selection | ✅ Implemented |
+| DatePicker | DAY/WEEK/CUSTOM date selection | ✅ Implemented |
 | Search | Text search for task name/dept | ✅ Implemented |
 | Filter Button | Opens filter modal | ✅ Implemented |
 | ADD NEW Button | Navigate to `/tasks/new` | ✅ Implemented |
@@ -48,7 +48,7 @@ The Task List screen displays a paginated table of task groups with filtering, s
 
 | Feature | Description | Status |
 |---------|-------------|--------|
-| TODAY tab | Select current date | ✅ Implemented |
+| DAY tab | Select a single day | ✅ Implemented |
 | WEEK tab | Select week number (W01-W53) with year, tooltip on hover | ✅ Implemented |
 | CUSTOM tab | Dual calendar for date range with left/right click logic | ✅ Implemented |
 | Popup size | 841x582 pixels | ✅ Implemented |
@@ -130,7 +130,7 @@ The Task List screen displays a paginated table of task groups with filtering, s
 ```typescript
 type TaskStatus = 'NOT_YET' | 'DRAFT' | 'DONE';
 type HQCheckStatus = 'NOT_YET' | 'DRAFT' | 'DONE';
-type DateMode = 'TODAY' | 'WEEK' | 'CUSTOM';
+type DateMode = 'DAY' | 'WEEK' | 'CUSTOM';
 
 interface TaskGroup {
   id: string;
@@ -201,6 +201,7 @@ frontend/src/
 | 2024-12-28 | Added sorting for all columns |
 | 2025-12-28 | Updated DatePicker UI: vertical tabs, week grid with tooltips, dual calendar with borders |
 | 2025-12-28 | Added left/right calendar click logic with validation |
+| 2025-12-28 | Renamed TODAY tab to DAY for single day selection |
 
 ---
 
@@ -209,7 +210,7 @@ frontend/src/
 | Spec Item | Original Spec | Current Implementation | Status |
 |-----------|---------------|------------------------|--------|
 | **A.1 Date Display** |
-| TODAY | Tự động lọc task có hiệu lực trong ngày | ✅ Filter tasks by date overlap | ✅ Fixed |
+| DAY | Chọn 1 ngày cụ thể để lọc task | ✅ Filter tasks by date overlap | ✅ Fixed |
 | WEEK | Hover hiển thị tooltip khoảng ngày | ✅ Tooltip on hover | ✅ Fixed |
 | CUSTOM | 2 Calendar, highlight màu hồng nhạt | ✅ Dual calendar with pink highlight | ✅ Fixed |
 | **A.2 Search Bar** |

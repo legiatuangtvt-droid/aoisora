@@ -94,15 +94,15 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
 
   const getDisplayText = (): string => {
     switch (dateMode) {
-      case 'TODAY':
-        return `TODAY: ${formatDate(new Date())}`;
+      case 'DAY':
+        return `DAY: ${formatDate(new Date())}`;
       case 'WEEK':
         const weekRange = getWeekRange(selectedYear, selectedWeek);
         return `WEEK ${selectedWeek}: ${formatDate(weekRange.from)} - ${formatDate(weekRange.to)}`;
       case 'CUSTOM':
         return `CUSTOM: ${formatDate(customFromDate)} - ${formatDate(customToDate)}`;
       default:
-        return `TODAY: ${formatDate(new Date())}`;
+        return `DAY: ${formatDate(new Date())}`;
     }
   };
 
@@ -113,12 +113,12 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
       const weekRange = getWeekRange(selectedYear, selectedWeek);
       onDateChange('WEEK', { from: weekRange.from, to: weekRange.to });
     } else {
-      // TODAY: from and to are the same day
+      // DAY: from and to are the same day
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const endOfToday = new Date();
       endOfToday.setHours(23, 59, 59, 999);
-      onDateChange('TODAY', { from: today, to: endOfToday });
+      onDateChange('DAY', { from: today, to: endOfToday });
     }
     setIsOpen(false);
   };
@@ -344,11 +344,11 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
     );
   };
 
-  const renderTodayContent = () => {
+  const renderDayContent = () => {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-xl font-semibold text-gray-900 mb-2">Today</p>
+          <p className="text-xl font-semibold text-gray-900 mb-2">Selected Day</p>
           <p className="text-base text-gray-600">{formatDate(new Date())}</p>
         </div>
       </div>
@@ -414,14 +414,14 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
           {/* Left side - Tabs */}
           <div className="w-20 py-4">
             <button
-              onClick={() => setActiveTab('TODAY')}
+              onClick={() => setActiveTab('DAY')}
               className={`w-full px-3 py-2 text-left text-sm font-medium transition-colors ${
-                activeTab === 'TODAY'
+                activeTab === 'DAY'
                   ? 'bg-pink-50 text-[#C5055B] border-l-2 border-[#C5055B]'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
-              TODAY
+              DAY
             </button>
             <button
               onClick={() => setActiveTab('WEEK')}
@@ -472,7 +472,7 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
 
             {/* Content area */}
             <div className="flex-1 p-4">
-              {activeTab === 'TODAY' && renderTodayContent()}
+              {activeTab === 'DAY' && renderDayContent()}
               {activeTab === 'WEEK' && renderWeekPicker()}
               {activeTab === 'CUSTOM' && renderCustomContent()}
             </div>
