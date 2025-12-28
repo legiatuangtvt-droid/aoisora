@@ -277,13 +277,13 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
               <button
                 key={week}
                 onClick={() => setSelectedWeek(week)}
-                className={`px-2 py-2 text-sm rounded transition-colors ${
+                className={`px-2 py-2 text-sm rounded transition-colors whitespace-nowrap ${
                   selectedWeek === week
                     ? 'bg-[#C5055B] text-white font-medium'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                W {week.toString().padStart(2, '0')}
+                W&nbsp;{week.toString().padStart(2, '0')}
               </button>
             );
           })}
