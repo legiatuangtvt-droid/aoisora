@@ -6,19 +6,9 @@ import { useRouter } from 'next/navigation';
 import { TaskGroup, DateMode, TaskFilters } from '@/types/tasks';
 import { mockTaskGroups } from '@/data/mockTasks';
 import StatusPill from '@/components/ui/StatusPill';
-import SearchBar from '@/components/ui/SearchBar';
 import FilterModal from '@/components/tasks/FilterModal';
 import DatePicker from '@/components/ui/DatePicker';
 import ColumnFilterDropdown from '@/components/ui/ColumnFilterDropdown';
-
-// Sorting types
-type SortField = 'no' | 'dept' | 'taskGroupName' | 'startDate' | 'progress' | 'unable' | 'status' | 'hqCheck';
-type SortDirection = 'asc' | 'desc' | null;
-
-interface SortConfig {
-  field: SortField | null;
-  direction: SortDirection;
-}
 
 export default function TaskListPage() {
   const router = useRouter();
@@ -49,9 +39,6 @@ export default function TaskListPage() {
     hqCheck: [],
   });
 
-  // Sorting state
-  const [sortConfig, setSortConfig] = useState<SortConfig>({ field: null, direction: null });
-
   // Column filter states
   const [deptColumnFilter, setDeptColumnFilter] = useState<string[]>([]);
   const [statusColumnFilter, setStatusColumnFilter] = useState<string[]>([]);
@@ -80,41 +67,6 @@ export default function TaskListPage() {
   // Apply filters handler
   const handleApplyFilters = (newFilters: TaskFilters) => {
     setFilters(newFilters);
-  };
-
-  // Handle column sorting
-  const handleSort = (field: SortField) => {
-    setSortConfig((prev) => {
-      if (prev.field === field) {
-        // Cycle through: asc -> desc -> null
-        if (prev.direction === 'asc') return { field, direction: 'desc' };
-        if (prev.direction === 'desc') return { field: null, direction: null };
-      }
-      return { field, direction: 'asc' };
-    });
-  };
-
-  // Get sort icon based on current sort state
-  const getSortIcon = (field: SortField) => {
-    if (sortConfig.field !== field) {
-      return (
-        <svg className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-        </svg>
-      );
-    }
-    if (sortConfig.direction === 'asc') {
-      return (
-        <svg className="w-4 h-4 text-pink-600 cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-        </svg>
-      );
-    }
-    return (
-      <svg className="w-4 h-4 text-pink-600 cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-      </svg>
-    );
   };
 
   // Date change handler
@@ -175,44 +127,11 @@ export default function TaskListPage() {
     return matchesDateRange && matchesSearch && matchesDeptModal && matchesDeptColumn && matchesStatusModal && matchesStatusColumn && matchesHQCheckModal && matchesHQCheckColumn;
   });
 
-  // Sort tasks based on sortConfig
-  const sortedTasks = [...filteredTasks].sort((a, b) => {
-    if (!sortConfig.field || !sortConfig.direction) return 0;
-
-    const field = sortConfig.field;
-    const direction = sortConfig.direction === 'asc' ? 1 : -1;
-
-    switch (field) {
-      case 'no':
-        return (a.no - b.no) * direction;
-      case 'dept':
-        return a.dept.localeCompare(b.dept) * direction;
-      case 'taskGroupName':
-        return a.taskGroupName.localeCompare(b.taskGroupName) * direction;
-      case 'startDate':
-        return a.startDate.localeCompare(b.startDate) * direction;
-      case 'progress':
-        const aProgress = a.progress.completed / a.progress.total;
-        const bProgress = b.progress.completed / b.progress.total;
-        return (aProgress - bProgress) * direction;
-      case 'unable':
-        return (a.unable - b.unable) * direction;
-      case 'status':
-        const statusOrder = { 'NOT_YET': 0, 'DRAFT': 1, 'DONE': 2 };
-        return (statusOrder[a.status] - statusOrder[b.status]) * direction;
-      case 'hqCheck':
-        const hqOrder = { 'NOT_YET': 0, 'DRAFT': 1, 'DONE': 2 };
-        return (hqOrder[a.hqCheck] - hqOrder[b.hqCheck]) * direction;
-      default:
-        return 0;
-    }
-  });
-
-  // Calculate pagination (use sortedTasks instead of filteredTasks)
-  const totalPages = Math.ceil(sortedTasks.length / itemsPerPage);
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredTasks.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedTasks = sortedTasks.slice(startIndex, endIndex);
+  const paginatedTasks = filteredTasks.slice(startIndex, endIndex);
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -280,26 +199,12 @@ export default function TaskListPage() {
         <table className="w-full">
           <thead className="bg-pink-50">
               <tr>
-                <th
-                  className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50 cursor-pointer hover:bg-pink-100 transition-colors"
-                  onClick={() => handleSort('no')}
-                >
-                  <div className="flex items-center justify-center gap-2">
-                    No
-                    {getSortIcon('no')}
-                  </div>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
+                  No
                 </th>
-                <th
-                  className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50"
-                >
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
                   <div className="flex items-center justify-center gap-1">
-                    <span
-                      className="cursor-pointer hover:text-pink-600 transition-colors"
-                      onClick={() => handleSort('dept')}
-                    >
-                      Dept
-                    </span>
-                    {getSortIcon('dept')}
+                    <span>Dept</span>
                     <ColumnFilterDropdown
                       options={uniqueDepts}
                       selectedValues={deptColumnFilter}
@@ -308,53 +213,21 @@ export default function TaskListPage() {
                     />
                   </div>
                 </th>
-                <th
-                  className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50 cursor-pointer hover:bg-pink-100 transition-colors"
-                  onClick={() => handleSort('taskGroupName')}
-                >
-                  <div className="flex items-center justify-center gap-2">
-                    Task Group
-                    {getSortIcon('taskGroupName')}
-                  </div>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
+                  Task Group
                 </th>
-                <th
-                  className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50 cursor-pointer hover:bg-pink-100 transition-colors"
-                  onClick={() => handleSort('startDate')}
-                >
-                  <div className="flex items-center justify-center gap-2">
-                    Start → End
-                    {getSortIcon('startDate')}
-                  </div>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
+                  Start → End
                 </th>
-                <th
-                  className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50 cursor-pointer hover:bg-pink-100 transition-colors"
-                  onClick={() => handleSort('progress')}
-                >
-                  <div className="flex items-center justify-center gap-2">
-                    Progress
-                    {getSortIcon('progress')}
-                  </div>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
+                  Progress
                 </th>
-                <th
-                  className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50 cursor-pointer hover:bg-pink-100 transition-colors"
-                  onClick={() => handleSort('unable')}
-                >
-                  <div className="flex items-center justify-center gap-2">
-                    Unable
-                    {getSortIcon('unable')}
-                  </div>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
+                  Unable
                 </th>
-                <th
-                  className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50"
-                >
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
                   <div className="flex items-center justify-center gap-1">
-                    <span
-                      className="cursor-pointer hover:text-pink-600 transition-colors"
-                      onClick={() => handleSort('status')}
-                    >
-                      Status
-                    </span>
-                    {getSortIcon('status')}
+                    <span>Status</span>
                     <ColumnFilterDropdown
                       options={statusOptions}
                       selectedValues={statusColumnFilter}
@@ -363,17 +236,9 @@ export default function TaskListPage() {
                     />
                   </div>
                 </th>
-                <th
-                  className="px-4 py-3 text-center text-xs font-semibold text-gray-700 bg-pink-50"
-                >
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 bg-pink-50">
                   <div className="flex items-center justify-center gap-1">
-                    <span
-                      className="cursor-pointer hover:text-pink-600 transition-colors"
-                      onClick={() => handleSort('hqCheck')}
-                    >
-                      HQ Check
-                    </span>
-                    {getSortIcon('hqCheck')}
+                    <span>HQ Check</span>
                     <ColumnFilterDropdown
                       options={hqCheckOptions}
                       selectedValues={hqCheckColumnFilter}
@@ -496,10 +361,10 @@ export default function TaskListPage() {
         <div className="bg-white px-4 py-3 border-t border-gray-200">
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-600">
-              Total: <span className="font-semibold text-gray-900">{sortedTasks.length}</span> tasks group
-              {sortedTasks.length > 0 && (
+              Total: <span className="font-semibold text-gray-900">{filteredTasks.length}</span> tasks group
+              {filteredTasks.length > 0 && (
                 <span className="ml-2 text-gray-500">
-                  (Showing {startIndex + 1}-{Math.min(endIndex, sortedTasks.length)})
+                  (Showing {startIndex + 1}-{Math.min(endIndex, filteredTasks.length)})
                 </span>
               )}
             </div>
