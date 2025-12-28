@@ -169,9 +169,9 @@ export default function Sidebar() {
             )}
           </button>
 
-          {/* Children */}
-          {isExpanded && isMenuExpanded && item.children && (
-            <div className="ml-4 mt-1 space-y-1 border-l-2 border-gray-200 dark:border-gray-700">
+          {/* Children - show when expanded OR when collapsed but menu is open */}
+          {isMenuExpanded && item.children && (
+            <div className={`mt-1 space-y-1 ${isExpanded ? 'ml-4 border-l-2 border-gray-200 dark:border-gray-700' : ''}`}>
               {item.children.map(child => renderMenuItem(child, true))}
             </div>
           )}
@@ -180,12 +180,14 @@ export default function Sidebar() {
     }
 
     // Regular menu item or child item
+    const childCollapsedStyle = isChild && !isExpanded ? 'pl-1' : '';
+
     return (
       <Link
         key={item.id}
         href={item.route}
         title={!isExpanded ? item.label : undefined}
-        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isChild ? 'ml-2' : ''} ${
+        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isChild && isExpanded ? 'ml-2' : ''} ${childCollapsedStyle} ${
           isActive(item.route)
             ? 'bg-pink-50 dark:bg-pink-900/20 text-[#C5055B] dark:text-pink-400'
             : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
@@ -193,7 +195,7 @@ export default function Sidebar() {
       >
         <MenuIcon
           name={item.icon}
-          className={`w-5 h-5 flex-shrink-0 ${isActive(item.route) ? 'text-[#C5055B] dark:text-pink-400' : ''}`}
+          className={`${isChild && !isExpanded ? 'w-4 h-4' : 'w-5 h-5'} flex-shrink-0 ${isActive(item.route) ? 'text-[#C5055B] dark:text-pink-400' : ''}`}
         />
         {isExpanded && (
           <span className="text-sm font-medium whitespace-nowrap overflow-hidden">
