@@ -13,6 +13,78 @@ import {
 } from '@/lib/api';
 import type { Store, Staff, ShiftAssignment, ShiftCode } from '@/types/api';
 
+// Task Group colors from legacy system
+const TASK_GROUP_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  POS: { bg: '#e2e8f0', text: '#1e293b', border: '#94a3b8' },
+  PERI: { bg: '#bbf7d0', text: '#166534', border: '#4ade80' },
+  DRY: { bg: '#bfdbfe', text: '#1e40af', border: '#60a5fa' },
+  MMD: { bg: '#fde68a', text: '#92400e', border: '#facc15' },
+  LEADER: { bg: '#99f6e4', text: '#134e4a', border: '#2dd4bf' },
+  'QC-FSH': { bg: '#e9d5ff', text: '#6b21a8', border: '#c084fc' },
+  DELICA: { bg: '#c7d2fe', text: '#3730a3', border: '#818cf8' },
+  DND: { bg: '#fecaca', text: '#991b1b', border: '#f87171' },
+  OTHER: { bg: '#fbcfe8', text: '#9d174d', border: '#f472b6' },
+};
+
+// Task assignment for a time slot
+interface ScheduledTask {
+  taskCode: string;
+  taskName: string;
+  groupId: string;
+  startTime: string; // HH:MM
+  endTime: string;   // HH:MM
+}
+
+// Mock scheduled tasks per staff (for demo)
+const MOCK_SCHEDULED_TASKS: Record<number, ScheduledTask[]> = {
+  1: [ // Staff ID 1 - Leader
+    { taskCode: '1501', taskName: 'Mở kho', groupId: 'LEADER', startTime: '06:00', endTime: '06:15' },
+    { taskCode: '1505', taskName: 'Balancing', groupId: 'LEADER', startTime: '06:15', endTime: '06:30' },
+    { taskCode: '0101', taskName: 'Mở POS', groupId: 'POS', startTime: '06:30', endTime: '06:45' },
+    { taskCode: '0801', taskName: 'Cleaning Time', groupId: 'QC-FSH', startTime: '09:00', endTime: '09:15' },
+    { taskCode: '1510', taskName: 'Bàn giao tiền', groupId: 'LEADER', startTime: '10:00', endTime: '10:30' },
+    { taskCode: '0102', taskName: 'Hỗ trợ POS', groupId: 'POS', startTime: '11:00', endTime: '12:00' },
+    { taskCode: '1005', taskName: 'Break Time', groupId: 'OTHER', startTime: '12:00', endTime: '13:00' },
+  ],
+  2: [ // Staff ID 2
+    { taskCode: '0201', taskName: 'Lên hàng thịt cá', groupId: 'PERI', startTime: '06:00', endTime: '07:00' },
+    { taskCode: '0202', taskName: 'Lên hàng rau củ', groupId: 'PERI', startTime: '07:00', endTime: '08:00' },
+    { taskCode: '0801', taskName: 'Cleaning Time', groupId: 'QC-FSH', startTime: '09:00', endTime: '09:15' },
+    { taskCode: '0205', taskName: 'Cắt gọt', groupId: 'PERI', startTime: '10:00', endTime: '10:30' },
+    { taskCode: '1005', taskName: 'Break Time', groupId: 'OTHER', startTime: '11:00', endTime: '12:00' },
+    { taskCode: '0210', taskName: 'Giảm giá Peri', groupId: 'PERI', startTime: '12:00', endTime: '12:30' },
+  ],
+  3: [ // Staff ID 3
+    { taskCode: '0301', taskName: 'Lên hàng khô', groupId: 'DRY', startTime: '06:00', endTime: '07:30' },
+    { taskCode: '0801', taskName: 'Cleaning Time', groupId: 'QC-FSH', startTime: '09:00', endTime: '09:15' },
+    { taskCode: '0304', taskName: 'Bắn OOS', groupId: 'DRY', startTime: '10:00', endTime: '10:30' },
+    { taskCode: '1005', taskName: 'Break Time', groupId: 'OTHER', startTime: '11:00', endTime: '12:00' },
+    { taskCode: '0302', taskName: 'Kéo mặt Dry', groupId: 'DRY', startTime: '12:30', endTime: '13:00' },
+  ],
+  4: [ // Staff ID 4
+    { taskCode: '0401', taskName: 'Nhận hàng Peri', groupId: 'MMD', startTime: '06:00', endTime: '07:00' },
+    { taskCode: '0405', taskName: 'Nhận hàng D&D', groupId: 'MMD', startTime: '07:00', endTime: '08:00' },
+    { taskCode: '0801', taskName: 'Cleaning Time', groupId: 'QC-FSH', startTime: '09:00', endTime: '09:15' },
+    { taskCode: '0403', taskName: 'Nhận hàng RDC', groupId: 'MMD', startTime: '11:00', endTime: '12:30' },
+    { taskCode: '1005', taskName: 'Break Time', groupId: 'OTHER', startTime: '12:30', endTime: '13:30' },
+  ],
+  5: [ // Staff ID 5
+    { taskCode: '0501', taskName: 'Pha chế Cafe', groupId: 'DELICA', startTime: '06:00', endTime: '06:30' },
+    { taskCode: '0503', taskName: 'Lên hàng Delica', groupId: 'DELICA', startTime: '07:00', endTime: '07:30' },
+    { taskCode: '0801', taskName: 'Cleaning Time', groupId: 'QC-FSH', startTime: '09:00', endTime: '09:15' },
+    { taskCode: '0504', taskName: 'Kéo mặt Delica', groupId: 'DELICA', startTime: '10:00', endTime: '10:15' },
+    { taskCode: '1005', taskName: 'Break Time', groupId: 'OTHER', startTime: '11:00', endTime: '12:00' },
+    { taskCode: '0505', taskName: 'Kiểm tra HSD', groupId: 'DELICA', startTime: '12:00', endTime: '12:15' },
+  ],
+  6: [ // Staff ID 6
+    { taskCode: '0601', taskName: 'Lên hàng D&D', groupId: 'DND', startTime: '06:00', endTime: '06:45' },
+    { taskCode: '0602', taskName: 'Kéo mặt D&D', groupId: 'DND', startTime: '07:00', endTime: '07:15' },
+    { taskCode: '0801', taskName: 'Cleaning Time', groupId: 'QC-FSH', startTime: '09:00', endTime: '09:15' },
+    { taskCode: '0604', taskName: 'Đặt hàng D&D', groupId: 'DND', startTime: '10:00', endTime: '10:30' },
+    { taskCode: '1005', taskName: 'Break Time', groupId: 'OTHER', startTime: '11:00', endTime: '12:00' },
+  ],
+};
+
 // Mock data from JSON files (subset for demo)
 const MOCK_STORES: Store[] = [
   { store_id: 1, store_code: 'AMPM_D1_NCT', store_name: 'AEON MaxValu Nguyen Cu Trinh', region_id: null, address: 'Quan 1, TP.HCM', phone: null, email: null, manager_id: null, status: 'ACTIVE', created_at: '', updated_at: '' },
@@ -264,17 +336,39 @@ export default function DailySchedulePage() {
     }
   };
 
-  // Check if this is the first slot of shift (to show label)
-  const isFirstSlotOfShift = (hour: number, minute: number, shiftCode: ShiftCode | null | undefined): boolean => {
-    if (!shiftCode || shiftCode.shift_code === 'OFF') return false;
-    const [startH, startM] = shiftCode.start_time.split(':').map(Number);
-    return hour === startH && minute === startM;
-  };
-
   // Get shift color
   const getShiftColor = (shiftCode: ShiftCode | null | undefined): string => {
     if (!shiftCode || !shiftCode.color_code) return '#E5E7EB';
     return shiftCode.color_code;
+  };
+
+  // Get task for a specific time slot
+  const getTaskForSlot = (staffId: number, hour: number, minute: number): ScheduledTask | null => {
+    const tasks = MOCK_SCHEDULED_TASKS[staffId];
+    if (!tasks) return null;
+
+    const slotTime = hour * 60 + minute;
+
+    for (const task of tasks) {
+      const [startH, startM] = task.startTime.split(':').map(Number);
+      const [endH, endM] = task.endTime.split(':').map(Number);
+      const startMinutes = startH * 60 + startM;
+      const endMinutes = endH * 60 + endM;
+
+      if (slotTime >= startMinutes && slotTime < endMinutes) {
+        return task;
+      }
+    }
+    return null;
+  };
+
+  // Check if this is the first slot of a task (to show task name)
+  const isFirstSlotOfTask = (staffId: number, hour: number, minute: number): boolean => {
+    const task = getTaskForSlot(staffId, hour, minute);
+    if (!task) return false;
+
+    const [startH, startM] = task.startTime.split(':').map(Number);
+    return hour === startH && minute === startM;
   };
 
   // Handle Check Task button
@@ -327,7 +421,7 @@ export default function DailySchedulePage() {
                 <span className="text-xs text-gray-500">
                   {backendOnline ? 'Online' : 'Offline (Demo)'}
                 </span>
-                <span className="text-[10px] text-gray-400 ml-1">v15</span>
+                <span className="text-[10px] text-gray-400 ml-1">v16</span>
               </div>
             </div>
           </div>
@@ -504,7 +598,9 @@ export default function DailySchedulePage() {
                         {/* Time Slots - 15 minute intervals */}
                         {timeSlots.map(slot => {
                           const isActive = isWithinShift(slot.hour, slot.minute, row.shiftCode);
-                          const isFirstSlot = isFirstSlotOfShift(slot.hour, slot.minute, row.shiftCode);
+                          const task = getTaskForSlot(row.staff.staff_id, slot.hour, slot.minute);
+                          const isFirstTaskSlot = isFirstSlotOfTask(row.staff.staff_id, slot.hour, slot.minute);
+                          const taskColors = task ? TASK_GROUP_COLORS[task.groupId] : null;
                           const now = new Date();
                           const currentSlotMinutes = now.getHours() * 60 + Math.floor(now.getMinutes() / 15) * 15;
                           const slotMinutes = slot.hour * 60 + slot.minute;
@@ -515,20 +611,32 @@ export default function DailySchedulePage() {
                               key={`${row.staff.staff_id}-${slot.time}`}
                               className={`p-0 border border-gray-200 ${
                                 slot.isHourStart ? 'border-l-2 border-l-gray-300' : ''
-                              } ${isCurrentSlot ? 'bg-amber-100' : ''}`}
+                              } ${isCurrentSlot ? 'bg-amber-50' : ''}`}
                             >
-                              {isActive && (
+                              {task && taskColors ? (
                                 <div
-                                  className="h-7 flex items-center justify-center"
-                                  style={{ backgroundColor: `${shiftColor}90` }}
+                                  className="h-7 flex items-center justify-center border-y"
+                                  style={{
+                                    backgroundColor: taskColors.bg,
+                                    borderColor: taskColors.border,
+                                  }}
+                                  title={`${task.taskName} (${task.taskCode})`}
                                 >
-                                  {isFirstSlot && (
-                                    <span className="text-[8px] font-bold text-white truncate drop-shadow-sm">
-                                      {row.shiftCode?.shift_code}
+                                  {isFirstTaskSlot && (
+                                    <span
+                                      className="text-[7px] font-bold truncate px-0.5 leading-tight"
+                                      style={{ color: taskColors.text }}
+                                    >
+                                      {task.taskCode}
                                     </span>
                                   )}
                                 </div>
-                              )}
+                              ) : isActive ? (
+                                <div
+                                  className="h-7 flex items-center justify-center"
+                                  style={{ backgroundColor: `${shiftColor}30` }}
+                                />
+                              ) : null}
                             </td>
                           );
                         })}
