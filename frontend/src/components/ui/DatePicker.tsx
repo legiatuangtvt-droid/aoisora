@@ -375,11 +375,11 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
         </div>
 
         {/* Dual Calendar */}
-        <div className="flex gap-4">
-          <div className="flex-1 border border-gray-200 rounded-lg p-3">
+        <div className="flex border border-gray-200 rounded-lg gap-4">
+          <div className="flex-1 p-3">
             {renderCustomCalendar(leftCalendarMonth, setLeftCalendarMonth)}
           </div>
-          <div className="flex-1 border border-gray-200 rounded-lg p-3">
+          <div className="flex-1 p-3">
             {renderCustomCalendar(rightCalendarMonth, setRightCalendarMonth)}
           </div>
         </div>
@@ -406,7 +406,7 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
       {isOpen && (
         <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 flex" style={{ minWidth: activeTab === 'CUSTOM' ? '520px' : '580px' }}>
           {/* Left side - Tabs */}
-          <div className="w-20 border-r border-gray-200 py-4">
+          <div className="w-20 py-4">
             <button
               onClick={() => setActiveTab('TODAY')}
               className={`w-full px-3 py-2 text-left text-sm font-medium transition-colors ${
@@ -443,7 +443,7 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
           <div className="flex-1 flex flex-col">
             {/* Year selector (for WEEK mode) */}
             {activeTab === 'WEEK' && (
-              <div className="flex items-center justify-end gap-2 px-4 py-3 border-b border-gray-200">
+              <div className="flex items-center justify-end gap-2 px-4 py-3">
                 <button
                   onClick={() => setSelectedYear(selectedYear - 1)}
                   className="w-6 h-6 flex items-center justify-center hover:bg-gray-100 rounded transition-colors"
@@ -472,7 +472,7 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center justify-end gap-3 px-4 py-3 border-t border-gray-200">
+            <div className="flex items-center justify-end gap-3 px-4 py-3">
               <button
                 onClick={handleApply}
                 className="px-6 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition-colors"
