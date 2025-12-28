@@ -337,6 +337,85 @@ export interface ManHourSummary {
 }
 
 // ============================================
+// Task Group Types (DWS - Daily Schedule)
+// ============================================
+
+export interface TaskGroup {
+  group_id: string;  // POS, PERI, DRY, etc.
+  group_code: string;
+  group_name: string | null;
+  priority: number;
+  sort_order: number;
+  color_bg: string | null;    // #e2e8f0
+  color_text: string | null;  // #1e293b
+  color_border: string | null; // #94a3b8
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface TaskGroupCreate {
+  group_id: string;
+  group_code: string;
+  group_name?: string;
+  priority?: number;
+  sort_order?: number;
+  color_bg?: string;
+  color_text?: string;
+  color_border?: string;
+  is_active?: boolean;
+}
+
+// ============================================
+// Daily Schedule Task Types (DWS)
+// ============================================
+
+export interface DailyScheduleTask {
+  schedule_task_id: number;
+  staff_id: number;
+  store_id: number | null;
+  schedule_date: string;  // YYYY-MM-DD
+  group_id: string | null;
+  task_code: string;
+  task_name: string;
+  start_time: string;  // HH:MM:SS
+  end_time: string;    // HH:MM:SS
+  status: 'pending' | 'in_progress' | 'completed' | 'skipped';
+  completed_at: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  task_group?: TaskGroup;
+}
+
+export interface DailyScheduleTaskCreate {
+  staff_id: number;
+  store_id?: number;
+  schedule_date: string;
+  group_id?: string;
+  task_code: string;
+  task_name: string;
+  start_time: string;
+  end_time: string;
+  status?: string;
+  notes?: string;
+}
+
+export interface DailyScheduleTaskUpdate {
+  status?: string;
+  notes?: string;
+  completed_at?: string;
+}
+
+export interface StaffDailySchedule {
+  staff_id: number;
+  staff_name: string;
+  schedule_date: string;
+  tasks: DailyScheduleTask[];
+  total_tasks: number;
+  completed_tasks: number;
+}
+
+// ============================================
 // Notification Types
 // ============================================
 

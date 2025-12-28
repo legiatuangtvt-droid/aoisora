@@ -31,6 +31,12 @@ import type {
   Notification,
   NotificationCreate,
   NotificationListResponse,
+  TaskGroup,
+  TaskGroupCreate,
+  DailyScheduleTask,
+  DailyScheduleTaskCreate,
+  DailyScheduleTaskUpdate,
+  StaffDailySchedule,
 } from '@/types/api';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
@@ -500,6 +506,93 @@ export async function deleteNotification(id: number): Promise<{ message: string 
 
 export async function clearReadNotifications(): Promise<{ message: string }> {
   return fetchApi<{ message: string }>('/notifications/clear-read', {
+    method: 'DELETE',
+  });
+}
+
+// ============================================
+// Task Group API (DWS - Daily Schedule)
+// ============================================
+
+export async function getTaskGroups(activeOnly?: boolean): Promise<TaskGroup[]> {
+  const query = activeOnly !== undefined ? `?is_active=${activeOnly}` : '';
+  return fetchApi<TaskGroup[]>(`/shifts/task-groups/${query}`);
+}
+
+export async function getTaskGroupById(groupId: string): Promise<TaskGroup> {
+  return fetchApi<TaskGroup>(`/shifts/task-groups/${groupId}`);
+}
+
+export async function createTaskGroup(data: TaskGroupCreate): Promise<TaskGroup> {
+  return fetchApi<TaskGroup>('/shifts/task-groups/', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+// ============================================
+// Daily Schedule Task API (DWS)
+// ============================================
+
+export async function getScheduleTasks(params?: {
+  store_id?: number;
+  staff_id?: number;
+  schedule_date?: string;
+  group_id?: string;
+  status?: string;
+  skip?: number;
+  limit?: number;
+}): Promise<DailyScheduleTask[]> {
+  const searchParams = new URLSearchParams();
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        searchParams.append(key, String(value));
+      }
+    });
+  }
+  const query = searchParams.toString();
+  return fetchApi<DailyScheduleTask[]>(`/shifts/schedule-tasks/${query ? `?${query}` : ''}`);
+}
+
+export async function getScheduleTaskById(taskId: number): Promise<DailyScheduleTask> {
+  return fetchApi<DailyScheduleTask>(`/shifts/schedule-tasks/${taskId}`);
+}
+
+export async function getStaffDailySchedule(
+  staffId: number,
+  scheduleDate: string
+): Promise<StaffDailySchedule> {
+  return fetchApi<StaffDailySchedule>(
+    `/shifts/schedule-tasks/by-staff/${staffId}?schedule_date=${scheduleDate}`
+  );
+}
+
+export async function createScheduleTask(data: DailyScheduleTaskCreate): Promise<DailyScheduleTask> {
+  return fetchApi<DailyScheduleTask>('/shifts/schedule-tasks/', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateScheduleTask(
+  taskId: number,
+  data: DailyScheduleTaskUpdate
+): Promise<DailyScheduleTask> {
+  return fetchApi<DailyScheduleTask>(`/shifts/schedule-tasks/${taskId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function completeScheduleTask(taskId: number): Promise<DailyScheduleTask> {
+  return fetchApi<DailyScheduleTask>(`/shifts/schedule-tasks/${taskId}/complete`, {
+    method: 'PUT',
+  });
+}
+
+export async function deleteScheduleTask(taskId: number): Promise<{ message: string }> {
+  return fetchApi<{ message: string }>(`/shifts/schedule-tasks/${taskId}`, {
     method: 'DELETE',
   });
 }

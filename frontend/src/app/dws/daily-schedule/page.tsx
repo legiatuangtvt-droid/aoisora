@@ -13,26 +13,28 @@ import {
 } from '@/lib/api';
 import type { Store, Staff, ShiftAssignment, ShiftCode } from '@/types/api';
 
-// Task Group colors from legacy system
-const TASK_GROUP_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  POS: { bg: '#e2e8f0', text: '#1e293b', border: '#94a3b8' },
-  PERI: { bg: '#bbf7d0', text: '#166534', border: '#4ade80' },
-  DRY: { bg: '#bfdbfe', text: '#1e40af', border: '#60a5fa' },
-  MMD: { bg: '#fde68a', text: '#92400e', border: '#facc15' },
-  LEADER: { bg: '#99f6e4', text: '#134e4a', border: '#2dd4bf' },
-  'QC-FSH': { bg: '#e9d5ff', text: '#6b21a8', border: '#c084fc' },
-  DELICA: { bg: '#c7d2fe', text: '#3730a3', border: '#818cf8' },
-  DND: { bg: '#fecaca', text: '#991b1b', border: '#f87171' },
-  OTHER: { bg: '#fbcfe8', text: '#9d174d', border: '#f472b6' },
+// Task Group colors from legacy system - matching data-task_groups.json
+const TASK_GROUP_COLORS: Record<string, { bg: string; text: string; border: string; name: string }> = {
+  POS: { bg: '#e2e8f0', text: '#1e293b', border: '#94a3b8', name: 'Thu ngan' },
+  PERI: { bg: '#bbf7d0', text: '#166534', border: '#4ade80', name: 'Tuoi song' },
+  DRY: { bg: '#bfdbfe', text: '#1e40af', border: '#60a5fa', name: 'Hang kho' },
+  MMD: { bg: '#fde68a', text: '#92400e', border: '#facc15', name: 'Nhan hang' },
+  LEADER: { bg: '#99f6e4', text: '#134e4a', border: '#2dd4bf', name: 'Quan ly' },
+  'QC-FSH': { bg: '#e9d5ff', text: '#6b21a8', border: '#c084fc', name: 'Ve sinh' },
+  DELICA: { bg: '#c7d2fe', text: '#3730a3', border: '#818cf8', name: 'Delica' },
+  DND: { bg: '#fecaca', text: '#991b1b', border: '#f87171', name: 'D&D' },
+  OTHER: { bg: '#fbcfe8', text: '#9d174d', border: '#f472b6', name: 'Khac' },
 };
 
-// Task assignment for a time slot
+// Task assignment for a time slot (matching legacy daily-templates format)
 interface ScheduledTask {
   taskCode: string;
   taskName: string;
   groupId: string;
   startTime: string; // HH:MM
   endTime: string;   // HH:MM
+  isComplete?: 0 | 1;  // Legacy uses 0/1, optional for mock
+  awardedPoints?: number;
 }
 
 // Mock scheduled tasks per staff (for demo)
@@ -147,14 +149,6 @@ function getMonday(date: Date): Date {
   return d;
 }
 
-// Time slot type - now with 15-minute intervals
-interface TimeSlot {
-  time: string;
-  hour: number;
-  minute: number; // 0, 15, 30, 45
-  isHourStart: boolean; // true if minute is 0
-}
-
 // Schedule row type
 interface ScheduleRow {
   staff: Staff;
@@ -189,21 +183,7 @@ export default function DailySchedulePage() {
     });
   }, [selectedDate]);
 
-  // Time slots from 05:00 to 23:00 with 15-minute intervals (4 slots per hour)
-  const timeSlots: TimeSlot[] = useMemo(() => {
-    const slots: TimeSlot[] = [];
-    for (let hour = 5; hour <= 23; hour++) {
-      for (const minute of [0, 15, 30, 45]) {
-        slots.push({
-          time: `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`,
-          hour,
-          minute,
-          isHourStart: minute === 0,
-        });
-      }
-    }
-    return slots;
-  }, []);
+  // Time slots generation moved inline to hour columns in render
 
   // Load initial data
   useEffect(() => {
@@ -309,31 +289,6 @@ export default function DailySchedulePage() {
 
   const selectDay = (date: Date) => {
     setSelectedDate(date);
-  };
-
-  // Check if time slot is within shift (supports 15-minute intervals)
-  const isWithinShift = (hour: number, minute: number, shiftCode: ShiftCode | null | undefined): boolean => {
-    if (!shiftCode || shiftCode.shift_code === 'OFF') return false;
-
-    const [startH, startM] = shiftCode.start_time.split(':').map(Number);
-    const [endH, endM] = shiftCode.end_time.split(':').map(Number);
-
-    const slotMinutes = hour * 60 + minute;
-    const startMinutes = startH * 60 + startM;
-    const endMinutes = endH * 60 + endM;
-
-    if (startMinutes < endMinutes) {
-      return slotMinutes >= startMinutes && slotMinutes < endMinutes;
-    } else {
-      // Handle overnight shifts
-      return slotMinutes >= startMinutes || slotMinutes < endMinutes;
-    }
-  };
-
-  // Get shift color
-  const getShiftColor = (shiftCode: ShiftCode | null | undefined): string => {
-    if (!shiftCode || !shiftCode.color_code) return '#E5E7EB';
-    return shiftCode.color_code;
   };
 
   // Get task for a specific time slot
@@ -590,153 +545,159 @@ export default function DailySchedulePage() {
               </div>
             </div>
           ) : (
-            <div className="overflow-auto flex-1">
-              <table className="min-w-full border-collapse">
-                {/* Header */}
-                <thead className="bg-slate-100 sticky top-0 z-20">
+            <div className="overflow-auto flex-1" id="schedule-grid-container">
+              <table className="min-w-full border-collapse table-fixed">
+                {/* Header - like legacy with completion rate */}
+                <thead className="bg-slate-100 border-2 border-b-black sticky top-0 z-20">
                   <tr>
-                    <th className="p-2 border-2 border-gray-300 w-52 min-w-52 sticky left-0 bg-slate-100 z-30 text-left">
-                      <div className="font-semibold text-gray-700">Nhan vien</div>
-                      <div className="text-xs text-gray-500">{formatDate(selectedDate)}</div>
+                    {/* First column - Store completion rate like legacy */}
+                    <th className="p-2 border border-black w-40 min-w-40 sticky left-0 bg-slate-100 z-30">
+                      <div className="relative w-full h-full flex items-center justify-center" title="Ty le hoan thanh cua cua hang">
+                        <svg className="w-16 h-16" viewBox="0 0 36 36">
+                          <path className="stroke-slate-300" strokeWidth="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                          <path className="stroke-indigo-500" strokeWidth="4" fill="none" strokeDasharray="68, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center text-base font-bold text-indigo-600">68%</div>
+                      </div>
                     </th>
-                    <th className="p-2 border border-gray-300 w-24 min-w-24 text-center text-xs font-semibold text-gray-700">
-                      Plan / Actual
-                    </th>
-                    {timeSlots.map(slot => (
+                    {/* Hour columns - each hour gets 4 quarter slots */}
+                    {Array.from({ length: 19 }, (_, i) => i + 5).map(hour => (
                       <th
-                        key={slot.time}
-                        className={`p-1 border border-gray-300 min-w-[22px] w-[22px] text-center font-medium text-gray-600 text-[10px] ${
-                          slot.isHourStart ? 'border-l-2 border-l-gray-400' : ''
-                        }`}
+                        key={hour}
+                        data-hour={hour}
+                        className="p-2 border border-black min-w-[310px] text-center font-semibold text-slate-700"
+                        colSpan={4}
                       >
-                        {slot.isHourStart ? slot.time.substring(0, 2) : ''}
+                        <div className="flex justify-between items-center">
+                          <span className="text-blue-600 text-sm">
+                            <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span className="text-xs">1.25</span>
+                          </span>
+                          <span className="text-2xl">{String(hour).padStart(2, '0')}:00</span>
+                          <span className="text-green-600 text-sm">
+                            <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                            <span className="text-xs">1.50</span>
+                          </span>
+                        </div>
                       </th>
                     ))}
                   </tr>
                 </thead>
 
-                {/* Body */}
+                {/* Body - like legacy with tall rows and task cards */}
                 <tbody>
                   {scheduleRows.map(row => {
-                    const shiftColor = getShiftColor(row.shiftCode);
+                    const staffTasks = MOCK_SCHEDULED_TASKS[row.staff.staff_id] || [];
+                    const completedCount = staffTasks.filter(t => t.isComplete === 1).length;
+                    const totalCount = staffTasks.length;
+                    const completionRate = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+                    const experiencePoints = staffTasks.reduce((sum, t) => sum + (t.awardedPoints || 5), 0);
 
                     return (
-                      <tr key={row.staff.staff_id} className="border-b hover:bg-gray-50">
+                      <tr key={row.staff.staff_id} className="border-b-2 border-black">
                         {/* Staff Info - Left Column (like legacy) */}
-                        <td className="p-2 border-l-2 border-r border-gray-300 sticky left-0 bg-white z-10 min-w-52">
-                          <div className="flex items-start gap-2">
-                            {/* Staff avatar/icon */}
-                            <div
-                              className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold"
-                              style={{
-                                backgroundColor: shiftColor,
-                                color: '#fff',
-                              }}
-                            >
-                              {row.staff.staff_name.charAt(0)}
+                        <td className="h-[106px] align-middle border-l-2 border-r-2 border-black sticky left-0 bg-white z-10 min-w-40 flex flex-col transition-all">
+                          {/* Row 1: Name, Position, Experience Points */}
+                          <div className="relative text-center flex-shrink-0 p-1">
+                            <div className="text-sm font-semibold text-slate-800">{row.staff.staff_name}</div>
+                            <div className="text-xs text-slate-600">{row.staff.role || 'Staff'}</div>
+                            <div className="absolute bottom-1 right-2 text-xs text-amber-600 font-bold" title="Diem kinh nghiem">
+                              <svg className="w-3 h-3 inline text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                              </svg>
+                              {experiencePoints.toLocaleString()}
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium text-gray-800 text-sm truncate">{row.staff.staff_name}</div>
-                              <div className="flex items-center gap-1 mt-0.5">
-                                {row.shiftCode && (
-                                  <span
-                                    className="px-1.5 py-0.5 rounded text-[10px] font-bold"
-                                    style={{
-                                      backgroundColor: shiftColor,
-                                      color: '#fff',
-                                    }}
-                                  >
-                                    {row.shiftCode.shift_code}
-                                  </span>
-                                )}
-                                <span className="text-[10px] text-gray-500">{row.staff.role || 'Staff'}</span>
+                          </div>
+
+                          {/* Row 2: Plan/Actual and Progress Ring */}
+                          <div className="flex justify-between items-stretch flex-grow border-t border-black">
+                            {/* Left: Plan/Actual and Alert */}
+                            <div className="text-xs whitespace-nowrap border-r border-black flex-grow p-1">
+                              {row.shiftCode ? (
+                                <>
+                                  <div><strong>Plan:</strong> {row.shiftCode.shift_code}: {row.shiftCode.start_time.substring(0, 5)}~{row.shiftCode.end_time.substring(0, 5)}</div>
+                                  <div><strong>Actual:</strong> {row.shiftCode.start_time.substring(0, 5)}~{row.shiftCode.end_time.substring(0, 5)}</div>
+                                  <div className="text-green-600 font-semibold">
+                                    <svg className="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    Dung gio
+                                  </div>
+                                </>
+                              ) : (
+                                <div className="text-gray-400">OFF</div>
+                              )}
+                            </div>
+
+                            {/* Right: Progress Ring */}
+                            <div className="relative w-12 h-12 flex-shrink-0 self-center mx-2" title={`Ty le hoan thanh: ${completionRate}%`}>
+                              <svg className="w-full h-full" viewBox="0 0 36 36">
+                                <path className="stroke-slate-200" strokeWidth="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                                <path className="stroke-green-500" strokeWidth="4" fill="none" strokeDasharray={`${completionRate}, 100`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                              </svg>
+                              <div className="absolute inset-0 flex flex-col items-center justify-center leading-tight">
+                                <span className="text-xs font-bold text-green-600">{completionRate}%</span>
+                                <span className="text-[10px] font-semibold text-amber-600">+{experiencePoints}</span>
                               </div>
                             </div>
                           </div>
+
+                          {/* Row 3: Sub-tasks */}
+                          <div className="border-t pb-[2px] border-black text-xs p-1">
+                            <strong>Sub-tasks:</strong> {staffTasks.length > 0 ? staffTasks.slice(0, 2).map(t => t.taskName).join(', ') : 'N/A'}...
+                          </div>
                         </td>
 
-                        {/* Plan/Actual Column */}
-                        <td className="p-1.5 border border-gray-300 text-center min-w-24">
-                          {row.shiftCode ? (
-                            <div className="space-y-0.5">
-                              {/* Plan Time */}
-                              <div className="flex items-center justify-between text-[10px]">
-                                <span className="text-gray-500">Plan:</span>
-                                <span className="font-medium text-gray-700">
-                                  {row.shiftCode.start_time.substring(0, 5)}-{row.shiftCode.end_time.substring(0, 5)}
-                                </span>
-                              </div>
-                              {/* Actual Time (mock - same as plan for demo) */}
-                              <div className="flex items-center justify-between text-[10px]">
-                                <span className="text-gray-500">Actual:</span>
-                                <span className="font-medium text-green-600">
-                                  {row.shiftCode.start_time.substring(0, 5)}-{row.shiftCode.end_time.substring(0, 5)}
-                                </span>
-                              </div>
-                              {/* Progress Bar */}
-                              <div className="mt-1">
-                                <div className="flex items-center justify-between text-[9px] mb-0.5">
-                                  <span className="text-gray-500">Progress</span>
-                                  <span className="font-bold text-blue-600">75%</span>
-                                </div>
-                                <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                        {/* Time Slots - 15 minute intervals with task cards */}
+                        {Array.from({ length: 19 }, (_, hourIdx) => hourIdx + 5).map(hour => (
+                          <td key={`${row.staff.staff_id}-hour-${hour}`} className="p-0 border border-black align-middle">
+                            <div className="grid grid-cols-4 h-[104px]">
+                              {[0, 15, 30, 45].map(minute => {
+                                const slotTime = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+                                const task = getTaskForSlot(row.staff.staff_id, hour, minute);
+                                const isFirstTaskSlot = isFirstSlotOfTask(row.staff.staff_id, hour, minute);
+                                const taskColors = task ? TASK_GROUP_COLORS[task.groupId] : null;
+                                const now = new Date();
+                                const currentHour = now.getHours();
+                                const currentMinute = now.getMinutes();
+                                const currentQuarter = currentMinute < 15 ? 0 : currentMinute < 30 ? 15 : currentMinute < 45 ? 30 : 45;
+                                const isCurrentSlot = hour === currentHour && minute === currentQuarter && formatDate(selectedDate) === formatDate(now);
+
+                                return (
                                   <div
-                                    className="h-full bg-blue-500 rounded-full"
-                                    style={{ width: '75%' }}
-                                  />
-                                </div>
-                              </div>
+                                    key={`${slotTime}`}
+                                    className={`quarter-hour-slot border-r border-dashed border-slate-200 last:border-r-0 flex justify-center items-center ${
+                                      isCurrentSlot ? 'bg-amber-100' : ''
+                                    }`}
+                                    data-time={`${String(hour).padStart(2, '0')}:00`}
+                                    data-quarter={String(minute).padStart(2, '0')}
+                                  >
+                                    {task && taskColors && isFirstTaskSlot && (
+                                      <div
+                                        className="scheduled-task-item relative w-[70px] h-[100px] border-2 text-xs p-1 rounded-md shadow-sm flex flex-col justify-between items-center text-center cursor-pointer hover:shadow-md transition-shadow"
+                                        style={{
+                                          backgroundColor: taskColors.bg,
+                                          color: taskColors.text,
+                                          borderColor: taskColors.border,
+                                        }}
+                                        title={`${task.taskName} (${task.taskCode})`}
+                                      >
+                                        <div className="task-content flex-grow flex flex-col justify-center">
+                                          <span className="overflow-hidden text-ellipsis text-[10px] leading-tight">{task.taskName}</span>
+                                        </div>
+                                        <span className="task-content font-semibold mt-auto text-[11px]">{task.taskCode}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
                             </div>
-                          ) : (
-                            <span className="text-gray-400 text-xs">OFF</span>
-                          )}
-                        </td>
-
-                        {/* Time Slots - 15 minute intervals */}
-                        {timeSlots.map(slot => {
-                          const isActive = isWithinShift(slot.hour, slot.minute, row.shiftCode);
-                          const task = getTaskForSlot(row.staff.staff_id, slot.hour, slot.minute);
-                          const isFirstTaskSlot = isFirstSlotOfTask(row.staff.staff_id, slot.hour, slot.minute);
-                          const taskColors = task ? TASK_GROUP_COLORS[task.groupId] : null;
-                          const now = new Date();
-                          const currentSlotMinutes = now.getHours() * 60 + Math.floor(now.getMinutes() / 15) * 15;
-                          const slotMinutes = slot.hour * 60 + slot.minute;
-                          const isCurrentSlot = slotMinutes === currentSlotMinutes && formatDate(selectedDate) === formatDate(now);
-
-                          return (
-                            <td
-                              key={`${row.staff.staff_id}-${slot.time}`}
-                              className={`p-0 border border-gray-200 ${
-                                slot.isHourStart ? 'border-l-2 border-l-gray-300' : ''
-                              } ${isCurrentSlot ? 'bg-amber-50' : ''}`}
-                            >
-                              {task && taskColors ? (
-                                <div
-                                  className="h-7 flex items-center justify-center border-y"
-                                  style={{
-                                    backgroundColor: taskColors.bg,
-                                    borderColor: taskColors.border,
-                                  }}
-                                  title={`${task.taskName} (${task.taskCode})`}
-                                >
-                                  {isFirstTaskSlot && (
-                                    <span
-                                      className="text-[7px] font-bold truncate px-0.5 leading-tight"
-                                      style={{ color: taskColors.text }}
-                                    >
-                                      {task.taskCode}
-                                    </span>
-                                  )}
-                                </div>
-                              ) : isActive ? (
-                                <div
-                                  className="h-7 flex items-center justify-center"
-                                  style={{ backgroundColor: `${shiftColor}30` }}
-                                />
-                              ) : null}
-                            </td>
-                          );
-                        })}
+                          </td>
+                        ))}
                       </tr>
                     );
                   })}
