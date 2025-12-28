@@ -203,6 +203,7 @@ frontend/src/
 | 2025-12-28 | Added left/right calendar click logic with validation |
 | 2025-12-28 | Renamed TODAY tab to DAY for single day selection |
 | 2025-12-28 | Added calendar picker for DAY tab |
+| 2025-12-28 | Added today highlight with border in all calendars |
 
 ---
 

@@ -233,6 +233,11 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
       return day === 0 || day === 6;
     };
 
+    const isToday = (date: Date) => {
+      const today = new Date();
+      return date.toDateString() === today.toDateString();
+    };
+
     return (
       <div className="flex-1">
         {/* Calendar Header */}
@@ -277,6 +282,7 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
             const isEnd = isRangeEnd(dayInfo.date);
             const inRange = isInRange(dayInfo.date);
             const weekend = isWeekend(dayInfo.date);
+            const today = isToday(dayInfo.date);
 
             return (
               <div
@@ -292,6 +298,8 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
                   className={`w-7 h-7 flex items-center justify-center text-xs rounded-full transition-colors ${
                     isStart || isEnd
                       ? 'bg-[#C5055B] text-white font-medium'
+                      : today
+                      ? 'border-2 border-[#C5055B] text-[#C5055B] font-medium'
                       : !dayInfo.isCurrentMonth
                       ? 'text-gray-300'
                       : weekend
@@ -368,6 +376,11 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
       return day === 0 || day === 6;
     };
 
+    const isToday = (date: Date) => {
+      const today = new Date();
+      return date.toDateString() === today.toDateString();
+    };
+
     return (
       <div className="flex-1">
         {/* Selected date display */}
@@ -423,6 +436,7 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
             {days.map((dayInfo, index) => {
               const isSelected = isSelectedDay(dayInfo.date);
               const weekend = isWeekend(dayInfo.date);
+              const today = isToday(dayInfo.date);
 
               return (
                 <div
@@ -434,6 +448,8 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
                     className={`w-7 h-7 flex items-center justify-center text-xs rounded-full transition-colors ${
                       isSelected
                         ? 'bg-[#C5055B] text-white font-medium'
+                        : today
+                        ? 'border-2 border-[#C5055B] text-[#C5055B] font-medium'
                         : !dayInfo.isCurrentMonth
                         ? 'text-gray-300'
                         : weekend
