@@ -217,7 +217,10 @@ export default function TaskListPage() {
               )}
             </button>
 
-            <button className="flex items-center gap-2 px-5 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm font-medium">
+            <button
+              onClick={() => router.push('/tasks/new')}
+              className="flex items-center gap-2 px-5 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm font-medium"
+            >
               <span className="text-lg">+</span>
               ADD NEW
             </button>
