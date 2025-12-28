@@ -1,0 +1,173 @@
+'use client';
+
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
+import { useSidebar } from '@/contexts/SidebarContext';
+import { MenuItem } from '@/types/layout';
+
+// Menu items configuration
+const menuItems: MenuItem[] = [
+  {
+    id: 'hq-store',
+    label: 'Task list HQ-Store',
+    icon: 'clipboard-list',
+    route: '/tasks/hq-store',
+  },
+  {
+    id: 'list-task',
+    label: 'List task',
+    icon: 'list',
+    route: '/tasks/list',
+  },
+  {
+    id: 'detail',
+    label: 'Detail',
+    icon: 'document',
+    route: '/tasks/detail',
+  },
+  {
+    id: 'message',
+    label: 'Message',
+    icon: 'chat',
+    route: '/messages',
+  },
+  {
+    id: 'todo',
+    label: 'To-do Task',
+    icon: 'check-circle',
+    route: '/todo',
+  },
+  {
+    id: 'library',
+    label: 'Task Library',
+    icon: 'library',
+    route: '/library',
+  },
+  {
+    id: 'report',
+    label: 'Report',
+    icon: 'chart',
+    route: '/reports',
+  },
+  {
+    id: 'users',
+    label: 'User management',
+    icon: 'users',
+    route: '/users',
+  },
+];
+
+// Icon component
+function MenuIcon({ name, className = '' }: { name: string; className?: string }) {
+  const iconMap: Record<string, JSX.Element> = {
+    'clipboard-list': (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+      </svg>
+    ),
+    'list': (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+      </svg>
+    ),
+    'document': (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+    ),
+    'chat': (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+      </svg>
+    ),
+    'check-circle': (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+    'library': (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+      </svg>
+    ),
+    'chart': (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+      </svg>
+    ),
+    'users': (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+      </svg>
+    ),
+  };
+
+  return iconMap[name] || <span className={className}>?</span>;
+}
+
+export default function Sidebar() {
+  const { isExpanded, toggleSidebar } = useSidebar();
+  const pathname = usePathname();
+
+  const isActive = (route: string) => {
+    if (route === '/tasks/list' && pathname === '/tasks/list') return true;
+    if (route !== '/tasks/list' && pathname.startsWith(route)) return true;
+    return false;
+  };
+
+  return (
+    <aside
+      className={`fixed left-0 top-16 h-[calc(100vh-4rem)] bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 z-40 ${
+        isExpanded ? 'w-60' : 'w-16'
+      }`}
+    >
+      {/* Toggle Button */}
+      <button
+        onClick={toggleSidebar}
+        className="absolute -right-3 top-6 w-6 h-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors shadow-sm"
+      >
+        <svg
+          className={`w-4 h-4 text-gray-500 transition-transform ${isExpanded ? '' : 'rotate-180'}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+
+      {/* Menu Items */}
+      <nav className="p-3 space-y-1">
+        {menuItems.map((item) => (
+          <Link
+            key={item.id}
+            href={item.route}
+            title={!isExpanded ? item.label : undefined}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+              isActive(item.route)
+                ? 'bg-pink-50 dark:bg-pink-900/20 text-[#C5055B] dark:text-pink-400'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+            }`}
+          >
+            <MenuIcon
+              name={item.icon}
+              className={`w-5 h-5 flex-shrink-0 ${
+                isActive(item.route) ? 'text-[#C5055B] dark:text-pink-400' : ''
+              }`}
+            />
+            {isExpanded && (
+              <span className="text-sm font-medium whitespace-nowrap overflow-hidden">
+                {item.label}
+              </span>
+            )}
+            {item.badge && isExpanded && (
+              <span className="ml-auto px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">
+                {item.badge}
+              </span>
+            )}
+          </Link>
+        ))}
+      </nav>
+    </aside>
+  );
+}
