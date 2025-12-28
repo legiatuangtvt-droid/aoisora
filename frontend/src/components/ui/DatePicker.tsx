@@ -258,25 +258,22 @@ export default function DatePicker({ dateMode, onDateChange }: DatePickerProps) 
     const columns = 9;
     const rows = Math.ceil(totalWeeks / columns);
 
-    const weekRange = getWeekRange(selectedYear, selectedWeek);
-
     return (
       <div className="flex-1">
-        {/* Week range display */}
-        <div className="text-sm text-gray-600 mb-4">
-          {formatShortDate(weekRange.from)} – {formatShortDate(weekRange.to)}
-        </div>
-
         {/* Week grid */}
         <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}>
           {Array.from({ length: rows * columns }, (_, i) => {
             const week = i + 1;
             if (week > totalWeeks) return <div key={i} />;
 
+            const weekRange = getWeekRange(selectedYear, week);
+            const tooltipText = `${formatShortDate(weekRange.from)} – ${formatShortDate(weekRange.to)}`;
+
             return (
               <button
                 key={week}
                 onClick={() => setSelectedWeek(week)}
+                title={tooltipText}
                 className={`px-2 py-2 text-sm rounded transition-colors whitespace-nowrap ${
                   selectedWeek === week
                     ? 'bg-[#C5055B] text-white font-medium'
