@@ -37,56 +37,299 @@ interface ScheduledTask {
   awardedPoints?: number;
 }
 
-// Mock scheduled tasks per staff (for demo)
+// Mock scheduled tasks per staff (for demo) - Matches seed_data.py
+// CA SÁNG: Staff 1-4 (06:00-14:00), CA CHIỀU: Staff 5-8 (14:30-22:30)
+// Mỗi khung giờ 15 phút có đủ 4 task từ 4 nhân viên trong ca
 const MOCK_SCHEDULED_TASKS: Record<number, ScheduledTask[]> = {
-  1: [ // Staff ID 1 - Leader (with multiple tasks at same time slot for testing)
+  // ========== CA SÁNG ==========
+  1: [ // Staff 1 - Leader ca sáng
+    // 06:00 slot - 4 tasks cùng lúc với staff 2,3,4
     { taskCode: '1501', taskName: 'Mở kho', groupId: 'LEADER', startTime: '06:00', endTime: '06:15' },
-    { taskCode: '0101', taskName: 'Mở POS', groupId: 'POS', startTime: '06:00', endTime: '06:15' },
-    { taskCode: '0801', taskName: 'Clean', groupId: 'QC-FSH', startTime: '06:00', endTime: '06:15' },
-    { taskCode: '0201', taskName: 'Check', groupId: 'PERI', startTime: '06:00', endTime: '06:15' },
     { taskCode: '1505', taskName: 'Balancing', groupId: 'LEADER', startTime: '06:15', endTime: '06:30' },
-    { taskCode: '0102', taskName: 'Mở POS 2', groupId: 'POS', startTime: '06:30', endTime: '06:45' },
-    { taskCode: '0802', taskName: 'Cleaning Time', groupId: 'QC-FSH', startTime: '09:00', endTime: '09:15' },
-    { taskCode: '1510', taskName: 'Bàn giao tiền', groupId: 'LEADER', startTime: '10:00', endTime: '10:30' },
-    { taskCode: '0103', taskName: 'Hỗ trợ POS', groupId: 'POS', startTime: '11:00', endTime: '12:00' },
-    { taskCode: '1005', taskName: 'Break Time', groupId: 'OTHER', startTime: '12:00', endTime: '13:00' },
+    { taskCode: '0101', taskName: 'Mở POS', groupId: 'POS', startTime: '06:30', endTime: '06:45' },
+    { taskCode: '0102', taskName: 'Check POS', groupId: 'POS', startTime: '06:45', endTime: '07:00' },
+    // 07:00 slot
+    { taskCode: '1506', taskName: 'Kiểm hàng', groupId: 'LEADER', startTime: '07:00', endTime: '07:15' },
+    { taskCode: '1507', taskName: 'Duyệt đơn', groupId: 'LEADER', startTime: '07:15', endTime: '07:30' },
+    { taskCode: '1508', taskName: 'Giao việc', groupId: 'LEADER', startTime: '07:30', endTime: '07:45' },
+    { taskCode: '0103', taskName: 'Hỗ trợ POS', groupId: 'POS', startTime: '07:45', endTime: '08:00' },
+    // 08:00 slot
+    { taskCode: '1509', taskName: 'Meeting', groupId: 'LEADER', startTime: '08:00', endTime: '08:15' },
+    { taskCode: '0104', taskName: 'Đối soát', groupId: 'POS', startTime: '08:15', endTime: '08:30' },
+    { taskCode: '0105', taskName: 'In báo cáo', groupId: 'POS', startTime: '08:30', endTime: '08:45' },
+    { taskCode: '0106', taskName: 'Kiểm POS', groupId: 'POS', startTime: '08:45', endTime: '09:00' },
+    // 09:00 slot - Cleaning
+    { taskCode: '0801', taskName: 'Cleaning', groupId: 'QC-FSH', startTime: '09:00', endTime: '09:15' },
+    { taskCode: '0802', taskName: 'Kiểm VSC', groupId: 'QC-FSH', startTime: '09:15', endTime: '09:30' },
+    { taskCode: '0803', taskName: 'VS khu POS', groupId: 'QC-FSH', startTime: '09:30', endTime: '09:45' },
+    { taskCode: '1510', taskName: 'Bàn giao', groupId: 'LEADER', startTime: '09:45', endTime: '10:00' },
+    // 10:00-11:00
+    { taskCode: '1511', taskName: 'Check OOS', groupId: 'LEADER', startTime: '10:00', endTime: '10:15' },
+    { taskCode: '1512', taskName: 'Duyệt KM', groupId: 'LEADER', startTime: '10:15', endTime: '10:30' },
+    { taskCode: '0107', taskName: 'Đổi tiền', groupId: 'POS', startTime: '10:30', endTime: '10:45' },
+    { taskCode: '0108', taskName: 'Voucher', groupId: 'POS', startTime: '10:45', endTime: '11:00' },
+    // 11:00-12:00
+    { taskCode: '0109', taskName: 'Phục vụ', groupId: 'POS', startTime: '11:00', endTime: '11:15' },
+    { taskCode: '0110', taskName: 'Thanh toán', groupId: 'POS', startTime: '11:15', endTime: '11:30' },
+    { taskCode: '0111', taskName: 'Khiếu nại', groupId: 'POS', startTime: '11:30', endTime: '11:45' },
+    { taskCode: '1513', taskName: 'Giám sát', groupId: 'LEADER', startTime: '11:45', endTime: '12:00' },
+    // 12:00-13:00 Break
+    { taskCode: '1005', taskName: 'Break', groupId: 'OTHER', startTime: '12:00', endTime: '12:15' },
+    { taskCode: '1006', taskName: 'Break', groupId: 'OTHER', startTime: '12:15', endTime: '12:30' },
+    { taskCode: '1007', taskName: 'Break', groupId: 'OTHER', startTime: '12:30', endTime: '12:45' },
+    { taskCode: '1008', taskName: 'Break', groupId: 'OTHER', startTime: '12:45', endTime: '13:00' },
+    // 13:00-14:00
+    { taskCode: '1514', taskName: 'Chuẩn bị', groupId: 'LEADER', startTime: '13:00', endTime: '13:15' },
+    { taskCode: '1515', taskName: 'Đóng kho', groupId: 'LEADER', startTime: '13:15', endTime: '13:30' },
+    { taskCode: '0112', taskName: 'Kiểm POS', groupId: 'POS', startTime: '13:30', endTime: '13:45' },
+    { taskCode: '1516', taskName: 'Bàn giao', groupId: 'LEADER', startTime: '13:45', endTime: '14:00' },
   ],
-  2: [ // Staff ID 2
-    { taskCode: '0201', taskName: 'Lên hàng thịt cá', groupId: 'PERI', startTime: '06:00', endTime: '07:00' },
-    { taskCode: '0202', taskName: 'Lên hàng rau củ', groupId: 'PERI', startTime: '07:00', endTime: '08:00' },
-    { taskCode: '0801', taskName: 'Cleaning Time', groupId: 'QC-FSH', startTime: '09:00', endTime: '09:15' },
-    { taskCode: '0205', taskName: 'Cắt gọt', groupId: 'PERI', startTime: '10:00', endTime: '10:30' },
-    { taskCode: '1005', taskName: 'Break Time', groupId: 'OTHER', startTime: '11:00', endTime: '12:00' },
-    { taskCode: '0210', taskName: 'Giảm giá Peri', groupId: 'PERI', startTime: '12:00', endTime: '12:30' },
+  2: [ // Staff 2 - PERI ca sáng
+    // 06:00 slot
+    { taskCode: '0201', taskName: 'Lên thịt', groupId: 'PERI', startTime: '06:00', endTime: '06:15' },
+    { taskCode: '0202', taskName: 'Lên rau', groupId: 'PERI', startTime: '06:15', endTime: '06:30' },
+    { taskCode: '0203', taskName: 'Sắp kệ', groupId: 'PERI', startTime: '06:30', endTime: '06:45' },
+    { taskCode: '0204', taskName: 'Kiểm HSD', groupId: 'PERI', startTime: '06:45', endTime: '07:00' },
+    // 07:00 slot
+    { taskCode: '0205', taskName: 'Cắt gọt', groupId: 'PERI', startTime: '07:00', endTime: '07:15' },
+    { taskCode: '0206', taskName: 'Đóng gói', groupId: 'PERI', startTime: '07:15', endTime: '07:30' },
+    { taskCode: '0207', taskName: 'Cân gói', groupId: 'PERI', startTime: '07:30', endTime: '07:45' },
+    { taskCode: '0208', taskName: 'Dán nhãn', groupId: 'PERI', startTime: '07:45', endTime: '08:00' },
+    // 08:00 slot
+    { taskCode: '0209', taskName: 'Bổ sung', groupId: 'PERI', startTime: '08:00', endTime: '08:15' },
+    { taskCode: '0210', taskName: 'Giảm giá', groupId: 'PERI', startTime: '08:15', endTime: '08:30' },
+    { taskCode: '0211', taskName: 'FIFO', groupId: 'PERI', startTime: '08:30', endTime: '08:45' },
+    { taskCode: '0212', taskName: 'Nhiệt độ', groupId: 'PERI', startTime: '08:45', endTime: '09:00' },
+    // 09:00 slot
+    { taskCode: '0801', taskName: 'Cleaning', groupId: 'QC-FSH', startTime: '09:00', endTime: '09:15' },
+    { taskCode: '0804', taskName: 'VS Peri', groupId: 'QC-FSH', startTime: '09:15', endTime: '09:30' },
+    { taskCode: '0213', taskName: 'Kiểm kho', groupId: 'PERI', startTime: '09:30', endTime: '09:45' },
+    { taskCode: '0214', taskName: 'Đặt hàng', groupId: 'PERI', startTime: '09:45', endTime: '10:00' },
+    // 10:00-14:00 (tiếp tục)
+    { taskCode: '0215', taskName: 'Hàng hư', groupId: 'PERI', startTime: '10:00', endTime: '10:15' },
+    { taskCode: '0216', taskName: 'Cắt gọt', groupId: 'PERI', startTime: '10:15', endTime: '10:30' },
+    { taskCode: '0217', taskName: 'Kéo mặt', groupId: 'PERI', startTime: '10:30', endTime: '10:45' },
+    { taskCode: '0218', taskName: 'OOS Peri', groupId: 'PERI', startTime: '10:45', endTime: '11:00' },
+    { taskCode: '0219', taskName: 'Lên trưa', groupId: 'PERI', startTime: '11:00', endTime: '11:15' },
+    { taskCode: '0220', taskName: 'Salad', groupId: 'PERI', startTime: '11:15', endTime: '11:30' },
+    { taskCode: '0221', taskName: 'Kệ lạnh', groupId: 'PERI', startTime: '11:30', endTime: '11:45' },
+    { taskCode: '0222', taskName: 'CB giảm', groupId: 'PERI', startTime: '11:45', endTime: '12:00' },
+    // Break
+    { taskCode: '1005', taskName: 'Break', groupId: 'OTHER', startTime: '12:00', endTime: '12:15' },
+    { taskCode: '1006', taskName: 'Break', groupId: 'OTHER', startTime: '12:15', endTime: '12:30' },
+    { taskCode: '1007', taskName: 'Break', groupId: 'OTHER', startTime: '12:30', endTime: '12:45' },
+    { taskCode: '1008', taskName: 'Break', groupId: 'OTHER', startTime: '12:45', endTime: '13:00' },
+    // 13:00-14:00
+    { taskCode: '0223', taskName: 'Giảm trưa', groupId: 'PERI', startTime: '13:00', endTime: '13:15' },
+    { taskCode: '0224', taskName: 'Hàng tồn', groupId: 'PERI', startTime: '13:15', endTime: '13:30' },
+    { taskCode: '0225', taskName: 'Vệ sinh', groupId: 'PERI', startTime: '13:30', endTime: '13:45' },
+    { taskCode: '0226', taskName: 'Bàn giao', groupId: 'PERI', startTime: '13:45', endTime: '14:00' },
   ],
-  3: [ // Staff ID 3
-    { taskCode: '0301', taskName: 'Lên hàng khô', groupId: 'DRY', startTime: '06:00', endTime: '07:30' },
-    { taskCode: '0801', taskName: 'Cleaning Time', groupId: 'QC-FSH', startTime: '09:00', endTime: '09:15' },
-    { taskCode: '0304', taskName: 'Bắn OOS', groupId: 'DRY', startTime: '10:00', endTime: '10:30' },
-    { taskCode: '1005', taskName: 'Break Time', groupId: 'OTHER', startTime: '11:00', endTime: '12:00' },
-    { taskCode: '0302', taskName: 'Kéo mặt Dry', groupId: 'DRY', startTime: '12:30', endTime: '13:00' },
+  3: [ // Staff 3 - DRY ca sáng
+    { taskCode: '0301', taskName: 'Lên khô', groupId: 'DRY', startTime: '06:00', endTime: '06:15' },
+    { taskCode: '0302', taskName: 'Kéo mặt', groupId: 'DRY', startTime: '06:15', endTime: '06:30' },
+    { taskCode: '0303', taskName: 'Sắp kệ', groupId: 'DRY', startTime: '06:30', endTime: '06:45' },
+    { taskCode: '0304', taskName: 'Bắn OOS', groupId: 'DRY', startTime: '06:45', endTime: '07:00' },
+    { taskCode: '0305', taskName: 'HSD Dry', groupId: 'DRY', startTime: '07:00', endTime: '07:15' },
+    { taskCode: '0306', taskName: 'FIFO', groupId: 'DRY', startTime: '07:15', endTime: '07:30' },
+    { taskCode: '0307', taskName: 'Dán nhãn', groupId: 'DRY', startTime: '07:30', endTime: '07:45' },
+    { taskCode: '0308', taskName: 'Check giá', groupId: 'DRY', startTime: '07:45', endTime: '08:00' },
+    { taskCode: '0309', taskName: 'Bổ sung', groupId: 'DRY', startTime: '08:00', endTime: '08:15' },
+    { taskCode: '0310', taskName: 'Promo', groupId: 'DRY', startTime: '08:15', endTime: '08:30' },
+    { taskCode: '0311', taskName: 'Endcap', groupId: 'DRY', startTime: '08:30', endTime: '08:45' },
+    { taskCode: '0312', taskName: 'VS kệ', groupId: 'DRY', startTime: '08:45', endTime: '09:00' },
+    { taskCode: '0801', taskName: 'Cleaning', groupId: 'QC-FSH', startTime: '09:00', endTime: '09:15' },
+    { taskCode: '0805', taskName: 'VS Dry', groupId: 'QC-FSH', startTime: '09:15', endTime: '09:30' },
+    { taskCode: '0313', taskName: 'Kiểm kho', groupId: 'DRY', startTime: '09:30', endTime: '09:45' },
+    { taskCode: '0314', taskName: 'Đặt hàng', groupId: 'DRY', startTime: '09:45', endTime: '10:00' },
+    { taskCode: '0315', taskName: 'Hàng lỗi', groupId: 'DRY', startTime: '10:00', endTime: '10:15' },
+    { taskCode: '0316', taskName: 'Kéo mặt 2', groupId: 'DRY', startTime: '10:15', endTime: '10:30' },
+    { taskCode: '0317', taskName: 'Check OOS', groupId: 'DRY', startTime: '10:30', endTime: '10:45' },
+    { taskCode: '0318', taskName: 'POG', groupId: 'DRY', startTime: '10:45', endTime: '11:00' },
+    { taskCode: '0319', taskName: 'Snack', groupId: 'DRY', startTime: '11:00', endTime: '11:15' },
+    { taskCode: '0320', taskName: 'Nước', groupId: 'DRY', startTime: '11:15', endTime: '11:30' },
+    { taskCode: '0321', taskName: 'Mì gói', groupId: 'DRY', startTime: '11:30', endTime: '11:45' },
+    { taskCode: '0322', taskName: 'Gia vị', groupId: 'DRY', startTime: '11:45', endTime: '12:00' },
+    { taskCode: '1005', taskName: 'Break', groupId: 'OTHER', startTime: '12:00', endTime: '12:15' },
+    { taskCode: '1006', taskName: 'Break', groupId: 'OTHER', startTime: '12:15', endTime: '12:30' },
+    { taskCode: '1007', taskName: 'Break', groupId: 'OTHER', startTime: '12:30', endTime: '12:45' },
+    { taskCode: '1008', taskName: 'Break', groupId: 'OTHER', startTime: '12:45', endTime: '13:00' },
+    { taskCode: '0323', taskName: 'Kéo cuối', groupId: 'DRY', startTime: '13:00', endTime: '13:15' },
+    { taskCode: '0324', taskName: 'BC OOS', groupId: 'DRY', startTime: '13:15', endTime: '13:30' },
+    { taskCode: '0325', taskName: 'Vệ sinh', groupId: 'DRY', startTime: '13:30', endTime: '13:45' },
+    { taskCode: '0326', taskName: 'Bàn giao', groupId: 'DRY', startTime: '13:45', endTime: '14:00' },
   ],
-  4: [ // Staff ID 4
-    { taskCode: '0401', taskName: 'Nhận hàng Peri', groupId: 'MMD', startTime: '06:00', endTime: '07:00' },
-    { taskCode: '0405', taskName: 'Nhận hàng D&D', groupId: 'MMD', startTime: '07:00', endTime: '08:00' },
-    { taskCode: '0801', taskName: 'Cleaning Time', groupId: 'QC-FSH', startTime: '09:00', endTime: '09:15' },
-    { taskCode: '0403', taskName: 'Nhận hàng RDC', groupId: 'MMD', startTime: '11:00', endTime: '12:30' },
-    { taskCode: '1005', taskName: 'Break Time', groupId: 'OTHER', startTime: '12:30', endTime: '13:30' },
+  4: [ // Staff 4 - MMD ca sáng
+    { taskCode: '0401', taskName: 'Nhận Peri', groupId: 'MMD', startTime: '06:00', endTime: '06:15' },
+    { taskCode: '0402', taskName: 'Kiểm Peri', groupId: 'MMD', startTime: '06:15', endTime: '06:30' },
+    { taskCode: '0403', taskName: 'Nhận RDC', groupId: 'MMD', startTime: '06:30', endTime: '06:45' },
+    { taskCode: '0404', taskName: 'Kiểm RDC', groupId: 'MMD', startTime: '06:45', endTime: '07:00' },
+    { taskCode: '0405', taskName: 'Nhận D&D', groupId: 'MMD', startTime: '07:00', endTime: '07:15' },
+    { taskCode: '0406', taskName: 'Phân loại', groupId: 'MMD', startTime: '07:15', endTime: '07:30' },
+    { taskCode: '0407', taskName: 'Nhập kho', groupId: 'MMD', startTime: '07:30', endTime: '07:45' },
+    { taskCode: '0408', taskName: 'Cập nhật', groupId: 'MMD', startTime: '07:45', endTime: '08:00' },
+    { taskCode: '0409', taskName: 'Hàng trả', groupId: 'MMD', startTime: '08:00', endTime: '08:15' },
+    { taskCode: '0410', taskName: 'Kiểm DC', groupId: 'MMD', startTime: '08:15', endTime: '08:30' },
+    { taskCode: '0411', taskName: 'BC nhập', groupId: 'MMD', startTime: '08:30', endTime: '08:45' },
+    { taskCode: '0412', taskName: 'Sắp kho', groupId: 'MMD', startTime: '08:45', endTime: '09:00' },
+    { taskCode: '0801', taskName: 'Cleaning', groupId: 'QC-FSH', startTime: '09:00', endTime: '09:15' },
+    { taskCode: '0806', taskName: 'VS kho', groupId: 'QC-FSH', startTime: '09:15', endTime: '09:30' },
+    { taskCode: '0413', taskName: 'Kiểm MMD', groupId: 'MMD', startTime: '09:30', endTime: '09:45' },
+    { taskCode: '0414', taskName: 'Nhận BS', groupId: 'MMD', startTime: '09:45', endTime: '10:00' },
+    { taskCode: '0415', taskName: 'Claim', groupId: 'MMD', startTime: '10:00', endTime: '10:15' },
+    { taskCode: '0416', taskName: 'HSD kho', groupId: 'MMD', startTime: '10:15', endTime: '10:30' },
+    { taskCode: '0417', taskName: 'CB xuất', groupId: 'MMD', startTime: '10:30', endTime: '10:45' },
+    { taskCode: '0418', taskName: 'RDC 2', groupId: 'MMD', startTime: '10:45', endTime: '11:00' },
+    { taskCode: '0419', taskName: 'Kiểm RDC2', groupId: 'MMD', startTime: '11:00', endTime: '11:15' },
+    { taskCode: '0420', taskName: 'Phân RDC', groupId: 'MMD', startTime: '11:15', endTime: '11:30' },
+    { taskCode: '0421', taskName: 'Nhập BS', groupId: 'MMD', startTime: '11:30', endTime: '11:45' },
+    { taskCode: '0422', taskName: 'Hệ thống', groupId: 'MMD', startTime: '11:45', endTime: '12:00' },
+    { taskCode: '1005', taskName: 'Break', groupId: 'OTHER', startTime: '12:00', endTime: '12:15' },
+    { taskCode: '1006', taskName: 'Break', groupId: 'OTHER', startTime: '12:15', endTime: '12:30' },
+    { taskCode: '1007', taskName: 'Break', groupId: 'OTHER', startTime: '12:30', endTime: '12:45' },
+    { taskCode: '1008', taskName: 'Break', groupId: 'OTHER', startTime: '12:45', endTime: '13:00' },
+    { taskCode: '0423', taskName: 'BC tồn', groupId: 'MMD', startTime: '13:00', endTime: '13:15' },
+    { taskCode: '0424', taskName: 'Hàng chờ', groupId: 'MMD', startTime: '13:15', endTime: '13:30' },
+    { taskCode: '0425', taskName: 'VS MMD', groupId: 'MMD', startTime: '13:30', endTime: '13:45' },
+    { taskCode: '0426', taskName: 'Bàn giao', groupId: 'MMD', startTime: '13:45', endTime: '14:00' },
   ],
-  5: [ // Staff ID 5
-    { taskCode: '0501', taskName: 'Pha chế Cafe', groupId: 'DELICA', startTime: '06:00', endTime: '06:30' },
-    { taskCode: '0503', taskName: 'Lên hàng Delica', groupId: 'DELICA', startTime: '07:00', endTime: '07:30' },
-    { taskCode: '0801', taskName: 'Cleaning Time', groupId: 'QC-FSH', startTime: '09:00', endTime: '09:15' },
-    { taskCode: '0504', taskName: 'Kéo mặt Delica', groupId: 'DELICA', startTime: '10:00', endTime: '10:15' },
-    { taskCode: '1005', taskName: 'Break Time', groupId: 'OTHER', startTime: '11:00', endTime: '12:00' },
-    { taskCode: '0505', taskName: 'Kiểm tra HSD', groupId: 'DELICA', startTime: '12:00', endTime: '12:15' },
+
+  // ========== CA CHIỀU (14:30-22:30) ==========
+  5: [ // Staff 5 - Leader ca chiều
+    { taskCode: '2501', taskName: 'Nhận BG', groupId: 'LEADER', startTime: '14:30', endTime: '14:45' },
+    { taskCode: '2502', taskName: 'Kiểm ca', groupId: 'LEADER', startTime: '14:45', endTime: '15:00' },
+    { taskCode: '2503', taskName: 'OOS', groupId: 'LEADER', startTime: '15:00', endTime: '15:15' },
+    { taskCode: '2504', taskName: 'Duyệt giảm', groupId: 'LEADER', startTime: '15:15', endTime: '15:30' },
+    { taskCode: '2505', taskName: 'Giám sát', groupId: 'LEADER', startTime: '15:30', endTime: '15:45' },
+    { taskCode: '0113', taskName: 'Hỗ trợ', groupId: 'POS', startTime: '15:45', endTime: '16:00' },
+    { taskCode: '2506', taskName: 'Promo', groupId: 'LEADER', startTime: '16:00', endTime: '16:15' },
+    { taskCode: '0114', taskName: 'Tiền POS', groupId: 'POS', startTime: '16:15', endTime: '16:30' },
+    { taskCode: '0115', taskName: 'Đổi tiền', groupId: 'POS', startTime: '16:30', endTime: '16:45' },
+    { taskCode: '2507', taskName: 'Meeting', groupId: 'LEADER', startTime: '16:45', endTime: '17:00' },
+    { taskCode: '0116', taskName: 'Hỗ trợ TT', groupId: 'POS', startTime: '17:00', endTime: '17:15' },
+    { taskCode: '0117', taskName: 'Phục vụ', groupId: 'POS', startTime: '17:15', endTime: '17:30' },
+    { taskCode: '2508', taskName: 'GS POS', groupId: 'LEADER', startTime: '17:30', endTime: '17:45' },
+    { taskCode: '0118', taskName: 'Khiếu nại', groupId: 'POS', startTime: '17:45', endTime: '18:00' },
+    { taskCode: '2509', taskName: 'Điều phối', groupId: 'LEADER', startTime: '18:00', endTime: '18:15' },
+    { taskCode: '0119', taskName: 'POS peak', groupId: 'POS', startTime: '18:15', endTime: '18:30' },
+    { taskCode: '0120', taskName: 'Queue', groupId: 'POS', startTime: '18:30', endTime: '18:45' },
+    { taskCode: '2510', taskName: 'Kiểm sàn', groupId: 'LEADER', startTime: '18:45', endTime: '19:00' },
+    { taskCode: '0121', taskName: 'Đối soát', groupId: 'POS', startTime: '19:00', endTime: '19:15' },
+    { taskCode: '2511', taskName: 'Giảm tối', groupId: 'LEADER', startTime: '19:15', endTime: '19:30' },
+    { taskCode: '0807', taskName: 'Clean tối', groupId: 'QC-FSH', startTime: '19:30', endTime: '19:45' },
+    { taskCode: '2512', taskName: 'VSC', groupId: 'LEADER', startTime: '19:45', endTime: '20:00' },
+    { taskCode: '1005', taskName: 'Break', groupId: 'OTHER', startTime: '20:00', endTime: '20:15' },
+    { taskCode: '1006', taskName: 'Break', groupId: 'OTHER', startTime: '20:15', endTime: '20:30' },
+    { taskCode: '1007', taskName: 'Break', groupId: 'OTHER', startTime: '20:30', endTime: '20:45' },
+    { taskCode: '1008', taskName: 'Break', groupId: 'OTHER', startTime: '20:45', endTime: '21:00' },
+    { taskCode: '2513', taskName: 'CB đóng', groupId: 'LEADER', startTime: '21:00', endTime: '21:15' },
+    { taskCode: '0122', taskName: 'Đếm tiền', groupId: 'POS', startTime: '21:15', endTime: '21:30' },
+    { taskCode: '2514', taskName: 'Kiểm kho', groupId: 'LEADER', startTime: '21:30', endTime: '21:45' },
+    { taskCode: '2515', taskName: 'BC ngày', groupId: 'LEADER', startTime: '21:45', endTime: '22:00' },
+    { taskCode: '0123', taskName: 'Đóng POS', groupId: 'POS', startTime: '22:00', endTime: '22:15' },
+    { taskCode: '2516', taskName: 'Đóng kho', groupId: 'LEADER', startTime: '22:15', endTime: '22:30' },
   ],
-  6: [ // Staff ID 6
-    { taskCode: '0601', taskName: 'Lên hàng D&D', groupId: 'DND', startTime: '06:00', endTime: '06:45' },
-    { taskCode: '0602', taskName: 'Kéo mặt D&D', groupId: 'DND', startTime: '07:00', endTime: '07:15' },
-    { taskCode: '0801', taskName: 'Cleaning Time', groupId: 'QC-FSH', startTime: '09:00', endTime: '09:15' },
-    { taskCode: '0604', taskName: 'Đặt hàng D&D', groupId: 'DND', startTime: '10:00', endTime: '10:30' },
-    { taskCode: '1005', taskName: 'Break Time', groupId: 'OTHER', startTime: '11:00', endTime: '12:00' },
+  6: [ // Staff 6 - PERI ca chiều
+    { taskCode: '0227', taskName: 'Nhận BG', groupId: 'PERI', startTime: '14:30', endTime: '14:45' },
+    { taskCode: '0228', taskName: 'Kiểm Peri', groupId: 'PERI', startTime: '14:45', endTime: '15:00' },
+    { taskCode: '0229', taskName: 'Bổ sung', groupId: 'PERI', startTime: '15:00', endTime: '15:15' },
+    { taskCode: '0230', taskName: 'Kéo mặt', groupId: 'PERI', startTime: '15:15', endTime: '15:30' },
+    { taskCode: '0231', taskName: 'Cắt gọt', groupId: 'PERI', startTime: '15:30', endTime: '15:45' },
+    { taskCode: '0232', taskName: 'Đóng gói', groupId: 'PERI', startTime: '15:45', endTime: '16:00' },
+    { taskCode: '0233', taskName: 'HSD', groupId: 'PERI', startTime: '16:00', endTime: '16:15' },
+    { taskCode: '0234', taskName: 'CB giảm', groupId: 'PERI', startTime: '16:15', endTime: '16:30' },
+    { taskCode: '0235', taskName: 'Sticker', groupId: 'PERI', startTime: '16:30', endTime: '16:45' },
+    { taskCode: '0236', taskName: 'FIFO', groupId: 'PERI', startTime: '16:45', endTime: '17:00' },
+    { taskCode: '0237', taskName: 'BS peak', groupId: 'PERI', startTime: '17:00', endTime: '17:15' },
+    { taskCode: '0238', taskName: 'Kéo peak', groupId: 'PERI', startTime: '17:15', endTime: '17:30' },
+    { taskCode: '0239', taskName: 'OOS', groupId: 'PERI', startTime: '17:30', endTime: '17:45' },
+    { taskCode: '0240', taskName: 'Cắt BS', groupId: 'PERI', startTime: '17:45', endTime: '18:00' },
+    { taskCode: '0241', taskName: 'Salad', groupId: 'PERI', startTime: '18:00', endTime: '18:15' },
+    { taskCode: '0242', taskName: 'Nhiệt độ', groupId: 'PERI', startTime: '18:15', endTime: '18:30' },
+    { taskCode: '0243', taskName: 'Hàng hư', groupId: 'PERI', startTime: '18:30', endTime: '18:45' },
+    { taskCode: '0244', taskName: 'Kéo tối', groupId: 'PERI', startTime: '18:45', endTime: '19:00' },
+    { taskCode: '0245', taskName: 'Giảm 30%', groupId: 'PERI', startTime: '19:00', endTime: '19:15' },
+    { taskCode: '0246', taskName: 'Giảm 50%', groupId: 'PERI', startTime: '19:15', endTime: '19:30' },
+    { taskCode: '0808', taskName: 'VS Peri', groupId: 'QC-FSH', startTime: '19:30', endTime: '19:45' },
+    { taskCode: '0247', taskName: 'Thu dọn', groupId: 'PERI', startTime: '19:45', endTime: '20:00' },
+    { taskCode: '1005', taskName: 'Break', groupId: 'OTHER', startTime: '20:00', endTime: '20:15' },
+    { taskCode: '1006', taskName: 'Break', groupId: 'OTHER', startTime: '20:15', endTime: '20:30' },
+    { taskCode: '1007', taskName: 'Break', groupId: 'OTHER', startTime: '20:30', endTime: '20:45' },
+    { taskCode: '1008', taskName: 'Break', groupId: 'OTHER', startTime: '20:45', endTime: '21:00' },
+    { taskCode: '0248', taskName: 'Thu cuối', groupId: 'PERI', startTime: '21:00', endTime: '21:15' },
+    { taskCode: '0249', taskName: 'Kho tối', groupId: 'PERI', startTime: '21:15', endTime: '21:30' },
+    { taskCode: '0250', taskName: 'Vệ sinh', groupId: 'PERI', startTime: '21:30', endTime: '21:45' },
+    { taskCode: '0251', taskName: 'BC Peri', groupId: 'PERI', startTime: '21:45', endTime: '22:00' },
+    { taskCode: '0252', taskName: 'Đóng lạnh', groupId: 'PERI', startTime: '22:00', endTime: '22:15' },
+    { taskCode: '0253', taskName: 'BG cuối', groupId: 'PERI', startTime: '22:15', endTime: '22:30' },
+  ],
+  7: [ // Staff 7 - DRY ca chiều
+    { taskCode: '0327', taskName: 'Nhận BG', groupId: 'DRY', startTime: '14:30', endTime: '14:45' },
+    { taskCode: '0328', taskName: 'OOS Dry', groupId: 'DRY', startTime: '14:45', endTime: '15:00' },
+    { taskCode: '0329', taskName: 'Bổ sung', groupId: 'DRY', startTime: '15:00', endTime: '15:15' },
+    { taskCode: '0330', taskName: 'Kéo mặt', groupId: 'DRY', startTime: '15:15', endTime: '15:30' },
+    { taskCode: '0331', taskName: 'Promo', groupId: 'DRY', startTime: '15:30', endTime: '15:45' },
+    { taskCode: '0332', taskName: 'Endcap', groupId: 'DRY', startTime: '15:45', endTime: '16:00' },
+    { taskCode: '0333', taskName: 'HSD', groupId: 'DRY', startTime: '16:00', endTime: '16:15' },
+    { taskCode: '0334', taskName: 'Snack', groupId: 'DRY', startTime: '16:15', endTime: '16:30' },
+    { taskCode: '0335', taskName: 'Nước', groupId: 'DRY', startTime: '16:30', endTime: '16:45' },
+    { taskCode: '0336', taskName: 'FIFO', groupId: 'DRY', startTime: '16:45', endTime: '17:00' },
+    { taskCode: '0337', taskName: 'BS peak', groupId: 'DRY', startTime: '17:00', endTime: '17:15' },
+    { taskCode: '0338', taskName: 'Kéo peak', groupId: 'DRY', startTime: '17:15', endTime: '17:30' },
+    { taskCode: '0339', taskName: 'OOS peak', groupId: 'DRY', startTime: '17:30', endTime: '17:45' },
+    { taskCode: '0340', taskName: 'Gondola', groupId: 'DRY', startTime: '17:45', endTime: '18:00' },
+    { taskCode: '0341', taskName: 'Mì gói', groupId: 'DRY', startTime: '18:00', endTime: '18:15' },
+    { taskCode: '0342', taskName: 'Gia vị', groupId: 'DRY', startTime: '18:15', endTime: '18:30' },
+    { taskCode: '0343', taskName: 'Bánh kẹo', groupId: 'DRY', startTime: '18:30', endTime: '18:45' },
+    { taskCode: '0344', taskName: 'Kéo tối', groupId: 'DRY', startTime: '18:45', endTime: '19:00' },
+    { taskCode: '0345', taskName: 'Giảm HSD', groupId: 'DRY', startTime: '19:00', endTime: '19:15' },
+    { taskCode: '0346', taskName: 'Thu dọn', groupId: 'DRY', startTime: '19:15', endTime: '19:30' },
+    { taskCode: '0809', taskName: 'VS Dry', groupId: 'QC-FSH', startTime: '19:30', endTime: '19:45' },
+    { taskCode: '0347', taskName: 'Kiểm kho', groupId: 'DRY', startTime: '19:45', endTime: '20:00' },
+    { taskCode: '1005', taskName: 'Break', groupId: 'OTHER', startTime: '20:00', endTime: '20:15' },
+    { taskCode: '1006', taskName: 'Break', groupId: 'OTHER', startTime: '20:15', endTime: '20:30' },
+    { taskCode: '1007', taskName: 'Break', groupId: 'OTHER', startTime: '20:30', endTime: '20:45' },
+    { taskCode: '1008', taskName: 'Break', groupId: 'OTHER', startTime: '20:45', endTime: '21:00' },
+    { taskCode: '0348', taskName: 'Kéo cuối', groupId: 'DRY', startTime: '21:00', endTime: '21:15' },
+    { taskCode: '0349', taskName: 'BC OOS', groupId: 'DRY', startTime: '21:15', endTime: '21:30' },
+    { taskCode: '0350', taskName: 'Vệ sinh', groupId: 'DRY', startTime: '21:30', endTime: '21:45' },
+    { taskCode: '0351', taskName: 'BC Dry', groupId: 'DRY', startTime: '21:45', endTime: '22:00' },
+    { taskCode: '0352', taskName: 'Kiểm cuối', groupId: 'DRY', startTime: '22:00', endTime: '22:15' },
+    { taskCode: '0353', taskName: 'BG cuối', groupId: 'DRY', startTime: '22:15', endTime: '22:30' },
+  ],
+  8: [ // Staff 8 - DELICA/DND ca chiều
+    { taskCode: '0506', taskName: 'Nhận BG', groupId: 'DELICA', startTime: '14:30', endTime: '14:45' },
+    { taskCode: '0603', taskName: 'Kiểm D&D', groupId: 'DND', startTime: '14:45', endTime: '15:00' },
+    { taskCode: '0507', taskName: 'Pha Cafe', groupId: 'DELICA', startTime: '15:00', endTime: '15:15' },
+    { taskCode: '0508', taskName: 'Lên Delica', groupId: 'DELICA', startTime: '15:15', endTime: '15:30' },
+    { taskCode: '0604', taskName: 'Đặt D&D', groupId: 'DND', startTime: '15:30', endTime: '15:45' },
+    { taskCode: '0605', taskName: 'Kéo D&D', groupId: 'DND', startTime: '15:45', endTime: '16:00' },
+    { taskCode: '0509', taskName: 'HSD Del', groupId: 'DELICA', startTime: '16:00', endTime: '16:15' },
+    { taskCode: '0510', taskName: 'Bánh', groupId: 'DELICA', startTime: '16:15', endTime: '16:30' },
+    { taskCode: '0606', taskName: 'Sữa D&D', groupId: 'DND', startTime: '16:30', endTime: '16:45' },
+    { taskCode: '0607', taskName: 'FIFO D&D', groupId: 'DND', startTime: '16:45', endTime: '17:00' },
+    { taskCode: '0511', taskName: 'Pha peak', groupId: 'DELICA', startTime: '17:00', endTime: '17:15' },
+    { taskCode: '0512', taskName: 'Phục vụ', groupId: 'DELICA', startTime: '17:15', endTime: '17:30' },
+    { taskCode: '0608', taskName: 'D&D peak', groupId: 'DND', startTime: '17:30', endTime: '17:45' },
+    { taskCode: '0609', taskName: 'OOS D&D', groupId: 'DND', startTime: '17:45', endTime: '18:00' },
+    { taskCode: '0513', taskName: 'BS Del', groupId: 'DELICA', startTime: '18:00', endTime: '18:15' },
+    { taskCode: '0514', taskName: 'Kéo Del', groupId: 'DELICA', startTime: '18:15', endTime: '18:30' },
+    { taskCode: '0610', taskName: 'Nhiệt D&D', groupId: 'DND', startTime: '18:30', endTime: '18:45' },
+    { taskCode: '0611', taskName: 'Kéo D&D', groupId: 'DND', startTime: '18:45', endTime: '19:00' },
+    { taskCode: '0515', taskName: 'Giảm Del', groupId: 'DELICA', startTime: '19:00', endTime: '19:15' },
+    { taskCode: '0612', taskName: 'Giảm D&D', groupId: 'DND', startTime: '19:15', endTime: '19:30' },
+    { taskCode: '0810', taskName: 'VS Del', groupId: 'QC-FSH', startTime: '19:30', endTime: '19:45' },
+    { taskCode: '0516', taskName: 'Thu Del', groupId: 'DELICA', startTime: '19:45', endTime: '20:00' },
+    { taskCode: '1005', taskName: 'Break', groupId: 'OTHER', startTime: '20:00', endTime: '20:15' },
+    { taskCode: '1006', taskName: 'Break', groupId: 'OTHER', startTime: '20:15', endTime: '20:30' },
+    { taskCode: '1007', taskName: 'Break', groupId: 'OTHER', startTime: '20:30', endTime: '20:45' },
+    { taskCode: '1008', taskName: 'Break', groupId: 'OTHER', startTime: '20:45', endTime: '21:00' },
+    { taskCode: '0517', taskName: 'Đóng Del', groupId: 'DELICA', startTime: '21:00', endTime: '21:15' },
+    { taskCode: '0613', taskName: 'Thu D&D', groupId: 'DND', startTime: '21:15', endTime: '21:30' },
+    { taskCode: '0518', taskName: 'VS máy', groupId: 'DELICA', startTime: '21:30', endTime: '21:45' },
+    { taskCode: '0614', taskName: 'Kho D&D', groupId: 'DND', startTime: '21:45', endTime: '22:00' },
+    { taskCode: '0519', taskName: 'BC Del', groupId: 'DELICA', startTime: '22:00', endTime: '22:15' },
+    { taskCode: '0615', taskName: 'BG D&D', groupId: 'DND', startTime: '22:15', endTime: '22:30' },
   ],
 };
 
@@ -416,7 +659,7 @@ export default function DailySchedulePage() {
                 <span className="text-xs text-gray-500">
                   {backendOnline ? 'Online' : 'Offline (Demo)'}
                 </span>
-                <span className="text-[10px] text-gray-400 ml-1">v18</span>
+                <span className="text-[10px] text-gray-400 ml-1">v21</span>
               </div>
             </div>
           </div>
@@ -653,7 +896,7 @@ export default function DailySchedulePage() {
                                 return (
                                   <div
                                     key={`${slotTime}`}
-                                    className={`quarter-hour-slot border-r border-dashed border-slate-200 last:border-r-0 flex flex-wrap gap-0.5 p-0.5 content-start overflow-hidden ${
+                                    className={`quarter-hour-slot border-r border-dashed border-slate-200 last:border-r-0 h-full ${
                                       isCurrentSlot ? 'bg-amber-100' : ''
                                     }`}
                                     data-time={`${String(hour).padStart(2, '0')}:00`}
@@ -664,7 +907,7 @@ export default function DailySchedulePage() {
                                       return (
                                         <div
                                           key={`${task.taskCode}-${taskIdx}`}
-                                          className="scheduled-task-item flex-shrink-0 w-[34px] h-[48px] border text-[8px] p-0.5 rounded shadow-sm flex flex-col justify-between items-center text-center cursor-pointer hover:shadow-md transition-shadow overflow-hidden"
+                                          className="scheduled-task-item w-full h-full border-2 text-xs p-1 rounded-md shadow-sm flex flex-col justify-center items-center text-center cursor-pointer hover:shadow-md transition-shadow"
                                           style={{
                                             backgroundColor: taskColors?.bg || '#f1f5f9',
                                             color: taskColors?.text || '#1e293b',
@@ -672,8 +915,8 @@ export default function DailySchedulePage() {
                                           }}
                                           title={`${task.taskName} (${task.taskCode})`}
                                         >
-                                          <span className="w-full overflow-hidden text-ellipsis whitespace-nowrap leading-tight">{task.taskName}</span>
-                                          <span className="font-semibold text-[9px]">{task.taskCode}</span>
+                                          <span className="font-medium leading-tight truncate w-full">{task.taskName}</span>
+                                          <span className="font-bold text-sm mt-1">{task.taskCode}</span>
                                         </div>
                                       );
                                     })}

@@ -133,17 +133,17 @@ def seed_task_groups(db: Session):
 
 
 def seed_shift_assignments(db: Session):
-    """Seed shift assignments for today and next 7 days"""
+    """Seed shift assignments for today and next 7 days
+    - Staff 1-4: Ca sáng (V8.6: 06:00-14:00)
+    - Staff 5-8: Ca chiều (V8.14: 14:30-22:30)
+    """
     today = date.today()
-    shift_patterns = [1, 2, 1, 2, 3, 4, 5]  # Rotating pattern
 
     for day_offset in range(7):
         current_date = today + timedelta(days=day_offset)
 
-        for staff_id in range(1, 9):  # Staff 1-8
-            shift_idx = (staff_id + day_offset) % len(shift_patterns)
-            shift_code_id = shift_patterns[shift_idx]
-
+        # Ca sáng: Staff 1-4 -> shift_code_id=1 (V8.6)
+        for staff_id in range(1, 5):
             existing = db.query(ShiftAssignment).filter(
                 ShiftAssignment.staff_id == staff_id,
                 ShiftAssignment.shift_date == current_date
@@ -154,7 +154,25 @@ def seed_shift_assignments(db: Session):
                     staff_id=staff_id,
                     store_id=1,
                     shift_date=current_date,
-                    shift_code_id=shift_code_id,
+                    shift_code_id=1,  # V8.6 (Ca sáng)
+                    status="assigned",
+                    assigned_by=1
+                )
+                db.add(assignment)
+
+        # Ca chiều: Staff 5-8 -> shift_code_id=2 (V8.14)
+        for staff_id in range(5, 9):
+            existing = db.query(ShiftAssignment).filter(
+                ShiftAssignment.staff_id == staff_id,
+                ShiftAssignment.shift_date == current_date
+            ).first()
+
+            if not existing:
+                assignment = ShiftAssignment(
+                    staff_id=staff_id,
+                    store_id=1,
+                    shift_date=current_date,
+                    shift_code_id=2,  # V8.14 (Ca chiều)
                     status="assigned",
                     assigned_by=1
                 )
@@ -253,68 +271,396 @@ def seed_daily_templates(db: Session):
 
 
 def seed_daily_schedule_tasks(db: Session):
-    """Seed daily schedule tasks for staff"""
+    """Seed daily schedule tasks for staff with COMPLETE schedule
+
+    CA SÁNG (06:00-14:00): Staff 1-4
+    - Staff 1: Leader (LEADER tasks)
+    - Staff 2: PERI (Perishable tasks)
+    - Staff 3: DRY (Dry goods tasks)
+    - Staff 4: MMD (Receiving tasks)
+
+    CA CHIỀU (14:30-22:30): Staff 5-8
+    - Staff 5: Leader chiều (LEADER tasks)
+    - Staff 6: PERI chiều
+    - Staff 7: DRY chiều
+    - Staff 8: DELICA/DND
+
+    Mỗi khung giờ 15 phút sẽ có đủ 4 task (1 task mỗi người)
+    """
     today = date.today()
 
-    # Task templates per staff (based on their role)
-    task_templates = {
-        1: [  # Leader
+    # ========== CA SÁNG (06:00-14:00) - Staff 1-4 ==========
+    # Mỗi slot 15 phút, 4 người đều có task
+    morning_schedule = {
+        # Staff 1 - Leader ca sáng
+        1: [
+            # 06:00 slot
             ("1501", "Mở kho", "LEADER", time(6, 0), time(6, 15)),
             ("1505", "Balancing", "LEADER", time(6, 15), time(6, 30)),
             ("0101", "Mở POS", "POS", time(6, 30), time(6, 45)),
+            ("0102", "Check POS", "POS", time(6, 45), time(7, 0)),
+            # 07:00 slot
+            ("1506", "Kiểm tra hàng", "LEADER", time(7, 0), time(7, 15)),
+            ("1507", "Duyệt đơn", "LEADER", time(7, 15), time(7, 30)),
+            ("1508", "Giao việc", "LEADER", time(7, 30), time(7, 45)),
+            ("0103", "Hỗ trợ POS", "POS", time(7, 45), time(8, 0)),
+            # 08:00 slot
+            ("1509", "Meeting sáng", "LEADER", time(8, 0), time(8, 15)),
+            ("0104", "Đối soát tiền", "POS", time(8, 15), time(8, 30)),
+            ("0105", "In báo cáo", "POS", time(8, 30), time(8, 45)),
+            ("0106", "Kiểm kê POS", "POS", time(8, 45), time(9, 0)),
+            # 09:00 slot - Cleaning Time
             ("0801", "Cleaning Time", "QC-FSH", time(9, 0), time(9, 15)),
-            ("1510", "Bàn giao tiền", "LEADER", time(10, 0), time(10, 30)),
-            ("0102", "Hỗ trợ POS", "POS", time(11, 0), time(12, 0)),
-            ("1005", "Break Time", "OTHER", time(12, 0), time(13, 0)),
+            ("0802", "Kiểm tra VSC", "QC-FSH", time(9, 15), time(9, 30)),
+            ("0803", "Vệ sinh khu POS", "QC-FSH", time(9, 30), time(9, 45)),
+            ("1510", "Bàn giao tiền", "LEADER", time(9, 45), time(10, 0)),
+            # 10:00 slot
+            ("1511", "Kiểm tra hàng OOS", "LEADER", time(10, 0), time(10, 15)),
+            ("1512", "Duyệt khuyến mãi", "LEADER", time(10, 15), time(10, 30)),
+            ("0107", "Đổi tiền lẻ", "POS", time(10, 30), time(10, 45)),
+            ("0108", "Check voucher", "POS", time(10, 45), time(11, 0)),
+            # 11:00 slot
+            ("0109", "Phục vụ khách", "POS", time(11, 0), time(11, 15)),
+            ("0110", "Hỗ trợ thanh toán", "POS", time(11, 15), time(11, 30)),
+            ("0111", "Xử lý khiếu nại", "POS", time(11, 30), time(11, 45)),
+            ("1513", "Giám sát", "LEADER", time(11, 45), time(12, 0)),
+            # 12:00-13:00 Break
+            ("1005", "Break Time", "OTHER", time(12, 0), time(12, 15)),
+            ("1006", "Break Time", "OTHER", time(12, 15), time(12, 30)),
+            ("1007", "Break Time", "OTHER", time(12, 30), time(12, 45)),
+            ("1008", "Break Time", "OTHER", time(12, 45), time(13, 0)),
+            # 13:00 slot
+            ("1514", "Chuẩn bị bàn giao", "LEADER", time(13, 0), time(13, 15)),
+            ("1515", "Đóng kho", "LEADER", time(13, 15), time(13, 30)),
+            ("0112", "Kiểm POS cuối ca", "POS", time(13, 30), time(13, 45)),
+            ("1516", "Bàn giao ca", "LEADER", time(13, 45), time(14, 0)),
         ],
-        2: [  # PERI staff
-            ("0201", "Lên hàng thịt cá", "PERI", time(6, 0), time(7, 0)),
-            ("0202", "Lên hàng rau củ", "PERI", time(7, 0), time(8, 0)),
+        # Staff 2 - PERI ca sáng
+        2: [
+            # 06:00 slot
+            ("0201", "Lên thịt cá", "PERI", time(6, 0), time(6, 15)),
+            ("0202", "Lên rau củ", "PERI", time(6, 15), time(6, 30)),
+            ("0203", "Sắp xếp kệ", "PERI", time(6, 30), time(6, 45)),
+            ("0204", "Kiểm HSD", "PERI", time(6, 45), time(7, 0)),
+            # 07:00 slot
+            ("0205", "Cắt gọt rau", "PERI", time(7, 0), time(7, 15)),
+            ("0206", "Đóng gói thịt", "PERI", time(7, 15), time(7, 30)),
+            ("0207", "Cân đóng gói", "PERI", time(7, 30), time(7, 45)),
+            ("0208", "Dán nhãn giá", "PERI", time(7, 45), time(8, 0)),
+            # 08:00 slot
+            ("0209", "Bổ sung kệ", "PERI", time(8, 0), time(8, 15)),
+            ("0210", "Giảm giá Peri", "PERI", time(8, 15), time(8, 30)),
+            ("0211", "Xoay kệ FIFO", "PERI", time(8, 30), time(8, 45)),
+            ("0212", "Check nhiệt độ", "PERI", time(8, 45), time(9, 0)),
+            # 09:00 slot
             ("0801", "Cleaning Time", "QC-FSH", time(9, 0), time(9, 15)),
-            ("0205", "Cắt gọt", "PERI", time(10, 0), time(10, 30)),
-            ("1005", "Break Time", "OTHER", time(11, 0), time(12, 0)),
-            ("0210", "Giảm giá Peri", "PERI", time(12, 0), time(12, 30)),
+            ("0804", "Vệ sinh kệ Peri", "QC-FSH", time(9, 15), time(9, 30)),
+            ("0213", "Kiểm kho Peri", "PERI", time(9, 30), time(9, 45)),
+            ("0214", "Đặt hàng Peri", "PERI", time(9, 45), time(10, 0)),
+            # 10:00 slot
+            ("0215", "Xử lý hàng hư", "PERI", time(10, 0), time(10, 15)),
+            ("0216", "Cắt gọt bổ sung", "PERI", time(10, 15), time(10, 30)),
+            ("0217", "Kéo mặt Peri", "PERI", time(10, 30), time(10, 45)),
+            ("0218", "Check OOS Peri", "PERI", time(10, 45), time(11, 0)),
+            # 11:00 slot
+            ("0219", "Lên hàng trưa", "PERI", time(11, 0), time(11, 15)),
+            ("0220", "Bổ sung salad", "PERI", time(11, 15), time(11, 30)),
+            ("0221", "Kiểm kệ lạnh", "PERI", time(11, 30), time(11, 45)),
+            ("0222", "Chuẩn bị giảm giá", "PERI", time(11, 45), time(12, 0)),
+            # 12:00-13:00 Break
+            ("1005", "Break Time", "OTHER", time(12, 0), time(12, 15)),
+            ("1006", "Break Time", "OTHER", time(12, 15), time(12, 30)),
+            ("1007", "Break Time", "OTHER", time(12, 30), time(12, 45)),
+            ("1008", "Break Time", "OTHER", time(12, 45), time(13, 0)),
+            # 13:00 slot
+            ("0223", "Giảm giá trưa", "PERI", time(13, 0), time(13, 15)),
+            ("0224", "Kiểm hàng tồn", "PERI", time(13, 15), time(13, 30)),
+            ("0225", "Vệ sinh khu vực", "PERI", time(13, 30), time(13, 45)),
+            ("0226", "Bàn giao Peri", "PERI", time(13, 45), time(14, 0)),
         ],
-        3: [  # DRY staff
-            ("0301", "Lên hàng khô", "DRY", time(6, 0), time(7, 30)),
+        # Staff 3 - DRY ca sáng
+        3: [
+            # 06:00 slot
+            ("0301", "Lên hàng khô", "DRY", time(6, 0), time(6, 15)),
+            ("0302", "Kéo mặt Dry", "DRY", time(6, 15), time(6, 30)),
+            ("0303", "Sắp xếp kệ", "DRY", time(6, 30), time(6, 45)),
+            ("0304", "Bắn OOS", "DRY", time(6, 45), time(7, 0)),
+            # 07:00 slot
+            ("0305", "Kiểm HSD Dry", "DRY", time(7, 0), time(7, 15)),
+            ("0306", "Xoay FIFO", "DRY", time(7, 15), time(7, 30)),
+            ("0307", "Dán nhãn", "DRY", time(7, 30), time(7, 45)),
+            ("0308", "Check giá", "DRY", time(7, 45), time(8, 0)),
+            # 08:00 slot
+            ("0309", "Bổ sung kệ", "DRY", time(8, 0), time(8, 15)),
+            ("0310", "Kiểm promo", "DRY", time(8, 15), time(8, 30)),
+            ("0311", "Sắp xếp endcap", "DRY", time(8, 30), time(8, 45)),
+            ("0312", "Vệ sinh kệ", "DRY", time(8, 45), time(9, 0)),
+            # 09:00 slot
             ("0801", "Cleaning Time", "QC-FSH", time(9, 0), time(9, 15)),
-            ("0304", "Bắn OOS", "DRY", time(10, 0), time(10, 30)),
-            ("1005", "Break Time", "OTHER", time(11, 0), time(12, 0)),
-            ("0302", "Kéo mặt Dry", "DRY", time(12, 30), time(13, 0)),
+            ("0805", "Vệ sinh khu Dry", "QC-FSH", time(9, 15), time(9, 30)),
+            ("0313", "Kiểm kho Dry", "DRY", time(9, 30), time(9, 45)),
+            ("0314", "Đặt hàng Dry", "DRY", time(9, 45), time(10, 0)),
+            # 10:00 slot
+            ("0315", "Xử lý hàng lỗi", "DRY", time(10, 0), time(10, 15)),
+            ("0316", "Kéo mặt lần 2", "DRY", time(10, 15), time(10, 30)),
+            ("0317", "Check OOS", "DRY", time(10, 30), time(10, 45)),
+            ("0318", "Cập nhật POG", "DRY", time(10, 45), time(11, 0)),
+            # 11:00 slot
+            ("0319", "Bổ sung snack", "DRY", time(11, 0), time(11, 15)),
+            ("0320", "Check nước uống", "DRY", time(11, 15), time(11, 30)),
+            ("0321", "Sắp xếp mì gói", "DRY", time(11, 30), time(11, 45)),
+            ("0322", "Kiểm gia vị", "DRY", time(11, 45), time(12, 0)),
+            # 12:00-13:00 Break
+            ("1005", "Break Time", "OTHER", time(12, 0), time(12, 15)),
+            ("1006", "Break Time", "OTHER", time(12, 15), time(12, 30)),
+            ("1007", "Break Time", "OTHER", time(12, 30), time(12, 45)),
+            ("1008", "Break Time", "OTHER", time(12, 45), time(13, 0)),
+            # 13:00 slot
+            ("0323", "Kéo mặt cuối", "DRY", time(13, 0), time(13, 15)),
+            ("0324", "Báo cáo OOS", "DRY", time(13, 15), time(13, 30)),
+            ("0325", "Vệ sinh khu vực", "DRY", time(13, 30), time(13, 45)),
+            ("0326", "Bàn giao Dry", "DRY", time(13, 45), time(14, 0)),
         ],
-        4: [  # MMD staff
-            ("0401", "Nhận hàng Peri", "MMD", time(6, 0), time(7, 0)),
-            ("0405", "Nhận hàng D&D", "MMD", time(7, 0), time(8, 0)),
+        # Staff 4 - MMD ca sáng
+        4: [
+            # 06:00 slot
+            ("0401", "Nhận hàng Peri", "MMD", time(6, 0), time(6, 15)),
+            ("0402", "Kiểm hàng Peri", "MMD", time(6, 15), time(6, 30)),
+            ("0403", "Nhận hàng RDC", "MMD", time(6, 30), time(6, 45)),
+            ("0404", "Kiểm hàng RDC", "MMD", time(6, 45), time(7, 0)),
+            # 07:00 slot
+            ("0405", "Nhận hàng D&D", "MMD", time(7, 0), time(7, 15)),
+            ("0406", "Phân loại hàng", "MMD", time(7, 15), time(7, 30)),
+            ("0407", "Nhập kho", "MMD", time(7, 30), time(7, 45)),
+            ("0408", "Cập nhật tồn", "MMD", time(7, 45), time(8, 0)),
+            # 08:00 slot
+            ("0409", "Xử lý hàng trả", "MMD", time(8, 0), time(8, 15)),
+            ("0410", "Kiểm DC", "MMD", time(8, 15), time(8, 30)),
+            ("0411", "Báo cáo nhập", "MMD", time(8, 30), time(8, 45)),
+            ("0412", "Sắp xếp kho", "MMD", time(8, 45), time(9, 0)),
+            # 09:00 slot
             ("0801", "Cleaning Time", "QC-FSH", time(9, 0), time(9, 15)),
-            ("0403", "Nhận hàng RDC", "MMD", time(11, 0), time(12, 30)),
-            ("1005", "Break Time", "OTHER", time(12, 30), time(13, 30)),
-        ],
-        5: [  # DELICA staff
-            ("0501", "Pha chế Cafe", "DELICA", time(6, 0), time(6, 30)),
-            ("0503", "Lên hàng Delica", "DELICA", time(7, 0), time(7, 30)),
-            ("0801", "Cleaning Time", "QC-FSH", time(9, 0), time(9, 15)),
-            ("0504", "Kéo mặt Delica", "DELICA", time(10, 0), time(10, 15)),
-            ("1005", "Break Time", "OTHER", time(11, 0), time(12, 0)),
-            ("0505", "Kiểm tra HSD", "DELICA", time(12, 0), time(12, 15)),
-        ],
-        6: [  # D&D staff
-            ("0601", "Lên hàng D&D", "DND", time(6, 0), time(6, 45)),
-            ("0602", "Kéo mặt D&D", "DND", time(7, 0), time(7, 15)),
-            ("0801", "Cleaning Time", "QC-FSH", time(9, 0), time(9, 15)),
-            ("0604", "Đặt hàng D&D", "DND", time(10, 0), time(10, 30)),
-            ("1005", "Break Time", "OTHER", time(11, 0), time(12, 0)),
+            ("0806", "Vệ sinh kho", "QC-FSH", time(9, 15), time(9, 30)),
+            ("0413", "Kiểm kho MMD", "MMD", time(9, 30), time(9, 45)),
+            ("0414", "Nhận hàng bổ sung", "MMD", time(9, 45), time(10, 0)),
+            # 10:00 slot
+            ("0415", "Xử lý claim", "MMD", time(10, 0), time(10, 15)),
+            ("0416", "Kiểm HSD kho", "MMD", time(10, 15), time(10, 30)),
+            ("0417", "Chuẩn bị xuất", "MMD", time(10, 30), time(10, 45)),
+            ("0418", "Nhận hàng RDC 2", "MMD", time(10, 45), time(11, 0)),
+            # 11:00 slot
+            ("0419", "Kiểm hàng RDC 2", "MMD", time(11, 0), time(11, 15)),
+            ("0420", "Phân loại RDC", "MMD", time(11, 15), time(11, 30)),
+            ("0421", "Nhập kho bổ sung", "MMD", time(11, 30), time(11, 45)),
+            ("0422", "Cập nhật hệ thống", "MMD", time(11, 45), time(12, 0)),
+            # 12:00-13:00 Break
+            ("1005", "Break Time", "OTHER", time(12, 0), time(12, 15)),
+            ("1006", "Break Time", "OTHER", time(12, 15), time(12, 30)),
+            ("1007", "Break Time", "OTHER", time(12, 30), time(12, 45)),
+            ("1008", "Break Time", "OTHER", time(12, 45), time(13, 0)),
+            # 13:00 slot
+            ("0423", "Báo cáo tồn kho", "MMD", time(13, 0), time(13, 15)),
+            ("0424", "Kiểm hàng chờ", "MMD", time(13, 15), time(13, 30)),
+            ("0425", "Vệ sinh khu MMD", "MMD", time(13, 30), time(13, 45)),
+            ("0426", "Bàn giao MMD", "MMD", time(13, 45), time(14, 0)),
         ],
     }
+
+    # ========== CA CHIỀU (14:30-22:30) - Staff 5-8 ==========
+    afternoon_schedule = {
+        # Staff 5 - Leader ca chiều
+        5: [
+            # 14:30 slot
+            ("2501", "Nhận bàn giao", "LEADER", time(14, 30), time(14, 45)),
+            ("2502", "Kiểm tra ca", "LEADER", time(14, 45), time(15, 0)),
+            # 15:00 slot
+            ("2503", "Check hàng OOS", "LEADER", time(15, 0), time(15, 15)),
+            ("2504", "Duyệt giảm giá", "LEADER", time(15, 15), time(15, 30)),
+            ("2505", "Giám sát sàn", "LEADER", time(15, 30), time(15, 45)),
+            ("0113", "Hỗ trợ POS", "POS", time(15, 45), time(16, 0)),
+            # 16:00 slot
+            ("2506", "Kiểm promo", "LEADER", time(16, 0), time(16, 15)),
+            ("0114", "Check tiền POS", "POS", time(16, 15), time(16, 30)),
+            ("0115", "Đổi tiền lẻ", "POS", time(16, 30), time(16, 45)),
+            ("2507", "Meeting chiều", "LEADER", time(16, 45), time(17, 0)),
+            # 17:00 slot - Rush hour
+            ("0116", "Hỗ trợ thanh toán", "POS", time(17, 0), time(17, 15)),
+            ("0117", "Phục vụ khách", "POS", time(17, 15), time(17, 30)),
+            ("2508", "Giám sát POS", "LEADER", time(17, 30), time(17, 45)),
+            ("0118", "Xử lý khiếu nại", "POS", time(17, 45), time(18, 0)),
+            # 18:00 slot - Peak
+            ("2509", "Điều phối nhân lực", "LEADER", time(18, 0), time(18, 15)),
+            ("0119", "Hỗ trợ POS peak", "POS", time(18, 15), time(18, 30)),
+            ("0120", "Check queue", "POS", time(18, 30), time(18, 45)),
+            ("2510", "Kiểm tra sàn", "LEADER", time(18, 45), time(19, 0)),
+            # 19:00 slot
+            ("0121", "Đối soát tiền", "POS", time(19, 0), time(19, 15)),
+            ("2511", "Duyệt giảm giá tối", "LEADER", time(19, 15), time(19, 30)),
+            ("0807", "Cleaning tối", "QC-FSH", time(19, 30), time(19, 45)),
+            ("2512", "Kiểm VSC", "LEADER", time(19, 45), time(20, 0)),
+            # 20:00-21:00 Break
+            ("1005", "Break Time", "OTHER", time(20, 0), time(20, 15)),
+            ("1006", "Break Time", "OTHER", time(20, 15), time(20, 30)),
+            ("1007", "Break Time", "OTHER", time(20, 30), time(20, 45)),
+            ("1008", "Break Time", "OTHER", time(20, 45), time(21, 0)),
+            # 21:00 slot
+            ("2513", "Chuẩn bị đóng cửa", "LEADER", time(21, 0), time(21, 15)),
+            ("0122", "Đếm tiền cuối", "POS", time(21, 15), time(21, 30)),
+            ("2514", "Kiểm tra kho", "LEADER", time(21, 30), time(21, 45)),
+            ("2515", "Báo cáo ngày", "LEADER", time(21, 45), time(22, 0)),
+            # 22:00 slot
+            ("0123", "Đóng POS", "POS", time(22, 0), time(22, 15)),
+            ("2516", "Đóng kho", "LEADER", time(22, 15), time(22, 30)),
+        ],
+        # Staff 6 - PERI ca chiều
+        6: [
+            # 14:30 slot
+            ("0227", "Nhận bàn giao Peri", "PERI", time(14, 30), time(14, 45)),
+            ("0228", "Kiểm hàng Peri", "PERI", time(14, 45), time(15, 0)),
+            # 15:00 slot
+            ("0229", "Bổ sung kệ chiều", "PERI", time(15, 0), time(15, 15)),
+            ("0230", "Kéo mặt Peri", "PERI", time(15, 15), time(15, 30)),
+            ("0231", "Cắt gọt chiều", "PERI", time(15, 30), time(15, 45)),
+            ("0232", "Đóng gói thịt", "PERI", time(15, 45), time(16, 0)),
+            # 16:00 slot
+            ("0233", "Kiểm HSD", "PERI", time(16, 0), time(16, 15)),
+            ("0234", "Chuẩn bị giảm giá", "PERI", time(16, 15), time(16, 30)),
+            ("0235", "Dán sticker giảm", "PERI", time(16, 30), time(16, 45)),
+            ("0236", "Xoay FIFO", "PERI", time(16, 45), time(17, 0)),
+            # 17:00 slot
+            ("0237", "Bổ sung peak", "PERI", time(17, 0), time(17, 15)),
+            ("0238", "Kéo mặt peak", "PERI", time(17, 15), time(17, 30)),
+            ("0239", "Check OOS", "PERI", time(17, 30), time(17, 45)),
+            ("0240", "Cắt gọt bổ sung", "PERI", time(17, 45), time(18, 0)),
+            # 18:00 slot
+            ("0241", "Bổ sung salad", "PERI", time(18, 0), time(18, 15)),
+            ("0242", "Kiểm nhiệt độ", "PERI", time(18, 15), time(18, 30)),
+            ("0243", "Xử lý hàng hư", "PERI", time(18, 30), time(18, 45)),
+            ("0244", "Kéo mặt tối", "PERI", time(18, 45), time(19, 0)),
+            # 19:00 slot
+            ("0245", "Giảm giá tối 30%", "PERI", time(19, 0), time(19, 15)),
+            ("0246", "Giảm giá tối 50%", "PERI", time(19, 15), time(19, 30)),
+            ("0808", "Vệ sinh kệ Peri", "QC-FSH", time(19, 30), time(19, 45)),
+            ("0247", "Thu dọn hàng", "PERI", time(19, 45), time(20, 0)),
+            # 20:00-21:00 Break
+            ("1005", "Break Time", "OTHER", time(20, 0), time(20, 15)),
+            ("1006", "Break Time", "OTHER", time(20, 15), time(20, 30)),
+            ("1007", "Break Time", "OTHER", time(20, 30), time(20, 45)),
+            ("1008", "Break Time", "OTHER", time(20, 45), time(21, 0)),
+            # 21:00 slot
+            ("0248", "Thu hàng cuối", "PERI", time(21, 0), time(21, 15)),
+            ("0249", "Kiểm kho tối", "PERI", time(21, 15), time(21, 30)),
+            ("0250", "Vệ sinh khu vực", "PERI", time(21, 30), time(21, 45)),
+            ("0251", "Báo cáo Peri", "PERI", time(21, 45), time(22, 0)),
+            # 22:00 slot
+            ("0252", "Đóng kệ lạnh", "PERI", time(22, 0), time(22, 15)),
+            ("0253", "Bàn giao cuối", "PERI", time(22, 15), time(22, 30)),
+        ],
+        # Staff 7 - DRY ca chiều
+        7: [
+            # 14:30 slot
+            ("0327", "Nhận bàn giao Dry", "DRY", time(14, 30), time(14, 45)),
+            ("0328", "Kiểm OOS Dry", "DRY", time(14, 45), time(15, 0)),
+            # 15:00 slot
+            ("0329", "Bổ sung kệ chiều", "DRY", time(15, 0), time(15, 15)),
+            ("0330", "Kéo mặt Dry", "DRY", time(15, 15), time(15, 30)),
+            ("0331", "Check promo", "DRY", time(15, 30), time(15, 45)),
+            ("0332", "Sắp xếp endcap", "DRY", time(15, 45), time(16, 0)),
+            # 16:00 slot
+            ("0333", "Kiểm HSD", "DRY", time(16, 0), time(16, 15)),
+            ("0334", "Bổ sung snack", "DRY", time(16, 15), time(16, 30)),
+            ("0335", "Check nước uống", "DRY", time(16, 30), time(16, 45)),
+            ("0336", "Xoay FIFO", "DRY", time(16, 45), time(17, 0)),
+            # 17:00 slot
+            ("0337", "Bổ sung peak", "DRY", time(17, 0), time(17, 15)),
+            ("0338", "Kéo mặt peak", "DRY", time(17, 15), time(17, 30)),
+            ("0339", "Check OOS peak", "DRY", time(17, 30), time(17, 45)),
+            ("0340", "Sắp xếp gondola", "DRY", time(17, 45), time(18, 0)),
+            # 18:00 slot
+            ("0341", "Bổ sung mì gói", "DRY", time(18, 0), time(18, 15)),
+            ("0342", "Check gia vị", "DRY", time(18, 15), time(18, 30)),
+            ("0343", "Kiểm bánh kẹo", "DRY", time(18, 30), time(18, 45)),
+            ("0344", "Kéo mặt tối", "DRY", time(18, 45), time(19, 0)),
+            # 19:00 slot
+            ("0345", "Giảm giá HSD", "DRY", time(19, 0), time(19, 15)),
+            ("0346", "Thu dọn hàng", "DRY", time(19, 15), time(19, 30)),
+            ("0809", "Vệ sinh kệ Dry", "QC-FSH", time(19, 30), time(19, 45)),
+            ("0347", "Kiểm kho Dry", "DRY", time(19, 45), time(20, 0)),
+            # 20:00-21:00 Break
+            ("1005", "Break Time", "OTHER", time(20, 0), time(20, 15)),
+            ("1006", "Break Time", "OTHER", time(20, 15), time(20, 30)),
+            ("1007", "Break Time", "OTHER", time(20, 30), time(20, 45)),
+            ("1008", "Break Time", "OTHER", time(20, 45), time(21, 0)),
+            # 21:00 slot
+            ("0348", "Kéo mặt cuối", "DRY", time(21, 0), time(21, 15)),
+            ("0349", "Báo cáo OOS", "DRY", time(21, 15), time(21, 30)),
+            ("0350", "Vệ sinh khu vực", "DRY", time(21, 30), time(21, 45)),
+            ("0351", "Báo cáo Dry", "DRY", time(21, 45), time(22, 0)),
+            # 22:00 slot
+            ("0352", "Kiểm tra cuối", "DRY", time(22, 0), time(22, 15)),
+            ("0353", "Bàn giao cuối", "DRY", time(22, 15), time(22, 30)),
+        ],
+        # Staff 8 - DELICA/DND ca chiều
+        8: [
+            # 14:30 slot
+            ("0506", "Nhận bàn giao Delica", "DELICA", time(14, 30), time(14, 45)),
+            ("0603", "Kiểm D&D", "DND", time(14, 45), time(15, 0)),
+            # 15:00 slot
+            ("0507", "Pha chế Cafe", "DELICA", time(15, 0), time(15, 15)),
+            ("0508", "Lên hàng Delica", "DELICA", time(15, 15), time(15, 30)),
+            ("0604", "Đặt hàng D&D", "DND", time(15, 30), time(15, 45)),
+            ("0605", "Kéo mặt D&D", "DND", time(15, 45), time(16, 0)),
+            # 16:00 slot
+            ("0509", "Kiểm HSD Delica", "DELICA", time(16, 0), time(16, 15)),
+            ("0510", "Bổ sung bánh", "DELICA", time(16, 15), time(16, 30)),
+            ("0606", "Check sữa D&D", "DND", time(16, 30), time(16, 45)),
+            ("0607", "Xoay FIFO D&D", "DND", time(16, 45), time(17, 0)),
+            # 17:00 slot
+            ("0511", "Pha chế peak", "DELICA", time(17, 0), time(17, 15)),
+            ("0512", "Phục vụ khách", "DELICA", time(17, 15), time(17, 30)),
+            ("0608", "Bổ sung D&D peak", "DND", time(17, 30), time(17, 45)),
+            ("0609", "Check OOS D&D", "DND", time(17, 45), time(18, 0)),
+            # 18:00 slot
+            ("0513", "Bổ sung Delica", "DELICA", time(18, 0), time(18, 15)),
+            ("0514", "Kéo mặt Delica", "DELICA", time(18, 15), time(18, 30)),
+            ("0610", "Kiểm nhiệt D&D", "DND", time(18, 30), time(18, 45)),
+            ("0611", "Kéo mặt D&D tối", "DND", time(18, 45), time(19, 0)),
+            # 19:00 slot
+            ("0515", "Giảm giá Delica", "DELICA", time(19, 0), time(19, 15)),
+            ("0612", "Giảm giá D&D", "DND", time(19, 15), time(19, 30)),
+            ("0810", "Vệ sinh Delica", "QC-FSH", time(19, 30), time(19, 45)),
+            ("0516", "Thu dọn Delica", "DELICA", time(19, 45), time(20, 0)),
+            # 20:00-21:00 Break
+            ("1005", "Break Time", "OTHER", time(20, 0), time(20, 15)),
+            ("1006", "Break Time", "OTHER", time(20, 15), time(20, 30)),
+            ("1007", "Break Time", "OTHER", time(20, 30), time(20, 45)),
+            ("1008", "Break Time", "OTHER", time(20, 45), time(21, 0)),
+            # 21:00 slot
+            ("0517", "Đóng quầy Delica", "DELICA", time(21, 0), time(21, 15)),
+            ("0613", "Thu dọn D&D", "DND", time(21, 15), time(21, 30)),
+            ("0518", "Vệ sinh máy pha", "DELICA", time(21, 30), time(21, 45)),
+            ("0614", "Kiểm kho D&D", "DND", time(21, 45), time(22, 0)),
+            # 22:00 slot
+            ("0519", "Báo cáo Delica", "DELICA", time(22, 0), time(22, 15)),
+            ("0615", "Bàn giao D&D", "DND", time(22, 15), time(22, 30)),
+        ],
+    }
+
+    # Merge schedules
+    all_schedules = {**morning_schedule, **afternoon_schedule}
 
     for day_offset in range(7):
         current_date = today + timedelta(days=day_offset)
 
-        for staff_id, tasks in task_templates.items():
+        for staff_id, tasks in all_schedules.items():
             for task_code, task_name, group_id, start_t, end_t in tasks:
+                # Create unique task code per day to avoid conflicts
+                daily_task_code = f"{task_code}-D{day_offset}"
+
                 existing = db.query(DailyScheduleTask).filter(
                     DailyScheduleTask.staff_id == staff_id,
                     DailyScheduleTask.schedule_date == current_date,
-                    DailyScheduleTask.task_code == task_code
+                    DailyScheduleTask.task_code == daily_task_code
                 ).first()
 
                 if not existing:
@@ -323,7 +669,7 @@ def seed_daily_schedule_tasks(db: Session):
                         store_id=1,
                         schedule_date=current_date,
                         group_id=group_id,
-                        task_code=task_code,
+                        task_code=daily_task_code,
                         task_name=task_name,
                         start_time=start_t,
                         end_time=end_t,
@@ -332,7 +678,7 @@ def seed_daily_schedule_tasks(db: Session):
                     db.add(task)
 
     db.commit()
-    print("✓ Daily schedule tasks seeded")
+    print("✓ Daily schedule tasks seeded (8 staff, 4 per shift, 4 tasks per slot)")
 
 
 def main():
