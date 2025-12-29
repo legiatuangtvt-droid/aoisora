@@ -316,7 +316,8 @@ interface TaskDetailFilters {
 frontend/src/
 ├── app/tasks/
 │   ├── [id]/
-│   │   └── page.tsx              # Task detail page with dynamic ID
+│   │   ├── page.tsx              # Server component with generateStaticParams
+│   │   └── TaskDetailClient.tsx  # Client component for task detail UI
 │   ├── detail/
 │   │   └── page.tsx              # Auto-redirect to nearest deadline task
 │   ├── list/
@@ -375,3 +376,4 @@ frontend/src/
 | 2025-12-29 | Added navigation flow: click row in Task List or click Detail menu |
 | 2025-12-29 | Added /tasks/detail route with auto-redirect to nearest deadline task |
 | 2025-12-29 | Created /tasks/[id] page for task detail display |
+| 2025-12-29 | Fixed static export: added generateStaticParams and split into Server/Client components |
