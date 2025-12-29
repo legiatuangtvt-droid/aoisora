@@ -69,3 +69,138 @@ export interface Department {
   level: number;
   children?: Department[];
 }
+
+// ========================================
+// Task Detail Types (SCR_TASK_DETAIL)
+// ========================================
+
+// View modes for Task Detail
+export type ViewMode = 'results' | 'comment' | 'staff';
+
+// Task result status
+export type TaskResultStatus = 'success' | 'failed' | 'in_progress' | 'not_started';
+
+// Task type
+export type TaskType = 'image' | 'text' | 'checklist';
+
+// Image item
+export interface ImageItem {
+  id: string;
+  title: string;
+  url: string;
+  thumbnailUrl?: string;
+  uploadedAt: string;
+  count?: number;
+}
+
+// Comment
+export interface Comment {
+  id: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  userInitials: string;
+  content: string;
+  createdAt: string;
+}
+
+// Like info
+export interface LikeInfo {
+  count: number;
+  users: { id: string; name: string; avatar?: string }[];
+}
+
+// Completed by user
+export interface CompletedByUser {
+  id: string;
+  name: string;
+  avatar?: string;
+}
+
+// Store result with images and comments
+export interface StoreResult {
+  id: string;
+  storeId: string;
+  storeName: string;
+  storeLocation: string;
+  startTime?: string;
+  completedTime?: string;
+  status: TaskResultStatus;
+  completedBy?: CompletedByUser;
+  images: ImageItem[];
+  comments: Comment[];
+  likes: LikeInfo;
+}
+
+// Requirement image (for staff card)
+export interface RequirementImage {
+  id: string;
+  url: string;
+  thumbnailUrl?: string;
+  isCompleted: boolean;
+}
+
+// Staff result
+export interface StaffResult {
+  id: string;
+  staffId: string;
+  staffName: string;
+  avatar?: string;
+  position: string;
+  store: string;
+  storeId: string;
+  progress: number;
+  progressText: string;
+  status: TaskResultStatus;
+  requirements: RequirementImage[];
+  comments: Comment[];
+}
+
+// Workflow step
+export interface WorkflowStep {
+  id: string;
+  step: number;
+  name: string;
+  status: 'completed' | 'in_progress' | 'pending';
+  assignee?: CompletedByUser;
+  startDay?: string;
+  endDay?: string;
+  comment?: string;
+  skipInfo?: string;
+}
+
+// Task detail statistics
+export interface TaskDetailStats {
+  totalStaff: number;
+  notStarted: number;
+  completed: number;
+  unableToComplete: number;
+  avgCompletionTime: number;
+}
+
+// Task detail with full information
+export interface TaskDetail {
+  id: string;
+  level: number;
+  name: string;
+  startDate: string;
+  endDate: string;
+  hqCheckCode: string;
+  hqCheckStatus: HQCheckStatus;
+  taskType: TaskType;
+  manualLink?: string;
+  stats: TaskDetailStats;
+  storeResults: StoreResult[];
+  staffResults: StaffResult[];
+  workflowSteps: WorkflowStep[];
+}
+
+// Filter state for Task Detail
+export interface TaskDetailFilters {
+  region: string;
+  area: string;
+  store: string;
+  location: string;
+  status: string;
+  search: string;
+}

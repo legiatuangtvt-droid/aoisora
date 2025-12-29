@@ -2,9 +2,12 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { TaskGroup } from '@/types/tasks';
-import { mockTaskGroups } from '@/data/mockTasks';
-import StatusPill from '@/components/ui/StatusPill';
+import { TaskDetail, ViewMode, TaskDetailFilters, StoreResult, StaffResult } from '@/types/tasks';
+import { mockTaskDetail, mockStoreResults, mockStaffResults } from '@/data/mockTaskDetail';
+import TaskDetailHeader from '@/components/tasks/TaskDetailHeader';
+import TaskFilterBar from '@/components/tasks/TaskFilterBar';
+import StoreResultCard from '@/components/tasks/StoreResultCard';
+import StaffCard from '@/components/tasks/StaffCard';
 
 interface TaskDetailClientProps {
   taskId: string;
@@ -13,34 +16,102 @@ interface TaskDetailClientProps {
 export default function TaskDetailClient({ taskId }: TaskDetailClientProps) {
   const router = useRouter();
 
-  const [task, setTask] = useState<TaskGroup | null>(null);
+  const [task, setTask] = useState<TaskDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<ViewMode>('results');
+  const [filters, setFilters] = useState<TaskDetailFilters>({
+    region: 'all',
+    area: 'all',
+    store: 'all',
+    location: 'all',
+    status: 'all',
+    search: '',
+  });
+
+  // Store and Staff results
+  const [storeResults, setStoreResults] = useState<StoreResult[]>([]);
+  const [staffResults, setStaffResults] = useState<StaffResult[]>([]);
 
   useEffect(() => {
-    // Find task from mock data (replace with API call later)
-    const foundTask = mockTaskGroups.find(t => t.id === taskId);
-    setTask(foundTask || null);
-    setLoading(false);
+    // Simulate API call - replace with actual API later
+    const loadData = async () => {
+      setLoading(true);
+      // Mock delay
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Load task detail
+      if (mockTaskDetail.id === taskId || taskId) {
+        setTask(mockTaskDetail);
+        setStoreResults(mockStoreResults);
+        setStaffResults(mockStaffResults);
+      }
+      setLoading(false);
+    };
+
+    loadData();
   }, [taskId]);
+
+  // Filter store results based on filters
+  const filteredStoreResults = storeResults.filter(result => {
+    if (filters.region !== 'all' && !result.storeLocation.toLowerCase().includes(filters.region.toLowerCase())) {
+      return false;
+    }
+    if (filters.status !== 'all' && result.status !== filters.status) {
+      return false;
+    }
+    return true;
+  });
+
+  // Filter staff results based on filters
+  const filteredStaffResults = staffResults.filter(result => {
+    if (filters.location !== 'all' && result.store.toLowerCase() !== filters.location.toLowerCase()) {
+      return false;
+    }
+    if (filters.status !== 'all' && result.status !== filters.status) {
+      return false;
+    }
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      return (
+        result.staffName.toLowerCase().includes(searchLower) ||
+        result.staffId.toLowerCase().includes(searchLower)
+      );
+    }
+    return true;
+  });
+
+  const handleAddComment = (storeId: string, content: string) => {
+    console.log('Add comment to store:', storeId, content);
+    // TODO: Implement API call to add comment
+  };
+
+  const handleSendReminder = (staffId: string) => {
+    console.log('Send reminder to staff:', staffId);
+    // TODO: Implement API call to send reminder
+  };
+
+  const handleStaffComment = (staffId: string, content: string) => {
+    console.log('Add comment to staff:', staffId, content);
+    // TODO: Implement API call to add comment
+  };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-gray-500">Loading...</div>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-gray-500 dark:text-gray-400">Loading...</div>
       </div>
     );
   }
 
   if (!task) {
     return (
-      <div className="min-h-screen bg-white p-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Task Not Found</h1>
-          <p className="text-gray-600 mb-6">The task you're looking for doesn't exist.</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Task Not Found</h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">The task you're looking for doesn't exist.</p>
           <button
             onClick={() => router.push('/tasks/list')}
-            className="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors"
-            style={{ backgroundColor: '#C5055B' }}
+            className="px-4 py-2 bg-[#C5055B] text-white rounded-lg hover:bg-pink-700 transition-colors"
           >
             Back to List
           </button>
@@ -49,14 +120,17 @@ export default function TaskDetailClient({ taskId }: TaskDetailClientProps) {
     );
   }
 
+  // Determine if we should show staff view filters
+  const isStaffView = viewMode === 'results' && filteredStaffResults.length > 0;
+
   return (
-    <div className="min-h-screen bg-white">
-      <div className="p-8">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="p-6">
+        {/* Back Button */}
+        <div className="mb-4">
           <button
             onClick={() => router.push('/tasks/list')}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+            className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -65,87 +139,91 @@ export default function TaskDetailClient({ taskId }: TaskDetailClientProps) {
           </button>
         </div>
 
-        {/* Task Header Info */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <span className="text-sm text-gray-500">#{task.no}</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center">
-                    <span className="text-xs text-white font-bold">{task.dept.charAt(0)}</span>
-                  </div>
-                  <span className="font-medium text-gray-900">{task.dept}</span>
+        {/* Task Header */}
+        <TaskDetailHeader task={task} />
+
+        {/* Filter Bar */}
+        <TaskFilterBar
+          filters={filters}
+          onFilterChange={setFilters}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          showStaffFilters={isStaffView}
+        />
+
+        {/* Content based on view mode */}
+        {viewMode === 'results' && (
+          <div className="space-y-6">
+            {/* Store Results */}
+            {filteredStoreResults.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Store Results ({filteredStoreResults.length})
+                </h3>
+                {filteredStoreResults.map((result) => (
+                  <StoreResultCard
+                    key={result.storeId}
+                    result={result}
+                    onAddComment={handleAddComment}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Staff Results Grid */}
+            {filteredStaffResults.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Staff Progress ({filteredStaffResults.length})
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredStaffResults.map((staff) => (
+                    <StaffCard
+                      key={staff.id}
+                      staff={staff}
+                      onSendReminder={handleSendReminder}
+                      onAddComment={handleStaffComment}
+                    />
+                  ))}
                 </div>
               </div>
-              <h1 className="text-2xl font-bold text-gray-900">{task.taskGroupName}</h1>
-            </div>
-            <div className="flex items-center gap-3">
-              <StatusPill status={task.status} />
-              <StatusPill status={task.hqCheck} />
-            </div>
-          </div>
+            )}
 
-          {/* Task Meta Info */}
-          <div className="grid grid-cols-4 gap-6 pt-4 border-t border-gray-200">
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Duration</p>
-              <p className="font-medium text-gray-900">{task.startDate} → {task.endDate}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Progress</p>
-              <div className="flex items-center gap-2">
-                <div className="flex-1 bg-gray-200 rounded-full h-2 max-w-[100px]">
-                  <div
-                    className="bg-green-500 h-2 rounded-full"
-                    style={{ width: `${(task.progress.completed / task.progress.total) * 100}%` }}
-                  ></div>
-                </div>
-                <span className="font-medium text-gray-900">
-                  {task.progress.completed}/{task.progress.total}
-                </span>
+            {/* Empty State */}
+            {filteredStoreResults.length === 0 && filteredStaffResults.length === 0 && (
+              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-12 text-center">
+                <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p className="text-gray-500 dark:text-gray-400">No results found matching your filters.</p>
               </div>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Unable</p>
-              <p className="font-medium text-gray-900">{task.unable}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Status</p>
-              <StatusPill status={task.status} />
-            </div>
-          </div>
-        </div>
-
-        {/* Sub Tasks */}
-        {task.subTasks && task.subTasks.length > 0 && (
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <div className="px-6 py-4 bg-pink-50 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">Sub Tasks ({task.subTasks.length})</h2>
-            </div>
-            <div className="divide-y divide-gray-100">
-              {task.subTasks.map((subTask, index) => (
-                <div key={subTask.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm text-gray-400">{index + 1}.</span>
-                      <span className="text-gray-900">{subTask.name}</span>
-                      {subTask.assignee && (
-                        <span className="text-sm text-gray-500">({subTask.assignee})</span>
-                      )}
-                    </div>
-                    <StatusPill status={subTask.status} />
-                  </div>
-                </div>
-              ))}
-            </div>
+            )}
           </div>
         )}
 
-        {/* Empty State for Sub Tasks */}
-        {(!task.subTasks || task.subTasks.length === 0) && (
-          <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-            <p className="text-gray-500">No sub tasks available</p>
+        {viewMode === 'comment' && (
+          <div className="space-y-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              All Comments
+            </h3>
+            {/* Show store results with comments only view */}
+            {filteredStoreResults.map((result) => (
+              <StoreResultCard
+                key={result.storeId}
+                result={result}
+                showImages={false}
+                onAddComment={handleAddComment}
+              />
+            ))}
+
+            {filteredStoreResults.length === 0 && (
+              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-12 text-center">
+                <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                <p className="text-gray-500 dark:text-gray-400">No comments found.</p>
+              </div>
+            )}
           </div>
         )}
       </div>
