@@ -227,12 +227,12 @@ export default function TaskDetailClient({ taskId }: TaskDetailClientProps) {
             </div>
 
             {/* Right - View Mode Toggle with icons */}
-            <div className="flex items-center gap-1">
+            <div className="flex items-center bg-gray-100 rounded-lg p-1">
               <button
                 onClick={() => setViewMode('results')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   viewMode === 'results'
-                    ? 'text-[#C5055B]'
+                    ? 'bg-white text-[#C5055B] shadow-sm'
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
@@ -243,9 +243,9 @@ export default function TaskDetailClient({ taskId }: TaskDetailClientProps) {
               </button>
               <button
                 onClick={() => setViewMode('comment')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   viewMode === 'comment'
-                    ? 'text-[#C5055B]'
+                    ? 'bg-white text-[#C5055B] shadow-sm'
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
