@@ -151,11 +151,10 @@ export default function Sidebar() {
           <button
             onClick={() => toggleMenu(item.id)}
             title={!isExpanded ? item.label : undefined}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
-              active
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${active
                 ? 'bg-pink-50 dark:bg-pink-900/20 text-[#C5055B] dark:text-pink-400'
                 : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-            }`}
+              }`}
           >
             <MenuIcon
               name={item.icon}
@@ -180,7 +179,7 @@ export default function Sidebar() {
 
           {/* Children - show when expanded OR when collapsed but menu is open */}
           {isMenuExpanded && item.children && (
-            <div className={`mt-1 space-y-1 ${isExpanded ? 'ml-4 border-l-2 border-gray-200 dark:border-gray-700' : 'ml-5'}`}>
+            <div className={`mt-1 space-y-1 ${isExpanded ? 'ml-4 dark:border-gray-700' : 'ml-5'}`}>
               {item.children.map(child => renderMenuItem(child, true))}
             </div>
           )}
@@ -205,11 +204,10 @@ export default function Sidebar() {
         href={implemented ? item.route : '#'}
         onClick={handleClick}
         title={!isExpanded ? item.label : undefined}
-        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isChild && isExpanded ? 'ml-2' : ''} ${childCollapsedStyle} ${
-          isActive(item.route)
+        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isChild && isExpanded ? 'ml-2' : ''} ${childCollapsedStyle} ${isActive(item.route)
             ? 'bg-pink-50 dark:bg-pink-900/20 text-[#C5055B] dark:text-pink-400'
             : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-        }`}
+          }`}
       >
         <MenuIcon
           name={item.icon}
@@ -231,9 +229,8 @@ export default function Sidebar() {
 
   return (
     <aside
-      className={`fixed left-0 top-16 h-[calc(100vh-4rem)] bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 z-40 ${
-        isExpanded ? 'w-60' : 'w-16'
-      }`}
+      className={`fixed left-0 top-16 h-[calc(100vh-4rem)] bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 z-40 ${isExpanded ? 'w-60' : 'w-16'
+        }`}
     >
       {/* Toggle Button */}
       <button

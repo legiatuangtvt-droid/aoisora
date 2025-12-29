@@ -123,10 +123,12 @@ export default function TopBar({ user = mockUser }: TopBarProps) {
           </div>
 
           {/* Company Logo */}
-          <div className="hidden lg:flex items-center pl-4 border-l border-gray-200 dark:border-gray-700">
-            <div className="w-10 h-10 bg-gray-200 dark:bg-gray-600 rounded flex items-center justify-center">
-              <span className="text-gray-500 dark:text-gray-400 text-xs font-medium">LOGO</span>
-            </div>
+          <div className="hidden lg:flex items-center pl-4 dark:border-gray-700">
+            <img
+              src="/images/logos/aeon-maxvalu.png"
+              alt="AEON MaxValu"
+              className="h-10 w-auto object-contain"
+            />
           </div>
         </div>
       </div>
