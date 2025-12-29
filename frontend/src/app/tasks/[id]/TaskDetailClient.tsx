@@ -178,57 +178,80 @@ export default function TaskDetailClient({ taskId }: TaskDetailClientProps) {
         {/* Filter Bar */}
         <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6">
           <div className="flex items-center justify-between">
+            {/* Left - Dropdowns with badges */}
             <div className="flex items-center gap-3">
-              {/* Dropdowns */}
-              <select className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-500">
-                <option>Region</option>
-                <option>The North</option>
-                <option>The South</option>
-              </select>
-              <select className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-500">
-                <option>Area</option>
-                <option>Ocean area</option>
-                <option>Mountain area</option>
-              </select>
-              <select className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-500">
-                <option>Store</option>
-                <option>Store: 30</option>
-                <option>Store: 31</option>
-              </select>
-
-              {/* Search */}
+              {/* Region Dropdown */}
               <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search"
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 w-64"
-                />
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                <select className="appearance-none pl-3 pr-16 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 bg-white">
+                  <option>Region</option>
+                  <option>The North</option>
+                  <option>The South</option>
+                </select>
+                <div className="absolute right-8 top-1/2 -translate-y-1/2 px-1.5 py-0.5 bg-gray-100 rounded text-xs font-medium text-gray-600">
+                  4
+                </div>
+                <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+
+              {/* Area Dropdown */}
+              <div className="relative">
+                <select className="appearance-none pl-3 pr-16 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 bg-white">
+                  <option>Area</option>
+                  <option>Ocean area</option>
+                  <option>Mountain area</option>
+                </select>
+                <div className="absolute right-8 top-1/2 -translate-y-1/2 px-1.5 py-0.5 bg-gray-100 rounded text-xs font-medium text-gray-600">
+                  7
+                </div>
+                <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+
+              {/* Store Dropdown */}
+              <div className="relative">
+                <select className="appearance-none pl-3 pr-16 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 bg-white">
+                  <option>Store</option>
+                  <option>Store: 30</option>
+                  <option>Store: 31</option>
+                </select>
+                <div className="absolute right-8 top-1/2 -translate-y-1/2 px-1.5 py-0.5 bg-gray-100 rounded text-xs font-medium text-gray-600">
+                  30
+                </div>
+                <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </div>
             </div>
 
-            {/* View Mode Toggle */}
-            <div className="flex items-center gap-2">
+            {/* Right - View Mode Toggle with icons */}
+            <div className="flex items-center gap-1">
               <button
                 onClick={() => setViewMode('results')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   viewMode === 'results'
-                    ? 'bg-[#C5055B] text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
+                    ? 'text-[#C5055B]'
+                    : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
                 Results
               </button>
               <button
                 onClick={() => setViewMode('comment')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   viewMode === 'comment'
-                    ? 'bg-[#C5055B] text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
+                    ? 'text-[#C5055B]'
+                    : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
                 Comment
               </button>
             </div>
