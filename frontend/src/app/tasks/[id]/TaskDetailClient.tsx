@@ -62,89 +62,118 @@ export default function TaskDetailClient({ taskId }: TaskDetailClientProps) {
           </ol>
         </nav>
 
-        {/* Task Header */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-          <div className="flex items-start justify-between mb-4">
-            <div>
+        {/* Task Header - New Design */}
+        <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
+          <div className="flex items-start gap-6">
+            {/* Left - Task Info */}
+            <div className="flex-shrink-0 min-w-[320px]">
               {/* Task Level Badge */}
-              <span className="inline-block px-3 py-1 bg-pink-100 text-[#C5055B] text-sm font-medium rounded-full mb-3">
+              <span className="text-[#C5055B] text-sm font-medium">
                 Task level 1
               </span>
 
               {/* Task Name */}
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              <h1 className="text-2xl font-bold text-gray-900 mt-1 mb-2">
                 {task.taskGroupName}
               </h1>
 
-              {/* Task Info */}
-              <div className="flex items-center gap-6 text-sm text-gray-600">
+              {/* Date and HQ Check */}
+              <div className="flex items-center gap-3 text-sm text-gray-500 mb-3">
+                <span>{task.startDate} - {task.endDate}</span>
+                <span className="text-gray-300">|</span>
                 <span className="flex items-center gap-1">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  {task.startDate} &rarr; {task.endDate}
+                  HQ Check: {taskDetail?.hqCheckCode || '27/27'}
                 </span>
-                <span className="flex items-center gap-1 text-[#C5055B]">
-                  HQ Check: {taskDetail?.hqCheckCode || 'N/A'}
-                </span>
-                <span className="flex items-center gap-1">
+              </div>
+
+              {/* Task Type and Manual Link */}
+              <div className="flex items-center gap-4 text-sm">
+                <span className="flex items-center gap-1.5 text-gray-600">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
                   Task type: Image
                 </span>
-                <Link href="#" className="text-[#C5055B] hover:underline">
-                  Manual link
-                </Link>
+                <span className="flex items-center gap-1.5">
+                  <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                  </svg>
+                  <span className="text-gray-600">Manual link:</span>
+                  <Link href="#" className="text-[#C5055B] hover:underline">
+                    link
+                  </Link>
+                </span>
+              </div>
+
+              {/* User Icon */}
+              <div className="mt-3">
+                <div className="inline-flex items-center justify-center w-10 h-10 bg-pink-100 rounded-full">
+                  <svg className="w-5 h-5 text-[#C5055B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
               </div>
             </div>
 
-            {/* HQ Check Status */}
-            <div className="text-right">
-              <span className={`inline-block px-3 py-1 text-sm font-medium rounded-full ${
-                task.hqCheck === 'DONE' ? 'bg-blue-100 text-blue-700' :
-                task.hqCheck === 'DRAFT' ? 'bg-green-100 text-green-700' :
-                'bg-red-100 text-red-700'
-              }`}>
-                {task.hqCheck === 'DONE' ? 'Done' : task.hqCheck === 'DRAFT' ? 'Draft' : 'Not Yet'}
-              </span>
-            </div>
-          </div>
+            {/* Right - Statistics Cards */}
+            <div className="flex-1 grid grid-cols-4 gap-4">
+              {/* Not Started */}
+              <div className="border border-gray-200 rounded-xl p-4 text-center">
+                <div className="flex items-center justify-center mb-3">
+                  <div className="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-4xl font-bold text-gray-900 mb-1">{taskDetail?.stats.notStarted || 10}</div>
+                <div className="text-sm text-gray-500">Not Started</div>
+              </div>
 
-          {/* Statistics Cards */}
-          <div className="grid grid-cols-4 gap-4 mt-6">
-            <div className="bg-gray-50 rounded-lg p-4 text-center">
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+              {/* Completed */}
+              <div className="border-2 border-green-400 rounded-xl p-4 text-center bg-green-50/30">
+                <div className="flex items-center justify-center mb-3">
+                  <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-4xl font-bold text-gray-900 mb-1">{taskDetail?.stats.completed || task.progress.completed}</div>
+                <div className="text-sm text-gray-500">Completed</div>
               </div>
-              <div className="text-3xl font-bold text-gray-400">{taskDetail?.stats.notStarted || 0}</div>
-              <div className="text-sm text-gray-500">Not Started</div>
-            </div>
-            <div className="bg-green-50 rounded-lg p-4 text-center">
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
+
+              {/* Unable to Complete */}
+              <div className="border-2 border-red-400 rounded-xl p-4 text-center bg-red-50/30">
+                <div className="flex items-center justify-center mb-3">
+                  <div className="w-8 h-8 rounded-full border-2 border-red-500 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-4xl font-bold text-gray-900 mb-1">{taskDetail?.stats.unableToComplete || task.unable}</div>
+                <div className="text-sm text-gray-500">Unable to Complete</div>
               </div>
-              <div className="text-3xl font-bold text-green-600">{taskDetail?.stats.completed || task.progress.completed}</div>
-              <div className="text-sm text-gray-500">Completed</div>
-            </div>
-            <div className="bg-orange-50 rounded-lg p-4 text-center">
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+
+              {/* Average Completion Time */}
+              <div className="border-2 border-yellow-400 rounded-xl p-4 text-center bg-yellow-50/30">
+                <div className="flex items-center justify-center mb-3">
+                  <div className="w-8 h-8 rounded-full bg-yellow-400 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.2 3.2.8-1.3-4.5-2.7V7z"/>
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-4xl font-bold text-gray-900 mb-1">
+                  {taskDetail?.stats.avgCompletionTime || 60}<span className="text-xl">min</span>
+                </div>
+                <div className="text-sm text-gray-500">Average Completion Time</div>
               </div>
-              <div className="text-3xl font-bold text-orange-600">{taskDetail?.stats.unableToComplete || task.unable}</div>
-              <div className="text-sm text-gray-500">Unable to Complete</div>
-            </div>
-            <div className="bg-blue-50 rounded-lg p-4 text-center">
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="text-3xl font-bold text-blue-600">{taskDetail?.stats.avgCompletionTime || 60}min</div>
-              <div className="text-sm text-gray-500">Avg. Completion Time</div>
             </div>
           </div>
         </div>

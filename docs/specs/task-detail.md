@@ -378,3 +378,4 @@ frontend/src/
 | 2025-12-29 | Created /tasks/[id] page for task detail display |
 | 2025-12-29 | Fixed static export: added generateStaticParams and split into Server/Client components |
 | 2025-12-29 | Integrated StoreResultCard with ImageGrid and CommentsSection into TaskDetailClient |
+| 2025-12-29 | Redesigned Task Header: horizontal layout with task info left, stats cards right with colored borders |
