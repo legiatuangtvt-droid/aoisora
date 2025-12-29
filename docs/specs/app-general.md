@@ -112,6 +112,13 @@ This specification defines the general application layout including Top Bar, Sid
 - Toggle via User Menu or system preference
 - Store preference in localStorage
 - Apply `dark` class to `<html>` element
+- Global dark mode styles in `globals.css` automatically override:
+  - Background colors (white → gray-800, gray-50 → gray-900)
+  - Text colors (gray-900 → gray-100, etc.)
+  - Border colors
+  - Form input styles
+  - Table header backgrounds
+  - Hover states
 
 ### 3.5 Language Switching
 
@@ -216,6 +223,7 @@ frontend/src/
 
 | Date | Changes |
 |------|---------|
+| 2025-12-29 | Apply global dark mode styles to all pages via globals.css |
 | 2025-12-29 | Update theme toggle to show current state (Light Mode/Dark Mode) |
 | 2024-12-28 | Initial spec documentation |
 
