@@ -52,7 +52,7 @@ export default function UserMenu({ onClose }: UserMenuProps) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
             </svg>
           )}
-          <span className="text-sm text-gray-700 dark:text-gray-300">Dark Mode</span>
+          <span className="text-sm text-gray-700 dark:text-gray-300">{isDark ? 'Dark Mode' : 'Light Mode'}</span>
         </div>
         {/* Toggle Switch */}
         <div className={`w-10 h-5 rounded-full transition-colors ${isDark ? 'bg-[#C5055B]' : 'bg-gray-300'}`}>

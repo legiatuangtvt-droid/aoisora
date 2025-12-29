@@ -1,7 +1,7 @@
 # App General Layout Specification
 
 > **Status**: Implementation Complete (Frontend)
-> **Last Updated**: 2024-12-28
+> **Last Updated**: 2025-12-29
 > **Screen ID**: APP_GENERAL
 > **Applies to**: All screens
 
@@ -87,7 +87,7 @@ This specification defines the general application layout including Top Bar, Sid
 
 | Item | Icon | Action | Status |
 |------|------|--------|--------|
-| Dark Mode | 🌙/☀️ | Toggle dark/light mode | ✅ Implemented |
+| Light Mode / Dark Mode | 🌙/☀️ | Toggle dark/light mode (text changes based on current state) | ✅ Implemented |
 | My Profile | 👤 | Navigate to /profile | ✅ Implemented |
 | Account Settings | ⚙️ | Navigate to /settings | ✅ Implemented |
 | Language | 🌐 | Open language submenu | ✅ Implemented |
@@ -216,5 +216,6 @@ frontend/src/
 
 | Date | Changes |
 |------|---------|
+| 2025-12-29 | Update theme toggle to show current state (Light Mode/Dark Mode) |
 | 2024-12-28 | Initial spec documentation |
 
