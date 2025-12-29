@@ -3,13 +3,33 @@
 > **Status**: In Development
 > **Last Updated**: 2025-12-29
 > **Screen ID**: SCR_TASK_DETAIL
-> **Route**: /tasks/[id]
+> **Routes**:
+> - `/tasks/[id]` - Direct access with task ID
+> - `/tasks/detail` - Auto-redirect to nearest deadline task
 
 ---
 
 ## 1. Overview
 
 This screen displays detailed task information from HQ to stores. It supports multiple view modes:
+
+### 1.1 Navigation Flow
+
+| Access Method | Route | Behavior |
+|---------------|-------|----------|
+| Click row in Task List | `/tasks/{id}` | Displays detail of specific task |
+| Click "Detail" menu in Sidebar | `/tasks/detail` | Auto-redirects to task with nearest deadline |
+
+#### Auto-redirect Logic (`/tasks/detail`)
+1. Parse all task end dates
+2. Filter tasks where `endDate >= today` (not expired)
+3. Sort by `endDate` ascending (nearest first)
+4. Redirect to first task in sorted list
+5. Fallback: If no upcoming tasks, redirect to first task in list
+6. Fallback: If no tasks at all, redirect to `/tasks/list`
+
+### 1.2 View Modes
+
 - **Store View (Results View)**: View task results grouped by store with images and comments
 - **Comment View**: View all comments across stores
 - **Staff View (Card-based)**: View individual staff progress with images and comments
@@ -294,9 +314,15 @@ interface TaskDetailFilters {
 
 ```
 frontend/src/
-├── app/tasks/[id]/
-│   ├── page.tsx
-│   └── TaskDetailClient.tsx
+├── app/tasks/
+│   ├── [id]/
+│   │   └── page.tsx              # Task detail page with dynamic ID
+│   ├── detail/
+│   │   └── page.tsx              # Auto-redirect to nearest deadline task
+│   ├── list/
+│   │   └── page.tsx              # Task list page
+│   └── new/
+│       └── page.tsx              # Create new task page
 ├── components/tasks/
 │   ├── TaskDetailHeader.tsx
 │   ├── TaskFilterBar.tsx
@@ -346,3 +372,6 @@ frontend/src/
 | Date | Changes |
 |------|---------|
 | 2025-12-29 | Initial spec documentation |
+| 2025-12-29 | Added navigation flow: click row in Task List or click Detail menu |
+| 2025-12-29 | Added /tasks/detail route with auto-redirect to nearest deadline task |
+| 2025-12-29 | Created /tasks/[id] page for task detail display |
