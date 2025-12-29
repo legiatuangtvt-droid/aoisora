@@ -60,5 +60,8 @@ logs/
 # Claude Code
 .claude/settings.local.json
 
+# Firebase
+.firebase/
+
 # Misc
 nul
