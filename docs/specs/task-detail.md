@@ -377,3 +377,4 @@ frontend/src/
 | 2025-12-29 | Added /tasks/detail route with auto-redirect to nearest deadline task |
 | 2025-12-29 | Created /tasks/[id] page for task detail display |
 | 2025-12-29 | Fixed static export: added generateStaticParams and split into Server/Client components |
+| 2025-12-29 | Integrated StoreResultCard with ImageGrid and CommentsSection into TaskDetailClient |
