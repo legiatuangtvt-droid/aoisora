@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phân Tích & Tối Ưu Hóa Lịch Làm Việc</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony -->
+    <!-- Application Structure Plan: The application is structured into four thematic sections (Overview, Process, PDCA Optimization, Tools) rather than mirroring the document's chapters. This design choice facilitates a user-centric experience. Users can get a quick overview, dive deep into the creation process, interactively learn the problem-solving methodology via a PDCA simulation, or look up specific tools. The interactive PDCA cycle is the core, designed to turn passive reading into active learning, which is more effective for understanding complex problem-solving logic. -->
+    <!-- Visualization & Content Choices: 
+    - Report Info: The process of creating a work schedule. -> Goal: Organize & Inform. -> Viz/Presentation: An interactive step-by-step flowchart built with HTML/CSS. -> Interaction: Users can click on each step to reveal detailed sub-tasks. -> Justification: This visualizes the workflow, making it easier to follow than plain text. Library/Method: HTML/Tailwind CSS.
+    - Report Info: PDCA cycle for troubleshooting uncompleted work. -> Goal: Engage & Train. -> Viz/Presentation: An interactive simulation/diagnostic tool. -> Interaction: Users click buttons to move through the P-D-C-A steps, diagnose a simulated problem (assignment vs. training), and see the corresponding solutions. -> Justification: This transforms a complex, text-based concept into a hands-on learning experience, significantly improving comprehension and retention. Library/Method: HTML/Tailwind CSS/Vanilla JS.
+    - Report Info: 8 main tasks of management, system screens. -> Goal: Inform. -> Viz/Presentation: Styled cards and lists. -> Interaction: None, static information for quick reference. -> Justification: Clear and concise presentation for foundational knowledge. Library/Method: HTML/Tailwind CSS.
+    - CONFIRMATION: The source document is qualitative and procedural, lacking quantitative data suitable for charts. Therefore, no charts (Chart.js/Plotly.js) are used.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8;
+            color: #333;
+        }
+        .section-card {
+            background-color: #FFFFFF;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .section-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .nav-link {
+            transition: color 0.3s ease;
+            position: relative;
+            padding-bottom: 4px;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #4A90E2;
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after, .nav-link.active::after {
+            width: 100%;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-align: center;
+        }
+        .btn-primary {
+            background-color: #4A90E2;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #357ABD;
+        }
+        .btn-secondary {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        .btn-secondary:hover {
+            background-color: #e0e0e0;
+        }
+        .process-step {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border: 2px solid #E5E7EB;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: white;
+        }
+        .process-step.active, .process-step:hover {
+            border-color: #4A90E2;
+            background-color: #F0F8FF;
+        }
+        .step-number {
+            width: 2.5rem;
+            height: 2.5rem;
+            background-color: #4A90E2;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 700;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+        .arrow {
+            color: #D1D5DB;
+            font-size: 2rem;
+            margin: 0 1rem;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl md:text-2xl font-bold text-gray-800">Tối Ưu Hóa Lịch Làm Việc</h1>
+                </div>
+                <nav class="hidden md:flex space-x-8">
+                    <a href="#overview" class="nav-link text-gray-600 hover:text-gray-900">Tổng Quan</a>
+                    <a href="#process" class="nav-link text-gray-600 hover:text-gray-900">Quy Trình</a>
+                    <a href="#pdca" class="nav-link text-gray-600 hover:text-gray-900">Chu Trình PDCA</a>
+                    <a href="#tools" class="nav-link text-gray-600 hover:text-gray-900">Công Cụ</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8 space-y-12">
+
+        <section id="overview" class="section-card">
+            <h2 class="text-2xl md:text-3xl font-bold text-center mb-2 text-gray-800">Tổng Quan về Lịch Làm Việc (WS)</h2>
+            <p class="text-center text-gray-600 max-w-3xl mx-auto mb-8">
+                Phần này giới thiệu các khái niệm cốt lõi về lịch làm việc và vai trò của nó trong quản lý hiệu quả. Hiểu rõ những nguyên tắc cơ bản này là bước đầu tiên để xây dựng một lịch trình tối ưu, đảm bảo hoạt động trôi chảy và năng suất.
+            </p>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Lịch làm việc là gì?</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        Lịch làm việc (Work Schedule - WS) là một kế hoạch chi tiết phân công công việc cho từng nhân viên theo từng khung thời gian cụ thể. Đây không chỉ là việc xếp ca, mà là một công cụ quản lý chiến lược nhằm đảm bảo mọi nhiệm vụ cần thiết được hoàn thành đúng thời điểm, tối ưu hóa nguồn nhân lực và nâng cao hiệu suất hoạt động của cửa hàng.
+                    </p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">8 Nhiệm Vụ Chính của Quản Lý</h3>
+                    <ul class="space-y-2 text-gray-600">
+                        <li class="flex items-center"><span class="mr-2 text-blue-500">✓</span> Quản lý doanh thu và chi phí</li>
+                        <li class="flex items-center"><span class="mr-2 text-blue-500">✓</span> Quản lý nhân sự và đào tạo</li>
+                        <li class="flex items-center"><span class="mr-2 text-blue-500">✓</span> Quản lý hàng hóa và tồn kho</li>
+                        <li class="flex items-center"><span class="mr-2 text-blue-500">✓</span> Quản lý chất lượng dịch vụ</li>
+                        <li class="flex items-center"><span class="mr-2 text-blue-500">✓</span> Quản lý cơ sở vật chất</li>
+                        <li class="flex items-center"><span class="mr-2 text-blue-500">✓</span> Tuân thủ quy định và pháp luật</li>
+                        <li class="flex items-center"><span class="mr-2 text-blue-500">✓</span> Lập kế hoạch và báo cáo</li>
+                        <li class="flex items-center"><span class="mr-2 text-blue-500">✓</span> Phân công công việc (Tạo WS)</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="process" class="section-card">
+            <h2 class="text-2xl md:text-3xl font-bold text-center mb-2 text-gray-800">Quy Trình Tạo Lịch Làm Việc</h2>
+            <p class="text-center text-gray-600 max-w-3xl mx-auto mb-8">
+                Việc tạo ra một lịch làm việc hiệu quả đòi hỏi một quy trình bài bản và có hệ thống. Hãy khám phá từng bước, từ việc thiết lập thông tin cơ bản đến việc kiểm tra và hoàn thiện lịch trình. Nhấp vào mỗi bước để xem chi tiết các công việc cần thực hiện.
+            </p>
+            <div class="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4 mb-8">
+                <div id="step-1" class="process-step w-full md:w-auto active">
+                    <div class="step-number">1</div>
+                    <p class="font-semibold">Thiết lập Cơ bản</p>
+                </div>
+                <div class="arrow hidden md:block">→</div>
+                <div id="step-2" class="process-step w-full md:w-auto">
+                    <div class="step-number">2</div>
+                    <p class="font-semibold">Tạo Mẫu WS</p>
+                </div>
+                <div class="arrow hidden md:block">→</div>
+                <div id="step-3" class="process-step w-full md:w-auto">
+                    <div class="step-number">3</div>
+                    <p class="font-semibold">Kiểm tra & Đối chiếu</p>
+                </div>
+            </div>
+            <div id="process-details" class="mt-8 p-6 bg-gray-50 rounded-lg border">
+                <div id="detail-1" class="process-detail-content">
+                    <h4 class="text-lg font-bold text-gray-800">Bước 1: Tạo Thông Tin Cơ Bản</h4>
+                    <p class="text-gray-600 mt-2">Nền tảng của một lịch làm việc chính xác là dữ liệu đầu vào đầy đủ và đúng đắn. Bước này bao gồm:</p>
+                    <ul class="list-disc list-inside mt-4 space-y-2">
+                        <li><b>Quản lý cửa hàng:</b> Cấu hình thông tin về cửa hàng, giờ hoạt động, các khu vực làm việc.</li>
+                        <li><b>Quản lý nhân viên:</b> Nhập thông tin chi tiết về từng nhân viên, bao gồm kỹ năng, chức vụ, và thời gian có thể làm việc.</li>
+                    </ul>
+                </div>
+                <div id="detail-2" class="process-detail-content hidden">
+                    <h4 class="text-lg font-bold text-gray-800">Bước 2: Tạo Mẫu Lịch Làm Việc</h4>
+                    <p class="text-gray-600 mt-2">Dựa trên thông tin cơ bản, bạn sẽ xây dựng các mẫu lịch trình cho các ngày hoặc các tuần điển hình. Công việc chính bao gồm:</p>
+                     <ul class="list-disc list-inside mt-4 space-y-2">
+                        <li><b>Phân công công việc:</b> Liệt kê và gán các công việc cụ thể vào các khung giờ.</li>
+                        <li><b>Tạo danh sách nhân viên thu ngân / thứ tự giao hàng:</b> Sắp xếp các vai trò đặc thù như thu ngân hoặc nhân viên nhận hàng từ trung tâm.</li>
+                        <li><b>Kiểm tra công việc bị bỏ sót (sơ bộ):</b> Rà soát nhanh để đảm bảo các công việc quan trọng đã được đưa vào mẫu.</li>
+                    </ul>
+                </div>
+                <div id="detail-3" class="process-detail-content hidden">
+                     <h4 class="text-lg font-bold text-gray-800">Bước 3: Kiểm Tra Công Việc Bị Bỏ Sót & Đối Chiếu</h4>
+                    <p class="text-gray-600 mt-2">Đây là bước tinh chỉnh cuối cùng để đảm bảo lịch trình không chỉ đầy đủ mà còn hợp lý và khả thi.</p>
+                     <ul class="list-disc list-inside mt-4 space-y-2">
+                        <li><b>Hiển thị & kiểm tra:</b> Sử dụng các công cụ của hệ thống để hiển thị danh sách các công việc có thể đã bị bỏ sót.</li>
+                        <li><b>Đối chiếu phân công công việc:</b> So sánh lịch làm việc đã tạo với nhu cầu thực tế của cửa hàng (dựa trên doanh thu, lượng khách) để đảm bảo phân bổ nhân lực hợp lý, không thừa cũng không thiếu.</li>
+                        <li><b>Sử dụng chức năng hỗ trợ:</b> Tận dụng các chức năng tự động như "Garigari" để tối ưu hóa và hoàn thiện lịch trình.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="pdca" class="section-card">
+            <h2 class="text-2xl md:text-3xl font-bold text-center mb-2 text-gray-800">Tối Ưu Hóa với Chu Trình PDCA</h2>
+            <p class="text-center text-gray-600 max-w-3xl mx-auto mb-8">
+                Thực tế không phải lúc nào cũng diễn ra như kế hoạch. Khi có công việc không được hoàn thành, hãy sử dụng chu trình PDCA (Plan-Do-Check-Act) để tìm ra nguyên nhân gốc rễ và cải tiến liên tục. Hãy thử tương tác với quy trình dưới đây.
+            </p>
+
+            <div class="bg-gray-50 p-6 rounded-lg border">
+                <div id="pdca-plan">
+                    <h3 class="text-xl font-semibold text-gray-800">P (Plan): Kế hoạch ban đầu</h3>
+                    <p class="text-gray-600 mt-2 mb-4">Bạn đã tạo một lịch làm việc chi tiết, phân công công việc cho từng nhân viên.</p>
+                    <div class="p-4 border-l-4 border-blue-400 bg-blue-50">
+                        <p class="font-medium text-blue-800">Lịch làm việc đã được triển khai.</p>
+                    </div>
+                </div>
+
+                <div id="pdca-do" class="mt-6">
+                     <h3 class="text-xl font-semibold text-gray-800">D (Do): Thực hiện</h3>
+                    <p class="text-gray-600 mt-2 mb-4">Nhân viên thực hiện công việc theo lịch đã phân công.</p>
+                    <button id="check-work-btn" class="btn btn-primary">Kiểm tra kết quả công việc</button>
+                </div>
+                
+                <div id="pdca-check" class="mt-6 hidden">
+                    <h3 class="text-xl font-semibold text-gray-800">C (Check): Kiểm tra</h3>
+                    <div class="p-4 border-l-4 border-red-400 bg-red-50 mb-4">
+                        <h4 class="font-bold text-red-800">Vấn đề phát sinh: Có công việc chưa được hoàn thành!</h4>
+                        <p class="text-red-700">Bây giờ, bạn cần xác định nguyên nhân. Vấn đề nằm ở đâu?</p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <button class="diagnosis-btn btn btn-secondary flex-1" data-reason="assignment">
+                            <span class="font-bold">Phân công công việc?</span>
+                            <span class="text-sm block">Liệu việc sắp xếp có bất hợp lý?</span>
+                        </button>
+                        <button class="diagnosis-btn btn btn-secondary flex-1" data-reason="training">
+                            <span class="font-bold">Đào tạo nhân viên?</span>
+                            <span class="text-sm block">Liệu nhân viên có thực hiện đúng quy trình?</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="pdca-act" class="mt-6 hidden">
+                     <h3 class="text-xl font-semibold text-gray-800">A (Act): Hành động & Cải tiến</h3>
+                     <div id="assignment-reason" class="reason-content hidden p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+                        <h4 class="font-bold text-yellow-800">Nguyên nhân: Vấn đề từ việc phân công công việc.</h4>
+                        <p class="text-yellow-700 mt-2"><b>Các vấn đề có thể xảy ra:</b></p>
+                        <ul class="list-disc list-inside mt-2 text-yellow-700">
+                            <li>Phân công không hợp lý về vị trí bày hàng.</li>
+                            <li>Thứ tự công việc không tối ưu.</li>
+                            <li>Quá tải công việc trong giờ cao điểm.</li>
+                        </ul>
+                        <p class="text-yellow-700 mt-4"><b>Giải pháp đề xuất:</b></p>
+                        <ul class="list-disc list-inside mt-2 font-semibold text-yellow-800">
+                            <li>Làm lại lịch làm việc, điều chỉnh lại công việc.</li>
+                            <li>Thay đổi thứ tự bày hàng cho phù hợp với thực tế.</li>
+                        </ul>
+                     </div>
+                     <div id="training-reason" class="reason-content hidden p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+                        <h4 class="font-bold text-yellow-800">Nguyên nhân: Vấn đề từ việc đào tạo nhân viên.</h4>
+                        <p class="text-yellow-700 mt-2"><b>Các vấn đề có thể xảy ra:</b></p>
+                        <ul class="list-disc list-inside mt-2 text-yellow-700">
+                            <li>Nhân viên thiếu hiểu biết về phạm vi công việc.</li>
+                            <li>Không thực hiện đúng thứ tự công việc theo hướng dẫn.</li>
+                        </ul>
+                        <p class="text-yellow-700 mt-4"><b>Giải pháp đề xuất:</b></p>
+                        <ul class="list-disc list-inside mt-2 font-semibold text-yellow-800">
+                            <li>Xác nhận lại kiến thức của nhân viên tại hiện trường.</li>
+                            <li>Tiến hành đào tạo bổ sung, tập trung vào các điểm còn yếu.</li>
+                        </ul>
+                     </div>
+                     <button id="reset-pdca-btn" class="btn btn-primary mt-6">Bắt đầu lại chu trình</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="tools" class="section-card">
+            <h2 class="text-2xl md:text-3xl font-bold text-center mb-2 text-gray-800">Các Công Cụ và Chức Năng Hỗ Trợ</h2>
+            <p class="text-center text-gray-600 max-w-3xl mx-auto mb-8">
+                Hệ thống cung cấp các công cụ mạnh mẽ để giúp bạn tạo và quản lý lịch làm việc một cách hiệu quả hơn. Dưới đây là hai chức năng nổi bật được đề cập trong tài liệu.
+            </p>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="p-6 bg-gray-50 rounded-lg border">
+                    <h3 class="text-xl font-semibold mb-3 text-gray-700">Chức năng "Garigari"</h3>
+                    <p class="text-gray-600">
+                        Đây là một chức năng tự động hóa, có thể được sử dụng để nhanh chóng tạo ra một bản nháp lịch làm việc dựa trên các quy tắc và dữ liệu đã thiết lập. Nó giúp tiết kiệm thời gian trong giai đoạn đầu của việc lập kế hoạch, cho phép người quản lý tập trung hơn vào việc tinh chỉnh và tối ưu hóa.
+                    </p>
+                </div>
+                <div class="p-6 bg-gray-50 rounded-lg border">
+                    <h3 class="text-xl font-semibold mb-3 text-gray-700">Thông Báo Công Việc</h3>
+                    <p class="text-gray-600">
+                        Chức năng này cho phép tạo và gửi các thông báo công việc cụ thể đến nhân viên. Mục đích là để đảm bảo mọi người đều nhận thức rõ về các nhiệm vụ quan trọng, các thay đổi đột xuất hoặc các chỉ dẫn đặc biệt trong ca làm việc, giúp tăng cường giao tiếp và đảm bảo công việc được thực hiện đúng cách.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    
+    <footer class="bg-white border-t mt-12">
+        <div class="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-gray-500">
+            <p>&copy; 2025 - Ứng dụng Phân Tích & Tối Ưu Hóa Lịch Làm Việc.</p>
+            <p class="text-sm">Được tạo để trình bày báo cáo một cách trực quan.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const processSteps = document.querySelectorAll('.process-step');
+            const processDetails = document.querySelectorAll('.process-detail-content');
+            
+            processSteps.forEach(step => {
+                step.addEventListener('click', () => {
+                    processSteps.forEach(s => s.classList.remove('active'));
+                    step.classList.add('active');
+                    
+                    const stepId = step.id.split('-')[1];
+                    
+                    processDetails.forEach(detail => {
+                        if (detail.id === `detail-${stepId}`) {
+                            detail.classList.remove('hidden');
+                        } else {
+                            detail.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+
+            const checkWorkBtn = document.getElementById('check-work-btn');
+            const pdcaCheck = document.getElementById('pdca-check');
+            const pdcaAct = document.getElementById('pdca-act');
+            const diagnosisBtns = document.querySelectorAll('.diagnosis-btn');
+            const reasonContents = document.querySelectorAll('.reason-content');
+            const resetPdcaBtn = document.getElementById('reset-pdca-btn');
+
+            checkWorkBtn.addEventListener('click', () => {
+                pdcaCheck.classList.remove('hidden');
+                checkWorkBtn.disabled = true;
+                checkWorkBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            });
+
+            diagnosisBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const reason = btn.dataset.reason;
+                    pdcaAct.classList.remove('hidden');
+
+                    reasonContents.forEach(content => {
+                        if (content.id === `${reason}-reason`) {
+                            content.classList.remove('hidden');
+                        } else {
+                            content.classList.add('hidden');
+                        }
+                    });
+                    
+                    diagnosisBtns.forEach(b => {
+                        b.disabled = true;
+                        b.classList.add('opacity-50', 'cursor-not-allowed');
+                    });
+                });
+            });
+
+            resetPdcaBtn.addEventListener('click', () => {
+                pdcaCheck.classList.add('hidden');
+                pdcaAct.classList.add('hidden');
+                reasonContents.forEach(content => content.classList.add('hidden'));
+
+                checkWorkBtn.disabled = false;
+                checkWorkBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+                diagnosisBtns.forEach(b => {
+                    b.disabled = false;
+                    b.classList.remove('opacity-50', 'cursor-not-allowed');
+                });
+            });
+
+            const navLinks = document.querySelectorAll('a.nav-link');
+            const sections = document.querySelectorAll('section');
+
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.5
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href').substring(1) === entry.target.id) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+
+            navLinks.forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+
+        });
+    </script>
+</body>
+</html>

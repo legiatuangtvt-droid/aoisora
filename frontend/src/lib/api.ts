@@ -46,6 +46,20 @@ import type {
   ShiftTemplate,
   ShiftTemplateCreate,
   ShiftTemplateUpdate,
+  ManualFolder,
+  ManualFolderWithStats,
+  ManualDocument,
+  ManualFolderCreate,
+  ManualFolderUpdate,
+  ManualDocumentCreate,
+  ManualDocumentUpdate,
+  FolderBrowseResponse,
+  ManualSearchResponse,
+  ManualStep,
+  ManualStepCreate,
+  ManualStepUpdate,
+  ManualDocumentWithSteps,
+  ManualMedia,
 } from '@/types/api';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
@@ -736,5 +750,239 @@ export async function updateShiftTemplate(
 export async function deleteShiftTemplate(shiftTemplateId: number): Promise<{ message: string }> {
   return fetchApi<{ message: string }>(`/shifts/shift-templates/${shiftTemplateId}`, {
     method: 'DELETE',
+  });
+}
+
+// ============================================
+// Manual/Knowledge Base API
+// ============================================
+
+// Browse folder (like Google Drive / Teachme Biz)
+export async function browseManualFolder(params?: {
+  folder_id?: number;
+  store_id?: number;
+}): Promise<FolderBrowseResponse> {
+  const searchParams = new URLSearchParams();
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        searchParams.append(key, String(value));
+      }
+    });
+  }
+  const query = searchParams.toString();
+  return fetchApi<FolderBrowseResponse>(`/manual/browse${query ? `?${query}` : ''}`);
+}
+
+// Folder operations
+export async function getManualFolders(params?: {
+  parent_id?: number;
+  store_id?: number;
+}): Promise<ManualFolderWithStats[]> {
+  const searchParams = new URLSearchParams();
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        searchParams.append(key, String(value));
+      }
+    });
+  }
+  const query = searchParams.toString();
+  return fetchApi<ManualFolderWithStats[]>(`/manual/folders${query ? `?${query}` : ''}`);
+}
+
+export async function getManualFolderById(folderId: number): Promise<ManualFolder> {
+  return fetchApi<ManualFolder>(`/manual/folders/${folderId}`);
+}
+
+export async function createManualFolder(data: ManualFolderCreate): Promise<ManualFolder> {
+  return fetchApi<ManualFolder>('/manual/folders', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateManualFolder(
+  folderId: number,
+  data: ManualFolderUpdate
+): Promise<ManualFolder> {
+  return fetchApi<ManualFolder>(`/manual/folders/${folderId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteManualFolder(folderId: number): Promise<{ message: string }> {
+  return fetchApi<{ message: string }>(`/manual/folders/${folderId}`, {
+    method: 'DELETE',
+  });
+}
+
+// Document operations
+export async function getManualDocuments(params?: {
+  folder_id?: number;
+  status?: string;
+  store_id?: number;
+  search?: string;
+  skip?: number;
+  limit?: number;
+}): Promise<ManualDocument[]> {
+  const searchParams = new URLSearchParams();
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        searchParams.append(key, String(value));
+      }
+    });
+  }
+  const query = searchParams.toString();
+  return fetchApi<ManualDocument[]>(`/manual/documents${query ? `?${query}` : ''}`);
+}
+
+export async function getManualDocumentById(documentId: number): Promise<ManualDocument> {
+  return fetchApi<ManualDocument>(`/manual/documents/${documentId}`);
+}
+
+export async function createManualDocument(data: ManualDocumentCreate): Promise<ManualDocument> {
+  return fetchApi<ManualDocument>('/manual/documents', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateManualDocument(
+  documentId: number,
+  data: ManualDocumentUpdate
+): Promise<ManualDocument> {
+  return fetchApi<ManualDocument>(`/manual/documents/${documentId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteManualDocument(documentId: number): Promise<{ message: string }> {
+  return fetchApi<{ message: string }>(`/manual/documents/${documentId}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function logManualDocumentView(
+  documentId: number,
+  staffId: number
+): Promise<{ view_count: number }> {
+  return fetchApi<{ view_count: number }>(
+    `/manual/documents/${documentId}/view?staff_id=${staffId}`,
+    { method: 'POST' }
+  );
+}
+
+// Search
+export async function searchManual(params: {
+  q: string;
+  store_id?: number;
+}): Promise<ManualSearchResponse> {
+  const searchParams = new URLSearchParams();
+  searchParams.append('q', params.q);
+  if (params.store_id) {
+    searchParams.append('store_id', String(params.store_id));
+  }
+  return fetchApi<ManualSearchResponse>(`/manual/search?${searchParams.toString()}`);
+}
+
+// ============================================
+// Manual Step API (Teachme Biz style)
+// ============================================
+
+// Get document with all steps (for editor)
+export async function getManualDocumentWithSteps(documentId: number): Promise<ManualDocumentWithSteps> {
+  return fetchApi<ManualDocumentWithSteps>(`/manual/documents/${documentId}/full`);
+}
+
+// Get steps for a document
+export async function getManualSteps(documentId: number): Promise<ManualStep[]> {
+  return fetchApi<ManualStep[]>(`/manual/documents/${documentId}/steps`);
+}
+
+// Create step
+export async function createManualStep(data: ManualStepCreate): Promise<ManualStep> {
+  return fetchApi<ManualStep>('/manual/steps', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+// Update step
+export async function updateManualStep(stepId: number, data: ManualStepUpdate): Promise<ManualStep> {
+  return fetchApi<ManualStep>(`/manual/steps/${stepId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+// Delete step
+export async function deleteManualStep(stepId: number): Promise<{ message: string }> {
+  return fetchApi<{ message: string }>(`/manual/steps/${stepId}`, {
+    method: 'DELETE',
+  });
+}
+
+// Reorder steps
+export async function reorderManualSteps(
+  documentId: number,
+  stepOrders: Array<{ step_id: number; step_number: number }>
+): Promise<{ message: string }> {
+  return fetchApi<{ message: string }>(`/manual/steps/reorder?document_id=${documentId}`, {
+    method: 'POST',
+    body: JSON.stringify(stepOrders),
+  });
+}
+
+// ============================================
+// Manual Media Upload API
+// ============================================
+
+// Upload media file
+export async function uploadManualMedia(
+  file: File,
+  params?: { document_id?: number; step_id?: number; uploaded_by?: number }
+): Promise<ManualMedia> {
+  const formData = new FormData();
+  formData.append('file', file);
+  if (params?.document_id) formData.append('document_id', String(params.document_id));
+  if (params?.step_id) formData.append('step_id', String(params.step_id));
+  if (params?.uploaded_by) formData.append('uploaded_by', String(params.uploaded_by));
+
+  const response = await fetch(`${API_BASE_URL}/manual/upload`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error('Upload failed');
+  }
+
+  return response.json();
+}
+
+// Get media info
+export async function getManualMedia(mediaId: number): Promise<ManualMedia> {
+  return fetchApi<ManualMedia>(`/manual/media/${mediaId}`);
+}
+
+// Delete media
+export async function deleteManualMedia(mediaId: number): Promise<{ message: string }> {
+  return fetchApi<{ message: string }>(`/manual/media/${mediaId}`, {
+    method: 'DELETE',
+  });
+}
+
+// Move document to another folder
+export async function moveManualDocument(
+  documentId: number,
+  folderId: number
+): Promise<ManualDocument> {
+  return fetchApi<ManualDocument>(`/manual/documents/${documentId}/move`, {
+    method: 'PUT',
+    body: JSON.stringify({ folder_id: folderId }),
   });
 }

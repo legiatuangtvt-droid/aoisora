@@ -1,0 +1,73 @@
+# BỐ CỤC BÀI THUYẾT TRÌNH: GIẢI PHÁP QUẢN TRỊ VẬN HÀNH VÀ TỐI ƯU NHÂN SỰ (WS & DWS)
+
+## PHẦN 1: TỔNG QUAN
+**Mục 1: Tiêu đề**
+* **Chủ đề:** Giải pháp Số hóa Vận hành Chuỗi Cửa hàng: Hệ thống WS & DWS.
+* **Mục tiêu:** Quản lý vòng đời công việc minh bạch & Tối ưu hóa lịch làm việc nhân sự dựa trên dữ liệu.
+
+---
+
+## PHẦN 2: ỨNG DỤNG QUẢN LÝ CÔNG VIỆC (WS - WORK SYSTEM)
+
+**Mục 2: Tổng quan về WS**
+* **Định nghĩa:** Hệ thống quản lý vòng đời của Task (nhiệm vụ) từ khởi tạo đến kết thúc.
+* **Đặc điểm nổi bật:** Trực quan, xuyên suốt, dễ dàng kiểm soát và truy xuất lịch sử.
+
+**Mục 3: Quy trình vận hành chuẩn (6 Bước)**
+1.  **Thiết lập chuẩn (HQ):** Trụ sở chính (HQ) tạo các bộ Task mẫu (Template) cho các công việc có tính lặp lại hoặc tiêu chuẩn.
+2.  **Phân bổ (Assign):** HQ giao việc xuống cho từng Store cụ thể hoặc nhóm Store được chỉ định.
+3.  **Thực thi (Store):** Nhân viên tại cửa hàng nhận việc và thực hiện theo yêu cầu.
+4.  **Kiểm tra (Verify):** Store Leader/Quản lý kiểm tra kết quả thực hiện tại cửa hàng.
+5.  **Báo cáo (Report):** Hệ thống tổng hợp số liệu, thống kê trạng thái hoàn thành theo từng Store/Khu vực.
+6.  **Đánh giá (Evaluate):** HQ xem xét chất lượng thực thi dựa trên báo cáo và hình ảnh thực tế.
+
+**Mục 4: Tính tương tác & Kiểm soát chất lượng (Điểm mạnh)**
+* *Không chỉ là giao việc một chiều, hệ thống tập trung vào **tương tác hai chiều**:*
+    * **Phản hồi từ Store:** Nếu Task không thể thực hiện (do khách quan), Store có thể "Comment" trực tiếp trên App để xin chỉ thị từ HQ.
+    * **Kiểm soát từ HQ:** HQ đánh giá chất lượng qua hình ảnh báo cáo. Nếu chưa đạt, có chức năng "Return" (Trả về) yêu cầu làm lại ngay lập tức.
+* **Giá trị cốt lõi:**
+    * Lưu lại toàn bộ lịch sử tương tác (Log history).
+    * Dữ liệu này là cơ sở để đánh giá KPI: Chất lượng công việc, tốc độ phản hồi và tuân thủ quy trình của cả HQ và Store. 
+    * Xuất được report ngay lập tức theo bộ dữ liệu lịch sử đó để lãnh đạo có thể nắm được tình hình hoạt động, nếu cần đưa ra đối sách phù hợp để cải thiệu được hiệu quả làm việc tổng thể
+
+---
+
+## PHẦN 3: HỆ THỐNG TỐI ƯU LỊCH LÀM VIỆC (DWS - DYNAMIC WORKFORCE SCHEDULING)
+
+**Mục 5: Tổng quan về DWS**
+* **Mục tiêu:** Thiết lập, quản lý và phân bổ nguồn lực nhân sự một cách khoa học dựa trên dữ liệu thực tế.
+
+**Mục 6: Quy trình thiết lập mô hình (Bước 1 - 3)**
+1.  **Dữ liệu đầu vào:** Hệ thống nạp dữ liệu lịch sử (tần suất khách, khung giờ cao điểm/thấp điểm, thông tin cửa hàng, danh sách nhóm Task...).
+2.  **Tính toán Manhour:** Xử lý dữ liệu dựa trên các quy tắc (Rule) vận hành để tính ra tổng số giờ công (Manhour) cần thiết cho một cửa hàng.
+3.  **Tạo Model chuẩn:** Kết hợp dữ liệu máy tính và kinh nghiệm thực tế để tạo ra "Mô hình lịch làm việc chuẩn" (Standard Model).
+
+**Mục 7: Quy trình phân bổ và Vận hành (Bước 4 - 9)**
+4.  **Đăng ký lịch:** Áp dụng Model chuẩn cho từng Store. Nhân viên đăng ký lịch làm mong muốn cho tháng tiếp theo trên App.
+5.  **Sắp xếp tự động:** Hệ thống tự động phân bổ Task và nhân sự vào các khung giờ theo Model đã xác định.
+6.  **Lưu vết & Đối chiếu:** Lưu lại bản kế hoạch (Plan) để so sánh với thực tế (Actual).
+7.  **Điều phối cấp cao (RM):** Nếu Store không tự sắp xếp được nhân sự, Quản lý khu vực (RM) sẽ điều chuyển nhân sự giữa các Store lân cận.
+8.  **Chốt & Báo cáo:** Hoàn tất lịch làm việc toàn khu vực và báo cáo về HQ.
+9.  **Thực thi:** Nhân viên sử dụng App để xem lịch, check-in và thực hiện công việc hàng ngày.
+
+**Mục 8: Tính linh hoạt & Tối ưu hóa thực tiễn**
+* *Hệ thống không cứng nhắc mà hỗ trợ điều chỉnh theo thực tế:*
+    * **Cải tiến Model:** Nếu Store Leader điều chỉnh Model để phù hợp với thực tế và hiệu quả tăng lên -> HQ xác nhận và cập nhật lại Model chuẩn (Cải tiến liên tục).
+    * **Hỗ trợ khẩn cấp:** Nút "SOS" kêu gọi hỗ trợ nhân sự lấp vào các khung giờ trống/thiếu người.
+    * **Quản lý nghỉ phép:** Nhân viên xin nghỉ trên App -> Leader duyệt -> Hệ thống hỗ trợ sắp xếp lịch bù ngay lập tức.
+    * **Phản ứng nhanh:** Điều chỉnh lịch làm việc tức thì khi có biến động (Nhân viên ốm, lễ hội đột xuất gần cửa hàng...) thông qua thông báo đẩy (Push Notification).
+
+---
+
+## PHẦN 4: TỔNG KẾT
+
+**Mục 9: Giá trị mang lại**
+1.  **Số hóa toàn diện:** Mọi tương tác (Giao việc, xin nghỉ, duyệt, phản hồi) đều thực hiện trên App.
+2.  **Dữ liệu minh bạch:** Lịch sử được lưu trữ để đánh giá năng lực nhân viên và hiệu quả quản lý.
+3.  **Vận hành thông minh:** Chuyển từ quản lý theo cảm tính sang quản lý dựa trên dữ liệu (Data-driven) và mô hình chuẩn hóa.
+
+---
+
+### *Lời khuyên cho người thuyết trình:*
+* *Khi nói về **WS**, hãy nhấn mạnh vào từ khóa **"Vòng lặp chất lượng"** (Quality Loop) - tức là việc giao đi và phản hồi lại giúp công việc tốt lên.*
+* *Khi nói về **DWS**, hãy nhấn mạnh từ khóa **"Động"** (Dynamic) - tức là lịch làm việc không chết cứng mà "sống" theo biến động thực tế của cửa hàng.*

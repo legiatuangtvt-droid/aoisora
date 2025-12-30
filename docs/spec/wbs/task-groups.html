@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="logo.png" type="image/png"> 
+    <title>Nhóm Công Việc - AoiSora</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f8fc;
+        }
+    </style>
+</head>
+<body class="flex h-screen text-gray-800">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-800 text-white flex flex-col flex-shrink-0">
+        <div class="h-16 flex items-center justify-center text-2xl font-bold border-b border-slate-700">
+            <i class="fas fa-tasks mr-3 text-green-400"></i>
+            <span>AoiSora</span>
+        </div>
+        <nav class="flex-1 p-4 space-y-2">
+            <h3 class="px-4 text-sm font-semibold text-slate-400 uppercase tracking-wider">Lịch trình</h3>
+            <a href="index.html" class="flex items-center px-4 py-2 text-slate-300 hover:bg-slate-700 rounded-lg">
+                <i class="fas fa-calendar-day w-6"></i>
+                <span>Lịch Hàng Ngày</span>
+            </a>
+            <a href="/month.html" class="flex items-center px-4 py-2 text-slate-300 hover:bg-slate-700 rounded-lg">
+                <i class="fas fa-calendar-alt w-6"></i>
+                <span>Lịch Hàng Tháng</span>
+            </a>
+            <h3 class="px-4 pt-4 text-sm font-semibold text-slate-400 uppercase tracking-wider">Tổ chức</h3>
+            <a href="/store.html" class="flex items-center px-4 py-2 text-slate-300 hover:bg-slate-700 rounded-lg">
+                <i class="fas fa-store w-6"></i>
+                <span>Cửa Hàng</span>
+            </a>
+            <a href="/staff.html" class="flex items-center px-4 py-2 text-slate-300 hover:bg-slate-700 rounded-lg">
+                <i class="fas fa-users w-6"></i>
+                <span>Nhân Viên</span>
+            </a>
+             <h3 class="px-4 pt-4 text-sm font-semibold text-slate-400 uppercase tracking-wider">Quản lý</h3>
+            <a href="main-tasks.html" class="flex items-center px-4 py-2 text-slate-300 hover:bg-slate-700 rounded-lg">
+                <i class="fas fa-clipboard-list w-6"></i>
+                <span>Công Việc Chính</span>
+            </a>
+             <a href="task-groups.html" class="flex items-center px-4 py-2 text-white bg-green-600 rounded-lg">
+                <i class="fas fa-layer-group w-6"></i>
+                <span>Nhóm Công Việc</span>
+            </a>
+        </nav>
+        <!-- Nút Thêm Nhóm Mới trong Sidebar -->
+        <div class="p-4 border-t border-slate-700">
+            <button id="sidebar-add-group-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                <i class="fas fa-plus-circle mr-2"></i>Thêm Nhóm Mới
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Header -->
+        <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 flex-shrink-0">
+             <h1 class="text-xl font-semibold">Quản Lý Nhóm Công Việc</h1>
+            <div class="flex items-center space-x-6">
+                <a href="#" class="text-gray-600 hover:text-green-600 relative">
+                    <i class="fas fa-bell"></i>
+                    <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">3</span>
+                </a>
+                <div class="flex items-center">
+                    <img class="w-9 h-9 rounded-full object-cover" src="https://placehold.co/40x40/E2E8F0/4A5568?text=AV" alt="User Avatar">
+                    <span class="ml-3 font-semibold">J. Manager</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <main class="flex-1 overflow-auto p-6">
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                
+                <!-- Toolbar -->
+                <div class="flex justify-between items-center mb-6">
+                    <!-- Nút Thêm Nhóm Công Việc Mới trong Main Content -->
+                    <button id="main-add-group-btn" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg transition-colors shadow-md">
+                        <i class="fas fa-plus mr-2"></i> Thêm Nhóm Công Việc Mới
+                    </button>
+                    <div class="relative w-1/3">
+                        <input type="text" placeholder="Tìm kiếm nhóm..." class="w-full border border-gray-300 p-2 pl-10 rounded-lg focus:ring-green-500 focus:border-green-500">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                </div>
+
+                <!-- Task Group List -->
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Nhóm</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên Nhóm</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mô Tả</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số Lượng Công Việc</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hành Động</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="task-groups-list">
+                            <!-- Data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL: Thêm Nhóm Công Việc -->
+    <div id="group-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center pb-3 border-b">
+                <h3 class="text-xl font-semibold text-gray-800"><i class="fas fa-plus-square mr-2 text-indigo-500"></i> Tạo Nhóm Công Việc Mới</h3>
+                <button class="text-gray-400 hover:text-gray-600" onclick="closeModal()">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            
+            <!-- Modal Body (Form) -->
+            <form class="mt-4 space-y-4" id="add-group-form">
+                <div>
+                    <label for="group-name" class="block text-sm font-medium text-gray-700">Tên Nhóm (*)</label>
+                    <input type="text" id="group-name" name="group-name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border">
+                </div>
+                <div>
+                    <label for="group-area" class="block text-sm font-medium text-gray-700">Khu vực áp dụng</label>
+                    <select id="group-area" name="group-area" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border">
+                        <option value="POS">POS (Quầy thu ngân)</option>
+                        <option value="MMD">MMD (Hàng khô/Tạp hóa)</option>
+                        <option value="Cafe">Aeon Cafe</option>
+                        <option value="All">Toàn bộ cửa hàng</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="group-desc" class="block text-sm font-medium text-gray-700">Mô tả chi tiết</label>
+                    <textarea id="group-desc" name="group-desc" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border"></textarea>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="pt-4 flex justify-end space-x-3 border-t">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        Hủy
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-500 text-white rounded-md text-sm font-medium hover:bg-indigo-600 shadow-md">
+                        <i class="fas fa-save mr-1"></i> Lưu Nhóm
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const taskGroups = [
+            { id: "TS01", name: "Trưng Bày Tươi Sống", description: "Các công việc liên quan đến hàng tươi, rau củ, thịt cá", count: 12 },
+            { id: "HK02", name: "Trưng Bày Hàng Khô", description: "Sắp xếp, kiểm tra OOS khu vực hàng đóng gói", count: 8 },
+            { id: "KT03", name: "Marketing & Giá", description: "Quản lý biển giá, POSM và khuyến mãi", count: 5 },
+            { id: "VS04", name: "Vệ Sinh Chung", description: "Các công việc vệ sinh định kỳ trong ngày", count: 3 },
+        ];
+
+        function renderTaskGroups() {
+            const list = document.getElementById('task-groups-list');
+            list.innerHTML = '';
+
+            taskGroups.forEach(group => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${group.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${group.name}</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">${group.description}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${group.count}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-3"><i class="fas fa-eye"></i> Xem chi tiết</a>
+                        <a href="#" class="text-red-600 hover:text-red-900"><i class="fas fa-trash"></i> Xóa</a>
+                    </td>
+                `;
+                list.appendChild(row);
+            });
+        }
+
+        // --- Logic Modal Thêm Nhóm Công Việc ---
+        
+        const modal = document.getElementById('group-modal');
+        const sidebarAddGroupBtn = document.getElementById('sidebar-add-group-btn');
+        const mainAddGroupBtn = document.getElementById('main-add-group-btn');
+        const addGroupForm = document.getElementById('add-group-form');
+
+        window.openModal = function() {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        window.closeModal = function() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            addGroupForm.reset(); // Reset form khi đóng
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTaskGroups();
+
+            // Gán sự kiện cho các nút
+            sidebarAddGroupBtn.addEventListener('click', openModal);
+            mainAddGroupBtn.addEventListener('click', openModal);
+
+            // Xử lý gửi form (Mô phỏng)
+            addGroupForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const groupName = document.getElementById('group-name').value;
+                const groupArea = document.getElementById('group-area').value;
+                const groupDesc = document.getElementById('group-desc').value;
+
+                // Thêm nhóm mới vào dữ liệu giả lập
+                const newId = 'GR' + (taskGroups.length + 1).toString().padStart(2, '0');
+                taskGroups.push({
+                    id: newId,
+                    name: groupName,
+                    description: groupDesc,
+                    count: 0 // Nhóm mới chưa có công việc
+                });
+                
+                // Cập nhật lại danh sách hiển thị
+                renderTaskGroups();
+
+                alert(`Đã tạo thành công nhóm: ${groupName} (ID: ${newId})`);
+                closeModal();
+            });
+        });
+
+    </script>
+</body>
+</html>

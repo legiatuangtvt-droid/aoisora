@@ -104,6 +104,12 @@ class DailyScheduleTask(Base):
     """Scheduled tasks assigned to staff for a specific date and time slot"""
     __tablename__ = "daily_schedule_tasks"
 
+    # Status codes (stored in code_master with code_type='TASK_STATUS')
+    STATUS_NOT_YET = 1      # Not Yet - Task not started
+    STATUS_DONE = 2         # Done - Task completed successfully
+    STATUS_SKIPPED = 3      # Skipped - Task was skipped
+    STATUS_IN_PROGRESS = 4  # In Progress - Task is currently in progress
+
     schedule_task_id = Column(Integer, primary_key=True, index=True)
     staff_id = Column(Integer, ForeignKey("staff.staff_id", ondelete="CASCADE"), nullable=False)
     store_id = Column(Integer, ForeignKey("stores.store_id"))
@@ -113,7 +119,7 @@ class DailyScheduleTask(Base):
     task_name = Column(String(255), nullable=False)
     start_time = Column(Time, nullable=False)
     end_time = Column(Time, nullable=False)
-    status = Column(String(20), default="pending")  # pending, in_progress, completed, skipped
+    status = Column(Integer, default=STATUS_NOT_YET, nullable=False)  # 1=Not Yet, 2=Done, 3=Skipped, 4=In Progress
     completed_at = Column(DateTime)
     notes = Column(String)
     created_at = Column(DateTime, default=func.now())
@@ -123,6 +129,17 @@ class DailyScheduleTask(Base):
     staff = relationship("Staff", foreign_keys=[staff_id])
     store = relationship("Store", foreign_keys=[store_id])
     task_group = relationship("TaskGroup", back_populates="scheduled_tasks")
+
+    @property
+    def status_name(self) -> str:
+        """Get status name from status code"""
+        status_map = {
+            self.STATUS_NOT_YET: "Not Yet",
+            self.STATUS_DONE: "Done",
+            self.STATUS_SKIPPED: "Skipped",
+            self.STATUS_IN_PROGRESS: "In Progress",
+        }
+        return status_map.get(self.status, "Unknown")
 
 
 class ShiftCode(Base):

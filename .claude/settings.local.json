@@ -28,7 +28,31 @@
       "Bash(py -c \"from app.core.config import settings; print\\(''Config loaded OK''\\)\")",
       "Bash(node scripts/validate.js:*)",
       "Bash(node scripts/validate.cjs:*)",
-      "Bash(timeout 5 cat:*)"
+      "Bash(timeout 5 cat:*)",
+      "Bash(dir \"C:\\\\Users\\\\PC\\\\AppData\\\\Local\\\\Programs\\\\Python\")",
+      "Bash(dir \"C:\\\\Program Files\\\\Python*\")",
+      "Bash(dir \"C:\\\\Python*\")",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(cmd //c \"taskkill /PID 3416 /F\")",
+      "Bash(cmd //c \"taskkill /F /IM node.exe 2>nul\")",
+      "Bash(curl:*)",
+      "Bash(python -m json.tool:*)",
+      "Bash(PGPASSWORD='p@ssw0rd' psql:*)",
+      "Bash(npx tsc:*)",
+      "Bash(tasklist:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(timeout:*)",
+      "Bash(cmd /c \"taskkill /F /IM python.exe 2>nul\")",
+      "Bash(ping:*)",
+      "Bash(cmd /c \"for /f \"\"tokens=5\"\" %a in \\(''netstat -aon ^| findstr :8000''\\) do taskkill /F /PID %a 2>nul\")",
+      "Bash(cmd /c \"cd /d C:\\\\Users\\\\PC\\\\Documents\\\\aura\\\\backend && rmdir /S /Q __pycache__ 2>nul & rmdir /S /Q app\\\\__pycache__ 2>nul & rmdir /S /Q app\\\\api\\\\__pycache__ 2>nul & rmdir /S /Q app\\\\api\\\\v1\\\\__pycache__ 2>nul & echo Cache cleared\")",
+      "Bash(cmd /c \"netstat -ano | findstr :8000\")",
+      "Bash(python -m uvicorn:*)",
+      "Bash(pip show:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nSave Python FastAPI backend before migration to Laravel 12\n\n- Add Manual/Knowledge Base API \\(folders, documents, steps, media\\)\n- Add properties-based configuration system\n- Add document action menu \\(publish/unpublish, move, delete\\)\n- Add folder selection dialogs for document creation\n- Fix various UI components in manual module\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git reset:*)"
     ]
   }
 }

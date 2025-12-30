@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HQ Task Dashboard – Standalone (Embedded Data)</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root { --line:#e5e7eb; --muted:#6b7280; --card-h:68px; --card-gap:8px; }
+    body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial; margin:0; padding:12px; font-size:13px; background:#fafafa; }
+    h1 { font-size:18px; margin:0 0 6px; }
+    .muted { color:var(--muted); font-size:12px; }
+    .controls { display:flex; flex-wrap:wrap; gap:8px; align-items:flex-end; margin-bottom:8px; }
+    label { font-size:11px; display:flex; flex-direction:column; gap:4px; color:#374151; }
+    input, select { height:28px; padding:4px 8px; border:1px solid var(--line); border-radius:8px; font-size:12px; background:#fff; }
+
+    /* ===== WEEK DASHBOARD (trên cùng) ===== */
+    .wk-dash { margin:8px 0 12px; }
+    .wk-tabs { display:flex; gap:8px; align-items:flex-end; padding:0 4px; flex-wrap:wrap; }
+    .wk-tab {
+      border:1px solid var(--line); background:#fff; padding:6px 12px;
+      border-top-left-radius:12px; border-top-right-radius:12px; cursor:pointer;
+      font-weight:700; font-size:12px; color:#111827; user-select:none;
+    }
+    .wk-tab.active {
+      background:#dbeafe; border-color:#bfdbfe; border-bottom-color:#dbeafe;
+      box-shadow: 0 -1px 0 #dbeafe inset;
+    }
+    .wk-panel {
+      background:#dbeafe; border:1px solid #bfdbfe; border-radius:14px; padding:12px; margin-top:-1px;
+    }
+    .stats-row { display:grid; grid-template-columns: repeat(6, 1fr); gap:8px; text-align:center; }
+    .stat .vnum { font-size:22px; font-weight:800; line-height:1; margin-bottom:2px; }
+    .stat .vhead { font-size:12px; }
+    .c-red { color:#ef4444; }
+    .c-red2 { color:#dc2626; }
+    .c-blue { color:#2563eb; }
+    .c-green { color:#16a34a; }
+
+    /* details + summary cho báo cáo */
+    details { border:1px solid var(--line); border-radius:10px; background:#fff; }
+    details summary { list-style:none; cursor:pointer; padding:8px 10px; font-weight:600; display:flex; justify-content:space-between; align-items:center; }
+    details[open] summary { border-bottom:1px solid var(--line); }
+    .card-bd { padding:8px; }
+    canvas { max-height:240px; }
+
+    /* Hai báo cáo cùng 1 dòng */
+    .reports { display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px; }
+    .reports details { margin:0; }
+    @media (max-width: 920px) { .reports { grid-template-columns: 1fr; } }
+
+    /* List task theo ngày */
+    .tasks { display:block; }
+    .day-col { border:1px solid var(--line); border-radius:10px; background:#f8fafc; overflow:hidden; margin-bottom:10px; }
+    .day-col h3 { margin:0; padding:8px 12px; background:#e2e8f0; font-size:12px; letter-spacing:.04em; display:flex; justify-content:space-between; align-items:center; }
+    .week-nav { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+    .week-nav button { padding:2px 8px; border:1px solid var(--line); border-radius:6px; background:#fff; cursor:pointer; }
+
+    /* Scroll đẹp + GIỚI HẠN đúng 5 task */
+    .task-scroll{
+      overflow:auto; padding:8px; scroll-behavior:smooth; scroll-snap-type:y proximity;
+      max-height: calc(var(--card-h) * 5 + var(--card-gap) * 4);
+    }
+    .task-scroll::-webkit-scrollbar { width:8px; }
+    .task-scroll::-webkit-scrollbar-thumb { background:linear-gradient(180deg,#94a3b8,#64748b); border-radius:8px; }
+    .task-scroll::-webkit-scrollbar-track { background:#e2e8f0; border-radius:8px; }
+
+    /* Task card (cố định cao để đảm bảo 5 cái) */
+    .task-card{
+      display:flex; gap:10px; align-items:flex-start; background:#fff; border:1px solid #e5e7eb;
+      border-radius:12px; padding:10px; margin-bottom:var(--card-gap); scroll-snap-align:start;
+      box-sizing:border-box; height:var(--card-h); overflow:hidden;
+    }
+    .num { font-weight:700; color:#334155; min-width:22px; text-align:right; }
+    .badge { width:24px; height:24px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:10px; color:#fff; font-weight:700; flex:0 0 24px; }
+    .title { font-weight:700; color:#111827; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .meta { font-size:12px; color:#6b7280; display:flex; gap:10px; align-items:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .dot { width:6px; height:6px; border-radius:50%; background:#9ca3af; display:inline-block; flex:0 0 6px; }
+  </style>
+</head>
+<body>
+  <h1>HQ Task Dashboard – Standalone</h1>
+  <p class="muted">Bản này có thể <b>nhúng sẵn dữ liệu</b> (dán JSON vào 2 biến dưới), hoặc bạn có thể <i>tải Excel thay thế</i> bằng nút bên dưới.</p>
+
+  <!-- ===== BẢNG ĐIỀU KHIỂN TUẦN (TRÊN CÙNG) ===== -->
+  <div id="wkDash" class="wk-dash" hidden>
+    <div id="wkTabs" class="wk-tabs"></div>
+    <div class="wk-panel">
+      <div id="wkStats" class="stats-row"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <label>Thay bằng file Excel khác (tùy chọn)<input id="file" type="file" accept=".xlsx,.xls" /></label>
+    <label>Tuần<select id="week"></select></label>
+    <label style="flex:1">Lọc Task Name<input id="taskFilter" type="text" placeholder="Nhập tên task..." /></label>
+  </div>
+
+  <!-- Hai báo cáo -->
+  <div class="reports">
+    <details open>
+      <summary>Báo cáo 1 – Tỉ lệ hoàn thành theo Store (tuần <span id="wk1">—</span>)</summary>
+      <div class="card-bd"><canvas id="chart1"></canvas></div>
+    </details>
+    <details open>
+      <summary>Báo cáo 2 – Plan vs Unplan theo Dept (tuần <span id="wk2">—</span>)</summary>
+      <div class="card-bd"><canvas id="chart2"></canvas></div>
+    </details>
+  </div>
+
+  <!-- List task -->
+  <details open>
+    <summary>List task theo tuần (chia theo ngày – Start day)</summary>
+    <div class="card-bd">
+      <div class="week-nav">
+        <button id="prevWeek">◀</button>
+        <span>Tuần: <b id="weekView">—</b></span>
+        <button id="nextWeek">▶</button>
+      </div>
+      <div id="weekTasks" class="tasks"></div>
+    </div>
+  </details>
+
+  <script>
+    /* ========= NHÚNG SẴN DỮ LIỆU ========= */
+    const PRELOADED_HEADERS = []; // <-- dán JSON headers vào đây
+    const PRELOADED_ROWS = [];    // <-- dán JSON rows vào đây
+
+    // ========= State =========
+    let RAW_ROWS=[...PRELOADED_ROWS], HEADERS=[...PRELOADED_HEADERS], WEEKS=[], curWeekIndex=0;
+    let CH1=null, CH2=null;
+    let CUR_DAY = 'ALL'; // mặc định hiển thị cả tuần
+
+    // ========= Utils =========
+    function parseDate(v){
+      if(!v) return null;
+      if(typeof v==='number'){ const d=new Date(Math.round((v-25569)*86400*1000)); return isNaN(d.getTime())?null:d; }
+      const d=new Date(v); return isNaN(d.getTime())?null:d;
+    }
+    function toNum(v){ const n=Number(v); return isNaN(n)?null:n; }
+    function toNumLoose(v){ if(v==null) return null; const m=String(v).match(/-?\d+(\.\d+)?/); return m?+m[0]:null; }
+
+    function hydrateWeeks(){
+      const set=new Set(RAW_ROWS.map(r=>String(r['Week']||'').trim()).filter(Boolean));
+      WEEKS=Array.from(set).sort((a,b)=>(parseInt(String(a).replace(/\D/g,''))||0)-(parseInt(String(b).replace(/\D/g,''))||0));
+      const sel=document.getElementById('week');
+      sel.innerHTML=WEEKS.map(w=>`<option value="${w}">${w}</option>`).join('');
+      if(WEEKS.length){ sel.value=WEEKS[0]; }
+    }
+
+    // ====== Report 1 ======
+    const STORE_LIST = [
+      "3002-Ecopark","3003-Riverside","3005-Horizon","3008-Hyundai","3011-Thăng Long","3013-Lotus","3014-Linh Đàm","3015-Westbay",
+      "3016-Ocean Park","3018-Lĩnh Nam","3019-The Five","3020-Eco Rừng Cọ","3022-Florence","3023-Kosmo","3024-Lacasta",
+      "3027-Zenpark","3028-Nam Trung Yên","3030-Sky Oasis","3031-Symphony","3032-Five Star","3033-Sapphire","3034-Landmark",
+      "3035-Masteri","3036-Royal City","3037-Havenpark"
+    ];
+    function computeReport1(w){
+      const stats = Object.fromEntries(STORE_LIST.map(s=>[s,{a:0,c:0}]));
+      RAW_ROWS.filter(r=>String(r['Week']).trim()===w).forEach(r=>{
+        const progStr = (r['Store Progress'] ?? r['Store Progress-Status'] ?? '') + '';
+        const m = progStr.match(/(\d+)\/(\d+)/);
+        const unable = toNum(r['Unable Stores']) || 0;
+        const total = m ? +m[2] : 25;
+        const done  = m ? +m[1] : Math.max(0, total - unable);
+        const assigned = STORE_LIST.slice(0, Math.min(total, STORE_LIST.length));
+        const completed = assigned.slice(0, Math.min(done, assigned.length));
+        assigned.forEach(s=>stats[s].a++);
+        completed.forEach(s=>stats[s].c++);
+      });
+      return Object.entries(stats).map(([Store,v])=>({Store, Ratio: v.a? Math.round(v.c/v.a*1000)/10 : 0}))
+        .sort((a,b)=>b.Ratio-a.Ratio).slice(0,12);
+    }
+    function renderChart1(data, w){
+      document.getElementById('wk1').textContent = w;
+      if(CH1) CH1.destroy();
+      CH1 = new Chart(document.getElementById('chart1'), {
+        type:'bar',
+        data:{ labels:data.map(d=>d.Store), datasets:[{ label:'Hoàn thành (%)', data:data.map(d=>d.Ratio) }] },
+        options:{ scales:{ y:{ beginAtZero:true, max:100, ticks:{ callback:v=>v+'%' } } } }
+      });
+    }
+
+    // ====== Report 2 ======
+    function computeReport2(w){
+      const bucket = {};
+      RAW_ROWS.filter(r=>String(r['Week']).trim()===w).forEach(r=>{
+        const dept = String(r['Dept']||'N/A');
+        const start = parseDate(r['Start day']||r['Start Day']||r['Start date']);
+        const created = start ? new Date(start.getTime()-7*86400000) : null; // thay bằng parseDate(r['Created Day']) nếu có
+        const diff = (start && created)? Math.round((start-created)/86400000) : 7;
+        const type = diff>=7 ? 'Plan' : diff<=2 ? 'Unplan' : 'Buffer';
+        bucket[dept] ||= {Dept:dept, Plan:0, Buffer:0, Unplan:0};
+        bucket[dept][type]++;
+      });
+      return Object.values(bucket);
+    }
+    function renderChart2(data, w){
+      document.getElementById('wk2').textContent = w;
+      if(CH2) CH2.destroy();
+      CH2 = new Chart(document.getElementById('chart2'), {
+        type:'bar',
+        data:{
+          labels:data.map(d=>d.Dept),
+          datasets:[
+            { label:'Plan', data:data.map(d=>d.Plan), stack:'s', backgroundColor:'#34d399' },
+            { label:'Buffer (3-6 ngày)', data:data.map(d=>d.Buffer), stack:'s', backgroundColor:'#fbbf24' },
+            { label:'Unplan', data:data.map(d=>d.Unplan), stack:'s', backgroundColor:'#f87171' }
+          ]
+        },
+        options:{ scales:{ x:{ stacked:true }, y:{ stacked:true, beginAtZero:true } } }
+      });
+    }
+
+    // ====== Group by Day ======
+    const DAYS_ORDER=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const DAY_MAP=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+    function groupByDay(rows){
+      const buckets=Object.fromEntries(DAYS_ORDER.map(d=>[d,[]]));
+      rows.forEach(r=>{
+        const s=parseDate(r['Start day']||r['Start Day']||r['Start date']);
+        const dn=s?DAY_MAP[s.getDay()]:'Mon';
+        buckets[dn].push(r);
+      });
+      const dnum=v=>{ const d=parseDate(v); return d? d.getTime() : Number.MAX_SAFE_INTEGER; };
+      Object.keys(buckets).forEach(k=>{
+        buckets[k].sort((a,b)=>{
+          const da=dnum(a['Start day']||a['Start Day']||a['Start date']);
+          const db=dnum(b['Start day']||b['Start Day']||b['Start date']);
+          if(da!==db) return da-db;
+          return String(a['Task Name']||a['Task name']||'').localeCompare(String(b['Task Name']||b['Task name']||''));
+        });
+      });
+      return buckets;
+    }
+
+    // ====== Stats (Active / Not Yet / Overdue / On Progress / Done / RE) ======
+    function normalizeStatus(raw, pct){
+      const s=String(raw||'').toLowerCase();
+      if(/done|hoàn thành|completed|finish/.test(s) || (pct!=null && pct>=100)) return 'Done';
+      if(/progress|doing|đang làm|working/.test(s) || (pct!=null && pct>0 && pct<100)) return 'On Progress';
+      if(/overdue|trễ|quá hạn/.test(s)) return 'Overdue';
+      if(/not[\s-]?yet|chưa bắt đầu|pending/.test(s) || (pct===0)) return 'Not Yet';
+      return null;
+    }
+    function inferStatus(row){
+      const pct = toNumLoose(row['Percent']??row['%']??row['Progress %']??row['Done %']);
+      const st = normalizeStatus(row['Status']??row['Progress']??row['State'], pct);
+      if(st) return st;
+
+      // Suy luận nhẹ theo ngày
+      const end=parseDate(row['End day']||row['End Day']||row['End date']);
+      const start=parseDate(row['Start day']||row['Start Day']||row['Start date']);
+      const now=new Date();
+      if(pct!=null){
+        if(pct>=100) return 'Done';
+        if(pct>0) return 'On Progress';
+        // pct===0 → xét theo ngày
+      }
+      if(end && end<now) return 'Overdue';
+      if(start && start>now) return 'Not Yet';
+      return 'On Progress'; // mặc định
+    }
+    function computeStats(rows){
+      let active=0, ny=0, od=0, op=0, done=0, reSum=0, reCnt=0;
+      rows.forEach(r=>{
+        const status=inferStatus(r);
+        if(status!=='Done') active++;
+        if(status==='Not Yet') ny++;
+        if(status==='Overdue') od++;
+        if(status==='On Progress') op++;
+        if(status==='Done') done++;
+        const re=toNumLoose(r['RE']??r['RE Score']??r['Reasonable Expectancy']);
+        if(re!=null){ reSum+=re; reCnt++; }
+      });
+      const reAvg = reCnt? Math.round((reSum/reCnt)*10)/10 : 0;
+      return {active, ny, od, op, done, reAvg};
+    }
+    function renderStatsFor(dayFilter, w){
+      const q = (document.getElementById('taskFilter').value||'').toLowerCase();
+      const weekRows = RAW_ROWS.filter(r=>String(r['Week']).trim()===w)
+        .filter(r=> q ? String(r['Task Name']||r['Task name']||'').toLowerCase().includes(q) : true);
+      const buckets = groupByDay(weekRows);
+      const takeRows = (dayFilter==='ALL') ? weekRows : buckets[dayFilter];
+      const s = computeStats(takeRows||[]);
+      const el = document.getElementById('wkStats');
+      el.innerHTML = `
+        <div class="stat"><div class="vnum">${s.active}</div><div class="vhead">Active</div></div>
+        <div class="stat"><div class="vnum c-red">${s.ny}</div><div class="vhead c-red">Not Yet</div></div>
+        <div class="stat"><div class="vnum c-red2">${s.od}</div><div class="vhead c-red2">Overdue</div></div>
+        <div class="stat"><div class="vnum c-blue">${s.op}</div><div class="vhead c-blue">On Progress</div></div>
+        <div class="stat"><div class="vnum c-green">${s.done}</div><div class="vhead c-green">Done</div></div>
+        <div class="stat"><div class="vnum">${s.reAvg}</div><div class="vhead">RE</div></div>
+      `;
+    }
+
+    // ====== Tabs (ALL + Mon..Sun) ======
+    function buildWeekTabs(){
+      const tabs = ['ALL', ...DAYS_ORDER];
+      const wrap = document.getElementById('wkTabs');
+      wrap.innerHTML = '';
+      tabs.forEach(d=>{
+        const b=document.createElement('button');
+        b.type='button'; b.className='wk-tab'+(CUR_DAY===d?' active':'');
+        b.textContent = d==='ALL' ? 'All' : d;
+        b.addEventListener('click', ()=>{
+          CUR_DAY=d;
+          Array.from(wrap.children).forEach(x=>x.classList.remove('active'));
+          b.classList.add('active');
+          // Rerender stats + tasks theo ngày
+          const w=document.getElementById('week').value;
+          renderStatsFor(CUR_DAY, w);
+          renderWeekTasks(w, CUR_DAY);
+        });
+        wrap.appendChild(b);
+      });
+    }
+
+    // ====== Render Weekly Tasks (có lọc ngày) ======
+    function renderWeekTasks(w, dayFilter='ALL'){
+      document.getElementById('weekView').textContent = w || '—';
+      const q = (document.getElementById('taskFilter').value||'').toLowerCase();
+      const rows = RAW_ROWS.filter(r=>String(r['Week']).trim()===w)
+        .filter(r=> q ? String(r['Task Name']||r['Task name']||'').toLowerCase().includes(q) : true);
+
+      const buckets = groupByDay(rows);
+      const container = document.getElementById('weekTasks');
+      container.innerHTML = '';
+
+      // Dept màu + initials
+      const colors = ['#ef4444','#f59e0b','#10b981','#3b82f6','#8b5cf6','#ec4899','#14b8a6','#84cc16','#fb923c'];
+      const deptColor = (d)=>{ let h=0; for(let i=0;i<String(d).length;i++) h=(h*31+String(d).charCodeAt(i))>>>0; return colors[h%colors.length]; };
+      const initials = (d)=> String(d||'').split(/\s|-/).map(x=>x[0]).join('').slice(0,2).toUpperCase();
+      const fmt = (v)=>{ const d=parseDate(v); if(!d) return ''; return d.toLocaleDateString('en-GB',{day:'2-digit', month:'short'}); };
+
+      // Khi lọc ngày: chỉ render 1 cột; Khi ALL: render đủ 7 cột
+      const daysToRender = (dayFilter==='ALL') ? DAYS_ORDER : [dayFilter];
+      let seq = 1;
+
+      daysToRender.forEach(day=>{
+        const list = buckets[day] || [];
+        const wrap = document.createElement('div');
+        wrap.className = 'day-col';
+        wrap.innerHTML = `<h3>${day.toUpperCase()}<span class="muted">${list.length} task</span></h3>`;
+
+        const scroller = document.createElement('div');
+        scroller.className = 'task-scroll';
+
+        list.forEach(r=>{
+          const dep = r['Dept'] || '';
+          const title = String(r['Task Name']||r['Task name']||'');
+          const sd = fmt(r['Start day']||r['Start Day']||r['Start date']);
+          const ed = fmt(r['End day']||r['End Day']||r['End date']);
+          const range = (sd||ed)? `${sd} – ${ed}` : '';
+
+          const card = document.createElement('div'); card.className='task-card';
+          card.innerHTML = `
+            <div class="num">${seq++}.</div>
+            <span class="badge" style="background:${deptColor(dep)}">${initials(dep)}</span>
+            <div class="body" style="min-width:0">
+              <div class="title">${title}</div>
+              <div class="meta"><span>${range}</span><span class="dot"></span><span><!-- RE trống --></span></div>
+            </div>`;
+          scroller.appendChild(card);
+        });
+
+        wrap.appendChild(scroller);
+        container.appendChild(wrap);
+      });
+    }
+
+    function updateAll(resetDay=true){
+      const w = document.getElementById('week').value;
+      if(!w) return;
+      if(resetDay) CUR_DAY='ALL'; // đổi tuần → về mặc định xem cả tuần
+
+      // tuần có dữ liệu → hiện dashboard + tabs
+      const hasData = RAW_ROWS.some(r=>String(r['Week']).trim()===w);
+      document.getElementById('wkDash').hidden = !hasData;
+      if(hasData){ buildWeekTabs(); renderStatsFor(CUR_DAY, w); }
+
+      renderChart1(computeReport1(w), w);
+      renderChart2(computeReport2(w), w);
+      renderWeekTasks(w, CUR_DAY);
+      curWeekIndex = WEEKS.indexOf(w);
+    }
+
+    // ===== Khởi tạo từ data nhúng nếu có =====
+    hydrateWeeks();
+    if (WEEKS.length) updateAll(true);
+
+    // ===== Cho phép thay Excel trên trình duyệt =====
+    async function ensureXLSX(){
+      if (window.XLSX) return;
+      await new Promise(r=>{
+        const s=document.createElement('script');
+        s.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+        document.head.appendChild(s); s.onload=r;
+      });
+    }
+    function aoaToObjects(aoa){
+      const idx=aoa.findIndex(r=>Array.isArray(r)&&r.includes('Week'));
+      if(idx<0) return {headers:[],rows:[]};
+      const headers=aoa[idx].map(h=>String(h||'').trim());
+      const rows=aoa.slice(idx+1).filter(r=>r && r.some(c=>String(c||'').trim()!==''))
+        .map(r=>{ const o={}; headers.forEach((h,i)=>o[h]=r[i]); return o; });
+      return {headers,rows};
+    }
+    document.getElementById('file').addEventListener('change', async (e)=>{
+      const f = e.target.files?.[0]; if(!f) return;
+      await ensureXLSX();
+      const reader = new FileReader();
+      reader.onload = (ev)=>{
+        try{
+          const wb = XLSX.read(new Uint8Array(ev.target.result), {type:'array'});
+          const sheet = wb.SheetNames.includes('Sheet1') ? 'Sheet1' : wb.SheetNames[0];
+          const ws = wb.Sheets[sheet];
+          const aoa = XLSX.utils.sheet_to_json(ws, {header:1, raw:true});
+          const parsed = aoaToObjects(aoa);
+          HEADERS = parsed.headers; RAW_ROWS = parsed.rows;
+          hydrateWeeks(); updateAll(true);
+        }catch(err){ alert('Không đọc được file Excel mới: ' + err); }
+      };
+      reader.readAsArrayBuffer(f);
+    });
+
+    // Tuần trước / tuần sau
+    document.getElementById('prevWeek')?.addEventListener('click', ()=>{
+      if(curWeekIndex>0){ curWeekIndex--; document.getElementById('week').value=WEEKS[curWeekIndex]; updateAll(true); }
+    });
+    document.getElementById('nextWeek')?.addEventListener('click', ()=>{
+      if(curWeekIndex<WEEKS.length-1){ curWeekIndex++; document.getElementById('week').value=WEEKS[curWeekIndex]; updateAll(true); }
+    });
+    document.getElementById('week').addEventListener('change', ()=>updateAll(true));
+
+    // Lọc theo tên task → cập nhật cả stats + list
+    document.getElementById('taskFilter').addEventListener('input', ()=>{
+      const w=document.getElementById('week').value;
+      renderStatsFor(CUR_DAY, w);
+      renderWeekTasks(w, CUR_DAY);
+    });
+  </script>
+</body>
+</html>

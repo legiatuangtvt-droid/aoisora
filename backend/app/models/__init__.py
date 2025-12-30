@@ -3,6 +3,7 @@ from .staff import Region, Department, Store, Staff
 from .task import CodeMaster, Manual, CheckList, Task, TaskCheckList
 from .shift import TaskGroup, TaskLibrary, DailyTemplate, ShiftTemplate, DailyScheduleTask, ShiftCode, ShiftAssignment
 from .notification import Notification
+from .manual import ManualFolder, ManualDocument, ManualStep, ManualMedia, ManualViewLog
 
 __all__ = [
     # Staff & Organization
@@ -26,4 +27,10 @@ __all__ = [
     "ShiftAssignment",
     # Notifications
     "Notification",
+    # Manual/Knowledge Base
+    "ManualFolder",
+    "ManualDocument",
+    "ManualStep",
+    "ManualMedia",
+    "ManualViewLog",
 ]

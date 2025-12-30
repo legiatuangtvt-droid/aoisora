@@ -514,6 +514,27 @@ export interface ShiftTemplateUpdate {
 // Daily Schedule Task Types (DWS)
 // ============================================
 
+// Task Status constants (matches code_master with code_type='TASK_STATUS')
+export const TaskStatus = {
+  NOT_YET: 1,      // Task not started
+  DONE: 2,         // Task completed successfully
+  SKIPPED: 3,      // Task was skipped
+  IN_PROGRESS: 4,  // Task is currently in progress
+} as const;
+
+export type TaskStatusType = typeof TaskStatus[keyof typeof TaskStatus];
+
+// Get status name from status code
+export function getTaskStatusName(status: number): string {
+  const statusMap: Record<number, string> = {
+    [TaskStatus.NOT_YET]: 'Not Yet',
+    [TaskStatus.DONE]: 'Done',
+    [TaskStatus.SKIPPED]: 'Skipped',
+    [TaskStatus.IN_PROGRESS]: 'In Progress',
+  };
+  return statusMap[status] || 'Unknown';
+}
+
 export interface DailyScheduleTask {
   schedule_task_id: number;
   staff_id: number;
@@ -524,7 +545,8 @@ export interface DailyScheduleTask {
   task_name: string;
   start_time: string;  // HH:MM:SS
   end_time: string;    // HH:MM:SS
-  status: 'pending' | 'in_progress' | 'completed' | 'skipped';
+  status: number;      // 1=Not Yet, 2=Done, 3=Skipped, 4=In Progress
+  status_name?: string;  // Computed from status code
   completed_at: string | null;
   notes: string | null;
   created_at: string;
@@ -541,12 +563,12 @@ export interface DailyScheduleTaskCreate {
   task_name: string;
   start_time: string;
   end_time: string;
-  status?: string;
+  status?: number;
   notes?: string;
 }
 
 export interface DailyScheduleTaskUpdate {
-  status?: string;
+  status?: number;
   notes?: string;
   completed_at?: string;
 }
@@ -591,6 +613,221 @@ export interface NotificationListResponse {
   notifications: Notification[];
   total: number;
   unread_count: number;
+}
+
+// ============================================
+// Manual/Knowledge Base Types
+// ============================================
+
+export interface ManualFolder {
+  folder_id: number;
+  folder_name: string;
+  parent_folder_id: number | null;
+  store_id: number | null;
+  description: string | null;
+  icon: string | null;
+  color: string | null;
+  sort_order: number;
+  is_active: boolean;
+  created_by: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ManualFolderWithStats extends ManualFolder {
+  document_count: number;
+  child_folder_count: number;
+  total_views: number;
+}
+
+export interface ManualDocument {
+  document_id: number;
+  folder_id: number | null;
+  document_code: string | null;
+  document_name: string;
+  description: string | null;
+  content_type: string;
+  content: string | null;
+  external_url: string | null;
+  thumbnail_url: string | null;
+  tags: string[] | null;
+  status: string;
+  published_at: string | null;
+  view_count: number;
+  version: number;
+  store_id: number | null;
+  is_public: boolean;
+  created_by: number | null;
+  updated_by: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ManualFolderCreate {
+  folder_name: string;
+  parent_folder_id?: number;
+  store_id?: number;
+  description?: string;
+  icon?: string;
+  color?: string;
+  sort_order?: number;
+  created_by?: number;
+}
+
+export interface ManualFolderUpdate {
+  folder_name?: string;
+  parent_folder_id?: number;
+  store_id?: number;
+  description?: string;
+  icon?: string;
+  color?: string;
+  sort_order?: number;
+  is_active?: boolean;
+}
+
+export interface ManualDocumentCreate {
+  folder_id?: number;
+  document_code?: string;
+  document_name: string;
+  description?: string;
+  content_type?: string;
+  content?: string;
+  external_url?: string;
+  thumbnail_url?: string;
+  tags?: string[];
+  status?: string;
+  store_id?: number;
+  is_public?: boolean;
+  created_by?: number;
+}
+
+export interface ManualDocumentUpdate {
+  folder_id?: number;
+  document_code?: string;
+  document_name?: string;
+  description?: string;
+  content_type?: string;
+  content?: string;
+  external_url?: string;
+  thumbnail_url?: string;
+  tags?: string[];
+  status?: string;
+  store_id?: number;
+  is_public?: boolean;
+  updated_by?: number;
+}
+
+export interface FolderBrowseResponse {
+  current_folder: ManualFolder | null;
+  breadcrumb: ManualFolder[];
+  folders: ManualFolderWithStats[];
+  documents: ManualDocument[];
+  total_folders: number;
+  total_documents: number;
+}
+
+export interface ManualSearchResult {
+  type: 'folder' | 'document';
+  folder?: ManualFolder;
+  document?: ManualDocument;
+}
+
+export interface ManualSearchResponse {
+  query: string;
+  results: ManualSearchResult[];
+  total: number;
+}
+
+// ManualStep Types (Teachme Biz style)
+export interface Annotation {
+  type: 'rectangle' | 'circle' | 'text' | 'arrow' | 'blur' | 'highlight' | 'subtitle' | 'marker';
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  color?: string;
+  stroke_width?: number;
+  fill_color?: string;
+  font_size?: number;
+  text?: string;
+  start_time?: number;
+  end_time?: number;
+  duration?: number;
+}
+
+export interface ManualStep {
+  step_id: number;
+  document_id: number;
+  step_number: number;
+  step_type: 'cover' | 'step';
+  title: string | null;
+  description: string | null;
+  media_type: 'image' | 'video' | null;
+  media_url: string | null;
+  media_thumbnail: string | null;
+  annotations: Annotation[];
+  video_trim_start: number | null;
+  video_trim_end: number | null;
+  video_muted: boolean;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ManualStepCreate {
+  document_id: number;
+  step_number: number;
+  step_type?: 'cover' | 'step';
+  title?: string;
+  description?: string;
+  media_type?: 'image' | 'video';
+  media_url?: string;
+  media_thumbnail?: string;
+  annotations?: Annotation[];
+  video_trim_start?: number;
+  video_trim_end?: number;
+  video_muted?: boolean;
+  sort_order?: number;
+}
+
+export interface ManualStepUpdate {
+  step_number?: number;
+  step_type?: 'cover' | 'step';
+  title?: string;
+  description?: string;
+  media_type?: 'image' | 'video';
+  media_url?: string;
+  media_thumbnail?: string;
+  annotations?: Annotation[];
+  video_trim_start?: number;
+  video_trim_end?: number;
+  video_muted?: boolean;
+  sort_order?: number;
+  is_active?: boolean;
+}
+
+export interface ManualDocumentWithSteps extends ManualDocument {
+  steps: ManualStep[];
+  folder: ManualFolder | null;
+}
+
+// ManualMedia Types
+export interface ManualMedia {
+  media_id: number;
+  document_id: number | null;
+  step_id: number | null;
+  file_name: string;
+  file_type: string | null;
+  file_size: number | null;
+  file_url: string;
+  thumbnail_url: string | null;
+  edited_url: string | null;
+  width: number | null;
+  height: number | null;
+  duration: number | null;
+  uploaded_by: number | null;
+  created_at: string;
 }
 
 // ============================================

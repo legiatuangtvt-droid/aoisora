@@ -38,3 +38,16 @@ from .notification import (
     NotificationBase, NotificationCreate, NotificationResponse, NotificationWithSender,
     NotificationMarkRead, NotificationMarkAllRead, UnreadCountResponse, NotificationListResponse,
 )
+
+# Manual/Knowledge Base
+from .manual import (
+    ManualFolderBase, ManualFolderCreate, ManualFolderUpdate, ManualFolderResponse,
+    ManualFolderWithStats, ManualFolderTree,
+    ManualDocumentBase, ManualDocumentCreate, ManualDocumentUpdate, ManualDocumentResponse,
+    ManualDocumentWithFolder, ManualDocumentWithSteps,
+    ManualStepBase, ManualStepCreate, ManualStepUpdate, ManualStepResponse,
+    ManualMediaBase, ManualMediaCreate, ManualMediaResponse,
+    AnnotationBase,
+    ManualViewLogCreate, ManualViewLogResponse,
+    FolderBrowseResponse, ManualSearchResult, ManualSearchResponse,
+)

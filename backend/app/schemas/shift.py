@@ -198,6 +198,25 @@ class TaskGroupResponse(TaskGroupBase):
 # DailyScheduleTask Schemas
 # ============================================
 
+# Status constants (matches code_master with code_type='TASK_STATUS')
+class TaskStatus:
+    NOT_YET = 1      # Task not started
+    DONE = 2         # Task completed successfully
+    SKIPPED = 3      # Task was skipped
+    IN_PROGRESS = 4  # Task is currently in progress
+
+    @staticmethod
+    def get_name(status: int) -> str:
+        """Get status name from status code"""
+        status_map = {
+            TaskStatus.NOT_YET: "Not Yet",
+            TaskStatus.DONE: "Done",
+            TaskStatus.SKIPPED: "Skipped",
+            TaskStatus.IN_PROGRESS: "In Progress",
+        }
+        return status_map.get(status, "Unknown")
+
+
 class DailyScheduleTaskBase(BaseModel):
     staff_id: int
     store_id: Optional[int] = None
@@ -207,7 +226,7 @@ class DailyScheduleTaskBase(BaseModel):
     task_name: str
     start_time: time
     end_time: time
-    status: str = "pending"  # pending, in_progress, completed, skipped
+    status: int = TaskStatus.NOT_YET  # 1=Not Yet, 2=Done, 3=Skipped, 4=In Progress
     notes: Optional[str] = None
 
 
@@ -216,7 +235,7 @@ class DailyScheduleTaskCreate(DailyScheduleTaskBase):
 
 
 class DailyScheduleTaskUpdate(BaseModel):
-    status: Optional[str] = None
+    status: Optional[int] = None
     notes: Optional[str] = None
     completed_at: Optional[datetime] = None
 
@@ -226,9 +245,15 @@ class DailyScheduleTaskResponse(DailyScheduleTaskBase):
     completed_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
+    status_name: Optional[str] = None  # Computed from status code
 
     class Config:
         from_attributes = True
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        if self.status_name is None:
+            self.status_name = TaskStatus.get_name(self.status)
 
 
 class DailyScheduleTaskWithGroup(DailyScheduleTaskResponse):
@@ -390,3 +415,8 @@ class ManHourReport(BaseModel):
     total_template: Decimal = Decimal("0")
     total_actual: Decimal = Decimal("0")
     total_diff: Decimal = Decimal("0")
+
+
+# Rebuild models with forward references
+TaskLibraryWithGroup.model_rebuild()
+DailyScheduleTaskWithGroup.model_rebuild()

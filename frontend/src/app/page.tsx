@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 // Simple API functions
 async function checkHealth() {
@@ -12,21 +10,30 @@ async function checkHealth() {
   return await response.json();
 }
 
+// Menu tile interface
+interface MenuTile {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon: React.ReactNode;
+  href: string;
+  isExternal?: boolean;
+  isUnderDevelopment?: boolean;
+  notificationCount?: number;
+}
+
 export default function Home() {
-  const { translations: t } = useLanguage();
   const [backendStatus, setBackendStatus] = useState<{ version?: string } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadData() {
       try {
         setLoading(true);
-        setError(null);
         const health = await checkHealth();
         setBackendStatus(health);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to connect');
+      } catch {
+        // Silently fail - backend offline
       } finally {
         setLoading(false);
       }
@@ -34,155 +41,179 @@ export default function Home() {
     loadData();
   }, []);
 
+  // Menu tiles configuration
+  const menuTiles: MenuTile[] = [
+    {
+      id: 'dws',
+      title: 'DWS',
+      subtitle: 'Daily Work Schedule',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+        </svg>
+      ),
+      href: '/dws/daily-schedule',
+      isExternal: true,
+    },
+    {
+      id: 'task-hq',
+      title: 'Task from HQ',
+      subtitle: 'Assignments & status',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+        </svg>
+      ),
+      href: '/tasks',
+      isExternal: true,
+    },
+    {
+      id: 'faq',
+      title: 'FAQ',
+      subtitle: 'Frequently Asked Questions',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      href: '/faq',
+      isUnderDevelopment: true,
+    },
+    {
+      id: 'manual',
+      title: 'MANUAL',
+      subtitle: 'Aoi knowledge base',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      ),
+      href: '/manual',
+    },
+    {
+      id: 'quality',
+      title: 'Check Quality',
+      subtitle: 'Quality Through Time',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+      ),
+      href: '/quality',
+      isUnderDevelopment: true,
+    },
+    {
+      id: 'training',
+      title: 'Training',
+      subtitle: 'Learning & upskilling',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+      ),
+      href: '/training',
+      isUnderDevelopment: true,
+      notificationCount: 5,
+    },
+  ];
+
   return (
-    <main className="min-h-screen p-8 bg-gray-50">
-      <div className="max-w-7xl mx-auto">
-        {/* Header with Language Switcher and Backend Status */}
-        <div className="flex items-start justify-between mb-8">
-          <div>
-            <h1 className="text-4xl font-bold mb-2">{t.common.appName}</h1>
-            <p className="text-xl text-gray-600">{t.common.appDescription}</p>
-          </div>
-          <div className="flex items-center gap-3">
-            {/* Backend Status Indicator */}
-            <div
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${
-                backendStatus
-                  ? 'bg-green-100 text-green-700'
-                  : loading
-                    ? 'bg-yellow-100 text-yellow-700'
-                    : 'bg-red-100 text-red-700'
-              }`}
-              title={backendStatus ? `v${backendStatus.version}` : error || ''}
-            >
-              <div className={`w-2 h-2 rounded-full ${
-                backendStatus
-                  ? 'bg-green-500'
-                  : loading
-                    ? 'bg-yellow-500 animate-pulse'
-                    : 'bg-red-500'
-              }`} />
-              <span>
-                {backendStatus
-                  ? 'Running'
-                  : loading
-                    ? 'Connecting'
-                    : 'Disconnected'}
-              </span>
-            </div>
-            {/* Language Switcher */}
-            <LanguageSwitcher variant="compact" />
-          </div>
-        </div>
+    <main className="min-h-screen bg-gradient-to-b from-sky-100 to-sky-50">
+      {/* Header */}
+      <header className="pt-12 pb-8 px-4">
+        <h1 className="text-5xl font-bold text-center text-sky-500 tracking-wide">
+          AOI SORA
+        </h1>
+      </header>
 
-        {/* DWS Section */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-4 text-indigo-700">{t.dws.title}</h2>
+      {/* Menu Grid */}
+      <div className="max-w-4xl mx-auto px-4 pb-12">
+        <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Link href="/dws/daily-schedule" className="block p-6 border-2 rounded-xl bg-white hover:border-indigo-400 hover:shadow-lg transition-all group">
-              <div className="flex items-center gap-4 mb-3">
-                <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
-                  <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800">{t.dws.dailySchedule}</h3>
-                  <p className="text-sm text-gray-500">Daily Schedule</p>
-                </div>
-              </div>
-              <p className="text-gray-600 text-sm">{t.dws.dailyScheduleDesc}</p>
-            </Link>
-
-            <Link href="/dws/workforce-dispatch" className="block p-6 border-2 rounded-xl bg-white hover:border-indigo-400 hover:shadow-lg transition-all group">
-              <div className="flex items-center gap-4 mb-3">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800">{t.dws.workforceDispatch}</h3>
-                  <p className="text-sm text-gray-500">Workforce Dispatch</p>
-                </div>
-              </div>
-              <p className="text-gray-600 text-sm">{t.dws.workforceDispatchDesc}</p>
-            </Link>
-
-            <Link href="/dws/shift-codes" className="block p-6 border-2 rounded-xl bg-white hover:border-indigo-400 hover:shadow-lg transition-all group">
-              <div className="flex items-center gap-4 mb-3">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
-                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800">{t.dws.shiftCodes}</h3>
-                  <p className="text-sm text-gray-500">Shift Codes</p>
-                </div>
-              </div>
-              <p className="text-gray-600 text-sm">{t.dws.shiftCodesDesc}</p>
-            </Link>
+            {menuTiles.map((tile) => (
+              <MenuTileCard key={tile.id} tile={tile} />
+            ))}
           </div>
+
+          {/* Tip */}
+          <p className="text-center text-gray-400 text-sm mt-6">
+            Tip: Right-click a tile to copy its link or open in a new tab.
+          </p>
         </div>
+      </div>
 
-        {/* WS Section */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-4 text-teal-700">{t.ws.title}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Link href="/tasks" className="block p-6 border-2 rounded-xl bg-white hover:border-teal-400 hover:shadow-lg transition-all group">
-              <div className="flex items-center gap-4 mb-3">
-                <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center group-hover:bg-teal-200 transition-colors">
-                  <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800">{t.ws.taskManagement}</h3>
-                  <p className="text-sm text-gray-500">Task Management</p>
-                </div>
-              </div>
-              <p className="text-gray-600 text-sm">{t.ws.taskManagementDesc}</p>
-            </Link>
-
-            <div className="p-6 border-2 border-dashed rounded-xl bg-gray-50">
-              <div className="flex items-center gap-4 mb-3">
-                <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-400">{t.ws.notifications}</h3>
-                  <p className="text-sm text-gray-400">Notifications</p>
-                </div>
-              </div>
-              <p className="text-gray-400 text-sm">{t.ws.inDevelopment}</p>
-            </div>
-
-            <div className="p-6 border-2 border-dashed rounded-xl bg-gray-50">
-              <div className="flex items-center gap-4 mb-3">
-                <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-400">{t.ws.reports}</h3>
-                  <p className="text-sm text-gray-400">Reports</p>
-                </div>
-              </div>
-              <p className="text-gray-400 text-sm">{t.ws.inDevelopment}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer Info */}
-        <div className="text-center text-sm text-gray-500 mt-8 pt-8 border-t">
-          <p>{t.common.appName} - {t.common.appDescription}</p>
-          {error && <p className="text-red-500 mt-2">{error}</p>}
+      {/* Backend Status Indicator (small, bottom right) */}
+      <div className="fixed bottom-4 right-4">
+        <div
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium shadow-lg ${
+            backendStatus
+              ? 'bg-green-100 text-green-700'
+              : loading
+                ? 'bg-yellow-100 text-yellow-700'
+                : 'bg-red-100 text-red-700'
+          }`}
+          title={backendStatus ? `Backend v${backendStatus.version}` : 'Backend offline'}
+        >
+          <div className={`w-2 h-2 rounded-full ${
+            backendStatus
+              ? 'bg-green-500'
+              : loading
+                ? 'bg-yellow-500 animate-pulse'
+                : 'bg-red-500'
+          }`} />
+          <span>
+            {backendStatus ? 'Online' : loading ? 'Connecting...' : 'Offline'}
+          </span>
         </div>
       </div>
     </main>
+  );
+}
+
+// Menu Tile Card Component
+function MenuTileCard({ tile }: { tile: MenuTile }) {
+  const cardContent = (
+    <div className="relative bg-sky-500 hover:bg-sky-600 text-white rounded-2xl p-5 h-full transition-all duration-200 hover:shadow-lg hover:-translate-y-1 cursor-pointer">
+      {/* Notification Badge */}
+      {tile.notificationCount && tile.notificationCount > 0 && (
+        <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-xs font-bold shadow-md">
+          {tile.notificationCount}
+        </div>
+      )}
+
+      {/* Icon */}
+      <div className="mb-3">
+        {tile.icon}
+      </div>
+
+      {/* Title */}
+      <h3 className="text-lg font-bold mb-1">{tile.title}</h3>
+
+      {/* Subtitle */}
+      <p className="text-sky-100 text-sm mb-3">{tile.subtitle}</p>
+
+      {/* Action Button */}
+      <div className="mt-auto">
+        {tile.isUnderDevelopment ? (
+          <span className="inline-block px-3 py-1 bg-white/20 rounded-full text-xs">
+            Under development
+          </span>
+        ) : (
+          <span className="inline-block px-3 py-1 bg-white/20 rounded-full text-xs">
+            {tile.isExternal ? 'Opens new tab' : 'Open'}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+
+  if (tile.isUnderDevelopment) {
+    return <div className="opacity-80">{cardContent}</div>;
+  }
+
+  return (
+    <Link href={tile.href} target={tile.isExternal ? '_blank' : undefined}>
+      {cardContent}
+    </Link>
   );
 }

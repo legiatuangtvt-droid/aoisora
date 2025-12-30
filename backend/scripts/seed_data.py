@@ -654,13 +654,12 @@ def seed_daily_schedule_tasks(db: Session):
 
         for staff_id, tasks in all_schedules.items():
             for task_code, task_name, group_id, start_t, end_t in tasks:
-                # Create unique task code per day to avoid conflicts
-                daily_task_code = f"{task_code}-D{day_offset}"
-
+                # Check duplicate by staff_id + schedule_date + start_time (not task_code)
+                # This ensures only 1 task per staff per time slot
                 existing = db.query(DailyScheduleTask).filter(
                     DailyScheduleTask.staff_id == staff_id,
                     DailyScheduleTask.schedule_date == current_date,
-                    DailyScheduleTask.task_code == daily_task_code
+                    DailyScheduleTask.start_time == start_t
                 ).first()
 
                 if not existing:
@@ -669,7 +668,7 @@ def seed_daily_schedule_tasks(db: Session):
                         store_id=1,
                         schedule_date=current_date,
                         group_id=group_id,
-                        task_code=daily_task_code,
+                        task_code=task_code,  # Use original task_code without day suffix
                         task_name=task_name,
                         start_time=start_t,
                         end_time=end_t,

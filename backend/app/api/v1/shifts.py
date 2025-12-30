@@ -717,6 +717,7 @@ async def complete_schedule_task(
 ):
     """
     Mark a scheduled task as completed.
+    Status: 2 = Done (from code_master TASK_STATUS)
     """
     from datetime import datetime
 
@@ -724,7 +725,7 @@ async def complete_schedule_task(
     if not task:
         raise HTTPException(status_code=404, detail="Scheduled task not found")
 
-    task.status = "completed"
+    task.status = DailyScheduleTask.STATUS_DONE  # 2 = Done
     task.completed_at = datetime.now()
     db.commit()
     db.refresh(task)
