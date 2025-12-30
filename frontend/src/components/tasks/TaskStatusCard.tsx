@@ -9,30 +9,46 @@ interface TaskStatusCardProps {
   onLike?: () => void;
 }
 
-const STATUS_CONFIG: Record<TaskResultStatus, { label: string; bgColor: string; borderColor: string; textColor: string }> = {
+const STATUS_CONFIG: Record<TaskResultStatus, { label: string; badgeLabel: string; bgColor: string; borderColor: string; textColor: string; dotColor: string; badgeBg: string; badgeText: string }> = {
   success: {
     label: 'ĐÃ HOÀN THÀNH CÔNG VIỆC',
-    bgColor: 'bg-green-50 dark:bg-green-900/20',
-    borderColor: 'border-green-500',
-    textColor: 'text-green-700 dark:text-green-400',
+    badgeLabel: 'SUCCESS',
+    bgColor: 'bg-blue-50 dark:bg-blue-900/20',
+    borderColor: 'border-l-4 border-teal-400',
+    textColor: 'text-blue-600 dark:text-blue-400',
+    dotColor: 'bg-teal-500',
+    badgeBg: 'bg-white border border-teal-400',
+    badgeText: 'text-teal-600',
   },
   failed: {
     label: 'KHÔNG HOÀN THÀNH CÔNG VIỆC',
+    badgeLabel: 'FAILED',
     bgColor: 'bg-orange-50 dark:bg-orange-900/20',
-    borderColor: 'border-orange-500',
+    borderColor: 'border-l-4 border-orange-500',
     textColor: 'text-orange-700 dark:text-orange-400',
+    dotColor: 'bg-orange-500',
+    badgeBg: 'bg-white border border-orange-400',
+    badgeText: 'text-orange-600',
   },
   in_progress: {
     label: 'CHƯA HOÀN THÀNH CÔNG VIỆC',
+    badgeLabel: 'IN PROCESS',
     bgColor: 'bg-yellow-50 dark:bg-yellow-900/20',
-    borderColor: 'border-yellow-500',
+    borderColor: 'border-l-4 border-yellow-500',
     textColor: 'text-yellow-700 dark:text-yellow-400',
+    dotColor: 'bg-yellow-500',
+    badgeBg: 'bg-white border border-yellow-400',
+    badgeText: 'text-yellow-600',
   },
   not_started: {
     label: 'CHƯA BẮT ĐẦU',
+    badgeLabel: 'NOT STARTED',
     bgColor: 'bg-gray-50 dark:bg-gray-800',
-    borderColor: 'border-gray-300 dark:border-gray-600',
+    borderColor: 'border-l-4 border-gray-300 dark:border-gray-600',
     textColor: 'text-gray-700 dark:text-gray-400',
+    dotColor: 'bg-gray-400',
+    badgeBg: 'bg-white border border-gray-300',
+    badgeText: 'text-gray-600',
   },
 };
 
@@ -40,24 +56,18 @@ export default function TaskStatusCard({ status, linkUrl, likes, onLike }: TaskS
   const config = STATUS_CONFIG[status];
 
   return (
-    <div className={`p-4 rounded-lg border-l-4 ${config.bgColor} ${config.borderColor}`}>
-      <div className="flex items-start justify-between">
+    <div className={`p-4 rounded-lg ${config.bgColor} ${config.borderColor}`}>
+      <div className="flex items-center justify-between">
         {/* Status Info */}
         <div>
-          {/* Status Badge */}
-          <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-            status === 'success' ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300' :
-            status === 'failed' ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300' :
-            status === 'in_progress' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300' :
-            'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-          }`}>
-            {status === 'success' ? 'SUCCESS' :
-             status === 'failed' ? 'FAILED' :
-             status === 'in_progress' ? 'IN PROCESS' : 'NOT STARTED'}
+          {/* Status Badge with dot */}
+          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${config.badgeBg} ${config.badgeText}`}>
+            <span className={`w-2 h-2 rounded-full ${config.dotColor}`}></span>
+            {config.badgeLabel}
           </span>
 
           {/* Status Text */}
-          <h3 className={`text-lg font-bold mt-2 ${config.textColor}`}>
+          <h3 className={`text-xl font-bold mt-2 ${config.textColor}`}>
             {config.label}
           </h3>
 
@@ -65,7 +75,7 @@ export default function TaskStatusCard({ status, linkUrl, likes, onLike }: TaskS
           {linkUrl && (
             <a
               href={linkUrl}
-              className="text-sm text-[#C5055B] hover:underline mt-1 inline-block"
+              className="text-sm text-blue-500 hover:underline mt-1 inline-block"
             >
               Link báo cáo
             </a>
@@ -73,36 +83,32 @@ export default function TaskStatusCard({ status, linkUrl, likes, onLike }: TaskS
         </div>
 
         {/* Like Section */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <button
             onClick={onLike}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg border transition-colors ${
-              likes.count > 0
-                ? 'border-pink-300 bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400'
-                : 'border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-pink-300 hover:text-pink-600'
-            }`}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-pink-100 text-pink-600 hover:bg-pink-200 transition-colors"
           >
-            <svg className="w-4 h-4" fill={likes.count > 0 ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
             </svg>
             <span className="text-sm font-medium">Like</span>
           </button>
 
           {/* Like count and avatars */}
           {likes.count > 0 && (
-            <div className="flex items-center">
+            <div className="flex items-center gap-2">
               {/* User avatars */}
               <div className="flex -space-x-2">
-                {likes.users.slice(0, 3).map((user, index) => (
+                {likes.users.slice(0, 3).map((user) => (
                   <div
                     key={user.id}
-                    className="w-6 h-6 rounded-full bg-pink-500 border-2 border-white dark:border-gray-800 flex items-center justify-center"
+                    className="w-8 h-8 rounded-full bg-gray-300 border-2 border-white dark:border-gray-800 flex items-center justify-center overflow-hidden"
                     title={user.name}
                   >
                     {user.avatar ? (
-                      <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
+                      <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-white text-xs font-medium">
+                      <span className="text-gray-600 text-xs font-medium">
                         {user.name.charAt(0)}
                       </span>
                     )}
@@ -110,7 +116,7 @@ export default function TaskStatusCard({ status, linkUrl, likes, onLike }: TaskS
                 ))}
               </div>
               {/* Count */}
-              <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
+              <span className="text-sm text-gray-500 dark:text-gray-400">
                 {likes.count} {likes.count === 1 ? 'like' : 'likes'}
               </span>
             </div>

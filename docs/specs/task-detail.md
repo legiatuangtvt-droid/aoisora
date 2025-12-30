@@ -140,18 +140,20 @@ This screen displays detailed task information from HQ to stores. It supports mu
 
 ### 3.7 Task Status Cards (D. Task Status Cards)
 
-| Status | Color | Text |
-|--------|-------|------|
-| SUCCESS | Green (bg-green-50, border-green-500) | ĐÃ HOÀN THÀNH CÔNG VIỆC |
-| FAILED | Orange/Red (bg-orange-50, border-orange-500) | KHÔNG HOÀN THÀNH CÔNG VIỆC |
-| IN_PROGRESS | Yellow (bg-yellow-50, border-yellow-500) | CHƯA HOÀN THÀNH CÔNG VIỆC |
+| Status | Badge | Color | Text |
+|--------|-------|-------|------|
+| SUCCESS | Dot (teal) + "SUCCESS" | Blue (bg-blue-50, border-l-4 border-teal-400, text-blue-600) | ĐÃ HOÀN THÀNH CÔNG VIỆC |
+| FAILED | Dot (orange) + "FAILED" | Orange (bg-orange-50, border-l-4 border-orange-500, text-orange-700) | KHÔNG HOÀN THÀNH CÔNG VIỆC |
+| IN_PROGRESS | Dot (yellow) + "IN PROCESS" | Yellow (bg-yellow-50, border-l-4 border-yellow-500, text-yellow-700) | CHƯA HOÀN THÀNH CÔNG VIỆC |
+| NOT_STARTED | Dot (gray) + "NOT STARTED" | Gray (bg-gray-50, border-l-4 border-gray-300, text-gray-700) | CHƯA BẮT ĐẦU |
 
 **Card Elements:**
-- Status badge (color-coded)
+- Status badge with colored dot indicator (pill-style, white bg with colored border)
 - Status text (bold, color-coded)
-- Link báo cáo (clickable link)
-- Like button with count
-- User avatars (who liked)
+- Link báo cáo (clickable link, blue text)
+- Like button (pink bg-pink-100, filled heart icon, "Like" text)
+- User avatars (who liked, stacked with -space-x-2)
+- Like count text (e.g., "2 likes")
 
 ### 3.8 Staff Card - Staff View (F.2 Staff Card)
 
@@ -383,3 +385,5 @@ frontend/src/
 | 2025-12-30 | Task Header flex fix: Use items-stretch to sync left/right side heights, enabling justify-between to work |
 | 2025-12-30 | Filter dropdowns: Added count badges with slate-300 border, white bg, positioned next to selector text |
 | 2025-12-30 | Store Card: Start time and Completed time now display on same row with teal color for Completed time label |
+| 2025-12-30 | Store Card: Redesigned layout with unified main content section, store location with teal region, bottom row with Completed by badge (yellow) and headphone icon |
+| 2025-12-30 | Task Status Card: Redesigned with badge dot indicator, blue theme for SUCCESS, pink Like button with filled heart, stacked user avatars |
