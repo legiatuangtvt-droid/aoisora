@@ -97,8 +97,7 @@ This screen displays detailed task information from HQ to stores. It supports mu
 | All Location | Dropdown | Filter all locations (Staff view) |
 | All Status | Dropdown | Filter by task status (Staff view) |
 | Search | Text input | Search by staff name or ID |
-| Results Button | Toggle | Switch to Results view |
-| Comment Button | Toggle | Switch to Comment view |
+| View Mode Toggle | Toggle group | Switch between Results/Comment view (pill-style toggle with gray background, active button has white bg with pink text) |
 
 ### 3.3 Store Card - Results View (C.1 Store Card)
 
@@ -379,3 +378,4 @@ frontend/src/
 | 2025-12-29 | Fixed static export: added generateStaticParams and split into Server/Client components |
 | 2025-12-29 | Integrated StoreResultCard with ImageGrid and CommentsSection into TaskDetailClient |
 | 2025-12-29 | Redesigned Task Header: horizontal layout with task info left, stats cards right with colored borders |
+| 2025-12-30 | Updated View Mode Toggle UI: pill-style toggle with gray bg, white active button with pink text |
