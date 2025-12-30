@@ -33,26 +33,13 @@ export default function CommentsSection({
     }
   };
 
-  // Format date with ordinal suffix (e.g., "Tuesday, December 16th")
-  const formatDateWithOrdinal = (date: Date) => {
-    const day = date.getDate();
-    const ordinal = (d: number) => {
-      if (d > 3 && d < 21) return 'th';
-      switch (d % 10) {
-        case 1: return 'st';
-        case 2: return 'nd';
-        case 3: return 'rd';
-        default: return 'th';
-      }
-    };
-    const weekday = date.toLocaleDateString('en-US', { weekday: 'long' });
-    const month = date.toLocaleDateString('en-US', { month: 'long' });
-    return `${weekday}, ${month} ${day}${ordinal(day)}`;
-  };
-
   // Group comments by date
   const groupedComments = comments.reduce((acc, comment) => {
-    const date = formatDateWithOrdinal(new Date(comment.createdAt));
+    const date = new Date(comment.createdAt).toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+    });
     if (!acc[date]) {
       acc[date] = [];
     }
@@ -65,7 +52,7 @@ export default function CommentsSection({
       {/* Header */}
       {alwaysExpanded ? (
         <div className="px-4 py-3">
-          <span className="text-lg font-bold text-gray-900 dark:text-white">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Comments ({comments.length})
           </span>
         </div>
@@ -101,7 +88,7 @@ export default function CommentsSection({
                 <div key={date}>
                   {/* Date separator */}
                   <div className="flex items-center justify-center my-4">
-                    <span className="text-sm text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 px-4 py-1.5 rounded-full">
+                    <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
                       {date}
                     </span>
                   </div>
@@ -116,14 +103,11 @@ export default function CommentsSection({
           )}
 
           {/* Comment Input */}
-          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex items-center gap-3">
-            {/* User Avatar */}
-            <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-              <img
-                src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face"
-                alt="User avatar"
-                className="w-full h-full object-cover"
-              />
+          <div className="mt-4 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center flex-shrink-0">
+              <svg className="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
             </div>
             <div className="flex-1 relative">
               <input
@@ -131,13 +115,13 @@ export default function CommentsSection({
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Comment..."
-                className="w-full px-4 py-3 pr-12 border border-gray-200 dark:border-gray-600 rounded-full bg-gray-50 dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:bg-white"
+                placeholder="Write a comment..."
+                className="w-full px-4 py-2 pr-12 border border-gray-300 dark:border-gray-600 rounded-full bg-white dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-500"
               />
               <button
                 onClick={handleSubmit}
                 disabled={!newComment.trim()}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-[#C5055B] hover:text-pink-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-[#C5055B] hover:text-pink-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
@@ -168,7 +152,7 @@ function CommentItem({ comment }: CommentItemProps) {
   return (
     <div className="flex items-start gap-3 py-2">
       {/* Avatar */}
-      <div className="w-10 h-10 rounded-full bg-sky-100 flex items-center justify-center flex-shrink-0">
+      <div className="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center flex-shrink-0">
         {comment.userAvatar ? (
           <img
             src={comment.userAvatar}
@@ -176,7 +160,7 @@ function CommentItem({ comment }: CommentItemProps) {
             className="w-full h-full rounded-full object-cover"
           />
         ) : (
-          <span className="text-sky-600 text-sm font-semibold">
+          <span className="text-white text-xs font-medium">
             {comment.userInitials}
           </span>
         )}

@@ -393,4 +393,4 @@ frontend/src/
 | 2025-12-30 | Store Card (Image/Results): Removed TaskStatusCard section - UI only shows header, images, completed by, and comments |
 | 2025-12-30 | Store Card: Replaced headphone icon with cloud-check icon (mdi_cloud-check-outline.png) |
 | 2025-12-30 | Store Card: Added viewMode prop - when 'comment', hides ImageGrid and always expands CommentsSection without toggle arrow |
-| 2025-12-30 | Comments Section: Updated UI for comment view - larger bold header, date with ordinal suffix, sky-blue avatars, border separator, user avatar in input |
+| 2025-12-30 | Comments Section: Reverted to consistent UI for both Results and Comment view - same styling, only difference is alwaysExpanded removes toggle arrow |
