@@ -112,10 +112,11 @@ This screen displays detailed task information from HQ to stores. It supports mu
 
 | Element | Description |
 |---------|-------------|
-| Image Card | Card with title "Picture at [Location] (count)" |
-| Image Thumbnail | Thumbnail with hover "View" button |
-| Uploaded Date | Date below thumbnail |
-| Scroll Arrow | Left/right navigation arrows |
+| Image Card | Card with border, contains header (title + 3-dot menu), image thumbnail, and uploaded date |
+| Card Header | Title "Picture at [Location] (count)" + 3-dot menu button |
+| Image Thumbnail | Aspect ratio 16:10, with play icon (bottom-right), hover shows "View" button with search icon |
+| Uploaded Date | "Uploaded: Dec 01, 2025" format below image |
+| Scroll Buttons | Circular buttons with arrow icons, positioned at left/right edges when scrollable |
 
 ### 3.5 Image Lightbox (C.3 Image Lightbox)
 
@@ -387,3 +388,5 @@ frontend/src/
 | 2025-12-30 | Store Card: Start time and Completed time now display on same row with teal color for Completed time label |
 | 2025-12-30 | Store Card: Redesigned layout with unified main content section, store location with teal region, bottom row with Completed by badge (yellow) and headphone icon |
 | 2025-12-30 | Task Status Card: Redesigned with badge dot indicator, blue theme for SUCCESS, pink Like button with filled heart, stacked user avatars |
+| 2025-12-30 | Image Grid: Redesigned cards with border, header (title + menu), 16:10 aspect ratio, play icon, hover View button, formatted date |
+| 2025-12-30 | Store Card: Changed Completed by badge from yellow to green theme (bg-green-50, border-green-200) |

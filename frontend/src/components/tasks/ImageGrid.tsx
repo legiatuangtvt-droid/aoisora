@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ImageItem } from '@/types/tasks';
 
 interface ImageGridProps {
@@ -11,7 +11,7 @@ interface ImageGridProps {
 export default function ImageGrid({ images, onImageClick }: ImageGridProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
   const checkScroll = () => {
     if (scrollRef.current) {
@@ -21,9 +21,15 @@ export default function ImageGrid({ images, onImageClick }: ImageGridProps) {
     }
   };
 
+  useEffect(() => {
+    checkScroll();
+    window.addEventListener('resize', checkScroll);
+    return () => window.removeEventListener('resize', checkScroll);
+  }, [images]);
+
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
-      const scrollAmount = 300;
+      const scrollAmount = 320;
       scrollRef.current.scrollBy({
         left: direction === 'left' ? -scrollAmount : scrollAmount,
         behavior: 'smooth',
@@ -40,9 +46,9 @@ export default function ImageGrid({ images, onImageClick }: ImageGridProps) {
       {canScrollLeft && (
         <button
           onClick={() => scroll('left')}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white dark:bg-gray-700 rounded-full shadow-lg flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+          className="absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white border border-gray-200 rounded-full shadow-md flex items-center justify-center hover:bg-gray-50 transition-colors"
         >
-          <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
@@ -52,7 +58,7 @@ export default function ImageGrid({ images, onImageClick }: ImageGridProps) {
       <div
         ref={scrollRef}
         onScroll={checkScroll}
-        className="flex gap-4 overflow-x-auto scrollbar-hide pb-2"
+        className="flex gap-4 overflow-x-auto scrollbar-hide"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {images.map((image, index) => (
@@ -65,12 +71,12 @@ export default function ImageGrid({ images, onImageClick }: ImageGridProps) {
       </div>
 
       {/* Scroll Right Button */}
-      {canScrollRight && images.length > 3 && (
+      {canScrollRight && (
         <button
           onClick={() => scroll('right')}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white dark:bg-gray-700 rounded-full shadow-lg flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+          className="absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white border border-gray-200 rounded-full shadow-md flex items-center justify-center hover:bg-gray-50 transition-colors"
         >
-          <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </button>
@@ -79,7 +85,7 @@ export default function ImageGrid({ images, onImageClick }: ImageGridProps) {
   );
 }
 
-// Image Card Component
+// Image Card Component - Matching mockup design
 interface ImageCardProps {
   image: ImageItem;
   onClick: () => void;
@@ -88,23 +94,37 @@ interface ImageCardProps {
 function ImageCard({ image, onClick }: ImageCardProps) {
   const [isHovered, setIsHovered] = useState(false);
 
+  // Format date for display
+  const formatDate = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: '2-digit',
+        year: 'numeric'
+      });
+    } catch {
+      return dateStr;
+    }
+  };
+
   return (
-    <div className="flex-shrink-0 w-[160px]">
-      {/* Title */}
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
-          {image.title} {image.count && image.count > 1 && `(${image.count})`}
+    <div className="flex-shrink-0 w-[280px] border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800">
+      {/* Card Header - Title + Menu */}
+      <div className="flex items-center justify-between px-3 py-2">
+        <span className="text-sm font-semibold text-gray-900 dark:text-white">
+          {image.title} {image.count && `(${image.count})`}
         </span>
         <button className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
           </svg>
         </button>
       </div>
 
-      {/* Image */}
+      {/* Image Container */}
       <div
-        className="relative aspect-[4/3] rounded-lg overflow-hidden cursor-pointer border border-gray-200 dark:border-gray-700"
+        className="relative aspect-[16/10] cursor-pointer mx-3"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onClick={onClick}
@@ -112,33 +132,32 @@ function ImageCard({ image, onClick }: ImageCardProps) {
         <img
           src={image.thumbnailUrl || image.url}
           alt={image.title}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover rounded-md"
         />
+
+        {/* Play Icon (bottom-right corner) */}
+        <div className="absolute bottom-2 right-2 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow">
+          <svg className="w-4 h-4 text-gray-700 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </div>
 
         {/* Hover overlay with View button */}
         {isHovered && (
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity">
-            <button className="flex items-center gap-1 px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-800 hover:bg-gray-100">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity rounded-md">
+            <button className="flex items-center gap-2 px-4 py-2 bg-white/95 rounded-lg text-sm font-medium text-gray-800 hover:bg-white shadow-lg">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               View
             </button>
           </div>
         )}
-
-        {/* Video indicator (if applicable) */}
-        {image.title.toLowerCase().includes('video') && (
-          <div className="absolute top-2 left-2 px-2 py-0.5 bg-black/60 rounded text-white text-xs">
-            Video
-          </div>
-        )}
       </div>
 
       {/* Upload date */}
-      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-        Uploaded: {image.uploadedAt}
+      <p className="text-xs text-gray-500 dark:text-gray-400 px-3 py-2">
+        Uploaded: {formatDate(image.uploadedAt)}
       </p>
     </div>
   );

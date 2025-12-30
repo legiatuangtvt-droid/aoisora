@@ -90,9 +90,9 @@ export default function StoreResultCard({
         <div className="flex items-center justify-between">
           {/* Completed By */}
           {result.completedBy && (
-            <div>
+            <div className="flex items-center">
               <span className="text-xs text-gray-500 dark:text-gray-400 italic">Completed by</span>
-              <div className="inline-flex items-center ml-2 px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 rounded-lg text-sm font-medium">
+              <div className="inline-flex items-center ml-2 px-3 py-1.5 bg-green-50 dark:bg-green-900/30 text-gray-900 dark:text-green-300 rounded-lg text-sm font-semibold border border-green-200 dark:border-green-700">
                 {result.completedBy.name}
               </div>
             </div>
