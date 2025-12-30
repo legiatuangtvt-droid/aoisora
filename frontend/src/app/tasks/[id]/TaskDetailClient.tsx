@@ -126,7 +126,7 @@ export default function TaskDetailClient({ taskId }: TaskDetailClientProps) {
                 <div className="flex items-center justify-center mb-3">
                   <div className="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center">
                     <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                      <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
                     </svg>
                   </div>
                 </div>
@@ -165,7 +165,7 @@ export default function TaskDetailClient({ taskId }: TaskDetailClientProps) {
                 <div className="flex items-center justify-center mb-3">
                   <div className="w-8 h-8 rounded-full bg-yellow-400 flex items-center justify-center">
                     <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.2 3.2.8-1.3-4.5-2.7V7z"/>
+                      <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.2 3.2.8-1.3-4.5-2.7V7z" />
                     </svg>
                   </div>
                 </div>
@@ -179,8 +179,8 @@ export default function TaskDetailClient({ taskId }: TaskDetailClientProps) {
         </div>
 
         {/* Filter Bar */}
-        <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6">
-          <div className="flex items-center justify-between">
+        <div className="mt-6 mb-6">
+          <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-3">
               {/* Dropdowns */}
               <select className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-500">
@@ -213,24 +213,22 @@ export default function TaskDetailClient({ taskId }: TaskDetailClientProps) {
             </div>
 
             {/* View Mode Toggle */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 bg-slate-200 border border-gray-300 rounded-lg p-1">
               <button
                 onClick={() => setViewMode('results')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  viewMode === 'results'
-                    ? 'bg-[#C5055B] text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${viewMode === 'results'
+                  ? 'bg-white text-[#C5055B] shadow-sm'
+                  : 'text-gray-600 hover:bg-gray-100'
+                  }`}
               >
                 Results
               </button>
               <button
                 onClick={() => setViewMode('comment')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  viewMode === 'comment'
-                    ? 'bg-[#C5055B] text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${viewMode === 'comment'
+                  ? 'bg-white text-[#C5055B] shadow-sm'
+                  : 'text-gray-600 hover:bg-gray-100'
+                  }`}
               >
                 Comment
               </button>
