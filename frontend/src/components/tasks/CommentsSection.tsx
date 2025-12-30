@@ -87,7 +87,7 @@ export default function CommentsSection({
               {Object.entries(groupedComments).map(([date, dateComments]) => (
                 <div key={date}>
                   {/* Date separator */}
-                  <div className="flex items-center justify-center my-4">
+                  <div className="flex items-center justify-center">
                     <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
                       {date}
                     </span>
