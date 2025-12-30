@@ -343,41 +343,17 @@ export default function TaskDetailClient({ taskId }: TaskDetailClientProps) {
             </div>
           )}
 
-          {/* Comment View */}
+          {/* Comment View - Uses StoreResultCard with viewMode="comment" */}
           {viewMode === 'comment' && taskDetail && (
             <div className="space-y-6">
               {taskDetail.storeResults.length > 0 ? (
                 taskDetail.storeResults.map((result) => (
-                  <div key={result.id} className="bg-white border border-gray-200 rounded-lg p-1">
-                    <div className="flex items-center gap-3 mb-4">
-                      <h3 className="text-lg font-semibold text-gray-900">{result.storeName}</h3>
-                      <span className="text-sm text-gray-500">{result.storeLocation}</span>
-                    </div>
-                    {result.comments.length > 0 ? (
-                      <div className="space-y-4">
-                        {result.comments.map((comment) => (
-                          <div key={comment.id} className="flex gap-3">
-                            <div className="w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center flex-shrink-0">
-                              <span className="text-xs font-medium text-[#C5055B]">
-                                {comment.userInitials}
-                              </span>
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium text-gray-900">{comment.userName}</span>
-                                <span className="text-xs text-gray-500">
-                                  {new Date(comment.createdAt).toLocaleString()}
-                                </span>
-                              </div>
-                              <p className="text-gray-600 mt-1">{comment.content}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-gray-500">No comments yet.</p>
-                    )}
-                  </div>
+                  <StoreResultCard
+                    key={result.id}
+                    result={result}
+                    viewMode="comment"
+                    onAddComment={handleAddComment}
+                  />
                 ))
               ) : (
                 <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
