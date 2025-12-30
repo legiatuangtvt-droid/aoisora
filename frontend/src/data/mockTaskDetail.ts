@@ -61,7 +61,7 @@ const mockImages: ImageItem[] = [
 ];
 
 // Mock store results
-const mockStoreResults: StoreResult[] = [
+export const mockStoreResults: StoreResult[] = [
   {
     id: 'store-result-1',
     storeId: '3016',
@@ -124,7 +124,7 @@ const mockStoreResults: StoreResult[] = [
 ];
 
 // Mock staff results
-const mockStaffResults: StaffResult[] = [
+export const mockStaffResults: StaffResult[] = [
   {
     id: 'staff-1',
     staffId: '3371-6612',
@@ -262,7 +262,8 @@ const mockWorkflowSteps: WorkflowStep[] = [
 ];
 
 // Mock task detail - "Trưng bày hoa ngày rằm"
-export const mockTaskDetail1: TaskDetail = {
+// Also exported as mockTaskDetail for default usage
+export const mockTaskDetail: TaskDetail = {
   id: 'task-1',
   level: 1,
   name: 'Trưng bày hoa ngày rằm',
@@ -332,11 +333,11 @@ export const mockTaskDetail3: TaskDetail = {
 // Get mock task detail by ID
 export function getMockTaskDetail(taskId: string): TaskDetail | null {
   const tasks: Record<string, TaskDetail> = {
-    'task-1': mockTaskDetail1,
+    'task-1': mockTaskDetail,
     'task-2': mockTaskDetail2,
     'task-3': mockTaskDetail3,
   };
-  return tasks[taskId] || mockTaskDetail1;
+  return tasks[taskId] || mockTaskDetail;
 }
 
 // Filter options
