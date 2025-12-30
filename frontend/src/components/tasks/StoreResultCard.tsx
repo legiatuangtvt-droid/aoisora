@@ -9,12 +9,14 @@ import CommentsSection from './CommentsSection';
 interface StoreResultCardProps {
   result: StoreResult;
   showImages?: boolean;
+  viewMode?: 'results' | 'comment';
   onAddComment?: (storeId: string, content: string) => void;
 }
 
 export default function StoreResultCard({
   result,
   showImages = true,
+  viewMode = 'results',
   onAddComment,
 }: StoreResultCardProps) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
@@ -75,8 +77,8 @@ export default function StoreResultCard({
           </div>
         </div>
 
-        {/* Images Grid */}
-        {showImages && result.images.length > 0 && (
+        {/* Images Grid - Hidden in comment view mode */}
+        {showImages && viewMode === 'results' && result.images.length > 0 && (
           <div className="mb-4">
             <ImageGrid
               images={result.images}
@@ -108,11 +110,12 @@ export default function StoreResultCard({
         </div>
       </div>
 
-      {/* Comments Section */}
+      {/* Comments Section - Always expanded in comment view mode */}
       <CommentsSection
         comments={result.comments}
         onAddComment={handleAddComment}
-        defaultExpanded={false}
+        defaultExpanded={viewMode === 'comment'}
+        alwaysExpanded={viewMode === 'comment'}
       />
 
       {/* Image Lightbox */}
