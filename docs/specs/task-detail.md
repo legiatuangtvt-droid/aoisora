@@ -90,7 +90,7 @@ This screen displays detailed task information from HQ to stores. It supports mu
 
 | Element | Type | Description |
 |---------|------|-------------|
-| Region | Dropdown | Filter by region, with count badge (black border, white bg) |
+| Region | Dropdown | Filter by region, with count badge (slate-300 border, white bg) |
 | Area | Dropdown | Filter by area (dependent on Region), with count badge |
 | Store | Dropdown | Filter by store (dependent on Area), with count badge |
 | All Location | Dropdown | Filter all locations (Staff view) |
@@ -381,4 +381,4 @@ frontend/src/
 | 2025-12-30 | Enhanced View Mode Toggle UX: sliding indicator animation, keyboard navigation, badge counts, loading state, press feedback, scroll position preservation, fade content transition |
 | 2025-12-30 | Task Header layout: Task Type, Manual Link and User Icon moved to bottom of left side (Task Info column) |
 | 2025-12-30 | Task Header flex fix: Use items-stretch to sync left/right side heights, enabling justify-between to work |
-| 2025-12-30 | Filter dropdowns: Added count badges with black border, white bg, positioned next to selector text |
+| 2025-12-30 | Filter dropdowns: Added count badges with slate-300 border, white bg, positioned next to selector text |

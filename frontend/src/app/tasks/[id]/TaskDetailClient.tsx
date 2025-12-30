@@ -261,7 +261,7 @@ export default function TaskDetailClient({ taskId }: TaskDetailClientProps) {
                   <option>The North</option>
                   <option>The South</option>
                 </select>
-                <span className="absolute border border-black rounded left-[62px] top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-xs font-medium bg-white text-gray-600 pointer-events-none">3</span>
+                <span className="absolute border border-slate-300 rounded left-[62px] top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-xs font-medium bg-white text-gray-600 pointer-events-none">3</span>
                 <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
@@ -274,7 +274,7 @@ export default function TaskDetailClient({ taskId }: TaskDetailClientProps) {
                   <option>Ocean area</option>
                   <option>Mountain area</option>
                 </select>
-                <span className="absolute border border-black rounded left-[46px] top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-xs font-medium bg-white text-gray-600 pointer-events-none">5</span>
+                <span className="absolute border border-slate-300 rounded left-[46px] top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-xs font-medium bg-white text-gray-600 pointer-events-none">5</span>
                 <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
@@ -287,7 +287,7 @@ export default function TaskDetailClient({ taskId }: TaskDetailClientProps) {
                   <option>Store: 30</option>
                   <option>Store: 31</option>
                 </select>
-                <span className="absolute border border-black rounded left-[48px] top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-xs font-medium bg-white text-gray-600 pointer-events-none">27</span>
+                <span className="absolute border border-slate-300 rounded left-[48px] top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-xs font-medium bg-white text-gray-600 pointer-events-none">27</span>
                 <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
