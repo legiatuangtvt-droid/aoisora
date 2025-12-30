@@ -254,22 +254,44 @@ export default function TaskDetailClient({ taskId }: TaskDetailClientProps) {
         <div className="mt-6 mb-6">
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-3">
-              {/* Dropdowns */}
-              <select className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-500">
-                <option>Region</option>
-                <option>The North</option>
-                <option>The South</option>
-              </select>
-              <select className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-500">
-                <option>Area</option>
-                <option>Ocean area</option>
-                <option>Mountain area</option>
-              </select>
-              <select className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-500">
-                <option>Store</option>
-                <option>Store: 30</option>
-                <option>Store: 31</option>
-              </select>
+              {/* Region Dropdown with Badge */}
+              <div className="relative inline-flex items-center gap-1">
+                <select className="appearance-none pl-3 pr-8 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 bg-white">
+                  <option>Region</option>
+                  <option>The North</option>
+                  <option>The South</option>
+                </select>
+                <span className="absolute border border-black rounded left-[62px] top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-xs font-medium bg-white text-gray-600 pointer-events-none">3</span>
+                <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+
+              {/* Area Dropdown with Badge */}
+              <div className="relative inline-flex items-center gap-1">
+                <select className="p-2 appearance-none pl-3 pr-8 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 bg-white">
+                  <option>Area</option>
+                  <option>Ocean area</option>
+                  <option>Mountain area</option>
+                </select>
+                <span className="absolute border border-black rounded left-[46px] top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-xs font-medium bg-white text-gray-600 pointer-events-none">5</span>
+                <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+
+              {/* Store Dropdown with Badge */}
+              <div className="relative inline-flex items-center">
+                <select className="appearance-none pl-3 pr-8 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 bg-white">
+                  <option>Store</option>
+                  <option>Store: 30</option>
+                  <option>Store: 31</option>
+                </select>
+                <span className="absolute border border-black rounded left-[48px] top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-xs font-medium bg-white text-gray-600 pointer-events-none">27</span>
+                <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
 
               {/* Search */}
               <div className="relative">
