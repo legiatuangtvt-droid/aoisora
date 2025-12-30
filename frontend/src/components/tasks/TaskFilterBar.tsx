@@ -127,13 +127,13 @@ export default function TaskFilterBar({
         )}
 
         {/* View Mode Toggle */}
-        <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+        <div className="flex items-center bg-gray-200 dark:bg-gray-600 rounded-lg p-1">
           <button
             onClick={() => onViewModeChange('results')}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
               viewMode === 'results'
-                ? 'bg-white dark:bg-gray-600 text-[#C5055B] shadow-sm'
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                ? 'bg-white text-[#C5055B] shadow-sm'
+                : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white'
             }`}
           >
             {/* Document/Results icon */}
@@ -144,10 +144,10 @@ export default function TaskFilterBar({
           </button>
           <button
             onClick={() => onViewModeChange('comment')}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
               viewMode === 'comment'
-                ? 'bg-white dark:bg-gray-600 text-[#C5055B] shadow-sm'
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                ? 'bg-white text-[#C5055B] shadow-sm'
+                : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white'
             }`}
           >
             {/* Comment icon */}
