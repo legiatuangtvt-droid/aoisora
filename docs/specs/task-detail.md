@@ -104,8 +104,8 @@ This screen displays detailed task information from HQ to stores. It supports mu
 |---------|-------------|
 | Store Location | Region + Area + Store ID |
 | Store Name | Bold, large font (e.g., "OCEAN PARK") |
-| Start Time | Label + datetime |
-| Completed Time | Label + datetime |
+| Start Time | Label (gray) + datetime, same row with Completed Time |
+| Completed Time | Label (teal) + datetime, same row with Start Time |
 | Menu Button | 3-dot icon for options |
 
 ### 3.4 Image Grid (C.2 Image Grid)
@@ -382,3 +382,4 @@ frontend/src/
 | 2025-12-30 | Task Header layout: Task Type, Manual Link and User Icon moved to bottom of left side (Task Info column) |
 | 2025-12-30 | Task Header flex fix: Use items-stretch to sync left/right side heights, enabling justify-between to work |
 | 2025-12-30 | Filter dropdowns: Added count badges with slate-300 border, white bg, positioned next to selector text |
+| 2025-12-30 | Store Card: Start time and Completed time now display on same row with teal color for Completed time label |

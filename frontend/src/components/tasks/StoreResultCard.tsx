@@ -49,21 +49,19 @@ export default function StoreResultCard({
 
           {/* Right - Dates & Menu */}
           <div className="flex items-start gap-4">
-            {/* Dates */}
-            <div className="text-right text-xs">
+            {/* Dates - Same row layout */}
+            <div className="flex items-start gap-6 text-xs">
               {result.startTime && (
-                <p className="text-gray-500 dark:text-gray-400">
-                  <span className="text-gray-400">Start time:</span>
-                  <br />
-                  <span className="text-gray-700 dark:text-gray-300">{result.startTime}</span>
-                </p>
+                <div>
+                  <p className="text-gray-400 dark:text-gray-500 mb-0.5">Start time</p>
+                  <p className="text-gray-700 dark:text-gray-300">{result.startTime}</p>
+                </div>
               )}
               {result.completedTime && (
-                <p className="text-gray-500 dark:text-gray-400 mt-2">
-                  <span className="text-pink-500">Completed time:</span>
-                  <br />
-                  <span className="text-gray-700 dark:text-gray-300">{result.completedTime}</span>
-                </p>
+                <div>
+                  <p className="text-teal-500 mb-0.5">Completed time</p>
+                  <p className="text-gray-700 dark:text-gray-300">{result.completedTime}</p>
+                </div>
               )}
             </div>
 
