@@ -75,7 +75,7 @@ This screen displays detailed task information from HQ to stores. It supports mu
 | Task Name | Bold text, large font | "Trưng bày hoa ngày rằm" |
 | Date Range | Start → End dates | "04 Nov - 21 Dec" |
 | HQ Check Status | Status badge | "HQ Check: D097" |
-| Bottom Row | Task Type + Manual Link + User Icon on same line at bottom of card (with border-top separator) | "Task type: Image | Manual link: link | [user icon]" |
+| Bottom Row | Task Type + Manual Link + User Icon on same line at bottom of left side (Task Info column) | "Task type: Image | Manual link: link | [user icon]" |
 
 #### A.2 Statistics Cards
 
@@ -379,4 +379,4 @@ frontend/src/
 | 2025-12-29 | Redesigned Task Header: horizontal layout with task info left, stats cards right with colored borders |
 | 2025-12-30 | Updated View Mode Toggle UI: pill-style toggle with gray bg, white active button with pink text |
 | 2025-12-30 | Enhanced View Mode Toggle UX: sliding indicator animation, keyboard navigation, badge counts, loading state, press feedback, scroll position preservation, fade content transition |
-| 2025-12-30 | Task Header layout: Task Type, Manual Link and User Icon moved to bottom of card with border separator |
+| 2025-12-30 | Task Header layout: Task Type, Manual Link and User Icon moved to bottom of left side (Task Info column) |
