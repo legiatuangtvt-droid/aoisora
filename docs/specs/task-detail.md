@@ -391,3 +391,4 @@ frontend/src/
 | 2025-12-30 | Image Grid: Redesigned cards with border, header (title + menu), 16:10 aspect ratio, play icon, hover View button, formatted date |
 | 2025-12-30 | Store Card: Changed Completed by badge from yellow to green theme (bg-green-50, border-green-200) |
 | 2025-12-30 | Store Card (Image/Results): Removed TaskStatusCard section - UI only shows header, images, completed by, and comments |
+| 2025-12-30 | Store Card: Replaced headphone icon with cloud-check icon (mdi_cloud-check-outline.png) |
