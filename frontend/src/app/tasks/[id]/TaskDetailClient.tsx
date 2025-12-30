@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { mockTaskGroups } from '@/data/mockTasks';
 import { getMockTaskDetail } from '@/data/mockTaskDetail';
 import { ViewMode } from '@/types/tasks';
 import Link from 'next/link';
 import StoreResultCard from '@/components/tasks/StoreResultCard';
+import ViewModeToggle from '@/components/tasks/ViewModeToggle';
 
 interface TaskDetailClientProps {
   taskId: string;
@@ -17,12 +18,80 @@ interface TaskDetailClientProps {
  */
 export default function TaskDetailClient({ taskId }: TaskDetailClientProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('results');
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isContentVisible, setIsContentVisible] = useState(true);
+
+  // Refs for scroll preservation
+  const scrollPositions = useRef<Record<ViewMode, number>>({
+    results: 0,
+    comment: 0,
+    staff: 0,
+  });
+  const contentRef = useRef<HTMLDivElement>(null);
 
   // Find the task by ID from task list
   const task = mockTaskGroups.find(t => t.id === taskId);
 
   // Get detailed task data
   const taskDetail = getMockTaskDetail(`task-${taskId}`);
+
+  // Calculate counts for badges
+  const resultsCount = taskDetail?.storeResults.length || 0;
+  const commentsCount = taskDetail?.storeResults.reduce(
+    (acc, store) => acc + store.comments.length,
+    0
+  ) || 0;
+
+  // Save scroll position before view change
+  const saveScrollPosition = useCallback(() => {
+    if (contentRef.current) {
+      scrollPositions.current[viewMode] = contentRef.current.scrollTop;
+    }
+  }, [viewMode]);
+
+  // Restore scroll position after view change
+  const restoreScrollPosition = useCallback((mode: ViewMode) => {
+    if (contentRef.current) {
+      contentRef.current.scrollTop = scrollPositions.current[mode];
+    }
+  }, []);
+
+  // Handle view mode change with animation
+  const handleViewModeChange = useCallback((newMode: ViewMode) => {
+    if (newMode === viewMode || isTransitioning) return;
+
+    // Save current scroll position
+    saveScrollPosition();
+
+    // Start fade out
+    setIsTransitioning(true);
+    setIsContentVisible(false);
+
+    // After fade out, switch view and fade in
+    setTimeout(() => {
+      setViewMode(newMode);
+
+      // Small delay to allow DOM update
+      setTimeout(() => {
+        restoreScrollPosition(newMode);
+        setIsContentVisible(true);
+        setIsTransitioning(false);
+      }, 50);
+    }, 150); // Match CSS transition duration
+  }, [viewMode, isTransitioning, saveScrollPosition, restoreScrollPosition]);
+
+  // Save scroll position on scroll
+  useEffect(() => {
+    const content = contentRef.current;
+    if (!content) return;
+
+    const handleScroll = () => {
+      scrollPositions.current[viewMode] = content.scrollTop;
+    };
+
+    content.addEventListener('scroll', handleScroll, { passive: true });
+    return () => content.removeEventListener('scroll', handleScroll);
+  }, [viewMode]);
 
   if (!task) {
     return (
@@ -213,56 +282,87 @@ export default function TaskDetailClient({ taskId }: TaskDetailClientProps) {
             </div>
 
             {/* View Mode Toggle */}
-            <div className="flex items-center gap-2 bg-slate-200 border border-gray-300 rounded-lg p-1">
-              <button
-                onClick={() => setViewMode('results')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${viewMode === 'results'
-                  ? 'bg-white text-[#C5055B] shadow-sm'
-                  : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-              >
-                Results
-              </button>
-              <button
-                onClick={() => setViewMode('comment')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${viewMode === 'comment'
-                  ? 'bg-white text-[#C5055B] shadow-sm'
-                  : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-              >
-                Comment
-              </button>
-            </div>
+            <ViewModeToggle
+              viewMode={viewMode}
+              onViewModeChange={handleViewModeChange}
+              resultsCount={resultsCount}
+              commentsCount={commentsCount}
+              isLoading={isTransitioning}
+            />
           </div>
         </div>
 
-        {/* Store Results */}
-        {viewMode === 'results' && taskDetail && (
-          <div className="space-y-6">
-            {taskDetail.storeResults.length > 0 ? (
-              taskDetail.storeResults.map((result) => (
-                <StoreResultCard
-                  key={result.id}
-                  result={result}
-                  showImages={true}
-                  onAddComment={handleAddComment}
-                />
-              ))
-            ) : (
-              <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
-                <p className="text-gray-500">No store results yet.</p>
-              </div>
-            )}
-          </div>
-        )}
+        {/* Content Area with Fade Animation */}
+        <div
+          ref={contentRef}
+          className={`transition-opacity duration-150 ease-in-out ${
+            isContentVisible ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
+          {/* Store Results */}
+          {viewMode === 'results' && taskDetail && (
+            <div className="space-y-6">
+              {taskDetail.storeResults.length > 0 ? (
+                taskDetail.storeResults.map((result) => (
+                  <StoreResultCard
+                    key={result.id}
+                    result={result}
+                    showImages={true}
+                    onAddComment={handleAddComment}
+                  />
+                ))
+              ) : (
+                <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
+                  <p className="text-gray-500">No store results yet.</p>
+                </div>
+              )}
+            </div>
+          )}
 
-        {/* Comment View */}
-        {viewMode === 'comment' && (
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">All Comments</h3>
-            <p className="text-gray-500">Comment view coming soon...</p>
-          </div>
-        )}
+          {/* Comment View */}
+          {viewMode === 'comment' && taskDetail && (
+            <div className="space-y-6">
+              {taskDetail.storeResults.length > 0 ? (
+                taskDetail.storeResults.map((result) => (
+                  <div key={result.id} className="bg-white border border-gray-200 rounded-lg p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <h3 className="text-lg font-semibold text-gray-900">{result.storeName}</h3>
+                      <span className="text-sm text-gray-500">{result.storeLocation}</span>
+                    </div>
+                    {result.comments.length > 0 ? (
+                      <div className="space-y-4">
+                        {result.comments.map((comment) => (
+                          <div key={comment.id} className="flex gap-3">
+                            <div className="w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center flex-shrink-0">
+                              <span className="text-xs font-medium text-[#C5055B]">
+                                {comment.userInitials}
+                              </span>
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-gray-900">{comment.userName}</span>
+                                <span className="text-xs text-gray-500">
+                                  {new Date(comment.createdAt).toLocaleString()}
+                                </span>
+                              </div>
+                              <p className="text-gray-600 mt-1">{comment.content}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500">No comments yet.</p>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
+                  <p className="text-gray-500">No comments yet.</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -2,6 +2,7 @@
 
 import { ViewMode, TaskDetailFilters } from '@/types/tasks';
 import { mockFilterOptions } from '@/data/mockTaskDetail';
+import ViewModeToggle from './ViewModeToggle';
 
 interface TaskFilterBarProps {
   filters: TaskDetailFilters;
@@ -9,6 +10,9 @@ interface TaskFilterBarProps {
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
   showStaffFilters?: boolean;
+  resultsCount?: number;
+  commentsCount?: number;
+  isLoading?: boolean;
 }
 
 export default function TaskFilterBar({
@@ -17,6 +21,9 @@ export default function TaskFilterBar({
   viewMode,
   onViewModeChange,
   showStaffFilters = false,
+  resultsCount,
+  commentsCount,
+  isLoading = false,
 }: TaskFilterBarProps) {
   const handleChange = (field: keyof TaskDetailFilters, value: string) => {
     onFilterChange({ ...filters, [field]: value });
@@ -127,36 +134,13 @@ export default function TaskFilterBar({
         )}
 
         {/* View Mode Toggle */}
-        <div className="flex items-center bg-gray-200 dark:bg-gray-600 rounded-lg p-1">
-          <button
-            onClick={() => onViewModeChange('results')}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-              viewMode === 'results'
-                ? 'bg-white text-[#C5055B] shadow-sm'
-                : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white'
-            }`}
-          >
-            {/* Document/Results icon */}
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            Results
-          </button>
-          <button
-            onClick={() => onViewModeChange('comment')}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-              viewMode === 'comment'
-                ? 'bg-white text-[#C5055B] shadow-sm'
-                : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white'
-            }`}
-          >
-            {/* Comment icon */}
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-            Comment
-          </button>
-        </div>
+        <ViewModeToggle
+          viewMode={viewMode}
+          onViewModeChange={onViewModeChange}
+          resultsCount={resultsCount}
+          commentsCount={commentsCount}
+          isLoading={isLoading}
+        />
       </div>
     </div>
   );
