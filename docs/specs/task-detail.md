@@ -390,3 +390,4 @@ frontend/src/
 | 2025-12-30 | Task Status Card: Redesigned with badge dot indicator, blue theme for SUCCESS, pink Like button with filled heart, stacked user avatars |
 | 2025-12-30 | Image Grid: Redesigned cards with border, header (title + menu), 16:10 aspect ratio, play icon, hover View button, formatted date |
 | 2025-12-30 | Store Card: Changed Completed by badge from yellow to green theme (bg-green-50, border-green-200) |
+| 2025-12-30 | Store Card (Image/Results): Removed TaskStatusCard section - UI only shows header, images, completed by, and comments |

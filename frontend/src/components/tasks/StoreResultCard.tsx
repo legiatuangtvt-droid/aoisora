@@ -1,11 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { StoreResult, ImageItem } from '@/types/tasks';
+import { StoreResult } from '@/types/tasks';
 import ImageGrid from './ImageGrid';
 import ImageLightbox from './ImageLightbox';
 import CommentsSection from './CommentsSection';
-import TaskStatusCard from './TaskStatusCard';
 
 interface StoreResultCardProps {
   result: StoreResult;
@@ -106,17 +105,6 @@ export default function StoreResultCard({
           </button>
         </div>
       </div>
-
-      {/* Task Status Card (for status display) */}
-      {result.status !== 'not_started' && (
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-          <TaskStatusCard
-            status={result.status}
-            linkUrl="#"
-            likes={result.likes}
-          />
-        </div>
-      )}
 
       {/* Comments Section */}
       <CommentsSection
