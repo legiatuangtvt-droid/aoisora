@@ -380,3 +380,4 @@ frontend/src/
 | 2025-12-30 | Updated View Mode Toggle UI: pill-style toggle with gray bg, white active button with pink text |
 | 2025-12-30 | Enhanced View Mode Toggle UX: sliding indicator animation, keyboard navigation, badge counts, loading state, press feedback, scroll position preservation, fade content transition |
 | 2025-12-30 | Task Header layout: Task Type, Manual Link and User Icon moved to bottom of left side (Task Info column) |
+| 2025-12-30 | Task Header flex fix: Use items-stretch to sync left/right side heights, enabling justify-between to work |

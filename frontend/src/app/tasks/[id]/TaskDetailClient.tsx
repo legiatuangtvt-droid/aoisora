@@ -133,33 +133,36 @@ export default function TaskDetailClient({ taskId }: TaskDetailClientProps) {
 
         {/* Task Header - New Design */}
         <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
-          <div className="flex items-start gap-6">
+          <div className="flex items-stretch gap-6">
             {/* Left - Task Info */}
-            <div className="flex-shrink-0 min-w-[320px] flex flex-col">
-              {/* Task Level Badge */}
-              <span className="text-[#C5055B] text-sm font-medium">
-                Task level 1
-              </span>
-
-              {/* Task Name */}
-              <h1 className="text-2xl font-bold text-gray-900 mt-1 mb-2">
-                {task.taskGroupName}
-              </h1>
-
-              {/* Date and HQ Check */}
-              <div className="flex items-center gap-3 text-sm text-gray-500 mb-4">
-                <span>{task.startDate} - {task.endDate}</span>
-                <span className="text-gray-300">|</span>
-                <span className="flex items-center gap-1">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  HQ Check: {taskDetail?.hqCheckCode || '27/27'}
+            <div className="flex-shrink-0 min-w-[320px] flex flex-col justify-between">
+              {/* Top: Task Level, Name, Date, HQ Check */}
+              <div>
+                {/* Task Level Badge */}
+                <span className="text-[#C5055B] text-sm font-medium">
+                  Task level 1
                 </span>
+
+                {/* Task Name */}
+                <h1 className="text-2xl font-bold text-gray-900 mt-1 mb-2">
+                  {task.taskGroupName}
+                </h1>
+
+                {/* Date and HQ Check */}
+                <div className="flex items-center gap-3 text-sm text-gray-500">
+                  <span>{task.startDate} - {task.endDate}</span>
+                  <span className="text-gray-300">|</span>
+                  <span className="flex items-center gap-1">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    HQ Check: {taskDetail?.hqCheckCode || '27/27'}
+                  </span>
+                </div>
               </div>
 
-              {/* Bottom of Left Side: Task Type, Manual Link and User Icon */}
-              <div className="flex items-center gap-4 text-sm mt-auto">
+              {/* Bottom: Task Type, Manual Link and User Icon */}
+              <div className="flex items-center gap-4 text-sm">
                 {/* Task Type */}
                 <span className="flex items-center gap-1.5 text-gray-600">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
