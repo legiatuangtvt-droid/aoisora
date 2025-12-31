@@ -294,7 +294,7 @@ export const mockTaskDetail2: TaskDetail = {
   endDate: '21 Dec',
   hqCheckCode: 'D097',
   hqCheckStatus: 'NOT_YET',
-  taskType: 'checklist',
+  taskType: 'yes_no',
   manualLink: '/manuals/survey',
   stats: {
     totalStaff: 0,
