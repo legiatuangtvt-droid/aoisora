@@ -43,7 +43,7 @@
 
 #### B.1. Task Level 1 (Main Task)
 
-*Card dimensions: 536x789px, positioned at the right edge of the viewport.*
+*Card dimensions: 536x789px, positioned at the left side.*
 
 *Accordion behavior: Only 1 section expanded at a time. Default: all 4 sections collapsed. Light red highlight for sections with incomplete required data.*
 
@@ -180,5 +180,6 @@ frontend/src/
 |------|--------|
 | 2025-12-31 | Initial specification created |
 | 2025-12-31 | Implemented Detail Tab UI with Task Level Card and all sections |
-| 2025-12-31 | Position Task Level Card at right edge, set dimensions 536x789px |
+| 2025-12-31 | Set TaskLevelCard dimensions 536x789px |
 | 2025-12-31 | Position Detail/Maps tabs at right edge of viewport |
+| 2025-12-31 | Restore TaskLevelCard to left side position |
