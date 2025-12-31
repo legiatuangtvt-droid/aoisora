@@ -61,28 +61,30 @@ export default function NewTaskPage() {
           <span className="text-gray-900 dark:text-white font-medium">Add task</span>
         </nav>
 
-        {/* Tabs */}
-        <div className="flex items-center gap-1 mb-6 border-b border-gray-200 dark:border-gray-700">
-          <button
-            onClick={() => setActiveTab('detail')}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'detail'
-                ? 'border-pink-600 text-pink-600 dark:text-pink-400'
-                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-            }`}
-          >
-            Detail
-          </button>
-          <button
-            onClick={() => setActiveTab('maps')}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'maps'
-                ? 'border-pink-600 text-pink-600 dark:text-pink-400'
-                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-            }`}
-          >
-            Maps
-          </button>
+        {/* Tabs - aligned to right */}
+        <div className="flex justify-end mb-6">
+          <div className="flex items-center gap-1 border-b border-gray-200 dark:border-gray-700">
+            <button
+              onClick={() => setActiveTab('detail')}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'detail'
+                  ? 'border-pink-600 text-pink-600 dark:text-pink-400'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+            >
+              Detail
+            </button>
+            <button
+              onClick={() => setActiveTab('maps')}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'maps'
+                  ? 'border-pink-600 text-pink-600 dark:text-pink-400'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+            >
+              Maps
+            </button>
+          </div>
         </div>
 
         {/* Tab Content */}

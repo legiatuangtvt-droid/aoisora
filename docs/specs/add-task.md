@@ -37,6 +37,8 @@
 | 2 | Detail Tab | Default tab | Display detailed input form for each task level |
 | 3 | Maps Tab | Secondary tab | Display hierarchical task structure as flowchart/tree |
 
+*Note: Tab navigation (Detail/Maps) is positioned at the right edge of the viewport.*
+
 ### B. Body Area - Detail Tab
 
 #### B.1. Task Level 1 (Main Task)
@@ -179,3 +181,4 @@ frontend/src/
 | 2025-12-31 | Initial specification created |
 | 2025-12-31 | Implemented Detail Tab UI with Task Level Card and all sections |
 | 2025-12-31 | Position Task Level Card at right edge, set dimensions 536x789px |
+| 2025-12-31 | Position Detail/Maps tabs at right edge of viewport |
