@@ -1,14 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-
 interface SectionCardProps {
   id: string;
   title: string;
   icon: React.ReactNode;
   iconBgColor?: string;
   children: React.ReactNode;
-  defaultExpanded?: boolean;
+  isExpanded?: boolean;
+  onToggle?: () => void;
 }
 
 export default function SectionCard({
@@ -17,15 +16,14 @@ export default function SectionCard({
   icon,
   iconBgColor = 'bg-pink-100 dark:bg-pink-900/30',
   children,
-  defaultExpanded = false,
+  isExpanded = false,
+  onToggle,
 }: SectionCardProps) {
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
-
   return (
     <div className="bg-gray-50 dark:bg-gray-700/30 rounded-lg overflow-hidden">
       {/* Section Header */}
       <button
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={onToggle}
         className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors"
       >
         <div className="flex items-center gap-3">

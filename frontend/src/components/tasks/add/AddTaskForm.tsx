@@ -17,6 +17,9 @@ interface AddTaskFormProps {
   isSavingDraft?: boolean;
 }
 
+// Section IDs for accordion
+type SectionId = 'A' | 'B' | 'C' | 'D';
+
 export default function AddTaskForm({
   onSaveDraft,
   onSubmit,
@@ -24,6 +27,18 @@ export default function AddTaskForm({
   isSavingDraft = false,
 }: AddTaskFormProps) {
   const [taskLevels, setTaskLevels] = useState<TaskLevel[]>([createEmptyTaskLevel(1)]);
+
+  // Track which section is expanded for each task level (accordion behavior)
+  // Key: taskLevelId, Value: expanded sectionId or null
+  const [expandedSections, setExpandedSections] = useState<Record<string, SectionId | null>>({});
+
+  // Toggle section expansion (accordion - only one section open at a time per task level)
+  const handleSectionToggle = useCallback((taskLevelId: string, sectionId: SectionId) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [taskLevelId]: prev[taskLevelId] === sectionId ? null : sectionId,
+    }));
+  }, []);
 
   // Update task level
   const updateTaskLevel = useCallback((taskLevelId: string, updates: Partial<TaskLevel>) => {
@@ -150,7 +165,8 @@ export default function AddTaskForm({
               id="A"
               title="Task Information"
               icon={<TaskInfoIcon />}
-              defaultExpanded={true}
+              isExpanded={expandedSections[taskLevel.id] === 'A'}
+              onToggle={() => handleSectionToggle(taskLevel.id, 'A')}
             >
               <TaskInfoSection
                 data={taskLevel.taskInformation}
@@ -165,6 +181,8 @@ export default function AddTaskForm({
               id="B"
               title="Instructions"
               icon={<InstructionsIcon />}
+              isExpanded={expandedSections[taskLevel.id] === 'B'}
+              onToggle={() => handleSectionToggle(taskLevel.id, 'B')}
             >
               <InstructionsSection
                 data={taskLevel.instructions}
@@ -178,6 +196,8 @@ export default function AddTaskForm({
               id="C"
               title="Scope"
               icon={<ScopeIcon />}
+              isExpanded={expandedSections[taskLevel.id] === 'C'}
+              onToggle={() => handleSectionToggle(taskLevel.id, 'C')}
             >
               <ScopeSection
                 data={taskLevel.scope}
@@ -196,6 +216,8 @@ export default function AddTaskForm({
               id="D"
               title="Approval Process"
               icon={<ApprovalIcon />}
+              isExpanded={expandedSections[taskLevel.id] === 'D'}
+              onToggle={() => handleSectionToggle(taskLevel.id, 'D')}
             >
               <ApprovalSection
                 data={taskLevel.approval}
