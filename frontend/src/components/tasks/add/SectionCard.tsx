@@ -22,11 +22,11 @@ export default function SectionCard({
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   return (
-    <div className="w-[536px] bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div className="bg-gray-50 dark:bg-gray-700/30 rounded-lg overflow-hidden">
       {/* Section Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+        className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors"
       >
         <div className="flex items-center gap-3">
           {/* Section Icon */}

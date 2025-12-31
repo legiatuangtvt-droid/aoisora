@@ -10,6 +10,7 @@ interface TaskLevelCardProps {
   onDelete: () => void;
   canAddSubLevel: boolean;
   canDelete: boolean;
+  children?: React.ReactNode;
 }
 
 // Level subtitles
@@ -28,6 +29,7 @@ export default function TaskLevelCard({
   onDelete,
   canAddSubLevel,
   canDelete,
+  children,
 }: TaskLevelCardProps) {
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -53,9 +55,9 @@ export default function TaskLevelCard({
   };
 
   return (
-    <div className="w-[536px]">
+    <div className="w-[536px] border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
       {/* Card Header - Pink background */}
-      <div className="flex items-center justify-between px-4 py-3 bg-pink-50 dark:bg-pink-900/20 rounded-t-lg border border-b-0 border-pink-200 dark:border-pink-800">
+      <div className="flex items-center justify-between px-4 py-3 bg-pink-50 dark:bg-pink-900/20 border-b border-pink-200 dark:border-pink-800">
         {/* Left - Icon, Title, Subtitle */}
         <div className="flex items-center gap-3">
           {/* Level Icon */}
@@ -116,6 +118,13 @@ export default function TaskLevelCard({
           )}
         </div>
       </div>
+
+      {/* Card Content - Sections */}
+      {children && (
+        <div className="p-4 space-y-3 bg-white dark:bg-gray-800">
+          {children}
+        </div>
+      )}
     </div>
   );
 }

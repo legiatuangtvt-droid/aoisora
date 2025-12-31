@@ -136,7 +136,7 @@ export default function AddTaskForm({
 
       return (
         <div key={taskLevel.id} style={{ marginLeft: depth > 0 ? '24px' : 0 }}>
-          {/* Task Level Header */}
+          {/* Task Level Card with Sections inside */}
           <TaskLevelCard
             taskLevel={taskLevel}
             onNameChange={(name) => handleNameChange(taskLevel.id, name)}
@@ -144,10 +144,7 @@ export default function AddTaskForm({
             onDelete={() => handleDeleteTaskLevel(taskLevel.id)}
             canAddSubLevel={canAddSubLevel}
             canDelete={canDelete}
-          />
-
-          {/* Section Cards */}
-          <div className="space-y-3 mt-3">
+          >
             {/* A. Task Information */}
             <SectionCard
               id="A"
@@ -208,7 +205,7 @@ export default function AddTaskForm({
                 hodOptions={mockMasterData.hods}
               />
             </SectionCard>
-          </div>
+          </TaskLevelCard>
 
           {/* Render children */}
           {children.map((child) => (
