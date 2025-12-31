@@ -330,12 +330,110 @@ export const mockTaskDetail3: TaskDetail = {
   workflowSteps: mockWorkflowSteps,
 };
 
+// Mock store results for Yes/No task type (no images)
+const mockYesNoStoreResults: StoreResult[] = [
+  {
+    id: 'yn-store-result-1',
+    storeId: '3016',
+    storeName: 'OCEAN PARK',
+    storeLocation: 'The North - Ocean area - 3016',
+    startTime: '04:30 30 Nov 2025',
+    completedTime: '17:00 03 Dec 2025',
+    status: 'success',
+    completedBy: {
+      id: 'user-1',
+      name: 'Tùng (SM Ocean)',
+    },
+    images: [], // No images for Yes/No task
+    comments: mockComments,
+    likes: {
+      count: 2,
+      users: [
+        { id: 'user-3', name: 'User 1' },
+        { id: 'user-4', name: 'User 2' },
+      ],
+    },
+  },
+  {
+    id: 'yn-store-result-2',
+    storeId: '3027',
+    storeName: 'ZEN PARK',
+    storeLocation: 'The North - Ocean area - 3027',
+    startTime: '04:30 30 Nov 2025',
+    completedTime: '17:00 03 Dec 2025',
+    status: 'success',
+    completedBy: {
+      id: 'user-2',
+      name: 'Việt (SM Zen)',
+    },
+    images: [],
+    comments: [
+      {
+        id: 'cmt-yn-1',
+        userId: 'user-2',
+        userName: 'Việt',
+        userInitials: 'V',
+        content: 'Đã hoàn thành kiểm tra mở cửa.',
+        createdAt: '2025-12-16T08:30:00',
+      },
+    ],
+    likes: {
+      count: 1,
+      users: [{ id: 'user-1', name: 'Tùng' }],
+    },
+  },
+  {
+    id: 'yn-store-result-3',
+    storeId: '3028',
+    storeName: 'MOUNTAIN VIEW',
+    storeLocation: 'The South - Mountain area - 3028',
+    startTime: '05:00 01 Dec 2025',
+    status: 'in_progress',
+    completedBy: {
+      id: 'user-3',
+      name: 'Hoa (SM Mountain)',
+    },
+    images: [],
+    comments: [],
+    likes: {
+      count: 0,
+      users: [],
+    },
+  },
+];
+
+// Mock task detail - "Store Opening Checklist" (Yes/No type)
+export const mockTaskDetailYesNo: TaskDetail = {
+  id: '2',
+  level: 1,
+  name: 'Store Opening Checklist',
+  startDate: '12/01',
+  endDate: '12/15',
+  hqCheckCode: '10/10',
+  hqCheckStatus: 'NOT_YET',
+  taskType: 'yes_no',
+  manualLink: '/manuals/store-opening',
+  stats: {
+    totalStaff: 0,
+    notStarted: 5,
+    completed: 5,
+    unableToComplete: 0,
+    avgCompletionTime: 45,
+  },
+  storeResults: mockYesNoStoreResults,
+  staffResults: [],
+  workflowSteps: mockWorkflowSteps,
+};
+
 // Get mock task detail by ID
 export function getMockTaskDetail(taskId: string): TaskDetail | null {
   const tasks: Record<string, TaskDetail> = {
     'task-1': mockTaskDetail,
+    '1': mockTaskDetail,           // Daily Fresh Food Check (Image type)
     'task-2': mockTaskDetail2,
+    '2': mockTaskDetailYesNo,      // Store Opening Checklist (Yes/No type)
     'task-3': mockTaskDetail3,
+    '3': mockTaskDetail3,
   };
   return tasks[taskId] || mockTaskDetail;
 }

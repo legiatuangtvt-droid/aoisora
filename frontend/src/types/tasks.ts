@@ -24,6 +24,7 @@ export interface TaskGroup {
   no: number;
   dept: string;
   taskGroupName: string;
+  taskType?: TaskType;
   startDate: string;
   endDate: string;
   progress: {
@@ -81,7 +82,7 @@ export type ViewMode = 'results' | 'comment' | 'staff';
 export type TaskResultStatus = 'success' | 'failed' | 'in_progress' | 'not_started';
 
 // Task type
-export type TaskType = 'image' | 'text' | 'checklist';
+export type TaskType = 'image' | 'yes_no' | 'text' | 'checklist';
 
 // Image item
 export interface ImageItem {
