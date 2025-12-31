@@ -196,9 +196,11 @@ export default function AddTaskForm({
 
   return (
     <div className="space-y-6">
-      {/* Task Levels */}
-      <div className="space-y-4">
-        {getTaskLevelsTree()}
+      {/* Task Levels - aligned to right */}
+      <div className="flex justify-end">
+        <div className="space-y-4">
+          {getTaskLevelsTree()}
+        </div>
       </div>
 
       {/* Footer Actions */}
