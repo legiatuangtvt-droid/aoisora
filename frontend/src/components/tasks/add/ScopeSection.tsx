@@ -45,127 +45,117 @@ export default function ScopeSection({
 
   return (
     <div className="space-y-4">
-      {/* Region */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Region <span className="text-red-500">*</span>
+      {/* 1. Store Header */}
+      <div className="text-sm font-semibold text-gray-900 dark:text-white">
+        1. Store
+      </div>
+
+      {/* 1.1 Region */}
+      <div className="flex items-center gap-4">
+        <label className="w-20 text-sm text-gray-600 dark:text-gray-400">
+          1.1<br />Region
         </label>
         <select
           value={data.regionId}
           onChange={(e) => handleChange('regionId', e.target.value)}
-          className={`w-full px-3 py-2 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 ${
+          className={`flex-1 px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 ${
             errors.regionId
               ? 'border-red-500 focus:ring-red-500'
               : 'border-gray-300 dark:border-gray-600'
           }`}
         >
-          <option value="">Select region</option>
+          <option value=""></option>
           {regionOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>
           ))}
         </select>
-        {errors.regionId && (
-          <p className="mt-1 text-xs text-red-500">{errors.regionId}</p>
-        )}
       </div>
 
-      {/* Zone */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Zone <span className="text-red-500">*</span>
+      {/* 1.2 Zone */}
+      <div className="flex items-center gap-4">
+        <label className="w-20 text-sm text-gray-600 dark:text-gray-400">
+          1.2<br />Zone
         </label>
         <select
           value={data.zoneId}
           onChange={(e) => handleChange('zoneId', e.target.value)}
           disabled={!data.regionId}
-          className={`w-full px-3 py-2 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
+          className={`flex-1 px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
             errors.zoneId
               ? 'border-red-500 focus:ring-red-500'
               : 'border-gray-300 dark:border-gray-600'
           }`}
         >
-          <option value="">Select zone</option>
+          <option value=""></option>
           {zoneOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>
           ))}
         </select>
-        {errors.zoneId && (
-          <p className="mt-1 text-xs text-red-500">{errors.zoneId}</p>
-        )}
       </div>
 
-      {/* Area */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Area <span className="text-red-500">*</span>
+      {/* 1.3 Area */}
+      <div className="flex items-center gap-4">
+        <label className="w-20 text-sm text-gray-600 dark:text-gray-400">
+          1.3<br />Area
         </label>
         <select
           value={data.areaId}
           onChange={(e) => handleChange('areaId', e.target.value)}
           disabled={!data.zoneId}
-          className={`w-full px-3 py-2 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
+          className={`flex-1 px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
             errors.areaId
               ? 'border-red-500 focus:ring-red-500'
               : 'border-gray-300 dark:border-gray-600'
           }`}
         >
-          <option value="">Select area</option>
+          <option value=""></option>
           {areaOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>
           ))}
         </select>
-        {errors.areaId && (
-          <p className="mt-1 text-xs text-red-500">{errors.areaId}</p>
-        )}
       </div>
 
-      {/* Store */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Store <span className="text-red-500">*</span>
+      {/* 1.4 Store */}
+      <div className="flex items-center gap-4">
+        <label className="w-20 text-sm text-gray-600 dark:text-gray-400">
+          1.4<br />Store
         </label>
         <select
           value={data.storeId}
           onChange={(e) => handleChange('storeId', e.target.value)}
           disabled={!data.areaId}
-          className={`w-full px-3 py-2 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
+          className={`flex-1 px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
             errors.storeId
               ? 'border-red-500 focus:ring-red-500'
               : 'border-gray-300 dark:border-gray-600'
           }`}
         >
-          <option value="">Select store</option>
+          <option value=""></option>
           {storeOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>
           ))}
         </select>
-        {errors.storeId && (
-          <p className="mt-1 text-xs text-red-500">{errors.storeId}</p>
-        )}
       </div>
 
-      {/* Divider */}
-      <hr className="border-gray-200 dark:border-gray-700" />
-
-      {/* Store Leader */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Store Leader
+      {/* 1.5 Store Leader */}
+      <div className="flex items-center gap-4">
+        <label className="w-20 text-sm text-gray-600 dark:text-gray-400">
+          1.5<br />Store Leader
         </label>
         <select
           value={data.storeLeaderId}
           onChange={(e) => handleChange('storeLeaderId', e.target.value)}
-          className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
+          className="flex-1 px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
         >
-          <option value="">Select store leader (optional)</option>
+          <option value=""></option>
           {storeLeaderOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
@@ -174,17 +164,17 @@ export default function ScopeSection({
         </select>
       </div>
 
-      {/* Specific Staff */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Specific Staff
+      {/* 1.6 Specific Staff */}
+      <div className="flex items-center gap-4">
+        <label className="w-20 text-sm text-gray-600 dark:text-gray-400">
+          1.6<br />Specific Staff
         </label>
         <select
           value={data.specificStaffId}
           onChange={(e) => handleChange('specificStaffId', e.target.value)}
-          className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
+          className="flex-1 px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
         >
-          <option value="">Select specific staff (optional)</option>
+          <option value=""></option>
           {staffOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}

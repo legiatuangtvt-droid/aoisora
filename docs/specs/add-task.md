@@ -159,7 +159,8 @@ frontend/src/
 │   └── tasks/
 │       └── add/
 │           ├── AddTaskForm.tsx
-│           ├── TaskLevelCard.tsx
+│           ├── TaskLevelCard.tsx      # Pink header with icon, title, subtitle, menu
+│           ├── SectionCard.tsx        # Collapsible card wrapper for sections A-D
 │           ├── TaskInfoSection.tsx
 │           ├── InstructionsSection.tsx
 │           ├── ScopeSection.tsx
@@ -183,3 +184,4 @@ frontend/src/
 | 2025-12-31 | Set TaskLevelCard dimensions 536x789px |
 | 2025-12-31 | Position Detail/Maps tabs at right edge of viewport |
 | 2025-12-31 | Restore TaskLevelCard to left side position |
+| 2025-12-31 | Redesign UI sections A-D as separate cards with SectionCard wrapper |

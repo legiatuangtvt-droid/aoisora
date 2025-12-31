@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import { TaskLevel, TaskInformation, TaskInstructions, TaskScope, TaskApproval } from '@/types/addTask';
 import { mockMasterData, createEmptyTaskLevel } from '@/data/mockAddTask';
 import TaskLevelCard from './TaskLevelCard';
+import SectionCard from './SectionCard';
 import TaskInfoSection from './TaskInfoSection';
 import InstructionsSection from './InstructionsSection';
 import ScopeSection from './ScopeSection';
@@ -36,10 +37,6 @@ export default function AddTaskForm({
     updateTaskLevel(taskLevelId, { name });
   }, [updateTaskLevel]);
 
-  // Handle section toggle
-  const handleSectionToggle = useCallback((taskLevelId: string, section: 'A' | 'B' | 'C' | 'D' | null) => {
-    updateTaskLevel(taskLevelId, { expandedSection: section });
-  }, [updateTaskLevel]);
 
   // Handle task information change
   const handleTaskInfoChange = useCallback((taskLevelId: string, taskInformation: TaskInformation) => {
@@ -99,53 +96,31 @@ export default function AddTaskForm({
     return mockMasterData.stores[areaId] || [];
   };
 
-  // Render section content
-  const renderSectionContent = (taskLevel: TaskLevel) => {
-    switch (taskLevel.expandedSection) {
-      case 'A':
-        return (
-          <TaskInfoSection
-            data={taskLevel.taskInformation}
-            onChange={(data) => handleTaskInfoChange(taskLevel.id, data)}
-            taskTypeOptions={mockMasterData.taskTypes}
-            executionTimeOptions={mockMasterData.executionTimes}
-          />
-        );
-      case 'B':
-        return (
-          <InstructionsSection
-            data={taskLevel.instructions}
-            onChange={(data) => handleInstructionsChange(taskLevel.id, data)}
-            taskTypeOptions={mockMasterData.instructionTaskTypes}
-          />
-        );
-      case 'C':
-        return (
-          <ScopeSection
-            data={taskLevel.scope}
-            onChange={(data) => handleScopeChange(taskLevel.id, data)}
-            regionOptions={mockMasterData.regions}
-            zoneOptions={getZoneOptions(taskLevel.scope.regionId)}
-            areaOptions={getAreaOptions(taskLevel.scope.zoneId)}
-            storeOptions={getStoreOptions(taskLevel.scope.areaId)}
-            storeLeaderOptions={mockMasterData.storeLeaders}
-            staffOptions={mockMasterData.staff}
-          />
-        );
-      case 'D':
-        return (
-          <ApprovalSection
-            data={taskLevel.approval}
-            onChange={(data) => handleApprovalChange(taskLevel.id, data)}
-            initiatorOptions={mockMasterData.initiators}
-            leaderOptions={mockMasterData.leaders}
-            hodOptions={mockMasterData.hods}
-          />
-        );
-      default:
-        return null;
-    }
-  };
+  // Section icons
+  const TaskInfoIcon = () => (
+    <svg className="w-4 h-4 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  );
+
+  const InstructionsIcon = () => (
+    <svg className="w-4 h-4 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+    </svg>
+  );
+
+  const ScopeIcon = () => (
+    <svg className="w-4 h-4 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  );
+
+  const ApprovalIcon = () => (
+    <svg className="w-4 h-4 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  );
 
   // Organize task levels into tree structure
   const getTaskLevelsTree = () => {
@@ -161,25 +136,79 @@ export default function AddTaskForm({
 
       return (
         <div key={taskLevel.id} style={{ marginLeft: depth > 0 ? '24px' : 0 }}>
+          {/* Task Level Header */}
           <TaskLevelCard
             taskLevel={taskLevel}
             onNameChange={(name) => handleNameChange(taskLevel.id, name)}
-            onToggleExpand={() => {}}
-            onSectionToggle={(section) => handleSectionToggle(taskLevel.id, section)}
             onAddSubLevel={() => handleAddSubLevel(taskLevel.id)}
             onDelete={() => handleDeleteTaskLevel(taskLevel.id)}
             canAddSubLevel={canAddSubLevel}
             canDelete={canDelete}
-          >
-            {renderSectionContent(taskLevel)}
-          </TaskLevelCard>
+          />
 
-          {/* Render section content outside the card but in the same container */}
-          {taskLevel.expandedSection && (
-            <div className="mt-0 -mt-px bg-gray-50 dark:bg-gray-900/50 border border-t-0 border-gray-200 dark:border-gray-700 rounded-b-lg px-4 py-4" style={{ marginLeft: depth > 0 ? '24px' : 0 }}>
-              {renderSectionContent(taskLevel)}
-            </div>
-          )}
+          {/* Section Cards */}
+          <div className="space-y-3 mt-3">
+            {/* A. Task Information */}
+            <SectionCard
+              id="A"
+              title="Task Information"
+              icon={<TaskInfoIcon />}
+              defaultExpanded={true}
+            >
+              <TaskInfoSection
+                data={taskLevel.taskInformation}
+                onChange={(data) => handleTaskInfoChange(taskLevel.id, data)}
+                taskTypeOptions={mockMasterData.taskTypes}
+                executionTimeOptions={mockMasterData.executionTimes}
+              />
+            </SectionCard>
+
+            {/* B. Instructions */}
+            <SectionCard
+              id="B"
+              title="Instructions"
+              icon={<InstructionsIcon />}
+            >
+              <InstructionsSection
+                data={taskLevel.instructions}
+                onChange={(data) => handleInstructionsChange(taskLevel.id, data)}
+                taskTypeOptions={mockMasterData.instructionTaskTypes}
+              />
+            </SectionCard>
+
+            {/* C. Scope */}
+            <SectionCard
+              id="C"
+              title="Scope"
+              icon={<ScopeIcon />}
+            >
+              <ScopeSection
+                data={taskLevel.scope}
+                onChange={(data) => handleScopeChange(taskLevel.id, data)}
+                regionOptions={mockMasterData.regions}
+                zoneOptions={getZoneOptions(taskLevel.scope.regionId)}
+                areaOptions={getAreaOptions(taskLevel.scope.zoneId)}
+                storeOptions={getStoreOptions(taskLevel.scope.areaId)}
+                storeLeaderOptions={mockMasterData.storeLeaders}
+                staffOptions={mockMasterData.staff}
+              />
+            </SectionCard>
+
+            {/* D. Approval Process */}
+            <SectionCard
+              id="D"
+              title="Approval Process"
+              icon={<ApprovalIcon />}
+            >
+              <ApprovalSection
+                data={taskLevel.approval}
+                onChange={(data) => handleApprovalChange(taskLevel.id, data)}
+                initiatorOptions={mockMasterData.initiators}
+                leaderOptions={mockMasterData.leaders}
+                hodOptions={mockMasterData.hods}
+              />
+            </SectionCard>
+          </div>
 
           {/* Render children */}
           {children.map((child) => (
@@ -202,7 +231,7 @@ export default function AddTaskForm({
       </div>
 
       {/* Footer Actions */}
-      <div className="flex items-center justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+      <div className="flex items-center justify-end gap-4">
         <button
           onClick={() => onSaveDraft(taskLevels)}
           disabled={isSavingDraft || isSubmitting}

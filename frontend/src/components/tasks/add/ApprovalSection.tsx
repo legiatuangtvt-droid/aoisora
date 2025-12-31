@@ -28,15 +28,15 @@ export default function ApprovalSection({
 
   return (
     <div className="space-y-4">
-      {/* Initiator */}
+      {/* 1. Initiator */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Initiator <span className="text-red-500">*</span>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          1. Initiator
         </label>
         <select
           value={data.initiatorId}
           onChange={(e) => handleChange('initiatorId', e.target.value)}
-          className={`w-full px-3 py-2 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 ${
+          className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 ${
             errors.initiatorId
               ? 'border-red-500 focus:ring-red-500'
               : 'border-gray-300 dark:border-gray-600'
@@ -52,20 +52,17 @@ export default function ApprovalSection({
         {errors.initiatorId && (
           <p className="mt-1 text-xs text-red-500">{errors.initiatorId}</p>
         )}
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          Task creator who initiates the task
-        </p>
       </div>
 
-      {/* Leader */}
+      {/* 2. Leader */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Leader <span className="text-red-500">*</span>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          2. Leader
         </label>
         <select
           value={data.leaderId}
           onChange={(e) => handleChange('leaderId', e.target.value)}
-          className={`w-full px-3 py-2 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 ${
+          className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 ${
             errors.leaderId
               ? 'border-red-500 focus:ring-red-500'
               : 'border-gray-300 dark:border-gray-600'
@@ -81,20 +78,17 @@ export default function ApprovalSection({
         {errors.leaderId && (
           <p className="mt-1 text-xs text-red-500">{errors.leaderId}</p>
         )}
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          Level 1 approval leader
-        </p>
       </div>
 
-      {/* HOD */}
+      {/* 3. HOD */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          HOD <span className="text-red-500">*</span>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          3. HOD
         </label>
         <select
           value={data.hodId}
           onChange={(e) => handleChange('hodId', e.target.value)}
-          className={`w-full px-3 py-2 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 ${
+          className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 ${
             errors.hodId
               ? 'border-red-500 focus:ring-red-500'
               : 'border-gray-300 dark:border-gray-600'
@@ -110,9 +104,6 @@ export default function ApprovalSection({
         {errors.hodId && (
           <p className="mt-1 text-xs text-red-500">{errors.hodId}</p>
         )}
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          Head of Department - Level 2 approval
-        </p>
       </div>
     </div>
   );

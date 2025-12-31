@@ -6,28 +6,11 @@ import { TaskLevel } from '@/types/addTask';
 interface TaskLevelCardProps {
   taskLevel: TaskLevel;
   onNameChange: (name: string) => void;
-  onToggleExpand: () => void;
-  onSectionToggle: (section: 'A' | 'B' | 'C' | 'D' | null) => void;
   onAddSubLevel: () => void;
   onDelete: () => void;
   canAddSubLevel: boolean;
   canDelete: boolean;
-  children?: React.ReactNode;
-  validationStatus?: {
-    A: boolean;
-    B: boolean;
-    C: boolean;
-    D: boolean;
-  };
 }
-
-// Section labels
-const SECTION_LABELS = {
-  A: 'Task information',
-  B: 'Instructions',
-  C: 'Scope',
-  D: 'Approval process',
-};
 
 // Level subtitles
 const LEVEL_SUBTITLES: Record<number, string> = {
@@ -41,14 +24,10 @@ const LEVEL_SUBTITLES: Record<number, string> = {
 export default function TaskLevelCard({
   taskLevel,
   onNameChange,
-  onToggleExpand,
-  onSectionToggle,
   onAddSubLevel,
   onDelete,
   canAddSubLevel,
   canDelete,
-  children,
-  validationStatus = { A: true, B: true, C: true, D: true },
 }: TaskLevelCardProps) {
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -74,13 +53,13 @@ export default function TaskLevelCard({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden w-[536px]">
-      {/* Card Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
+    <div className="w-[536px]">
+      {/* Card Header - Pink background */}
+      <div className="flex items-center justify-between px-4 py-3 bg-pink-50 dark:bg-pink-900/20 rounded-t-lg border border-b-0 border-pink-200 dark:border-pink-800">
         {/* Left - Icon, Title, Subtitle */}
         <div className="flex items-center gap-3">
           {/* Level Icon */}
-          <div className="w-10 h-10 rounded-lg bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-lg bg-white dark:bg-gray-800 border border-pink-200 dark:border-pink-700 flex items-center justify-center">
             <svg className="w-5 h-5 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
@@ -89,10 +68,10 @@ export default function TaskLevelCard({
           {/* Title & Subtitle */}
           <div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-              Task level {taskLevel.level}
+              Task Level {taskLevel.level}
             </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              {LEVEL_SUBTITLES[taskLevel.level] || 'Sub task'}
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {taskLevel.name || LEVEL_SUBTITLES[taskLevel.level] || 'Sub task'}
             </p>
           </div>
         </div>
@@ -101,7 +80,7 @@ export default function TaskLevelCard({
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors"
+            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-pink-100 dark:hover:bg-pink-900/30 rounded-lg transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
@@ -136,84 +115,6 @@ export default function TaskLevelCard({
             </div>
           )}
         </div>
-      </div>
-
-      {/* Task Name Input */}
-      <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-        <input
-          type="text"
-          value={taskLevel.name}
-          onChange={(e) => onNameChange(e.target.value)}
-          placeholder="Enter task name..."
-          maxLength={255}
-          className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-        />
-      </div>
-
-      {/* Accordion Sections */}
-      <div className="divide-y divide-gray-200 dark:divide-gray-700">
-        {(['A', 'B', 'C', 'D'] as const).map((section) => {
-          const isExpanded = taskLevel.expandedSection === section;
-          const isValid = validationStatus[section];
-
-          return (
-            <div key={section}>
-              {/* Section Header */}
-              <button
-                onClick={() => onSectionToggle(isExpanded ? null : section)}
-                className={`w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${
-                  !isValid ? 'bg-red-50 dark:bg-red-900/10' : ''
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  {/* Section Letter Badge */}
-                  <span className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold ${
-                    !isValid
-                      ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
-                      : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
-                  }`}>
-                    {section}
-                  </span>
-
-                  {/* Section Label */}
-                  <span className={`text-sm font-medium ${
-                    !isValid
-                      ? 'text-red-600 dark:text-red-400'
-                      : 'text-gray-700 dark:text-gray-300'
-                  }`}>
-                    {SECTION_LABELS[section]}
-                  </span>
-
-                  {/* Required indicator */}
-                  {!isValid && (
-                    <span className="text-xs text-red-500">*Required fields incomplete</span>
-                  )}
-                </div>
-
-                {/* Expand/Collapse Icon */}
-                <svg
-                  className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-
-              {/* Section Content */}
-              {isExpanded && (
-                <div className="px-4 py-4 bg-gray-50 dark:bg-gray-900/50">
-                  {children && (
-                    <div data-section={section}>
-                      {/* Content will be rendered by parent based on section */}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })}
       </div>
     </div>
   );
