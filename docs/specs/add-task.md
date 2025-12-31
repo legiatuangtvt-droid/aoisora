@@ -41,11 +41,36 @@
 
 ### B. Body Area - Detail Tab
 
-#### B.1. Task Level 1 (Main Task)
+#### B.1. Task Level Card Structure
 
-*Card dimensions: 536x789px, positioned at the left side.*
+*Task Level Card is a unified container with border enclosing both header and all sections.*
+
+```
+┌─────────────────────────────────────────────────────┐
+│  [Header - Pink background]                         │
+│  Icon | Task Level X | Subtitle        | Menu (⋮) │
+├─────────────────────────────────────────────────────┤
+│  [Content Area - White background with padding]     │
+│  ┌───────────────────────────────────────────────┐  │
+│  │ Section A: Task Information (collapsible)     │  │
+│  └───────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────┐  │
+│  │ Section B: Instructions (collapsible)         │  │
+│  └───────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────┐  │
+│  │ Section C: Scope (collapsible)                │  │
+│  └───────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────┐  │
+│  │ Section D: Approval Process (collapsible)     │  │
+│  └───────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────┘
+```
+
+*Card dimensions: 536px width, positioned at the left side.*
 
 *Accordion behavior: Only 1 section expanded at a time. Default: all 4 sections collapsed. Light red highlight for sections with incomplete required data.*
+
+#### B.2. Task Level 1 (Main Task)
 
 | No | Component | Type/Detail | Description | Required |
 |----|-----------|-------------|-------------|----------|
@@ -53,7 +78,7 @@
 | 2 | Menu (...) | Click to display | Options: "+ Add task level 2", "Delete task level 1" | |
 | 3 | Task name | Text input | Placeholder: "Enter task name...", max 255 chars | |
 
-#### B.1.1. Section A: Task Information
+#### B.2.1. Section A: Task Information
 
 | No | Field | Type | Options/Format | Required |
 |----|-------|------|----------------|----------|
@@ -61,7 +86,7 @@
 | 2 | Applicable Period | Date range picker | mm/dd/yyyy - mm/dd/yyyy | Yes |
 | 3 | Execution Time | Dropdown | 30 min, 1 hour, 2 hours, 4 hours, 8 hours | Yes |
 
-#### B.1.2. Section B: Instructions
+#### B.2.2. Section B: Instructions
 
 | No | Field | Type | Options/Format | Required |
 |----|-------|------|----------------|----------|
@@ -70,7 +95,7 @@
 | 3 | Note | Textarea | Free text, detailed instructions | No |
 | 4 | Photo Guidelines | Image upload grid | Grid 2x3, max 6 images, each max 5MB (JPG/PNG) | No |
 
-#### B.1.3. Section C: Scope
+#### B.2.3. Section C: Scope
 
 | No | Field | Type | Logic | Required |
 |----|-------|------|-------|----------|
@@ -83,7 +108,7 @@
 
 *Cascade Logic: Changing parent dropdown resets and reloads corresponding child dropdowns.*
 
-#### B.1.4. Section D: Approval Process
+#### B.2.4. Section D: Approval Process
 
 | No | Field | Type | Description | Required |
 |----|-------|------|-------------|----------|
@@ -185,3 +210,4 @@ frontend/src/
 | 2025-12-31 | Position Detail/Maps tabs at right edge of viewport |
 | 2025-12-31 | Restore TaskLevelCard to left side position |
 | 2025-12-31 | Redesign UI sections A-D as separate cards with SectionCard wrapper |
+| 2026-01-01 | Refactor: Move sections inside TaskLevelCard container - unified border around header and sections |
