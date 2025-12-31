@@ -75,8 +75,7 @@ This screen displays detailed task information from HQ to stores. It supports mu
 | Task Name | Bold text, large font | "Trưng bày hoa ngày rằm" |
 | Date Range | Start → End dates | "04 Nov - 21 Dec" |
 | HQ Check Status | Status badge | "HQ Check: D097" |
-| Task Type | Type with icon | "Task type: Image" |
-| Manual Link | Clickable link in pink | "Manual link" |
+| Bottom Row | Task Type + Manual Link + User Icon on same line at bottom of left side (Task Info column) | "Task type: Image | Manual link: link | [user icon]" |
 
 #### A.2 Statistics Cards
 
@@ -91,14 +90,13 @@ This screen displays detailed task information from HQ to stores. It supports mu
 
 | Element | Type | Description |
 |---------|------|-------------|
-| Region | Dropdown | Filter by region |
-| Area | Dropdown | Filter by area (dependent on Region) |
-| Store | Dropdown | Filter by store (dependent on Area) |
+| Region | Dropdown | Filter by region, with count badge (slate-300 border, white bg) |
+| Area | Dropdown | Filter by area (dependent on Region), with count badge |
+| Store | Dropdown | Filter by store (dependent on Area), with count badge |
 | All Location | Dropdown | Filter all locations (Staff view) |
 | All Status | Dropdown | Filter by task status (Staff view) |
 | Search | Text input | Search by staff name or ID |
-| Results Button | Toggle | Switch to Results view |
-| Comment Button | Toggle | Switch to Comment view |
+| View Mode Toggle | Toggle group | Switch between Results/Comment view (pill-style toggle with gray background, active button has white bg with pink text). Features: sliding indicator animation, keyboard navigation (Arrow keys), badge counts, loading state, press feedback, scroll position preservation, fade transition on content switch |
 
 ### 3.3 Store Card - Results View (C.1 Store Card)
 
@@ -106,18 +104,19 @@ This screen displays detailed task information from HQ to stores. It supports mu
 |---------|-------------|
 | Store Location | Region + Area + Store ID |
 | Store Name | Bold, large font (e.g., "OCEAN PARK") |
-| Start Time | Label + datetime |
-| Completed Time | Label + datetime |
+| Start Time | Label (gray) + datetime, same row with Completed Time |
+| Completed Time | Label (teal) + datetime, same row with Start Time |
 | Menu Button | 3-dot icon for options |
 
 ### 3.4 Image Grid (C.2 Image Grid)
 
 | Element | Description |
 |---------|-------------|
-| Image Card | Card with title "Picture at [Location] (count)" |
-| Image Thumbnail | Thumbnail with hover "View" button |
-| Uploaded Date | Date below thumbnail |
-| Scroll Arrow | Left/right navigation arrows |
+| Image Card | Card with border, contains header (title + 3-dot menu), image thumbnail, and uploaded date |
+| Card Header | Title "Picture at [Location] (count)" + 3-dot menu button |
+| Image Thumbnail | Aspect ratio 16:10, with play icon (bottom-right), hover shows "View" button with search icon |
+| Uploaded Date | "Uploaded: Dec 01, 2025" format below image |
+| Scroll Buttons | Circular buttons with arrow icons, positioned at left/right edges when scrollable |
 
 ### 3.5 Image Lightbox (C.3 Image Lightbox)
 
@@ -142,18 +141,20 @@ This screen displays detailed task information from HQ to stores. It supports mu
 
 ### 3.7 Task Status Cards (D. Task Status Cards)
 
-| Status | Color | Text |
-|--------|-------|------|
-| SUCCESS | Green (bg-green-50, border-green-500) | ĐÃ HOÀN THÀNH CÔNG VIỆC |
-| FAILED | Orange/Red (bg-orange-50, border-orange-500) | KHÔNG HOÀN THÀNH CÔNG VIỆC |
-| IN_PROGRESS | Yellow (bg-yellow-50, border-yellow-500) | CHƯA HOÀN THÀNH CÔNG VIỆC |
+| Status | Badge | Color | Text |
+|--------|-------|-------|------|
+| SUCCESS | Dot (teal) + "SUCCESS" | Blue (bg-blue-50, border-l-4 border-teal-400, text-blue-600) | ĐÃ HOÀN THÀNH CÔNG VIỆC |
+| FAILED | Dot (orange) + "FAILED" | Orange (bg-orange-50, border-l-4 border-orange-500, text-orange-700) | KHÔNG HOÀN THÀNH CÔNG VIỆC |
+| IN_PROGRESS | Dot (yellow) + "IN PROCESS" | Yellow (bg-yellow-50, border-l-4 border-yellow-500, text-yellow-700) | CHƯA HOÀN THÀNH CÔNG VIỆC |
+| NOT_STARTED | Dot (gray) + "NOT STARTED" | Gray (bg-gray-50, border-l-4 border-gray-300, text-gray-700) | CHƯA BẮT ĐẦU |
 
 **Card Elements:**
-- Status badge (color-coded)
+- Status badge with colored dot indicator (pill-style, white bg with colored border)
 - Status text (bold, color-coded)
-- Link báo cáo (clickable link)
-- Like button with count
-- User avatars (who liked)
+- Link báo cáo (clickable link, blue text)
+- Like button (pink bg-pink-100, filled heart icon, "Like" text)
+- User avatars (who liked, stacked with -space-x-2)
+- Like count text (e.g., "2 likes")
 
 ### 3.8 Staff Card - Staff View (F.2 Staff Card)
 
@@ -379,3 +380,19 @@ frontend/src/
 | 2025-12-29 | Fixed static export: added generateStaticParams and split into Server/Client components |
 | 2025-12-29 | Integrated StoreResultCard with ImageGrid and CommentsSection into TaskDetailClient |
 | 2025-12-29 | Redesigned Task Header: horizontal layout with task info left, stats cards right with colored borders |
+| 2025-12-30 | Updated View Mode Toggle UI: pill-style toggle with gray bg, white active button with pink text |
+| 2025-12-30 | Enhanced View Mode Toggle UX: sliding indicator animation, keyboard navigation, badge counts, loading state, press feedback, scroll position preservation, fade content transition |
+| 2025-12-30 | Task Header layout: Task Type, Manual Link and User Icon moved to bottom of left side (Task Info column) |
+| 2025-12-30 | Task Header flex fix: Use items-stretch to sync left/right side heights, enabling justify-between to work |
+| 2025-12-30 | Filter dropdowns: Added count badges with slate-300 border, white bg, positioned next to selector text |
+| 2025-12-30 | Store Card: Start time and Completed time now display on same row with teal color for Completed time label |
+| 2025-12-30 | Store Card: Redesigned layout with unified main content section, store location with teal region, bottom row with Completed by badge (yellow) and headphone icon |
+| 2025-12-30 | Task Status Card: Redesigned with badge dot indicator, blue theme for SUCCESS, pink Like button with filled heart, stacked user avatars |
+| 2025-12-30 | Image Grid: Redesigned cards with border, header (title + menu), 16:10 aspect ratio, play icon, hover View button, formatted date |
+| 2025-12-30 | Store Card: Changed Completed by badge from yellow to green theme (bg-green-50, border-green-200) |
+| 2025-12-30 | Store Card (Image/Results): Removed TaskStatusCard section - UI only shows header, images, completed by, and comments |
+| 2025-12-30 | Store Card: Replaced headphone icon with cloud-check icon (mdi_cloud-check-outline.png) |
+| 2025-12-30 | Store Card: Added viewMode prop - when 'comment', hides ImageGrid and always expands CommentsSection without toggle arrow |
+| 2025-12-30 | Comments Section: Reverted to consistent UI for both Results and Comment view - same styling, only difference is alwaysExpanded removes toggle arrow |
+| 2025-12-31 | YesNoStatusSection: New component for Yes/No task type showing status badge, completion text, report link, Like button with avatars |
+| 2025-12-31 | StoreResultCard: Added taskType prop to conditionally render ImageGrid (image) or YesNoStatusSection (yes_no) |

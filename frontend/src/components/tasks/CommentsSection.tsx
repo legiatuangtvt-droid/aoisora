@@ -7,14 +7,16 @@ interface CommentsSectionProps {
   comments: Comment[];
   onAddComment?: (content: string) => void;
   defaultExpanded?: boolean;
+  alwaysExpanded?: boolean; // When true, always expanded and hide toggle arrow
 }
 
 export default function CommentsSection({
   comments,
   onAddComment,
   defaultExpanded = false,
+  alwaysExpanded = false,
 }: CommentsSectionProps) {
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded || alwaysExpanded);
   const [newComment, setNewComment] = useState('');
 
   const handleSubmit = () => {
@@ -48,22 +50,30 @@ export default function CommentsSection({
   return (
     <div className="border-t border-gray-200 dark:border-gray-700">
       {/* Header */}
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-      >
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-          Comments ({comments.length})
-        </span>
-        <svg
-          className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+      {alwaysExpanded ? (
+        <div className="px-4 py-3">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            Comments ({comments.length})
+          </span>
+        </div>
+      ) : (
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            Comments ({comments.length})
+          </span>
+          <svg
+            className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+      )}
 
       {/* Comments List */}
       {isExpanded && (
@@ -77,7 +87,7 @@ export default function CommentsSection({
               {Object.entries(groupedComments).map(([date, dateComments]) => (
                 <div key={date}>
                   {/* Date separator */}
-                  <div className="flex items-center justify-center my-4">
+                  <div className="flex items-center justify-center">
                     <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
                       {date}
                     </span>

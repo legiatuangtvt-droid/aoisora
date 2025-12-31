@@ -8,7 +8,7 @@ import { useToast } from '@/components/ui/Toast';
 import { MenuItem } from '@/types/layout';
 
 // Routes that are implemented
-const implementedRoutes = ['/tasks/list', '/tasks/new', '/tasks/detail', '/tasks/'];
+const implementedRoutes = ['/tasks/list', '/tasks/new', '/tasks/detail', '/tasks/', '/tasks/messages'];
 
 // Menu items configuration with parent-child structure
 const menuItems: MenuItem[] = [
@@ -119,6 +119,12 @@ export default function Sidebar() {
   const [expandedMenus, setExpandedMenus] = useState<string[]>(['hq-store']); // Default expanded
 
   const isActive = (route: string) => {
+    // Special case: /tasks/detail should be active for /tasks/[id] routes
+    if (route === '/tasks/detail') {
+      // Match /tasks/detail or /tasks/{numeric-id}
+      const taskDetailPattern = /^\/tasks\/(\d+|detail)$/;
+      return taskDetailPattern.test(pathname);
+    }
     return pathname === route || pathname.startsWith(route + '/');
   };
 

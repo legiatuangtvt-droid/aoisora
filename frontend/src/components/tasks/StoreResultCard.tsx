@@ -1,22 +1,28 @@
 'use client';
 
 import { useState } from 'react';
-import { StoreResult, ImageItem } from '@/types/tasks';
+import { StoreResult, TaskType } from '@/types/tasks';
 import ImageGrid from './ImageGrid';
 import ImageLightbox from './ImageLightbox';
 import CommentsSection from './CommentsSection';
-import TaskStatusCard from './TaskStatusCard';
+import YesNoStatusSection from './YesNoStatusSection';
 
 interface StoreResultCardProps {
   result: StoreResult;
   showImages?: boolean;
+  viewMode?: 'results' | 'comment';
+  taskType?: TaskType;
   onAddComment?: (storeId: string, content: string) => void;
+  onLike?: (storeId: string) => void;
 }
 
 export default function StoreResultCard({
   result,
   showImages = true,
+  viewMode = 'results',
+  taskType = 'image',
   onAddComment,
+  onLike,
 }: StoreResultCardProps) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
@@ -32,15 +38,21 @@ export default function StoreResultCard({
     onAddComment?.(result.storeId, content);
   };
 
+  const handleLike = () => {
+    onLike?.(result.storeId);
+  };
+
   return (
     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden mb-6">
-      {/* Store Header */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-start justify-between">
+      {/* Main Content Section */}
+      <div className="p-4">
+        {/* Store Header */}
+        <div className="flex items-start justify-between mb-4">
           {/* Left - Store Info */}
           <div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-              {result.storeLocation}
+            <p className="text-xs mb-1">
+              <span className="text-teal-500">{result.storeLocation.split(' - ')[0]}</span>
+              <span className="text-gray-500 dark:text-gray-400"> - {result.storeLocation.split(' - ').slice(1).join(' - ')}</span>
             </p>
             <h3 className="text-lg font-bold text-gray-900 dark:text-white">
               {result.storeName}
@@ -49,21 +61,19 @@ export default function StoreResultCard({
 
           {/* Right - Dates & Menu */}
           <div className="flex items-start gap-4">
-            {/* Dates */}
-            <div className="text-right text-xs">
+            {/* Dates - Same row layout */}
+            <div className="flex items-start gap-6 text-xs">
               {result.startTime && (
-                <p className="text-gray-500 dark:text-gray-400">
-                  <span className="text-gray-400">Start time:</span>
-                  <br />
-                  <span className="text-gray-700 dark:text-gray-300">{result.startTime}</span>
-                </p>
+                <div>
+                  <p className="text-gray-400 dark:text-gray-500 mb-0.5">Start time</p>
+                  <p className="text-gray-700 dark:text-gray-300">{result.startTime}</p>
+                </div>
               )}
               {result.completedTime && (
-                <p className="text-gray-500 dark:text-gray-400 mt-2">
-                  <span className="text-pink-500">Completed time:</span>
-                  <br />
-                  <span className="text-gray-700 dark:text-gray-300">{result.completedTime}</span>
-                </p>
+                <div>
+                  <p className="text-teal-500 mb-0.5">Completed time</p>
+                  <p className="text-gray-700 dark:text-gray-300">{result.completedTime}</p>
+                </div>
               )}
             </div>
 
@@ -76,43 +86,60 @@ export default function StoreResultCard({
           </div>
         </div>
 
-        {/* Completed By */}
-        {result.completedBy && (
-          <div className="mt-3">
-            <span className="text-xs text-gray-500 dark:text-gray-400">Completed by</span>
-            <div className="inline-flex items-center ml-2 px-3 py-1 bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-300 rounded-full text-sm font-medium">
-              {result.completedBy.name}
-            </div>
-          </div>
+        {/* Content Section - varies by taskType and viewMode */}
+        {viewMode === 'results' && (
+          <>
+            {/* Image Grid - for image task type */}
+            {taskType === 'image' && showImages && result.images.length > 0 && (
+              <div className="mb-4">
+                <ImageGrid
+                  images={result.images}
+                  onImageClick={handleImageClick}
+                />
+              </div>
+            )}
+
+            {/* Yes/No Status Section - for yes_no task type */}
+            {taskType === 'yes_no' && (
+              <YesNoStatusSection
+                status={result.status}
+                likes={result.likes}
+                reportLink="#"
+                onLike={handleLike}
+              />
+            )}
+          </>
         )}
+
+        {/* Bottom Row: Completed By + Headphone Icon */}
+        <div className="flex items-center justify-between">
+          {/* Completed By */}
+          {result.completedBy && (
+            <div className="flex items-center">
+              <span className="text-xs text-gray-500 dark:text-gray-400 italic">Completed by</span>
+              <div className="inline-flex items-center ml-2 px-3 py-1.5 bg-green-50 dark:bg-green-900/30 text-gray-900 dark:text-green-300 rounded-lg text-sm font-semibold border border-green-200 dark:border-green-700">
+                {result.completedBy.name}
+              </div>
+            </div>
+          )}
+
+          {/* Cloud Check Icon */}
+          <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+            <img
+              src="/icons/mdi_cloud-check-outline.png"
+              alt="Cloud check"
+              className="w-5 h-5"
+            />
+          </button>
+        </div>
       </div>
 
-      {/* Images Grid */}
-      {showImages && result.images.length > 0 && (
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-          <ImageGrid
-            images={result.images}
-            onImageClick={handleImageClick}
-          />
-        </div>
-      )}
-
-      {/* Task Status Card (for status display) */}
-      {result.status !== 'not_started' && (
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-          <TaskStatusCard
-            status={result.status}
-            linkUrl="#"
-            likes={result.likes}
-          />
-        </div>
-      )}
-
-      {/* Comments Section */}
+      {/* Comments Section - Always expanded in comment view mode */}
       <CommentsSection
         comments={result.comments}
         onAddComment={handleAddComment}
-        defaultExpanded={false}
+        defaultExpanded={viewMode === 'comment'}
+        alwaysExpanded={viewMode === 'comment'}
       />
 
       {/* Image Lightbox */}
