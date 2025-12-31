@@ -1,23 +1,28 @@
 'use client';
 
 import { useState } from 'react';
-import { StoreResult } from '@/types/tasks';
+import { StoreResult, TaskType } from '@/types/tasks';
 import ImageGrid from './ImageGrid';
 import ImageLightbox from './ImageLightbox';
 import CommentsSection from './CommentsSection';
+import YesNoStatusSection from './YesNoStatusSection';
 
 interface StoreResultCardProps {
   result: StoreResult;
   showImages?: boolean;
   viewMode?: 'results' | 'comment';
+  taskType?: TaskType;
   onAddComment?: (storeId: string, content: string) => void;
+  onLike?: (storeId: string) => void;
 }
 
 export default function StoreResultCard({
   result,
   showImages = true,
   viewMode = 'results',
+  taskType = 'image',
   onAddComment,
+  onLike,
 }: StoreResultCardProps) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
@@ -31,6 +36,10 @@ export default function StoreResultCard({
 
   const handleAddComment = (content: string) => {
     onAddComment?.(result.storeId, content);
+  };
+
+  const handleLike = () => {
+    onLike?.(result.storeId);
   };
 
   return (
@@ -77,14 +86,29 @@ export default function StoreResultCard({
           </div>
         </div>
 
-        {/* Images Grid - Hidden in comment view mode */}
-        {showImages && viewMode === 'results' && result.images.length > 0 && (
-          <div className="mb-4">
-            <ImageGrid
-              images={result.images}
-              onImageClick={handleImageClick}
-            />
-          </div>
+        {/* Content Section - varies by taskType and viewMode */}
+        {viewMode === 'results' && (
+          <>
+            {/* Image Grid - for image task type */}
+            {taskType === 'image' && showImages && result.images.length > 0 && (
+              <div className="mb-4">
+                <ImageGrid
+                  images={result.images}
+                  onImageClick={handleImageClick}
+                />
+              </div>
+            )}
+
+            {/* Yes/No Status Section - for yes_no task type */}
+            {taskType === 'yes_no' && (
+              <YesNoStatusSection
+                status={result.status}
+                likes={result.likes}
+                reportLink="#"
+                onLike={handleLike}
+              />
+            )}
+          </>
         )}
 
         {/* Bottom Row: Completed By + Headphone Icon */}

@@ -338,6 +338,7 @@ export default function TaskDetailClient({ taskId }: TaskDetailClientProps) {
                     key={result.id}
                     result={result}
                     showImages={true}
+                    taskType={taskDetail.taskType}
                     onAddComment={handleAddComment}
                   />
                 ))
@@ -358,6 +359,7 @@ export default function TaskDetailClient({ taskId }: TaskDetailClientProps) {
                     key={result.id}
                     result={result}
                     viewMode="comment"
+                    taskType={taskDetail.taskType}
                     onAddComment={handleAddComment}
                   />
                 ))

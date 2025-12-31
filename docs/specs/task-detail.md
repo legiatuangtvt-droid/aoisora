@@ -394,3 +394,5 @@ frontend/src/
 | 2025-12-30 | Store Card: Replaced headphone icon with cloud-check icon (mdi_cloud-check-outline.png) |
 | 2025-12-30 | Store Card: Added viewMode prop - when 'comment', hides ImageGrid and always expands CommentsSection without toggle arrow |
 | 2025-12-30 | Comments Section: Reverted to consistent UI for both Results and Comment view - same styling, only difference is alwaysExpanded removes toggle arrow |
+| 2025-12-31 | YesNoStatusSection: New component for Yes/No task type showing status badge, completion text, report link, Like button with avatars |
+| 2025-12-31 | StoreResultCard: Added taskType prop to conditionally render ImageGrid (image) or YesNoStatusSection (yes_no) |
