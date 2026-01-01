@@ -92,6 +92,7 @@ export function MenuIcon({ name, className = '' }: { name: string; className?: s
         width={size}
         height={size}
         className={`flex-shrink-0 ${className.replace(/w-\d+\s*h-\d+/, '')}`}
+        style={{ width: 'auto', height: 'auto' }}
       />
     );
   }

@@ -327,3 +327,5 @@ frontend/src/
 | 2026-01-02 | Responsive: Touch-friendly styles - minimum 44px tap targets, safe-area support for notched devices |
 | 2026-01-02 | Responsive: CSS utilities - grid-responsive, touch-target, safe-area-*, slide-up/slide-down animations |
 | 2026-01-02 | Responsive: Breakpoints - mobile (<768px), tablet (768-1023px), desktop (≥1024px) |
+| 2026-01-02 | Fix: Next.js Image aspect ratio warning - added style={{ width: 'auto', height: 'auto' }} to PNG icons in Sidebar and BottomNavigation |
+| 2026-01-02 | Fix: ManagerCommentPanel border color for dark mode - replaced inline style with Tailwind classes (border-gray-300 dark:border-gray-500) |

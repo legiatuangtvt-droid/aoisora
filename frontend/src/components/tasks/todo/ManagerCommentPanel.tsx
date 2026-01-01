@@ -70,10 +70,7 @@ export default function ManagerCommentPanel({
         </div>
 
         {/* Comment Card */}
-        <div
-          className="bg-white dark:bg-gray-800 rounded-[10px] p-4"
-          style={{ border: '0.5px solid #6B6B6B' }}
-        >
+        <div className="bg-white dark:bg-gray-800 rounded-[10px] p-4 border border-gray-300 dark:border-gray-500">
           {/* Comments List */}
           <div className="space-y-4">
             {managerComments.map((comment) => (
@@ -194,10 +191,7 @@ export default function ManagerCommentPanel({
         </div>
 
         {/* Comment Card */}
-        <div
-          className="bg-white dark:bg-gray-800 rounded-[10px] p-4"
-          style={{ border: '0.5px solid #6B6B6B' }}
-        >
+        <div className="bg-white dark:bg-gray-800 rounded-[10px] p-4 border border-gray-300 dark:border-gray-500">
           {/* Comments List */}
           <div className="space-y-4">
             {otherComments.map((comment) => (

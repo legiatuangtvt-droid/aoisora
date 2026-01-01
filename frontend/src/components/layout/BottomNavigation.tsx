@@ -91,6 +91,7 @@ export default function BottomNavigation() {
           width={24}
           height={24}
           className={`transition-transform duration-200 ${isActiveItem ? 'scale-110' : ''}`}
+          style={{ width: 'auto', height: 'auto' }}
         />
       );
     }
