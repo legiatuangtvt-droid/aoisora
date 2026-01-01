@@ -293,3 +293,6 @@ frontend/src/
 | 2026-01-01 | UI: FilterBar User selector - added user icon (flowbite_user-solid.png) |
 | 2026-01-01 | UI: FilterBar Status selector - added filter icon (flowbite_filter-outline.png) |
 | 2026-01-01 | UI: FilterBar Type selector - added types icon (gridicons_types.png) |
+| 2026-01-01 | UI: CalendarView - added calendar icon (mdi_invoice-text-scheduled-outline.png) |
+| 2026-01-01 | UI: DailyTaskRow - 4 location dropdowns (Region, Zone, Area, Store), numbered task badges, single status per row |
+| 2026-01-01 | UI: TaskStatusBadge - added dot indicator, removed Type column from calendar table |
