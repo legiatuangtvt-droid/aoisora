@@ -102,18 +102,28 @@ export default function TaskMapsTab({ taskLevels, onAddSubLevel }: TaskMapsTabPr
 
         {/* Children with indentation */}
         {hasChildren && (
-          <div className="relative ml-6 mt-2 pl-6 border-l-2 border-gray-200 dark:border-gray-600">
-            {children.map((child, index) => (
-              <div key={child.id} className="relative">
-                {/* Horizontal connector line */}
-                <div className="absolute left-0 top-5 w-6 h-px bg-gray-200 dark:bg-gray-600 -translate-x-6" />
+          <div className="relative ml-6 pl-6">
+            {children.map((child, index) => {
+              const isLastChild = index === children.length - 1;
 
-                {/* Child node with margin for spacing */}
-                <div className={index > 0 ? 'mt-3' : ''}>
+              return (
+                <div key={child.id} className="relative pt-3">
+                  {/* Vertical line - from top to horizontal connector position */}
+                  <div className="absolute -left-6 top-0 h-8 w-0.5 bg-gray-200 dark:bg-gray-600" />
+
+                  {/* Vertical line - continues down to next sibling (not for last child) */}
+                  {!isLastChild && (
+                    <div className="absolute -left-6 top-8 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-600" />
+                  )}
+
+                  {/* Horizontal connector line - from vertical line to card */}
+                  <div className="absolute -left-6 top-8 w-6 h-0.5 bg-gray-200 dark:bg-gray-600" />
+
+                  {/* Child node */}
                   {renderTaskNode(child, false)}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
