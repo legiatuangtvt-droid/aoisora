@@ -19,7 +19,7 @@ export const STATUS_CONFIG: Record<TaskStatus, StatusConfig> = {
   in_process: {
     label: 'In process',
     color: 'text-[#EDA600]',
-    bgColor: 'bg-[#FEF9E7]',
+    bgColor: 'bg-[#EDA600]/5',
     borderColor: 'border-[#EDA600]',
     dotColor: 'bg-[#EDA600]',
   },
