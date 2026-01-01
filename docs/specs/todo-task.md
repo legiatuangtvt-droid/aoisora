@@ -300,3 +300,4 @@ frontend/src/
 | 2026-01-01 | UI: TaskStatusBadge - In Process status with custom colors (border/text: #EDA600, bg: #EDA600 5%) |
 | 2026-01-01 | UI: TaskStatusBadge - Draft status with custom colors (border/text: #1BBA5E, bg: #EBFFF3) |
 | 2026-01-01 | UI: TaskStatusBadge - Done status with custom colors (border/text: #297EF6, bg: #E5F0FF) |
+| 2026-01-01 | UI: TaskStatusBadge - Increased background opacity to 10% for In Process, Done, Draft |
