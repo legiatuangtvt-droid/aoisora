@@ -306,3 +306,4 @@ frontend/src/
 | 2026-01-01 | UI: ManagerCommentPanel - Use material-symbols_comment-rounded.png icon instead of SVG |
 | 2026-01-01 | UI: ManagerCommentPanel - Added gray background to comment messages (bg-gray-100) |
 | 2026-01-01 | UI: ManagerCommentPanel - Avatar outside message box, only content has gray background |
+| 2026-01-01 | UI: ManagerCommentPanel - Added border to reply input box |

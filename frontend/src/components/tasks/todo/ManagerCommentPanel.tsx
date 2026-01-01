@@ -107,7 +107,7 @@ export default function ManagerCommentPanel({
           </div>
 
           {/* Input with Send Button */}
-          <div className="flex-1 relative">
+          <div className="flex-1 relative border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800">
             <input
               type="text"
               value={replyText}
