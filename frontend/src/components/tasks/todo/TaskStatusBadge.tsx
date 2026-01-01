@@ -11,7 +11,7 @@ interface TaskStatusBadgeProps {
 const DEFAULT_DOT_COLORS: Record<TaskStatus, string> = {
   in_process: 'bg-[#EDA600]',
   done: 'bg-green-500',
-  draft: 'bg-gray-400',
+  draft: 'bg-[#1BBA5E]',
   not_yet: 'bg-red-500',
 };
 
@@ -19,7 +19,7 @@ const DEFAULT_DOT_COLORS: Record<TaskStatus, string> = {
 const DEFAULT_BORDER_COLORS: Record<TaskStatus, string> = {
   in_process: 'border-[#EDA600]',
   done: 'border-green-500',
-  draft: 'border-gray-400',
+  draft: 'border-[#1BBA5E]',
   not_yet: 'border-red-500',
 };
 

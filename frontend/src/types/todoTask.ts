@@ -30,8 +30,10 @@ export const STATUS_CONFIG: Record<TaskStatus, StatusConfig> = {
   },
   draft: {
     label: 'Draft',
-    color: 'text-gray-700 dark:text-gray-300',
-    bgColor: 'bg-gray-100 dark:bg-gray-700',
+    color: 'text-[#1BBA5E]',
+    bgColor: 'bg-[#EBFFF3]',
+    borderColor: 'border-[#1BBA5E]',
+    dotColor: 'bg-[#1BBA5E]',
   },
   not_yet: {
     label: 'Not Yet',
