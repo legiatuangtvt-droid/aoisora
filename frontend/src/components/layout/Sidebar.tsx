@@ -10,7 +10,7 @@ import { useToast } from '@/components/ui/Toast';
 import { MenuItem } from '@/types/layout';
 
 // Routes that are implemented
-const implementedRoutes = ['/tasks/list', '/tasks/new', '/tasks/detail', '/tasks/', '/tasks/messages', '/tasks/todo'];
+const implementedRoutes = ['/tasks/list', '/tasks/new', '/tasks/detail', '/tasks/', '/tasks/messages', '/tasks/todo', '/tasks/library'];
 
 // Menu items configuration with parent-child structure
 export const menuItems: MenuItem[] = [
@@ -50,7 +50,7 @@ export const menuItems: MenuItem[] = [
     id: 'library',
     label: 'Task Library',
     icon: 'task-library',
-    route: '/library',
+    route: '/tasks/library',
   },
   {
     id: 'report',
@@ -184,7 +184,8 @@ export default function Sidebar() {
       return taskDetailPattern.test(pathname);
     }
     if (pathname === route) return true;
-    if (route === '/tasks' && pathname.startsWith('/tasks/todo')) {
+    // Exclude standalone menu items from parent /tasks menu
+    if (route === '/tasks' && (pathname.startsWith('/tasks/todo') || pathname.startsWith('/tasks/library'))) {
       return false;
     }
     return pathname.startsWith(route + '/');

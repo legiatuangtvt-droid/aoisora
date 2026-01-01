@@ -220,11 +220,12 @@
 ```
 frontend/src/
 ├── app/
-│   └── library/
-│       └── page.tsx
+│   └── tasks/
+│       └── library/
+│           └── page.tsx
 ├── components/
 │   └── library/
-│       ├── TaskLibraryPage.tsx
+│       ├── index.ts
 │       ├── TaskLibraryHeader.tsx
 │       ├── TaskLibraryTabs.tsx
 │       ├── DepartmentFilterChips.tsx
@@ -232,8 +233,7 @@ frontend/src/
 │       ├── TaskGroupSection.tsx
 │       ├── TaskDataTable.tsx
 │       ├── TaskStatusBadge.tsx
-│       ├── TaskRowActions.tsx
-│       └── CreateTaskModal.tsx
+│       └── TaskRowActions.tsx
 ├── types/
 │   └── taskLibrary.ts
 └── data/
@@ -247,3 +247,4 @@ frontend/src/
 | Date | Change |
 |------|--------|
 | 2026-01-02 | Initial specification created |
+| 2026-01-02 | Implemented UI: route /tasks/library, all components created, sidebar menu highlight fix |
