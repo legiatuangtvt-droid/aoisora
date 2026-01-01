@@ -7,22 +7,31 @@ interface TaskStatusBadgeProps {
   onClick?: () => void;
 }
 
-// Dot color mapping for status
-const DOT_COLORS: Record<TaskStatus, string> = {
-  in_process: 'bg-orange-400',
+// Default dot color mapping for statuses without custom dotColor
+const DEFAULT_DOT_COLORS: Record<TaskStatus, string> = {
+  in_process: 'bg-[#EDA600]',
   done: 'bg-green-500',
   draft: 'bg-gray-400',
   not_yet: 'bg-red-500',
 };
 
+// Default border color mapping for statuses without custom borderColor
+const DEFAULT_BORDER_COLORS: Record<TaskStatus, string> = {
+  in_process: 'border-[#EDA600]',
+  done: 'border-green-500',
+  draft: 'border-gray-400',
+  not_yet: 'border-red-500',
+};
+
 export default function TaskStatusBadge({ status, onClick }: TaskStatusBadgeProps) {
   const config = STATUS_CONFIG[status];
-  const dotColor = DOT_COLORS[status];
+  const dotColor = config.dotColor || DEFAULT_DOT_COLORS[status];
+  const borderColor = config.borderColor || DEFAULT_BORDER_COLORS[status];
 
   return (
     <button
       onClick={onClick}
-      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${config.bgColor} ${config.color} hover:opacity-80 transition-opacity border border-current/20`}
+      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${config.bgColor} ${config.color} ${borderColor} hover:opacity-80 transition-opacity border`}
     >
       <span className={`w-2 h-2 rounded-full ${dotColor}`} />
       {config.label}

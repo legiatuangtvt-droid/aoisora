@@ -11,13 +11,17 @@ export interface StatusConfig {
   label: string;
   color: string;
   bgColor: string;
+  borderColor?: string;
+  dotColor?: string;
 }
 
 export const STATUS_CONFIG: Record<TaskStatus, StatusConfig> = {
   in_process: {
     label: 'In process',
-    color: 'text-orange-700 dark:text-orange-300',
-    bgColor: 'bg-orange-100 dark:bg-orange-900/30',
+    color: 'text-[#EDA600]',
+    bgColor: 'bg-[#FEF9E7]',
+    borderColor: 'border-[#EDA600]',
+    dotColor: 'bg-[#EDA600]',
   },
   done: {
     label: 'Done',
