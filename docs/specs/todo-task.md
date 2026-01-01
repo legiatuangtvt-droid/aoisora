@@ -307,3 +307,4 @@ frontend/src/
 | 2026-01-01 | UI: ManagerCommentPanel - Added gray background to comment messages (bg-gray-100) |
 | 2026-01-01 | UI: ManagerCommentPanel - Avatar outside message box, only content has gray background |
 | 2026-01-01 | UI: ManagerCommentPanel - Added border to reply input box |
+| 2026-01-01 | UI: ManagerCommentPanel - Added Other Comment section with same styling as Manager Comment (avatar bg: #E5F0FF, text: #003E95, message bg: #F4F4F4, border-radius: 0px 10px 10px 10px, reply border: #9B9B9B, send icon: #C5055B) |

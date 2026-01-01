@@ -177,9 +177,15 @@ export const mockManagerComments: ManagerComment[] = [
 export const mockOtherComments: ManagerComment[] = [
   {
     id: 'oc-1',
-    content: 'Remember to submit reports by Friday EOD.',
-    author: 'Team Lead',
-    createdAt: new Date(2025, 11, 14, 14, 0),
+    content: 'Make time for the ones that matter most.',
+    author: 'Human',
+    createdAt: new Date(2025, 11, 15, 10, 21),
+  },
+  {
+    id: 'oc-2',
+    content: 'Make time for the ones that matter most.',
+    author: 'Human',
+    createdAt: new Date(2025, 11, 15, 10, 21),
   },
 ];
 
