@@ -13,6 +13,7 @@ export interface StatusConfig {
   bgColor: string;
   borderColor?: string;
   dotColor?: string;
+  hexBorderColor?: string; // For inline style with 0.5px border
 }
 
 export const STATUS_CONFIG: Record<TaskStatus, StatusConfig> = {
@@ -20,27 +21,28 @@ export const STATUS_CONFIG: Record<TaskStatus, StatusConfig> = {
     label: 'In process',
     color: 'text-[#EDA600]',
     bgColor: 'bg-[#EDA600]/10',
-    borderColor: 'border-[#EDA600]',
     dotColor: 'bg-[#EDA600]',
+    hexBorderColor: '#EDA600',
   },
   done: {
     label: 'Done',
     color: 'text-[#297EF6]',
-    bgColor: 'bg-[#297EF6]/10',
-    borderColor: 'border-[#297EF6]',
+    bgColor: 'bg-[#E5F0FF]',
     dotColor: 'bg-[#297EF6]',
+    hexBorderColor: '#297EF6',
   },
   draft: {
     label: 'Draft',
     color: 'text-[#1BBA5E]',
     bgColor: 'bg-[#1BBA5E]/10',
-    borderColor: 'border-[#1BBA5E]',
     dotColor: 'bg-[#1BBA5E]',
+    hexBorderColor: '#1BBA5E',
   },
   not_yet: {
     label: 'Not Yet',
     color: 'text-red-700 dark:text-red-300',
     bgColor: 'bg-red-100 dark:bg-red-900/30',
+    hexBorderColor: '#F44336',
   },
 };
 

@@ -15,25 +15,26 @@ const DEFAULT_DOT_COLORS: Record<TaskStatus, string> = {
   not_yet: 'bg-red-500',
 };
 
-// Default border color mapping for statuses without custom borderColor
-const DEFAULT_BORDER_COLORS: Record<TaskStatus, string> = {
-  in_process: 'border-[#EDA600]',
-  done: 'border-[#297EF6]',
-  draft: 'border-[#1BBA5E]',
-  not_yet: 'border-red-500',
+// Default hex border colors for inline style
+const DEFAULT_HEX_BORDER_COLORS: Record<TaskStatus, string> = {
+  in_process: '#EDA600',
+  done: '#297EF6',
+  draft: '#1BBA5E',
+  not_yet: '#F44336',
 };
 
 export default function TaskStatusBadge({ status, onClick }: TaskStatusBadgeProps) {
   const config = STATUS_CONFIG[status];
   const dotColor = config.dotColor || DEFAULT_DOT_COLORS[status];
-  const borderColor = config.borderColor || DEFAULT_BORDER_COLORS[status];
+  const hexBorderColor = config.hexBorderColor || DEFAULT_HEX_BORDER_COLORS[status];
 
   return (
     <button
       onClick={onClick}
-      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${config.bgColor} ${config.color} ${borderColor} hover:opacity-80 transition-opacity border`}
+      className={`inline-flex items-center justify-center gap-2 px-3 py-0 h-[25px] rounded-[26px] text-[13px] font-normal ${config.bgColor} ${config.color} hover:opacity-80 transition-opacity`}
+      style={{ border: `0.5px solid ${hexBorderColor}` }}
     >
-      <span className={`w-2 h-2 rounded-full ${dotColor}`} />
+      <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />
       {config.label}
     </button>
   );
