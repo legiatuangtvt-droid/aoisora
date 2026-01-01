@@ -228,8 +228,37 @@ export default function AddTaskForm({
       );
     };
 
+    // Render "Add new sub task" button to add more children at same level
+    const renderAddSubTaskButton = (parentLevel: TaskLevel): JSX.Element | null => {
+      if (parentLevel.level >= 5) return null;
+
+      return (
+        <button
+          onClick={() => handleAddSubLevel(parentLevel.id)}
+          className="w-[536px] flex items-center gap-3 px-4 py-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+        >
+          {/* Plus Icon */}
+          <div className="w-10 h-10 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
+            <svg className="w-5 h-5 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+          </div>
+          {/* Text */}
+          <div className="text-left">
+            <p className="text-base font-semibold text-gray-900 dark:text-white">
+              Add new sub task {parentLevel.level + 1}
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              This task will be added to Level {parentLevel.level + 1}
+            </p>
+          </div>
+        </button>
+      );
+    };
+
     const renderTaskLevel = (taskLevel: TaskLevel): JSX.Element => {
       const children = getChildren(taskLevel.id);
+      const canAddMoreChildren = taskLevel.level < 5;
 
       if (children.length === 0) {
         return (
@@ -245,9 +274,11 @@ export default function AddTaskForm({
           {/* Parent task level */}
           {renderTaskLevelCard(taskLevel)}
 
-          {/* Children task levels */}
+          {/* Children task levels + Add button */}
           <div className="flex flex-col gap-4">
             {children.map((child) => renderTaskLevel(child))}
+            {/* Button to add more children at this level */}
+            {canAddMoreChildren && renderAddSubTaskButton(taskLevel)}
           </div>
         </div>
       );

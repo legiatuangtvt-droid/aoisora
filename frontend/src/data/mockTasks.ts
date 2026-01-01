@@ -57,20 +57,20 @@ export const mockDepartments: Department[] = [
   }
 ];
 
-// Mock Task Groups
+// Mock Task Groups - Data for 01/01/2026
 export const mockTaskGroups: TaskGroup[] = [
   {
     id: '1',
     no: 1,
     dept: 'PERI',
-    taskGroupName: 'Daily Fresh Food Check',
+    taskGroupName: 'New Year Fresh Food Check',
     taskType: 'image',
-    startDate: '12/01',
-    endDate: '12/31',
-    progress: { completed: 23, total: 27 },
-    unable: 2,
-    status: 'DONE',
-    hqCheck: 'DONE',
+    startDate: '01/01',
+    endDate: '01/15',
+    progress: { completed: 5, total: 27 },
+    unable: 0,
+    status: 'NOT_YET',
+    hqCheck: 'NOT_YET',
     subTasks: [
       {
         id: '1-1',
@@ -81,7 +81,7 @@ export const mockTaskGroups: TaskGroup[] = [
       {
         id: '1-2',
         name: 'Expiry date check',
-        status: 'DONE',
+        status: 'NOT_YET',
         assignee: 'Jane Smith'
       },
       {
@@ -96,11 +96,11 @@ export const mockTaskGroups: TaskGroup[] = [
     id: '2',
     no: 2,
     dept: 'GRO',
-    taskGroupName: 'Store Opening Checklist',
+    taskGroupName: 'Store Opening Checklist 2026',
     taskType: 'yes_no',
-    startDate: '12/01',
-    endDate: '12/15',
-    progress: { completed: 5, total: 10 },
+    startDate: '01/01',
+    endDate: '01/07',
+    progress: { completed: 3, total: 10 },
     unable: 0,
     status: 'NOT_YET',
     hqCheck: 'NOT_YET',
@@ -123,23 +123,23 @@ export const mockTaskGroups: TaskGroup[] = [
     id: '3',
     no: 3,
     dept: 'DELICA',
-    taskGroupName: 'System Maintenance',
-    startDate: '12/10',
-    endDate: '12/20',
-    progress: { completed: 8, total: 8 },
+    taskGroupName: 'New Year Menu Setup',
+    startDate: '01/01',
+    endDate: '01/05',
+    progress: { completed: 2, total: 8 },
     unable: 0,
-    status: 'DONE',
+    status: 'NOT_YET',
     hqCheck: 'DRAFT',
     subTasks: [
       {
         id: '3-1',
-        name: 'Database backup',
+        name: 'Update menu boards',
         status: 'DONE'
       },
       {
         id: '3-2',
-        name: 'Server update',
-        status: 'DONE'
+        name: 'Prepare special items',
+        status: 'NOT_YET'
       }
     ]
   },
@@ -147,11 +147,11 @@ export const mockTaskGroups: TaskGroup[] = [
     id: '4',
     no: 4,
     dept: 'ADMIN',
-    taskGroupName: 'Monthly Inventory Count',
-    startDate: '12/05',
-    endDate: '12/25',
-    progress: { completed: 12, total: 20 },
-    unable: 1,
+    taskGroupName: 'January Inventory Count',
+    startDate: '01/01',
+    endDate: '01/10',
+    progress: { completed: 4, total: 20 },
+    unable: 0,
     status: 'NOT_YET',
     hqCheck: 'DRAFT',
     subTasks: [
@@ -173,13 +173,13 @@ export const mockTaskGroups: TaskGroup[] = [
     id: '5',
     no: 5,
     dept: 'MMD',
-    taskGroupName: 'Marketing Campaign Setup',
-    startDate: '12/08',
-    endDate: '12/22',
-    progress: { completed: 15, total: 15 },
+    taskGroupName: 'New Year Marketing Campaign',
+    startDate: '01/01',
+    endDate: '01/15',
+    progress: { completed: 8, total: 15 },
     unable: 0,
-    status: 'DONE',
-    hqCheck: 'DONE',
+    status: 'NOT_YET',
+    hqCheck: 'NOT_YET',
     subTasks: [
       {
         id: '5-1',
@@ -190,7 +190,7 @@ export const mockTaskGroups: TaskGroup[] = [
       {
         id: '5-2',
         name: 'Schedule social media posts',
-        status: 'DONE',
+        status: 'NOT_YET',
         assignee: 'David Park'
       }
     ]
@@ -199,10 +199,10 @@ export const mockTaskGroups: TaskGroup[] = [
     id: '6',
     no: 6,
     dept: 'ACC',
-    taskGroupName: 'Financial Report Preparation',
-    startDate: '12/01',
-    endDate: '12/30',
-    progress: { completed: 8, total: 12 },
+    taskGroupName: 'Year-End Financial Closing',
+    startDate: '01/01',
+    endDate: '01/20',
+    progress: { completed: 6, total: 12 },
     unable: 0,
     status: 'NOT_YET',
     hqCheck: 'NOT_YET',
@@ -225,13 +225,13 @@ export const mockTaskGroups: TaskGroup[] = [
     id: '7',
     no: 7,
     dept: 'CONTROL',
-    taskGroupName: 'Quality Control Audit',
-    startDate: '12/03',
-    endDate: '12/17',
-    progress: { completed: 10, total: 10 },
+    taskGroupName: 'Q1 Quality Control Audit',
+    startDate: '01/01',
+    endDate: '01/14',
+    progress: { completed: 2, total: 10 },
     unable: 0,
-    status: 'DONE',
-    hqCheck: 'DONE',
+    status: 'NOT_YET',
+    hqCheck: 'DRAFT',
     subTasks: [
       {
         id: '7-1',
@@ -242,7 +242,7 @@ export const mockTaskGroups: TaskGroup[] = [
       {
         id: '7-2',
         name: 'Document findings',
-        status: 'DONE',
+        status: 'NOT_YET',
         assignee: 'Rachel Green'
       }
     ]
@@ -251,11 +251,11 @@ export const mockTaskGroups: TaskGroup[] = [
     id: '8',
     no: 8,
     dept: 'IMPROVEMENT',
-    taskGroupName: 'Process Optimization Project',
-    startDate: '12/06',
-    endDate: '12/28',
-    progress: { completed: 3, total: 15 },
-    unable: 2,
+    taskGroupName: '2026 Process Optimization',
+    startDate: '01/01',
+    endDate: '01/31',
+    progress: { completed: 1, total: 15 },
+    unable: 0,
     status: 'NOT_YET',
     hqCheck: 'DRAFT',
     subTasks: [
@@ -277,24 +277,24 @@ export const mockTaskGroups: TaskGroup[] = [
     id: '9',
     no: 9,
     dept: 'MKT',
-    taskGroupName: 'Customer Survey Analysis',
-    startDate: '12/02',
-    endDate: '12/16',
-    progress: { completed: 18, total: 18 },
+    taskGroupName: 'Customer Feedback Survey Q1',
+    startDate: '01/01',
+    endDate: '01/21',
+    progress: { completed: 3, total: 18 },
     unable: 0,
-    status: 'DONE',
-    hqCheck: 'DONE',
+    status: 'NOT_YET',
+    hqCheck: 'NOT_YET',
     subTasks: [
       {
         id: '9-1',
         name: 'Collect survey responses',
-        status: 'DONE',
+        status: 'NOT_YET',
         assignee: 'Olivia Martinez'
       },
       {
         id: '9-2',
         name: 'Create analysis report',
-        status: 'DONE',
+        status: 'NOT_YET',
         assignee: 'Ryan Taylor'
       }
     ]
@@ -303,11 +303,11 @@ export const mockTaskGroups: TaskGroup[] = [
     id: '10',
     no: 10,
     dept: 'SPA',
-    taskGroupName: 'Space Planning Review',
-    startDate: '12/04',
-    endDate: '12/24',
-    progress: { completed: 6, total: 14 },
-    unable: 1,
+    taskGroupName: 'New Year Store Layout Review',
+    startDate: '01/01',
+    endDate: '01/18',
+    progress: { completed: 4, total: 14 },
+    unable: 0,
     status: 'NOT_YET',
     hqCheck: 'NOT_YET',
     subTasks: [
@@ -329,12 +329,12 @@ export const mockTaskGroups: TaskGroup[] = [
     id: '11',
     no: 11,
     dept: 'ORD',
-    taskGroupName: 'Supply Order Processing',
-    startDate: '12/07',
-    endDate: '12/21',
-    progress: { completed: 20, total: 20 },
+    taskGroupName: 'January Supply Orders',
+    startDate: '01/01',
+    endDate: '01/12',
+    progress: { completed: 10, total: 20 },
     unable: 0,
-    status: 'DONE',
+    status: 'NOT_YET',
     hqCheck: 'DRAFT',
     subTasks: [
       {
@@ -346,7 +346,7 @@ export const mockTaskGroups: TaskGroup[] = [
       {
         id: '11-2',
         name: 'Place orders',
-        status: 'DONE',
+        status: 'NOT_YET',
         assignee: 'Jessica Brown'
       }
     ]
@@ -355,10 +355,10 @@ export const mockTaskGroups: TaskGroup[] = [
     id: '12',
     no: 12,
     dept: 'HR',
-    taskGroupName: 'Employee Training Program',
-    startDate: '12/09',
-    endDate: '12/27',
-    progress: { completed: 7, total: 16 },
+    taskGroupName: '2026 Training Program Launch',
+    startDate: '01/01',
+    endDate: '01/25',
+    progress: { completed: 2, total: 16 },
     unable: 0,
     status: 'NOT_YET',
     hqCheck: 'NOT_YET',
@@ -381,11 +381,11 @@ export const mockTaskGroups: TaskGroup[] = [
     id: '13',
     no: 13,
     dept: 'PERI',
-    taskGroupName: 'Cold Storage Maintenance',
-    startDate: '12/11',
-    endDate: '12/26',
-    progress: { completed: 5, total: 9 },
-    unable: 1,
+    taskGroupName: 'Cold Storage Post-Holiday Check',
+    startDate: '01/01',
+    endDate: '01/08',
+    progress: { completed: 3, total: 9 },
+    unable: 0,
     status: 'NOT_YET',
     hqCheck: 'DRAFT',
     subTasks: [
@@ -407,13 +407,13 @@ export const mockTaskGroups: TaskGroup[] = [
     id: '14',
     no: 14,
     dept: 'GRO',
-    taskGroupName: 'Shelf Restocking Protocol',
-    startDate: '12/12',
-    endDate: '12/29',
-    progress: { completed: 11, total: 11 },
+    taskGroupName: 'New Year Shelf Restocking',
+    startDate: '01/01',
+    endDate: '01/05',
+    progress: { completed: 7, total: 11 },
     unable: 0,
-    status: 'DONE',
-    hqCheck: 'DONE',
+    status: 'NOT_YET',
+    hqCheck: 'NOT_YET',
     subTasks: [
       {
         id: '14-1',
@@ -424,7 +424,7 @@ export const mockTaskGroups: TaskGroup[] = [
       {
         id: '14-2',
         name: 'Restock shelves',
-        status: 'DONE',
+        status: 'NOT_YET',
         assignee: 'Laura Adams'
       }
     ]
@@ -433,13 +433,13 @@ export const mockTaskGroups: TaskGroup[] = [
     id: '15',
     no: 15,
     dept: 'DELICA',
-    taskGroupName: 'Food Safety Inspection',
-    startDate: '12/13',
-    endDate: '12/23',
-    progress: { completed: 14, total: 14 },
+    taskGroupName: 'January Food Safety Inspection',
+    startDate: '01/01',
+    endDate: '01/10',
+    progress: { completed: 5, total: 14 },
     unable: 0,
-    status: 'DONE',
-    hqCheck: 'DONE',
+    status: 'NOT_YET',
+    hqCheck: 'NOT_YET',
     subTasks: [
       {
         id: '15-1',
@@ -450,7 +450,7 @@ export const mockTaskGroups: TaskGroup[] = [
       {
         id: '15-2',
         name: 'Update safety logs',
-        status: 'DONE',
+        status: 'NOT_YET',
         assignee: 'Mark Phillips'
       }
     ]

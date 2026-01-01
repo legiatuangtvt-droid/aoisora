@@ -122,12 +122,53 @@ export default function TaskLevelCard({
         </div>
       </div>
 
-      {/* Card Content - Sections */}
-      {children && (
-        <div className="p-4 space-y-3 bg-white dark:bg-gray-800">
-          {children}
+      {/* Card Content */}
+      <div className="p-4 space-y-4 bg-white dark:bg-gray-800">
+        {/* Task Name Input */}
+        <div>
+          {/* Label with formatting buttons */}
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-sm font-medium text-gray-900 dark:text-white">
+              Task name <span className="text-red-500">(*)</span>
+            </label>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                className="w-8 h-8 flex items-center justify-center border border-gray-300 dark:border-gray-600 rounded text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                B
+              </button>
+              <button
+                type="button"
+                className="w-8 h-8 flex items-center justify-center border border-gray-300 dark:border-gray-600 rounded text-sm italic text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                I
+              </button>
+              <button
+                type="button"
+                className="w-8 h-8 flex items-center justify-center border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                A
+              </button>
+            </div>
+          </div>
+          {/* Input field */}
+          <input
+            type="text"
+            value={taskLevel.name}
+            onChange={(e) => onNameChange(e.target.value)}
+            placeholder="Enter task name..."
+            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-colors"
+          />
         </div>
-      )}
+
+        {/* Sections */}
+        {children && (
+          <div className="space-y-3">
+            {children}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
