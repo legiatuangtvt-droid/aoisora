@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useSidebar } from '@/contexts/SidebarContext';
+import { useNavigation } from '@/contexts/NavigationContext';
 import { useToast } from '@/components/ui/Toast';
 import { MenuItem } from '@/types/layout';
 
@@ -114,9 +114,10 @@ function MenuIcon({ name, className = '' }: { name: string; className?: string }
 
 export default function Sidebar() {
   const { isExpanded, toggleSidebar } = useSidebar();
+  const { expandedMenus, toggleMenu, collapseAllMenus, setIsNavigating } = useNavigation();
   const pathname = usePathname();
+  const router = useRouter();
   const { showDevelopingToast } = useToast();
-  const [expandedMenus, setExpandedMenus] = useState<string[]>(['hq-store']); // Default expanded
 
   const isActive = (route: string) => {
     // Special case: /tasks/detail should be active for /tasks/[id] routes
@@ -144,12 +145,20 @@ export default function Sidebar() {
     return item.children.some(child => isActive(child.route));
   };
 
-  const toggleMenu = (menuId: string) => {
-    setExpandedMenus(prev =>
-      prev.includes(menuId)
-        ? prev.filter(id => id !== menuId)
-        : [menuId] // Only keep the newly opened menu, close all others
-    );
+  const handleNavigation = (e: React.MouseEvent, route: string, isChild: boolean, implemented: boolean) => {
+    if (!implemented) {
+      e.preventDefault();
+      showDevelopingToast();
+      return;
+    }
+
+    // Show loading indicator
+    setIsNavigating(true);
+
+    // Collapse all expanded menus when clicking on a non-child menu item
+    if (!isChild) {
+      collapseAllMenus();
+    }
   };
 
   const renderMenuItem = (item: MenuItem, isChild = false) => {
@@ -164,14 +173,20 @@ export default function Sidebar() {
           <button
             onClick={() => toggleMenu(item.id)}
             title={!isExpanded ? item.label : undefined}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${active
+            className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${active
                 ? 'bg-pink-50 dark:bg-pink-900/20 text-[#C5055B] dark:text-pink-400'
                 : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
               }`}
           >
+            {/* Active indicator bar */}
+            <div
+              className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 rounded-r-full transition-all duration-200 ${
+                active ? 'h-6 bg-[#C5055B]' : 'h-0 bg-transparent'
+              }`}
+            />
             <MenuIcon
               name={item.icon}
-              className={`w-5 h-5 flex-shrink-0 ${active ? 'text-[#C5055B] dark:text-pink-400' : ''}`}
+              className={`w-5 h-5 flex-shrink-0 transition-transform duration-200 group-hover:scale-110 ${active ? 'text-[#C5055B] dark:text-pink-400' : ''}`}
             />
             {isExpanded && (
               <>
@@ -179,7 +194,7 @@ export default function Sidebar() {
                   {item.label}
                 </span>
                 <svg
-                  className={`w-4 h-4 transition-transform ${isMenuExpanded ? 'rotate-180' : ''}`}
+                  className={`w-4 h-4 transition-transform duration-300 ease-out ${isMenuExpanded ? 'rotate-180' : ''}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -190,12 +205,16 @@ export default function Sidebar() {
             )}
           </button>
 
-          {/* Children - show when expanded OR when collapsed but menu is open */}
-          {isMenuExpanded && item.children && (
+          {/* Children with animation */}
+          <div
+            className={`overflow-hidden transition-all duration-300 ease-out ${
+              isMenuExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+            }`}
+          >
             <div className={`mt-1 space-y-1 ${isExpanded ? 'ml-4 dark:border-gray-700' : 'ml-5'}`}>
-              {item.children.map(child => renderMenuItem(child, true))}
+              {item.children?.map(child => renderMenuItem(child, true))}
             </div>
-          )}
+          </div>
         </div>
       );
     }
@@ -204,27 +223,32 @@ export default function Sidebar() {
     const childCollapsedStyle = isChild && !isExpanded ? 'pl-1' : '';
     const implemented = isImplemented(item.route);
 
-    const handleClick = (e: React.MouseEvent) => {
-      if (!implemented) {
-        e.preventDefault();
-        showDevelopingToast();
-      }
-    };
-
     return (
       <Link
         key={item.id}
         href={implemented ? item.route : '#'}
-        onClick={handleClick}
+        onClick={(e) => handleNavigation(e, item.route, isChild, implemented)}
         title={!isExpanded ? item.label : undefined}
-        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isChild && isExpanded ? 'ml-2' : ''} ${childCollapsedStyle} ${isActive(item.route)
+        className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${isChild && isExpanded ? 'ml-2' : ''} ${childCollapsedStyle} ${isActive(item.route)
             ? 'bg-pink-50 dark:bg-pink-900/20 text-[#C5055B] dark:text-pink-400'
             : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
           }`}
       >
+        {/* Active indicator bar */}
+        <div
+          className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 rounded-r-full transition-all duration-200 ${
+            isActive(item.route) ? 'h-6 bg-[#C5055B]' : 'h-0 bg-transparent'
+          }`}
+        />
+
+        {/* Ripple effect container */}
+        <div className="absolute inset-0 rounded-lg overflow-hidden">
+          <span className="absolute inset-0 bg-[#C5055B] opacity-0 group-active:opacity-10 transition-opacity duration-150" />
+        </div>
+
         <MenuIcon
           name={item.icon}
-          className={`${isChild && !isExpanded ? 'w-4 h-4' : 'w-5 h-5'} flex-shrink-0 ${isActive(item.route) ? 'text-[#C5055B] dark:text-pink-400' : ''}`}
+          className={`${isChild && !isExpanded ? 'w-4 h-4' : 'w-5 h-5'} flex-shrink-0 transition-transform duration-200 group-hover:scale-110 ${isActive(item.route) ? 'text-[#C5055B] dark:text-pink-400' : ''}`}
         />
         {isExpanded && (
           <span className="text-sm font-medium whitespace-nowrap overflow-hidden">
@@ -232,7 +256,7 @@ export default function Sidebar() {
           </span>
         )}
         {item.badge && isExpanded && (
-          <span className="ml-auto px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">
+          <span className="ml-auto px-2 py-0.5 bg-red-500 text-white text-xs rounded-full animate-pulse">
             {item.badge}
           </span>
         )}
@@ -248,10 +272,10 @@ export default function Sidebar() {
       {/* Toggle Button */}
       <button
         onClick={toggleSidebar}
-        className="absolute -right-3 top-6 w-6 h-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors shadow-sm"
+        className="absolute -right-3 top-6 w-6 h-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm hover:shadow-md hover:scale-110"
       >
         <svg
-          className={`w-4 h-4 text-gray-500 transition-transform ${isExpanded ? '' : 'rotate-180'}`}
+          className={`w-4 h-4 text-gray-500 transition-transform duration-300 ${isExpanded ? '' : 'rotate-180'}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"

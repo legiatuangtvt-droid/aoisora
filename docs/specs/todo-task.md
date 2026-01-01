@@ -308,3 +308,14 @@ frontend/src/
 | 2026-01-01 | UI: ManagerCommentPanel - Avatar outside message box, only content has gray background |
 | 2026-01-01 | UI: ManagerCommentPanel - Added border to reply input box |
 | 2026-01-01 | UI: ManagerCommentPanel - Added Other Comment section with same styling as Manager Comment (avatar bg: #E5F0FF, text: #003E95, message bg: #F4F4F4, border-radius: 0px 10px 10px 10px, reply border: #9B9B9B, send icon: #C5055B) |
+| 2026-01-01 | UX: Sidebar - Accordion behavior: only one parent menu can be expanded at a time |
+| 2026-01-01 | UX: Sidebar - Clicking non-child menu items collapses all expanded menus |
+| 2026-01-01 | UX: Sidebar - Menu expand/collapse state saved to localStorage |
+| 2026-01-01 | UX: Sidebar - Active state with left border indicator (#C5055B) |
+| 2026-01-01 | UX: Sidebar - Icon scale animation on hover (scale-110) |
+| 2026-01-01 | UX: Sidebar - Ripple effect on click |
+| 2026-01-01 | UX: Sidebar - Smooth submenu expand/collapse animation (300ms ease-out) |
+| 2026-01-01 | UX: Navigation - Loading progress bar when navigating between pages |
+| 2026-01-01 | UX: Navigation - Page transition fade effect (150ms) |
+| 2026-01-01 | UX: Added NavigationContext for managing navigation state |
+| 2026-01-01 | UX: Added Skeleton components for loading states (TableRowSkeleton, CardSkeleton, TodoTaskPageSkeleton, TaskListPageSkeleton) |
