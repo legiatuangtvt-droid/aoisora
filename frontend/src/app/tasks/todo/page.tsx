@@ -83,27 +83,26 @@ export default function TodoTaskPage() {
         {/* Week Header */}
         <WeekHeader weekInfo={mockWeekInfo} onAddNew={handleAddNew} />
 
-        {/* Main Content Grid */}
+        {/* Row 1: Overview Panels */}
+        <div className="grid grid-cols-2 gap-6 mb-6">
+          <OverallWeekPanel
+            weekNumber={mockWeekInfo.weekNumber}
+            tasks={mockOverviewTasks}
+            onTargetChange={handleTargetChange}
+          />
+          <LastWeekReviewPanel
+            weekNumber={mockWeekInfo.weekNumber - 1}
+            tasks={mockLastWeekTasks}
+          />
+        </div>
+
+        {/* Filter Bar */}
+        <FilterBar filters={filters} onFiltersChange={setFilters} />
+
+        {/* Row 2: Calendar View + Manager Comments */}
         <div className="grid grid-cols-12 gap-6">
-          {/* Left Column: Overview Panels + Calendar */}
-          <div className="col-span-9 space-y-6">
-            {/* Overview Panels Row */}
-            <div className="grid grid-cols-2 gap-6">
-              <OverallWeekPanel
-                weekNumber={mockWeekInfo.weekNumber}
-                tasks={mockOverviewTasks}
-                onTargetChange={handleTargetChange}
-              />
-              <LastWeekReviewPanel
-                weekNumber={mockWeekInfo.weekNumber - 1}
-                tasks={mockLastWeekTasks}
-              />
-            </div>
-
-            {/* Filter Bar */}
-            <FilterBar filters={filters} onFiltersChange={setFilters} />
-
-            {/* Calendar View */}
+          {/* Calendar View */}
+          <div className="col-span-9">
             <CalendarView
               weekInfo={mockWeekInfo}
               dailyTasks={filteredDailyTasks}
@@ -114,7 +113,7 @@ export default function TodoTaskPage() {
             />
           </div>
 
-          {/* Right Column: Manager Comments */}
+          {/* Manager Comments */}
           <div className="col-span-3">
             <ManagerCommentPanel
               managerComments={mockManagerComments}
