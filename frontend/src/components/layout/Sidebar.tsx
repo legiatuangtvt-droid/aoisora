@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useSidebar } from '@/contexts/SidebarContext';
@@ -118,6 +119,24 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { showDevelopingToast } = useToast();
+  const sidebarRef = useRef<HTMLElement>(null);
+
+  // Handle click outside to collapse menus
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
+        // Click is outside sidebar, collapse all menus
+        if (expandedMenus.length > 0) {
+          collapseAllMenus();
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [expandedMenus, collapseAllMenus]);
 
   const isActive = (route: string) => {
     // Special case: /tasks/detail should be active for /tasks/[id] routes
@@ -266,6 +285,7 @@ export default function Sidebar() {
 
   return (
     <aside
+      ref={sidebarRef}
       className={`fixed left-0 top-16 h-[calc(100vh-4rem)] bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 z-40 ${isExpanded ? 'w-60' : 'w-16'
         }`}
     >
