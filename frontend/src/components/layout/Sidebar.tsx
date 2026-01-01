@@ -23,19 +23,19 @@ const menuItems: MenuItem[] = [
       {
         id: 'list-task',
         label: 'List task',
-        icon: 'list',
+        icon: 'task-daily',
         route: '/tasks/list',
       },
       {
         id: 'detail',
         label: 'Detail',
-        icon: 'document',
+        icon: 'task-pin',
         route: '/tasks/detail',
       },
       {
         id: 'message',
         label: 'Message',
-        icon: 'chat',
+        icon: 'message',
         route: '/tasks/messages',
       },
     ],
@@ -43,25 +43,25 @@ const menuItems: MenuItem[] = [
   {
     id: 'todo',
     label: 'To-do Task',
-    icon: 'check-circle',
+    icon: 'task-edit',
     route: '/tasks/todo',
   },
   {
     id: 'library',
     label: 'Task Library',
-    icon: 'library',
+    icon: 'task-library',
     route: '/library',
   },
   {
     id: 'report',
     label: 'Report',
-    icon: 'chart',
+    icon: 'file-report',
     route: '/reports',
   },
   {
     id: 'users',
     label: 'User management',
-    icon: 'users',
+    icon: 'user-management',
     route: '/users',
   },
 ];
@@ -69,6 +69,13 @@ const menuItems: MenuItem[] = [
 // PNG icon paths mapping
 const pngIconMap: Record<string, string> = {
   'gg-list': '/icons/gg_list.png',
+  'task-daily': '/icons/hugeicons_task-daily-02.png',
+  'task-pin': '/icons/streamline-ultimate_task-list-pin.png',
+  'message': '/icons/Group.png',
+  'task-edit': '/icons/hugeicons_task-edit-02.png',
+  'task-library': '/icons/tabler_library.png',
+  'file-report': '/icons/mdi_file-report-outline.png',
+  'user-management': '/icons/Frame 7.png',
 };
 
 // Icon component
