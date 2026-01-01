@@ -296,3 +296,4 @@ frontend/src/
 | 2026-01-01 | UI: CalendarView - added calendar icon (mdi_invoice-text-scheduled-outline.png) |
 | 2026-01-01 | UI: DailyTaskRow - 4 location dropdowns (Region, Zone, Area, Store), numbered task badges, single status per row |
 | 2026-01-01 | UI: TaskStatusBadge - added dot indicator, removed Type column from calendar table |
+| 2026-01-01 | UI: CalendarView - removed table header row |

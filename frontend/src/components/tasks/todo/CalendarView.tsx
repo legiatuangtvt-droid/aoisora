@@ -73,19 +73,6 @@ export default function CalendarView({
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead>
-            <tr className="bg-gray-50 dark:bg-gray-700/50">
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24 border-r border-gray-200 dark:border-gray-600">
-                Date
-              </th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600">
-                Productivity
-              </th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-28">
-                Status
-              </th>
-            </tr>
-          </thead>
           <tbody>
             {dailyTasks.map((dayData) => (
               <DailyTaskRow
