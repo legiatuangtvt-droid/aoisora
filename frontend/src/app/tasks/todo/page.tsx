@@ -28,6 +28,7 @@ export default function TodoTaskPage() {
     type: 'all',
   });
   const [isPanelsExpanded, setIsPanelsExpanded] = useState(true);
+  const [showComments, setShowComments] = useState(false);
 
   const handleAddNew = () => {
     router.push('/tasks/new');
@@ -78,14 +79,16 @@ export default function TodoTaskPage() {
     }),
   }));
 
+  const totalComments = mockManagerComments.length + mockOtherComments.length;
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         {/* Week Header */}
         <WeekHeader weekInfo={mockWeekInfo} onAddNew={handleAddNew} />
 
-        {/* Row 1: Overview Panels */}
-        <div className="grid grid-cols-2 gap-6 mb-6">
+        {/* Row 1: Overview Panels - Stack on mobile */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
           <OverallWeekPanel
             weekNumber={mockWeekInfo.weekNumber}
             tasks={mockOverviewTasks}
@@ -104,10 +107,57 @@ export default function TodoTaskPage() {
         {/* Filter Bar */}
         <FilterBar filters={filters} onFiltersChange={setFilters} />
 
-        {/* Row 2: Calendar View + Manager Comments */}
-        <div className="grid grid-cols-12 gap-6">
+        {/* Mobile: Tab navigation between Calendar and Comments */}
+        <div className="sm:hidden mb-4">
+          <div className="flex border-b border-gray-200 dark:border-gray-700">
+            <button
+              onClick={() => setShowComments(false)}
+              className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors ${
+                !showComments
+                  ? 'border-pink-600 text-pink-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
+              }`}
+            >
+              Calendar
+            </button>
+            <button
+              onClick={() => setShowComments(true)}
+              className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors ${
+                showComments
+                  ? 'border-pink-600 text-pink-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
+              }`}
+            >
+              Comments ({totalComments})
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile: Show Calendar or Comments based on tab */}
+        <div className="sm:hidden">
+          {!showComments ? (
+            <CalendarView
+              weekInfo={mockWeekInfo}
+              dailyTasks={filteredDailyTasks}
+              onPrevWeek={handlePrevWeek}
+              onNextWeek={handleNextWeek}
+              onTaskClick={handleTaskClick}
+              onStatusChange={handleStatusChange}
+            />
+          ) : (
+            <ManagerCommentPanel
+              managerComments={mockManagerComments}
+              otherComments={mockOtherComments}
+              onAddManagerComment={handleAddManagerComment}
+              onAddOtherComment={handleAddOtherComment}
+            />
+          )}
+        </div>
+
+        {/* Desktop: Row 2: Calendar View + Manager Comments side by side */}
+        <div className="hidden sm:grid grid-cols-12 gap-6">
           {/* Calendar View */}
-          <div className="col-span-9">
+          <div className="col-span-12 lg:col-span-9">
             <CalendarView
               weekInfo={mockWeekInfo}
               dailyTasks={filteredDailyTasks}
@@ -118,8 +168,8 @@ export default function TodoTaskPage() {
             />
           </div>
 
-          {/* Manager Comments */}
-          <div className="col-span-3">
+          {/* Manager Comments - Hidden on tablet, shown on desktop */}
+          <div className="hidden lg:block col-span-3">
             <ManagerCommentPanel
               managerComments={mockManagerComments}
               otherComments={mockOtherComments}
@@ -128,7 +178,28 @@ export default function TodoTaskPage() {
             />
           </div>
         </div>
+
+        {/* Tablet: Comments below calendar */}
+        <div className="hidden sm:block lg:hidden mt-6">
+          <ManagerCommentPanel
+            managerComments={mockManagerComments}
+            otherComments={mockOtherComments}
+            onAddManagerComment={handleAddManagerComment}
+            onAddOtherComment={handleAddOtherComment}
+          />
+        </div>
       </div>
+
+      {/* Mobile FAB for Add New */}
+      <button
+        onClick={handleAddNew}
+        className="sm:hidden fixed bottom-20 right-4 w-14 h-14 bg-pink-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-pink-700 active:scale-95 transition-all z-40"
+        aria-label="Add new task"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+        </svg>
+      </button>
     </div>
   );
 }

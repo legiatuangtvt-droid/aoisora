@@ -329,3 +329,12 @@ frontend/src/
 | 2026-01-02 | Responsive: Breakpoints - mobile (<768px), tablet (768-1023px), desktop (≥1024px) |
 | 2026-01-02 | Fix: Next.js Image aspect ratio warning - added style={{ width: 'auto', height: 'auto' }} to PNG icons in Sidebar and BottomNavigation |
 | 2026-01-02 | Fix: ManagerCommentPanel border color for dark mode - replaced inline style with Tailwind classes (border-gray-300 dark:border-gray-500) |
+| 2026-01-02 | Responsive: WeekHeader - stack vertical on mobile, centered text, hide Add button (use FAB instead) |
+| 2026-01-02 | Responsive: OverallWeekPanel & LastWeekReviewPanel - card view on mobile with smaller icons and fonts |
+| 2026-01-02 | Responsive: FilterBar - horizontal scroll on mobile, flex-shrink-0 for dropdowns |
+| 2026-01-02 | Responsive: CalendarViewMobile component - vertical timeline layout for mobile with day cards, task preview, status badges |
+| 2026-01-02 | Responsive: CalendarView - shows mobile timeline on small screens, table view on desktop |
+| 2026-01-02 | Responsive: TaskStatusBadge - added compact prop for smaller mobile version |
+| 2026-01-02 | Responsive: ManagerCommentPanel - tab navigation on mobile (Manager/Other), both sections on desktop |
+| 2026-01-02 | Responsive: TodoTaskPage layout - stacked panels on mobile, tab navigation for Calendar/Comments, 12-col grid on desktop |
+| 2026-01-02 | Responsive: FAB (Floating Action Button) for Add New task on mobile, positioned bottom-right above bottom nav |

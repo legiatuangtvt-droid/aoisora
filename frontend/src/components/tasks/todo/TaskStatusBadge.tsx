@@ -5,6 +5,7 @@ import { TaskStatus, STATUS_CONFIG } from '@/types/todoTask';
 interface TaskStatusBadgeProps {
   status: TaskStatus;
   onClick?: () => void;
+  compact?: boolean; // Smaller version for mobile timeline
 }
 
 // Default dot color mapping for statuses without custom dotColor
@@ -23,10 +24,23 @@ const DEFAULT_HEX_BORDER_COLORS: Record<TaskStatus, string> = {
   not_yet: '#F44336',
 };
 
-export default function TaskStatusBadge({ status, onClick }: TaskStatusBadgeProps) {
+export default function TaskStatusBadge({ status, onClick, compact = false }: TaskStatusBadgeProps) {
   const config = STATUS_CONFIG[status];
   const dotColor = config.dotColor || DEFAULT_DOT_COLORS[status];
   const hexBorderColor = config.hexBorderColor || DEFAULT_HEX_BORDER_COLORS[status];
+
+  // Compact version for mobile
+  if (compact) {
+    return (
+      <span
+        className={`inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${config.bgColor} ${config.color}`}
+        style={{ border: `0.5px solid ${hexBorderColor}` }}
+      >
+        <span className={`w-1 h-1 rounded-full ${dotColor}`} />
+        {config.label}
+      </span>
+    );
+  }
 
   return (
     <button
