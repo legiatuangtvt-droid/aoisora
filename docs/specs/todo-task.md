@@ -302,3 +302,4 @@ frontend/src/
 | 2026-01-01 | UI: TaskStatusBadge - Done status with custom colors (border/text: #297EF6, bg: #E5F0FF) |
 | 2026-01-01 | UI: TaskStatusBadge - Increased background opacity to 10% for In Process, Done, Draft |
 | 2026-01-01 | UI: TaskStatusBadge - Done status: exact Figma CSS (bg: #E5F0FF, border: 0.5px solid #297EF6, dot: 6px, font: 13px normal, height: 25px, border-radius: 26px) |
+| 2026-01-01 | UI: ManagerCommentPanel - Redesigned to match Figma (header with comment icon, card with 0.5px border #6B6B6B, rounded-[10px], avatar with initials, author name + time, reply input with send button) |

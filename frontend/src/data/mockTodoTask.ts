@@ -168,9 +168,9 @@ export const mockDailyTasks: DailyTaskData[] = [
 export const mockManagerComments: ManagerComment[] = [
   {
     id: 'mc-1',
-    content: 'Good progress on store visits this week. Keep up the momentum.',
-    author: 'Manager Nguyen',
-    createdAt: new Date(2025, 11, 15, 9, 30),
+    content: 'nhà cung cấp giao thiếu hoa nên chỉ có hình ABC.',
+    author: 'Tùng SM',
+    createdAt: new Date(2025, 11, 15, 10, 21),
   },
 ];
 
