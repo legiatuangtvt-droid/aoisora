@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSidebar } from '@/contexts/SidebarContext';
@@ -13,7 +13,7 @@ import { MenuItem } from '@/types/layout';
 const implementedRoutes = ['/tasks/list', '/tasks/new', '/tasks/detail', '/tasks/', '/tasks/messages', '/tasks/todo'];
 
 // Menu items configuration with parent-child structure
-const menuItems: MenuItem[] = [
+export const menuItems: MenuItem[] = [
   {
     id: 'hq-store',
     label: 'Task list HQ-Store',
@@ -67,7 +67,7 @@ const menuItems: MenuItem[] = [
 ];
 
 // PNG icon paths mapping
-const pngIconMap: Record<string, string> = {
+export const pngIconMap: Record<string, string> = {
   'gg-list': '/icons/gg_list.png',
   'task-daily': '/icons/hugeicons_task-daily-02.png',
   'task-pin': '/icons/streamline-ultimate_task-list-pin.png',
@@ -79,7 +79,7 @@ const pngIconMap: Record<string, string> = {
 };
 
 // Icon component
-function MenuIcon({ name, className = '' }: { name: string; className?: string }) {
+export function MenuIcon({ name, className = '' }: { name: string; className?: string }) {
   // Check if it's a PNG icon
   if (pngIconMap[name]) {
     // Extract size from className (e.g., "w-5 h-5" -> 20)
@@ -138,19 +138,26 @@ function MenuIcon({ name, className = '' }: { name: string; className?: string }
 }
 
 export default function Sidebar() {
-  const { isExpanded, toggleSidebar } = useSidebar();
+  const {
+    isExpanded,
+    toggleSidebar,
+    isMobileMenuOpen,
+    setIsMobileMenuOpen,
+    isMobile,
+    isTablet,
+    isDesktop
+  } = useSidebar();
   const { expandedMenus, toggleMenu, collapseAllMenus, setIsNavigating } = useNavigation();
   const pathname = usePathname();
-  const router = useRouter();
   const { showDevelopingToast } = useToast();
   const sidebarRef = useRef<HTMLElement>(null);
 
-  // Handle click outside to collapse sidebar
+  // Handle click outside to collapse sidebar (desktop only)
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
-        // Click is outside sidebar, collapse sidebar if expanded
-        if (isExpanded) {
+        // On desktop, collapse sidebar if expanded
+        if (isDesktop && isExpanded) {
           toggleSidebar();
         }
       }
@@ -160,19 +167,22 @@ export default function Sidebar() {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isExpanded, toggleSidebar]);
+  }, [isExpanded, toggleSidebar, isDesktop]);
+
+  // Close mobile menu when route changes
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      setIsMobileMenuOpen(false);
+    }
+  }, [pathname]);
 
   const isActive = (route: string) => {
     // Special case: /tasks/detail should be active for /tasks/[id] routes
     if (route === '/tasks/detail') {
-      // Match /tasks/detail or /tasks/{numeric-id}
       const taskDetailPattern = /^\/tasks\/(\d+|detail)$/;
       return taskDetailPattern.test(pathname);
     }
-    // Exact match first
     if (pathname === route) return true;
-    // For parent routes, only match if not a sibling menu item
-    // e.g., /tasks should not highlight when on /tasks/todo (which is a separate menu item)
     if (route === '/tasks' && pathname.startsWith('/tasks/todo')) {
       return false;
     }
@@ -195,12 +205,15 @@ export default function Sidebar() {
       return;
     }
 
-    // Show loading indicator
     setIsNavigating(true);
 
-    // Collapse all expanded menus when clicking on a non-child menu item
     if (!isChild) {
       collapseAllMenus();
+    }
+
+    // Close mobile menu after navigation
+    if (isMobile || isTablet) {
+      setIsMobileMenuOpen(false);
     }
   };
 
@@ -208,20 +221,19 @@ export default function Sidebar() {
     const hasChildren = item.children && item.children.length > 0;
     const isMenuExpanded = expandedMenus.includes(item.id);
     const active = isActive(item.route) || isChildActive(item);
+    const showExpanded = isExpanded || isMobileMenuOpen;
 
     if (hasChildren) {
       return (
         <div key={item.id}>
-          {/* Parent menu item */}
           <button
             onClick={() => toggleMenu(item.id)}
-            title={!isExpanded ? item.label : undefined}
-            className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${active
+            title={!showExpanded ? item.label : undefined}
+            className={`group relative w-full flex items-center gap-3 px-3 py-3 md:py-2.5 rounded-lg transition-all duration-200 ${active
                 ? 'bg-pink-50 dark:bg-pink-900/20 text-[#C5055B] dark:text-pink-400'
                 : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
               }`}
           >
-            {/* Active indicator bar */}
             <div
               className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 rounded-r-full transition-all duration-200 ${
                 active ? 'h-6 bg-[#C5055B]' : 'h-0 bg-transparent'
@@ -231,7 +243,7 @@ export default function Sidebar() {
               name={item.icon}
               className={`w-5 h-5 flex-shrink-0 transition-transform duration-200 group-hover:scale-110 ${active ? 'text-[#C5055B] dark:text-pink-400' : ''}`}
             />
-            {isExpanded && (
+            {showExpanded && (
               <>
                 <span className="text-sm font-medium whitespace-nowrap overflow-hidden flex-1 text-left">
                   {item.label}
@@ -248,13 +260,12 @@ export default function Sidebar() {
             )}
           </button>
 
-          {/* Children with animation */}
           <div
             className={`overflow-hidden transition-all duration-300 ease-out ${
               isMenuExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
             }`}
           >
-            <div className={`mt-1 space-y-1 ${isExpanded ? 'ml-4 dark:border-gray-700' : 'ml-5'}`}>
+            <div className={`mt-1 space-y-1 ${showExpanded ? 'ml-4 dark:border-gray-700' : 'ml-5'}`}>
               {item.children?.map(child => renderMenuItem(child, true))}
             </div>
           </div>
@@ -262,8 +273,7 @@ export default function Sidebar() {
       );
     }
 
-    // Regular menu item or child item
-    const childCollapsedStyle = isChild && !isExpanded ? 'pl-1' : '';
+    const childCollapsedStyle = isChild && !showExpanded ? 'pl-1' : '';
     const implemented = isImplemented(item.route);
 
     return (
@@ -271,34 +281,32 @@ export default function Sidebar() {
         key={item.id}
         href={implemented ? item.route : '#'}
         onClick={(e) => handleNavigation(e, item.route, isChild, implemented)}
-        title={!isExpanded ? item.label : undefined}
-        className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${isChild && isExpanded ? 'ml-2' : ''} ${childCollapsedStyle} ${isActive(item.route)
+        title={!showExpanded ? item.label : undefined}
+        className={`group relative flex items-center gap-3 px-3 py-3 md:py-2.5 rounded-lg transition-all duration-200 ${isChild && showExpanded ? 'ml-2' : ''} ${childCollapsedStyle} ${isActive(item.route)
             ? 'bg-pink-50 dark:bg-pink-900/20 text-[#C5055B] dark:text-pink-400'
             : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
           }`}
       >
-        {/* Active indicator bar */}
         <div
           className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 rounded-r-full transition-all duration-200 ${
             isActive(item.route) ? 'h-6 bg-[#C5055B]' : 'h-0 bg-transparent'
           }`}
         />
 
-        {/* Ripple effect container */}
         <div className="absolute inset-0 rounded-lg overflow-hidden">
           <span className="absolute inset-0 bg-[#C5055B] opacity-0 group-active:opacity-10 transition-opacity duration-150" />
         </div>
 
         <MenuIcon
           name={item.icon}
-          className={`${isChild && !isExpanded ? 'w-4 h-4' : 'w-5 h-5'} flex-shrink-0 transition-transform duration-200 group-hover:scale-110 ${isActive(item.route) ? 'text-[#C5055B] dark:text-pink-400' : ''}`}
+          className={`${isChild && !showExpanded ? 'w-4 h-4' : 'w-5 h-5'} flex-shrink-0 transition-transform duration-200 group-hover:scale-110 ${isActive(item.route) ? 'text-[#C5055B] dark:text-pink-400' : ''}`}
         />
-        {isExpanded && (
+        {showExpanded && (
           <span className="text-sm font-medium whitespace-nowrap overflow-hidden">
             {item.label}
           </span>
         )}
-        {item.badge && isExpanded && (
+        {item.badge && showExpanded && (
           <span className="ml-auto px-2 py-0.5 bg-red-500 text-white text-xs rounded-full animate-pulse">
             {item.badge}
           </span>
@@ -307,11 +315,51 @@ export default function Sidebar() {
     );
   };
 
+  // Mobile/Tablet: Show overlay sidebar
+  if (isMobile || isTablet) {
+    return (
+      <>
+        {/* Backdrop overlay */}
+        <div
+          className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300 ${
+            isMobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+
+        {/* Sidebar drawer */}
+        <aside
+          ref={sidebarRef}
+          className={`fixed left-0 top-16 h-[calc(100vh-4rem)] w-72 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-50 transform transition-transform duration-300 ease-out ${
+            isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+        >
+          {/* Close button */}
+          <button
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          {/* Menu Items */}
+          <nav className="p-4 pt-14 space-y-1 overflow-y-auto h-full">
+            {menuItems.map(item => renderMenuItem(item))}
+          </nav>
+        </aside>
+      </>
+    );
+  }
+
+  // Desktop: Regular sidebar
   return (
     <aside
       ref={sidebarRef}
-      className={`fixed left-0 top-16 h-[calc(100vh-4rem)] bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 z-40 ${isExpanded ? 'w-60' : 'w-16'
-        }`}
+      className={`fixed left-0 top-16 h-[calc(100vh-4rem)] bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 z-40 ${
+        isExpanded ? 'w-60' : 'w-16'
+      }`}
     >
       {/* Toggle Button */}
       <button

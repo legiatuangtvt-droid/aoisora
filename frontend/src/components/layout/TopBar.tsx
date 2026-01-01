@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { User } from '@/types/layout';
 import { useToast } from '@/components/ui/Toast';
+import { useSidebar } from '@/contexts/SidebarContext';
 import UserMenu from './UserMenu';
 
 interface TopBarProps {
@@ -22,6 +23,7 @@ export default function TopBar({ user = mockUser }: TopBarProps) {
   const [notificationCount] = useState(3);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const { showDevelopingToast } = useToast();
+  const { toggleMobileMenu, isMobile, isTablet } = useSidebar();
 
   // Close user menu when clicking outside
   useEffect(() => {
@@ -49,20 +51,34 @@ export default function TopBar({ user = mockUser }: TopBarProps) {
   return (
     <header className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 fixed top-0 left-0 right-0 z-50">
       <div className="h-full px-4 flex items-center justify-between">
-        {/* Left side - Logo */}
-        <div className="flex items-center gap-4">
+        {/* Left side - Hamburger Menu + Logo */}
+        <div className="flex items-center gap-3">
+          {/* Hamburger Menu Button - Mobile/Tablet only */}
+          {(isMobile || isTablet) && (
+            <button
+              onClick={toggleMobileMenu}
+              className="p-2 -ml-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              aria-label="Toggle menu"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          )}
+
+          {/* Logo */}
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-[#C5055B] rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">O</span>
             </div>
-            <span className="text-xl font-bold text-gray-900 dark:text-white">
+            <span className="text-xl font-bold text-gray-900 dark:text-white hidden sm:block">
               OptiChain
             </span>
           </div>
         </div>
 
         {/* Right side - Notifications, User, Company Logo */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           {/* Notification Bell */}
           <button
             onClick={showDevelopingToast}
@@ -82,20 +98,20 @@ export default function TopBar({ user = mockUser }: TopBarProps) {
           <div className="relative" ref={userMenuRef}>
             <button
               onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-              className="flex items-center gap-3 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
             >
               {/* Avatar */}
-              <div className="w-10 h-10 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center overflow-hidden">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
                 {user.avatar ? (
                   <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-gray-600 dark:text-gray-300 font-medium">
+                  <span className="text-gray-600 dark:text-gray-300 font-medium text-sm sm:text-base">
                     {user.name.charAt(0).toUpperCase()}
                   </span>
                 )}
               </div>
 
-              {/* Name & Role */}
+              {/* Name & Role - Hidden on mobile */}
               <div className="hidden md:block text-left">
                 <p className="text-sm font-medium text-gray-900 dark:text-white">
                   {user.name}
@@ -105,9 +121,9 @@ export default function TopBar({ user = mockUser }: TopBarProps) {
                 </span>
               </div>
 
-              {/* Dropdown Arrow */}
+              {/* Dropdown Arrow - Hidden on mobile */}
               <svg
-                className={`w-4 h-4 text-gray-500 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`}
+                className={`w-4 h-4 text-gray-500 transition-transform hidden sm:block ${isUserMenuOpen ? 'rotate-180' : ''}`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -122,7 +138,7 @@ export default function TopBar({ user = mockUser }: TopBarProps) {
             )}
           </div>
 
-          {/* Company Logo */}
+          {/* Company Logo - Hidden on mobile */}
           <div className="hidden lg:flex items-center pl-4 dark:border-gray-700">
             <img
               src="/images/logos/aeon-maxvalu.png"
