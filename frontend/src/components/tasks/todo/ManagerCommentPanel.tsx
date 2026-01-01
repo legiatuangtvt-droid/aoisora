@@ -65,16 +65,16 @@ export default function ManagerCommentPanel({
         {/* Comments List */}
         <div className="space-y-4">
           {managerComments.map((comment) => (
-            <div key={comment.id} className="flex gap-3 bg-gray-100 dark:bg-gray-700 rounded-lg p-3">
-              {/* Avatar with initials */}
+            <div key={comment.id} className="flex gap-3">
+              {/* Avatar with initials - outside message box */}
               <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
                 <span className="text-xs font-medium text-white">
                   {getInitials(comment.author)}
                 </span>
               </div>
 
-              {/* Content */}
-              <div className="flex-1">
+              {/* Content with gray background */}
+              <div className="flex-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-3">
                 <div className="flex items-baseline gap-2">
                   <span className="font-bold text-sm text-black dark:text-white">
                     {comment.author}

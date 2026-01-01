@@ -305,3 +305,4 @@ frontend/src/
 | 2026-01-01 | UI: ManagerCommentPanel - Redesigned to match Figma (header with comment icon, card with 0.5px border #6B6B6B, rounded-[10px], avatar with initials, author name + time, reply input with send button) |
 | 2026-01-01 | UI: ManagerCommentPanel - Use material-symbols_comment-rounded.png icon instead of SVG |
 | 2026-01-01 | UI: ManagerCommentPanel - Added gray background to comment messages (bg-gray-100) |
+| 2026-01-01 | UI: ManagerCommentPanel - Avatar outside message box, only content has gray background |
