@@ -222,3 +222,4 @@ frontend/src/
 | 2026-01-01 | UI: Add "Add new sub task" button below children list to add more siblings |
 | 2026-01-01 | UI: Add Task name input field with formatting buttons (B/I/A) above sections |
 | 2026-01-01 | UI: Implement Maps tab with task hierarchy flowchart/tree view |
+| 2026-01-01 | UI: Maps tab - child task levels indented with connector lines to show parent-child hierarchy |

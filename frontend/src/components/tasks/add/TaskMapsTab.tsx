@@ -25,94 +25,95 @@ export default function TaskMapsTab({ taskLevels, onAddSubLevel }: TaskMapsTabPr
   // Get root level
   const rootLevels = taskLevels.filter((tl) => tl.parentId === null);
 
-  // Render a single task node in the map
+  // Render the task card component
+  const renderTaskCard = (taskLevel: TaskLevel, isRoot: boolean, canAddSubLevel: boolean): JSX.Element => (
+    <div
+      className={`relative flex items-center gap-3 px-4 py-3 rounded-lg border min-w-[280px] ${
+        isRoot
+          ? 'bg-pink-50 dark:bg-pink-900/20 border-pink-200 dark:border-pink-800'
+          : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+      }`}
+    >
+      {/* Icon */}
+      <div
+        className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+          isRoot
+            ? 'bg-white dark:bg-gray-800 border border-pink-200 dark:border-pink-700'
+            : 'bg-gray-100 dark:bg-gray-700'
+        }`}
+      >
+        {isRoot ? (
+          // Root task icon (grid/dashboard icon)
+          <svg className="w-5 h-5 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+          </svg>
+        ) : (
+          // Sub-task icon (arrow/branch icon)
+          <svg className="w-5 h-5 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+          </svg>
+        )}
+      </div>
+
+      {/* Title & Subtitle */}
+      <div className="flex-1">
+        <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
+          Task Level {taskLevel.level}
+        </h4>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          {taskLevel.name || LEVEL_SUBTITLES[taskLevel.level] || 'Sub task'}
+        </p>
+      </div>
+
+      {/* Add button (only for non-root and can add) */}
+      {!isRoot && canAddSubLevel && (
+        <button
+          onClick={() => onAddSubLevel(taskLevel.id)}
+          className="w-8 h-8 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center hover:bg-pink-200 dark:hover:bg-pink-800/50 transition-colors"
+        >
+          <svg className="w-4 h-4 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+        </button>
+      )}
+
+      {/* Root card: Detail dropdown */}
+      {isRoot && (
+        <button className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+          Detail
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+      )}
+    </div>
+  );
+
+  // Render a single task node in the map with proper indentation
   const renderTaskNode = (taskLevel: TaskLevel, isRoot: boolean = false): JSX.Element => {
     const children = getChildren(taskLevel.id);
     const canAddSubLevel = taskLevel.level < 5;
     const hasChildren = children.length > 0;
 
     return (
-      <div key={taskLevel.id} className="flex flex-col items-center">
+      <div key={taskLevel.id} className="flex flex-col">
         {/* Task Card */}
-        <div
-          className={`relative flex items-center gap-3 px-4 py-3 rounded-lg border min-w-[280px] ${
-            isRoot
-              ? 'bg-pink-50 dark:bg-pink-900/20 border-pink-200 dark:border-pink-800'
-              : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
-          }`}
-        >
-          {/* Icon */}
-          <div
-            className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-              isRoot
-                ? 'bg-white dark:bg-gray-800 border border-pink-200 dark:border-pink-700'
-                : 'bg-gray-100 dark:bg-gray-700'
-            }`}
-          >
-            {isRoot ? (
-              // Root task icon (grid/dashboard icon)
-              <svg className="w-5 h-5 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-              </svg>
-            ) : (
-              // Sub-task icon (arrow/branch icon)
-              <svg className="w-5 h-5 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-              </svg>
-            )}
-          </div>
+        {renderTaskCard(taskLevel, isRoot, canAddSubLevel)}
 
-          {/* Title & Subtitle */}
-          <div className="flex-1">
-            <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
-              Task Level {taskLevel.level}
-            </h4>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              {taskLevel.name || LEVEL_SUBTITLES[taskLevel.level] || 'Sub task'}
-            </p>
-          </div>
-
-          {/* Add button (only for non-root and can add) */}
-          {!isRoot && canAddSubLevel && (
-            <button
-              onClick={() => onAddSubLevel(taskLevel.id)}
-              className="w-8 h-8 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center hover:bg-pink-200 dark:hover:bg-pink-800/50 transition-colors"
-            >
-              <svg className="w-4 h-4 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-            </button>
-          )}
-
-          {/* Root card: Detail dropdown */}
-          {isRoot && (
-            <button className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
-              Detail
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-          )}
-        </div>
-
-        {/* Connection line and children */}
+        {/* Children with indentation */}
         {hasChildren && (
-          <div className="flex flex-col items-center">
-            {/* Vertical line down */}
-            <div className="w-px h-6 bg-gray-300 dark:bg-gray-600" />
+          <div className="relative ml-6 mt-2 pl-6 border-l-2 border-gray-200 dark:border-gray-600">
+            {children.map((child, index) => (
+              <div key={child.id} className="relative">
+                {/* Horizontal connector line */}
+                <div className="absolute left-0 top-5 w-6 h-px bg-gray-200 dark:bg-gray-600 -translate-x-6" />
 
-            {/* Children container */}
-            <div className="flex flex-col items-center gap-0">
-              {children.map((child, index) => (
-                <div key={child.id} className="flex flex-col items-center">
-                  {/* Connector line */}
-                  {index > 0 && <div className="w-px h-4 bg-gray-300 dark:bg-gray-600" />}
-
-                  {/* Child node */}
+                {/* Child node with margin for spacing */}
+                <div className={index > 0 ? 'mt-3' : ''}>
                   {renderTaskNode(child, false)}
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
