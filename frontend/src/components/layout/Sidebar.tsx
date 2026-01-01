@@ -8,7 +8,7 @@ import { useToast } from '@/components/ui/Toast';
 import { MenuItem } from '@/types/layout';
 
 // Routes that are implemented
-const implementedRoutes = ['/tasks/list', '/tasks/new', '/tasks/detail', '/tasks/', '/tasks/messages'];
+const implementedRoutes = ['/tasks/list', '/tasks/new', '/tasks/detail', '/tasks/', '/tasks/messages', '/tasks/todo'];
 
 // Menu items configuration with parent-child structure
 const menuItems: MenuItem[] = [
@@ -42,7 +42,7 @@ const menuItems: MenuItem[] = [
     id: 'todo',
     label: 'To-do Task',
     icon: 'check-circle',
-    route: '/todo',
+    route: '/tasks/todo',
   },
   {
     id: 'library',
@@ -125,7 +125,14 @@ export default function Sidebar() {
       const taskDetailPattern = /^\/tasks\/(\d+|detail)$/;
       return taskDetailPattern.test(pathname);
     }
-    return pathname === route || pathname.startsWith(route + '/');
+    // Exact match first
+    if (pathname === route) return true;
+    // For parent routes, only match if not a sibling menu item
+    // e.g., /tasks should not highlight when on /tasks/todo (which is a separate menu item)
+    if (route === '/tasks' && pathname.startsWith('/tasks/todo')) {
+      return false;
+    }
+    return pathname.startsWith(route + '/');
   };
 
   const isImplemented = (route: string) => {
