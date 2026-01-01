@@ -148,7 +148,7 @@ export default function Sidebar() {
     setExpandedMenus(prev =>
       prev.includes(menuId)
         ? prev.filter(id => id !== menuId)
-        : [...prev, menuId]
+        : [menuId] // Only keep the newly opened menu, close all others
     );
   };
 
