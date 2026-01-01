@@ -287,3 +287,4 @@ frontend/src/
 | 2026-01-01 | Implemented full UI: TypeScript types, mock data, all components (WeekHeader, OverallWeekPanel, LastWeekReviewPanel, FilterBar, CalendarView, ManagerCommentPanel) |
 | 2026-01-01 | Added sidebar menu navigation: To-do Task menu item with route /tasks/todo |
 | 2026-01-01 | Layout: Row 1 = Overview panels, Row 2 = Calendar + Manager Comments side by side |
+| 2026-01-01 | UI: OverallWeekPanel - collapsible card with icon, vertical borders in table |
