@@ -91,8 +91,8 @@ export function MenuIcon({ name, className = '' }: { name: string; className?: s
         alt={name}
         width={size}
         height={size}
-        className={`flex-shrink-0 ${className.replace(/w-\d+\s*h-\d+/, '')}`}
-        style={{ width: 'auto', height: 'auto' }}
+        className={`flex-shrink-0 ${className}`}
+        style={{ width: `${size}px`, height: `${size}px`, minWidth: `${size}px`, minHeight: `${size}px` }}
       />
     );
   }
@@ -266,7 +266,7 @@ export default function Sidebar() {
               isMenuExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
             }`}
           >
-            <div className={`mt-1 space-y-1 ${showExpanded ? 'ml-4 dark:border-gray-700' : 'ml-5'}`}>
+            <div className={`mt-1 space-y-1 ${showExpanded ? 'ml-4 dark:border-gray-700' : ''}`}>
               {item.children?.map(child => renderMenuItem(child, true))}
             </div>
           </div>
@@ -274,8 +274,9 @@ export default function Sidebar() {
       );
     }
 
-    const childCollapsedStyle = isChild && !showExpanded ? 'pl-1' : '';
     const implemented = isImplemented(item.route);
+    // When sidebar is collapsed, child items have slight left padding to show hierarchy
+    const collapsedChildStyle = isChild && !showExpanded ? 'pl-5 pr-2' : 'px-3';
 
     return (
       <Link
@@ -283,7 +284,7 @@ export default function Sidebar() {
         href={implemented ? item.route : '#'}
         onClick={(e) => handleNavigation(e, item.route, isChild, implemented)}
         title={!showExpanded ? item.label : undefined}
-        className={`group relative flex items-center gap-3 px-3 py-3 md:py-2.5 rounded-lg transition-all duration-200 ${isChild && showExpanded ? 'ml-2' : ''} ${childCollapsedStyle} ${isActive(item.route)
+        className={`group relative flex items-center gap-3 py-3 md:py-2.5 rounded-lg transition-all duration-200 ${collapsedChildStyle} ${isChild && showExpanded ? 'ml-2 px-3' : ''} ${isActive(item.route)
             ? 'bg-pink-50 dark:bg-pink-900/20 text-[#C5055B] dark:text-pink-400'
             : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
           }`}
@@ -300,7 +301,7 @@ export default function Sidebar() {
 
         <MenuIcon
           name={item.icon}
-          className={`${isChild && !showExpanded ? 'w-4 h-4' : 'w-5 h-5'} flex-shrink-0 transition-transform duration-200 group-hover:scale-110 ${isActive(item.route) ? 'text-[#C5055B] dark:text-pink-400' : ''}`}
+          className={`${isChild ? 'w-4 h-4' : 'w-5 h-5'} flex-shrink-0 transition-transform duration-200 group-hover:scale-110 ${isActive(item.route) ? 'text-[#C5055B] dark:text-pink-400' : ''}`}
         />
         {showExpanded && (
           <span className="text-sm font-medium whitespace-nowrap overflow-hidden">

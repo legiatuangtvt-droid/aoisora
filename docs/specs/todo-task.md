@@ -338,3 +338,6 @@ frontend/src/
 | 2026-01-02 | Responsive: ManagerCommentPanel - tab navigation on mobile (Manager/Other), both sections on desktop |
 | 2026-01-02 | Responsive: TodoTaskPage layout - stacked panels on mobile, tab navigation for Calendar/Comments, 12-col grid on desktop |
 | 2026-01-02 | Responsive: FAB (Floating Action Button) for Add New task on mobile, positioned bottom-right above bottom nav |
+| 2026-01-02 | Fix: Sidebar MenuIcon - fixed size with minWidth/minHeight to prevent shrinking |
+| 2026-01-02 | UI: Sidebar child menu icons smaller (w-4 h-4 = 16px) than parent icons (w-5 h-5 = 20px) to show hierarchy |
+| 2026-01-02 | UI: Sidebar collapsed child menu items - slight left padding (pl-5) to indicate parent-child relationship |
