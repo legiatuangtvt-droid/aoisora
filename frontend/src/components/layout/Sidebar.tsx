@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSidebar } from '@/contexts/SidebarContext';
 import { useNavigation } from '@/contexts/NavigationContext';
 import { useToast } from '@/components/ui/Toast';
@@ -16,7 +17,7 @@ const menuItems: MenuItem[] = [
   {
     id: 'hq-store',
     label: 'Task list HQ-Store',
-    icon: 'clipboard-list',
+    icon: 'gg-list',
     route: '/tasks',
     children: [
       {
@@ -65,14 +66,30 @@ const menuItems: MenuItem[] = [
   },
 ];
 
+// PNG icon paths mapping
+const pngIconMap: Record<string, string> = {
+  'gg-list': '/icons/gg_list.png',
+};
+
 // Icon component
 function MenuIcon({ name, className = '' }: { name: string; className?: string }) {
+  // Check if it's a PNG icon
+  if (pngIconMap[name]) {
+    // Extract size from className (e.g., "w-5 h-5" -> 20)
+    const sizeMatch = className.match(/w-(\d+)/);
+    const size = sizeMatch ? parseInt(sizeMatch[1]) * 4 : 20;
+    return (
+      <Image
+        src={pngIconMap[name]}
+        alt={name}
+        width={size}
+        height={size}
+        className={`flex-shrink-0 ${className.replace(/w-\d+\s*h-\d+/, '')}`}
+      />
+    );
+  }
+
   const iconMap: Record<string, JSX.Element> = {
-    'clipboard-list': (
-      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-      </svg>
-    ),
     'list': (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
