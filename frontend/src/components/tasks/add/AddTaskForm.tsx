@@ -11,6 +11,8 @@ import ScopeSection from './ScopeSection';
 import ApprovalSection from './ApprovalSection';
 
 interface AddTaskFormProps {
+  taskLevels: TaskLevel[];
+  onTaskLevelsChange: (taskLevels: TaskLevel[]) => void;
   onSaveDraft: (taskLevels: TaskLevel[]) => void;
   onSubmit: (taskLevels: TaskLevel[]) => void;
   isSubmitting?: boolean;
@@ -21,12 +23,21 @@ interface AddTaskFormProps {
 type SectionId = 'A' | 'B' | 'C' | 'D';
 
 export default function AddTaskForm({
+  taskLevels,
+  onTaskLevelsChange,
   onSaveDraft,
   onSubmit,
   isSubmitting = false,
   isSavingDraft = false,
 }: AddTaskFormProps) {
-  const [taskLevels, setTaskLevels] = useState<TaskLevel[]>([createEmptyTaskLevel(1)]);
+  // Use setter function that calls parent callback
+  const setTaskLevels = (updater: TaskLevel[] | ((prev: TaskLevel[]) => TaskLevel[])) => {
+    if (typeof updater === 'function') {
+      onTaskLevelsChange(updater(taskLevels));
+    } else {
+      onTaskLevelsChange(updater);
+    }
+  };
 
   // Track which section is expanded for each task level (accordion behavior)
   // Key: taskLevelId, Value: expanded sectionId or null

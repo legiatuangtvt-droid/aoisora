@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { TaskLevel } from '@/types/addTask';
+import { createEmptyTaskLevel } from '@/data/mockAddTask';
 import AddTaskForm from '@/components/tasks/add/AddTaskForm';
+import TaskMapsTab from '@/components/tasks/add/TaskMapsTab';
 import { useToast } from '@/components/ui/Toast';
 
 type TabType = 'detail' | 'maps';
@@ -15,6 +17,18 @@ export default function NewTaskPage() {
   const [activeTab, setActiveTab] = useState<TabType>('detail');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
+
+  // Lifted state for task levels - shared between Detail and Maps tabs
+  const [taskLevels, setTaskLevels] = useState<TaskLevel[]>([createEmptyTaskLevel(1)]);
+
+  // Add sub-level handler for Maps tab
+  const handleAddSubLevel = useCallback((parentId: string) => {
+    const parent = taskLevels.find((tl) => tl.id === parentId);
+    if (!parent || parent.level >= 5) return;
+
+    const newTaskLevel = createEmptyTaskLevel(parent.level + 1, parentId);
+    setTaskLevels((prev) => [...prev, newTaskLevel]);
+  }, [taskLevels]);
 
   const handleSaveDraft = async (taskLevels: TaskLevel[]) => {
     setIsSavingDraft(true);
@@ -90,33 +104,18 @@ export default function NewTaskPage() {
         {/* Tab Content */}
         {activeTab === 'detail' ? (
           <AddTaskForm
+            taskLevels={taskLevels}
+            onTaskLevelsChange={setTaskLevels}
             onSaveDraft={handleSaveDraft}
             onSubmit={handleSubmit}
             isSubmitting={isSubmitting}
             isSavingDraft={isSavingDraft}
           />
         ) : (
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
-            <svg
-              className="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"
-              />
-            </svg>
-            <p className="text-gray-500 dark:text-gray-400">
-              Task hierarchy map will be displayed here
-            </p>
-            <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
-              Add task levels in the Detail tab to see the hierarchy
-            </p>
-          </div>
+          <TaskMapsTab
+            taskLevels={taskLevels}
+            onAddSubLevel={handleAddSubLevel}
+          />
         )}
       </div>
     </div>
