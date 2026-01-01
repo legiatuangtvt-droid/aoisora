@@ -121,13 +121,13 @@ export default function Sidebar() {
   const { showDevelopingToast } = useToast();
   const sidebarRef = useRef<HTMLElement>(null);
 
-  // Handle click outside to collapse menus
+  // Handle click outside to collapse sidebar
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
-        // Click is outside sidebar, collapse all menus
-        if (expandedMenus.length > 0) {
-          collapseAllMenus();
+        // Click is outside sidebar, collapse sidebar if expanded
+        if (isExpanded) {
+          toggleSidebar();
         }
       }
     };
@@ -136,7 +136,7 @@ export default function Sidebar() {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [expandedMenus, collapseAllMenus]);
+  }, [isExpanded, toggleSidebar]);
 
   const isActive = (route: string) => {
     // Special case: /tasks/detail should be active for /tasks/[id] routes
