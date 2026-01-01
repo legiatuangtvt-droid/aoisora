@@ -291,3 +291,5 @@ frontend/src/
 | 2026-01-01 | UI: LastWeekReviewPanel - same collapsible style, use stash_last-updates-solid.png icon |
 | 2026-01-01 | UI: Sync expand/collapse state between OverallWeek and LastWeekReview panels |
 | 2026-01-01 | UI: FilterBar User selector - added user icon (flowbite_user-solid.png) |
+| 2026-01-01 | UI: FilterBar Status selector - added filter icon (flowbite_filter-outline.png) |
+| 2026-01-01 | UI: FilterBar Type selector - added types icon (gridicons_types.png) |

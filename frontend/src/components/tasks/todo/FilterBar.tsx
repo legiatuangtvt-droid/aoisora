@@ -55,11 +55,18 @@ export default function FilterBar({ filters, onFiltersChange }: FilterBarProps) 
       </div>
 
       {/* Status Dropdown */}
-      <div className="relative">
+      <div className="relative flex items-center">
+        <Image
+          src="/icons/flowbite_filter-outline.png"
+          alt="Filter"
+          width={16}
+          height={16}
+          className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+        />
         <select
           value={filters.status}
           onChange={(e) => handleStatusChange(e.target.value)}
-          className="appearance-none pl-3 pr-8 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 cursor-pointer"
+          className="appearance-none pl-9 pr-8 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 cursor-pointer"
         >
           {statusOptions.map((option) => (
             <option key={option.value} value={option.value}>
@@ -78,11 +85,18 @@ export default function FilterBar({ filters, onFiltersChange }: FilterBarProps) 
       </div>
 
       {/* Type Dropdown */}
-      <div className="relative">
+      <div className="relative flex items-center">
+        <Image
+          src="/icons/gridicons_types.png"
+          alt="Types"
+          width={16}
+          height={16}
+          className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+        />
         <select
           value={filters.type}
           onChange={(e) => handleTypeChange(e.target.value)}
-          className="appearance-none pl-3 pr-8 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 cursor-pointer"
+          className="appearance-none pl-9 pr-8 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 cursor-pointer"
         >
           {typeOptions.map((option) => (
             <option key={option.value} value={option.value}>
