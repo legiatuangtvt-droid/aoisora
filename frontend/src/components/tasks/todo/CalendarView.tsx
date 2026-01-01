@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { DailyTaskData, WeekInfo, TodoTask } from '@/types/todoTask';
 import DailyTaskRow from './DailyTaskRow';
 
@@ -36,9 +37,12 @@ export default function CalendarView({
         <div className="flex items-center gap-3">
           {/* Calendar Icon */}
           <div className="w-8 h-8 rounded-lg bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
-            <svg className="w-4 h-4 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
+            <Image
+              src="/icons/mdi_invoice-text-scheduled-outline.png"
+              alt="Calendar"
+              width={20}
+              height={20}
+            />
           </div>
           <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
             Week {weekInfo.weekNumber}, {weekInfo.year}
