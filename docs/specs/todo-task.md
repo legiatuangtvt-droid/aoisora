@@ -288,3 +288,5 @@ frontend/src/
 | 2026-01-01 | Added sidebar menu navigation: To-do Task menu item with route /tasks/todo |
 | 2026-01-01 | Layout: Row 1 = Overview panels, Row 2 = Calendar + Manager Comments side by side |
 | 2026-01-01 | UI: OverallWeekPanel - collapsible card with icon, vertical borders in table |
+| 2026-01-01 | UI: LastWeekReviewPanel - same collapsible style, use stash_last-updates-solid.png icon |
+| 2026-01-01 | UI: Sync expand/collapse state between OverallWeek and LastWeekReview panels |

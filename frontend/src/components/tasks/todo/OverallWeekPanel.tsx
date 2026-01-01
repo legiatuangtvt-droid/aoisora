@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import Image from 'next/image';
 import { WeekOverviewTask } from '@/types/todoTask';
 
@@ -8,16 +7,17 @@ interface OverallWeekPanelProps {
   weekNumber: number;
   tasks: WeekOverviewTask[];
   onTargetChange?: (taskId: string, value: string) => void;
+  isExpanded: boolean;
+  onToggle: () => void;
 }
 
-export default function OverallWeekPanel({ weekNumber, tasks, onTargetChange }: OverallWeekPanelProps) {
-  const [isExpanded, setIsExpanded] = useState(true);
+export default function OverallWeekPanel({ weekNumber, tasks, onTargetChange, isExpanded, onToggle }: OverallWeekPanelProps) {
 
   return (
     <div className="bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
       {/* Panel Header - Clickable */}
       <button
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={onToggle}
         className="w-full flex items-center justify-between px-4 py-4"
       >
         <div className="flex items-center gap-3">
@@ -51,7 +51,7 @@ export default function OverallWeekPanel({ weekNumber, tasks, onTargetChange }: 
         <div className="bg-white dark:bg-gray-700">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="bg-pink-50 dark:bg-pink-900/20">
+              <tr className="bg-pink-50 dark:bg-pink-900/20 h-10">
                 <th className="px-4 py-2 text-left text-xs font-medium text-pink-700 dark:text-pink-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600">
                   W{weekNumber} Task
                 </th>
@@ -70,14 +70,14 @@ export default function OverallWeekPanel({ weekNumber, tasks, onTargetChange }: 
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
               {tasks.map((task) => (
-                <tr key={task.id} className="hover:bg-gray-50 dark:hover:bg-gray-600/50">
-                  <td className="px-4 py-3 text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600">
+                <tr key={task.id} className="hover:bg-gray-50 dark:hover:bg-gray-600/50 h-12">
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600">
                     {task.name}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 border-r border-gray-200 dark:border-gray-600">
+                  <td className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 border-r border-gray-200 dark:border-gray-600">
                     {task.method}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-2">
                     <input
                       type="text"
                       value={task.target}

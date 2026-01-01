@@ -27,6 +27,7 @@ export default function TodoTaskPage() {
     status: 'all',
     type: 'all',
   });
+  const [isPanelsExpanded, setIsPanelsExpanded] = useState(true);
 
   const handleAddNew = () => {
     router.push('/tasks/new');
@@ -89,10 +90,14 @@ export default function TodoTaskPage() {
             weekNumber={mockWeekInfo.weekNumber}
             tasks={mockOverviewTasks}
             onTargetChange={handleTargetChange}
+            isExpanded={isPanelsExpanded}
+            onToggle={() => setIsPanelsExpanded(!isPanelsExpanded)}
           />
           <LastWeekReviewPanel
             weekNumber={mockWeekInfo.weekNumber - 1}
             tasks={mockLastWeekTasks}
+            isExpanded={isPanelsExpanded}
+            onToggle={() => setIsPanelsExpanded(!isPanelsExpanded)}
           />
         </div>
 
