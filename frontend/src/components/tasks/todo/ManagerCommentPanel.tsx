@@ -65,7 +65,7 @@ export default function ManagerCommentPanel({
         {/* Comments List */}
         <div className="space-y-4">
           {managerComments.map((comment) => (
-            <div key={comment.id} className="flex gap-3">
+            <div key={comment.id} className="flex gap-3 bg-gray-100 dark:bg-gray-700 rounded-lg p-3">
               {/* Avatar with initials */}
               <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
                 <span className="text-xs font-medium text-white">
