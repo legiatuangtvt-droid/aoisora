@@ -144,97 +144,111 @@ export default function AddTaskForm({
       return taskLevels.filter((tl) => tl.parentId === parentId);
     };
 
-    const renderTaskLevel = (taskLevel: TaskLevel, depth = 0): JSX.Element => {
-      const children = getChildren(taskLevel.id);
+    const renderTaskLevelCard = (taskLevel: TaskLevel): JSX.Element => {
       const canAddSubLevel = taskLevel.level < 5;
       const canDelete = taskLevels.length > 1;
 
       return (
-        <div key={taskLevel.id} style={{ marginLeft: depth > 0 ? '24px' : 0 }}>
-          {/* Task Level Card with Sections inside */}
-          <TaskLevelCard
-            taskLevel={taskLevel}
-            onNameChange={(name) => handleNameChange(taskLevel.id, name)}
-            onAddSubLevel={() => handleAddSubLevel(taskLevel.id)}
-            onDelete={() => handleDeleteTaskLevel(taskLevel.id)}
-            canAddSubLevel={canAddSubLevel}
-            canDelete={canDelete}
+        <TaskLevelCard
+          taskLevel={taskLevel}
+          onNameChange={(name) => handleNameChange(taskLevel.id, name)}
+          onAddSubLevel={() => handleAddSubLevel(taskLevel.id)}
+          onDelete={() => handleDeleteTaskLevel(taskLevel.id)}
+          canAddSubLevel={canAddSubLevel}
+          canDelete={canDelete}
+        >
+          {/* A. Task Information */}
+          <SectionCard
+            id="A"
+            title="Task Information"
+            icon={<TaskInfoIcon />}
+            isExpanded={expandedSections[taskLevel.id] === 'A'}
+            onToggle={() => handleSectionToggle(taskLevel.id, 'A')}
           >
-            {/* A. Task Information */}
-            <SectionCard
-              id="A"
-              title="Task Information"
-              icon={<TaskInfoIcon />}
-              isExpanded={expandedSections[taskLevel.id] === 'A'}
-              onToggle={() => handleSectionToggle(taskLevel.id, 'A')}
-            >
-              <TaskInfoSection
-                data={taskLevel.taskInformation}
-                onChange={(data) => handleTaskInfoChange(taskLevel.id, data)}
-                taskTypeOptions={mockMasterData.taskTypes}
-                executionTimeOptions={mockMasterData.executionTimes}
-              />
-            </SectionCard>
+            <TaskInfoSection
+              data={taskLevel.taskInformation}
+              onChange={(data) => handleTaskInfoChange(taskLevel.id, data)}
+              taskTypeOptions={mockMasterData.taskTypes}
+              executionTimeOptions={mockMasterData.executionTimes}
+            />
+          </SectionCard>
 
-            {/* B. Instructions */}
-            <SectionCard
-              id="B"
-              title="Instructions"
-              icon={<InstructionsIcon />}
-              isExpanded={expandedSections[taskLevel.id] === 'B'}
-              onToggle={() => handleSectionToggle(taskLevel.id, 'B')}
-            >
-              <InstructionsSection
-                data={taskLevel.instructions}
-                onChange={(data) => handleInstructionsChange(taskLevel.id, data)}
-                taskTypeOptions={mockMasterData.instructionTaskTypes}
-              />
-            </SectionCard>
+          {/* B. Instructions */}
+          <SectionCard
+            id="B"
+            title="Instructions"
+            icon={<InstructionsIcon />}
+            isExpanded={expandedSections[taskLevel.id] === 'B'}
+            onToggle={() => handleSectionToggle(taskLevel.id, 'B')}
+          >
+            <InstructionsSection
+              data={taskLevel.instructions}
+              onChange={(data) => handleInstructionsChange(taskLevel.id, data)}
+              taskTypeOptions={mockMasterData.instructionTaskTypes}
+            />
+          </SectionCard>
 
-            {/* C. Scope */}
-            <SectionCard
-              id="C"
-              title="Scope"
-              icon={<ScopeIcon />}
-              isExpanded={expandedSections[taskLevel.id] === 'C'}
-              onToggle={() => handleSectionToggle(taskLevel.id, 'C')}
-            >
-              <ScopeSection
-                data={taskLevel.scope}
-                onChange={(data) => handleScopeChange(taskLevel.id, data)}
-                regionOptions={mockMasterData.regions}
-                zoneOptions={getZoneOptions(taskLevel.scope.regionId)}
-                areaOptions={getAreaOptions(taskLevel.scope.zoneId)}
-                storeOptions={getStoreOptions(taskLevel.scope.areaId)}
-                storeLeaderOptions={mockMasterData.storeLeaders}
-                staffOptions={mockMasterData.staff}
-              />
-            </SectionCard>
+          {/* C. Scope */}
+          <SectionCard
+            id="C"
+            title="Scope"
+            icon={<ScopeIcon />}
+            isExpanded={expandedSections[taskLevel.id] === 'C'}
+            onToggle={() => handleSectionToggle(taskLevel.id, 'C')}
+          >
+            <ScopeSection
+              data={taskLevel.scope}
+              onChange={(data) => handleScopeChange(taskLevel.id, data)}
+              regionOptions={mockMasterData.regions}
+              zoneOptions={getZoneOptions(taskLevel.scope.regionId)}
+              areaOptions={getAreaOptions(taskLevel.scope.zoneId)}
+              storeOptions={getStoreOptions(taskLevel.scope.areaId)}
+              storeLeaderOptions={mockMasterData.storeLeaders}
+              staffOptions={mockMasterData.staff}
+            />
+          </SectionCard>
 
-            {/* D. Approval Process */}
-            <SectionCard
-              id="D"
-              title="Approval Process"
-              icon={<ApprovalIcon />}
-              isExpanded={expandedSections[taskLevel.id] === 'D'}
-              onToggle={() => handleSectionToggle(taskLevel.id, 'D')}
-            >
-              <ApprovalSection
-                data={taskLevel.approval}
-                onChange={(data) => handleApprovalChange(taskLevel.id, data)}
-                initiatorOptions={mockMasterData.initiators}
-                leaderOptions={mockMasterData.leaders}
-                hodOptions={mockMasterData.hods}
-              />
-            </SectionCard>
-          </TaskLevelCard>
+          {/* D. Approval Process */}
+          <SectionCard
+            id="D"
+            title="Approval Process"
+            icon={<ApprovalIcon />}
+            isExpanded={expandedSections[taskLevel.id] === 'D'}
+            onToggle={() => handleSectionToggle(taskLevel.id, 'D')}
+          >
+            <ApprovalSection
+              data={taskLevel.approval}
+              onChange={(data) => handleApprovalChange(taskLevel.id, data)}
+              initiatorOptions={mockMasterData.initiators}
+              leaderOptions={mockMasterData.leaders}
+              hodOptions={mockMasterData.hods}
+            />
+          </SectionCard>
+        </TaskLevelCard>
+      );
+    };
 
-          {/* Render children */}
-          {children.map((child) => (
-            <div key={child.id} className="mt-4">
-              {renderTaskLevel(child, depth + 1)}
-            </div>
-          ))}
+    const renderTaskLevel = (taskLevel: TaskLevel): JSX.Element => {
+      const children = getChildren(taskLevel.id);
+
+      if (children.length === 0) {
+        return (
+          <div key={taskLevel.id}>
+            {renderTaskLevelCard(taskLevel)}
+          </div>
+        );
+      }
+
+      // Render parent and children horizontally
+      return (
+        <div key={taskLevel.id} className="flex items-start gap-4">
+          {/* Parent task level */}
+          {renderTaskLevelCard(taskLevel)}
+
+          {/* Children task levels */}
+          <div className="flex flex-col gap-4">
+            {children.map((child) => renderTaskLevel(child))}
+          </div>
         </div>
       );
     };

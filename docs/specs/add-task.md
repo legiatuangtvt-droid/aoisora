@@ -66,9 +66,13 @@
 └─────────────────────────────────────────────────────┘
 ```
 
-*Card dimensions: 536px width, positioned at the left side.*
+*Card dimensions: 536px width.*
 
-*Accordion behavior: Only 1 section expanded at a time. Default: all 4 sections collapsed. Light red highlight for sections with incomplete required data.*
+*Layout: Task levels display horizontally. Level 2 appears beside (right of) Level 1, Level 3 beside Level 2, etc. Multiple children of the same parent stack vertically.*
+
+*Accordion behavior: Only 1 section expanded at a time per task level. Default: all sections collapsed. Light red highlight for sections with incomplete required data.*
+
+*Section header: Darker background (gray-100) to distinguish from content area (gray-50) when expanded.*
 
 #### B.2. Task Level 1 (Main Task)
 
@@ -211,3 +215,6 @@ frontend/src/
 | 2025-12-31 | Restore TaskLevelCard to left side position |
 | 2025-12-31 | Redesign UI sections A-D as separate cards with SectionCard wrapper |
 | 2026-01-01 | Refactor: Move sections inside TaskLevelCard container - unified border around header and sections |
+| 2026-01-01 | UI: Section header darker background (gray-100) to distinguish from content |
+| 2026-01-01 | UI: Delete menu always visible (disabled when only 1 level) |
+| 2026-01-01 | Layout: Task levels display horizontally (Level 2 beside Level 1) |
