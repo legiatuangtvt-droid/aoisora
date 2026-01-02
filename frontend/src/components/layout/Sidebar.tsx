@@ -10,7 +10,7 @@ import { useToast } from '@/components/ui/Toast';
 import { MenuItem } from '@/types/layout';
 
 // Routes that are implemented
-const implementedRoutes = ['/tasks/list', '/tasks/new', '/tasks/detail', '/tasks/', '/tasks/messages', '/tasks/todo', '/tasks/library', '/users/info'];
+const implementedRoutes = ['/tasks/list', '/tasks/new', '/tasks/detail', '/tasks/', '/tasks/messages', '/tasks/todo', '/tasks/library', '/tasks/info', '/tasks/store-info'];
 
 // Menu items configuration with parent-child structure
 export const menuItems: MenuItem[] = [
@@ -68,13 +68,13 @@ export const menuItems: MenuItem[] = [
         id: 'user-info',
         label: 'User information',
         icon: 'user-cog',
-        route: '/users/info',
+        route: '/tasks/info',
       },
       {
         id: 'store-info',
         label: 'Store information',
         icon: 'store-cog',
-        route: '/users/store',
+        route: '/tasks/store-info',
       },
     ],
   },

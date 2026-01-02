@@ -12,7 +12,7 @@
 | 1 | Tên màn hình | Thông tin cửa hàng (Store Information Screen) |
 | 2 | Mã màn hình | SCR_STORE_INFO |
 | 3 | Đối tượng sử dụng | Nhân viên HQ (Headquarter) có quyền quản lý |
-| 4 | Điều hướng truy cập | Từ Sidebar Menu: "User Management" → "Store Information" |
+| 4 | Điều hướng truy cập | Từ Sidebar Menu: "User Management" → "Store Information" → Route: `/tasks/store-info` |
 
 **Mục đích:** Màn hình quản lý thông tin cửa hàng theo khu vực địa lý (Regions/Areas), quản lý danh sách stores và nhân viên tại mỗi store.
 
@@ -279,3 +279,6 @@ StoreInformationPage/
 |------|--------|
 | 2026-01-02 | Initial specification created |
 | 2026-01-02 | Implemented Store Information screen with all components |
+| 2026-01-02 | Updated navigation route from `/users/store-info` to `/tasks/store-info` |
+| 2026-01-02 | Updated icons: Permissions button (user+gear), Import Excel button (file+arrow), Staff icon |
+| 2026-01-02 | Fixed badge G3 positioning near avatar |
