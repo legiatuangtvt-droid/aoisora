@@ -6,7 +6,6 @@ import { StoreDepartment } from '@/types/storeInfo';
 interface StoreDepartmentCardProps {
   department: StoreDepartment;
   onToggle: (departmentId: string) => void;
-  hasConnector?: boolean;
 }
 
 // Department icons - inline SVG for dynamic colors
@@ -40,19 +39,12 @@ const DepartmentIcon: React.FC<{ icon: string; color: string }> = ({ icon, color
 const StoreDepartmentCard: React.FC<StoreDepartmentCardProps> = ({
   department,
   onToggle,
-  hasConnector = true,
 }) => {
   return (
-    <div className="relative">
-      {/* Connector Line */}
-      {hasConnector && (
-        <div className="absolute left-0 top-1/2 w-5 h-px bg-[#9B9B9B]" />
-      )}
-
-      <div
-        className="ml-10 flex items-center justify-between px-4 py-5 bg-white border border-[#9B9B9B] rounded-[10px] cursor-pointer hover:bg-gray-50 transition-colors"
-        onClick={() => onToggle(department.id)}
-      >
+    <div
+      className="flex items-center justify-between px-4 py-5 bg-white border border-[#9B9B9B] rounded-[10px] cursor-pointer hover:bg-gray-50 transition-colors"
+      onClick={() => onToggle(department.id)}
+    >
         {/* Left Section */}
         <div className="flex items-center gap-2.5">
           {/* Department Icon */}
@@ -94,7 +86,6 @@ const StoreDepartmentCard: React.FC<StoreDepartmentCardProps> = ({
             />
           </svg>
         </button>
-      </div>
     </div>
   );
 };
