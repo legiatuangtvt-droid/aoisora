@@ -63,6 +63,20 @@ export const menuItems: MenuItem[] = [
     label: 'User management',
     icon: 'user-management',
     route: '/users',
+    children: [
+      {
+        id: 'user-info',
+        label: 'User information',
+        icon: 'user-cog',
+        route: '/users/info',
+      },
+      {
+        id: 'store-info',
+        label: 'Store information',
+        icon: 'store-cog',
+        route: '/users/store',
+      },
+    ],
   },
 ];
 
@@ -76,23 +90,37 @@ export const pngIconMap: Record<string, string> = {
   'task-library': '/icons/tabler_library.png',
   'file-report': '/icons/mdi_file-report-outline.png',
   'user-management': '/icons/Frame 7.png',
+  'user-cog': '/icons/stash_user-cog.png',
+  'store-cog': '/icons/mdi_store-cog-outline.png',
 };
 
 // Icon component
-export function MenuIcon({ name, className = '' }: { name: string; className?: string }) {
+export function MenuIcon({ name, className = '', isActive = false }: { name: string; className?: string; isActive?: boolean }) {
   // Check if it's a PNG icon
   if (pngIconMap[name]) {
     // Extract size from className (e.g., "w-5 h-5" -> 20)
     const sizeMatch = className.match(/w-(\d+)/);
     const size = sizeMatch ? parseInt(sizeMatch[1]) * 4 : 20;
+
+    // CSS filter for pink/red color (#C5055B) when active
+    // Default: grayscale with slight opacity for gray look
+    const activeFilter = 'invert(15%) sepia(95%) saturate(5000%) hue-rotate(330deg) brightness(85%) contrast(105%)';
+    const defaultFilter = 'invert(45%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(95%) contrast(90%)';
+
     return (
       <Image
         src={pngIconMap[name]}
         alt={name}
         width={size}
         height={size}
-        className={`flex-shrink-0 ${className}`}
-        style={{ width: `${size}px`, height: `${size}px`, minWidth: `${size}px`, minHeight: `${size}px` }}
+        className={`flex-shrink-0 transition-all duration-200 ${className}`}
+        style={{
+          width: `${size}px`,
+          height: `${size}px`,
+          minWidth: `${size}px`,
+          minHeight: `${size}px`,
+          filter: isActive ? activeFilter : defaultFilter,
+        }}
       />
     );
   }
@@ -244,6 +272,7 @@ export default function Sidebar() {
             <MenuIcon
               name={item.icon}
               className={`w-5 h-5 flex-shrink-0 transition-transform duration-200 group-hover:scale-110 ${active ? 'text-[#C5055B] dark:text-pink-400' : ''}`}
+              isActive={active}
             />
             {showExpanded && (
               <>
@@ -303,6 +332,7 @@ export default function Sidebar() {
         <MenuIcon
           name={item.icon}
           className={`${isChild ? 'w-4 h-4' : 'w-5 h-5'} flex-shrink-0 transition-transform duration-200 group-hover:scale-110 ${isActive(item.route) ? 'text-[#C5055B] dark:text-pink-400' : ''}`}
+          isActive={isActive(item.route)}
         />
         {showExpanded && (
           <span className="text-sm font-medium whitespace-nowrap overflow-hidden">

@@ -341,3 +341,5 @@ frontend/src/
 | 2026-01-02 | Fix: Sidebar MenuIcon - fixed size with minWidth/minHeight to prevent shrinking |
 | 2026-01-02 | UI: Sidebar child menu icons smaller (w-4 h-4 = 16px) than parent icons (w-5 h-5 = 20px) to show hierarchy |
 | 2026-01-02 | UI: Sidebar collapsed child menu items - slight left padding (pl-5) to indicate parent-child relationship |
+| 2026-01-02 | UI: Sidebar User Management - converted to parent menu with 2 children: User information (user-cog icon), Store information (store-cog icon) |
+| 2026-01-02 | UI: Sidebar MenuIcon - added isActive prop with CSS filter for color change (gray default, pink #C5055B when active) |
