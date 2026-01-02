@@ -1,24 +1,13 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { User } from '@/types/layout';
 import { useToast } from '@/components/ui/Toast';
 import { useSidebar } from '@/contexts/SidebarContext';
+import { useUser } from '@/contexts/UserContext';
 import UserMenu from './UserMenu';
 
-interface TopBarProps {
-  user?: User;
-}
-
-// Mock user for development
-const mockUser: User = {
-  id: '1',
-  name: 'Nguyen Van A',
-  email: 'nguyen.van.a@company.com',
-  role: 'admin',
-};
-
-export default function TopBar({ user = mockUser }: TopBarProps) {
+export default function TopBar() {
+  const { currentUser } = useUser();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [notificationCount] = useState(3);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -39,13 +28,25 @@ export default function TopBar({ user = mockUser }: TopBarProps) {
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
-      case 'admin':
-        return 'bg-red-100 text-red-700';
       case 'manager':
+        return 'bg-purple-100 text-purple-700';
+      case 'supervisor':
         return 'bg-blue-100 text-blue-700';
+      case 'staff':
+        return 'bg-green-100 text-green-700';
       default:
         return 'bg-gray-100 text-gray-700';
     }
+  };
+
+  // Role labels for display
+  const getRoleLabel = (role: string) => {
+    const labels: Record<string, string> = {
+      manager: 'Manager',
+      supervisor: 'Supervisor',
+      staff: 'Staff',
+    };
+    return labels[role] || role;
   };
 
   return (
@@ -102,22 +103,18 @@ export default function TopBar({ user = mockUser }: TopBarProps) {
             >
               {/* Avatar */}
               <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
-                {user.avatar ? (
-                  <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-gray-600 dark:text-gray-300 font-medium text-sm sm:text-base">
-                    {user.name.charAt(0).toUpperCase()}
-                  </span>
-                )}
+                <span className="text-gray-600 dark:text-gray-300 font-medium text-sm sm:text-base">
+                  {currentUser.staff_name.charAt(0).toUpperCase()}
+                </span>
               </div>
 
               {/* Name & Role - Hidden on mobile */}
               <div className="hidden md:block text-left">
                 <p className="text-sm font-medium text-gray-900 dark:text-white">
-                  {user.name}
+                  {currentUser.staff_name}
                 </p>
-                <span className={`text-xs px-2 py-0.5 rounded-full ${getRoleBadgeColor(user.role)}`}>
-                  {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                <span className={`text-xs px-2 py-0.5 rounded-full ${getRoleBadgeColor(currentUser.role)}`}>
+                  {getRoleLabel(currentUser.role)}
                 </span>
               </div>
 
