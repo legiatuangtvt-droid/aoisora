@@ -1,16 +1,32 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { Department, DepartmentId } from '@/types/userInfo';
 
 interface DepartmentCardProps {
   department: Department;
   onToggle: (departmentId: DepartmentId) => void;
-  showConnector?: boolean;
 }
 
-// Department icons
+// Department icons - supports both file paths and icon names
 const DepartmentIcon: React.FC<{ icon: string; color: string }> = ({ icon, color }) => {
+  // Check if icon is a file path (starts with / or contains .)
+  const isFilePath = icon.startsWith('/') || icon.includes('.');
+
+  if (isFilePath) {
+    return (
+      <Image
+        src={icon}
+        alt="department icon"
+        width={24}
+        height={24}
+        className="w-6 h-6"
+      />
+    );
+  }
+
+  // Fallback to inline SVG icons for backward compatibility
   const iconMap: Record<string, React.ReactNode> = {
     admin: (
       <svg className="w-6 h-6" viewBox="0 0 24 24" fill={color}>
@@ -51,53 +67,45 @@ const DepartmentIcon: React.FC<{ icon: string; color: string }> = ({ icon, color
 const DepartmentCard: React.FC<DepartmentCardProps> = ({
   department,
   onToggle,
-  showConnector = true,
 }) => {
   return (
-    <div className="relative">
-      {/* Connector line */}
-      {showConnector && (
-        <div className="absolute -left-5 top-1/2 w-5 h-px bg-[#9B9B9B]" />
-      )}
-
-      <div
-        className="bg-white border border-[#9B9B9B] rounded-[10px] p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
-        onClick={() => onToggle(department.id)}
-      >
-        <div className="flex items-center gap-3">
-          {/* Department Icon */}
-          <div
-            className="w-9 h-9 rounded-[5px] flex items-center justify-center"
-            style={{ backgroundColor: department.iconBg }}
-          >
-            <DepartmentIcon icon={department.icon} color={department.iconColor} />
-          </div>
-
-          {/* Department Info */}
-          <div className="flex flex-col gap-1">
-            <span className="text-base font-bold text-black">{department.name}</span>
-            <div className="flex items-center gap-2 text-[13px] text-[#6B6B6B]">
-              <span>{department.memberCount} Members</span>
-              <span className="w-[5px] h-[5px] rounded-full bg-[#6B6B6B]" />
-              <span>{department.gradeRange}</span>
-            </div>
-          </div>
+    <div
+      className="bg-white border border-[#9B9B9B] rounded-[10px] p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
+      onClick={() => onToggle(department.id)}
+    >
+      <div className="flex items-center gap-3">
+        {/* Department Icon */}
+        <div
+          className="w-9 h-9 rounded-[5px] flex items-center justify-center"
+          style={{ backgroundColor: department.iconBg }}
+        >
+          <DepartmentIcon icon={department.icon} color={department.iconColor} />
         </div>
 
-        {/* Expand/Collapse Icon */}
-        <button className="p-2 rounded-full">
-          <svg
-            className={`w-6 h-6 text-black transition-transform duration-300 ${
-              department.isExpanded ? '' : 'rotate-180'
-            }`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-          </svg>
-        </button>
+        {/* Department Info */}
+        <div className="flex flex-col gap-1">
+          <span className="text-base font-bold text-black">{department.name}</span>
+          <div className="flex items-center gap-2 text-[13px] text-[#6B6B6B]">
+            <span>{department.memberCount} Members</span>
+            <span className="w-[5px] h-[5px] rounded-full bg-[#6B6B6B]" />
+            <span>{department.gradeRange}</span>
+          </div>
+        </div>
       </div>
+
+      {/* Expand/Collapse Icon */}
+      <button className="p-2 rounded-full">
+        <svg
+          className={`w-6 h-6 text-black transition-transform duration-300 ${
+            department.isExpanded ? '' : 'rotate-180'
+          }`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+        </svg>
+      </button>
     </div>
   );
 };

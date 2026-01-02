@@ -282,9 +282,38 @@ frontend/src/
 
 ---
 
+## 8. DEPARTMENT ICONS
+
+*Các department sử dụng file SVG icon từ thư mục `/public/icons/`*
+
+| Department | Icon File | Color |
+|------------|-----------|-------|
+| Admin | `/icons/admin.svg` | #233D62 |
+| OP | `/icons/op.svg` | #0D9488 |
+| CONTROL | `/icons/control.svg` | #7C3AED |
+| IMPROVEMENT | `/icons/improvement.svg` | #2563EB |
+| HR | `/icons/hr.svg` | #E11D48 |
+| MD | `/icons/md.svg` | #D97706 |
+
+---
+
+## 9. CONNECTOR LINES
+
+*Đường kẻ liên kết (connector lines) giữa các thẻ trong hierarchy tree*
+
+| Component | Connector Position | Calculation |
+|-----------|-------------------|-------------|
+| HierarchyTree → DepartmentCard | `top-[50px]` | pt-4(16px) + p-4(16px) + half h-9(18px) |
+| DepartmentDetailView → TeamCard | `top-[48px]` | pt-4(16px) + py-3(12px) + half h-10(20px) |
+| TeamCard → MemberCard | `top-[40px]` | pt-3(12px) + py-2(8px) + half h-10(20px) |
+
+---
+
 ## CHANGELOG
 
 | Date | Change |
 |------|--------|
 | 2026-01-02 | Initial specification created |
 | 2026-01-02 | Added Department Detail View with TeamCard, MemberCard, DepartmentHeadCard components |
+| 2026-01-02 | Updated department icons to use SVG files from /public/icons/ |
+| 2026-01-02 | Fixed connector line positions to align with card centers |

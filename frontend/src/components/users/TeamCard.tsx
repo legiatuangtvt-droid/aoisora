@@ -7,15 +7,11 @@ import MemberCard from './MemberCard';
 interface TeamCardProps {
   team: Team;
   onToggle?: (teamId: string) => void;
-  showConnector?: boolean;
-  isLast?: boolean;
 }
 
 const TeamCard: React.FC<TeamCardProps> = ({
   team,
   onToggle,
-  showConnector = true,
-  isLast = false,
 }) => {
   const [showMenu, setShowMenu] = useState(false);
 
@@ -25,24 +21,10 @@ const TeamCard: React.FC<TeamCardProps> = ({
 
   // Get unique grades for display
   const gradeDisplay = team.gradeRange;
+  const membersCount = team.members.length;
 
   return (
-    <div className="relative">
-      {/* L-shaped connector line */}
-      {showConnector && (
-        <>
-          {/* Vertical line extending from parent */}
-          <div
-            className={`absolute w-px bg-[#9B9B9B] ${isLast ? 'h-[35px] top-0' : 'h-full'}`}
-            style={{ left: '-20px' }}
-          />
-          {/* Horizontal line to this card */}
-          <div
-            className="absolute h-px bg-[#9B9B9B]"
-            style={{ left: '-20px', width: '20px', top: '35px' }}
-          />
-        </>
-      )}
+    <div className="flex flex-col">
 
       {/* Team Card */}
       <div className="bg-white rounded-[10px] border border-[#E8E8E8] overflow-hidden">
@@ -177,22 +159,31 @@ const TeamCard: React.FC<TeamCardProps> = ({
         </div>
 
         {/* Expanded Members List */}
-        {team.isExpanded && team.members.length > 0 && (
+        {team.isExpanded && membersCount > 0 && (
           <div className="px-4 pb-4 pt-2 border-t border-[#E8E8E8]">
-            <div className="ml-6 pl-5 relative">
-              {/* Vertical connector for members */}
-              <div
-                className="absolute left-0 top-0 w-px bg-[#9B9B9B]"
-                style={{ height: `calc(100% - 20px)` }}
-              />
-              {team.members.map((member, index) => (
-                <MemberCard
-                  key={member.id}
-                  member={member}
-                  showConnector={true}
-                  isLast={index === team.members.length - 1}
-                />
-              ))}
+            <div className="relative ml-6 pl-6">
+              {team.members.map((member, index) => {
+                const isLastMember = index === membersCount - 1;
+
+                return (
+                  <div key={member.id} className="relative pt-3">
+                    {/* Vertical line - from top to horizontal connector position */}
+                    {/* pt-3(12px) + py-2(8px) + half of h-10(20px) = 40px */}
+                    <div className="absolute -left-6 top-0 h-[40px] w-0.5 bg-[#9B9B9B]" />
+
+                    {/* Vertical line - continues down to next sibling (not for last member) */}
+                    {!isLastMember && (
+                      <div className="absolute -left-6 top-[40px] bottom-0 w-0.5 bg-[#9B9B9B]" />
+                    )}
+
+                    {/* Horizontal connector line - from vertical line to card center */}
+                    <div className="absolute -left-6 top-[40px] w-6 h-0.5 bg-[#9B9B9B]" />
+
+                    {/* Member Card */}
+                    <MemberCard member={member} />
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

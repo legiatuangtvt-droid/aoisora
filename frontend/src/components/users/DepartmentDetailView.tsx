@@ -17,41 +17,48 @@ const DepartmentDetailView: React.FC<DepartmentDetailViewProps> = ({
   onToggleTeam,
   onAddMember,
 }) => {
-  return (
-    <div className="relative">
-      {/* Vertical connector line from top to bottom */}
-      {department.teams && department.teams.length > 0 && (
-        <div
-          className="absolute left-[21px] w-px bg-[#9B9B9B]"
-          style={{
-            top: '80px',
-            bottom: '81px',
-          }}
-        />
-      )}
+  const teamsCount = department.teams?.length || 0;
 
+  return (
+    <div className="flex flex-col">
       {/* Department Head Card */}
       {department.head && (
         <DepartmentHeadCard head={department.head} />
       )}
 
-      {/* Teams */}
-      {department.teams && department.teams.length > 0 && (
-        <div className="mt-4 ml-10 space-y-4">
-          {department.teams.map((team, index) => (
-            <TeamCard
-              key={team.id}
-              team={team}
-              onToggle={onToggleTeam}
-              showConnector={true}
-              isLast={index === department.teams!.length - 1}
-            />
-          ))}
+      {/* Teams with connector lines */}
+      {department.teams && teamsCount > 0 && (
+        <div className="relative ml-6 pl-6">
+          {department.teams.map((team, index) => {
+            const isLastTeam = index === teamsCount - 1;
+
+            return (
+              <div key={team.id} className="relative pt-4">
+                {/* Vertical line - from top to horizontal connector position */}
+                {/* pt-4(16px) + py-3(12px) + half of h-10(20px) = 48px */}
+                <div className="absolute -left-6 top-0 h-[48px] w-0.5 bg-[#9B9B9B]" />
+
+                {/* Vertical line - continues down to next sibling (not for last team) */}
+                {!isLastTeam && (
+                  <div className="absolute -left-6 top-[48px] bottom-0 w-0.5 bg-[#9B9B9B]" />
+                )}
+
+                {/* Horizontal connector line - from vertical line to card center */}
+                <div className="absolute -left-6 top-[48px] w-6 h-0.5 bg-[#9B9B9B]" />
+
+                {/* Team Card */}
+                <TeamCard
+                  team={team}
+                  onToggle={onToggleTeam}
+                />
+              </div>
+            );
+          })}
         </div>
       )}
 
       {/* Add Member Button */}
-      <div className="mt-6 ml-10">
+      <div className="mt-6 ml-12">
         <AddMemberButton onClick={onAddMember} />
       </div>
     </div>

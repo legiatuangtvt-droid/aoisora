@@ -5,34 +5,15 @@ import { Employee, JOB_GRADE_COLORS } from '@/types/userInfo';
 
 interface MemberCardProps {
   member: Employee;
-  showConnector?: boolean;
-  isLast?: boolean;
 }
 
 const MemberCard: React.FC<MemberCardProps> = ({
   member,
-  showConnector = true,
-  isLast = false,
 }) => {
   const gradeColor = JOB_GRADE_COLORS[member.jobGrade];
 
   return (
-    <div className="relative flex items-center">
-      {/* L-shaped connector line */}
-      {showConnector && (
-        <>
-          {/* Vertical line */}
-          <div
-            className={`absolute left-0 w-px bg-[#9B9B9B] ${isLast ? 'h-[50%] top-0' : 'h-full'}`}
-            style={{ left: '-20px' }}
-          />
-          {/* Horizontal line */}
-          <div
-            className="absolute h-px bg-[#9B9B9B]"
-            style={{ left: '-20px', width: '20px', top: '50%' }}
-          />
-        </>
-      )}
+    <div className="flex items-center">
 
       {/* Member Card */}
       <div className="flex items-center gap-3 py-2">
