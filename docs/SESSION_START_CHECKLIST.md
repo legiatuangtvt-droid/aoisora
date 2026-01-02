@@ -193,33 +193,86 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 
 # Quick Commands
 
+## Laragon Paths (Windows - D:\devtool\laragon)
+
 ```bash
-# Git
+# PHP
+PHP="D:\devtool\laragon\bin\php\php-8.3.28-Win32-vs16-x64\php.exe"
+
+# Composer
+COMPOSER="D:\devtool\laragon\bin\composer\composer.phar"
+
+# PostgreSQL
+PSQL="D:\devtool\laragon\bin\postgresql\pgsql-18\bin\psql.exe"
+PG_CTL="D:\devtool\laragon\bin\postgresql\pgsql-18\bin\pg_ctl.exe"
+PG_DATA="D:\devtool\laragon\data\postgresql"
+```
+
+## Git Commands
+
+```bash
 git status
 git pull
 git add .
 git commit -m "message"
 git push
+```
 
-# Frontend Development
+## Frontend Development
+
+```bash
 cd frontend
 npm install
 npm run dev
 npm run build
 npm run lint
 npm run typecheck
+```
 
-# Backend Development
+## Backend Development (with Laragon paths)
+
+```bash
 cd backend
-composer install
-php artisan serve
-php artisan migrate
-php artisan db:seed
-php artisan route:list
 
-# Database
-psql -U postgres -d aoisora
-php artisan migrate:fresh --seed  # Reset DB with seeds
+# Install dependencies
+"D:\devtool\laragon\bin\php\php-8.3.28-Win32-vs16-x64\php.exe" "D:\devtool\laragon\bin\composer\composer.phar" install
+
+# Start Laravel server
+"D:\devtool\laragon\bin\php\php-8.3.28-Win32-vs16-x64\php.exe" artisan serve
+
+# Run migrations
+"D:\devtool\laragon\bin\php\php-8.3.28-Win32-vs16-x64\php.exe" artisan migrate
+
+# Run seeders
+"D:\devtool\laragon\bin\php\php-8.3.28-Win32-vs16-x64\php.exe" artisan db:seed
+
+# List routes
+"D:\devtool\laragon\bin\php\php-8.3.28-Win32-vs16-x64\php.exe" artisan route:list
+
+# Check database connection
+"D:\devtool\laragon\bin\php\php-8.3.28-Win32-vs16-x64\php.exe" artisan db:show
+```
+
+## PostgreSQL Commands (with Laragon paths)
+
+```bash
+# Start PostgreSQL
+"D:\devtool\laragon\bin\postgresql\pgsql-18\bin\pg_ctl.exe" -D "D:\devtool\laragon\data\postgresql" start
+
+# Stop PostgreSQL
+"D:\devtool\laragon\bin\postgresql\pgsql-18\bin\pg_ctl.exe" -D "D:\devtool\laragon\data\postgresql" stop
+
+# Connect to database
+"D:\devtool\laragon\bin\postgresql\pgsql-18\bin\psql.exe" -U postgres -d aoisora
+
+# Run schema.sql
+"D:\devtool\laragon\bin\postgresql\pgsql-18\bin\psql.exe" -U postgres -d aoisora -f "d:\Project\Aura Web\database\schema.sql"
+
+# Run seed_data.sql
+"D:\devtool\laragon\bin\postgresql\pgsql-18\bin\psql.exe" -U postgres -d aoisora -f "d:\Project\Aura Web\database\seed_data.sql"
+
+# List tables
+"D:\devtool\laragon\bin\postgresql\pgsql-18\bin\psql.exe" -U postgres -d aoisora -c "\dt"
 ```
 
 ---

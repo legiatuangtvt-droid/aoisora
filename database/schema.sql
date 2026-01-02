@@ -113,6 +113,7 @@ CREATE TABLE "personal_access_tokens" (
     "token" VARCHAR(64) UNIQUE NOT NULL,
     "abilities" TEXT,
     "last_used_at" TIMESTAMP,
+    "expires_at" TIMESTAMP,
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -336,6 +337,7 @@ CREATE TABLE "manual_folders" (
     "description" TEXT,
     "icon" VARCHAR(50),
     "sort_order" INTEGER DEFAULT 0,
+    "display_order" INTEGER DEFAULT 0,
     "is_active" BOOLEAN DEFAULT true,
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
