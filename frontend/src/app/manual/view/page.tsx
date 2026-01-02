@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft,
@@ -24,7 +24,7 @@ import { getManualDocumentWithSteps, updateManualDocument } from '@/lib/api';
 import type { ManualDocumentWithSteps, ManualStep, Annotation } from '@/types/api';
 import QRCode from 'qrcode';
 
-export default function ManualViewPage() {
+function ManualViewPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const documentId = searchParams.get('id');
@@ -516,5 +516,21 @@ export default function ManualViewPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+    </div>
+  );
+}
+
+export default function ManualViewPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <ManualViewPageContent />
+    </Suspense>
   );
 }

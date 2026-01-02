@@ -239,7 +239,7 @@ export default function CreateManualDialog({
                             onClick={selectCurrentFolder}
                             className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700"
                           >
-                            Chon thu muc "{folderPath[folderPath.length - 1].folder_name}"
+                            Chon thu muc &quot;{folderPath[folderPath.length - 1].folder_name}&quot;
                           </button>
                         )}
                       </div>

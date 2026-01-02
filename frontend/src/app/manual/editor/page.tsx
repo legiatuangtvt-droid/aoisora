@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft,
@@ -48,7 +48,7 @@ interface LocalStep {
   isModified?: boolean;
 }
 
-export default function ManualEditorPage() {
+function ManualEditorPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const documentId = searchParams.get('id');
@@ -638,5 +638,21 @@ export default function ManualEditorPage() {
         />
       )}
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+    </div>
+  );
+}
+
+export default function ManualEditorPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <ManualEditorPageContent />
+    </Suspense>
   );
 }

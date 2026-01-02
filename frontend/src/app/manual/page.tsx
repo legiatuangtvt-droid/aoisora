@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { browseManualFolder, searchManual, updateManualDocument, deleteManualDocument, moveManualDocument } from '@/lib/api';
@@ -74,7 +74,7 @@ const SIDEBAR_MENU = [
   },
 ];
 
-export default function ManualPage() {
+function ManualPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const folderId = searchParams.get('folder_id');
@@ -695,5 +695,21 @@ export default function ManualPage() {
         currentFolderId={selectedDocument?.folder_id || null}
       />
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+    </div>
+  );
+}
+
+export default function ManualPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <ManualPageContent />
+    </Suspense>
   );
 }
