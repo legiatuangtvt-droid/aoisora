@@ -1,213 +1,213 @@
 # STORE INFORMATION SCREEN SPECIFICATION
 
 **Screen ID:** SCR_STORE_INFO
-**Screen Name:** Store Information Screen (Thông tin cửa hàng)
+**Screen Name:** Store Information Screen
 
 ---
 
-## 1. MÔ TẢ CHUNG (General Description)
+## 1. GENERAL DESCRIPTION
 
-| STT | Thuộc tính | Giá trị |
-|-----|------------|---------|
-| 1 | Tên màn hình | Thông tin cửa hàng (Store Information Screen) |
-| 2 | Mã màn hình | SCR_STORE_INFO |
-| 3 | Đối tượng sử dụng | Nhân viên HQ (Headquarter) có quyền quản lý |
-| 4 | Điều hướng truy cập | Từ Sidebar Menu: "User Management" → "Store Information" → Route: `/tasks/store-info` |
+| # | Attribute | Value |
+|---|-----------|-------|
+| 1 | Screen Name | Store Information Screen |
+| 2 | Screen ID | SCR_STORE_INFO |
+| 3 | Target Users | HQ (Headquarter) staff with management permissions |
+| 4 | Navigation Path | Sidebar Menu: "User Management" → "Store Information" → Route: `/tasks/store-info` |
 
-**Mục đích:** Màn hình quản lý thông tin cửa hàng theo khu vực địa lý (Regions/Areas), quản lý danh sách stores và nhân viên tại mỗi store.
+**Purpose:** Screen for managing store information by geographic regions/areas, managing store lists and staff at each store.
 
-### Luồng truy cập:
+### Access Flow:
 
-| STT | Bước | Mô tả |
-|-----|------|-------|
-| 1 | BƯỚC 1 | Từ Sidebar Menu, chọn "User Management" |
-| 2 | BƯỚC 2 | Chọn mục con "Store Information" |
-| 3 | BƯỚC 3 | Màn hình STORE INFORMATION hiển thị với các tabs khu vực |
+| # | Step | Description |
+|---|------|-------------|
+| 1 | STEP 1 | From Sidebar Menu, select "User Management" |
+| 2 | STEP 2 | Select sub-menu "Store Information" |
+| 3 | STEP 3 | STORE INFORMATION screen displays with region tabs |
 
 ---
 
-## 2. MÔ TẢ CHI TIẾT CHỨC NĂNG (Functional Specification)
+## 2. FUNCTIONAL SPECIFICATION
 
-*Được chia theo thành phần: Header (Title + Actions), Tab Navigation (theo Region), và Content Area (Area/Store hierarchy).*
+*Divided by components: Header (Title + Actions), Tab Navigation (by Region), and Content Area (Area/Store hierarchy).*
 
-### A. Khu vực Header
+### A. Header Section
 
-| STT | Thành phần | Mô tả | Ghi chú |
-|-----|------------|-------|---------|
-| 1 | Page Title | "STORE INFORMATION" | Font bold, màu đen |
-| 2 | Subtitle | "Manage hierarchy, team members, and configure data access permissions" | Text màu xám |
-| 3 | Permissions Button | Nút "Permissions" với icon region | Button outlined, màu xám |
-| 4 | Import Excel Button | Nút "Import Excel" với icon | Button filled, màu hồng/#E5 |
+| # | Component | Description | Notes |
+|---|-----------|-------------|-------|
+| 1 | Page Title | "STORE INFORMATION" | Bold font, black color |
+| 2 | Subtitle | "Manage hierarchy, team members, and configure data access permissions" | Gray text |
+| 3 | Permissions Button | "Permissions" button with region icon | Outlined button, gray color |
+| 4 | Import Excel Button | "Import Excel" button with icon | Filled button, pink/#E5 color |
 
-### B. Tab Navigation (Điều hướng theo Region)
+### B. Tab Navigation (Region Navigation)
 
-*Các tabs hiển thị theo vùng/miền/khu vực, tab active có underline màu hồng.*
+*Tabs display by region/area, active tab has pink underline.*
 
-| STT | Tab | Mô tả | Ghi chú |
-|-----|-----|-------|---------|
-| 1 | SMBU (Store) | Tab mặc định - Tổng | Không có icon riêng |
-| 2 | OCEAN | Khu vực Ocean | Tab active có underline màu hồng |
-| 3 | HA NOI CENTER | Khu vực Hà Nội trung | |
-| 4 | ECO PARK | Khu vực Eco Park | |
-| 5 | HA DONG | Khu vực Hà Đông | |
-| 6 | NGO | Khu vực ... | |
+| # | Tab | Description | Notes |
+|---|-----|-------------|-------|
+| 1 | SMBU (Store) | Default tab - Total | No specific icon |
+| 2 | OCEAN | Ocean region | Active tab has pink underline |
+| 3 | HA NOI CENTER | Hanoi Center region | |
+| 4 | ECO PARK | Eco Park region | |
+| 5 | HA DONG | Ha Dong region | |
+| 6 | NGO | NGO region | |
 
-### C. Content Area - Area Section (Khu vực theo vùng)
+### C. Content Area - Area Section
 
-*Hiển thị danh sách các Area trong Region đã chọn, mỗi Area có thể expand/collapse.*
+*Displays list of Areas in selected Region, each Area can expand/collapse.*
 
 #### C.1. Area Header Card
 
-| STT | Thành phần | Mô tả | Ghi chú |
-|-----|------------|-------|---------|
-| 1 | Area Name | Tên khu vực (VD: "Area Hà Nam") | Font bold, chữ in hoa, nền xanh dương |
-| 2 | Store Count | Số lượng stores trong area | Icon store + số (VD: "23 Stores") |
-| 3 | Expand/Collapse Icon | Icon mũi tên (∨/∧) | Góc phải, click để mở rộng/thu gọn |
-| 4 | Background Color | Nền màu xanh dương | Phân biệt với store cards |
+| # | Component | Description | Notes |
+|---|-----------|-------------|-------|
+| 1 | Area Name | Area name (e.g., "Area Ha Nam") | Bold font, uppercase, blue background |
+| 2 | Store Count | Number of stores in area | Store icon + number (e.g., "23 Stores") |
+| 3 | Expand/Collapse Icon | Arrow icon (∨/∧) | Right corner, click to expand/collapse |
+| 4 | Background Color | Blue background | Distinguishes from store cards |
 
-#### C.2. Store Card (Card cửa hàng)
+#### C.2. Store Card
 
-| STT | Thành phần | Mô tả | Ghi chú |
-|-----|------------|-------|---------|
-| 1 | Store Icon | Icon cửa hàng | Icon màu xanh dương |
-| 2 | Store Code | Mã cửa hàng (VD: code 1234) | Text nhỏ, màu xám, phía trên tên |
-| 3 | Store Name | Tên cửa hàng (VD: "Ocean Park 1") | Font bold |
-| 4 | Store Manager | "Tên quản lý cửa hàng" | Icon người + tên (VD: "Hoang Huong Giang") |
-| 5 | Staff Count | Số lượng nhân viên | Icon người + số (VD: "Staff: 15") |
-| 6 | Expand/Collapse Icon | Icon mũi tên (∨/∧) | Góc phải card |
-| 7 | Indent Line | Đường kẻ dọc thể hiện thuộc Area | Màu xám nhạt, bên trái |
+| # | Component | Description | Notes |
+|---|-----------|-------------|-------|
+| 1 | Store Icon | Store icon | Blue color icon |
+| 2 | Store Code | Store code (e.g., code 1234) | Small text, gray, above name |
+| 3 | Store Name | Store name (e.g., "Ocean Park 1") | Bold font |
+| 4 | Store Manager | Store manager name | Person icon + name (e.g., "Hoang Huong Giang") |
+| 5 | Staff Count | Number of staff | Person icon + number (e.g., "Staff: 15") |
+| 6 | Expand/Collapse Icon | Arrow icon (∨/∧) | Right corner of card |
+| 7 | Indent Line | Vertical line showing Area hierarchy | Light gray, left side |
 
-### D. Department Cards trong Area
+### D. Department Cards in Area
 
-*Mỗi Area chứa các Department cards với icon và màu sắc riêng.*
+*Each Area contains Department cards with specific icons and colors.*
 
-| STT | Department | Mô tả | Ghi chú |
-|-----|------------|-------|---------|
-| 1 | ZEN PARK | Icon tâm giác/delta | Xanh lá (#4ACAF0) |
-| 2 | CONTROL | Icon cái đĩ/gear | Xanh dương (#2196F3) |
-| 3 | IMPROVEMENT | Icon con diamond | Tím (#673572) |
-| 4 | HR | Icon người | Đỏ (#FF5182) |
+| # | Department | Description | Notes |
+|---|------------|-------------|-------|
+| 1 | ZEN PARK | Triangle/delta icon | Teal (#4ACAF0) |
+| 2 | CONTROL | Gear icon | Blue (#2196F3) |
+| 3 | IMPROVEMENT | Diamond icon | Purple (#673572) |
+| 4 | HR | Person icon | Red (#FF5182) |
 
-| STT | Thành phần | Mô tả | Ghi chú |
-|-----|------------|-------|---------|
-| 1 | Department Icon | Icon đại diện dept | Màu sắc theo loại department |
-| 2 | Department Name | Tên department (VD: "ZEN PARK") | |
-| 3 | Expand/Collapse Icon | Icon mũi tên | Góc phải card |
-| 4 | Indent Line | Đường kẻ thể hiện hierarchy | Theo tầng Area → Store → Dept |
+| # | Component | Description | Notes |
+|---|-----------|-------------|-------|
+| 1 | Department Icon | Department representative icon | Color by department type |
+| 2 | Department Name | Department name (e.g., "ZEN PARK") | |
+| 3 | Expand/Collapse Icon | Arrow icon | Right corner of card |
+| 4 | Indent Line | Line showing hierarchy | By level: Area → Store → Dept |
 
-### E. Store Detail (Khi Expand Store Card)
+### E. Store Detail (When Expanding Store Card)
 
-*Khi expand card store sẽ hiển thị danh sách nhân viên trong store.*
+*When expanding store card, displays list of staff in store.*
 
-| STT | Thành phần | Mô tả | Ghi chú |
-|-----|------------|-------|---------|
-| 1 | Staff List | Danh sách nhân viên trong store | Hiển thị theo danh sách |
-| 2 | Staff Card | Card thông tin nhân viên | Avatar + Tên + Chức vụ |
-| 3 | Staff Avatar | Ảnh đại diện nhân viên | Hình tròn + badge cấp bậc |
-| 4 | Staff Name | Tên nhân viên | Font bold |
-| 5 | Staff Position | Chức vụ (VD: "Store Manager") | Text xám |
-| 6 | Menu (ba chấm) | Menu options cho staff | Edit/Delete options |
+| # | Component | Description | Notes |
+|---|-----------|-------------|-------|
+| 1 | Staff List | List of staff in store | Displayed as list |
+| 2 | Staff Card | Staff information card | Avatar + Name + Position |
+| 3 | Staff Avatar | Staff profile picture | Circle + grade badge |
+| 4 | Staff Name | Staff name | Bold font |
+| 5 | Staff Position | Position (e.g., "Store Manager") | Gray text |
+| 6 | Menu (three dots) | Menu options for staff | Edit/Delete options |
 
 ### F. Add New Team or Member
 
-| STT | Thành phần | Mô tả | Ghi chú |
-|-----|------------|-------|---------|
-| 1 | Add Button | Nút "+ Add new Team or Member" | Icon cuối danh sách |
-| 2 | Button Style | Dashed border, icon (+) | Màu xám, hover đổi màu hồng |
-| 3 | Click Action | Mở popup/modal thêm mới | Thêm Store hoặc staff |
+| # | Component | Description | Notes |
+|---|-----------|-------------|-------|
+| 1 | Add Button | "+ Add new Team or Member" button | Icon at end of list |
+| 2 | Button Style | Dashed border, (+) icon | Gray, hover changes to pink |
+| 3 | Click Action | Opens add new popup/modal | Add Store or staff |
 
 ### G. Permissions Modal
 
-| STT | Thành phần | Mô tả | Ghi chú |
-|-----|------------|-------|---------|
-| 1 | Modal Header | "Permissions" với nút close (X) | Title bold |
-| 2 | Store/User Selection | Chọn store hoặc user đã tạo | Dropdown hoặc search |
-| 3 | Permission List | Danh sách quyền có thể cấp | Checkbox cho từng quyền |
-| 4 | Save Button | Nút lưu cấu hình | Button màu hồng |
+| # | Component | Description | Notes |
+|---|-----------|-------------|-------|
+| 1 | Modal Header | "Permissions" with close button (X) | Bold title |
+| 2 | Store/User Selection | Select created store or user | Dropdown or search |
+| 3 | Permission List | List of permissions to grant | Checkbox for each permission |
+| 4 | Save Button | Save configuration button | Pink button |
 
 ### H. Import Excel Function
 
-| STT | Thành phần | Mô tả | Ghi chú |
-|-----|------------|-------|---------|
-| 1 | Upload Dialog | Dialog chọn file Excel | Chấp nhận .xlsx, .xls |
-| 2 | Template Download | Link tải template mẫu | "Download template" |
-| 3 | Preview Data | Xem trước dữ liệu | Table preview |
-| 4 | Validation | Kiểm tra dữ liệu hợp lệ | Highlight lỗi nếu có |
-| 5 | Confirm Import | Xác nhận import dữ liệu | Button "Import" |
+| # | Component | Description | Notes |
+|---|-----------|-------------|-------|
+| 1 | Upload Dialog | Excel file selection dialog | Accepts .xlsx, .xls |
+| 2 | Template Download | Template download link | "Download template" |
+| 3 | Preview Data | Data preview | Table preview |
+| 4 | Validation | Data validation check | Highlight errors if any |
+| 5 | Confirm Import | Confirm data import | "Import" button |
 
 ---
 
 ## 3. VALIDATION RULES
 
-| STT | Rule | Description |
-|-----|------|-------------|
-| 1 | Store code unique | Mã cửa hàng phải là duy nhất trong hệ thống |
-| 2 | Store name required | Tên cửa hàng không được để trống |
-| 3 | Area required | Mỗi store phải thuộc một Area |
-| 4 | Region required | Mỗi Area phải thuộc một Region |
-| 5 | Manager assignment | Mỗi store nên có ít nhất một Store Manager |
-| 6 | Excel format | File import phải đúng định dạng template |
+| # | Rule | Description |
+|---|------|-------------|
+| 1 | Store code unique | Store code must be unique in the system |
+| 2 | Store name required | Store name cannot be empty |
+| 3 | Area required | Each store must belong to an Area |
+| 4 | Region required | Each Area must belong to a Region |
+| 5 | Manager assignment | Each store should have at least one Store Manager |
+| 6 | Excel format | Import file must match template format |
 
 ---
 
 ## 4. API INTEGRATION
 
-| STT | Action | Method | Endpoint | Description |
-|-----|--------|--------|----------|-------------|
-| 1 | Get Regions | GET | /api/v1/regions | Lấy danh sách regions |
-| 2 | Get Areas by Region | GET | /api/v1/regions/{id}/areas | Lấy areas theo region |
-| 3 | Get Stores by Area | GET | /api/v1/areas/{id}/stores | Lấy stores theo area |
-| 4 | Get Store Detail | GET | /api/v1/stores/{id} | Lấy thông tin chi tiết store |
-| 5 | Get Store Staff | GET | /api/v1/stores/{id}/staff | Lấy danh sách nhân viên store |
-| 6 | Add Store | POST | /api/v1/stores | Thêm store mới |
-| 7 | Update Store | PUT | /api/v1/stores/{id} | Cập nhật thông tin store |
-| 8 | Delete Store | DELETE | /api/v1/stores/{id} | Xóa store |
-| 9 | Add Staff to Store | POST | /api/v1/stores/{id}/staff | Thêm nhân viên vào store |
-| 10 | Import Stores | POST | /api/v1/stores/import | Import stores từ Excel |
+| # | Action | Method | Endpoint | Description |
+|---|--------|--------|----------|-------------|
+| 1 | Get Regions | GET | /api/v1/regions | Get list of regions |
+| 2 | Get Areas by Region | GET | /api/v1/regions/{id}/areas | Get areas by region |
+| 3 | Get Stores by Area | GET | /api/v1/areas/{id}/stores | Get stores by area |
+| 4 | Get Store Detail | GET | /api/v1/stores/{id} | Get store detail information |
+| 5 | Get Store Staff | GET | /api/v1/stores/{id}/staff | Get store staff list |
+| 6 | Add Store | POST | /api/v1/stores | Add new store |
+| 7 | Update Store | PUT | /api/v1/stores/{id} | Update store information |
+| 8 | Delete Store | DELETE | /api/v1/stores/{id} | Delete store |
+| 9 | Add Staff to Store | POST | /api/v1/stores/{id}/staff | Add staff to store |
+| 10 | Import Stores | POST | /api/v1/stores/import | Import stores from Excel |
 
 ---
 
 ## 5. UI STATES
 
-| STT | State Type | State | Display |
-|-----|------------|-------|---------|
-| 1 | Loading | Loading | Skeleton loader cho hierarchy tree |
-| 2 | Loading | Expanding area/store | Spinner trong card |
-| 3 | Loading | Importing | Progress bar với phần trăm |
+| # | State Type | State | Display |
+|---|------------|-------|---------|
+| 1 | Loading | Loading | Skeleton loader for hierarchy tree |
+| 2 | Loading | Expanding area/store | Spinner in card |
+| 3 | Loading | Importing | Progress bar with percentage |
 | 4 | Empty | No stores in area | "No stores in this area" |
 | 5 | Empty | No staff in store | "No staff assigned" |
-| 6 | Error | Load failed | Error message với retry button |
-| 7 | Error | Import failed | Error details với highlight dòng lỗi |
+| 6 | Error | Load failed | Error message with retry button |
+| 7 | Error | Import failed | Error details with highlighted error rows |
 | 8 | Success | Store added | Toast "Store added successfully" |
 | 9 | Success | Import complete | Toast "Import completed: X stores added" |
-| 10 | Active | Tab selected | Tab có underline màu hồng |
-| 11 | Expanded | Area/Store open | Icon mũi tên xoay lên (∧) |
+| 10 | Active | Tab selected | Tab has pink underline |
+| 11 | Expanded | Area/Store open | Arrow icon rotates up (∧) |
 
 ---
 
-## 6. CÁC KỊCH BẢN TEST (Test Scenarios)
+## 6. TEST SCENARIOS
 
-### A. Kiểm thử giao diện (UI/UX Testing)
+### A. UI/UX Testing
 
-| STT | Test Case | Kịch bản | Kỳ vọng |
-|-----|-----------|----------|---------|
-| 1 | Layout check | Mở màn hình Store | Header, tabs, hierarchy hiển thị đúng |
-| 2 | Tab navigation | Click các tabs region | Content thay đổi theo tab, underline di chuyển |
-| 3 | Expand Area | Click vào area header | Mở rộng hiển thị stores trong area |
-| 4 | Expand Store | Click vào store card | Mở rộng hiển thị staff trong store |
-| 5 | Icon colors | Xem các department cards | Icon màu sắc đúng theo department |
+| # | Test Case | Scenario | Expected |
+|---|-----------|----------|----------|
+| 1 | Layout check | Open Store screen | Header, tabs, hierarchy display correctly |
+| 2 | Tab navigation | Click region tabs | Content changes per tab, underline moves |
+| 3 | Expand Area | Click area header | Expands to show stores in area |
+| 4 | Expand Store | Click store card | Expands to show staff in store |
+| 5 | Icon colors | View department cards | Icon colors match department |
 
-### B. Kiểm thử chức năng (Functional Testing)
+### B. Functional Testing
 
-| STT | Test Case | Kịch bản | Kỳ vọng |
-|-----|-----------|----------|---------|
-| 1 | Add new store | Click "+ Add new" → Nhập thông tin → Save | Store mới xuất hiện trong area |
-| 2 | Edit store | Click menu → Edit → Sửa thông tin → Save | Thông tin được cập nhật |
-| 3 | Delete store | Click menu → Delete → Xác nhận | Store bị xóa khỏi danh sách |
-| 4 | Add staff to store | Expand store → Add staff → Chọn staff → Save | Staff xuất hiện trong store |
-| 5 | Import Excel | Chọn file → Import → Confirm | Stores được import thành công |
-| 6 | Switch tabs | Click tab OCEAN → Click tab HA NOI CENTER | Data load đúng theo từng region |
-| 7 | Set permissions | Click Permissions → Chọn store → Cấp quyền → Save | Quyền được lưu thành công |
+| # | Test Case | Scenario | Expected |
+|---|-----------|----------|----------|
+| 1 | Add new store | Click "+ Add new" → Enter info → Save | New store appears in area |
+| 2 | Edit store | Click menu → Edit → Modify info → Save | Information is updated |
+| 3 | Delete store | Click menu → Delete → Confirm | Store is removed from list |
+| 4 | Add staff to store | Expand store → Add staff → Select staff → Save | Staff appears in store |
+| 5 | Import Excel | Select file → Import → Confirm | Stores are imported successfully |
+| 6 | Switch tabs | Click OCEAN tab → Click HA NOI CENTER tab | Data loads correctly per region |
+| 7 | Set permissions | Click Permissions → Select store → Grant permissions → Save | Permissions are saved successfully |
 
 ---
 
@@ -264,12 +264,12 @@ StoreInformationPage/
 
 ## 9. CONNECTOR LINES
 
-*Đường kẻ liên kết (connector lines) giữa các thẻ trong hierarchy tree*
+*Connector lines between cards in hierarchy tree*
 
 | Component | Position | Description |
 |-----------|----------|-------------|
-| Area → Store | Left indent | Đường dọc + ngang nối từ Area xuống Store |
-| Store → Staff | Left indent | Đường dọc + ngang nối từ Store xuống Staff |
+| Area → Store | Left indent | Vertical + horizontal line from Area to Store |
+| Store → Staff | Left indent | Vertical + horizontal line from Store to Staff |
 
 ---
 
@@ -282,3 +282,4 @@ StoreInformationPage/
 | 2026-01-02 | Updated navigation route from `/users/store-info` to `/tasks/store-info` |
 | 2026-01-02 | Updated icons: Permissions button (user+gear), Import Excel button (file+arrow), Staff icon |
 | 2026-01-02 | Fixed badge G3 positioning near avatar |
+| 2026-01-02 | Translated specification to English |

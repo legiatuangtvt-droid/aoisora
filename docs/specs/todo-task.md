@@ -4,8 +4,8 @@
 
 ## 1. GENERAL DESCRIPTION
 
-| STT | Attribute | Value |
-|-----|-----------|-------|
+| No | Attribute | Value |
+|----|-----------|-------|
 | 1 | Screen Name | To Do Task Screen |
 | 2 | Screen Code | SCR_TODO_TASK |
 | 3 | Target Users | HQ (Headquarter) Staff |
@@ -28,11 +28,11 @@
 
 ### A. Week Header
 
-| STT | Component | Value | Notes |
-|-----|-----------|-------|-------|
-| 1 | Week Title | "WEEK 51, 2025" | Font bold, large, color black |
-| 2 | Date Range | "December 15- December 21" | Text gray, smaller, below title |
-| 3 | Add New Button | Nút "+ Add New" | Button filled pink/red, bold text |
+| No | Component | Value | Notes |
+|----|-----------|-------|-------|
+| 1 | Week Title | "WEEK 51, 2025" | Font bold, large, black color |
+| 2 | Date Range | "December 15- December 21" | Gray text, smaller, below title |
+| 3 | Add New Button | "+ Add New" button | Filled button pink/red, bold text |
 
 ### B. Overall Week Panel (Current Week Overview)
 
@@ -40,23 +40,23 @@
 
 #### B.1. Panel Header
 
-| STT | Component | Value | Notes |
-|-----|-----------|-------|-------|
-| 1 | Icon | Icon calendar/checklist | Pink color |
+| No | Component | Value | Notes |
+|----|-----------|-------|-------|
+| 1 | Icon | Calendar/checklist icon | Pink color |
 | 2 | Title | "Overall Week 51" | Font bold |
 
 #### B.2. Table Columns
 
-| STT | Column | Value | Notes |
-|-----|--------|-------|-------|
+| No | Column | Value | Notes |
+|----|--------|-------|-------|
 | 1 | W51 Task | Total tasks in week 51 | Header pink color/highlight |
 | 2 | Means/Method | Method to complete task | Has tooltip icon (i) |
 | 3 | Target | Target value | Example: "Typing..." (placeholder) |
 
 #### B.3. Task Rows
 
-| STT | Task | Description |
-|-----|------|-------------|
+| No | Task | Description |
+|----|------|-------------|
 | 1 | 1. Opening Store | Store opening tasks |
 | 2 | 2. Plan for 2026 | Planning for next year 2026 |
 | 3 | 3. Support Store | Store support tasks |
@@ -67,22 +67,22 @@
 
 #### C.1. Panel Header
 
-| STT | Component | Value | Notes |
-|-----|-----------|-------|-------|
+| No | Component | Value | Notes |
+|----|-----------|-------|-------|
 | 1 | Title | "Last Week Review" | Font bold, pink color |
 
 #### C.2. Table Columns
 
-| STT | Column | Value | Notes |
-|-----|--------|-------|-------|
+| No | Column | Value | Notes |
+|----|--------|-------|-------|
 | 1 | W50 Task | Total tasks in week 50 | Header pink color/highlight |
 | 2 | Progress/Bottleneck | Progress and bottleneck notes | Notes on bottleneck |
 | 3 | Output | Output/result of task | Output of each task |
 
 ### D. Filter Bar (Filter Options)
 
-| STT | Component | Type | Description |
-|-----|-----------|------|-------------|
+| No | Component | Type | Description |
+|----|-----------|------|-------------|
 | 1 | All Statuses | Dropdown | Filter by status: All, In Progress, Done, Pending |
 | 2 | All Types | Dropdown | Filter by type: All, Personal, Team, Store |
 
@@ -92,17 +92,17 @@
 
 #### E.1. Calendar Header
 
-| STT | Component | Value | Notes |
-|-----|-----------|-------|-------|
-| 1 | Calendar Icon | Icon tick | Pink color |
+| No | Component | Value | Notes |
+|----|-----------|-------|-------|
+| 1 | Calendar Icon | Checkmark icon | Pink color |
 | 2 | Week Title | "Week 51, 2025" | Font bold |
 | 3 | Navigation Arrows | Left/right arrows | Switch week previous/next |
 | 4 | Placeholder | Area on right side | Can display mini calendar |
 
 #### E.2. Daily Task Table
 
-| STT | Column | Value | Notes |
-|-----|--------|-------|-------|
+| No | Column | Value | Notes |
+|----|--------|-------|-------|
 | 1 | Date | Day of week | Format: "MON/15 Dec" (day + date) |
 | 2 | Productivity | Task list for day | List tasks, numbered sequentially |
 | 3 | Type | Task type | Example: "Personal" with icon bullet |
@@ -110,32 +110,32 @@
 
 #### E.3. Date Cell Format
 
-| STT | Component | Value | Notes |
-|-----|-----------|-------|-------|
+| No | Component | Value | Notes |
+|----|-----------|-------|-------|
 | 1 | Day of Week | Day name (MON, TUE, WED...) | Text small, uppercase |
 | 2 | Day Number | Day number (15, 16, 17...) | Font bold, large |
 | 3 | Month | Month name (Dec) | Text small, same row with Day |
 
 #### E.4. Productivity Cell Format
 
-| STT | Component | Value | Notes |
-|-----|-----------|-------|-------|
+| No | Component | Value | Notes |
+|----|-----------|-------|-------|
 | 1 | Location Header | Work location | Example: "V917: Long Bien -> Ocean", font bold |
 | 2 | Task List | Task list for the day | Numbered: 1, 2, 3... |
 | 3 | Task Item | Task name | Example: "Survey competitor", "Check store" |
 
 ### F. Task Types (Task Categories)
 
-| STT | Type | Icon | Description |
-|-----|------|------|-------------|
-| 1 | Personal | Bullet pink | Personal individual tasks |
-| 2 | Team | Bullet cyan | Team collaborative tasks |
-| 3 | Store | Bullet green | Store-related tasks |
+| No | Type | Icon | Description |
+|----|------|------|-------------|
+| 1 | Personal | Pink bullet | Personal individual tasks |
+| 2 | Team | Cyan bullet | Team collaborative tasks |
+| 3 | Store | Green bullet | Store-related tasks |
 
 ### G. Status Types (Task Statuses)
 
-| STT | Status | Color | Description |
-|-----|--------|-------|-------------|
+| No | Status | Color | Description |
+|----|--------|-------|-------------|
 | 1 | In Process | Yellow/Orange (#FFC107) | Task in progress |
 | 2 | Done | Green (#4CAF50) | Task completed |
 | 3 | Draft | Gray (#9E9E9E) | Draft status |
@@ -145,8 +145,8 @@
 
 *Each daily task row includes location selection dropdowns.*
 
-| STT | Field | Type | Description |
-|-----|-------|------|-------------|
+| No | Field | Type | Description |
+|----|-------|------|-------------|
 | 1 | Location Header | Text | Format: "V917: [Region] -> [Zone]" |
 | 2 | Region | Dropdown | Select region |
 | 3 | Zone | Dropdown | Dependent on Region |
@@ -157,23 +157,23 @@
 
 *Panel on the right side for manager comments and feedback.*
 
-| STT | Component | Type | Description |
-|-----|-----------|------|-------------|
+| No | Component | Type | Description |
+|----|-----------|------|-------------|
 | 1 | Panel Title | Text | "Manager Comment" with pink underline |
 | 2 | Comment Input | Textarea | Input field for manager comments |
 | 3 | Other Comment | Textarea | Secondary comment section |
 
 ### J. Weekend Display
 
-| STT | Day | Display |
-|-----|-----|---------|
+| No | Day | Display |
+|----|-----|---------|
 | 1 | Saturday | "OFF" - no tasks displayed |
 | 2 | Sunday | "OFF" - no tasks displayed |
 
 ### K. Add New Task
 
-| STT | Component | Value | Notes |
-|-----|-----------|-------|-------|
+| No | Component | Value | Notes |
+|----|-----------|-------|-------|
 | 1 | Button Label | "+ Add New" | Icon (+) plus text |
 | 2 | Button Style | Filled button, pink/red | Hover: darker shade |
 | 3 | Click Action | Opens add new task modal | Modal or navigate to add screen |
@@ -182,8 +182,8 @@
 
 ## 3. VALIDATION RULES
 
-| STT | Rule | Description |
-|-----|------|-------------|
+| No | Rule | Description |
+|----|------|-------------|
 | 1 | Task name required | Task name cannot be empty |
 | 2 | Date required | Must select date for task |
 | 3 | Type required | Must select task type |
@@ -194,8 +194,8 @@
 
 ## 4. API INTEGRATION
 
-| STT | Action | Method | Endpoint | Description |
-|-----|--------|--------|----------|-------------|
+| No | Action | Method | Endpoint | Description |
+|----|--------|--------|----------|-------------|
 | 1 | Get Week Tasks | GET | /api/v1/todo/week/{weekNum} | Get tasks for a week |
 | 2 | Get Daily Tasks | GET | /api/v1/todo/date/{date} | Get tasks by specific day |
 | 3 | Get Week Overview | GET | /api/v1/todo/overview/week/{weekNum} | Get week overview summary |
@@ -209,8 +209,8 @@
 
 ## 5. UI STATES
 
-| STT | State Type | State | Display |
-|-----|------------|-------|---------|
+| No | State Type | State | Display |
+|----|------------|-------|---------|
 | 1 | Loading | Initial load | Skeleton loader on panels and calendar |
 | 2 | Loading | Week change | Spinner when switching weeks |
 | 3 | Empty | No tasks | "No tasks for this week" |
@@ -227,8 +227,8 @@
 
 ### A. UI/UX Testing
 
-| STT | Test Case | Scenario | Expected |
-|-----|-----------|----------|----------|
+| No | Test Case | Scenario | Expected |
+|----|-----------|----------|----------|
 | 1 | Layout check | Open To Do Task screen | Header, panels, calendar display correctly |
 | 2 | Week display | View week info | Display week number and date range |
 | 3 | Panel layout | View 2 panels Overview | 2 panels side by side, table inside |
@@ -237,8 +237,8 @@
 
 ### B. Functional Testing
 
-| STT | Test Case | Scenario | Expected |
-|-----|-----------|----------|----------|
+| No | Test Case | Scenario | Expected |
+|----|-----------|----------|----------|
 | 1 | Add new task | Click "+ Add New" -> Save | Task appears in calendar |
 | 2 | Filter by status | Select from dropdown | Only show tasks matching filter type |
 | 3 | Filter by type | Click "Personal" filter | Only show tasks of that type |
@@ -343,3 +343,4 @@ frontend/src/
 | 2026-01-02 | UI: Sidebar collapsed child menu items - slight left padding (pl-5) to indicate parent-child relationship |
 | 2026-01-02 | UI: Sidebar User Management - converted to parent menu with 2 children: User information (user-cog icon), Store information (store-cog icon) |
 | 2026-01-02 | UI: Sidebar MenuIcon - added isActive prop with CSS filter for color change (gray default, pink #C5055B when active) |
+| 2026-01-02 | Translated specification to English |

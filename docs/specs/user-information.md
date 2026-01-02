@@ -1,236 +1,236 @@
-# ĐẶC TẢ MÀN HÌNH USER INFORMATION (SCR_USER_INFO)
+# USER INFORMATION SCREEN SPECIFICATION (SCR_USER_INFO)
 
 ---
 
-## 1. MÔ TẢ CHUNG (General Description)
+## 1. GENERAL DESCRIPTION
 
-| STT | Thuộc tính | Giá trị |
-|-----|------------|---------|
-| 1 | Tên màn hình | Thông tin người dùng (User Information Screen) |
-| 2 | Mã màn hình | SCR_USER_INFO |
-| 3 | Đối tượng sử dụng | Nhân viên HQ (Headquarter) có quyền quản lý |
-| 4 | Điểm truy cập | Từ Sidebar Menu: "User Management" > "User Information" |
+| # | Attribute | Value |
+|---|-----------|-------|
+| 1 | Screen Name | User Information Screen |
+| 2 | Screen ID | SCR_USER_INFO |
+| 3 | Target Users | HQ (Headquarter) staff with management permissions |
+| 4 | Access Point | From Sidebar Menu: "User Management" > "User Information" |
 
-*Mục đích: Màn hình quản lý và theo dõi danh sách người dùng (Hierarchy), quản lý Team members và các màn hình quản lý khác của tổ chức.*
+*Purpose: Screen for managing and tracking user lists (Hierarchy), managing Team members and other organization management screens.*
 
 ---
 
-## 2. CẤP BẬC CHỨC DANH (Office Title)
+## 2. JOB GRADES (Office Title)
 
-*Hệ thống phân cấp chức danh từ thấp đến cao trong tổ chức.*
+*Hierarchical job title system from lowest to highest in organization.*
 
-| STT | Mã | Chức danh (Title) |
-|-----|-----|-------------------|
-| 1 | G1 | Officer | Nhân viên |
-| 2 | G3 | Executive | Chuyên viên |
-| 3 | G4 | Deputy Manager | Phó quản lý |
-| 4 | G5 | Manager | Quản lý |
-| 5 | G6 | General Manager | Tổng quản lý |
-| 6 | G7 | Senior General Manager | Tổng quản lý cấp cao |
+| # | Code | Title | Description |
+|---|------|-------|-------------|
+| 1 | G1 | Officer | Staff level |
+| 2 | G3 | Executive | Specialist level |
+| 3 | G4 | Deputy Manager | Deputy manager level |
+| 4 | G5 | Manager | Manager level |
+| 5 | G6 | General Manager | General manager level |
+| 6 | G7 | Senior General Manager | Senior general manager level |
 | 7 | G8 | CCO | Chief Commercial Officer |
 
 ---
 
-## 3. MÔ TẢ CHI TIẾT CHỨC NĂNG (Functional Specification)
+## 3. FUNCTIONAL SPECIFICATION
 
-*Giao diện chứa thành Header (Title + Actions), Tab Navigation, và Content Area (Hierarchy Tree).*
+*Interface contains Header (Title + Actions), Tab Navigation, and Content Area (Hierarchy Tree).*
 
-### A. Khu vực Header
+### A. Header Section
 
-| STT | Thành phần | Mô tả | Ghi chú |
-|-----|------------|-------|---------|
-| 1 | Page Title | "USER INFORMATION" | Font lớn, bold, màu đen |
-| 2 | Subtitle | "Team members..." | Text màu xám |
-| 3 | Permissions Button | Nút "Permissions" với icon | Button outlined, màu xám |
-| 4 | Import Excel Button | Nút "Import Excel" với icon | Button filled, màu hồng/đỏ |
+| # | Component | Description | Notes |
+|---|-----------|-------------|-------|
+| 1 | Page Title | "USER INFORMATION" | Large font, bold, black color |
+| 2 | Subtitle | "Team members..." | Gray text |
+| 3 | Permissions Button | "Permissions" button with icon | Outlined button, gray color |
+| 4 | Import Excel Button | "Import Excel" button with icon | Filled button, pink/red color |
 
-### B. Tab Navigation (Hiệu điều hướng phòng ban)
+### B. Tab Navigation (Department Navigation)
 
-*Các tab hiển thị cho theo phòng ban, tab active có underline màu hồng.*
+*Tabs display by department, active tab has pink underline.*
 
-| STT | Tab | Mô tả | Icon |
-|-----|-----|-------|------|
-| 1 | Deputy Manager (Head Office) | Tab mặc định - Văn phòng chính | Không có icon riêng |
-| 2 | Admin | Phòng hành chính | Icon tùy |
-| 3 | OP | Phòng vận hành | Icon vàng |
-| 4 | GP | Phòng lập trình | Icon xanh lá |
-| 5 | CONTROL | Phòng kiểm soát | Icon xanh dương |
-| 6 | IMPROVEMENT | Phòng cải tiến | Icon cam |
-| 7 | HR | Phòng Nhân sự | Icon xám |
-| 8 | MG | Phòng Quản trị | Không có icon riêng |
+| # | Tab | Description | Icon |
+|---|-----|-------------|------|
+| 1 | Deputy Manager (Head Office) | Default tab - Main office | No specific icon |
+| 2 | Admin | Administration department | Custom icon |
+| 3 | OP | Operations department | Yellow icon |
+| 4 | GP | Programming department | Green icon |
+| 5 | CONTROL | Control department | Blue icon |
+| 6 | IMPROVEMENT | Improvement department | Orange icon |
+| 7 | HR | Human Resources department | Gray icon |
+| 8 | MG | Management department | No specific icon |
 
-### C. Content Area - Tab Deputy Manager (Head Office)
+### C. Content Area - Deputy Manager (Head Office) Tab
 
-*Nội dung khu vực chính hiển thị cây phòng với khả năng expand/collapse.*
+*Main content area displays department tree with expand/collapse capability.*
 
-#### C.1. Root Card Node (Người đứng đầu)
+#### C.1. Root Card Node (Head of Organization)
 
-| STT | Thành phần | Mô tả | Ghi chú |
-|-----|------------|-------|---------|
-| 1 | Avatar | Ảnh đại diện người dùng | Hình tròn |
-| 2 | Badge | Badge hiển thị cấp bậc (VD: G5) | - |
-| 3 | Title Badge | - | Nền xanh lá, text trắng |
-| 4 | User Name | "VP/GĐ Ngọc ..." | Tên người dùng |
-| 5 | Position | Chức danh + Title (VD: G4 - General Manager) | - |
-| 6 | Menu (ba chấm) | Popup menu với các actions | Click hiển thị popup |
-| 7 | 5.1 | - Edir division | Chỉnh sửa phòng ban | Icon bút chỉ màu hồng |
-| 8 | 5.2 | - Delete division | Xóa division/user | Icon thùng rác màu hồng |
+| # | Component | Description | Notes |
+|---|-----------|-------------|-------|
+| 1 | Avatar | User profile picture | Circular |
+| 2 | Badge | Badge showing grade level (e.g., G5) | - |
+| 3 | Title Badge | - | Green background, white text |
+| 4 | User Name | "VP/Director Name ..." | User's name |
+| 5 | Position | Title + Grade (e.g., G4 - General Manager) | - |
+| 6 | Menu (three dots) | Popup menu with actions | Click displays popup |
+| 7 | 5.1 | - Edit division | Edit department | Pink pencil icon |
+| 8 | 5.2 | - Delete division | Delete division/user | Pink trash icon |
 
-#### C.2. Department Card (Card phòng ban)
+#### C.2. Department Card
 
-| STT | Thành phần | Mô tả | Ghi chú |
-|-----|------------|-------|---------|
-| 1 | Department Icon | Icon đại diện phòng ban | Màu sắc khác nhau theo phòng ban |
-| 2 | Department Name | Tên phòng ban (VD: "Admin", "GP") | Font bold |
-| 3 | Member Count | Số lượng thành viên (VD: "1 Member", "3 Members") | Text màu xám |
-| 4 | Title Range | Phạm vi cấp bậc | Text màu xám, sau dấu Bullet |
-| 5 | Expand/Collapse Icon | Icon mũi tên để mở/đóng | Góc phải card |
+| # | Component | Description | Notes |
+|---|-----------|-------------|-------|
+| 1 | Department Icon | Department representative icon | Different colors by department |
+| 2 | Department Name | Department name (e.g., "Admin", "GP") | Bold font |
+| 3 | Member Count | Number of members (e.g., "1 Member", "3 Members") | Gray text |
+| 4 | Title Range | Grade range | Gray text, after bullet |
+| 5 | Expand/Collapse Icon | Arrow icon to open/close | Right corner of card |
 
-#### C.3. Department tree Colors
+#### C.3. Department Tree Colors
 
-| STT | Phòng | Icon | Ghi chú |
-|-----|-------|------|---------|
-| 1 | ADMIN | Icon người/nhóm | Icon #84C7FE |
-| 2 | GP | - | Xanh lá (WACASO) |
-| 3 | CONTROL | Icon điều khiển | Xanh dương #185FFF |
-| 4 | IMPROVEMENT | Icon cải tiến, đồng hồ | Màu cam (#F57C22) |
-| 5 | MD | Icon vàng/mới/brown | Vàng/Cam (#FF9800) |
+| # | Department | Icon | Notes |
+|---|------------|------|-------|
+| 1 | ADMIN | Person/group icon | Icon #84C7FE |
+| 2 | GP | - | Green (WACASO) |
+| 3 | CONTROL | Control icon | Blue #185FFF |
+| 4 | IMPROVEMENT | Improvement/clock icon | Orange (#F57C22) |
+| 5 | MD | Yellow/new/brown icon | Yellow/Orange (#FF9800) |
 
-### D. Content Area - Tab Department (VD: Admin)
+### D. Content Area - Department Tab (e.g., Admin)
 
-*Nội dung khi mở tab phòng ban, hiển thị danh sách các card bao gồm của phòng Department Head và các Team đã được thiết lập.*
+*Content when opening department tab, displays list of cards including Department Head and established Teams.*
 
 #### D.1. Department Head Card
 
-| STT | Thành phần | Mô tả | Ghi chú |
-|-----|------------|-------|---------|
-| 1 | Department Head Card | Card người đứng đầu phòng ban | VD: Đỗ Thị Kim Quyên |
-| 2 | Head Avatar | Ảnh đại diện + Badge | Badge màu xanh lá |
-| 3 | Head Name | Tên người đứng đầu | Font bold |
-| 4 | Head Position | Chức vụ + Title | "Head of Dept - Deputy Manager" |
-| 5 | Menu (ba chấm) | Popup menu với các actions | Góc phải card |
+| # | Component | Description | Notes |
+|---|-----------|-------------|-------|
+| 1 | Department Head Card | Card for department head | e.g., Do Thi Kim Quyen |
+| 2 | Head Avatar | Profile picture + Badge | Green badge |
+| 3 | Head Name | Head's name | Bold font |
+| 4 | Head Position | Position + Title | "Head of Dept - Deputy Manager" |
+| 5 | Menu (three dots) | Popup menu with actions | Right corner of card |
 
-#### D.2. Team Card (Card nhóm trong phòng ban)
+#### D.2. Team Card
 
-| STT | Thành phần | Mô tả | Ghi chú |
-|-----|------------|-------|---------|
-| 1 | Team Card Container | Card chứa thông tin Team | Border xanh dương khi expanded |
-| 2 | Team Icon | Icon đại diện team | Màu tím/xanh, đại loại team |
-| 3 | Team Name | Tên team (VD: "Account", "Account Executive") | Font bold, màu xanh dương |
-| 4 | Member Count | Số thành viên (VD: "2 Members", "1 Member") | Text màu xám |
-| 5 | Title Range | Phạm vi cấp bậc (VD: G3 - G4) | Text màu xám |
-| 6 | Expand/Collapse | Mũi tên mở/đóng | Góc phải, xoay khi expanded |
-| 7 | Indent Line | Đường kẻ thể hiện cấu trúc cây | Màu xám, bên trái card |
+| # | Component | Description | Notes |
+|---|-----------|-------------|-------|
+| 1 | Team Card Container | Card containing Team information | Blue border when expanded |
+| 2 | Team Icon | Team representative icon | Purple/blue, team type |
+| 3 | Team Name | Team name (e.g., "Account", "Account Executive") | Bold font, blue color |
+| 4 | Member Count | Number of members (e.g., "2 Members", "1 Member") | Gray text |
+| 5 | Title Range | Grade range (e.g., G3 - G4) | Gray text |
+| 6 | Expand/Collapse | Arrow to open/close | Right corner, rotates when expanded |
+| 7 | Indent Line | Line showing tree structure | Gray, left of card |
 
-#### D.3. Member Card (Card thành viên trong Team)
+#### D.3. Member Card
 
-| STT | Thành phần | Mô tả | Ghi chú |
-|-----|------------|-------|---------|
-| 1 | Member Avatar | Ảnh đại diện thành viên | Hình tròn |
-| 2 | Badge | Badge cấp bậc (VD: G3, G4) | Nền xanh lá, góc dưới avatar |
-| 3 | Member Name | Tên thành viên | VD: "Nguyễn Thị Hiền", Font bold |
-| 4 | Member Position | Chức vụ | "Team Lead", "Account Executive" |
-| 5 | Menu (ba chấm) | Popup menu với các actions | Góc phải card |
-| 6 | Indent Line | Đường kẻ dọc + ngang thể hiện cấu trúc cây | Màu xám, đường L shape |
-| 7 | Click Action | Click vào card để mở chi tiết | Vùng Cam/Xanh là vùng click được |
+| # | Component | Description | Notes |
+|---|-----------|-------------|-------|
+| 1 | Member Avatar | Member's profile picture | Circular |
+| 2 | Badge | Grade badge (e.g., G3, G4) | Green background, bottom corner of avatar |
+| 3 | Member Name | Member's name | e.g., "Nguyen Thi Hien", Bold font |
+| 4 | Member Position | Position | "Team Lead", "Account Executive" |
+| 5 | Menu (three dots) | Popup menu with actions | Right corner of card |
+| 6 | Indent Line | Vertical + horizontal line showing tree structure | Gray, L-shaped line |
+| 7 | Click Action | Click card to open details | Orange/Blue area is clickable |
 
-### D.4. Employee Detail Modal (Popup thông tin nhân viên)
+### D.4. Employee Detail Modal
 
-*Khi click vào member card, hiển thị popup modal với thông tin chi tiết của nhân viên đó.*
+*When clicking member card, displays popup modal with detailed employee information.*
 
 #### D.4.1. Modal Header
 
-| STT | Thành phần | Mô tả | Ghi chú |
-|-----|------------|-------|---------|
-| 1 | Modal Container | Popup với nền trắng | Overlay tối 50% phía sau |
-| 2 | Close Button | Nút (X) đóng popup | Góc phải trên |
-| 3 | Avatar | Ảnh đại diện nhân viên | Hình tròn, bên trái |
-| 4 | Employee Name | Tên nhân viên (VD: "Nguyễn Thị Huệ") | Font bold, lớn |
-| 5 | Position | Chức vụ (VD: "Team Lead") | Text màu xám, dưới tên |
-| 6 | Status Badge | Trạng thái (VD: "Active") | Badge màu xanh lá |
-| 7 | Phone | Email nhân viên | Icon + số điện thoại (VD: +84 968 488 238) |
+| # | Component | Description | Notes |
+|---|-----------|-------------|-------|
+| 1 | Modal Container | Popup with white background | 50% dark overlay behind |
+| 2 | Close Button | (X) close button | Top right corner |
+| 3 | Avatar | Employee profile picture | Circular, left side |
+| 4 | Employee Name | Employee name (e.g., "Nguyen Thi Hue") | Bold, large font |
+| 5 | Position | Position (e.g., "Team Lead") | Gray text, below name |
+| 6 | Status Badge | Status (e.g., "Active") | Green badge |
+| 7 | Phone | Employee phone | Icon + phone number (e.g., +84 968 488 238) |
 
-#### D.4.2. Employee Information (Thông tin chi tiết nhân viên)
+#### D.4.2. Employee Information
 
-| STT | Field | Mô tả | Ghi chú |
-|-----|-------|-------|---------|
-| 1 | SAP CODE | Mã SAP | VD: "00279857" |
-| 2 | LINE MANAGER | Quản lý trực tiếp | Avatar + Tên + Mã (VD: Đỗ Thị Kim Quyên - 00283407) |
-| 3 | JOB GRADE | Cấp bậc công việc | VD: "G5 - Senior", text màu hồng |
-| 4 | JOINING DATE | Ngày vào công ty | VD: "17 Aug, 2017", format DD MMM, YYYY |
+| # | Field | Description | Notes |
+|---|-------|-------------|-------|
+| 1 | SAP CODE | SAP code | e.g., "00279857" |
+| 2 | LINE MANAGER | Direct manager | Avatar + Name + Code (e.g., Do Thi Kim Quyen - 00283407) |
+| 3 | JOB GRADE | Job grade | e.g., "G5 - Senior", pink text |
+| 4 | JOINING DATE | Company join date | e.g., "17 Aug, 2017", format DD MMM, YYYY |
 
-#### D.4.3. Organization Detail (Thông tin tổ chức)
+#### D.4.3. Organization Detail
 
-| STT | Field | Mô tả | Ghi chú |
-|-----|-------|-------|---------|
-| 1 | DIVISION | Khối | VD: "SMMH (Head Office)" |
-| 2 | DEPARTMENT | Phòng ban | VD: "Account Team" |
-| 3 | SECTION | Bộ phận | - |
-| 4 | DEPARTMENT (Location) | Chi nhánh/Địa điểm | VD: "Ha Noi, ..." |
+| # | Field | Description | Notes |
+|---|-------|-------------|-------|
+| 1 | DIVISION | Division | e.g., "SMMH (Head Office)" |
+| 2 | DEPARTMENT | Department | e.g., "Account Team" |
+| 3 | SECTION | Section | - |
+| 4 | DEPARTMENT (Location) | Branch/Location | e.g., "Ha Noi, ..." |
 
 ### E. Add New Team or Member
 
-| STT | Thành phần | Mô tả | Ghi chú |
-|-----|------------|-------|---------|
-| 1 | Add Button | Nút "+ Add new member" | Nằm cuối danh sách hierarchy |
-| 2 | Button Style | Dashed border, icon (+) | Màu xám, hover đổi màu background |
-| 3 | Click Action | Mở form/modal thêm mới | Cả thêm Team hoặc Member |
+| # | Component | Description | Notes |
+|---|-----------|-------------|-------|
+| 1 | Add Button | "+ Add new member" button | At end of hierarchy list |
+| 2 | Button Style | Dashed border, (+) icon | Gray, hover changes background |
+| 3 | Click Action | Opens add new form/modal | For both Team or Member |
 
 ### E.1. Add New Division Popup Menu
 
-| STT | Thành phần | Mô tả | Ghi chú |
-|-----|------------|-------|---------|
-| 1 | + Add new division | Thêm division/phòng | Icon màu hồng |
-| 2 | Edit division | Chỉnh sửa division hiện tại | Icon bút chỉ màu hồng |
-| 3 | Delete division | Xóa division | Icon thùng rác màu hồng |
+| # | Component | Description | Notes |
+|---|-----------|-------------|-------|
+| 1 | + Add new division | Add division/department | Pink icon |
+| 2 | Edit division | Edit current division | Pink pencil icon |
+| 3 | Delete division | Delete division | Pink trash icon |
 
 ### F. Permissions Modal
 
-| STT | Thành phần | Mô tả | Ghi chú |
-|-----|------------|-------|---------|
-| 1 | Modal Header | "Permissions" với nền trắng | Title bold |
-| 2 | User/Role Selection | Chọn user hoặc role để phân quyền | Dropdown hoặc search |
-| 3 | Permission List | Danh sách quyền có thể cấp | Checkboxes cho từng quyền |
-| 4 | Save Button | Nút lưu cấu hình | Button màu hồng |
+| # | Component | Description | Notes |
+|---|-----------|-------------|-------|
+| 1 | Modal Header | "Permissions" with white background | Bold title |
+| 2 | User/Role Selection | Select user or role for permissions | Dropdown or search |
+| 3 | Permission List | List of permissions to grant | Checkboxes for each permission |
+| 4 | Save Button | Save configuration button | Pink button |
 
 ### G. Import Excel Function
 
-| STT | Thành phần | Mô tả | Ghi chú |
-|-----|------------|-------|---------|
-| 1 | Upload Dialog | Drag-drop hoặc file picker | Chấp nhận xlsx, xls |
-| 2 | Template Download | Link tải template mẫu | "Download template" |
-| 3 | Preview Data | Xem trước dữ liệu | Table preview |
-| 4 | Confirm Import | Nút xác nhận import dữ liệu | Button "Import" |
+| # | Component | Description | Notes |
+|---|-----------|-------------|-------|
+| 1 | Upload Dialog | Drag-drop or file picker | Accepts xlsx, xls |
+| 2 | Template Download | Template download link | "Download template" |
+| 3 | Preview Data | Data preview | Table preview |
+| 4 | Confirm Import | Confirm import button | "Import" button |
 
 ---
 
 ## 4. API INTEGRATION
 
-| STT | Action | Method | Endpoint | Description |
-|-----|--------|--------|----------|-------------|
-| 1 | Get Hierarchy | GET | /api/v1/users/hierarchy | Lấy cấu trúc phân cấp |
-| 2 | Get Department | GET | /api/v1/departments/{id} | Lấy thông tin phòng ban |
-| 3 | Get Members | GET | /api/v1/departments/{id}/members | Lấy danh sách thành viên phòng ban |
-| 4 | Get Employee Detail | GET | /api/v1/users/{id} | Lấy thông tin chi tiết nhân viên |
-| 5 | Add User | POST | /api/v1/users | Thêm người dùng mới |
-| 6 | Update User | PUT | /api/v1/users/{id} | Cập nhật thông tin người dùng |
-| 7 | Delete User | DELETE | /api/v1/users/{id} | Xóa người dùng |
-| 8 | Import Users | POST | /api/v1/users/import | Import danh sách từ Excel |
+| # | Action | Method | Endpoint | Description |
+|---|--------|--------|----------|-------------|
+| 1 | Get Hierarchy | GET | /api/v1/users/hierarchy | Get hierarchy structure |
+| 2 | Get Department | GET | /api/v1/departments/{id} | Get department information |
+| 3 | Get Members | GET | /api/v1/departments/{id}/members | Get department member list |
+| 4 | Get Employee Detail | GET | /api/v1/users/{id} | Get detailed employee information |
+| 5 | Add User | POST | /api/v1/users | Add new user |
+| 6 | Update User | PUT | /api/v1/users/{id} | Update user information |
+| 7 | Delete User | DELETE | /api/v1/users/{id} | Delete user |
+| 8 | Import Users | POST | /api/v1/users/import | Import list from Excel |
 
 ---
 
-## 5. CÁC KỊCH BẢN TEST (Test Scenarios)
+## 5. TEST SCENARIOS
 
-| STT | Kịch bản | Mô tả | Kỳ vọng |
-|-----|----------|-------|---------|
-| 1 | Click tab | Click vào tabs khác phòng | Content thay đổi theo tab |
-| 2 | Test navigation | Click vào department | Hiển thị các members |
-| 3 | Expand/Collapse | Click vào mũi tên expand | Mở rộng/thu gọn nội dung |
-| 4 | View employee detail | Click vào member card | Modal hiển thị đầy đủ thông tin nhân viên |
-| 5 | Add new member | Click "+ Add new" và điền thông tin | Member mới xuất hiện |
-| 6 | Edit user | Click menu → Edit và sửa thông tin | Thông tin được cập nhật |
-| 7 | Delete user | Click menu → Delete và xác nhận | User bị xóa khỏi hierarchy |
-| 8 | Import Excel | Click Import Excel và upload file | Users được thêm thành công |
+| # | Scenario | Description | Expected |
+|---|----------|-------------|----------|
+| 1 | Click tab | Click on different department tabs | Content changes per tab |
+| 2 | Test navigation | Click on department | Displays members |
+| 3 | Expand/Collapse | Click expand arrow | Content expands/collapses |
+| 4 | View employee detail | Click member card | Modal displays full employee information |
+| 5 | Add new member | Click "+ Add new" and fill information | New member appears |
+| 6 | Edit user | Click menu → Edit and modify information | Information is updated |
+| 7 | Delete user | Click menu → Delete and confirm | User is removed from hierarchy |
+| 8 | Import Excel | Click Import Excel and upload file | Users are added successfully |
 
 ---
 
@@ -239,8 +239,7 @@
 ```
 frontend/src/
 ├── app/
-│   └── users/
-│       ├── layout.tsx
+│   └── tasks/
 │       └── info/
 │           └── page.tsx
 ├── components/
@@ -284,7 +283,7 @@ frontend/src/
 
 ## 8. DEPARTMENT ICONS
 
-*Các department sử dụng inline SVG icons trong component DepartmentCard.tsx để tối ưu performance và hỗ trợ dynamic colors*
+*Departments use inline SVG icons in DepartmentCard.tsx component for optimized performance and dynamic color support*
 
 | Department | Icon Name | Color | ViewBox |
 |------------|-----------|-------|---------|
@@ -295,17 +294,17 @@ frontend/src/
 | HR | `hr` | #E11D48 | 0 0 18 13 |
 | MD | `md` | #D97706 | 0 0 20 18 |
 
-**Lợi ích của inline SVG:**
-- Không cần HTTP request riêng cho mỗi icon
-- Render nhanh hơn (không đợi load file)
-- Thay đổi màu động qua props `fill={color}`
-- Không phụ thuộc vào thư mục `/public/icons/`
+**Benefits of inline SVG:**
+- No separate HTTP request for each icon
+- Faster rendering (no file loading wait)
+- Dynamic color changes via `fill={color}` props
+- No dependency on `/public/icons/` folder
 
 ---
 
 ## 9. CONNECTOR LINES
 
-*Đường kẻ liên kết (connector lines) giữa các thẻ trong hierarchy tree*
+*Connector lines between cards in hierarchy tree*
 
 | Component | Connector Position | Calculation |
 |-----------|-------------------|-------------|
@@ -326,3 +325,4 @@ frontend/src/
 | 2026-01-02 | Converted department icons from SVG files to inline SVG for better performance |
 | 2026-01-02 | Updated Admin and OP icons with new SVG designs from Figma |
 | 2026-01-02 | Fixed tab colors: inactive tabs now display gray text |
+| 2026-01-02 | Translated specification to English |
