@@ -66,17 +66,15 @@ export default function TaskListPage() {
   }
 
   // State management
-  const [dateMode, setDateMode] = useState<DateMode>('WEEK');
+  const [dateMode, setDateMode] = useState<DateMode>('DAY');
   const [dateRange, setDateRange] = useState<DateRange>(() => {
-    // Default to current week
+    // Default to today
     const today = new Date();
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay());
-    startOfWeek.setHours(0, 0, 0, 0);
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
-    endOfWeek.setHours(23, 59, 59, 999);
-    return { from: startOfWeek, to: endOfWeek };
+    const dayStart = new Date(today);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(today);
+    dayEnd.setHours(23, 59, 59, 999);
+    return { from: dayStart, to: dayEnd };
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [tasks, setTasks] = useState<TaskGroup[]>([]);
