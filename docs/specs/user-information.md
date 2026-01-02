@@ -284,16 +284,22 @@ frontend/src/
 
 ## 8. DEPARTMENT ICONS
 
-*Các department sử dụng file SVG icon từ thư mục `/public/icons/`*
+*Các department sử dụng inline SVG icons trong component DepartmentCard.tsx để tối ưu performance và hỗ trợ dynamic colors*
 
-| Department | Icon File | Color |
-|------------|-----------|-------|
-| Admin | `/icons/admin.svg` | #233D62 |
-| OP | `/icons/op.svg` | #0D9488 |
-| CONTROL | `/icons/control.svg` | #7C3AED |
-| IMPROVEMENT | `/icons/improvement.svg` | #2563EB |
-| HR | `/icons/hr.svg` | #E11D48 |
-| MD | `/icons/md.svg` | #D97706 |
+| Department | Icon Name | Color | ViewBox |
+|------------|-----------|-------|---------|
+| Admin | `admin` | #233D62 | 0 0 18 20 |
+| OP | `op` | #0D9488 | 0 0 20 21 |
+| CONTROL | `control` | #7C3AED | 0 0 22 22 |
+| IMPROVEMENT | `improvement` | #2563EB | 0 0 22 22 |
+| HR | `hr` | #E11D48 | 0 0 18 13 |
+| MD | `md` | #D97706 | 0 0 20 18 |
+
+**Lợi ích của inline SVG:**
+- Không cần HTTP request riêng cho mỗi icon
+- Render nhanh hơn (không đợi load file)
+- Thay đổi màu động qua props `fill={color}`
+- Không phụ thuộc vào thư mục `/public/icons/`
 
 ---
 
@@ -317,3 +323,4 @@ frontend/src/
 | 2026-01-02 | Added Department Detail View with TeamCard, MemberCard, DepartmentHeadCard components |
 | 2026-01-02 | Updated department icons to use SVG files from /public/icons/ |
 | 2026-01-02 | Fixed connector line positions to align with card centers |
+| 2026-01-02 | Converted department icons from SVG files to inline SVG for better performance |

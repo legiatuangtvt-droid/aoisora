@@ -112,7 +112,7 @@ const adminTeams: Team[] = [
 const adminDepartment: Department = {
   id: 'Admin',
   name: 'ADMIN',
-  icon: '/icons/admin.svg',  // Using SVG file from public folder
+  icon: 'admin',  // Inline SVG icon
   iconColor: '#233D62',
   iconBg: 'rgba(35, 61, 98, 0.1)',
   memberCount: 7,
@@ -126,7 +126,7 @@ const adminDepartment: Department = {
 const opDepartment: Department = {
   id: 'OP',
   name: 'OP',
-  icon: '/icons/op.svg',  // Using SVG file from public folder
+  icon: 'op',  // Inline SVG icon
   iconColor: '#0D9488',
   iconBg: 'rgba(13, 148, 136, 0.1)',
   memberCount: 10,
@@ -138,7 +138,7 @@ const opDepartment: Department = {
 const controlDepartment: Department = {
   id: 'CONTROL',
   name: 'CONTROL',
-  icon: '/icons/control.svg',  // Using SVG file from public folder
+  icon: 'control',  // Inline SVG icon
   iconColor: '#7C3AED',
   iconBg: 'rgba(124, 58, 237, 0.1)',
   memberCount: 10,
@@ -150,7 +150,7 @@ const controlDepartment: Department = {
 const improvementDepartment: Department = {
   id: 'IMPROVEMENT',
   name: 'IMPROVEMENT',
-  icon: '/icons/improvement.svg',  // Using SVG file from public folder
+  icon: 'improvement',  // Inline SVG icon
   iconColor: '#2563EB',
   iconBg: 'rgba(37, 99, 235, 0.1)',
   memberCount: 12,
@@ -162,7 +162,7 @@ const improvementDepartment: Department = {
 const hrDepartment: Department = {
   id: 'HR',
   name: 'HR',
-  icon: '/icons/hr.svg',  // Using SVG file from public folder
+  icon: 'hr',  // Inline SVG icon
   iconColor: '#E11D48',
   iconBg: 'rgba(225, 29, 72, 0.1)',
   memberCount: 5,
@@ -174,7 +174,7 @@ const hrDepartment: Department = {
 const mdDepartment: Department = {
   id: 'MD',
   name: 'MD',
-  icon: '/icons/md.svg',  // Using SVG file from public folder
+  icon: 'md',  // Inline SVG icon
   iconColor: '#D97706',
   iconBg: 'rgba(217, 119, 6, 0.1)',
   memberCount: 8,
