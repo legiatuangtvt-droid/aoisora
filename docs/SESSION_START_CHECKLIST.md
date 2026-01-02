@@ -6,14 +6,138 @@
 
 ## 1. Git Synchronization
 
-- [ ] Kiểm tra nhánh hiện tại: `git branch`
-- [ ] Kiểm tra trạng thái: `git status`
-- [ ] Pull code mới nhất: `git pull`
-- [ ] Xem các commit gần đây: `git log --oneline -5`
+```bash
+git branch                    # Kiểm tra nhánh hiện tại
+git status                    # Kiểm tra trạng thái
+git pull                      # Pull code mới nhất
+git log --oneline -5          # Xem các commit gần đây
+```
 
 ---
 
-## 2. Project Structure Overview
+## 2. Start All Services (QUAN TRỌNG)
+
+> **Phải khởi động cả 3 services trước khi bắt đầu làm việc**
+
+### Step 1: Start PostgreSQL Database
+```bash
+"D:\devtool\laragon\bin\postgresql\pgsql-18\bin\pg_ctl.exe" -D "D:\devtool\laragon\data\postgresql" start
+```
+
+### Step 2: Start Backend (Laravel) - Terminal 1
+```bash
+cd backend
+"D:\devtool\laragon\bin\php\php-8.3.28-Win32-vs16-x64\php.exe" artisan serve
+# API chạy tại http://localhost:8000
+```
+
+### Step 3: Start Frontend (Next.js) - Terminal 2
+```bash
+cd frontend
+npm run dev
+# App chạy tại http://localhost:3000
+```
+
+### Verify All Services Running
+| Service | URL | Expected |
+|---------|-----|----------|
+| Frontend | http://localhost:3000 | Next.js app |
+| Backend API | http://localhost:8000/api/v1/auth/login | JSON response |
+| Database | `psql -U postgres -d aoisora -c "\dt"` | List tables |
+
+---
+
+## 3. Test Credentials
+
+| Username | Password | Role |
+|----------|----------|------|
+| `admin` | `password` | MANAGER |
+| `leader1` | `password` | STORE_LEADER_G3 |
+| `staff1_1` | `password` | STAFF |
+
+### Quick API Test (curl)
+```bash
+curl -s http://127.0.0.1:8000/api/v1/auth/login -X POST -H "Content-Type: application/json" -H "Accept: application/json" -d "{\"username\":\"admin\",\"password\":\"password\"}"
+```
+
+---
+
+## 4. Working Session Workflow
+
+> **Mục tiêu**: Backend + DB development, kết hợp hoàn thiện Frontend, update spec
+
+### Development Cycle
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  1. Chọn feature/screen cần làm                                 │
+│     ↓                                                           │
+│  2. Kiểm tra/hoàn thiện Backend API endpoints                   │
+│     ↓                                                           │
+│  3. Kiểm tra/cập nhật Database schema nếu cần                   │
+│     ↓                                                           │
+│  4. Hoàn thiện Frontend screen tương ứng                        │
+│     ↓                                                           │
+│  5. Test tích hợp FE + BE + DB                                  │
+│     ↓                                                           │
+│  6. Cập nhật spec file trong docs/specs/                        │
+│     ↓                                                           │
+│  7. Commit & Push                                               │
+│     ↓                                                           │
+│  (Lặp lại cho feature tiếp theo)                                │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### On Every Change (BẮT BUỘC)
+
+1. **Update Spec**: Cập nhật file `.md` spec tương ứng trong `docs/specs/`
+2. **Layer Separation**: Đảm bảo code đúng layer (Frontend/Backend/DB)
+3. **Commit & Push**: Sau mỗi thay đổi hoàn chỉnh:
+   ```bash
+   git add .
+   git commit -m "<type>(<scope>): <description>"
+   git push
+   ```
+
+---
+
+## 5. Login Screen Priority
+
+> **LƯU Ý**: Login screen (Authentication) cần được hoàn thiện ĐẦU TIÊN
+
+### Tại sao Login screen quan trọng?
+- Tất cả các screens khác đều yêu cầu authentication token
+- Không có login → không test được các screens khác trên browser
+- Backend API đã sẵn sàng: `/api/v1/auth/login`
+
+### Workaround tạm thời (nếu chưa có Login screen)
+```javascript
+// Mở Browser Console (F12) tại http://localhost:3000
+// Paste đoạn code sau để set token thủ công:
+
+// 1. Gọi API login
+fetch('http://localhost:8000/api/v1/auth/login', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ username: 'admin', password: 'password' })
+})
+.then(r => r.json())
+.then(data => {
+  localStorage.setItem('access_token', data.access_token);
+  console.log('Token saved:', data.access_token);
+});
+
+// 2. Refresh page để app sử dụng token
+```
+
+### Recommended: Hoàn thiện Login Screen trước
+- File: `frontend/src/app/login/page.tsx`
+- API: `POST /api/v1/auth/login`
+- Response: `{ access_token, token_type, staff }`
+
+---
+
+## 6. Project Structure
 
 ```
 Aura Web/
@@ -23,63 +147,6 @@ Aura Web/
 ├── docs/specs/        # Feature specifications
 └── mobile/            # Flutter app (future)
 ```
-
----
-
-## 3. Environment Check
-
-### Frontend (Next.js)
-- [ ] Kiểm tra Node.js version: `node -v` (yêu cầu v18+)
-- [ ] Kiểm tra npm version: `npm -v`
-- [ ] Cài đặt dependencies: `cd frontend && npm install`
-- [ ] Kiểm tra file `.env.local` (nếu có)
-
-### Backend (Laravel)
-- [ ] Kiểm tra PHP version: `php -v` (yêu cầu PHP 8.0+)
-- [ ] Kiểm tra Composer: `composer -V`
-- [ ] Cài đặt dependencies: `cd backend && composer install`
-- [ ] Kiểm tra file `.env` và cấu hình DB
-
-### Database (PostgreSQL)
-- [ ] Kiểm tra PostgreSQL: `psql --version` (yêu cầu v15+)
-- [ ] Kiểm tra kết nối DB: `psql -U postgres -c "SELECT version();"`
-- [ ] Verify database exists: `psql -U postgres -l`
-
----
-
-## 4. Run Applications
-
-### Frontend
-```bash
-cd frontend
-npm run dev
-# App chạy tại http://localhost:3000
-```
-
-### Backend
-```bash
-cd backend
-php artisan serve
-# API chạy tại http://localhost:8000
-```
-
-### Database
-```bash
-# Chạy migrations
-cd backend
-php artisan migrate
-
-# Chạy seeders (data mẫu)
-php artisan db:seed
-```
-
----
-
-## 5. Identify Issues
-
-- [ ] Liệt kê các lỗi compile/runtime (nếu có)
-- [ ] Liệt kê các warning
-- [ ] Đề xuất các cải thiện cần thiết
 
 ---
 
@@ -120,74 +187,48 @@ User ← Frontend (Next.js) ← API Response ← Backend (Laravel) ← Database 
 - API versioning: `/api/v1/*`
 
 ### Database Rules
-- Schema changes qua Laravel Migrations
-- Seed data qua Laravel Seeders
-- KHÔNG chỉnh sửa DB trực tiếp (dùng migrations)
+- Schema changes qua Laravel Migrations hoặc `database/schema.sql`
+- Seed data qua `database/seed_data.sql`
+- KHÔNG chỉnh sửa DB trực tiếp trong production
 - Foreign keys và indexes đầy đủ
 
 ---
 
-# Working Session Rules
+# Module Scope
 
-> Trong suốt phiên làm việc, tuân thủ các quy tắc sau:
+## WS Module (Work Standard) - TRONG SCOPE
 
-## On Every Change
-
-1. **Update Spec**: Mỗi khi có thay đổi code, cập nhật file `.md` spec tương ứng trong `docs/specs/`
-2. **Layer Separation**: Đảm bảo code đúng layer (Frontend/Backend/DB)
-3. **Commit & Push**: Sau mỗi thay đổi hoàn chỉnh:
-   ```bash
-   git add .
-   git commit -m "Mô tả thay đổi"
-   git push
-   ```
-
-## Module Scope
-
-### WS Module (Work Standard)
 | Component | Tables | Controllers | Frontend Pages |
 |-----------|--------|-------------|----------------|
-| Tasks | `tasks`, `task_check_list`, `check_lists` | TaskController | `/tasks/*` |
-| Task Groups | `task_groups` | TaskGroupController | - |
-| Task Library | `task_library` | TaskLibraryController | `/tasks/library` |
-| Manual | `manual_*` tables | ManualController | `/manual/*` |
-| Core | `staff`, `stores`, `departments`, `regions` | Core Controllers | `/users/*`, `/stores/*` |
+| **Auth** | `staff`, `personal_access_tokens` | AuthController | `/login` |
+| **Tasks** | `tasks`, `task_check_list`, `check_lists` | TaskController | `/tasks/*` |
+| **Task Groups** | `task_groups` | TaskGroupController | - |
+| **Task Library** | `task_library` | TaskLibraryController | `/tasks/library` |
+| **Manual** | `manual_*` tables | ManualController | `/manual/*` |
+| **Core** | `staff`, `stores`, `departments`, `regions` | Core Controllers | `/users/*`, `/stores/*` |
 
-### DWS Module (Daily Work Schedule) - KHÔNG trong scope hiện tại
+## DWS Module (Daily Work Schedule) - KHÔNG trong scope hiện tại
 - `shift_codes`, `shift_assignments`, `shift_templates`
 - `daily_templates`, `daily_schedule_tasks`
 - ShiftCodeController, DailyScheduleTaskController...
 
-## Spec Files Location
+---
 
-| Feature | Spec File |
-|---------|-----------|
-| Task List Screen | `docs/specs/task-list.md` |
-| Task Detail Screen | `docs/specs/task-detail.md` |
-| Task Library Screen | `docs/specs/task-library.md` |
-| Add Task Screen | `docs/specs/add-task.md` |
-| Todo Task Screen | `docs/specs/todo-task.md` |
-| User Information | `docs/specs/user-information.md` |
-| Store Information | `docs/specs/store-information.md` |
-| Message Screen | `docs/specs/message.md` |
-| App General | `docs/specs/app-general.md` |
+# Spec Files Location
 
-## Commit Message Format
-
-```
-<type>(<scope>): <short description>
-
-- Detail 1
-- Detail 2
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-
-Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
-```
-
-**Types**: `feat`, `fix`, `refactor`, `docs`, `style`, `chore`
-
-**Scopes**: `frontend`, `backend`, `db`, `api`, `docs`
+| Feature | Spec File | Status |
+|---------|-----------|--------|
+| Login Screen | `docs/specs/login.md` | TODO |
+| Task List Screen | `docs/specs/task-list.md` | Available |
+| Task Detail Screen | `docs/specs/task-detail.md` | Available |
+| Task Library Screen | `docs/specs/task-library.md` | Available |
+| Add Task Screen | `docs/specs/add-task.md` | Available |
+| Todo Task Screen | `docs/specs/todo-task.md` | Available |
+| Manual Screen | `docs/specs/manual.md` | TODO |
+| User Information | `docs/specs/user-information.md` | Available |
+| Store Information | `docs/specs/store-information.md` | Available |
+| Message Screen | `docs/specs/message.md` | Available |
+| App General | `docs/specs/app-general.md` | Available |
 
 ---
 
@@ -218,6 +259,25 @@ git commit -m "message"
 git push
 ```
 
+## Commit Message Format
+
+```
+<type>(<scope>): <short description>
+
+- Detail 1
+- Detail 2
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
+```
+
+**Types**: `feat`, `fix`, `refactor`, `docs`, `style`, `chore`
+
+**Scopes**: `frontend`, `backend`, `db`, `api`, `docs`
+
+---
+
 ## Frontend Development
 
 ```bash
@@ -240,14 +300,8 @@ cd backend
 # Start Laravel server
 "D:\devtool\laragon\bin\php\php-8.3.28-Win32-vs16-x64\php.exe" artisan serve
 
-# Run migrations
-"D:\devtool\laragon\bin\php\php-8.3.28-Win32-vs16-x64\php.exe" artisan migrate
-
-# Run seeders
-"D:\devtool\laragon\bin\php\php-8.3.28-Win32-vs16-x64\php.exe" artisan db:seed
-
 # List routes
-"D:\devtool\laragon\bin\php\php-8.3.28-Win32-vs16-x64\php.exe" artisan route:list
+"D:\devtool\laragon\bin\php\php-8.3.28-Win32-vs16-x64\php.exe" artisan route:list --path=api
 
 # Check database connection
 "D:\devtool\laragon\bin\php\php-8.3.28-Win32-vs16-x64\php.exe" artisan db:show
@@ -265,7 +319,7 @@ cd backend
 # Connect to database
 "D:\devtool\laragon\bin\postgresql\pgsql-18\bin\psql.exe" -U postgres -d aoisora
 
-# Run schema.sql
+# Run schema.sql (reset database)
 "D:\devtool\laragon\bin\postgresql\pgsql-18\bin\psql.exe" -U postgres -d aoisora -f "d:\Project\Aura Web\database\schema.sql"
 
 # Run seed_data.sql
@@ -277,59 +331,6 @@ cd backend
 
 ---
 
-# Required Software Installation
-
-## Cần cài đặt trước khi làm việc với Backend + DB:
-
-### 1. PHP 8.0+ (với extensions)
-```bash
-# Windows: Download từ https://windows.php.net/download/
-# Hoặc dùng XAMPP/Laragon
-
-# Verify
-php -v
-```
-
-**Extensions cần thiết:**
-- pdo_pgsql (PostgreSQL)
-- mbstring
-- openssl
-- tokenizer
-- xml
-- ctype
-- json
-- bcmath
-
-### 2. Composer (PHP Package Manager)
-```bash
-# Windows: Download từ https://getcomposer.org/download/
-
-# Verify
-composer -V
-```
-
-### 3. PostgreSQL 15+
-```bash
-# Windows: Download từ https://www.postgresql.org/download/windows/
-
-# Verify
-psql --version
-
-# Default credentials
-# Host: localhost
-# Port: 5432
-# User: postgres
-# Password: (set during installation)
-```
-
-### 4. pgAdmin (Optional - GUI cho PostgreSQL)
-```bash
-# Đi kèm với PostgreSQL installer
-# Hoặc download riêng: https://www.pgadmin.org/download/
-```
-
----
-
 # Database Configuration
 
 ## Backend `.env` configuration:
@@ -337,7 +338,7 @@ psql --version
 ```env
 APP_NAME=Aoisora
 APP_ENV=local
-APP_KEY=base64:...
+APP_KEY=base64:BuFEDRUHaCmP5M8IFmdcjhIaDPsDNlZflDpjOsFrbRs=
 APP_DEBUG=true
 APP_URL=http://localhost:8000
 
@@ -346,21 +347,31 @@ DB_HOST=127.0.0.1
 DB_PORT=5432
 DB_DATABASE=aoisora
 DB_USERNAME=postgres
-DB_PASSWORD=your_password
+DB_PASSWORD=
 
 # CORS
 CORS_ALLOWED_ORIGINS=http://localhost:3000
 ```
 
-## Create database:
+## Frontend `.env.local` configuration:
 
-```sql
--- Connect to PostgreSQL
-psql -U postgres
-
--- Create database
-CREATE DATABASE aoisora;
-
--- Verify
-\l
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
 ```
+
+---
+
+# End Session Checklist
+
+Trước khi kết thúc phiên làm việc:
+
+- [ ] Commit tất cả changes
+- [ ] Push lên remote
+- [ ] Update spec files nếu có thay đổi
+- [ ] Stop services (optional):
+  ```bash
+  # Stop PostgreSQL
+  "D:\devtool\laragon\bin\postgresql\pgsql-18\bin\pg_ctl.exe" -D "D:\devtool\laragon\data\postgresql" stop
+
+  # Frontend & Backend: Ctrl+C trong terminal
+  ```
