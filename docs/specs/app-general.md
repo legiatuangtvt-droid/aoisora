@@ -1,7 +1,7 @@
 # App General Layout Specification
 
 > **Status**: Implementation Complete (Frontend)
-> **Last Updated**: 2025-12-29
+> **Last Updated**: 2026-01-02
 > **Screen ID**: APP_GENERAL
 > **Applies to**: All screens
 
@@ -70,10 +70,12 @@ This specification defines the general application layout including Top Bar, Sid
 | ├─ 📝 | List task | /tasks/list | HQ-Store | ✅ Implemented |
 | ├─ 📄 | Detail | /tasks/detail | HQ-Store | ✅ Implemented |
 | └─ 💬 | Message | /tasks/messages | HQ-Store | ✅ Implemented |
-| ✅ | To-do Task | /todo | - | ✅ Menu item added |
-| 📚 | Task Library | /library | - | ✅ Menu item added |
+| ✅ | To-do Task | /tasks/todo | - | ✅ Implemented |
+| 📚 | Task Library | /tasks/library | - | ✅ Implemented |
 | 📊 | Report | /reports | - | ✅ Menu item added |
-| 👥 | User management | /users | - | ✅ Menu item added |
+| 👥 | User management | /users | - | ✅ Parent menu |
+| ├─ 👤 | User information | /tasks/info | User management | ✅ Implemented |
+| └─ 🏪 | Store information | /tasks/store-info | User management | ✅ Implemented |
 
 **Behavior:**
 - Expanded mode: Show icon + label
@@ -82,6 +84,19 @@ This specification defines the general application layout including Top Bar, Sid
 - Smooth transition animation (300ms)
 - Parent menus are expandable/collapsible with arrow indicator
 - Child items indented with left border line
+
+**UI/UX Enhancements (v2):**
+- Gradient background for active/hover states
+- Scale animation on hover (`scale-[1.02]`) and click (`scale-[0.98]`)
+- Icon rotation on hover (`rotate-3`)
+- Ripple effect on click
+- Gradient active indicator bar (from `#C5055B` to `#E5457B`)
+- Children count badge when sidebar is collapsed
+- Tooltip with item count preview (e.g., "Task list HQ-Store (3 items)")
+- Scroll improvements:
+  - Custom thin scrollbar with hover effect
+  - Top/bottom fade gradients
+  - Smooth scrolling
 
 ### 3.3 User Menu Dropdown
 
@@ -223,6 +238,9 @@ frontend/src/
 
 | Date | Changes |
 |------|---------|
+| 2026-01-02 | Enhanced sidebar UI/UX: gradient states, animations, scroll improvements |
+| 2026-01-02 | Added User management submenu (User info, Store info) |
+| 2026-01-02 | Added custom scrollbar styles to globals.css |
 | 2025-12-29 | Apply global dark mode styles to all pages via globals.css |
 | 2025-12-29 | Update theme toggle to show current state (Light Mode/Dark Mode) |
 | 2024-12-28 | Initial spec documentation |

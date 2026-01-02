@@ -252,6 +252,14 @@ export default function Sidebar() {
     }
   };
 
+  // Generate tooltip content with preview for parent items
+  const getTooltipContent = (item: MenuItem) => {
+    if (item.children && item.children.length > 0) {
+      return `${item.label} (${item.children.length} items)`;
+    }
+    return item.label;
+  };
+
   const renderMenuItem = (item: MenuItem, isChild = false) => {
     const hasChildren = item.children && item.children.length > 0;
     const isMenuExpanded = expandedMenus.includes(item.id);
@@ -260,28 +268,37 @@ export default function Sidebar() {
 
     if (hasChildren) {
       return (
-        <div key={item.id}>
+        <div key={item.id} className="group/parent">
           <button
             onClick={() => toggleMenu(item.id)}
-            title={!showExpanded ? item.label : undefined}
-            className={`group relative w-full flex items-center gap-3 px-3 py-3 md:py-2.5 rounded-lg transition-all duration-200 ${active
-                ? 'bg-pink-50 dark:bg-pink-900/20 text-[#C5055B] dark:text-pink-400'
-                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-              }`}
+            title={!showExpanded ? getTooltipContent(item) : undefined}
+            className={`group relative w-full flex items-center gap-3 px-3 py-3 md:py-2.5 rounded-lg transition-all duration-200
+              ${active
+                ? 'bg-gradient-to-r from-pink-50 to-pink-100/50 dark:from-pink-900/20 dark:to-pink-800/10 text-[#C5055B] dark:text-pink-400 shadow-sm'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100/50 dark:hover:from-gray-700 dark:hover:to-gray-600/50'
+              }
+              hover:scale-[1.02] hover:shadow-sm active:scale-[0.98] transform-gpu`}
           >
+            {/* Active indicator bar */}
             <div
-              className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 rounded-r-full transition-all duration-200 ${
-                active ? 'h-6 bg-[#C5055B]' : 'h-0 bg-transparent'
+              className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 rounded-r-full transition-all duration-300 ease-out ${
+                active ? 'h-6 bg-gradient-to-b from-[#C5055B] to-[#E5457B]' : 'h-0 bg-transparent'
               }`}
             />
+
+            {/* Ripple effect on click */}
+            <div className="absolute inset-0 rounded-lg overflow-hidden pointer-events-none">
+              <span className="absolute inset-0 bg-[#C5055B] opacity-0 group-active:opacity-10 transition-opacity duration-150" />
+            </div>
+
             <MenuIcon
               name={item.icon}
-              className={`w-5 h-5 flex-shrink-0 transition-transform duration-200 group-hover:scale-110 ${active ? 'text-[#C5055B] dark:text-pink-400' : ''}`}
+              className={`w-5 h-5 flex-shrink-0 transition-all duration-200 group-hover:scale-110 group-hover:rotate-3 ${active ? 'text-[#C5055B] dark:text-pink-400' : ''}`}
               isActive={active}
             />
             {showExpanded && (
               <>
-                <span className="text-sm font-medium whitespace-nowrap overflow-hidden flex-1 text-left">
+                <span className="text-sm font-medium whitespace-nowrap overflow-hidden flex-1 text-left transition-colors duration-200">
                   {item.label}
                 </span>
                 <svg
@@ -293,6 +310,13 @@ export default function Sidebar() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </>
+            )}
+
+            {/* Collapsed state: show children count dot */}
+            {!showExpanded && hasChildren && (
+              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-gray-400 dark:bg-gray-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                {item.children?.length}
+              </span>
             )}
           </button>
 
@@ -319,28 +343,32 @@ export default function Sidebar() {
         href={implemented ? item.route : '#'}
         onClick={(e) => handleNavigation(e, item.route, isChild, implemented)}
         title={!showExpanded ? item.label : undefined}
-        className={`group relative flex items-center gap-3 py-3 md:py-2.5 rounded-lg transition-all duration-200 ${collapsedChildStyle} ${isChild && showExpanded ? 'ml-2 px-3' : ''} ${isActive(item.route)
-            ? 'bg-pink-50 dark:bg-pink-900/20 text-[#C5055B] dark:text-pink-400'
-            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-          }`}
+        className={`group relative flex items-center gap-3 py-3 md:py-2.5 rounded-lg transition-all duration-200 ${collapsedChildStyle} ${isChild && showExpanded ? 'ml-2 px-3' : ''}
+          ${isActive(item.route)
+            ? 'bg-gradient-to-r from-pink-50 to-pink-100/50 dark:from-pink-900/20 dark:to-pink-800/10 text-[#C5055B] dark:text-pink-400 shadow-sm'
+            : 'text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100/50 dark:hover:from-gray-700 dark:hover:to-gray-600/50'
+          }
+          hover:scale-[1.02] hover:shadow-sm active:scale-[0.98] transform-gpu`}
       >
+        {/* Active indicator bar */}
         <div
-          className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 rounded-r-full transition-all duration-200 ${
-            isActive(item.route) ? 'h-6 bg-[#C5055B]' : 'h-0 bg-transparent'
+          className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 rounded-r-full transition-all duration-300 ease-out ${
+            isActive(item.route) ? 'h-6 bg-gradient-to-b from-[#C5055B] to-[#E5457B]' : 'h-0 bg-transparent'
           }`}
         />
 
-        <div className="absolute inset-0 rounded-lg overflow-hidden">
+        {/* Ripple effect on click */}
+        <div className="absolute inset-0 rounded-lg overflow-hidden pointer-events-none">
           <span className="absolute inset-0 bg-[#C5055B] opacity-0 group-active:opacity-10 transition-opacity duration-150" />
         </div>
 
         <MenuIcon
           name={item.icon}
-          className={`${isChild ? 'w-4 h-4' : 'w-5 h-5'} flex-shrink-0 transition-transform duration-200 group-hover:scale-110 ${isActive(item.route) ? 'text-[#C5055B] dark:text-pink-400' : ''}`}
+          className={`${isChild ? 'w-4 h-4' : 'w-5 h-5'} flex-shrink-0 transition-all duration-200 group-hover:scale-110 group-hover:rotate-3 ${isActive(item.route) ? 'text-[#C5055B] dark:text-pink-400' : ''}`}
           isActive={isActive(item.route)}
         />
         {showExpanded && (
-          <span className="text-sm font-medium whitespace-nowrap overflow-hidden">
+          <span className="text-sm font-medium whitespace-nowrap overflow-hidden transition-colors duration-200">
             {item.label}
           </span>
         )}
@@ -375,17 +403,25 @@ export default function Sidebar() {
           {/* Close button */}
           <button
             onClick={() => setIsMobileMenuOpen(false)}
-            className="absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors z-10"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
 
-          {/* Menu Items */}
-          <nav className="p-4 pt-14 space-y-1 overflow-y-auto h-full">
-            {menuItems.map(item => renderMenuItem(item))}
-          </nav>
+          {/* Menu Items with scroll improvements */}
+          <div className="relative h-full">
+            {/* Top fade gradient */}
+            <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-white dark:from-gray-800 to-transparent z-[1] pointer-events-none" />
+
+            <nav className="p-4 pt-14 pb-8 space-y-1 overflow-y-auto h-full scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-500">
+              {menuItems.map(item => renderMenuItem(item))}
+            </nav>
+
+            {/* Bottom fade gradient */}
+            <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white dark:from-gray-800 to-transparent pointer-events-none" />
+          </div>
         </aside>
       </>
     );
@@ -402,7 +438,7 @@ export default function Sidebar() {
       {/* Toggle Button */}
       <button
         onClick={toggleSidebar}
-        className="absolute -right-3 top-6 w-6 h-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm hover:shadow-md hover:scale-110"
+        className="absolute -right-3 top-6 w-6 h-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm hover:shadow-md hover:scale-110 z-10"
       >
         <svg
           className={`w-4 h-4 text-gray-500 transition-transform duration-300 ${isExpanded ? '' : 'rotate-180'}`}
@@ -414,10 +450,18 @@ export default function Sidebar() {
         </svg>
       </button>
 
-      {/* Menu Items */}
-      <nav className="p-3 space-y-1">
-        {menuItems.map(item => renderMenuItem(item))}
-      </nav>
+      {/* Menu Items with scroll improvements */}
+      <div className="relative h-full">
+        {/* Top fade gradient */}
+        <div className="absolute top-0 left-0 right-0 h-3 bg-gradient-to-b from-white dark:from-gray-800 to-transparent z-[1] pointer-events-none" />
+
+        <nav className="p-3 pb-6 space-y-1 overflow-y-auto h-full scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-500">
+          {menuItems.map(item => renderMenuItem(item))}
+        </nav>
+
+        {/* Bottom fade gradient */}
+        <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-white dark:from-gray-800 to-transparent pointer-events-none" />
+      </div>
     </aside>
   );
 }
