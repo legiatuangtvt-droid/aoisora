@@ -21,6 +21,9 @@ out/
 .env.test.local
 .env.production.local
 
+# TypeScript
+*.tsbuildinfo
+
 # Flutter
 .dart_tool/
 .flutter-plugins
@@ -53,5 +56,12 @@ Thumbs.db
 # Logs
 *.log
 logs/
-docs/spec/auraProject.rar
-*.rar
+
+# Claude Code
+.claude/settings.local.json
+
+# Firebase
+.firebase/
+
+# Misc
+nul

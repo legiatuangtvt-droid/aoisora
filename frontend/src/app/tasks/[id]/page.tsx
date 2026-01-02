@@ -1,22 +1,21 @@
+import { mockTaskGroups } from '@/data/mockTasks';
 import TaskDetailClient from './TaskDetailClient';
 
-// Generate static params for static export
-// Pre-render common task IDs, others handled client-side
+/**
+ * Generate static params for all tasks
+ * Required for Next.js static export with dynamic routes
+ */
 export function generateStaticParams() {
-  return [
-    { id: '1' },
-    { id: '2' },
-    { id: '3' },
-    { id: '4' },
-    { id: '5' },
-    { id: '6' },
-    { id: '7' },
-    { id: '8' },
-    { id: '9' },
-    { id: '10' },
-  ];
+  return mockTaskGroups.map((task) => ({
+    id: task.id,
+  }));
 }
 
+/**
+ * Task Detail page
+ * Server component wrapper for static export
+ * Route: /tasks/[id]
+ */
 export default function TaskDetailPage({ params }: { params: { id: string } }) {
   return <TaskDetailClient taskId={params.id} />;
 }

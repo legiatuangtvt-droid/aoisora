@@ -1,437 +1,370 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { mockTaskGroups } from '@/data/mockTasks';
+import { getMockTaskDetail } from '@/data/mockTaskDetail';
+import { ViewMode } from '@/types/tasks';
 import Link from 'next/link';
-import {
-  getTaskById,
-  updateTaskStatus,
-  updateTaskChecklist,
-  getCodeMaster,
-} from '@/lib/api';
-import type { Task, CodeMaster } from '@/types/api';
-import { TASK_STATUS } from '@/types/api';
+import StoreResultCard from '@/components/tasks/StoreResultCard';
+import ViewModeToggle from '@/components/tasks/ViewModeToggle';
 
 interface TaskDetailClientProps {
   taskId: string;
 }
 
+/**
+ * Task Detail Client Component
+ * Displays detailed information for a specific task
+ */
 export default function TaskDetailClient({ taskId }: TaskDetailClientProps) {
-  const router = useRouter();
-  const parsedTaskId = parseInt(taskId);
+  const [viewMode, setViewMode] = useState<ViewMode>('results');
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isContentVisible, setIsContentVisible] = useState(true);
 
-  const [task, setTask] = useState<Task | null>(null);
-  const [statuses, setStatuses] = useState<CodeMaster[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // Refs for scroll preservation
+  const scrollPositions = useRef<Record<ViewMode, number>>({
+    results: 0,
+    comment: 0,
+    staff: 0,
+  });
+  const contentRef = useRef<HTMLDivElement>(null);
 
-  // Load task data
+  // Find the task by ID from task list
+  const task = mockTaskGroups.find(t => t.id === taskId);
+
+  // Get detailed task data
+  const taskDetail = getMockTaskDetail(`task-${taskId}`);
+
+  // Calculate counts for badges
+  const resultsCount = taskDetail?.storeResults.length || 0;
+  const commentsCount = taskDetail?.storeResults.reduce(
+    (acc, store) => acc + store.comments.length,
+    0
+  ) || 0;
+
+  // Save scroll position before view change
+  const saveScrollPosition = useCallback(() => {
+    if (contentRef.current) {
+      scrollPositions.current[viewMode] = contentRef.current.scrollTop;
+    }
+  }, [viewMode]);
+
+  // Restore scroll position after view change
+  const restoreScrollPosition = useCallback((mode: ViewMode) => {
+    if (contentRef.current) {
+      contentRef.current.scrollTop = scrollPositions.current[mode];
+    }
+  }, []);
+
+  // Handle view mode change with animation
+  const handleViewModeChange = useCallback((newMode: ViewMode) => {
+    if (newMode === viewMode || isTransitioning) return;
+
+    // Save current scroll position
+    saveScrollPosition();
+
+    // Start fade out
+    setIsTransitioning(true);
+    setIsContentVisible(false);
+
+    // After fade out, switch view and fade in
+    setTimeout(() => {
+      setViewMode(newMode);
+
+      // Small delay to allow DOM update
+      setTimeout(() => {
+        restoreScrollPosition(newMode);
+        setIsContentVisible(true);
+        setIsTransitioning(false);
+      }, 50);
+    }, 150); // Match CSS transition duration
+  }, [viewMode, isTransitioning, saveScrollPosition, restoreScrollPosition]);
+
+  // Save scroll position on scroll
   useEffect(() => {
-    async function loadTask() {
-      setLoading(true);
-      setError(null);
+    const content = contentRef.current;
+    if (!content) return;
 
-      try {
-        const [taskData, statusData] = await Promise.all([
-          getTaskById(parsedTaskId),
-          getCodeMaster('status'),
-        ]);
-        setTask(taskData);
-        setStatuses(statusData);
-      } catch (err) {
-        console.error('Failed to load task:', err);
-        setError('Failed to load task details. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    }
+    const handleScroll = () => {
+      scrollPositions.current[viewMode] = content.scrollTop;
+    };
 
-    if (parsedTaskId) {
-      loadTask();
-    }
-  }, [parsedTaskId]);
-
-  // Handle status update
-  const handleStatusUpdate = async (newStatusId: number) => {
-    if (!task || updating) return;
-
-    setUpdating(true);
-    try {
-      const updatedTask = await updateTaskStatus(task.task_id, {
-        status_id: newStatusId,
-      });
-      setTask(updatedTask);
-    } catch (err) {
-      console.error('Failed to update status:', err);
-      setError('Failed to update task status.');
-    } finally {
-      setUpdating(false);
-    }
-  };
-
-  // Handle checklist item toggle
-  const handleChecklistToggle = async (checklistId: number, currentStatus: boolean) => {
-    if (!task || updating) return;
-
-    setUpdating(true);
-    try {
-      await updateTaskChecklist(task.task_id, checklistId, {
-        check_status: !currentStatus,
-      });
-      // Reload task to get updated checklist
-      const updatedTask = await getTaskById(task.task_id);
-      setTask(updatedTask);
-    } catch (err) {
-      console.error('Failed to update checklist:', err);
-      setError('Failed to update checklist item.');
-    } finally {
-      setUpdating(false);
-    }
-  };
-
-  // Get status info
-  const getStatusColor = (statusId: number | null) => {
-    switch (statusId) {
-      case TASK_STATUS.NOT_YET:
-        return 'bg-gray-400';
-      case TASK_STATUS.ON_PROGRESS:
-        return 'bg-blue-500';
-      case TASK_STATUS.DONE:
-        return 'bg-green-500';
-      case TASK_STATUS.OVERDUE:
-        return 'bg-red-500';
-      case TASK_STATUS.REJECT:
-        return 'bg-gray-600';
-      default:
-        return 'bg-gray-300';
-    }
-  };
-
-  const getStatusLabel = (statusId: number | null) => {
-    const status = statuses.find((s) => s.code_master_id === statusId);
-    return status?.name || 'Unknown';
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'urgent':
-        return 'bg-red-100 text-red-800 border-red-300';
-      case 'high':
-        return 'bg-orange-100 text-orange-800 border-orange-300';
-      case 'normal':
-        return 'bg-blue-100 text-blue-800 border-blue-300';
-      case 'low':
-        return 'bg-gray-100 text-gray-800 border-gray-300';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-300';
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-500">Loading task details...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error && !task) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">{error}</p>
-          <button
-            onClick={() => router.back()}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Go Back
-          </button>
-        </div>
-      </div>
-    );
-  }
+    content.addEventListener('scroll', handleScroll, { passive: true });
+    return () => content.removeEventListener('scroll', handleScroll);
+  }, [viewMode]);
 
   if (!task) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-600 mb-4">Task not found.</p>
+      <div className="min-h-screen bg-white p-4">
+        <div className="text-center py-12">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Task not found</h1>
+          <p className="text-gray-500 mb-6">Cannot find task with ID: {taskId}</p>
           <Link
-            href="/tasks"
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            href="/tasks/list"
+            className="inline-flex items-center px-4 py-2 bg-[#C5055B] text-white rounded-lg hover:bg-[#A00449] transition-colors"
           >
-            Back to Tasks
+            Back to list
           </Link>
         </div>
       </div>
     );
   }
 
+  const handleAddComment = (storeId: string, content: string) => {
+    console.log('Add comment to store:', storeId, content);
+    // TODO: Implement API call
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-blue-600 text-white p-4">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/tasks" className="px-4 py-2 bg-blue-700 rounded hover:bg-blue-800">
-              &larr; Back to Tasks
-            </Link>
-          </div>
-          <h1 className="text-xl font-bold">Task Details</h1>
-        </div>
-      </div>
+      <div className="p-4">
+        {/* Breadcrumb */}
+        <nav className="mb-6">
+          <ol className="flex items-center gap-2 text-sm">
+            <li>
+              <Link href="/tasks/list" className="text-gray-500 hover:text-[#C5055B]">
+                List task
+              </Link>
+            </li>
+            <li className="text-gray-400">&rarr;</li>
+            <li className="text-gray-900 font-medium">Detail</li>
+          </ol>
+        </nav>
 
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto p-6">
-        {/* Error Message */}
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-            {error}
-          </div>
-        )}
+        {/* Task Header - New Design */}
+        <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
+          <div className="flex items-stretch gap-6">
+            {/* Left - Task Info */}
+            <div className="flex-shrink-0 min-w-[320px] flex flex-col justify-between">
+              {/* Top: Task Level, Name, Date, HQ Check */}
+              <div>
+                {/* Task Level Badge */}
+                <span className="text-[#C5055B] text-sm font-medium">
+                  Task level 1
+                </span>
 
-        {/* Task Header */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <span
-                  className={`px-3 py-1 rounded text-sm text-white ${getStatusColor(task.status_id)}`}
-                >
-                  {getStatusLabel(task.status_id)}
-                </span>
-                <span
-                  className={`px-3 py-1 rounded text-sm border ${getPriorityColor(task.priority)}`}
-                >
-                  {task.priority.toUpperCase()}
-                </span>
+                {/* Task Name */}
+                <h1 className="text-2xl font-bold text-gray-900 mt-1 mb-2">
+                  {task.taskGroupName}
+                </h1>
+
+                {/* Date and HQ Check */}
+                <div className="flex items-center gap-3 text-sm text-gray-500">
+                  <span>{task.startDate} - {task.endDate}</span>
+                  <span className="text-gray-300">|</span>
+                  <span className="flex items-center gap-1">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    HQ Check: {taskDetail?.hqCheckCode || '27/27'}
+                  </span>
+                </div>
               </div>
-              <h1 className="text-2xl font-bold text-gray-900">{task.task_name}</h1>
+
+              {/* Task Type, Manual Link and User Icon - Same Row */}
+              <div className="flex items-center gap-4 text-sm">
+                {/* Task Type */}
+                <span className="flex items-center gap-1.5 text-gray-600">
+                  {taskDetail?.taskType === 'yes_no' ? (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  )}
+                  Task type: {taskDetail?.taskType === 'yes_no' ? 'Yes/No' : taskDetail?.taskType === 'image' ? 'Image' : taskDetail?.taskType || 'Image'}
+                </span>
+
+                {/* Manual Link */}
+                <span className="flex items-center gap-1.5">
+                  <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                  </svg>
+                  <span className="text-gray-600">Manual link:</span>
+                  <Link href="#" className="text-[#C5055B] hover:underline">
+                    link
+                  </Link>
+                </span>
+
+                {/* User Icon */}
+                <div className="inline-flex items-center justify-center w-10 h-10 bg-pink-100 rounded-full ml-2">
+                  <svg className="w-5 h-5 text-[#C5055B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+              </div>
             </div>
-            <div className="text-right text-sm text-gray-500">
-              <div>Task ID: #{task.task_id}</div>
-              <div>Created: {new Date(task.created_at).toLocaleDateString()}</div>
+
+            {/* Right - Statistics Cards */}
+            <div className="flex-1 grid grid-cols-4 gap-4">
+              {/* Not Started */}
+              <div className="border border-gray-200 rounded-xl p-4 text-center">
+                <div className="flex items-center justify-center mb-3">
+                  <div className="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-4xl font-bold text-gray-900 mb-1">{taskDetail?.stats.notStarted || 10}</div>
+                <div className="text-sm text-gray-500">Not Started</div>
+              </div>
+
+              {/* Completed */}
+              <div className="border-2 border-green-400 rounded-xl p-4 text-center bg-green-50/30">
+                <div className="flex items-center justify-center mb-3">
+                  <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-4xl font-bold text-gray-900 mb-1">{taskDetail?.stats.completed || task.progress.completed}</div>
+                <div className="text-sm text-gray-500">Completed</div>
+              </div>
+
+              {/* Unable to Complete */}
+              <div className="border-2 border-red-400 rounded-xl p-4 text-center bg-red-50/30">
+                <div className="flex items-center justify-center mb-3">
+                  <div className="w-8 h-8 rounded-full border-2 border-red-500 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-4xl font-bold text-gray-900 mb-1">{taskDetail?.stats.unableToComplete || task.unable}</div>
+                <div className="text-sm text-gray-500">Unable to Complete</div>
+              </div>
+
+              {/* Average Completion Time */}
+              <div className="border-2 border-yellow-400 rounded-xl p-4 text-center bg-yellow-50/30">
+                <div className="flex items-center justify-center mb-3">
+                  <div className="w-8 h-8 rounded-full bg-yellow-400 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.2 3.2.8-1.3-4.5-2.7V7z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-4xl font-bold text-gray-900 mb-1">
+                  {taskDetail?.stats.avgCompletionTime || 60}<span className="text-xl">min</span>
+                </div>
+                <div className="text-sm text-gray-500">Average Completion Time</div>
+              </div>
             </div>
           </div>
+        </div>
 
-          {task.task_description && (
-            <div className="mb-4">
-              <h3 className="text-sm font-semibold text-gray-600 mb-1">Description</h3>
-              <p className="text-gray-800">{task.task_description}</p>
+        {/* Filter Bar */}
+        <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center justify-between">
+            {/* Left - Dropdowns with badges */}
+            <div className="flex items-center gap-3">
+              {/* Region Dropdown */}
+              <div className="relative">
+                <select className="appearance-none pl-3 pr-16 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 bg-white">
+                  <option>Region</option>
+                  <option>The North</option>
+                  <option>The South</option>
+                </select>
+                <div className="absolute right-8 top-1/2 -translate-y-1/2 px-1.5 py-0.5 bg-gray-100 rounded text-xs font-medium text-gray-600">
+                  4
+                </div>
+                <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+
+              {/* Area Dropdown */}
+              <div className="relative">
+                <select className="appearance-none pl-3 pr-16 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 bg-white">
+                  <option>Area</option>
+                  <option>Ocean area</option>
+                  <option>Mountain area</option>
+                </select>
+                <div className="absolute right-8 top-1/2 -translate-y-1/2 px-1.5 py-0.5 bg-gray-100 rounded text-xs font-medium text-gray-600">
+                  7
+                </div>
+                <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+
+              {/* Store Dropdown */}
+              <div className="relative">
+                <select className="appearance-none pl-3 pr-16 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 bg-white">
+                  <option>Store</option>
+                  <option>Store: 30</option>
+                  <option>Store: 31</option>
+                </select>
+                <div className="absolute right-8 top-1/2 -translate-y-1/2 px-1.5 py-0.5 bg-gray-100 rounded text-xs font-medium text-gray-600">
+                  30
+                </div>
+                <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Right - View Mode Toggle */}
+            <ViewModeToggle
+              viewMode={viewMode}
+              onViewModeChange={handleViewModeChange}
+              resultsCount={resultsCount}
+              commentsCount={commentsCount}
+              isLoading={isTransitioning}
+            />
+          </div>
+        </div>
+
+        {/* Content Area with Fade Animation */}
+        <div
+          ref={contentRef}
+          className={`transition-opacity duration-150 ease-in-out ${isContentVisible ? 'opacity-100' : 'opacity-0'
+            }`}
+        >
+          {/* Store Results */}
+          {viewMode === 'results' && taskDetail && (
+            <div className="space-y-6">
+              {taskDetail.storeResults.length > 0 ? (
+                taskDetail.storeResults.map((result) => (
+                  <StoreResultCard
+                    key={result.id}
+                    result={result}
+                    showImages={true}
+                    taskType={taskDetail.taskType}
+                    onAddComment={handleAddComment}
+                  />
+                ))
+              ) : (
+                <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
+                  <p className="text-gray-500">No store results yet.</p>
+                </div>
+              )}
             </div>
           )}
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            {task.assigned_store && (
-              <div>
-                <span className="text-gray-500">Store:</span>
-                <div className="font-medium">{task.assigned_store.store_name}</div>
-              </div>
-            )}
-            {task.assigned_staff && (
-              <div>
-                <span className="text-gray-500">Assigned To:</span>
-                <div className="font-medium">{task.assigned_staff.staff_name}</div>
-              </div>
-            )}
-            {task.do_staff && (
-              <div>
-                <span className="text-gray-500">Executed By:</span>
-                <div className="font-medium">{task.do_staff.staff_name}</div>
-              </div>
-            )}
-            {task.department && (
-              <div>
-                <span className="text-gray-500">Department:</span>
-                <div className="font-medium">{task.department.department_name}</div>
-              </div>
-            )}
-            {task.start_date && (
-              <div>
-                <span className="text-gray-500">Start Date:</span>
-                <div className="font-medium">{task.start_date}</div>
-              </div>
-            )}
-            {task.end_date && (
-              <div>
-                <span className="text-gray-500">End Date:</span>
-                <div className="font-medium">{task.end_date}</div>
-              </div>
-            )}
-            {task.due_datetime && (
-              <div>
-                <span className="text-gray-500">Due:</span>
-                <div className="font-medium">
-                  {new Date(task.due_datetime).toLocaleString()}
-                </div>
-              </div>
-            )}
-            {task.completed_time && (
-              <div>
-                <span className="text-gray-500">Completed:</span>
-                <div className="font-medium">
-                  {new Date(task.completed_time).toLocaleString()}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Status Update */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">Update Status</h2>
-          <div className="flex flex-wrap gap-2">
-            {statuses.map((status) => (
-              <button
-                key={status.code_master_id}
-                onClick={() => handleStatusUpdate(status.code_master_id)}
-                disabled={updating || task.status_id === status.code_master_id}
-                className={`px-4 py-2 rounded text-sm transition-colors ${
-                  task.status_id === status.code_master_id
-                    ? 'bg-blue-600 text-white cursor-default'
-                    : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                } ${updating ? 'opacity-50 cursor-not-allowed' : ''}`}
-              >
-                {status.name}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Checklist */}
-        {task.checklists && task.checklists.length > 0 && (
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 className="text-lg font-semibold mb-4">Checklist</h2>
-            <div className="space-y-2">
-              {task.checklists.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
-                >
-                  <input
-                    type="checkbox"
-                    checked={item.check_status}
-                    onChange={() => handleChecklistToggle(item.check_list_id, item.check_status)}
-                    disabled={updating}
-                    className="w-5 h-5 text-blue-600 rounded cursor-pointer"
+          {/* Comment View - Uses StoreResultCard with viewMode="comment" */}
+          {viewMode === 'comment' && taskDetail && (
+            <div className="space-y-6">
+              {taskDetail.storeResults.length > 0 ? (
+                taskDetail.storeResults.map((result) => (
+                  <StoreResultCard
+                    key={result.id}
+                    result={result}
+                    viewMode="comment"
+                    taskType={taskDetail.taskType}
+                    onAddComment={handleAddComment}
                   />
-                  <div className="flex-1">
-                    <span
-                      className={`${
-                        item.check_status ? 'line-through text-gray-400' : 'text-gray-700'
-                      }`}
-                    >
-                      {item.check_list?.check_list_name || `Checklist #${item.check_list_id}`}
-                    </span>
-                    {item.notes && (
-                      <p className="text-sm text-gray-500 mt-1">{item.notes}</p>
-                    )}
-                  </div>
-                  {item.check_status && item.completed_at && (
-                    <span className="text-xs text-gray-400">
-                      {new Date(item.completed_at).toLocaleString()}
-                    </span>
-                  )}
+                ))
+              ) : (
+                <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
+                  <p className="text-gray-500">No comments yet.</p>
                 </div>
-              ))}
+              )}
             </div>
-          </div>
-        )}
-
-        {/* Comments */}
-        {task.comment && (
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 className="text-lg font-semibold mb-4">Comments</h2>
-            <p className="text-gray-700 whitespace-pre-wrap">{task.comment}</p>
-          </div>
-        )}
-
-        {/* Attachments */}
-        {task.attachments && task.attachments.length > 0 && (
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 className="text-lg font-semibold mb-4">Attachments</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {task.attachments.map((url, index) => (
-                <a
-                  key={index}
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 text-center"
-                >
-                  <div className="text-3xl mb-2">📎</div>
-                  <span className="text-sm text-blue-600 truncate block">
-                    Attachment {index + 1}
-                  </span>
-                </a>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Manual Reference */}
-        {task.manual && (
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 className="text-lg font-semibold mb-4">Reference Manual</h2>
-            <div className="flex items-center gap-3">
-              <div className="text-3xl">📖</div>
-              <div>
-                <div className="font-medium">{task.manual.manual_name}</div>
-                {task.manual.description && (
-                  <p className="text-sm text-gray-500">{task.manual.description}</p>
-                )}
-                {task.manual.manual_url && (
-                  <a
-                    href={task.manual.manual_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-blue-600 hover:underline"
-                  >
-                    View Manual &rarr;
-                  </a>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Task Meta Info */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Task Information</h2>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            {task.task_type && (
-              <div>
-                <span className="text-gray-500">Task Type:</span>
-                <div className="font-medium">{task.task_type.name}</div>
-              </div>
-            )}
-            {task.response_type && (
-              <div>
-                <span className="text-gray-500">Response Type:</span>
-                <div className="font-medium">{task.response_type.name}</div>
-              </div>
-            )}
-            {task.created_staff && (
-              <div>
-                <span className="text-gray-500">Created By:</span>
-                <div className="font-medium">{task.created_staff.staff_name}</div>
-              </div>
-            )}
-            <div>
-              <span className="text-gray-500">Repeat Task:</span>
-              <div className="font-medium">{task.is_repeat ? 'Yes' : 'No'}</div>
-            </div>
-            <div>
-              <span className="text-gray-500">Last Updated:</span>
-              <div className="font-medium">
-                {new Date(task.updated_at).toLocaleString()}
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
