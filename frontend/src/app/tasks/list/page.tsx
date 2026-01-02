@@ -180,13 +180,44 @@ export default function TaskListPage() {
     return new Date(year, month - 1, day);
   };
 
+  // Get current week range for default display logic
+  const getCurrentWeekRange = (): DateRange => {
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    endOfWeek.setHours(23, 59, 59, 999);
+    return { from: startOfWeek, to: endOfWeek };
+  };
+
+  const currentWeekRange = getCurrentWeekRange();
+
   // Filter tasks
   const filteredTasks = tasks.filter((task) => {
-    // Date range filter
     const taskStartDate = parseTaskDate(task.startDate);
     const taskEndDate = parseTaskDate(task.endDate);
-    const matchesDateRange =
+
+    // Default display logic: current week tasks + old tasks with NOT_YET status
+    const isInCurrentWeek =
+      taskEndDate >= currentWeekRange.from && taskStartDate <= currentWeekRange.to;
+    const isOldTaskNotYet =
+      taskEndDate < currentWeekRange.from && task.status === 'NOT_YET';
+
+    // Apply date range filter from DatePicker (when user selects specific date/week)
+    const matchesSelectedDateRange =
       taskEndDate >= dateRange.from && taskStartDate <= dateRange.to;
+
+    // Combined date logic:
+    // - If user is on default view (DAY mode with today), show current week + old NOT_YET
+    // - If user selected specific date/week/custom, respect that selection
+    const isDefaultView = dateMode === 'DAY' &&
+      dateRange.from.toDateString() === new Date().toDateString();
+
+    const matchesDateRange = isDefaultView
+      ? (isInCurrentWeek || isOldTaskNotYet)
+      : matchesSelectedDateRange;
 
     // Search filter
     const matchesSearch =
