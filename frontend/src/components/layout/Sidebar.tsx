@@ -212,8 +212,13 @@ export default function Sidebar() {
       return taskDetailPattern.test(pathname);
     }
     if (pathname === route) return true;
-    // Exclude standalone menu items from parent /tasks menu
-    if (route === '/tasks' && (pathname.startsWith('/tasks/todo') || pathname.startsWith('/tasks/library'))) {
+    // Exclude standalone menu items and User Management children from parent /tasks menu
+    if (route === '/tasks' && (
+      pathname.startsWith('/tasks/todo') ||
+      pathname.startsWith('/tasks/library') ||
+      pathname.startsWith('/tasks/info') ||
+      pathname.startsWith('/tasks/store-info')
+    )) {
       return false;
     }
     return pathname.startsWith(route + '/');
