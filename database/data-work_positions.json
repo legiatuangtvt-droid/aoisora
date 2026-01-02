@@ -1,9 +1,0 @@
-{
-  "work_positions": [
-    { "id": "LEADER", "name": "Leader", "balance": 10 },
-    { "id": "MMD", "name": "MMD", "balance": 15 },
-    { "id": "POS", "name": "POS", "balance": 25 },
-    { "id": "MERCHANDISE", "name": "Ngành hàng", "balance": 35 },
-    { "id": "CAFE", "name": "Aeon Cafe", "balance": 15 }
-  ]
-}

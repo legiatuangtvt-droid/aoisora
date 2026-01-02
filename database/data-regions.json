@@ -1,7 +1,0 @@
-{
-  "regions": [
-    { "id": "NORTH", "name": "Miền Bắc" },
-    { "id": "CENTRAL", "name": "Miền Trung" },
-    { "id": "SOUTH", "name": "Miền Nam" }
-  ]
-}
