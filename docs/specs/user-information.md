@@ -324,3 +324,4 @@ frontend/src/
 | 2026-01-02 | Updated department icons to use SVG files from /public/icons/ |
 | 2026-01-02 | Fixed connector line positions to align with card centers |
 | 2026-01-02 | Converted department icons from SVG files to inline SVG for better performance |
+| 2026-01-02 | Updated Admin and OP icons with new SVG designs from Figma |
