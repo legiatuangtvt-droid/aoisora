@@ -75,6 +75,47 @@ PG_DATA="D:\devtool\laragon\data\postgresql"
 - Schema file: `database/schema.sql`
 - Seed file: `database/seed_data.sql`
 
+### 7. Module Scope
+
+Hệ thống có 3 module chính. **Chỉ sửa code trong scope module được yêu cầu**.
+
+| Module | Mô tả | Frontend Path | Backend Controllers |
+|--------|-------|---------------|---------------------|
+| **WS** | Work Schedule - Task management | `/tasks/*` | `TaskController`, `CheckListController` |
+| **DWS** | Dispatch Work Schedule - Shift scheduling | `/dws/*` | `ShiftController`, `ScheduleTaskController` |
+| **Manual** | Knowledge Base - Documents | `/manual/*` | `ManualController` |
+
+⚠️ **Quan trọng**: Khi được yêu cầu làm việc trên 1 module, KHÔNG sửa code của module khác trừ khi được yêu cầu rõ ràng.
+
+### 8. Backend Patterns (Laravel)
+
+Tuân thủ các pattern sau khi viết code backend:
+
+```
+Request → Controller → Service → Model → Resource → Response
+```
+
+| Rule | Mô tả |
+|------|-------|
+| **Controller** | Chỉ nhận request, gọi Service, trả về Resource. KHÔNG chứa business logic |
+| **Service** | Chứa business logic, query database, xử lý data |
+| **Resource** | Transform model thành JSON response. Sử dụng cho TẤT CẢ API response |
+| **Validation** | Sử dụng Form Request classes, không validate trong Controller |
+
+**Ví dụ cấu trúc:**
+```
+app/
+├── Http/
+│   ├── Controllers/Api/V1/
+│   │   └── UserInfoController.php    # Gọi Service, return Resource
+│   ├── Requests/
+│   │   └── StoreUserRequest.php      # Validation rules
+│   └── Resources/
+│       └── StaffResource.php         # JSON transformation
+└── Services/
+    └── UserInfoService.php           # Business logic
+```
+
 ---
 
 ## Tham khảo chi tiết
