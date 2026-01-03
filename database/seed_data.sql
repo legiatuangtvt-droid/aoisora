@@ -58,6 +58,26 @@ INSERT INTO "departments" ("department_id", "department_name", "department_code"
 SELECT setval('departments_department_id_seq', 60);
 
 -- ============================================
+-- CORE DATA: Teams (Sub-groups within departments)
+-- ============================================
+
+INSERT INTO "teams" ("team_id", "team_name", "department_id", "icon", "icon_color", "icon_bg", "sort_order") VALUES
+-- Teams under Admin department (department_id = 2)
+('account-team', 'Account Team', 2, 'users', '#003E95', '#E5F0FF', 1),
+('qc-team', 'Quality Control', 2, 'shield', '#6B06B8', '#FDF0FF', 2),
+-- Teams under OP department (department_id = 1)
+('peri-team', 'Perishable Team', 1, 'leaf', '#059669', '#ECFDF5', 1),
+('grocery-team', 'Grocery Team', 1, 'shopping-cart', '#2563EB', '#EFF6FF', 2),
+-- Teams under Control department (department_id = 3)
+('qc-control-team', 'QC Control Team', 3, 'check-circle', '#7C3AED', '#F5F3FF', 1),
+-- Teams under Improvement department (department_id = 4)
+('process-team', 'Process Team', 4, 'cog', '#2563EB', '#EFF6FF', 1),
+('it-team', 'IT Team', 4, 'desktop', '#0891B2', '#ECFEFF', 2),
+-- Teams under HR department (department_id = 6)
+('recruit-team', 'Recruitment Team', 6, 'user-plus', '#E11D48', '#FFF1F2', 1),
+('training-team', 'Training Team', 6, 'book', '#EA580C', '#FFF7ED', 2);
+
+-- ============================================
 -- CORE DATA: Stores (4 stores for testing)
 -- ============================================
 
@@ -70,52 +90,134 @@ INSERT INTO "stores" ("store_id", "store_name", "store_code", "region_id", "addr
 SELECT setval('stores_store_id_seq', 4);
 
 -- ============================================
--- CORE DATA: Staff (32 staff - 8 per store)
--- Password: password123 (bcrypt hashed)
+-- CORE DATA: Staff (32 store staff + 52 SMBU staff = 84 total)
+-- Password: password (bcrypt hashed)
 -- ============================================
 
--- Store 1 Staff
-INSERT INTO "staff" ("staff_id", "staff_name", "staff_code", "username", "email", "phone", "store_id", "department_id", "role", "password_hash", "status") VALUES
-(1, 'Nguyen Van A', 'NV001', 'admin', 'admin@aoisora.com', '0901234567', 1, 1, 'MANAGER', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(2, 'Tran Thi B', 'NV002', 'leader1', 'leader1@aoisora.com', '0902345678', 1, 1, 'STORE_LEADER_G3', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(3, 'Le Van C', 'NV003', 'staff1_1', 'staff1_1@aoisora.com', '0903456789', 1, 1, 'STAFF', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(4, 'Pham Thi D', 'NV004', 'staff1_2', 'staff1_2@aoisora.com', '0904567890', 1, 1, 'STAFF', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(5, 'Hoang Van E', 'NV005', 'staff1_3', 'staff1_3@aoisora.com', '0905678901', 1, 1, 'STAFF', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(6, 'Nguyen Thi F', 'NV006', 'staff1_4', 'staff1_4@aoisora.com', '0906789012', 1, 1, 'STAFF', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(7, 'Tran Van G', 'NV007', 'staff1_5', 'staff1_5@aoisora.com', '0907890123', 1, 1, 'STAFF', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(8, 'Le Thi H', 'NV008', 'staff1_6', 'staff1_6@aoisora.com', '0908901234', 1, 1, 'STAFF', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+-- Store 1 Staff (staff_id 1-8)
+INSERT INTO "staff" ("staff_id", "staff_name", "staff_code", "username", "email", "phone", "store_id", "department_id", "role", "position", "job_grade", "sap_code", "password_hash", "status") VALUES
+(1, 'Nguyen Van A', 'NV001', 'admin', 'admin@aoisora.com', '0901234567', 1, 1, 'MANAGER', 'Store Manager', 'G5', 'SM01', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(2, 'Tran Thi B', 'NV002', 'leader1', 'leader1@aoisora.com', '0902345678', 1, 1, 'STORE_LEADER_G3', 'Store Leader', 'G3', 'SL01', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(3, 'Le Van C', 'NV003', 'staff1_1', 'staff1_1@aoisora.com', '0903456789', 1, 1, 'STAFF', 'Staff', 'G2', 'ST01', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(4, 'Pham Thi D', 'NV004', 'staff1_2', 'staff1_2@aoisora.com', '0904567890', 1, 1, 'STAFF', 'Staff', 'G2', 'ST02', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(5, 'Hoang Van E', 'NV005', 'staff1_3', 'staff1_3@aoisora.com', '0905678901', 1, 1, 'STAFF', 'Staff', 'G2', 'ST03', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(6, 'Nguyen Thi F', 'NV006', 'staff1_4', 'staff1_4@aoisora.com', '0906789012', 1, 1, 'STAFF', 'Staff', 'G2', 'ST04', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(7, 'Tran Van G', 'NV007', 'staff1_5', 'staff1_5@aoisora.com', '0907890123', 1, 1, 'STAFF', 'Staff', 'G2', 'ST05', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(8, 'Le Thi H', 'NV008', 'staff1_6', 'staff1_6@aoisora.com', '0908901234', 1, 1, 'STAFF', 'Staff', 'G2', 'ST06', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
 
--- Store 2 Staff
-(9, 'Pham Van I', 'NV009', 'manager2', 'manager2@aoisora.com', '0909012345', 2, 1, 'MANAGER', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(10, 'Hoang Thi K', 'NV010', 'leader2', 'leader2@aoisora.com', '0910123456', 2, 1, 'STORE_LEADER_G3', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(11, 'Nguyen Van L', 'NV011', 'staff2_1', 'staff2_1@aoisora.com', '0911234567', 2, 1, 'STAFF', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(12, 'Tran Thi M', 'NV012', 'staff2_2', 'staff2_2@aoisora.com', '0912345678', 2, 1, 'STAFF', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(13, 'Le Van N', 'NV013', 'staff2_3', 'staff2_3@aoisora.com', '0913456789', 2, 1, 'STAFF', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(14, 'Pham Thi O', 'NV014', 'staff2_4', 'staff2_4@aoisora.com', '0914567890', 2, 1, 'STAFF', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(15, 'Hoang Van P', 'NV015', 'staff2_5', 'staff2_5@aoisora.com', '0915678901', 2, 1, 'STAFF', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(16, 'Nguyen Thi Q', 'NV016', 'staff2_6', 'staff2_6@aoisora.com', '0916789012', 2, 1, 'STAFF', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+-- Store 2 Staff (staff_id 9-16)
+(9, 'Pham Van I', 'NV009', 'manager2', 'manager2@aoisora.com', '0909012345', 2, 1, 'MANAGER', 'Store Manager', 'G5', 'SM02', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(10, 'Hoang Thi K', 'NV010', 'leader2', 'leader2@aoisora.com', '0910123456', 2, 1, 'STORE_LEADER_G3', 'Store Leader', 'G3', 'SL02', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(11, 'Nguyen Van L', 'NV011', 'staff2_1', 'staff2_1@aoisora.com', '0911234567', 2, 1, 'STAFF', 'Staff', 'G2', 'ST07', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(12, 'Tran Thi M', 'NV012', 'staff2_2', 'staff2_2@aoisora.com', '0912345678', 2, 1, 'STAFF', 'Staff', 'G2', 'ST08', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(13, 'Le Van N', 'NV013', 'staff2_3', 'staff2_3@aoisora.com', '0913456789', 2, 1, 'STAFF', 'Staff', 'G2', 'ST09', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(14, 'Pham Thi O', 'NV014', 'staff2_4', 'staff2_4@aoisora.com', '0914567890', 2, 1, 'STAFF', 'Staff', 'G2', 'ST10', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(15, 'Hoang Van P', 'NV015', 'staff2_5', 'staff2_5@aoisora.com', '0915678901', 2, 1, 'STAFF', 'Staff', 'G2', 'ST11', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(16, 'Nguyen Thi Q', 'NV016', 'staff2_6', 'staff2_6@aoisora.com', '0916789012', 2, 1, 'STAFF', 'Staff', 'G2', 'ST12', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
 
--- Store 3 Staff
-(17, 'Tran Van R', 'NV017', 'manager3', 'manager3@aoisora.com', '0917890123', 3, 1, 'MANAGER', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(18, 'Le Thi S', 'NV018', 'leader3', 'leader3@aoisora.com', '0918901234', 3, 1, 'STORE_LEADER_G3', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(19, 'Pham Van T', 'NV019', 'staff3_1', 'staff3_1@aoisora.com', '0919012345', 3, 1, 'STAFF', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(20, 'Hoang Thi U', 'NV020', 'staff3_2', 'staff3_2@aoisora.com', '0920123456', 3, 1, 'STAFF', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(21, 'Nguyen Van V', 'NV021', 'staff3_3', 'staff3_3@aoisora.com', '0921234567', 3, 1, 'STAFF', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(22, 'Tran Thi W', 'NV022', 'staff3_4', 'staff3_4@aoisora.com', '0922345678', 3, 1, 'STAFF', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(23, 'Le Van X', 'NV023', 'staff3_5', 'staff3_5@aoisora.com', '0923456789', 3, 1, 'STAFF', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(24, 'Pham Thi Y', 'NV024', 'staff3_6', 'staff3_6@aoisora.com', '0924567890', 3, 1, 'STAFF', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+-- Store 3 Staff (staff_id 17-24)
+(17, 'Tran Van R', 'NV017', 'manager3', 'manager3@aoisora.com', '0917890123', 3, 1, 'MANAGER', 'Store Manager', 'G5', 'SM03', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(18, 'Le Thi S', 'NV018', 'leader3', 'leader3@aoisora.com', '0918901234', 3, 1, 'STORE_LEADER_G3', 'Store Leader', 'G3', 'SL03', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(19, 'Pham Van T', 'NV019', 'staff3_1', 'staff3_1@aoisora.com', '0919012345', 3, 1, 'STAFF', 'Staff', 'G2', 'ST13', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(20, 'Hoang Thi U', 'NV020', 'staff3_2', 'staff3_2@aoisora.com', '0920123456', 3, 1, 'STAFF', 'Staff', 'G2', 'ST14', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(21, 'Nguyen Van V', 'NV021', 'staff3_3', 'staff3_3@aoisora.com', '0921234567', 3, 1, 'STAFF', 'Staff', 'G2', 'ST15', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(22, 'Tran Thi W', 'NV022', 'staff3_4', 'staff3_4@aoisora.com', '0922345678', 3, 1, 'STAFF', 'Staff', 'G2', 'ST16', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(23, 'Le Van X', 'NV023', 'staff3_5', 'staff3_5@aoisora.com', '0923456789', 3, 1, 'STAFF', 'Staff', 'G2', 'ST17', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(24, 'Pham Thi Y', 'NV024', 'staff3_6', 'staff3_6@aoisora.com', '0924567890', 3, 1, 'STAFF', 'Staff', 'G2', 'ST18', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
 
--- Store 4 Staff
-(25, 'Hoang Van Z', 'NV025', 'manager4', 'manager4@aoisora.com', '0925678901', 4, 1, 'MANAGER', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(26, 'Nguyen Thi AA', 'NV026', 'leader4', 'leader4@aoisora.com', '0926789012', 4, 1, 'STORE_LEADER_G3', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(27, 'Tran Van AB', 'NV027', 'staff4_1', 'staff4_1@aoisora.com', '0927890123', 4, 1, 'STAFF', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(28, 'Le Thi AC', 'NV028', 'staff4_2', 'staff4_2@aoisora.com', '0928901234', 4, 1, 'STAFF', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(29, 'Pham Van AD', 'NV029', 'staff4_3', 'staff4_3@aoisora.com', '0929012345', 4, 1, 'STAFF', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(30, 'Hoang Thi AE', 'NV030', 'staff4_4', 'staff4_4@aoisora.com', '0930123456', 4, 1, 'STAFF', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(31, 'Nguyen Van AF', 'NV031', 'staff4_5', 'staff4_5@aoisora.com', '0931234567', 4, 1, 'STAFF', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(32, 'Tran Thi AG', 'NV032', 'staff4_6', 'staff4_6@aoisora.com', '0932345678', 4, 1, 'STAFF', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active');
+-- Store 4 Staff (staff_id 25-32)
+(25, 'Hoang Van Z', 'NV025', 'manager4', 'manager4@aoisora.com', '0925678901', 4, 1, 'MANAGER', 'Store Manager', 'G5', 'SM04', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(26, 'Nguyen Thi AA', 'NV026', 'leader4', 'leader4@aoisora.com', '0926789012', 4, 1, 'STORE_LEADER_G3', 'Store Leader', 'G3', 'SL04', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(27, 'Tran Van AB', 'NV027', 'staff4_1', 'staff4_1@aoisora.com', '0927890123', 4, 1, 'STAFF', 'Staff', 'G2', 'ST19', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(28, 'Le Thi AC', 'NV028', 'staff4_2', 'staff4_2@aoisora.com', '0928901234', 4, 1, 'STAFF', 'Staff', 'G2', 'ST20', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(29, 'Pham Van AD', 'NV029', 'staff4_3', 'staff4_3@aoisora.com', '0929012345', 4, 1, 'STAFF', 'Staff', 'G2', 'ST21', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(30, 'Hoang Thi AE', 'NV030', 'staff4_4', 'staff4_4@aoisora.com', '0930123456', 4, 1, 'STAFF', 'Staff', 'G2', 'ST22', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(31, 'Nguyen Van AF', 'NV031', 'staff4_5', 'staff4_5@aoisora.com', '0931234567', 4, 1, 'STAFF', 'Staff', 'G2', 'ST23', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(32, 'Tran Thi AG', 'NV032', 'staff4_6', 'staff4_6@aoisora.com', '0932345678', 4, 1, 'STAFF', 'Staff', 'G2', 'ST24', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active');
 
-SELECT setval('staff_staff_id_seq', 32);
+-- ============================================
+-- SMBU (Head Office) Staff - Based on mockUserInfo.ts
+-- store_id = NULL for HQ staff
+-- ============================================
+
+-- SMBU Root User - General Manager (staff_id 100)
+INSERT INTO "staff" ("staff_id", "staff_name", "staff_code", "username", "email", "phone", "store_id", "department_id", "team_id", "role", "position", "job_grade", "sap_code", "password_hash", "status") VALUES
+(100, 'YOSHINAGA', 'SM001', 'yoshinaga', 'yoshinaga@aoisora.com', '0900000001', NULL, NULL, NULL, 'GENERAL_MANAGER', 'General Manager', 'G6', 'SM GM', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active');
+
+-- ADMIN Department Staff (department_id = 2)
+-- Department Head
+INSERT INTO "staff" ("staff_id", "staff_name", "staff_code", "username", "email", "phone", "store_id", "department_id", "team_id", "role", "position", "job_grade", "sap_code", "line_manager_id", "password_hash", "status") VALUES
+(101, 'Do Thi Kim Duyen', 'AD001', 'duyen.admin', 'duyen@aoisora.com', '0900000101', NULL, 2, NULL, 'DEPT_HEAD', 'Head of Dept, Deputy Manager', 'G4', 'AD HD', 100, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+-- Account Team Members
+(102, 'Nguyen Thi Hien', 'AD002', 'hien.account', 'hien@aoisora.com', '0900000102', NULL, 2, 'account-team', 'TEAM_LEAD', 'Team Lead', 'G3', 'AC TL', 101, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(103, 'Nguyen Thi Hang', 'AD003', 'hang.account', 'hang@aoisora.com', '0900000103', NULL, 2, 'account-team', 'STAFF', 'Account Executive', 'G2', 'AC EX', 102, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+-- Quality Control Team Members
+(104, 'Tran Van An', 'AD004', 'an.qc', 'an.qc@aoisora.com', '0900000104', NULL, 2, 'qc-team', 'TEAM_LEAD', 'Team Lead', 'G3', 'QC TL', 101, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(105, 'Le Thi Binh', 'AD005', 'binh.qc', 'binh@aoisora.com', '0900000105', NULL, 2, 'qc-team', 'STAFF', 'QC Specialist', 'G2', 'QC SP', 104, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(106, 'Pham Van Cuong', 'AD006', 'cuong.qc', 'cuong@aoisora.com', '0900000106', NULL, 2, 'qc-team', 'STAFF', 'QC Analyst', 'G2', 'QC AN', 104, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(107, 'Hoang Thi Dung', 'AD007', 'dung.qc', 'dung@aoisora.com', '0900000107', NULL, 2, 'qc-team', 'STAFF', 'QC Officer', 'G2', 'QC OF', 104, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active');
+
+-- OP Department Staff (department_id = 1)
+INSERT INTO "staff" ("staff_id", "staff_name", "staff_code", "username", "email", "phone", "store_id", "department_id", "team_id", "role", "position", "job_grade", "sap_code", "line_manager_id", "password_hash", "status") VALUES
+(110, 'Nguyen Van Hung', 'OP001', 'hung.op', 'hung.op@aoisora.com', '0900000110', NULL, 1, NULL, 'DEPT_HEAD', 'Head of Operations', 'G4', 'OP HD', 100, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(111, 'Tran Thi Mai', 'OP002', 'mai.peri', 'mai.peri@aoisora.com', '0900000111', NULL, 1, 'peri-team', 'TEAM_LEAD', 'Perishable Team Lead', 'G3', 'PE TL', 110, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(112, 'Le Van Duc', 'OP003', 'duc.peri', 'duc.peri@aoisora.com', '0900000112', NULL, 1, 'peri-team', 'STAFF', 'Perishable Specialist', 'G2', 'PE SP', 111, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(113, 'Pham Thi Lan', 'OP004', 'lan.peri', 'lan.peri@aoisora.com', '0900000113', NULL, 1, 'peri-team', 'STAFF', 'Perishable Officer', 'G2', 'PE OF', 111, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(114, 'Hoang Van Minh', 'OP005', 'minh.grocery', 'minh.gro@aoisora.com', '0900000114', NULL, 1, 'grocery-team', 'TEAM_LEAD', 'Grocery Team Lead', 'G3', 'GR TL', 110, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(115, 'Nguyen Thi Nga', 'OP006', 'nga.grocery', 'nga.gro@aoisora.com', '0900000115', NULL, 1, 'grocery-team', 'STAFF', 'Grocery Specialist', 'G2', 'GR SP', 114, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(116, 'Tran Van Phong', 'OP007', 'phong.grocery', 'phong.gro@aoisora.com', '0900000116', NULL, 1, 'grocery-team', 'STAFF', 'Grocery Officer', 'G2', 'GR OF', 114, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(117, 'Le Thi Quynh', 'OP008', 'quynh.grocery', 'quynh.gro@aoisora.com', '0900000117', NULL, 1, 'grocery-team', 'STAFF', 'Grocery Staff', 'G2', 'GR ST', 114, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(118, 'Pham Van Son', 'OP009', 'son.grocery', 'son.gro@aoisora.com', '0900000118', NULL, 1, 'grocery-team', 'STAFF', 'Grocery Staff', 'G2', 'GR S2', 114, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(119, 'Hoang Thi Tam', 'OP010', 'tam.grocery', 'tam.gro@aoisora.com', '0900000119', NULL, 1, 'grocery-team', 'STAFF', 'Grocery Staff', 'G2', 'GR S3', 114, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active');
+
+-- CONTROL Department Staff (department_id = 3)
+INSERT INTO "staff" ("staff_id", "staff_name", "staff_code", "username", "email", "phone", "store_id", "department_id", "team_id", "role", "position", "job_grade", "sap_code", "line_manager_id", "password_hash", "status") VALUES
+(120, 'Nguyen Van Khanh', 'CT001', 'khanh.control', 'khanh.ctrl@aoisora.com', '0900000120', NULL, 3, NULL, 'DEPT_HEAD', 'Head of Control', 'G4', 'CT HD', 100, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(121, 'Tran Thi Linh', 'CT002', 'linh.qc', 'linh.qc@aoisora.com', '0900000121', NULL, 3, 'qc-control-team', 'TEAM_LEAD', 'QC Control Lead', 'G3', 'QC CL', 120, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(122, 'Le Van Nam', 'CT003', 'nam.qc', 'nam.qc@aoisora.com', '0900000122', NULL, 3, 'qc-control-team', 'STAFF', 'QC Inspector', 'G2', 'QC IN', 121, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(123, 'Pham Thi Oanh', 'CT004', 'oanh.qc', 'oanh.qc@aoisora.com', '0900000123', NULL, 3, 'qc-control-team', 'STAFF', 'QC Analyst', 'G2', 'QC A2', 121, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(124, 'Hoang Van Phu', 'CT005', 'phu.qc', 'phu.qc@aoisora.com', '0900000124', NULL, 3, 'qc-control-team', 'STAFF', 'QC Officer', 'G2', 'QC O2', 121, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(125, 'Nguyen Thi Quyen', 'CT006', 'quyen.qc', 'quyen.qc@aoisora.com', '0900000125', NULL, 3, 'qc-control-team', 'STAFF', 'QC Staff', 'G2', 'QC S1', 121, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(126, 'Tran Van Rong', 'CT007', 'rong.qc', 'rong.qc@aoisora.com', '0900000126', NULL, 3, 'qc-control-team', 'STAFF', 'QC Staff', 'G2', 'QC S2', 121, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(127, 'Le Thi Suong', 'CT008', 'suong.qc', 'suong.qc@aoisora.com', '0900000127', NULL, 3, 'qc-control-team', 'STAFF', 'QC Staff', 'G2', 'QC S3', 121, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(128, 'Pham Van Tu', 'CT009', 'tu.qc', 'tu.qc@aoisora.com', '0900000128', NULL, 3, 'qc-control-team', 'STAFF', 'QC Staff', 'G2', 'QC S4', 121, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(129, 'Hoang Thi Uyen', 'CT010', 'uyen.qc', 'uyen.qc@aoisora.com', '0900000129', NULL, 3, 'qc-control-team', 'STAFF', 'QC Staff', 'G2', 'QC S5', 121, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active');
+
+-- IMPROVEMENT Department Staff (department_id = 4)
+INSERT INTO "staff" ("staff_id", "staff_name", "staff_code", "username", "email", "phone", "store_id", "department_id", "team_id", "role", "position", "job_grade", "sap_code", "line_manager_id", "password_hash", "status") VALUES
+(130, 'Nguyen Van Vinh', 'IM001', 'vinh.improve', 'vinh.imp@aoisora.com', '0900000130', NULL, 4, NULL, 'DEPT_HEAD', 'Head of Improvement', 'G5', 'IM HD', 100, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(131, 'Tran Thi Xuan', 'IM002', 'xuan.process', 'xuan.proc@aoisora.com', '0900000131', NULL, 4, 'process-team', 'TEAM_LEAD', 'Process Team Lead', 'G3', 'PR TL', 130, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(132, 'Le Van Yen', 'IM003', 'yen.process', 'yen.proc@aoisora.com', '0900000132', NULL, 4, 'process-team', 'STAFF', 'Process Analyst', 'G2', 'PR AN', 131, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(133, 'Pham Thi Zung', 'IM004', 'zung.process', 'zung.proc@aoisora.com', '0900000133', NULL, 4, 'process-team', 'STAFF', 'Process Engineer', 'G2', 'PR EN', 131, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(134, 'Hoang Van Bach', 'IM005', 'bach.it', 'bach.it@aoisora.com', '0900000134', NULL, 4, 'it-team', 'TEAM_LEAD', 'IT Team Lead', 'G3', 'IT TL', 130, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(135, 'Nguyen Thi Cam', 'IM006', 'cam.it', 'cam.it@aoisora.com', '0900000135', NULL, 4, 'it-team', 'STAFF', 'Software Developer', 'G2', 'IT SD', 134, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(136, 'Tran Van Dan', 'IM007', 'dan.it', 'dan.it@aoisora.com', '0900000136', NULL, 4, 'it-team', 'STAFF', 'System Admin', 'G2', 'IT SA', 134, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(137, 'Le Thi Em', 'IM008', 'em.it', 'em.it@aoisora.com', '0900000137', NULL, 4, 'it-team', 'STAFF', 'IT Support', 'G2', 'IT SU', 134, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(138, 'Pham Van Gia', 'IM009', 'gia.it', 'gia.it@aoisora.com', '0900000138', NULL, 4, 'it-team', 'STAFF', 'IT Staff', 'G2', 'IT S1', 134, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(139, 'Hoang Thi Ha', 'IM010', 'ha.it', 'ha.it@aoisora.com', '0900000139', NULL, 4, 'it-team', 'STAFF', 'IT Staff', 'G2', 'IT S2', 134, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(140, 'Nguyen Van Hoa', 'IM011', 'hoa.it', 'hoa.it@aoisora.com', '0900000140', NULL, 4, 'it-team', 'STAFF', 'IT Staff', 'G2', 'IT S3', 134, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(141, 'Tran Thi Kim', 'IM012', 'kim.it', 'kim.it@aoisora.com', '0900000141', NULL, 4, 'it-team', 'STAFF', 'IT Staff', 'G2', 'IT S4', 134, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active');
+
+-- HR Department Staff (department_id = 6)
+INSERT INTO "staff" ("staff_id", "staff_name", "staff_code", "username", "email", "phone", "store_id", "department_id", "team_id", "role", "position", "job_grade", "sap_code", "line_manager_id", "password_hash", "status") VALUES
+(150, 'Le Van Lam', 'HR001', 'lam.hr', 'lam.hr@aoisora.com', '0900000150', NULL, 6, NULL, 'DEPT_HEAD', 'Head of HR', 'G3', 'HR HD', 100, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(151, 'Pham Thi My', 'HR002', 'my.recruit', 'my.hr@aoisora.com', '0900000151', NULL, 6, 'recruit-team', 'STAFF', 'Recruiter', 'G2', 'HR RC', 150, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(152, 'Hoang Van Nghia', 'HR003', 'nghia.train', 'nghia.hr@aoisora.com', '0900000152', NULL, 6, 'training-team', 'STAFF', 'Training Specialist', 'G2', 'HR TR', 150, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(153, 'Nguyen Thi Pha', 'HR004', 'pha.hr', 'pha.hr@aoisora.com', '0900000153', NULL, 6, 'recruit-team', 'STAFF', 'HR Officer', 'G1', 'HR OF', 150, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(154, 'Tran Van Quan', 'HR005', 'quan.hr', 'quan.hr@aoisora.com', '0900000154', NULL, 6, 'training-team', 'STAFF', 'HR Staff', 'G1', 'HR S1', 150, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active');
+
+-- MD Department Staff (using Planning department_id = 5 as MD)
+INSERT INTO "staff" ("staff_id", "staff_name", "staff_code", "username", "email", "phone", "store_id", "department_id", "team_id", "role", "position", "job_grade", "sap_code", "line_manager_id", "password_hash", "status") VALUES
+(160, 'Le Thi Sen', 'MD001', 'sen.md', 'sen.md@aoisora.com', '0900000160', NULL, 5, NULL, 'DEPT_HEAD', 'Head of Planning', 'G3', 'MD HD', 100, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(161, 'Pham Van Tai', 'MD002', 'tai.md', 'tai.md@aoisora.com', '0900000161', NULL, 5, NULL, 'STAFF', 'Planner', 'G2', 'MD PL', 160, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(162, 'Hoang Thi Ut', 'MD003', 'ut.md', 'ut.md@aoisora.com', '0900000162', NULL, 5, NULL, 'STAFF', 'Planner', 'G2', 'MD P2', 160, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(163, 'Nguyen Van Viet', 'MD004', 'viet.md', 'viet.md@aoisora.com', '0900000163', NULL, 5, NULL, 'STAFF', 'Marketing Staff', 'G2', 'MD MK', 160, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(164, 'Tran Thi Xim', 'MD005', 'xim.md', 'xim.md@aoisora.com', '0900000164', NULL, 5, NULL, 'STAFF', 'Space Planner', 'G2', 'MD SP', 160, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(165, 'Le Van Yen', 'MD006', 'yen.md', 'yen.md@aoisora.com', '0900000165', NULL, 5, NULL, 'STAFF', 'Ordering Staff', 'G2', 'MD OR', 160, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(166, 'Pham Thi Zoan', 'MD007', 'zoan.md', 'zoan.md@aoisora.com', '0900000166', NULL, 5, NULL, 'STAFF', 'Assistant', 'G2', 'MD AS', 160, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(167, 'Hoang Van An', 'MD008', 'an.md', 'an.md@aoisora.com', '0900000167', NULL, 5, NULL, 'STAFF', 'Staff', 'G2', 'MD S1', 160, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active');
+
+SELECT setval('staff_staff_id_seq', 200);
 
 -- Update store managers
 UPDATE "stores" SET "manager_id" = 1 WHERE "store_id" = 1;

@@ -36,6 +36,7 @@ DROP TABLE IF EXISTS "tasks" CASCADE;
 DROP TABLE IF EXISTS "manuals" CASCADE;
 DROP TABLE IF EXISTS "code_master" CASCADE;
 DROP TABLE IF EXISTS "staff" CASCADE;
+DROP TABLE IF EXISTS "teams" CASCADE;
 DROP TABLE IF EXISTS "stores" CASCADE;
 DROP TABLE IF EXISTS "departments" CASCADE;
 DROP TABLE IF EXISTS "regions" CASCADE;
@@ -75,6 +76,22 @@ ALTER TABLE "departments" ADD CONSTRAINT "fk_departments_parent"
 
 COMMENT ON TABLE "departments" IS 'Organizational departments (hierarchical)';
 
+-- Teams Table (Sub-groups within departments)
+CREATE TABLE "teams" (
+    "team_id" VARCHAR(50) PRIMARY KEY,
+    "team_name" VARCHAR(255) NOT NULL,
+    "department_id" INTEGER REFERENCES "departments"("department_id") ON DELETE CASCADE,
+    "icon" VARCHAR(50),
+    "icon_color" VARCHAR(20),
+    "icon_bg" VARCHAR(50),
+    "sort_order" INTEGER DEFAULT 0,
+    "is_active" BOOLEAN DEFAULT true,
+    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+COMMENT ON TABLE "teams" IS 'Teams within departments (e.g., Account Team, QC Team)';
+
 -- Stores Table
 CREATE TABLE "stores" (
     "store_id" SERIAL PRIMARY KEY,
@@ -102,13 +119,28 @@ CREATE TABLE "staff" (
     "phone" VARCHAR(20),
     "store_id" INTEGER REFERENCES "stores"("store_id") ON DELETE SET NULL,
     "department_id" INTEGER REFERENCES "departments"("department_id") ON DELETE SET NULL,
+    "team_id" VARCHAR(50),
     "role" VARCHAR(50) DEFAULT 'STAFF',
+    "position" VARCHAR(100),
+    "job_grade" VARCHAR(10),
+    "sap_code" VARCHAR(20),
+    "avatar_url" VARCHAR(500),
+    "line_manager_id" INTEGER,
+    "joining_date" DATE,
     "password_hash" VARCHAR(255) NOT NULL,
     "status" VARCHAR(20) DEFAULT 'active',
     "is_active" BOOLEAN DEFAULT true,
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Add line manager FK after table creation (self-referencing)
+ALTER TABLE "staff" ADD CONSTRAINT "fk_staff_line_manager"
+    FOREIGN KEY ("line_manager_id") REFERENCES "staff"("staff_id") ON DELETE SET NULL;
+
+-- Add team FK
+ALTER TABLE "staff" ADD CONSTRAINT "fk_staff_team"
+    FOREIGN KEY ("team_id") REFERENCES "teams"("team_id") ON DELETE SET NULL;
 
 COMMENT ON TABLE "staff" IS 'Employees and staff members (auth model for Laravel Sanctum)';
 
