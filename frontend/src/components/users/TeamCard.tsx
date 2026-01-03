@@ -1,17 +1,19 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Team } from '@/types/userInfo';
+import { Team, Employee } from '@/types/userInfo';
 import MemberCard from './MemberCard';
 
 interface TeamCardProps {
   team: Team;
   onToggle?: (teamId: string) => void;
+  onMemberClick?: (member: Employee) => void;
 }
 
 const TeamCard: React.FC<TeamCardProps> = ({
   team,
   onToggle,
+  onMemberClick,
 }) => {
   const [showMenu, setShowMenu] = useState(false);
 
@@ -180,7 +182,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
                     <div className="absolute -left-6 top-[40px] w-6 h-0.5 bg-[#9B9B9B]" />
 
                     {/* Member Card */}
-                    <MemberCard member={member} />
+                    <MemberCard member={member} onClick={onMemberClick} />
                   </div>
                 );
               })}

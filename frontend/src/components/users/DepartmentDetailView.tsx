@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Department } from '@/types/userInfo';
+import { Department, Employee } from '@/types/userInfo';
 import DepartmentHeadCard from './DepartmentHeadCard';
 import TeamCard from './TeamCard';
 import AddMemberButton from './AddMemberButton';
@@ -10,12 +10,14 @@ interface DepartmentDetailViewProps {
   department: Department;
   onToggleTeam: (teamId: string) => void;
   onAddMember: () => void;
+  onMemberClick?: (member: Employee) => void;
 }
 
 const DepartmentDetailView: React.FC<DepartmentDetailViewProps> = ({
   department,
   onToggleTeam,
   onAddMember,
+  onMemberClick,
 }) => {
   const teamsCount = department.teams?.length || 0;
 
@@ -50,6 +52,7 @@ const DepartmentDetailView: React.FC<DepartmentDetailViewProps> = ({
                 <TeamCard
                   team={team}
                   onToggle={onToggleTeam}
+                  onMemberClick={onMemberClick}
                 />
               </div>
             );

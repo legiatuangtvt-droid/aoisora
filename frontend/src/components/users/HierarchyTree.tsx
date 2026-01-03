@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { HierarchyNode, DepartmentId } from '@/types/userInfo';
+import { HierarchyNode, DepartmentId, Employee } from '@/types/userInfo';
 import RootUserCard from './RootUserCard';
 import DepartmentCard from './DepartmentCard';
 import DepartmentHeadCard from './DepartmentHeadCard';
@@ -13,6 +13,7 @@ interface HierarchyTreeProps {
   onToggleDepartment: (departmentId: DepartmentId) => void;
   onToggleTeam?: (departmentId: DepartmentId, teamId: string) => void;
   onAddMember: () => void;
+  onMemberClick?: (member: Employee) => void;
 }
 
 const HierarchyTree: React.FC<HierarchyTreeProps> = ({
@@ -20,6 +21,7 @@ const HierarchyTree: React.FC<HierarchyTreeProps> = ({
   onToggleDepartment,
   onToggleTeam,
   onAddMember,
+  onMemberClick,
 }) => {
   const departmentsCount = hierarchy.departments.length;
 
@@ -115,6 +117,7 @@ const HierarchyTree: React.FC<HierarchyTreeProps> = ({
                                 <TeamCard
                                   team={team}
                                   onToggle={(teamId) => onToggleTeam?.(department.id, teamId)}
+                                  onMemberClick={onMemberClick}
                                 />
                               </div>
                             );

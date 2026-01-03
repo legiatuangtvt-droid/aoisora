@@ -5,18 +5,23 @@ import { Employee, JOB_GRADE_COLORS } from '@/types/userInfo';
 
 interface MemberCardProps {
   member: Employee;
+  onClick?: (member: Employee) => void;
 }
 
 const MemberCard: React.FC<MemberCardProps> = ({
   member,
+  onClick,
 }) => {
   const gradeColor = JOB_GRADE_COLORS[member.jobGrade];
 
   return (
-    <div className="flex items-center">
+    <div
+      className="flex items-center cursor-pointer"
+      onClick={() => onClick?.(member)}
+    >
 
       {/* Member Card */}
-      <div className="flex items-center gap-3 py-2">
+      <div className="flex items-center gap-3 py-2 hover:bg-gray-50 rounded-lg px-2 -mx-2 transition-colors">
         {/* Avatar with grade badge */}
         <div className="relative">
           <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center">

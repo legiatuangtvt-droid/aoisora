@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { DepartmentId, HierarchyNode, Department, Team } from '@/types/userInfo';
+import { DepartmentId, HierarchyNode, Department, Team, Employee } from '@/types/userInfo';
 import {
   getSMBUHierarchy,
   getDepartmentTabs,
@@ -10,6 +10,7 @@ import {
   getTeamsList,
   createTeam,
   createMember,
+  getStaffDetail,
   DepartmentTab,
   DepartmentListItem,
   TeamListItem,
@@ -19,6 +20,7 @@ import DepartmentTabs from '@/components/users/DepartmentTabs';
 import HierarchyTree from '@/components/users/HierarchyTree';
 import DepartmentDetailView from '@/components/users/DepartmentDetailView';
 import AddTeamMemberModal, { TeamFormData, MemberFormData } from '@/components/users/AddTeamMemberModal';
+import EmployeeDetailModal from '@/components/users/EmployeeDetailModal';
 
 // Department code to ID mapping (from database)
 const DEPARTMENT_CODE_TO_ID: Record<string, number> = {
@@ -42,6 +44,10 @@ export default function UserInfoPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [departmentsList, setDepartmentsList] = useState<DepartmentListItem[]>([]);
   const [teamsList, setTeamsList] = useState<TeamListItem[]>([]);
+
+  // Employee detail modal state
+  const [isEmployeeModalOpen, setIsEmployeeModalOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
 
   // Fetch SMBU hierarchy on mount
   useEffect(() => {
@@ -249,6 +255,20 @@ export default function UserInfoPage() {
     }
   };
 
+  const handleMemberClick = useCallback(async (member: Employee) => {
+    try {
+      // Fetch full employee details
+      const staffDetail = await getStaffDetail(parseInt(member.id));
+      setSelectedEmployee(staffDetail);
+      setIsEmployeeModalOpen(true);
+    } catch (err) {
+      console.error('Error fetching staff detail:', err);
+      // Fallback to basic member info if detail fetch fails
+      setSelectedEmployee(member);
+      setIsEmployeeModalOpen(true);
+    }
+  }, []);
+
   if (loading && !hierarchy) {
     return (
       <div className="min-h-screen bg-[#F8F8F8] flex items-center justify-center">
@@ -303,6 +323,7 @@ export default function UserInfoPage() {
             onToggleDepartment={handleToggleDepartment}
             onToggleTeam={handleToggleTeamInHierarchy}
             onAddMember={handleAddMember}
+            onMemberClick={handleMemberClick}
           />
         ) : selectedDepartment ? (
           /* Department Detail View */
@@ -310,6 +331,7 @@ export default function UserInfoPage() {
             department={selectedDepartment}
             onToggleTeam={handleToggleTeam}
             onAddMember={handleAddMember}
+            onMemberClick={handleMemberClick}
           />
         ) : loading ? (
           <div className="flex items-center justify-center py-12">
@@ -325,6 +347,16 @@ export default function UserInfoPage() {
         onSubmit={handleModalSubmit}
         departments={departmentsList.map(d => ({ id: d.id, name: d.name, code: d.code }))}
         teams={teamsList.map(t => ({ id: t.id, name: t.name, departmentId: t.departmentId }))}
+      />
+
+      {/* Employee Detail Modal */}
+      <EmployeeDetailModal
+        isOpen={isEmployeeModalOpen}
+        onClose={() => {
+          setIsEmployeeModalOpen(false);
+          setSelectedEmployee(null);
+        }}
+        employee={selectedEmployee}
       />
     </div>
   );
