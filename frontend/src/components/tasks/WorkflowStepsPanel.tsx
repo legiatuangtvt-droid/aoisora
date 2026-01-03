@@ -169,14 +169,17 @@ export default function WorkflowStepsPanel({ steps, isOpen, onClose }: WorkflowS
                 return (
                   <div key={step.id} className={`flex gap-4 ${!isLastStep ? 'pb-5' : ''}`}>
                     {/* Step Icon with connecting line */}
-                    <div className="relative flex-shrink-0 w-[30px] flex flex-col items-center">
-                      {/* Icon */}
-                      <div className="relative z-10 bg-white flex-shrink-0">
+                    <div className="relative flex-shrink-0 w-[30px]">
+                      {/* Icon container */}
+                      <div className="relative z-10 bg-white">
                         <StepIcon step={step.step} status={step.status} />
                       </div>
-                      {/* Connecting line below icon (not for last step) */}
+                      {/* Connecting line - positioned absolutely to extend full height including padding */}
                       {!isLastStep && (
-                        <div className="w-[2px] flex-1 bg-[#C5055B]" />
+                        <div
+                          className="absolute left-1/2 -translate-x-1/2 w-[2px] bg-[#C5055B]"
+                          style={{ top: '30px', bottom: '-20px' }}
+                        />
                       )}
                     </div>
 

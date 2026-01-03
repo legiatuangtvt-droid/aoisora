@@ -219,8 +219,9 @@ Slide-in panel from right side, triggered by clicking the user-check icon in Tas
 
 #### Timeline Connecting Lines
 - 2px width, #C5055B color
-- Positioned below each step icon (not through icon)
-- Connects to next step's icon
+- Uses absolute positioning to extend from bottom of icon to next step's icon
+- Line starts at top: 30px (bottom of icon) and extends to bottom: -20px (through padding gap)
+- Creates seamless vertical connection between all steps
 - Hidden for last step
 
 | Steps | Fields |
