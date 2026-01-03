@@ -76,20 +76,53 @@ export default function UserInfoPage() {
     }
   }, []);
 
-  const handleToggleDepartment = useCallback((departmentId: DepartmentId) => {
+  const handleToggleDepartment = useCallback(async (departmentId: DepartmentId) => {
+    if (!hierarchy) return;
+
+    const dept = hierarchy.departments.find(d => d.id === departmentId);
+    if (!dept) return;
+
+    // If expanding and no teams loaded yet, fetch department details
+    if (!dept.isExpanded && !dept.teams) {
+      const deptCode = departmentId.toUpperCase();
+      const deptId = DEPARTMENT_CODE_TO_ID[deptCode];
+
+      if (deptId) {
+        try {
+          const deptData = await getDepartmentHierarchy(deptId);
+          setHierarchy(prev => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              departments: prev.departments.map(d =>
+                d.id === departmentId
+                  ? { ...d, ...deptData, isExpanded: true }
+                  : d
+              ),
+            };
+          });
+          return;
+        } catch (err) {
+          console.error('Error fetching department details:', err);
+        }
+      }
+    }
+
+    // Just toggle expanded state
     setHierarchy(prev => {
       if (!prev) return prev;
       return {
         ...prev,
-        departments: prev.departments.map(dept =>
-          dept.id === departmentId
-            ? { ...dept, isExpanded: !dept.isExpanded }
-            : dept
+        departments: prev.departments.map(d =>
+          d.id === departmentId
+            ? { ...d, isExpanded: !d.isExpanded }
+            : d
         ),
       };
     });
-  }, []);
+  }, [hierarchy]);
 
+  // Toggle team in selected department (for department detail view)
   const handleToggleTeam = useCallback((teamId: string) => {
     setSelectedDepartment(prev => {
       if (!prev || !prev.teams) return prev;
@@ -99,6 +132,28 @@ export default function UserInfoPage() {
           team.id === teamId
             ? { ...team, isExpanded: !team.isExpanded }
             : team
+        ),
+      };
+    });
+  }, []);
+
+  // Toggle team in hierarchy (for SMBU overview)
+  const handleToggleTeamInHierarchy = useCallback((departmentId: DepartmentId, teamId: string) => {
+    setHierarchy(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        departments: prev.departments.map(dept =>
+          dept.id === departmentId && dept.teams
+            ? {
+                ...dept,
+                teams: dept.teams.map((team: Team) =>
+                  team.id === teamId
+                    ? { ...team, isExpanded: !team.isExpanded }
+                    : team
+                ),
+              }
+            : dept
         ),
       };
     });
@@ -171,6 +226,7 @@ export default function UserInfoPage() {
           <HierarchyTree
             hierarchy={hierarchy}
             onToggleDepartment={handleToggleDepartment}
+            onToggleTeam={handleToggleTeamInHierarchy}
             onAddMember={handleAddMember}
           />
         ) : selectedDepartment ? (
