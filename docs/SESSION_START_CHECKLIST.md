@@ -35,13 +35,16 @@ cd backend
 ```bash
 cd frontend
 npm run dev
-# App chạy tại http://localhost:3000
+# App chạy tại http://localhost:3000 (hoặc 3001, 3002... nếu port bị chiếm)
 ```
+
+> **Note về CORS**: Backend đã được config để chấp nhận Frontend trên port 3000-3009.
+> Nếu port 3000 bị chiếm, Next.js sẽ tự động chuyển sang port khác và vẫn hoạt động bình thường.
 
 ### Verify All Services Running
 | Service | URL | Expected |
 |---------|-----|----------|
-| Frontend | http://localhost:3000 | Next.js app |
+| Frontend | http://localhost:3000 (hoặc 300x) | Next.js app |
 | Backend API | http://localhost:8000/api/v1/auth/login | JSON response |
 | Database | `psql -U postgres -d aoisora -c "\dt"` | List tables |
 
