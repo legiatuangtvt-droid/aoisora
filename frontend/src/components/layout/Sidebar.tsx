@@ -312,12 +312,6 @@ export default function Sidebar() {
               </>
             )}
 
-            {/* Collapsed state: show children count dot */}
-            {!showExpanded && hasChildren && (
-              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-gray-400 dark:bg-gray-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                {item.children?.length}
-              </span>
-            )}
           </button>
 
           <div
