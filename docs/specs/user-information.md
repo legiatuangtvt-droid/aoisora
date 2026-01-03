@@ -309,8 +309,47 @@ frontend/src/
 | Component | Connector Position | Calculation |
 |-----------|-------------------|-------------|
 | HierarchyTree → DepartmentCard | `top-[50px]` | pt-4(16px) + p-4(16px) + half h-9(18px) |
+| HierarchyTree → DepartmentHeadCard | `top-[62px]` | pt-4(16px) + p-4(16px) + half avatar(30px) |
+| HierarchyTree → TeamCard (expanded) | `top-[48px]` | pt-4(16px) + py-3(12px) + half icon(20px) |
 | DepartmentDetailView → TeamCard | `top-[48px]` | pt-4(16px) + py-3(12px) + half h-10(20px) |
 | TeamCard → MemberCard | `top-[40px]` | pt-3(12px) + py-2(8px) + half h-10(20px) |
+
+### Connector Line Implementation
+
+The hierarchy tree uses segmented vertical lines for proper alignment:
+
+1. **Department Card Level**: Vertical line from root to each department card
+2. **Expanded Content Level**: When department is expanded:
+   - Vertical line segments connect from previous item to current connector position
+   - Each segment height is calculated to reach exactly the horizontal connector
+   - Last item's vertical segment ends at its horizontal connector (no overflow)
+
+```
+Root User
+│
+├── Department Card 1 (collapsed)
+│
+├── Department Card 2 (expanded)
+│   │
+│   ├── Department Head Card
+│   │
+│   ├── Team Card 1
+│   │
+│   └── Team Card 2 (last - vertical line ends here)
+│
+└── Department Card 3
+```
+
+---
+
+## 10. API ENDPOINTS (User Information)
+
+| # | Action | Method | Endpoint | Description |
+|---|--------|--------|----------|-------------|
+| 1 | Get SMBU Hierarchy | GET | /api/v1/user-info/smbu-hierarchy | Get SMBU (Head Office) hierarchy with departments |
+| 2 | Get Department Tabs | GET | /api/v1/user-info/department-tabs | Get list of department tabs for navigation |
+| 3 | Get Department Hierarchy | GET | /api/v1/user-info/departments/{id}/hierarchy | Get department detail with head and teams |
+| 4 | Get Staff Detail | GET | /api/v1/user-info/staff/{id} | Get detailed staff information |
 
 ---
 
@@ -326,3 +365,6 @@ frontend/src/
 | 2026-01-02 | Updated Admin and OP icons with new SVG designs from Figma |
 | 2026-01-02 | Fixed tab colors: inactive tabs now display gray text |
 | 2026-01-02 | Translated specification to English |
+| 2026-01-03 | Added department expand/collapse with lazy loading in SMBU tab |
+| 2026-01-03 | Fixed connector lines to use segmented approach for proper alignment |
+| 2026-01-03 | Added User Information API endpoints documentation |

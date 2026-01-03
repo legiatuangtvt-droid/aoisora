@@ -56,52 +56,74 @@ const HierarchyTree: React.FC<HierarchyTreeProps> = ({
                 />
 
                 {/* Expanded Content: Head + Teams */}
-                {hasExpandedContent && (
-                  <div className="relative ml-6 pl-6">
-                    {/* Main vertical line connecting all expanded items */}
-                    <div className="absolute -left-6 top-0 bottom-0 w-0.5 bg-[#9B9B9B]" />
+                {hasExpandedContent && (() => {
+                  const hasHead = !!department.head;
+                  const teamsCount = department.teams?.length || 0;
+                  const hasTeams = teamsCount > 0;
 
-                    {/* Department Head */}
-                    {department.head && (
-                      <div className="relative pt-4">
-                        {/* Horizontal connector to head */}
-                        {/* pt-4(16px) + p-4(16px) + half of avatar(30px) = 62px */}
-                        <div className="absolute -left-6 top-[62px] w-6 h-0.5 bg-[#9B9B9B]" />
-                        <DepartmentHeadCard head={department.head} />
-                      </div>
-                    )}
+                  // Calculate total items for vertical line height
+                  // Each item: pt-4 (16px) + connector position
+                  // Head connector at 62px, Team connector at 48px
+                  const headHeight = hasHead ? 16 + 62 : 0; // pt-4 + connector position
+                  const teamsHeight = hasTeams ? teamsCount * (16 + 48) : 0; // each team: pt-4 + connector
 
-                    {/* Teams */}
-                    {department.teams && department.teams.length > 0 && (
-                      <div>
-                        {department.teams.map((team, teamIndex) => {
-                          const isLastTeam = teamIndex === department.teams!.length - 1;
+                  // If only head, line ends at head connector (62px from head container top)
+                  // If teams exist, line ends at last team connector
+                  let verticalLineHeight = 0;
+                  if (hasHead && !hasTeams) {
+                    verticalLineHeight = 16 + 62; // pt-4 + connector to center of head
+                  } else if (hasTeams) {
+                    // Head section height (if exists) + teams before last + last team connector position
+                    const headSectionHeight = hasHead ? (16 + 60 + 16 + 68) : 0; // pt-4 + p-4 + avatar(60) + p-4 + border
+                    const teamsBeforeLastHeight = (teamsCount - 1) * (16 + 52 + 12 + 12); // pt-4 + py-3 + icon + py-3 + some padding
+                    verticalLineHeight = headSectionHeight + (teamsCount - 1) * 80 + 16 + 48;
+                  }
 
-                          return (
-                            <div key={team.id} className="relative pt-4">
-                              {/* Horizontal connector to team */}
-                              {/* pt-4(16px) + py-3(12px) + half of icon(20px) = 48px */}
-                              <div className="absolute -left-6 top-[48px] w-6 h-0.5 bg-[#9B9B9B]" />
-                              {/* Hide the main vertical line after last team */}
-                              {isLastTeam && (
-                                <div className="absolute -left-6 top-[48px] bottom-0 w-1 bg-[#F8F8F8]" />
-                              )}
-                              <TeamCard
-                                team={team}
-                                onToggle={(teamId) => onToggleTeam?.(department.id, teamId)}
-                              />
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
+                  return (
+                    <div className="relative ml-12">
+                      {/* Department Head */}
+                      {hasHead && (
+                        <div className="relative pt-4 pl-6">
+                          {/* Vertical line segment to head */}
+                          <div className="absolute left-0 top-0 w-0.5 bg-[#9B9B9B]" style={{ height: hasTeams ? '100%' : '62px' }} />
+                          {/* Horizontal connector to head */}
+                          <div className="absolute left-0 top-[62px] w-6 h-0.5 bg-[#9B9B9B]" />
+                          <DepartmentHeadCard head={department.head!} />
+                        </div>
+                      )}
 
-                    {/* Hide vertical line after last item if no teams */}
-                    {department.head && (!department.teams || department.teams.length === 0) && (
-                      <div className="absolute -left-6 top-[62px] bottom-0 w-1 bg-[#F8F8F8]" />
-                    )}
-                  </div>
-                )}
+                      {/* Teams */}
+                      {hasTeams && (
+                        <div>
+                          {department.teams!.map((team, teamIndex) => {
+                            const isFirstTeam = teamIndex === 0;
+                            const isLastTeam = teamIndex === teamsCount - 1;
+
+                            return (
+                              <div key={team.id} className="relative pt-4 pl-6">
+                                {/* Vertical line segment - connects from previous item to this connector */}
+                                <div
+                                  className="absolute left-0 top-0 w-0.5 bg-[#9B9B9B]"
+                                  style={{ height: '48px' }}
+                                />
+                                {/* Vertical line continues to next item (not for last) */}
+                                {!isLastTeam && (
+                                  <div className="absolute left-0 top-[48px] bottom-0 w-0.5 bg-[#9B9B9B]" />
+                                )}
+                                {/* Horizontal connector to team */}
+                                <div className="absolute left-0 top-[48px] w-6 h-0.5 bg-[#9B9B9B]" />
+                                <TeamCard
+                                  team={team}
+                                  onToggle={(teamId) => onToggleTeam?.(department.id, teamId)}
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             );
           })}
