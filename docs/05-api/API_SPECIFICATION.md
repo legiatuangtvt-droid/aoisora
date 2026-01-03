@@ -17,6 +17,36 @@
 
 ---
 
+## Route Access Levels
+
+Routes are categorized into two access levels:
+
+### Public Routes (No Authentication Required)
+These routes can be accessed without a Bearer token:
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/auth/login` | POST | User authentication |
+| `/departments` | GET | List all departments |
+| `/departments/{id}` | GET | Get department details |
+| `/tasks` | GET | List tasks |
+| `/tasks/{id}` | GET | Get task details |
+| `/stores` | GET | List all stores |
+| `/stores/{id}` | GET | Get store details |
+| `/regions` | GET | List all regions |
+| `/regions/{id}` | GET | Get region details |
+| `/code-master` | GET | Get code master entries |
+
+### Protected Routes (Authentication Required)
+All other routes require a valid Bearer token in the Authorization header:
+```
+Authorization: Bearer <token>
+```
+
+Write operations (POST, PUT, DELETE) for public resources still require authentication.
+
+---
+
 ## 1. Authentication
 
 ### 1.1. Login
@@ -288,9 +318,9 @@ Deletes a staff member (soft delete - sets is_active to false).
 
 ### 2.6. List Stores
 
-Returns all stores.
+Returns all stores. **This is a public route (no authentication required).**
 
-**Endpoint:** `GET /staff/stores`
+**Endpoint:** `GET /stores`
 
 **Query Parameters:**
 | Parameter | Type | Required | Description |
@@ -321,9 +351,9 @@ Returns all stores.
 
 ### 2.7. List Departments
 
-Returns all departments.
+Returns all departments. **This is a public route (no authentication required).**
 
-**Endpoint:** `GET /staff/departments`
+**Endpoint:** `GET /departments`
 
 **Response 200:**
 ```json
@@ -341,9 +371,9 @@ Returns all departments.
 
 ### 2.8. List Regions
 
-Returns all regions.
+Returns all regions. **This is a public route (no authentication required).**
 
-**Endpoint:** `GET /staff/regions`
+**Endpoint:** `GET /regions`
 
 **Response 200:**
 ```json
@@ -363,7 +393,7 @@ Returns all regions.
 
 ### 3.1. List Tasks
 
-Returns tasks with optional filters.
+Returns tasks with optional filters. **This is a public route (no authentication required).**
 
 **Endpoint:** `GET /tasks`
 
@@ -423,7 +453,7 @@ Returns tasks with optional filters.
 
 ### 3.2. Get Task by ID
 
-Returns a specific task with full details.
+Returns a specific task with full details. **This is a public route (no authentication required).**
 
 **Endpoint:** `GET /tasks/{task_id}`
 
@@ -695,9 +725,9 @@ Updates a checklist item status.
 
 ### 3.9. Get Code Master
 
-Returns code master entries for lookups.
+Returns code master entries for lookups. **This is a public route (no authentication required).**
 
-**Endpoint:** `GET /tasks/code-master`
+**Endpoint:** `GET /code-master`
 
 **Query Parameters:**
 | Parameter | Type | Required | Description |

@@ -11,6 +11,12 @@
 -- DROP ALL EXISTING TABLES (reverse order of dependencies)
 -- ============================================
 
+DROP TABLE IF EXISTS "task_likes" CASCADE;
+DROP TABLE IF EXISTS "task_comments" CASCADE;
+DROP TABLE IF EXISTS "task_images" CASCADE;
+DROP TABLE IF EXISTS "task_staff_results" CASCADE;
+DROP TABLE IF EXISTS "task_store_results" CASCADE;
+DROP TABLE IF EXISTS "task_workflow_steps" CASCADE;
 DROP TABLE IF EXISTS "manual_view_logs" CASCADE;
 DROP TABLE IF EXISTS "manual_media" CASCADE;
 DROP TABLE IF EXISTS "manual_steps" CASCADE;
@@ -57,11 +63,17 @@ CREATE TABLE "departments" (
     "department_name" VARCHAR(255) NOT NULL,
     "department_code" VARCHAR(50) UNIQUE,
     "description" TEXT,
+    "parent_id" INTEGER,
+    "sort_order" INTEGER DEFAULT 0,
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-COMMENT ON TABLE "departments" IS 'Organizational departments';
+-- Add self-referencing FK after table creation
+ALTER TABLE "departments" ADD CONSTRAINT "fk_departments_parent"
+    FOREIGN KEY ("parent_id") REFERENCES "departments"("department_id") ON DELETE SET NULL;
+
+COMMENT ON TABLE "departments" IS 'Organizational departments (hierarchical)';
 
 -- Stores Table
 CREATE TABLE "stores" (
@@ -407,6 +419,100 @@ CREATE TABLE "manual_view_logs" (
 COMMENT ON TABLE "manual_view_logs" IS 'Track document views for analytics';
 
 -- ============================================
+-- TASK DETAIL TABLES (for Task Detail API)
+-- ============================================
+
+-- Task Workflow Steps Table
+CREATE TABLE "task_workflow_steps" (
+    "step_id" SERIAL PRIMARY KEY,
+    "task_id" INTEGER REFERENCES "tasks"("task_id") ON DELETE CASCADE,
+    "step_number" INTEGER NOT NULL, -- 1=SUBMIT, 2=APPROVE, 3=DO TASK, 4=CHECK
+    "step_name" VARCHAR(50) NOT NULL,
+    "status" VARCHAR(20) DEFAULT 'pending', -- pending, in_progress, completed, skipped
+    "assignee_id" INTEGER REFERENCES "staff"("staff_id") ON DELETE SET NULL,
+    "skip_info" VARCHAR(255), -- e.g., "27 Stores" for DO TASK step
+    "start_date" DATE,
+    "end_date" DATE,
+    "comment" TEXT,
+    "completed_at" TIMESTAMP,
+    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+COMMENT ON TABLE "task_workflow_steps" IS 'Workflow steps for each task (SUBMIT, APPROVE, DO TASK, CHECK)';
+
+-- Task Store Results Table
+CREATE TABLE "task_store_results" (
+    "result_id" SERIAL PRIMARY KEY,
+    "task_id" INTEGER REFERENCES "tasks"("task_id") ON DELETE CASCADE,
+    "store_id" INTEGER REFERENCES "stores"("store_id") ON DELETE CASCADE,
+    "status" VARCHAR(20) DEFAULT 'not_started', -- not_started, in_progress, success, failed
+    "start_time" TIMESTAMP,
+    "completed_time" TIMESTAMP,
+    "completed_by_id" INTEGER REFERENCES "staff"("staff_id") ON DELETE SET NULL,
+    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+COMMENT ON TABLE "task_store_results" IS 'Task completion results per store';
+
+-- Task Staff Results Table
+CREATE TABLE "task_staff_results" (
+    "result_id" SERIAL PRIMARY KEY,
+    "task_id" INTEGER REFERENCES "tasks"("task_id") ON DELETE CASCADE,
+    "staff_id" INTEGER REFERENCES "staff"("staff_id") ON DELETE CASCADE,
+    "store_id" INTEGER REFERENCES "stores"("store_id") ON DELETE SET NULL,
+    "status" VARCHAR(20) DEFAULT 'not_started', -- not_started, in_progress, success, failed
+    "progress" INTEGER DEFAULT 0, -- 0-100
+    "progress_text" VARCHAR(50), -- e.g., "100% (15/15 items)"
+    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+COMMENT ON TABLE "task_staff_results" IS 'Task completion results per staff member';
+
+-- Task Images Table
+CREATE TABLE "task_images" (
+    "image_id" SERIAL PRIMARY KEY,
+    "task_id" INTEGER REFERENCES "tasks"("task_id") ON DELETE CASCADE,
+    "store_result_id" INTEGER REFERENCES "task_store_results"("result_id") ON DELETE CASCADE,
+    "staff_result_id" INTEGER REFERENCES "task_staff_results"("result_id") ON DELETE CASCADE,
+    "title" VARCHAR(255),
+    "image_url" TEXT NOT NULL,
+    "thumbnail_url" TEXT,
+    "uploaded_by_id" INTEGER REFERENCES "staff"("staff_id") ON DELETE SET NULL,
+    "is_completed" BOOLEAN DEFAULT false,
+    "uploaded_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+COMMENT ON TABLE "task_images" IS 'Images uploaded for task completion';
+
+-- Task Comments Table
+CREATE TABLE "task_comments" (
+    "comment_id" SERIAL PRIMARY KEY,
+    "task_id" INTEGER REFERENCES "tasks"("task_id") ON DELETE CASCADE,
+    "store_result_id" INTEGER REFERENCES "task_store_results"("result_id") ON DELETE CASCADE,
+    "staff_result_id" INTEGER REFERENCES "task_staff_results"("result_id") ON DELETE CASCADE,
+    "user_id" INTEGER REFERENCES "staff"("staff_id") ON DELETE SET NULL,
+    "content" TEXT NOT NULL,
+    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+COMMENT ON TABLE "task_comments" IS 'Comments on task results';
+
+-- Task Likes Table
+CREATE TABLE "task_likes" (
+    "like_id" SERIAL PRIMARY KEY,
+    "store_result_id" INTEGER REFERENCES "task_store_results"("result_id") ON DELETE CASCADE,
+    "user_id" INTEGER REFERENCES "staff"("staff_id") ON DELETE CASCADE,
+    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "task_likes_unique" UNIQUE("store_result_id", "user_id")
+);
+
+COMMENT ON TABLE "task_likes" IS 'Likes on store task results';
+
+-- ============================================
 -- NOTIFICATIONS TABLE
 -- ============================================
 
@@ -459,6 +565,18 @@ CREATE INDEX "idx_notifications_recipient" ON "notifications" ("recipient_staff_
 CREATE INDEX "idx_manual_documents_folder" ON "manual_documents" ("folder_id");
 CREATE INDEX "idx_manual_steps_document" ON "manual_steps" ("document_id");
 CREATE INDEX "idx_manual_view_logs_document" ON "manual_view_logs" ("document_id");
+
+-- Task detail indexes
+CREATE INDEX "idx_task_workflow_steps_task" ON "task_workflow_steps" ("task_id");
+CREATE INDEX "idx_task_store_results_task" ON "task_store_results" ("task_id");
+CREATE INDEX "idx_task_store_results_store" ON "task_store_results" ("store_id");
+CREATE INDEX "idx_task_staff_results_task" ON "task_staff_results" ("task_id");
+CREATE INDEX "idx_task_staff_results_staff" ON "task_staff_results" ("staff_id");
+CREATE INDEX "idx_task_images_store_result" ON "task_images" ("store_result_id");
+CREATE INDEX "idx_task_images_staff_result" ON "task_images" ("staff_result_id");
+CREATE INDEX "idx_task_comments_store_result" ON "task_comments" ("store_result_id");
+CREATE INDEX "idx_task_comments_staff_result" ON "task_comments" ("staff_result_id");
+CREATE INDEX "idx_task_likes_store_result" ON "task_likes" ("store_result_id");
 
 -- ============================================
 -- INITIAL DATA - Code Master Values

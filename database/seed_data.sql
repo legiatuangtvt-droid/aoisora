@@ -420,6 +420,103 @@ INSERT INTO "tasks" ("task_name", "task_description", "task_type_id", "response_
 ('Ho tro ky thuat cho nhan vien', 'Ho tro xu ly cac van de ky thuat', 2, 6, 7, 4, 4, 27, 25, 'normal', CURRENT_DATE, CURRENT_DATE + 2);
 
 -- ============================================
+-- TASK DETAIL DATA: Workflow Steps, Store Results, Staff Results
+-- ============================================
+
+-- Sample image URLs
+-- SAMPLE_IMAGE = 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=300&fit=crop'
+-- SAMPLE_STORE_IMAGE = 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=400&h=300&fit=crop'
+
+-- Workflow Steps for Task 1 (Kiem ke hang hoa thang 12)
+INSERT INTO "task_workflow_steps" ("task_id", "step_number", "step_name", "status", "assignee_id", "skip_info", "start_date", "end_date", "comment") VALUES
+(1, 1, 'SUBMIT', 'completed', 1, NULL, CURRENT_DATE - 5, CURRENT_DATE - 4, 'Reference doc about inventory check procedures'),
+(1, 2, 'APPROVE', 'completed', 2, NULL, CURRENT_DATE - 4, CURRENT_DATE - 3, 'Approved for all stores'),
+(1, 3, 'DO TASK', 'in_progress', NULL, '4 Stores', CURRENT_DATE - 3, CURRENT_DATE + 4, NULL),
+(1, 4, 'CHECK', 'pending', 1, NULL, CURRENT_DATE + 4, CURRENT_DATE + 7, NULL);
+
+-- Workflow Steps for Task 2 (Ve sinh khu vuc thuc pham)
+INSERT INTO "task_workflow_steps" ("task_id", "step_number", "step_name", "status", "assignee_id", "skip_info", "start_date", "end_date", "comment") VALUES
+(2, 1, 'SUBMIT', 'completed', 1, NULL, CURRENT_DATE - 2, CURRENT_DATE - 1, 'Daily cleaning task submitted'),
+(2, 2, 'APPROVE', 'completed', 2, NULL, CURRENT_DATE - 1, CURRENT_DATE, 'Auto-approved for routine task'),
+(2, 3, 'DO TASK', 'in_progress', NULL, '4 Stores', CURRENT_DATE, CURRENT_DATE + 1, NULL),
+(2, 4, 'CHECK', 'pending', 9, NULL, CURRENT_DATE + 1, CURRENT_DATE + 2, NULL);
+
+-- Workflow Steps for Task 3 (Chuan bi khuyen mai Tet)
+INSERT INTO "task_workflow_steps" ("task_id", "step_number", "step_name", "status", "assignee_id", "skip_info", "start_date", "end_date", "comment") VALUES
+(3, 1, 'SUBMIT', 'completed', 1, NULL, CURRENT_DATE - 1, CURRENT_DATE, 'Tet promotion preparation plan'),
+(3, 2, 'APPROVE', 'in_progress', 2, NULL, CURRENT_DATE, CURRENT_DATE + 1, NULL),
+(3, 3, 'DO TASK', 'pending', NULL, '4 Stores', CURRENT_DATE + 1, CURRENT_DATE + 7, NULL),
+(3, 4, 'CHECK', 'pending', 17, NULL, CURRENT_DATE + 7, CURRENT_DATE + 10, NULL);
+
+-- Store Results for Task 1
+INSERT INTO "task_store_results" ("result_id", "task_id", "store_id", "status", "start_time", "completed_time", "completed_by_id") VALUES
+(1, 1, 1, 'success', CURRENT_TIMESTAMP - INTERVAL '3 days', CURRENT_TIMESTAMP - INTERVAL '1 day', 3),
+(2, 1, 2, 'failed', CURRENT_TIMESTAMP - INTERVAL '3 days', CURRENT_TIMESTAMP - INTERVAL '1 day', 11),
+(3, 1, 3, 'in_progress', CURRENT_TIMESTAMP - INTERVAL '2 days', NULL, 19),
+(4, 1, 4, 'not_started', NULL, NULL, NULL);
+
+-- Store Results for Task 2
+INSERT INTO "task_store_results" ("result_id", "task_id", "store_id", "status", "start_time", "completed_time", "completed_by_id") VALUES
+(5, 2, 1, 'success', CURRENT_TIMESTAMP - INTERVAL '6 hours', CURRENT_TIMESTAMP - INTERVAL '2 hours', 4),
+(6, 2, 2, 'in_progress', CURRENT_TIMESTAMP - INTERVAL '4 hours', NULL, 12),
+(7, 2, 3, 'not_started', NULL, NULL, NULL),
+(8, 2, 4, 'not_started', NULL, NULL, NULL);
+
+SELECT setval('task_store_results_result_id_seq', 8);
+
+-- Staff Results for Task 1
+INSERT INTO "task_staff_results" ("result_id", "task_id", "staff_id", "store_id", "status", "progress", "progress_text") VALUES
+(1, 1, 3, 1, 'success', 100, '100% (15/15 items)'),
+(2, 1, 4, 1, 'success', 100, '100% (10/10 items)'),
+(3, 1, 11, 2, 'in_progress', 75, '75% (7.5/10 items)'),
+(4, 1, 12, 2, 'in_progress', 50, '50% (5/10 items)'),
+(5, 1, 19, 3, 'not_started', 0, '0% (0/15 items)'),
+(6, 1, 20, 3, 'not_started', 0, '0% (0/10 items)');
+
+SELECT setval('task_staff_results_result_id_seq', 6);
+
+-- Images for Store Results
+INSERT INTO "task_images" ("task_id", "store_result_id", "staff_result_id", "title", "image_url", "thumbnail_url", "uploaded_by_id", "is_completed") VALUES
+-- Images for Store 1 Result (Task 1)
+(1, 1, NULL, 'Picture at POS', 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=300&fit=crop', 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=200&h=150&fit=crop', 3, true),
+(1, 1, NULL, 'Picture at Peri Area', 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=400&h=300&fit=crop', 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=200&h=150&fit=crop', 3, true),
+(1, 1, NULL, 'Picture at Ware House', 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=300&fit=crop', 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=200&h=150&fit=crop', 3, true),
+(1, 1, NULL, 'Picture at POS 2', 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=400&h=300&fit=crop', 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=200&h=150&fit=crop', 4, true),
+-- Images for Store 2 Result (Task 1) - partial
+(1, 2, NULL, 'Checking inventory', 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=300&fit=crop', 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=200&h=150&fit=crop', 11, true),
+(1, 2, NULL, 'Issue found', 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=400&h=300&fit=crop', 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=200&h=150&fit=crop', 11, true);
+
+-- Images for Staff Results
+INSERT INTO "task_images" ("task_id", "store_result_id", "staff_result_id", "title", "image_url", "thumbnail_url", "uploaded_by_id", "is_completed") VALUES
+(1, NULL, 1, 'Staff completion photo 1', 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=400&h=300&fit=crop', 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=200&h=150&fit=crop', 3, true),
+(1, NULL, 1, 'Staff completion photo 2', 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=300&fit=crop', 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=200&h=150&fit=crop', 3, true),
+(1, NULL, 2, 'Staff completion photo', 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=400&h=300&fit=crop', 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=200&h=150&fit=crop', 4, true),
+(1, NULL, 3, 'In progress photo', 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=300&fit=crop', 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=200&h=150&fit=crop', 11, true);
+
+-- Comments for Store Results
+INSERT INTO "task_comments" ("task_id", "store_result_id", "staff_result_id", "user_id", "content", "created_at") VALUES
+-- Comments for Store 1 Result
+(1, 1, NULL, 3, 'nha cung cap giao thieu hoa nen chi co hinh ABC.', CURRENT_TIMESTAMP - INTERVAL '2 days'),
+(1, 1, NULL, 1, 'ok mi da bao MO xu ly tiep.', CURRENT_TIMESTAMP - INTERVAL '1 day 23 hours'),
+-- Comments for Store 2 Result
+(1, 2, NULL, 11, 'Phat hien hang bi loi, can xu ly gap.', CURRENT_TIMESTAMP - INTERVAL '1 day 20 hours'),
+(1, 2, NULL, 9, 'Da gui yeu cau doi hang.', CURRENT_TIMESTAMP - INTERVAL '1 day 18 hours');
+
+-- Comments for Staff Results
+INSERT INTO "task_comments" ("task_id", "store_result_id", "staff_result_id", "user_id", "content", "created_at") VALUES
+(1, NULL, 1, 3, 'Da hoan thanh kiem ke khu vuc A.', CURRENT_TIMESTAMP - INTERVAL '2 days'),
+(1, NULL, 1, 1, 'ok, I will check later', CURRENT_TIMESTAMP - INTERVAL '1 day 22 hours'),
+(1, NULL, 3, 11, 'Dang cho hang ve de kiem tra.', CURRENT_TIMESTAMP - INTERVAL '1 day');
+
+-- Likes for Store Results
+INSERT INTO "task_likes" ("store_result_id", "user_id") VALUES
+(1, 1),
+(1, 2),
+(1, 9),
+(5, 1),
+(5, 2);
+
+-- ============================================
 -- MANUAL DATA: Folders and Documents
 -- ============================================
 
@@ -469,6 +566,13 @@ SELECT 'REGIONS' AS table_name, COUNT(*) AS count FROM regions
 UNION ALL SELECT 'DEPARTMENTS', COUNT(*) FROM departments
 UNION ALL SELECT 'STORES', COUNT(*) FROM stores
 UNION ALL SELECT 'STAFF', COUNT(*) FROM staff
+UNION ALL SELECT 'TASKS', COUNT(*) FROM tasks
+UNION ALL SELECT 'TASK_WORKFLOW_STEPS', COUNT(*) FROM task_workflow_steps
+UNION ALL SELECT 'TASK_STORE_RESULTS', COUNT(*) FROM task_store_results
+UNION ALL SELECT 'TASK_STAFF_RESULTS', COUNT(*) FROM task_staff_results
+UNION ALL SELECT 'TASK_IMAGES', COUNT(*) FROM task_images
+UNION ALL SELECT 'TASK_COMMENTS', COUNT(*) FROM task_comments
+UNION ALL SELECT 'TASK_LIKES', COUNT(*) FROM task_likes
 UNION ALL SELECT 'TASK_GROUPS', COUNT(*) FROM task_groups
 UNION ALL SELECT 'SHIFT_CODES', COUNT(*) FROM shift_codes
 UNION ALL SELECT 'SHIFT_ASSIGNMENTS', COUNT(*) FROM shift_assignments

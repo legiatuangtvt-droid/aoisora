@@ -122,7 +122,7 @@ export default function WorkflowStepsPanel({ steps, isOpen, onClose }: WorkflowS
       <div className="fixed right-0 top-0 h-full w-[414px] bg-white z-50 shadow-xl overflow-y-auto">
         <div className="p-6">
           {/* Round Tabs */}
-          <div className="flex justify-center mb-6">
+          <div className="flex justify-center mb-4">
             <div className="inline-flex bg-[#ECECEC] rounded-[10px] p-1 gap-3">
               <button
                 onClick={() => setActiveRound(1)}
@@ -147,26 +147,36 @@ export default function WorkflowStepsPanel({ steps, isOpen, onClose }: WorkflowS
             </div>
           </div>
 
+          {/* Link ASSIGN TASK */}
+          <div className="flex justify-end mb-4">
+            <a
+              href="#"
+              className="text-[15px] italic text-[#297EF6] underline hover:text-[#1a5fc4]"
+            >
+              Link ASSIGN TASK
+            </a>
+          </div>
+
           {/* Steps Timeline */}
           <div className="relative">
             {/* Steps */}
-            <div className="space-y-5">
+            <div className="flex flex-col gap-0">
               {steps.map((step, index) => {
                 const statusConfig = getStatusConfig(step);
                 const isLastStep = index === steps.length - 1;
                 const hasComment = step.comment && step.comment.length > 0;
 
                 return (
-                  <div key={step.id} className="flex gap-4">
+                  <div key={step.id} className={`flex gap-4 ${!isLastStep ? 'pb-5' : ''}`}>
                     {/* Step Icon with connecting line */}
-                    <div className="relative flex-shrink-0 flex flex-col items-center">
+                    <div className="relative flex-shrink-0 w-[30px] flex flex-col items-center">
                       {/* Icon */}
-                      <div className="relative z-10 bg-white">
+                      <div className="relative z-10 bg-white flex-shrink-0">
                         <StepIcon step={step.step} status={step.status} />
                       </div>
-                      {/* Connecting line to next step (not for last step) */}
+                      {/* Connecting line below icon (not for last step) */}
                       {!isLastStep && (
-                        <div className="w-[2px] flex-1 min-h-[20px] bg-[#C5055B] mt-1" />
+                        <div className="w-[2px] flex-1 bg-[#C5055B]" />
                       )}
                     </div>
 

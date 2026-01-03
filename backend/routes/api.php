@@ -30,6 +30,17 @@ Route::prefix('v1')->group(function () {
     // Public routes
     Route::post('auth/login', [AuthController::class, 'login']);
 
+    // Public read-only routes (for listing/browsing)
+    Route::get('departments', [DepartmentController::class, 'index']);
+    Route::get('departments/{department}', [DepartmentController::class, 'show']);
+    Route::get('tasks', [TaskController::class, 'index']);
+    Route::get('tasks/{task}', [TaskController::class, 'show']);
+    Route::get('stores', [StoreController::class, 'index']);
+    Route::get('stores/{store}', [StoreController::class, 'show']);
+    Route::get('regions', [RegionController::class, 'index']);
+    Route::get('regions/{region}', [RegionController::class, 'show']);
+    Route::get('code-master', [TaskController::class, 'getCodeMaster']);
+
     // Protected routes
     Route::middleware('auth:sanctum')->group(function () {
         // Auth
@@ -40,20 +51,27 @@ Route::prefix('v1')->group(function () {
         // Staff
         Route::apiResource('staff', StaffController::class);
 
-        // Stores
-        Route::apiResource('stores', StoreController::class);
+        // Stores (only write operations - read operations are public)
+        Route::post('stores', [StoreController::class, 'store']);
+        Route::put('stores/{store}', [StoreController::class, 'update']);
+        Route::delete('stores/{store}', [StoreController::class, 'destroy']);
 
-        // Departments
-        Route::apiResource('departments', DepartmentController::class);
+        // Departments (only write operations - read operations are public)
+        Route::post('departments', [DepartmentController::class, 'store']);
+        Route::put('departments/{department}', [DepartmentController::class, 'update']);
+        Route::delete('departments/{department}', [DepartmentController::class, 'destroy']);
 
-        // Regions
-        Route::apiResource('regions', RegionController::class);
+        // Regions (only write operations - read operations are public)
+        Route::post('regions', [RegionController::class, 'store']);
+        Route::put('regions/{region}', [RegionController::class, 'update']);
+        Route::delete('regions/{region}', [RegionController::class, 'destroy']);
 
-        // Tasks (WS)
-        Route::apiResource('tasks', TaskController::class);
+        // Tasks (only write operations - read operations are public)
+        Route::post('tasks', [TaskController::class, 'store']);
+        Route::put('tasks/{task}', [TaskController::class, 'update']);
+        Route::delete('tasks/{task}', [TaskController::class, 'destroy']);
         Route::put('tasks/{task}/status', [TaskController::class, 'updateStatus']);
         Route::get('tasks/{task}/checklists', [TaskController::class, 'getChecklists']);
-        Route::get('code-master', [TaskController::class, 'getCodeMaster']);
 
         // Checklists
         Route::apiResource('checklists', CheckListController::class);
