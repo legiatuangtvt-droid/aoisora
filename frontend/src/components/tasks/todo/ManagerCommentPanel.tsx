@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import { useState } from 'react';
 import { ManagerComment } from '@/types/todoTask';
 
@@ -168,13 +167,15 @@ export default function ManagerCommentPanel({
             }`}
           >
             <span className="flex items-center justify-center gap-1">
-              <Image
-                src="/icons/material-symbols_comment-rounded.png"
-                alt="Comment"
-                width={16}
-                height={16}
-                style={{ width: 'auto', height: 'auto' }}
-              />
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M22 4C22 2.9 21.1 2 20 2H4C2.9 2 2 2.9 2 4V16C2 17.1 2.9 18 4 18H18L22 22V4Z"/>
+              </svg>
               Manager ({managerComments.length})
             </span>
           </button>
@@ -219,13 +220,16 @@ export default function ManagerCommentPanel({
         <div className="space-y-2">
           {/* Header */}
           <div className="flex items-center gap-1">
-            <Image
-              src="/icons/material-symbols_comment-rounded.png"
-              alt="Comment"
-              width={24}
-              height={24}
-              style={{ width: 'auto', height: 'auto' }}
-            />
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="text-black dark:text-white"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M22 4C22 2.9 21.1 2 20 2H4C2.9 2 2 2.9 2 4V16C2 17.1 2.9 18 4 18H18L22 22V4Z"/>
+            </svg>
             <span className="text-[16px] font-bold text-black dark:text-white">
               Manager Comment
             </span>

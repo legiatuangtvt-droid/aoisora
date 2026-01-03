@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import { DailyTaskData, WeekInfo, TodoTask } from '@/types/todoTask';
 import DailyTaskRow from './DailyTaskRow';
 import CalendarViewMobile from './CalendarViewMobile';
@@ -55,13 +54,14 @@ export default function CalendarView({
           <div className="flex items-center gap-3">
             {/* Calendar Icon */}
             <div className="w-8 h-8 rounded-lg bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
-              <Image
-                src="/icons/mdi_invoice-text-scheduled-outline.png"
-                alt="Calendar"
-                width={20}
-                height={20}
-                style={{ width: 'auto', height: 'auto' }}
-              />
+              <svg
+                className="w-5 h-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M14 13H19V18H14V13ZM19 3H18V1H16V3H8V1H6V3H5C3.89 3 3 3.89 3 5V19C3 20.1 3.89 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.89 20.1 3 19 3ZM19 5V7H5V5H19ZM5 19V9H19V19H5Z" fill="#C5055B"/>
+              </svg>
             </div>
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
               Week {weekInfo.weekNumber}, {weekInfo.year}

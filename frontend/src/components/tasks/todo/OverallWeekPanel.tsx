@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import { WeekOverviewTask } from '@/types/todoTask';
 
 interface OverallWeekPanelProps {
@@ -23,14 +22,14 @@ export default function OverallWeekPanel({ weekNumber, tasks, onTargetChange, is
         <div className="flex items-center gap-2 sm:gap-3">
           {/* Icon */}
           <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white dark:bg-gray-700 border border-blue-200 dark:border-blue-700 flex items-center justify-center flex-shrink-0">
-            <Image
-              src="/icons/icon-park-outline_overall-reduction.png"
-              alt="Overall"
-              width={20}
-              height={20}
+            <svg
               className="w-4 h-4 sm:w-5 sm:h-5"
-              style={{ width: 'auto', height: 'auto' }}
-            />
+              viewBox="0 0 48 48"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M41.42 19.84L28.16 6.58004C26.09 4.51004 22.8 5.99004 22.8 8.92004V13.02C10.99 13.81 5 24.1 5 35.5C5 38.29 6.47 38.35 7.99 35.88C10.68 31.5 14.98 28.6 22.8 28.29V33.08C22.8 36.01 26.09 37.49 28.16 35.42L41.42 22.16C42.72 20.86 42.72 21.14 41.42 19.84Z" stroke="#3B82F6" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </div>
           {/* Title */}
           <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
