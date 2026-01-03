@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { mockTaskGroups } from '@/data/mockTasks';
+import { getTaskById, getDepartments } from '@/lib/api';
+import { Task as ApiTask, Department } from '@/types/api';
 import { getMockTaskDetail } from '@/data/mockTaskDetail';
-import { ViewMode } from '@/types/tasks';
+import { ViewMode, TaskGroup } from '@/types/tasks';
 import Link from 'next/link';
 import StoreResultCard from '@/components/tasks/StoreResultCard';
 import ViewModeToggle from '@/components/tasks/ViewModeToggle';
@@ -20,6 +21,9 @@ export default function TaskDetailClient({ taskId }: TaskDetailClientProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('results');
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isContentVisible, setIsContentVisible] = useState(true);
+  const [task, setTask] = useState<TaskGroup | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Refs for scroll preservation
   const scrollPositions = useRef<Record<ViewMode, number>>({
@@ -29,10 +33,63 @@ export default function TaskDetailClient({ taskId }: TaskDetailClientProps) {
   });
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // Find the task by ID from task list
-  const task = mockTaskGroups.find(t => t.id === taskId);
+  // Fetch task from API
+  useEffect(() => {
+    const fetchTask = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const [apiTask, departments] = await Promise.all([
+          getTaskById(Number(taskId)),
+          getDepartments()
+        ]);
 
-  // Get detailed task data
+        // Transform API task to TaskGroup format
+        const dept = departments.find((d: Department) => d.department_id === apiTask.dept_id);
+        const deptCode = dept?.department_code || dept?.department_name?.substring(0, 3).toUpperCase() || 'N/A';
+
+        const formatDate = (dateStr: string | null): string => {
+          if (!dateStr) return '--/--';
+          const date = new Date(dateStr);
+          return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+        };
+
+        const STATUS_MAP: Record<number, 'NOT_YET' | 'DRAFT' | 'DONE'> = {
+          7: 'NOT_YET',
+          8: 'DRAFT',
+          9: 'DONE',
+        };
+
+        const transformedTask: TaskGroup = {
+          id: apiTask.task_id.toString(),
+          no: 1,
+          dept: deptCode,
+          deptId: apiTask.dept_id,
+          taskGroupName: apiTask.task_name,
+          startDate: formatDate(apiTask.start_date),
+          endDate: formatDate(apiTask.end_date),
+          progress: {
+            completed: apiTask.status_id === 9 ? 1 : 0,
+            total: 1,
+          },
+          unable: 0,
+          status: STATUS_MAP[apiTask.status_id || 7] || 'NOT_YET',
+          hqCheck: STATUS_MAP[apiTask.status_id || 7] || 'NOT_YET',
+        };
+
+        setTask(transformedTask);
+      } catch (err) {
+        console.error('Failed to fetch task:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load task');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTask();
+  }, [taskId]);
+
+  // Get detailed task data (still using mock for now as detail API not ready)
   const taskDetail = getMockTaskDetail(`task-${taskId}`);
 
   // Calculate counts for badges
@@ -93,12 +150,25 @@ export default function TaskDetailClient({ taskId }: TaskDetailClientProps) {
     return () => content.removeEventListener('scroll', handleScroll);
   }, [viewMode]);
 
-  if (!task) {
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C5055B] mx-auto mb-4"></div>
+          <p className="text-gray-500">Loading task...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error or task not found
+  if (error || !task) {
     return (
       <div className="min-h-screen bg-white p-4">
         <div className="text-center py-12">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Task not found</h1>
-          <p className="text-gray-500 mb-6">Cannot find task with ID: {taskId}</p>
+          <p className="text-gray-500 mb-6">{error || `Cannot find task with ID: ${taskId}`}</p>
           <Link
             href="/tasks/list"
             className="inline-flex items-center px-4 py-2 bg-[#C5055B] text-white rounded-lg hover:bg-[#A00449] transition-colors"
