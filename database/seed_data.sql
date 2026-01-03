@@ -26,14 +26,18 @@ SELECT setval('regions_region_id_seq', 5);
 -- Display format: [sort_order]. [name] (e.g., "1. OP")
 -- ============================================
 
--- Parent departments (Level 1)
-INSERT INTO "departments" ("department_id", "department_name", "department_code", "description", "parent_id", "sort_order") VALUES
-(1, 'OP', 'OP', 'Operations', NULL, 1),
-(2, 'Admin', 'ADMIN', 'Administration', NULL, 2),
-(3, 'Control', 'CONTROL', 'Quality Control', NULL, 3),
-(4, 'Improvement', 'IMPROVEMENT', 'Process Improvement', NULL, 4),
-(5, 'Planning', 'PLANNING', 'Planning', NULL, 5),
-(6, 'HR', 'HR', 'Human Resources', NULL, 6);
+-- SMBU (Head Office) - Root department
+INSERT INTO "departments" ("department_id", "department_name", "department_code", "description", "parent_id", "sort_order", "icon", "icon_color", "icon_bg") VALUES
+(100, 'SMBU (Head Office)', 'SMBU', 'Head Office - Strategic Management Business Unit', NULL, 0, 'building', '#C5055B', 'rgba(197, 5, 91, 0.1)');
+
+-- Parent departments (Level 1 - under SMBU)
+INSERT INTO "departments" ("department_id", "department_name", "department_code", "description", "parent_id", "sort_order", "icon", "icon_color", "icon_bg") VALUES
+(1, 'OP', 'OP', 'Operations', 100, 1, 'op', '#0D9488', 'rgba(13, 148, 136, 0.1)'),
+(2, 'Admin', 'ADMIN', 'Administration', 100, 2, 'admin', '#233D62', 'rgba(35, 61, 98, 0.1)'),
+(3, 'Control', 'CONTROL', 'Quality Control', 100, 3, 'control', '#7C3AED', 'rgba(124, 58, 237, 0.1)'),
+(4, 'Improvement', 'IMPROVEMENT', 'Process Improvement', 100, 4, 'improvement', '#2563EB', 'rgba(37, 99, 235, 0.1)'),
+(5, 'Planning', 'PLANNING', 'Planning & MD', 100, 5, 'md', '#D97706', 'rgba(217, 119, 6, 0.1)'),
+(6, 'HR', 'HR', 'Human Resources', 100, 6, 'hr', '#E11D48', 'rgba(225, 29, 72, 0.1)');
 
 -- Child departments (Level 2 - under OP)
 INSERT INTO "departments" ("department_id", "department_name", "department_code", "description", "parent_id", "sort_order") VALUES
@@ -55,7 +59,7 @@ INSERT INTO "departments" ("department_id", "department_name", "department_code"
 (52, 'SPA', 'SPA', 'Space Planning', 5, 2),
 (53, 'ORD', 'ORD', 'Ordering', 5, 3);
 
-SELECT setval('departments_department_id_seq', 60);
+SELECT setval('departments_department_id_seq', 100);
 
 -- ============================================
 -- CORE DATA: Teams (Sub-groups within departments)
@@ -142,7 +146,7 @@ INSERT INTO "staff" ("staff_id", "staff_name", "staff_code", "username", "email"
 
 -- SMBU Root User - General Manager (staff_id 100)
 INSERT INTO "staff" ("staff_id", "staff_name", "staff_code", "username", "email", "phone", "store_id", "department_id", "team_id", "role", "position", "job_grade", "sap_code", "password_hash", "status") VALUES
-(100, 'YOSHINAGA', 'SM001', 'yoshinaga', 'yoshinaga@aoisora.com', '0900000001', NULL, NULL, NULL, 'GENERAL_MANAGER', 'General Manager', 'G6', 'SM GM', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active');
+(100, 'YOSHINAGA', 'SM001', 'yoshinaga', 'yoshinaga@aoisora.com', '0900000001', NULL, 100, NULL, 'GENERAL_MANAGER', 'General Manager', 'G6', 'SM GM', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active');
 
 -- ADMIN Department Staff (department_id = 2)
 -- Department Head

@@ -66,6 +66,10 @@ CREATE TABLE "departments" (
     "description" TEXT,
     "parent_id" INTEGER,
     "sort_order" INTEGER DEFAULT 0,
+    "icon" VARCHAR(50),
+    "icon_color" VARCHAR(20),
+    "icon_bg" VARCHAR(50),
+    "is_active" BOOLEAN DEFAULT true,
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

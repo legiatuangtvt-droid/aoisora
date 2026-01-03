@@ -20,17 +20,23 @@ class Staff extends Authenticatable
 
     protected $fillable = [
         'staff_code',
+        'staff_name',
         'username',
         'password_hash',
-        'full_name',
         'email',
         'phone',
         'store_id',
         'department_id',
+        'team_id',
         'position',
+        'job_grade',
+        'sap_code',
         'role',
         'avatar_url',
+        'line_manager_id',
+        'joining_date',
         'status',
+        'is_active',
         'hire_date',
         'contract_type',
         'hourly_rate',
@@ -44,7 +50,9 @@ class Staff extends Authenticatable
     protected $casts = [
         'skills' => 'array',
         'hire_date' => 'date',
+        'joining_date' => 'date',
         'hourly_rate' => 'decimal:2',
+        'is_active' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -63,6 +71,21 @@ class Staff extends Authenticatable
     public function department()
     {
         return $this->belongsTo(Department::class, 'department_id', 'department_id');
+    }
+
+    public function team()
+    {
+        return $this->belongsTo(Team::class, 'team_id', 'team_id');
+    }
+
+    public function lineManager()
+    {
+        return $this->belongsTo(Staff::class, 'line_manager_id', 'staff_id');
+    }
+
+    public function subordinates()
+    {
+        return $this->hasMany(Staff::class, 'line_manager_id', 'staff_id');
     }
 
     public function shiftAssignments()

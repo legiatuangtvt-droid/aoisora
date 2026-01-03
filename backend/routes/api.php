@@ -19,6 +19,8 @@ use App\Http\Controllers\Api\V1\ManualFolderController;
 use App\Http\Controllers\Api\V1\ManualDocumentController;
 use App\Http\Controllers\Api\V1\ManualStepController;
 use App\Http\Controllers\Api\V1\ManualMediaController;
+use App\Http\Controllers\Api\V1\TeamController;
+use App\Http\Controllers\Api\V1\UserInfoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,6 +42,18 @@ Route::prefix('v1')->group(function () {
     Route::get('regions', [RegionController::class, 'index']);
     Route::get('regions/{region}', [RegionController::class, 'show']);
     Route::get('code-master', [TaskController::class, 'getCodeMaster']);
+
+    // User Information (public read-only)
+    Route::prefix('user-info')->group(function () {
+        Route::get('smbu-hierarchy', [UserInfoController::class, 'smbuHierarchy']);
+        Route::get('department-tabs', [UserInfoController::class, 'departmentTabs']);
+        Route::get('departments/{department}/hierarchy', [UserInfoController::class, 'departmentHierarchy']);
+        Route::get('staff/{staff}', [UserInfoController::class, 'staffDetail']);
+    });
+
+    // Teams (public read-only)
+    Route::get('teams', [TeamController::class, 'index']);
+    Route::get('teams/{team}', [TeamController::class, 'show']);
 
     // Protected routes
     Route::middleware('auth:sanctum')->group(function () {
