@@ -15,84 +15,90 @@ class Task extends Model
 
     protected $fillable = [
         'task_name',
-        'description',
-        'task_type_id',
-        'priority_id',
-        'status_id',
-        'frequency_id',
-        'assigned_to',
-        'created_by',
-        'store_id',
-        'department_id',
+        'task_description',
         'manual_id',
-        'due_date',
+        'task_type_id',
+        'response_type_id',
+        'response_num',
+        'is_repeat',
+        'repeat_config',
+        'dept_id',
+        'assigned_store_id',
+        'assigned_staff_id',
+        'do_staff_id',
+        'status_id',
+        'priority',
+        'start_date',
+        'end_date',
         'start_time',
-        'end_time',
-        'duration_minutes',
-        'is_recurring',
-        'recurrence_pattern',
-        'notes',
+        'due_datetime',
+        'completed_time',
+        'comment',
+        'attachments',
+        'created_staff_id',
     ];
 
     protected $casts = [
-        'due_date' => 'date',
+        'start_date' => 'date',
+        'end_date' => 'date',
         'start_time' => 'datetime',
-        'end_time' => 'datetime',
-        'is_recurring' => 'boolean',
-        'recurrence_pattern' => 'array',
+        'due_datetime' => 'datetime',
+        'completed_time' => 'datetime',
+        'is_repeat' => 'boolean',
+        'repeat_config' => 'array',
+        'attachments' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
 
     public function taskType()
     {
-        return $this->belongsTo(CodeMaster::class, 'task_type_id', 'code_id');
+        return $this->belongsTo(CodeMaster::class, 'task_type_id', 'code_master_id');
     }
 
-    public function priority()
+    public function responseType()
     {
-        return $this->belongsTo(CodeMaster::class, 'priority_id', 'code_id');
+        return $this->belongsTo(CodeMaster::class, 'response_type_id', 'code_master_id');
     }
 
     public function status()
     {
-        return $this->belongsTo(CodeMaster::class, 'status_id', 'code_id');
-    }
-
-    public function frequency()
-    {
-        return $this->belongsTo(CodeMaster::class, 'frequency_id', 'code_id');
-    }
-
-    public function assignedTo()
-    {
-        return $this->belongsTo(Staff::class, 'assigned_to', 'staff_id');
-    }
-
-    public function createdBy()
-    {
-        return $this->belongsTo(Staff::class, 'created_by', 'staff_id');
-    }
-
-    public function store()
-    {
-        return $this->belongsTo(Store::class, 'store_id', 'store_id');
+        return $this->belongsTo(CodeMaster::class, 'status_id', 'code_master_id');
     }
 
     public function department()
     {
-        return $this->belongsTo(Department::class, 'department_id', 'department_id');
+        return $this->belongsTo(Department::class, 'dept_id', 'department_id');
+    }
+
+    public function assignedStore()
+    {
+        return $this->belongsTo(Store::class, 'assigned_store_id', 'store_id');
+    }
+
+    public function assignedStaff()
+    {
+        return $this->belongsTo(Staff::class, 'assigned_staff_id', 'staff_id');
+    }
+
+    public function doStaff()
+    {
+        return $this->belongsTo(Staff::class, 'do_staff_id', 'staff_id');
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(Staff::class, 'created_staff_id', 'staff_id');
     }
 
     public function manual()
     {
-        return $this->belongsTo(Manual::class, 'manual_id', 'manual_id');
+        return $this->belongsTo(ManualDocument::class, 'manual_id', 'document_id');
     }
 
     public function checklists()
     {
         return $this->belongsToMany(CheckList::class, 'task_check_list', 'task_id', 'check_list_id')
-            ->withPivot('is_completed', 'completed_at', 'completed_by')
-            ->withTimestamps();
+            ->withPivot('check_status', 'completed_at', 'completed_by', 'notes');
     }
 }

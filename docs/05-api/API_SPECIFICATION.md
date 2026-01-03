@@ -28,7 +28,7 @@ Authenticates a user and returns a JWT token.
 **Request Body:**
 ```json
 {
-  "email": "string (required)",
+  "username": "string (required)",
   "password": "string (required)"
 }
 ```
@@ -1333,10 +1333,8 @@ All error responses follow this format:
 | ID | Code | Name |
 |----|------|------|
 | 7 | NOT_YET | Not Yet |
-| 8 | ON_PROGRESS | On Progress |
+| 8 | DRAFT | Draft |
 | 9 | DONE | Done |
-| 10 | OVERDUE | Overdue |
-| 11 | REJECT | Reject |
 
 ### C. Shift Assignment Status Values
 
@@ -1349,4 +1347,4 @@ All error responses follow this format:
 
 ---
 
-*API Version 1.0 - Last Updated: 2025-12-27*
+*API Version 1.0 - Last Updated: 2026-01-03*

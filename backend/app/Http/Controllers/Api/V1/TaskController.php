@@ -18,15 +18,15 @@ class TaskController extends Controller
     {
         $tasks = QueryBuilder::for(Task::class)
             ->allowedFilters([
-                AllowedFilter::exact('store_id'),
-                AllowedFilter::exact('department_id'),
-                AllowedFilter::exact('assigned_to'),
+                AllowedFilter::exact('assigned_store_id'),
+                AllowedFilter::exact('dept_id'),
+                AllowedFilter::exact('assigned_staff_id'),
                 AllowedFilter::exact('status_id'),
-                AllowedFilter::exact('priority_id'),
+                AllowedFilter::exact('priority'),
                 AllowedFilter::partial('task_name'),
             ])
-            ->allowedSorts(['task_id', 'task_name', 'due_date', 'created_at'])
-            ->allowedIncludes(['assignedTo', 'createdBy', 'store', 'department', 'taskType', 'priority', 'status'])
+            ->allowedSorts(['task_id', 'task_name', 'end_date', 'start_date', 'created_at'])
+            ->allowedIncludes(['assignedStaff', 'createdBy', 'assignedStore', 'department', 'taskType', 'responseType', 'status'])
             ->paginate($request->get('per_page', 20));
 
         return response()->json($tasks);
@@ -38,8 +38,8 @@ class TaskController extends Controller
     public function show($id)
     {
         $task = Task::with([
-            'assignedTo', 'createdBy', 'store', 'department',
-            'taskType', 'priority', 'status', 'frequency', 'manual', 'checklists'
+            'assignedStaff', 'createdBy', 'assignedStore', 'department',
+            'taskType', 'responseType', 'status', 'manual', 'checklists'
         ])->findOrFail($id);
 
         return response()->json($task);
@@ -51,20 +51,22 @@ class TaskController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'task_name' => 'required|string|max:200',
-            'description' => 'nullable|string',
-            'task_type_id' => 'nullable|exists:code_master,code_id',
-            'priority_id' => 'nullable|exists:code_master,code_id',
-            'status_id' => 'nullable|exists:code_master,code_id',
-            'assigned_to' => 'nullable|exists:staff,staff_id',
-            'store_id' => 'nullable|exists:stores,store_id',
-            'department_id' => 'nullable|exists:departments,department_id',
-            'due_date' => 'nullable|date',
+            'task_name' => 'required|string|max:500',
+            'task_description' => 'nullable|string',
+            'task_type_id' => 'nullable|exists:code_master,code_master_id',
+            'response_type_id' => 'nullable|exists:code_master,code_master_id',
+            'status_id' => 'nullable|exists:code_master,code_master_id',
+            'assigned_staff_id' => 'nullable|exists:staff,staff_id',
+            'assigned_store_id' => 'nullable|exists:stores,store_id',
+            'dept_id' => 'nullable|exists:departments,department_id',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
+            'priority' => 'nullable|string|in:low,normal,high,urgent',
         ]);
 
         $task = Task::create(array_merge(
             $request->all(),
-            ['created_by' => $request->user()->staff_id]
+            ['created_staff_id' => $request->user()->staff_id]
         ));
 
         return response()->json($task, 201);
@@ -78,13 +80,15 @@ class TaskController extends Controller
         $task = Task::findOrFail($id);
 
         $request->validate([
-            'task_name' => 'nullable|string|max:200',
-            'description' => 'nullable|string',
-            'task_type_id' => 'nullable|exists:code_master,code_id',
-            'priority_id' => 'nullable|exists:code_master,code_id',
-            'status_id' => 'nullable|exists:code_master,code_id',
-            'assigned_to' => 'nullable|exists:staff,staff_id',
-            'due_date' => 'nullable|date',
+            'task_name' => 'nullable|string|max:500',
+            'task_description' => 'nullable|string',
+            'task_type_id' => 'nullable|exists:code_master,code_master_id',
+            'response_type_id' => 'nullable|exists:code_master,code_master_id',
+            'status_id' => 'nullable|exists:code_master,code_master_id',
+            'assigned_staff_id' => 'nullable|exists:staff,staff_id',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
+            'priority' => 'nullable|string|in:low,normal,high,urgent',
         ]);
 
         $task->update($request->all());
@@ -100,7 +104,7 @@ class TaskController extends Controller
         $task = Task::findOrFail($id);
 
         $request->validate([
-            'status_id' => 'required|exists:code_master,code_id',
+            'status_id' => 'required|exists:code_master,code_master_id',
         ]);
 
         $task->update(['status_id' => $request->status_id]);
@@ -142,7 +146,7 @@ class TaskController extends Controller
             $query->where('code_type', $type);
         }
 
-        $codes = $query->orderBy('display_order')->get();
+        $codes = $query->orderBy('sort_order')->get();
 
         return response()->json($codes);
     }

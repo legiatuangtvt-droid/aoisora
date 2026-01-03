@@ -159,7 +159,7 @@ export default function TaskListPage() {
 
   // Navigate to task detail page
   const handleRowClick = (taskId: string) => {
-    router.push(`/tasks/${taskId}`);
+    router.push(`/tasks/detail?id=${taskId}`);
   };
 
   // Apply filters handler
