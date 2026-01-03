@@ -986,3 +986,34 @@ export async function moveManualDocument(
     body: JSON.stringify({ folder_id: folderId }),
   });
 }
+
+// ============================================
+// User Information API (SCR_USER_INFO)
+// ============================================
+
+import type { HierarchyNode, Department as UserInfoDepartment, Employee } from '@/types/userInfo';
+
+export interface DepartmentTab {
+  id: string;
+  label: string;
+}
+
+// Get SMBU (Head Office) hierarchy
+export async function getSMBUHierarchy(): Promise<HierarchyNode> {
+  return fetchApi<HierarchyNode>('/user-info/smbu-hierarchy', { skipAuth: true });
+}
+
+// Get department tabs for navigation
+export async function getDepartmentTabs(): Promise<DepartmentTab[]> {
+  return fetchApi<DepartmentTab[]>('/user-info/department-tabs', { skipAuth: true });
+}
+
+// Get department hierarchy with teams and members
+export async function getDepartmentHierarchy(departmentId: number): Promise<UserInfoDepartment> {
+  return fetchApi<UserInfoDepartment>(`/user-info/departments/${departmentId}/hierarchy`, { skipAuth: true });
+}
+
+// Get staff detail
+export async function getStaffDetail(staffId: number): Promise<Employee> {
+  return fetchApi<Employee>(`/user-info/staff/${staffId}`, { skipAuth: true });
+}
