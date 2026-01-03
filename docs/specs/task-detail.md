@@ -343,6 +343,57 @@ frontend/src/
 
 ---
 
+## 5.1 Store Results Display Order
+
+Store results are sorted according to the following priority:
+
+| Priority | Status | Description |
+|----------|--------|-------------|
+| 1 (Top) | `in_progress` / `not_started` | Stores that haven't completed the task yet |
+| 2 | `failed` | Stores that could not complete the task |
+| 3 (Bottom) | `success` | Stores that completed the task successfully |
+
+**Within `success` status:** Stores are sorted by completion time (descending), meaning stores that completed earlier appear at the bottom of the success group.
+
+```typescript
+// Sorting logic implementation
+const sortedStoreResults = useMemo(() => {
+  const getStatusPriority = (status: StoreResult['status']): number => {
+    switch (status) {
+      case 'in_progress':
+      case 'not_started':
+        return 1; // Highest priority - show first
+      case 'failed':
+        return 2; // Second priority
+      case 'success':
+        return 3; // Lowest priority - show last
+      default:
+        return 4;
+    }
+  };
+
+  return [...taskDetail.storeResults].sort((a, b) => {
+    const priorityA = getStatusPriority(a.status);
+    const priorityB = getStatusPriority(b.status);
+
+    if (priorityA !== priorityB) {
+      return priorityA - priorityB;
+    }
+
+    // Within success status, sort by completion time (earlier at bottom)
+    if (a.status === 'success' && b.status === 'success') {
+      const timeA = parseCompletedTime(a.completedTime);
+      const timeB = parseCompletedTime(b.completedTime);
+      return timeB - timeA;
+    }
+
+    return 0;
+  });
+}, [taskDetail?.storeResults]);
+```
+
+---
+
 ## 6. API Integration
 
 | Action | Method | Endpoint | Description |
@@ -396,3 +447,4 @@ frontend/src/
 | 2025-12-30 | Comments Section: Reverted to consistent UI for both Results and Comment view - same styling, only difference is alwaysExpanded removes toggle arrow |
 | 2025-12-31 | YesNoStatusSection: New component for Yes/No task type showing status badge, completion text, report link, Like button with avatars |
 | 2025-12-31 | StoreResultCard: Added taskType prop to conditionally render ImageGrid (image) or YesNoStatusSection (yes_no) |
+| 2026-01-03 | Store Results Sorting: Added display order logic - in_progress/not_started first → failed second → success last (success sorted by completion time, earliest at bottom) |

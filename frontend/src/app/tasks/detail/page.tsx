@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getTaskById, getDepartments, getTasks } from '@/lib/api';
 import { Task as ApiTask, Department } from '@/types/api';
 import { getMockTaskDetail } from '@/data/mockTaskDetail';
-import { ViewMode, TaskGroup } from '@/types/tasks';
+import { ViewMode, TaskGroup, StoreResult } from '@/types/tasks';
 import Link from 'next/link';
 import StoreResultCard from '@/components/tasks/StoreResultCard';
 import ViewModeToggle from '@/components/tasks/ViewModeToggle';
@@ -146,6 +146,60 @@ export default function TaskDetailPage() {
     (acc, store) => acc + store.comments.length,
     0
   ) || 0;
+
+  // Sort store results by status priority:
+  // 1. in_progress/not_started (chưa hoàn thành) - first
+  // 2. failed (không hoàn thành được) - second
+  // 3. success (đã hoàn thành) - last, sorted by completedTime ascending (earliest completion at bottom)
+  const sortedStoreResults = useMemo(() => {
+    if (!taskDetail?.storeResults) return [];
+
+    const getStatusPriority = (status: StoreResult['status']): number => {
+      switch (status) {
+        case 'in_progress':
+        case 'not_started':
+          return 1; // Highest priority - show first
+        case 'failed':
+          return 2; // Second priority
+        case 'success':
+          return 3; // Lowest priority - show last
+        default:
+          return 4;
+      }
+    };
+
+    const parseCompletedTime = (timeStr?: string): number => {
+      if (!timeStr) return 0;
+      // Parse formats like "17:00 03 Dec, 2025" or "17:00 03 Dec 2025"
+      try {
+        const normalized = timeStr.replace(',', '');
+        const date = new Date(normalized);
+        return isNaN(date.getTime()) ? 0 : date.getTime();
+      } catch {
+        return 0;
+      }
+    };
+
+    return [...taskDetail.storeResults].sort((a, b) => {
+      const priorityA = getStatusPriority(a.status);
+      const priorityB = getStatusPriority(b.status);
+
+      // First sort by status priority
+      if (priorityA !== priorityB) {
+        return priorityA - priorityB;
+      }
+
+      // For completed stores, sort by completion time (earlier completion goes to bottom)
+      if (a.status === 'success' && b.status === 'success') {
+        const timeA = parseCompletedTime(a.completedTime);
+        const timeB = parseCompletedTime(b.completedTime);
+        // Ascending order: earlier time = larger value = goes to bottom
+        return timeB - timeA;
+      }
+
+      return 0;
+    });
+  }, [taskDetail?.storeResults]);
 
   // Save scroll position before view change
   const saveScrollPosition = useCallback(() => {
@@ -464,11 +518,11 @@ export default function TaskDetailPage() {
           className={`transition-opacity duration-150 ease-in-out ${isContentVisible ? 'opacity-100' : 'opacity-0'
             }`}
         >
-          {/* Store Results */}
+          {/* Store Results - sorted by: in_progress -> failed -> success (by completion time) */}
           {viewMode === 'results' && taskDetail && (
             <div className="space-y-6">
-              {taskDetail.storeResults.length > 0 ? (
-                taskDetail.storeResults.map((result) => (
+              {sortedStoreResults.length > 0 ? (
+                sortedStoreResults.map((result) => (
                   <StoreResultCard
                     key={result.id}
                     result={result}
@@ -488,8 +542,8 @@ export default function TaskDetailPage() {
           {/* Comment View - Uses StoreResultCard with viewMode="comment" */}
           {viewMode === 'comment' && taskDetail && (
             <div className="space-y-6">
-              {taskDetail.storeResults.length > 0 ? (
-                taskDetail.storeResults.map((result) => (
+              {sortedStoreResults.length > 0 ? (
+                sortedStoreResults.map((result) => (
                   <StoreResultCard
                     key={result.id}
                     result={result}
