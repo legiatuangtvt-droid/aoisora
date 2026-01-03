@@ -9,11 +9,13 @@ use Illuminate\Http\Request;
 class DepartmentController extends Controller
 {
     /**
-     * Get all departments
+     * Get all departments ordered by sort_order
      */
     public function index()
     {
-        $departments = Department::all();
+        $departments = Department::orderBy('sort_order')
+            ->orderBy('department_id')
+            ->get();
 
         return response()->json($departments);
     }

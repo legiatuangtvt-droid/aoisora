@@ -587,6 +587,7 @@ export default function TaskListPage() {
         onClose={() => setIsFilterOpen(false)}
         filters={filters}
         onApplyFilters={handleApplyFilters}
+        departments={departments}
       />
       </div>
     </div>

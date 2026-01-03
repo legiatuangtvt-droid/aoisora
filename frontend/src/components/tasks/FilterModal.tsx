@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { TaskFilters, TaskStatus, HQCheckStatus, Department } from '@/types/tasks';
-import { mockDepartments } from '@/data/mockTasks';
+import { Department as ApiDepartment } from '@/types/api';
 
 type FilterSection = 'department' | 'status' | 'hqCheck' | null;
 
@@ -11,6 +11,7 @@ interface FilterModalProps {
   onClose: () => void;
   filters: TaskFilters;
   onApplyFilters: (filters: TaskFilters) => void;
+  departments: ApiDepartment[];
 }
 
 export default function FilterModal({
@@ -18,12 +19,42 @@ export default function FilterModal({
   onClose,
   filters,
   onApplyFilters,
+  departments,
 }: FilterModalProps) {
   const [localFilters, setLocalFilters] = useState<TaskFilters>(filters);
   const [selectedDepts, setSelectedDepts] = useState<Set<string>>(
     new Set(filters.departments)
   );
   const [expandedSection, setExpandedSection] = useState<FilterSection>(null);
+
+  // Transform flat API departments to hierarchical structure
+  const hierarchicalDepts = useMemo((): Department[] => {
+    // Get parent departments (no parent_id)
+    const parents = departments
+      .filter((d) => d.parent_id === null)
+      .sort((a, b) => a.sort_order - b.sort_order);
+
+    return parents.map((parent) => {
+      // Find children for this parent
+      const children = departments
+        .filter((d) => d.parent_id === parent.department_id)
+        .sort((a, b) => a.sort_order - b.sort_order)
+        .map((child) => ({
+          id: String(child.department_id),
+          name: child.department_name,
+          code: child.department_code || '',
+          level: 2,
+        }));
+
+      return {
+        id: String(parent.department_id),
+        name: parent.department_name,
+        code: parent.department_code || '',
+        level: 1,
+        children: children.length > 0 ? children : undefined,
+      };
+    });
+  }, [departments]);
 
   // Auto-apply filters whenever they change
   useEffect(() => {
@@ -43,7 +74,7 @@ export default function FilterModal({
 
   // Find parent department for a child
   const findParentDept = (childId: string): Department | undefined => {
-    return mockDepartments.find(
+    return hierarchicalDepts.find(
       (parent) => parent.children?.some((child) => child.id === childId)
     );
   };
@@ -204,7 +235,7 @@ export default function FilterModal({
 
             {expandedSection === 'department' && (
               <div className="px-6 pb-4 pt-3">
-              {mockDepartments.map((dept, index) => (
+              {hierarchicalDepts.map((dept, index) => (
                 <div key={dept.id}>
                   <div className="py-3">
                     {/* Level 1 - Parent */}
@@ -243,7 +274,7 @@ export default function FilterModal({
                     )}
                   </div>
                   {/* Divider between departments */}
-                  {index < mockDepartments.length - 1 && (
+                  {index < hierarchicalDepts.length - 1 && (
                     <div className="border-t border-gray-200"></div>
                   )}
                 </div>

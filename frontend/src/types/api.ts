@@ -43,6 +43,8 @@ export interface Department {
   department_name: string;
   department_code: string | null;
   description: string | null;
+  parent_id: number | null;
+  sort_order: number;
   created_at: string;
   updated_at: string;
 }
