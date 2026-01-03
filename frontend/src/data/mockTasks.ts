@@ -1,56 +1,57 @@
 import { TaskGroup, Department } from '@/types/tasks';
 
-// Mock Departments Tree
+// Mock Departments Tree (Note: Frontend now fetches from API, this is for reference only)
+// Display format: [sort_order]. [name] (e.g., "1. OP")
 export const mockDepartments: Department[] = [
   {
-    id: 'op',
+    id: '1',
     name: '1. OP',
     code: 'OP',
     level: 1,
     children: [
-      { id: 'op-peri', name: 'Perisable', code: 'PERI', level: 2 },
-      { id: 'op-gro', name: 'Grocery', code: 'GRO', level: 2 },
-      { id: 'op-delica', name: 'Delica', code: 'DELICA', level: 2 },
-      { id: 'op-dd', name: 'D&D', code: 'D&D', level: 2 },
-      { id: 'op-cs', name: 'CS', code: 'CS', level: 2 }
+      { id: '11', name: 'Perisable', code: 'PERI', level: 2 },
+      { id: '12', name: 'Grocery', code: 'GRO', level: 2 },
+      { id: '13', name: 'Delica', code: 'DELICA', level: 2 },
+      { id: '14', name: 'D&D', code: 'DD', level: 2 },
+      { id: '15', name: 'CS', code: 'CS', level: 2 }
     ]
   },
   {
-    id: 'admin',
+    id: '2',
     name: '2. Admin',
     code: 'ADMIN',
     level: 1,
     children: [
-      { id: 'admin-admin', name: 'Admin', code: 'ADMIN', level: 2 },
-      { id: 'admin-mmd', name: 'MMD', code: 'MMD', level: 2 },
-      { id: 'admin-acc', name: 'ACC', code: 'ACC', level: 2 }
+      { id: '21', name: 'Admin', code: 'ADMIN-SUB', level: 2 },
+      { id: '22', name: 'MMD', code: 'MMD', level: 2 },
+      { id: '23', name: 'ACC', code: 'ACC', level: 2 }
     ]
   },
   {
-    id: 'control',
+    id: '3',
     name: '3. Control',
     code: 'CONTROL',
     level: 1
   },
   {
-    id: 'improvement',
+    id: '4',
     name: '4. Improvement',
     code: 'IMPROVEMENT',
     level: 1
   },
   {
-    id: 'planning',
+    id: '5',
     name: '5. Planning',
     code: 'PLANNING',
     level: 1,
     children: [
-      { id: 'planning-mkt', name: 'MKT', code: 'MKT', level: 2 },
-      { id: 'planning-spa', name: 'SPA', code: 'SPA', level: 2 },
-      { id: 'planning-ord', name: 'ORD', code: 'ORD', level: 2 }
+      { id: '51', name: 'MKT', code: 'MKT', level: 2 },
+      { id: '52', name: 'SPA', code: 'SPA', level: 2 },
+      { id: '53', name: 'ORD', code: 'ORD', level: 2 }
     ]
   },
   {
-    id: 'hr',
+    id: '6',
     name: '6. HR',
     code: 'HR',
     level: 1

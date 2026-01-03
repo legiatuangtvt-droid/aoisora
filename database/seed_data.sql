@@ -22,19 +22,40 @@ INSERT INTO "regions" ("region_id", "region_name", "region_code", "description")
 SELECT setval('regions_region_id_seq', 5);
 
 -- ============================================
--- CORE DATA: Departments
+-- CORE DATA: Departments (Hierarchical Structure)
+-- Display format: [sort_order]. [name] (e.g., "1. OP")
 -- ============================================
 
-INSERT INTO "departments" ("department_id", "department_name", "department_code", "description") VALUES
-(1, 'Operations', 'OPS', 'Store operations'),
-(2, 'Marketing', 'MKT', 'Marketing department'),
-(3, 'Human Resources', 'HR', 'Human resources'),
-(4, 'Quality Control', 'QC', 'Quality assurance'),
-(5, 'Logistics', 'LOG', 'Supply chain and logistics'),
-(6, 'Finance', 'FIN', 'Finance and accounting'),
-(7, 'IT', 'IT', 'Information technology');
+-- Parent departments (Level 1)
+INSERT INTO "departments" ("department_id", "department_name", "department_code", "description", "parent_id", "sort_order") VALUES
+(1, 'OP', 'OP', 'Operations', NULL, 1),
+(2, 'Admin', 'ADMIN', 'Administration', NULL, 2),
+(3, 'Control', 'CONTROL', 'Quality Control', NULL, 3),
+(4, 'Improvement', 'IMPROVEMENT', 'Process Improvement', NULL, 4),
+(5, 'Planning', 'PLANNING', 'Planning', NULL, 5),
+(6, 'HR', 'HR', 'Human Resources', NULL, 6);
 
-SELECT setval('departments_department_id_seq', 7);
+-- Child departments (Level 2 - under OP)
+INSERT INTO "departments" ("department_id", "department_name", "department_code", "description", "parent_id", "sort_order") VALUES
+(11, 'Perisable', 'PERI', 'Perishable goods', 1, 1),
+(12, 'Grocery', 'GRO', 'Grocery department', 1, 2),
+(13, 'Delica', 'DELICA', 'Delicatessen', 1, 3),
+(14, 'D&D', 'DD', 'Deli & Dairy', 1, 4),
+(15, 'CS', 'CS', 'Customer Service', 1, 5);
+
+-- Child departments (Level 2 - under Admin)
+INSERT INTO "departments" ("department_id", "department_name", "department_code", "description", "parent_id", "sort_order") VALUES
+(21, 'Admin', 'ADMIN-SUB', 'Admin sub-department', 2, 1),
+(22, 'MMD', 'MMD', 'Merchandising', 2, 2),
+(23, 'ACC', 'ACC', 'Accounting', 2, 3);
+
+-- Child departments (Level 2 - under Planning)
+INSERT INTO "departments" ("department_id", "department_name", "department_code", "description", "parent_id", "sort_order") VALUES
+(51, 'MKT', 'MKT', 'Marketing', 5, 1),
+(52, 'SPA', 'SPA', 'Space Planning', 5, 2),
+(53, 'ORD', 'ORD', 'Ordering', 5, 3);
+
+SELECT setval('departments_department_id_seq', 60);
 
 -- ============================================
 -- CORE DATA: Stores (4 stores for testing)
@@ -326,73 +347,77 @@ END $$;
 
 -- ============================================
 -- WS DATA: Sample Tasks
+-- Department mapping:
+--   11=PERI, 12=GRO, 13=DELICA, 14=D&D, 15=CS (under OP)
+--   21=Admin, 22=MMD, 23=ACC (under Admin)
+--   3=Control, 4=Improvement, 6=HR (parent)
+--   51=MKT, 52=SPA, 53=ORD (under Planning)
 -- ============================================
 
 INSERT INTO "tasks" ("task_name", "task_description", "task_type_id", "response_type_id", "status_id", "dept_id", "assigned_store_id", "assigned_staff_id", "created_staff_id", "priority", "start_date", "end_date") VALUES
 -- Original 5 tasks
-('Kiem ke hang hoa thang 12', 'Kiem ke toan bo hang hoa trong kho', 1, 5, 8, 1, 1, 3, 1, 'high', CURRENT_DATE - 3, CURRENT_DATE + 4),
-('Ve sinh khu vuc thuc pham', 'Ve sinh sach se khu vuc trung bay thuc pham', 2, 6, 7, 1, 1, 4, 1, 'normal', CURRENT_DATE, CURRENT_DATE + 1),
-('Chuan bi khuyen mai Tet', 'Chuan bi hang hoa va bang gia khuyen mai Tet', 3, 4, 7, 2, 1, 5, 1, 'urgent', CURRENT_DATE + 1, CURRENT_DATE + 7),
-('Bao cao doanh thu tuan', 'Tong hop va bao cao doanh thu tuan', 1, 4, 9, 6, 2, 11, 9, 'normal', CURRENT_DATE - 7, CURRENT_DATE - 1),
-('Dao tao nhan vien moi', 'Dao tao quy trinh lam viec cho nhan vien moi', 3, 5, 8, 3, 3, 19, 17, 'normal', CURRENT_DATE - 2, CURRENT_DATE + 5),
+('Kiem ke hang hoa thang 12', 'Kiem ke toan bo hang hoa trong kho', 1, 5, 8, 22, 1, 3, 1, 'high', CURRENT_DATE - 3, CURRENT_DATE + 4),
+('Ve sinh khu vuc thuc pham', 'Ve sinh sach se khu vuc trung bay thuc pham', 2, 6, 7, 23, 1, 4, 1, 'normal', CURRENT_DATE, CURRENT_DATE + 1),
+('Chuan bi khuyen mai Tet', 'Chuan bi hang hoa va bang gia khuyen mai Tet', 3, 4, 7, 3, 1, 5, 1, 'urgent', CURRENT_DATE + 1, CURRENT_DATE + 7),
+('Bao cao doanh thu tuan', 'Tong hop va bao cao doanh thu tuan', 1, 4, 9, 4, 2, 11, 9, 'normal', CURRENT_DATE - 7, CURRENT_DATE - 1),
+('Dao tao nhan vien moi', 'Dao tao quy trinh lam viec cho nhan vien moi', 3, 5, 8, 51, 3, 19, 17, 'normal', CURRENT_DATE - 2, CURRENT_DATE + 5),
 
--- Additional 45 tasks for filter testing (Total: 50 tasks)
--- Operations (OPS) - dept_id=1
-('Kiem tra nhiet do tu lanh', 'Kiem tra va ghi nhan nhiet do tu mat, tu dong', 1, 5, 7, 1, 1, 3, 1, 'high', CURRENT_DATE, CURRENT_DATE + 1),
-('Sap xep hang hoa ke 1', 'Sap xep lai hang hoa theo nguyen tac FIFO', 2, 6, 7, 1, 1, 4, 1, 'normal', CURRENT_DATE - 1, CURRENT_DATE),
-('Kiem tra HSD san pham', 'Kiem tra han su dung san pham trong khu vuc', 1, 5, 9, 1, 2, 11, 9, 'high', CURRENT_DATE - 5, CURRENT_DATE - 3),
-('Ve sinh khu vuc thu ngan', 'Lau don sach se khu vuc quay thu ngan', 2, 6, 8, 1, 2, 12, 9, 'normal', CURRENT_DATE - 2, CURRENT_DATE),
-('Kiem tra thiet bi dien', 'Kiem tra hoat dong cua cac thiet bi dien', 1, 5, 7, 1, 3, 19, 17, 'normal', CURRENT_DATE, CURRENT_DATE + 2),
-('Bao tri he thong dieu hoa', 'Bao tri dinh ky he thong dieu hoa', 3, 4, 7, 1, 3, 20, 17, 'low', CURRENT_DATE + 2, CURRENT_DATE + 5),
-('Kiem tra camera an ninh', 'Kiem tra hoat dong cua he thong camera', 1, 5, 9, 1, 4, 27, 25, 'high', CURRENT_DATE - 4, CURRENT_DATE - 2),
-('Cap nhat bang gia', 'Cap nhat bang gia moi cho san pham', 2, 6, 8, 1, 4, 28, 25, 'normal', CURRENT_DATE - 1, CURRENT_DATE + 1),
+-- PERI (Perishable) - dept_id=11
+('Kiem tra nhiet do tu lanh', 'Kiem tra va ghi nhan nhiet do tu mat, tu dong', 1, 5, 7, 52, 1, 3, 1, 'high', CURRENT_DATE, CURRENT_DATE + 1),
+('Sap xep hang hoa ke 1', 'Sap xep lai hang hoa theo nguyen tac FIFO', 2, 6, 7, 53, 1, 4, 1, 'normal', CURRENT_DATE - 1, CURRENT_DATE),
+('Kiem tra HSD san pham', 'Kiem tra han su dung san pham trong khu vuc', 1, 5, 9, 6, 2, 11, 9, 'high', CURRENT_DATE - 5, CURRENT_DATE - 3),
+('Ve sinh khu vuc thu ngan', 'Lau don sach se khu vuc quay thu ngan', 2, 6, 8, 11, 2, 12, 9, 'normal', CURRENT_DATE - 2, CURRENT_DATE),
+('Kiem tra thiet bi dien', 'Kiem tra hoat dong cua cac thiet bi dien', 1, 5, 7, 12, 3, 19, 17, 'normal', CURRENT_DATE, CURRENT_DATE + 2),
+('Bao tri he thong dieu hoa', 'Bao tri dinh ky he thong dieu hoa', 3, 4, 7, 13, 3, 20, 17, 'low', CURRENT_DATE + 2, CURRENT_DATE + 5),
+('Kiem tra camera an ninh', 'Kiem tra hoat dong cua he thong camera', 1, 5, 9, 14, 4, 27, 25, 'high', CURRENT_DATE - 4, CURRENT_DATE - 2),
+('Cap nhat bang gia', 'Cap nhat bang gia moi cho san pham', 2, 6, 8, 15, 4, 28, 25, 'normal', CURRENT_DATE - 1, CURRENT_DATE + 1),
 
--- Marketing (MKT) - dept_id=2
-('Thiet ke poster khuyen mai', 'Thiet ke poster quang cao chuong trinh khuyen mai', 3, 4, 7, 2, 1, 5, 1, 'high', CURRENT_DATE, CURRENT_DATE + 3),
-('Chuan bi vat pham POSM', 'Chuan bi vat pham quang cao tai diem ban', 2, 6, 8, 2, 1, 6, 1, 'normal', CURRENT_DATE - 2, CURRENT_DATE + 1),
-('Khao sat khach hang', 'Thuc hien khao sat y kien khach hang', 3, 4, 7, 2, 2, 13, 9, 'normal', CURRENT_DATE + 1, CURRENT_DATE + 7),
-('Bao cao hieu qua marketing', 'Tong hop bao cao hieu qua cac chuong trinh', 1, 4, 9, 2, 2, 14, 9, 'low', CURRENT_DATE - 10, CURRENT_DATE - 5),
-('Lap ke hoach truyen thong', 'Lap ke hoach truyen thong thang toi', 3, 4, 7, 2, 3, 21, 17, 'high', CURRENT_DATE + 3, CURRENT_DATE + 10),
-('Quan ly fanpage', 'Dang bai va tuong tac tren fanpage', 2, 6, 8, 2, 3, 22, 17, 'normal', CURRENT_DATE - 1, CURRENT_DATE + 2),
-('To chuc su kien sampling', 'To chuc su kien dung thu san pham', 3, 4, 7, 2, 4, 29, 25, 'urgent', CURRENT_DATE + 2, CURRENT_DATE + 4),
+-- MKT (Marketing) - dept_id=51
+('Thiet ke poster khuyen mai', 'Thiet ke poster quang cao chuong trinh khuyen mai', 3, 4, 7, 51, 1, 5, 1, 'high', CURRENT_DATE, CURRENT_DATE + 3),
+('Chuan bi vat pham POSM', 'Chuan bi vat pham quang cao tai diem ban', 2, 6, 8, 51, 1, 6, 1, 'normal', CURRENT_DATE - 2, CURRENT_DATE + 1),
+('Khao sat khach hang', 'Thuc hien khao sat y kien khach hang', 3, 4, 7, 51, 2, 13, 9, 'normal', CURRENT_DATE + 1, CURRENT_DATE + 7),
+('Bao cao hieu qua marketing', 'Tong hop bao cao hieu qua cac chuong trinh', 1, 4, 9, 51, 2, 14, 9, 'low', CURRENT_DATE - 10, CURRENT_DATE - 5),
+('Lap ke hoach truyen thong', 'Lap ke hoach truyen thong thang toi', 3, 4, 7, 52, 3, 21, 17, 'high', CURRENT_DATE + 3, CURRENT_DATE + 10),
+('Quan ly fanpage', 'Dang bai va tuong tac tren fanpage', 2, 6, 8, 52, 3, 22, 17, 'normal', CURRENT_DATE - 1, CURRENT_DATE + 2),
+('To chuc su kien sampling', 'To chuc su kien dung thu san pham', 3, 4, 7, 53, 4, 29, 25, 'urgent', CURRENT_DATE + 2, CURRENT_DATE + 4),
 
--- Human Resources (HR) - dept_id=3
-('Tuyen dung nhan vien ban hang', 'Tuyen dung 3 nhan vien ban hang moi', 3, 4, 7, 3, 1, 7, 1, 'high', CURRENT_DATE, CURRENT_DATE + 14),
-('Danh gia nhan vien quy 4', 'Thuc hien danh gia nhan vien quy 4', 1, 4, 8, 3, 1, 8, 1, 'normal', CURRENT_DATE - 5, CURRENT_DATE + 5),
-('Cap nhat ho so nhan su', 'Cap nhat thong tin ho so nhan vien', 2, 6, 9, 3, 2, 15, 9, 'low', CURRENT_DATE - 7, CURRENT_DATE - 3),
-('To chuc team building', 'To chuc hoat dong team building thang', 3, 4, 7, 3, 2, 16, 9, 'normal', CURRENT_DATE + 5, CURRENT_DATE + 7),
-('Dao tao an toan lao dong', 'Dao tao ve an toan lao dong cho nhan vien', 3, 5, 7, 3, 3, 23, 17, 'high', CURRENT_DATE + 1, CURRENT_DATE + 3),
-('Xu ly don xin nghi phep', 'Xu ly cac don xin nghi phep cua nhan vien', 2, 6, 8, 3, 4, 30, 25, 'normal', CURRENT_DATE - 1, CURRENT_DATE),
+-- HR (Human Resources) - dept_id=6
+('Tuyen dung nhan vien ban hang', 'Tuyen dung 3 nhan vien ban hang moi', 3, 4, 7, 6, 1, 7, 1, 'high', CURRENT_DATE, CURRENT_DATE + 14),
+('Danh gia nhan vien quy 4', 'Thuc hien danh gia nhan vien quy 4', 1, 4, 8, 6, 1, 8, 1, 'normal', CURRENT_DATE - 5, CURRENT_DATE + 5),
+('Cap nhat ho so nhan su', 'Cap nhat thong tin ho so nhan vien', 2, 6, 9, 6, 2, 15, 9, 'low', CURRENT_DATE - 7, CURRENT_DATE - 3),
+('To chuc team building', 'To chuc hoat dong team building thang', 3, 4, 7, 6, 2, 16, 9, 'normal', CURRENT_DATE + 5, CURRENT_DATE + 7),
+('Dao tao an toan lao dong', 'Dao tao ve an toan lao dong cho nhan vien', 3, 5, 7, 6, 3, 23, 17, 'high', CURRENT_DATE + 1, CURRENT_DATE + 3),
+('Xu ly don xin nghi phep', 'Xu ly cac don xin nghi phep cua nhan vien', 2, 6, 8, 6, 4, 30, 25, 'normal', CURRENT_DATE - 1, CURRENT_DATE),
 
--- Quality Control (QC) - dept_id=4
-('Kiem tra chat luong thuc pham', 'Kiem tra chat luong thuc pham nhap kho', 1, 5, 7, 4, 1, 3, 1, 'urgent', CURRENT_DATE, CURRENT_DATE + 1),
-('Danh gia nha cung cap', 'Danh gia chat luong nha cung cap', 1, 4, 8, 4, 1, 4, 1, 'high', CURRENT_DATE - 3, CURRENT_DATE + 2),
-('Kiem tra ve sinh an toan', 'Kiem tra tieu chuan ve sinh an toan thuc pham', 1, 5, 9, 4, 2, 11, 9, 'high', CURRENT_DATE - 6, CURRENT_DATE - 4),
-('Xu ly san pham loi', 'Xu ly va bao cao san pham bi loi', 2, 6, 7, 4, 2, 12, 9, 'urgent', CURRENT_DATE, CURRENT_DATE + 1),
-('Kiem tra quy trinh bao quan', 'Kiem tra quy trinh bao quan san pham', 1, 5, 8, 4, 3, 19, 17, 'normal', CURRENT_DATE - 2, CURRENT_DATE + 1),
-('Lap bao cao QC hang thang', 'Tong hop bao cao kiem soat chat luong', 1, 4, 7, 4, 4, 27, 25, 'low', CURRENT_DATE + 3, CURRENT_DATE + 7),
+-- Control (Quality Control) - dept_id=3
+('Kiem tra chat luong thuc pham', 'Kiem tra chat luong thuc pham nhap kho', 1, 5, 7, 3, 1, 3, 1, 'urgent', CURRENT_DATE, CURRENT_DATE + 1),
+('Danh gia nha cung cap', 'Danh gia chat luong nha cung cap', 1, 4, 8, 3, 1, 4, 1, 'high', CURRENT_DATE - 3, CURRENT_DATE + 2),
+('Kiem tra ve sinh an toan', 'Kiem tra tieu chuan ve sinh an toan thuc pham', 1, 5, 9, 3, 2, 11, 9, 'high', CURRENT_DATE - 6, CURRENT_DATE - 4),
+('Xu ly san pham loi', 'Xu ly va bao cao san pham bi loi', 2, 6, 7, 3, 2, 12, 9, 'urgent', CURRENT_DATE, CURRENT_DATE + 1),
+('Kiem tra quy trinh bao quan', 'Kiem tra quy trinh bao quan san pham', 1, 5, 8, 3, 3, 19, 17, 'normal', CURRENT_DATE - 2, CURRENT_DATE + 1),
+('Lap bao cao QC hang thang', 'Tong hop bao cao kiem soat chat luong', 1, 4, 7, 3, 4, 27, 25, 'low', CURRENT_DATE + 3, CURRENT_DATE + 7),
 
--- Logistics (LOG) - dept_id=5
-('Nhan hang tu nha cung cap', 'Nhan va kiem tra hang hoa tu NCC', 2, 6, 7, 5, 1, 5, 1, 'high', CURRENT_DATE, CURRENT_DATE + 1),
-('Sap xep kho hang', 'Sap xep lai kho hang theo quy dinh', 2, 6, 8, 5, 1, 6, 1, 'normal', CURRENT_DATE - 2, CURRENT_DATE),
-('Kiem ke ton kho', 'Kiem ke so luong ton kho thuc te', 1, 5, 9, 5, 2, 13, 9, 'high', CURRENT_DATE - 5, CURRENT_DATE - 3),
-('Chuyen hang giua cac cua hang', 'Dieu phoi chuyen hang giua cac chi nhanh', 2, 6, 7, 5, 2, 14, 9, 'normal', CURRENT_DATE + 1, CURRENT_DATE + 2),
-('Cap nhat he thong quan ly kho', 'Cap nhat thong tin vao he thong WMS', 2, 6, 8, 5, 3, 21, 17, 'low', CURRENT_DATE - 1, CURRENT_DATE + 1),
-('Xu ly hang tra ve', 'Xu ly va phan loai hang tra ve tu khach', 2, 6, 7, 5, 4, 29, 25, 'normal', CURRENT_DATE, CURRENT_DATE + 2),
+-- MMD (Merchandising) - dept_id=22
+('Nhan hang tu nha cung cap', 'Nhan va kiem tra hang hoa tu NCC', 2, 6, 7, 22, 1, 5, 1, 'high', CURRENT_DATE, CURRENT_DATE + 1),
+('Sap xep kho hang', 'Sap xep lai kho hang theo quy dinh', 2, 6, 8, 22, 1, 6, 1, 'normal', CURRENT_DATE - 2, CURRENT_DATE),
+('Kiem ke ton kho', 'Kiem ke so luong ton kho thuc te', 1, 5, 9, 22, 2, 13, 9, 'high', CURRENT_DATE - 5, CURRENT_DATE - 3),
+('Chuyen hang giua cac cua hang', 'Dieu phoi chuyen hang giua cac chi nhanh', 2, 6, 7, 22, 2, 14, 9, 'normal', CURRENT_DATE + 1, CURRENT_DATE + 2),
+('Cap nhat he thong quan ly kho', 'Cap nhat thong tin vao he thong WMS', 2, 6, 8, 22, 3, 21, 17, 'low', CURRENT_DATE - 1, CURRENT_DATE + 1),
+('Xu ly hang tra ve', 'Xu ly va phan loai hang tra ve tu khach', 2, 6, 7, 22, 4, 29, 25, 'normal', CURRENT_DATE, CURRENT_DATE + 2),
 
--- Finance (FIN) - dept_id=6
-('Doi soat doanh thu ngay', 'Doi soat doanh thu ban hang trong ngay', 1, 4, 7, 6, 1, 7, 1, 'high', CURRENT_DATE, CURRENT_DATE + 1),
-('Lap bao cao tai chinh thang', 'Tong hop bao cao tai chinh hang thang', 1, 4, 8, 6, 1, 8, 1, 'normal', CURRENT_DATE - 3, CURRENT_DATE + 2),
-('Thanh toan nha cung cap', 'Thuc hien thanh toan cho nha cung cap', 2, 6, 9, 6, 2, 15, 9, 'high', CURRENT_DATE - 7, CURRENT_DATE - 5),
-('Kiem tra chi phi van hanh', 'Kiem tra va phan tich chi phi van hanh', 1, 4, 7, 6, 3, 23, 17, 'normal', CURRENT_DATE + 2, CURRENT_DATE + 5),
-('Xu ly hoan tien khach hang', 'Xu ly cac yeu cau hoan tien tu khach', 2, 6, 8, 6, 4, 30, 25, 'urgent', CURRENT_DATE - 1, CURRENT_DATE),
+-- ACC (Accounting) - dept_id=23
+('Doi soat doanh thu ngay', 'Doi soat doanh thu ban hang trong ngay', 1, 4, 7, 23, 1, 7, 1, 'high', CURRENT_DATE, CURRENT_DATE + 1),
+('Lap bao cao tai chinh thang', 'Tong hop bao cao tai chinh hang thang', 1, 4, 8, 23, 1, 8, 1, 'normal', CURRENT_DATE - 3, CURRENT_DATE + 2),
+('Thanh toan nha cung cap', 'Thuc hien thanh toan cho nha cung cap', 2, 6, 9, 23, 2, 15, 9, 'high', CURRENT_DATE - 7, CURRENT_DATE - 5),
+('Kiem tra chi phi van hanh', 'Kiem tra va phan tich chi phi van hanh', 1, 4, 7, 23, 3, 23, 17, 'normal', CURRENT_DATE + 2, CURRENT_DATE + 5),
+('Xu ly hoan tien khach hang', 'Xu ly cac yeu cau hoan tien tu khach', 2, 6, 8, 23, 4, 30, 25, 'urgent', CURRENT_DATE - 1, CURRENT_DATE),
 
--- IT - dept_id=7
-('Bao tri he thong POS', 'Bao tri va cap nhat he thong POS', 3, 4, 7, 7, 1, 3, 1, 'high', CURRENT_DATE + 1, CURRENT_DATE + 3),
-('Sao luu du lieu', 'Sao luu du lieu he thong hang ngay', 2, 6, 9, 7, 1, 4, 1, 'normal', CURRENT_DATE - 1, CURRENT_DATE),
-('Kiem tra mang noi bo', 'Kiem tra va dam bao mang hoat dong on dinh', 1, 5, 8, 7, 2, 11, 9, 'normal', CURRENT_DATE - 2, CURRENT_DATE),
-('Cap nhat phan mem', 'Cap nhat phien ban phan mem moi', 3, 4, 7, 7, 3, 19, 17, 'low', CURRENT_DATE + 3, CURRENT_DATE + 7),
-('Ho tro ky thuat cho nhan vien', 'Ho tro xu ly cac van de ky thuat', 2, 6, 7, 7, 4, 27, 25, 'normal', CURRENT_DATE, CURRENT_DATE + 2);
+-- Improvement - dept_id=4
+('Bao tri he thong POS', 'Bao tri va cap nhat he thong POS', 3, 4, 7, 4, 1, 3, 1, 'high', CURRENT_DATE + 1, CURRENT_DATE + 3),
+('Sao luu du lieu', 'Sao luu du lieu he thong hang ngay', 2, 6, 9, 4, 1, 4, 1, 'normal', CURRENT_DATE - 1, CURRENT_DATE),
+('Kiem tra mang noi bo', 'Kiem tra va dam bao mang hoat dong on dinh', 1, 5, 8, 4, 2, 11, 9, 'normal', CURRENT_DATE - 2, CURRENT_DATE),
+('Cap nhat phan mem', 'Cap nhat phien ban phan mem moi', 3, 4, 7, 4, 3, 19, 17, 'low', CURRENT_DATE + 3, CURRENT_DATE + 7),
+('Ho tro ky thuat cho nhan vien', 'Ho tro xu ly cac van de ky thuat', 2, 6, 7, 4, 4, 27, 25, 'normal', CURRENT_DATE, CURRENT_DATE + 2);
 
 -- ============================================
 -- MANUAL DATA: Folders and Documents

@@ -48,7 +48,7 @@ export default function FilterModal({
 
       return {
         id: String(parent.department_id),
-        name: parent.department_name,
+        name: `${parent.sort_order}. ${parent.department_name}`,
         code: parent.department_code || '',
         level: 1,
         children: children.length > 0 ? children : undefined,
