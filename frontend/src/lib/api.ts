@@ -270,7 +270,7 @@ export async function getStoreById(id: number): Promise<Store> {
 // ============================================
 
 export async function getDepartments(): Promise<Department[]> {
-  return fetchApi<Department[]>('/staff/departments');
+  return fetchApi<Department[]>('/departments');
 }
 
 // ============================================
