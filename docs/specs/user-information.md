@@ -208,14 +208,15 @@
 
 | # | Action | Method | Endpoint | Description |
 |---|--------|--------|----------|-------------|
-| 1 | Get Hierarchy | GET | /api/v1/users/hierarchy | Get hierarchy structure |
-| 2 | Get Department | GET | /api/v1/departments/{id} | Get department information |
-| 3 | Get Members | GET | /api/v1/departments/{id}/members | Get department member list |
-| 4 | Get Employee Detail | GET | /api/v1/users/{id} | Get detailed employee information |
-| 5 | Add User | POST | /api/v1/users | Add new user |
-| 6 | Update User | PUT | /api/v1/users/{id} | Update user information |
-| 7 | Delete User | DELETE | /api/v1/users/{id} | Delete user |
-| 8 | Import Users | POST | /api/v1/users/import | Import list from Excel |
+| 1 | Get SMBU Hierarchy | GET | /api/v1/user-info/smbu-hierarchy | Get root user + departments |
+| 2 | Get Department Tabs | GET | /api/v1/user-info/department-tabs | Get tab navigation list |
+| 3 | Get Department Hierarchy | GET | /api/v1/user-info/departments/{id}/hierarchy | Get department with teams and members |
+| 4 | Get Staff Detail | GET | /api/v1/user-info/staff/{id} | Get detailed employee information |
+| 5 | Get Departments List | GET | /api/v1/user-info/departments-list | Get departments for dropdown |
+| 6 | Get Teams List | GET | /api/v1/user-info/teams-list | Get teams for dropdown |
+| 7 | Create Team | POST | /api/v1/user-info/teams | Create new team |
+| 8 | Create Member | POST | /api/v1/user-info/members | Create new staff member |
+| 9 | Import Users | POST | /api/v1/users/import | Import list from Excel (TODO) |
 
 ---
 
@@ -255,6 +256,7 @@ frontend/src/
 │       ├── TeamCard.tsx
 │       ├── MemberCard.tsx
 │       ├── AddMemberButton.tsx
+│       ├── AddTeamMemberModal.tsx
 │       ├── EmployeeDetailModal.tsx (TODO)
 │       ├── PermissionsModal.tsx (TODO)
 │       └── ImportExcelModal.tsx (TODO)
@@ -350,6 +352,10 @@ Root User
 | 2 | Get Department Tabs | GET | /api/v1/user-info/department-tabs | Get list of department tabs for navigation |
 | 3 | Get Department Hierarchy | GET | /api/v1/user-info/departments/{id}/hierarchy | Get department detail with head and teams |
 | 4 | Get Staff Detail | GET | /api/v1/user-info/staff/{id} | Get detailed staff information |
+| 5 | Get Departments List | GET | /api/v1/user-info/departments-list | Get departments for dropdown selection |
+| 6 | Get Teams List | GET | /api/v1/user-info/teams-list | Get teams for dropdown selection |
+| 7 | Create Team | POST | /api/v1/user-info/teams | Create a new team in a department |
+| 8 | Create Member | POST | /api/v1/user-info/members | Create a new staff member |
 
 ---
 
@@ -368,3 +374,5 @@ Root User
 | 2026-01-03 | Added department expand/collapse with lazy loading in SMBU tab |
 | 2026-01-03 | Fixed connector lines to use segmented approach for proper alignment |
 | 2026-01-03 | Added User Information API endpoints documentation |
+| 2026-01-04 | Implemented AddTeamMemberModal for adding new teams and members |
+| 2026-01-04 | Added API endpoints: departments-list, teams-list, POST teams, POST members |

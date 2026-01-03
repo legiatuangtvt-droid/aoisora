@@ -2,11 +2,23 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { DepartmentId, HierarchyNode, Department, Team } from '@/types/userInfo';
-import { getSMBUHierarchy, getDepartmentTabs, getDepartmentHierarchy, DepartmentTab } from '@/lib/api';
+import {
+  getSMBUHierarchy,
+  getDepartmentTabs,
+  getDepartmentHierarchy,
+  getDepartmentsList,
+  getTeamsList,
+  createTeam,
+  createMember,
+  DepartmentTab,
+  DepartmentListItem,
+  TeamListItem,
+} from '@/lib/api';
 import UserInfoHeader from '@/components/users/UserInfoHeader';
 import DepartmentTabs from '@/components/users/DepartmentTabs';
 import HierarchyTree from '@/components/users/HierarchyTree';
 import DepartmentDetailView from '@/components/users/DepartmentDetailView';
+import AddTeamMemberModal, { TeamFormData, MemberFormData } from '@/components/users/AddTeamMemberModal';
 
 // Department code to ID mapping (from database)
 const DEPARTMENT_CODE_TO_ID: Record<string, number> = {
@@ -25,6 +37,11 @@ export default function UserInfoPage() {
   const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [departmentsList, setDepartmentsList] = useState<DepartmentListItem[]>([]);
+  const [teamsList, setTeamsList] = useState<TeamListItem[]>([]);
 
   // Fetch SMBU hierarchy on mount
   useEffect(() => {
@@ -169,9 +186,67 @@ export default function UserInfoPage() {
     console.log('Open import Excel modal');
   };
 
-  const handleAddMember = () => {
-    // TODO: Implement add member modal
-    console.log('Open add member modal');
+  const handleAddMember = async () => {
+    // Fetch departments and teams for the modal
+    try {
+      const [depts, teams] = await Promise.all([
+        getDepartmentsList(),
+        getTeamsList(),
+      ]);
+      setDepartmentsList(depts);
+      setTeamsList(teams);
+      setIsModalOpen(true);
+    } catch (err) {
+      console.error('Error fetching dropdown data:', err);
+      setError('Failed to load form data. Please try again.');
+    }
+  };
+
+  const handleModalSubmit = async (data: TeamFormData | MemberFormData) => {
+    if (data.type === 'team') {
+      await createTeam({
+        teamName: data.teamName,
+        departmentId: data.departmentId,
+        icon: data.icon,
+        iconColor: data.iconColor,
+        iconBg: data.iconBg,
+      });
+
+      // Update teams list
+      const updatedTeams = await getTeamsList();
+      setTeamsList(updatedTeams);
+    } else {
+      await createMember({
+        staffName: data.staffName,
+        staffCode: data.staffCode,
+        email: data.email,
+        phone: data.phone,
+        position: data.position,
+        jobGrade: data.jobGrade,
+        departmentId: data.departmentId,
+        teamId: data.teamId,
+        sapCode: data.sapCode,
+        lineManagerId: data.lineManagerId,
+      });
+    }
+
+    // Refresh the hierarchy data
+    try {
+      const hierarchyData = await getSMBUHierarchy();
+      setHierarchy(hierarchyData);
+
+      // If viewing a department, refresh that too
+      if (activeTab !== 'SMBU' && selectedDepartment) {
+        const deptCode = activeTab.toUpperCase();
+        const deptId = DEPARTMENT_CODE_TO_ID[deptCode];
+        if (deptId) {
+          const deptData = await getDepartmentHierarchy(deptId);
+          setSelectedDepartment(deptData);
+        }
+      }
+    } catch (err) {
+      console.error('Error refreshing data:', err);
+    }
   };
 
   if (loading && !hierarchy) {
@@ -242,6 +317,15 @@ export default function UserInfoPage() {
           </div>
         ) : null}
       </div>
+
+      {/* Add Team/Member Modal */}
+      <AddTeamMemberModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleModalSubmit}
+        departments={departmentsList.map(d => ({ id: d.id, name: d.name, code: d.code }))}
+        teams={teamsList.map(t => ({ id: t.id, name: t.name, departmentId: t.departmentId }))}
+      />
     </div>
   );
 }

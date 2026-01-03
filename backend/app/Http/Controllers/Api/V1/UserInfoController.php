@@ -199,4 +199,130 @@ class UserInfoController extends Controller
             'status' => $staff->is_active ? 'Active' : 'Inactive',
         ];
     }
+
+    /**
+     * Get all departments for dropdown selection
+     */
+    public function departments()
+    {
+        $smbu = Department::where('department_code', 'SMBU')->first();
+
+        $departments = Department::where('parent_id', $smbu?->department_id)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->get()
+            ->map(function ($dept) {
+                return [
+                    'id' => $dept->department_id,
+                    'name' => $dept->department_name,
+                    'code' => $dept->department_code,
+                ];
+            });
+
+        return response()->json($departments);
+    }
+
+    /**
+     * Get all teams for dropdown selection
+     */
+    public function teams()
+    {
+        $teams = Team::where('is_active', true)
+            ->orderBy('department_id')
+            ->orderBy('sort_order')
+            ->get()
+            ->map(function ($team) {
+                return [
+                    'id' => $team->team_id,
+                    'name' => $team->team_name,
+                    'departmentId' => $team->department_id,
+                ];
+            });
+
+        return response()->json($teams);
+    }
+
+    /**
+     * Create a new team
+     */
+    public function storeTeam(Request $request)
+    {
+        $validated = $request->validate([
+            'teamName' => 'required|string|max:100',
+            'departmentId' => 'required|integer|exists:departments,department_id',
+            'icon' => 'nullable|string|max:50',
+            'iconColor' => 'nullable|string|max:20',
+            'iconBg' => 'nullable|string|max:50',
+        ]);
+
+        // Generate team_id
+        $lastTeam = Team::orderBy('team_id', 'desc')->first();
+        $nextId = $lastTeam ? ((int) preg_replace('/[^0-9]/', '', $lastTeam->team_id)) + 1 : 1;
+        $teamId = 'T' . str_pad($nextId, 3, '0', STR_PAD_LEFT);
+
+        $team = Team::create([
+            'team_id' => $teamId,
+            'team_name' => $validated['teamName'],
+            'department_id' => $validated['departmentId'],
+            'icon' => $validated['icon'] ?? 'users',
+            'icon_color' => $validated['iconColor'] ?? '#003E95',
+            'icon_bg' => $validated['iconBg'] ?? '#E5F0FF',
+            'sort_order' => Team::where('department_id', $validated['departmentId'])->count() + 1,
+            'is_active' => true,
+        ]);
+
+        return response()->json([
+            'message' => 'Team created successfully',
+            'team' => [
+                'id' => $team->team_id,
+                'name' => $team->team_name,
+                'departmentId' => $team->department_id,
+            ],
+        ], 201);
+    }
+
+    /**
+     * Create a new staff member
+     */
+    public function storeMember(Request $request)
+    {
+        $validated = $request->validate([
+            'staffName' => 'required|string|max:100',
+            'staffCode' => 'required|string|max:20|unique:staff,staff_code',
+            'email' => 'required|email|max:100|unique:staff,email',
+            'phone' => 'nullable|string|max:20',
+            'position' => 'required|string|max:100',
+            'jobGrade' => 'required|string|in:G1,G2,G3,G4,G5,G6,G7,G8',
+            'departmentId' => 'required|integer|exists:departments,department_id',
+            'teamId' => 'nullable|string|exists:teams,team_id',
+            'sapCode' => 'nullable|string|max:20',
+            'lineManagerId' => 'nullable|integer|exists:staff,staff_id',
+        ]);
+
+        // Generate username from email
+        $username = explode('@', $validated['email'])[0];
+
+        $staff = Staff::create([
+            'staff_code' => $validated['staffCode'],
+            'staff_name' => $validated['staffName'],
+            'username' => $username,
+            'password_hash' => bcrypt('password123'), // Default password
+            'email' => $validated['email'],
+            'phone' => $validated['phone'],
+            'position' => $validated['position'],
+            'job_grade' => $validated['jobGrade'],
+            'department_id' => $validated['departmentId'],
+            'team_id' => $validated['teamId'],
+            'sap_code' => $validated['sapCode'],
+            'line_manager_id' => $validated['lineManagerId'],
+            'joining_date' => now(),
+            'is_active' => true,
+            'status' => 'active',
+        ]);
+
+        return response()->json([
+            'message' => 'Staff member created successfully',
+            'staff' => $this->formatStaffMember($staff),
+        ], 201);
+    }
 }

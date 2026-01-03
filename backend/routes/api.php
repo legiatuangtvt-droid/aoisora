@@ -49,6 +49,10 @@ Route::prefix('v1')->group(function () {
         Route::get('department-tabs', [UserInfoController::class, 'departmentTabs']);
         Route::get('departments/{department}/hierarchy', [UserInfoController::class, 'departmentHierarchy']);
         Route::get('staff/{staff}', [UserInfoController::class, 'staffDetail']);
+        Route::get('departments-list', [UserInfoController::class, 'departments']);
+        Route::get('teams-list', [UserInfoController::class, 'teams']);
+        Route::post('teams', [UserInfoController::class, 'storeTeam']);
+        Route::post('members', [UserInfoController::class, 'storeMember']);
     });
 
     // Teams (public read-only)

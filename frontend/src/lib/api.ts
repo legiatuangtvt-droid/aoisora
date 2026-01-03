@@ -1017,3 +1017,67 @@ export async function getDepartmentHierarchy(departmentId: number): Promise<User
 export async function getStaffDetail(staffId: number): Promise<Employee> {
   return fetchApi<Employee>(`/user-info/staff/${staffId}`, { skipAuth: true });
 }
+
+// Department and Team list for dropdowns
+export interface DepartmentListItem {
+  id: number;
+  name: string;
+  code: string;
+}
+
+export interface TeamListItem {
+  id: string;
+  name: string;
+  departmentId: number;
+}
+
+// Get departments list for dropdown
+export async function getDepartmentsList(): Promise<DepartmentListItem[]> {
+  return fetchApi<DepartmentListItem[]>('/user-info/departments-list', { skipAuth: true });
+}
+
+// Get teams list for dropdown
+export async function getTeamsList(): Promise<TeamListItem[]> {
+  return fetchApi<TeamListItem[]>('/user-info/teams-list', { skipAuth: true });
+}
+
+// Create team request
+export interface CreateTeamRequest {
+  teamName: string;
+  departmentId: number;
+  icon?: string;
+  iconColor?: string;
+  iconBg?: string;
+}
+
+// Create member request
+export interface CreateMemberRequest {
+  staffName: string;
+  staffCode: string;
+  email: string;
+  phone?: string;
+  position: string;
+  jobGrade: string;
+  departmentId: number;
+  teamId?: string;
+  sapCode?: string;
+  lineManagerId?: number;
+}
+
+// Create a new team
+export async function createTeam(data: CreateTeamRequest): Promise<{ message: string; team: TeamListItem }> {
+  return fetchApi<{ message: string; team: TeamListItem }>('/user-info/teams', {
+    method: 'POST',
+    body: JSON.stringify(data),
+    skipAuth: true,
+  });
+}
+
+// Create a new staff member
+export async function createMember(data: CreateMemberRequest): Promise<{ message: string; staff: Employee }> {
+  return fetchApi<{ message: string; staff: Employee }>('/user-info/members', {
+    method: 'POST',
+    body: JSON.stringify(data),
+    skipAuth: true,
+  });
+}
