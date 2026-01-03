@@ -23,6 +23,7 @@ export interface TaskGroup {
   id: string;
   no: number;
   dept: string;
+  deptId: number | null;  // Department ID for filtering
   taskGroupName: string;
   taskType?: TaskType;
   startDate: string;

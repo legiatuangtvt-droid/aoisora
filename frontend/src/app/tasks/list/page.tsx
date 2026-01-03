@@ -41,6 +41,7 @@ function transformApiTaskToTaskGroup(task: ApiTask, index: number, departments: 
     id: task.task_id.toString(),
     no: index + 1,
     dept: deptCode,
+    deptId: task.dept_id,
     taskGroupName: task.task_name,
     taskType: undefined,
     startDate: formatDate(task.start_date),
@@ -224,12 +225,12 @@ export default function TaskListPage() {
       task.taskGroupName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       task.dept.toLowerCase().includes(searchQuery.toLowerCase());
 
-    // Department filter (modal)
+    // Department filter (modal) - compare with department_id
     const matchesDeptModal =
       filters.departments.length === 0 ||
-      filters.departments.some((deptId) => {
-        const deptCode = deptId.split('-').pop()?.toUpperCase();
-        return task.dept === deptCode || deptId.includes(task.dept.toLowerCase());
+      filters.departments.some((selectedDeptId) => {
+        // selectedDeptId is a string of department_id (e.g., "11", "12")
+        return task.deptId !== null && String(task.deptId) === selectedDeptId;
       });
 
     // Department column filter
