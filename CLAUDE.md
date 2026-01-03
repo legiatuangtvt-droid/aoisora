@@ -116,6 +116,23 @@ app/
     └── UserInfoService.php           # Business logic
 ```
 
+### 9. Session Start (Optional)
+
+Nếu user yêu cầu khởi động servers, thực hiện theo thứ tự:
+
+```bash
+# 1. Start PostgreSQL
+"D:\devtool\laragon\bin\postgresql\pgsql-18\bin\pg_ctl.exe" -D "D:\devtool\laragon\data\postgresql" start
+
+# 2. Start Backend (Laravel)
+cd backend && "D:\devtool\laragon\bin\php\php-8.3.28-Win32-vs16-x64\php.exe" artisan serve
+
+# 3. Start Frontend (Next.js)
+cd frontend && npm run dev
+```
+
+Chi tiết: `docs/SESSION_START_CHECKLIST.md`
+
 ---
 
 ## Tham khảo chi tiết
