@@ -4,7 +4,7 @@
 
 The Report screen displays task completion statistics across stores and departments. It provides weekly tracking data with visual charts and detailed tabular reports.
 
-**Route:** `/report`
+**Route:** `/tasks/report`
 
 ---
 
@@ -268,7 +268,7 @@ Query params:
 
 | Component | File | Status |
 |-----------|------|--------|
-| ReportPage | `frontend/src/app/report/page.tsx` | ✅ Implemented |
+| ReportPage | `frontend/src/app/tasks/report/page.tsx` | ✅ Implemented |
 | WeeklyCompletionGrid | `frontend/src/components/report/WeeklyCompletionGrid.tsx` | ✅ Implemented |
 | StackedBarChart | `frontend/src/components/report/StackedBarChart.tsx` | ✅ Implemented |
 | StoreReportTable | `frontend/src/components/report/StoreReportTable.tsx` | ✅ Implemented |
@@ -289,3 +289,4 @@ Query params:
 |------|--------|
 | 2026-01-03 | Initial specification created from wireframe |
 | 2026-01-03 | Implemented Report screen with all components |
+| 2026-01-03 | Moved to `/tasks/report` route, fixed menu highlight |

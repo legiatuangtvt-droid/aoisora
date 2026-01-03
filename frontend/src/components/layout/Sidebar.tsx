@@ -10,7 +10,7 @@ import { useToast } from '@/components/ui/Toast';
 import { MenuItem } from '@/types/layout';
 
 // Routes that are implemented
-const implementedRoutes = ['/tasks/list', '/tasks/new', '/tasks/detail', '/tasks/', '/tasks/messages', '/tasks/todo', '/tasks/library', '/tasks/info', '/tasks/store-info'];
+const implementedRoutes = ['/tasks/list', '/tasks/new', '/tasks/detail', '/tasks/', '/tasks/messages', '/tasks/todo', '/tasks/library', '/tasks/info', '/tasks/store-info', '/tasks/report'];
 
 // Menu items configuration with parent-child structure
 export const menuItems: MenuItem[] = [
@@ -56,7 +56,7 @@ export const menuItems: MenuItem[] = [
     id: 'report',
     label: 'Report',
     icon: 'file-report',
-    route: '/reports',
+    route: '/tasks/report',
   },
   {
     id: 'users',
@@ -217,7 +217,8 @@ export default function Sidebar() {
       pathname.startsWith('/tasks/todo') ||
       pathname.startsWith('/tasks/library') ||
       pathname.startsWith('/tasks/info') ||
-      pathname.startsWith('/tasks/store-info')
+      pathname.startsWith('/tasks/store-info') ||
+      pathname.startsWith('/tasks/report')
     )) {
       return false;
     }
