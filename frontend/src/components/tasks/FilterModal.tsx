@@ -79,11 +79,17 @@ export default function FilterModal({
         dept.children.forEach((child) => newSelected.add(child.id));
       }
 
-      // If this is a child, also check the parent
+      // If this is a child, check if ALL siblings are now selected
       if (isChild) {
         const parent = findParentDept(dept.id);
-        if (parent) {
-          newSelected.add(parent.id);
+        if (parent && parent.children) {
+          const allChildrenSelected = parent.children.every((child) =>
+            newSelected.has(child.id)
+          );
+          // Only check parent if ALL children are selected
+          if (allChildrenSelected) {
+            newSelected.add(parent.id);
+          }
         }
       }
     }

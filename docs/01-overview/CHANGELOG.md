@@ -15,7 +15,8 @@ System design changes and feature updates.
 - **Filter Modal parent-child checkbox logic**:
   - Check parent → all children checked
   - Uncheck parent → all children unchecked
-  - Check child → parent also checked
+  - Check all children → parent automatically checked
+  - Uncheck any child → parent unchecked (only auto-check when ALL children selected)
   - Uncheck all children → parent automatically unchecked
 
 ### Fixed

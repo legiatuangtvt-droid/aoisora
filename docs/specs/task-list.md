@@ -129,7 +129,8 @@ The Task List screen displays a paginated table of task groups with filtering, s
 |--------|----------|
 | Check parent | All children are also checked |
 | Uncheck parent | All children are also unchecked |
-| Check child | Parent is also checked |
+| Check all children | Parent is automatically checked |
+| Uncheck any child | Parent is unchecked (if not all children selected) |
 | Uncheck all children | Parent is automatically unchecked |
 
 ---
