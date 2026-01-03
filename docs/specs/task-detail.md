@@ -173,17 +173,62 @@ This screen displays detailed task information from HQ to stores. It supports mu
 
 ### 3.9 Workflow Steps Panel (E. Workflow Steps Panel)
 
-| Step | Name | Fields |
-|------|------|--------|
-| Step 1 | SUBMIT | Assignee, Start Day, End Day, Comment |
-| Step 2 | APPROVE | Assignee, Start Day, End Day, Comment |
-| Step 3 | DO TASK | Skip (shows store count), Start Day, End Day |
-| Step 4 | CHECK | Assignee, Start Day, End Day |
+Slide-in panel from right side, triggered by clicking the user-check icon in Task Header.
 
-**Panel Elements:**
-- Round tabs (Round 1, Round 2, etc.)
-- Step cards with status icons
-- Expandable/collapsible steps
+#### Trigger
+- User-check icon (SVG with user + checkmark) in bottom row of Task Info section
+- Click opens panel with backdrop overlay
+
+#### Panel Layout
+| Element | Description |
+|---------|-------------|
+| Backdrop | Dark semi-transparent overlay (bg-black/30), click to close |
+| Panel | Fixed right side, width 414px, white background, full height, scrollable |
+| Round Tabs | Centered tab group for Round 1, Round 2 (gray bg, active: white bg + pink text) |
+| Steps Timeline | Vertical timeline with step icons and connecting lines |
+
+#### Step Icons (30x30 rounded circle with border)
+| Step | Icon | Active Border |
+|------|------|---------------|
+| Step 1 | Document with export arrow (SUBMIT) | #C5055B (pink) |
+| Step 2 | Checkmark (APPROVE) | #C5055B |
+| Step 3 | Gear/Settings (DO TASK) | #C5055B |
+| Step 4 | Large checkmark (CHECK) | #C5055B |
+
+**Icon Colors:**
+- Active (non-pending): #C5055B (pink)
+- Inactive (pending): #9B9B9B (gray)
+
+#### Step Status Badges
+| Status | Label | Dot Color | Background | Border | Text |
+|--------|-------|-----------|------------|--------|------|
+| completed | Done | #297EF6 | #E5F0FF | #297EF6 | #297EF6 |
+| in_progress | In process | #EDA600 | #EDA600/5 | #EDA600 | #EDA600 |
+| pending | Pending | gray-400 | gray-100 | gray-400 | gray-500 |
+| submitted (Step 1 completed) | Submited | #1BBA5E | #EBFFF3 | #1BBA5E | #1BBA5E |
+
+#### Step Card Elements
+| Element | Description |
+|---------|-------------|
+| Step Title | "Step N: {name}" - bold, large font |
+| Status Badge | Dot + label, pill style |
+| Assignee Avatar | 30x30 rounded, top-right of card |
+| Assign to | Label + name or skip info |
+| Start Day / End Day | Two columns with dates |
+| Comment Section | Gray background box with quote marks |
+
+#### Timeline Connecting Lines
+- 2px width, #C5055B color
+- Positioned below each step icon (not through icon)
+- Connects to next step's icon
+- Hidden for last step
+
+| Steps | Fields |
+|-------|--------|
+| Step 1: SUBMIT | Assignee, Start Day, End Day, Comment |
+| Step 2: APPROVE | Assignee, Start Day, End Day, Comment |
+| Step 3: DO TASK | Skip info (e.g., "27 Stores"), Start Day, End Day |
+| Step 4: CHECK | Assignee, Start Day, End Day |
 
 ---
 
@@ -448,3 +493,4 @@ const sortedStoreResults = useMemo(() => {
 | 2025-12-31 | YesNoStatusSection: New component for Yes/No task type showing status badge, completion text, report link, Like button with avatars |
 | 2025-12-31 | StoreResultCard: Added taskType prop to conditionally render ImageGrid (image) or YesNoStatusSection (yes_no) |
 | 2026-01-03 | Store Results Sorting: Added display order logic - in_progress/not_started first → failed second → success last (success sorted by completion time, earliest at bottom) |
+| 2026-01-03 | WorkflowStepsPanel: New slide-in panel component with round tabs, timeline, step icons, status badges. Triggered by user-check icon in Task Header |
