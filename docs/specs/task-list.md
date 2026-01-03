@@ -119,9 +119,18 @@ The Task List screen displays a paginated table of task groups with filtering, s
 | Filter | Options | Status |
 |--------|---------|--------|
 | View Scope | All team, My tasks | ✅ Implemented |
-| Department | Multi-select checkboxes | ✅ Implemented |
-| Status | NOT_YET, DRAFT, DONE | ✅ Implemented |
-| HQ Check | NOT_YET, DRAFT, DONE | ✅ Implemented |
+| Department | Multi-select checkboxes with parent-child logic | ✅ Implemented |
+| Status | NOT_YET, DRAFT, DONE (chip buttons) | ✅ Implemented |
+| HQ Check | NOT_YET, DRAFT, DONE (chip buttons) | ✅ Implemented |
+
+### 4.1 Department Checkbox Logic
+
+| Action | Behavior |
+|--------|----------|
+| Check parent | All children are also checked |
+| Uncheck parent | All children are also unchecked |
+| Check child | Parent is also checked |
+| Uncheck all children | Parent is automatically unchecked |
 
 ---
 
@@ -204,6 +213,9 @@ frontend/src/
 | 2025-12-28 | Renamed TODAY tab to DAY for single day selection |
 | 2025-12-28 | Added calendar picker for DAY tab |
 | 2025-12-28 | Added today highlight with border in all calendars |
+| 2026-01-03 | Added search clear button (X icon) |
+| 2026-01-03 | Updated default DatePicker from WEEK to DAY (today) |
+| 2026-01-03 | Added parent-child checkbox logic in Filter Modal Department section |
 
 ---
 

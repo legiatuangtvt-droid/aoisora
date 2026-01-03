@@ -41,8 +41,15 @@ export default function FilterModal({
     setExpandedSection(expandedSection === section ? null : section);
   };
 
+  // Find parent department for a child
+  const findParentDept = (childId: string): Department | undefined => {
+    return mockDepartments.find(
+      (parent) => parent.children?.some((child) => child.id === childId)
+    );
+  };
+
   // Handle department checkbox - with parent-child logic
-  const handleDeptToggle = (dept: Department) => {
+  const handleDeptToggle = (dept: Department, isChild: boolean = false) => {
     const newSelected = new Set(selectedDepts);
 
     if (newSelected.has(dept.id)) {
@@ -51,11 +58,33 @@ export default function FilterModal({
       if (dept.children) {
         dept.children.forEach((child) => newSelected.delete(child.id));
       }
+
+      // If this is a child, check if all siblings are now unchecked
+      if (isChild) {
+        const parent = findParentDept(dept.id);
+        if (parent && parent.children) {
+          const anyChildSelected = parent.children.some((child) =>
+            newSelected.has(child.id)
+          );
+          // If no children are selected, uncheck the parent too
+          if (!anyChildSelected) {
+            newSelected.delete(parent.id);
+          }
+        }
+      }
     } else {
       // Check: add self and children
       newSelected.add(dept.id);
       if (dept.children) {
         dept.children.forEach((child) => newSelected.add(child.id));
+      }
+
+      // If this is a child, also check the parent
+      if (isChild) {
+        const parent = findParentDept(dept.id);
+        if (parent) {
+          newSelected.add(parent.id);
+        }
       }
     }
 
@@ -200,7 +229,7 @@ export default function FilterModal({
                             <input
                               type="checkbox"
                               checked={selectedDepts.has(child.id)}
-                              onChange={() => handleDeptToggle(child)}
+                              onChange={() => handleDeptToggle(child, true)}
                               className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                             />
                             <span className="text-sm text-gray-700">

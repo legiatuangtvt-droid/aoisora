@@ -4,6 +4,37 @@ System design changes and feature updates.
 
 ---
 
+## [2026-01-03] - Task List Improvements
+
+### Changed
+- **Tasks page redirect**: `/tasks` now redirects to `/tasks/list` automatically
+- **DatePicker default**: Changed from WEEK to DAY (today) as default mode
+- **Search input**: Added clear button (X icon) to quickly clear search text
+
+### Added
+- **Filter Modal parent-child checkbox logic**:
+  - Check parent → all children checked
+  - Uncheck parent → all children unchecked
+  - Check child → parent also checked
+  - Uncheck all children → parent automatically unchecked
+
+### Fixed
+- **Departments API**: Fixed endpoint path from `/staff/departments` to `/departments`
+- **Sidebar**: Removed badge from parent menu items
+
+### Database
+- **Departments restructure**: Added `parent_id` and `sort_order` columns for hierarchical structure
+- **New department structure**:
+  - 1. OP → Perisable, Grocery, Delica, D&D, CS
+  - 2. Admin → Admin, MMD, ACC
+  - 3. Control
+  - 4. Improvement
+  - 5. Planning → MKT, SPA, ORD
+  - 6. HR
+- **Test data**: Added 50 tasks with varied statuses, priorities, and date ranges
+
+---
+
 ## [2025-12-27] - DWS Pages Update to Match Legacy Spec
 
 ### Changes
