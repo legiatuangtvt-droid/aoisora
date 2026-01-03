@@ -59,17 +59,13 @@ export default function FilterModal({
         dept.children.forEach((child) => newSelected.delete(child.id));
       }
 
-      // If this is a child, check if all siblings are now unchecked
+      // If this is a child, uncheck parent (since not all children are selected anymore)
       if (isChild) {
         const parent = findParentDept(dept.id);
-        if (parent && parent.children) {
-          const anyChildSelected = parent.children.some((child) =>
-            newSelected.has(child.id)
-          );
-          // If no children are selected, uncheck the parent too
-          if (!anyChildSelected) {
-            newSelected.delete(parent.id);
-          }
+        if (parent) {
+          // Always uncheck parent when any child is unchecked
+          // This follows the principle: parent checked = all children checked
+          newSelected.delete(parent.id);
         }
       }
     } else {

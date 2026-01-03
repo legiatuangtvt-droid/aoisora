@@ -16,8 +16,8 @@ System design changes and feature updates.
   - Check parent → all children checked
   - Uncheck parent → all children unchecked
   - Check all children → parent automatically checked
-  - Uncheck any child → parent unchecked (only auto-check when ALL children selected)
-  - Uncheck all children → parent automatically unchecked
+  - Uncheck any child → parent automatically unchecked
+  - Principle: Parent checked ⟺ All children checked
 
 ### Fixed
 - **Departments API**: Fixed endpoint path from `/staff/departments` to `/departments`
