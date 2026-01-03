@@ -57,37 +57,34 @@ const HierarchyTree: React.FC<HierarchyTreeProps> = ({
 
                 {/* Expanded Content: Head + Teams */}
                 {hasExpandedContent && (
-                  <div className="relative ml-6 pl-6 mt-4">
+                  <div className="relative ml-6 pl-6">
+                    {/* Main vertical line connecting all expanded items */}
+                    <div className="absolute -left-6 top-0 bottom-0 w-0.5 bg-[#9B9B9B]" />
+
                     {/* Department Head */}
                     {department.head && (
-                      <div className="relative pt-2">
-                        {/* Vertical line to head */}
-                        <div className="absolute -left-6 top-0 h-[42px] w-0.5 bg-[#9B9B9B]" />
-                        {/* Horizontal connector */}
-                        <div className="absolute -left-6 top-[42px] w-6 h-0.5 bg-[#9B9B9B]" />
-                        {/* Continue line if teams exist */}
-                        {department.teams && department.teams.length > 0 && (
-                          <div className="absolute -left-6 top-[42px] bottom-0 w-0.5 bg-[#9B9B9B]" />
-                        )}
+                      <div className="relative pt-4">
+                        {/* Horizontal connector to head */}
+                        {/* pt-4(16px) + p-4(16px) + half of avatar(30px) = 62px */}
+                        <div className="absolute -left-6 top-[62px] w-6 h-0.5 bg-[#9B9B9B]" />
                         <DepartmentHeadCard head={department.head} />
                       </div>
                     )}
 
                     {/* Teams */}
                     {department.teams && department.teams.length > 0 && (
-                      <div className="mt-3">
+                      <div>
                         {department.teams.map((team, teamIndex) => {
                           const isLastTeam = teamIndex === department.teams!.length - 1;
 
                           return (
-                            <div key={team.id} className="relative pt-3">
-                              {/* Vertical line to team */}
-                              <div className="absolute -left-6 top-0 h-[36px] w-0.5 bg-[#9B9B9B]" />
-                              {/* Horizontal connector */}
-                              <div className="absolute -left-6 top-[36px] w-6 h-0.5 bg-[#9B9B9B]" />
-                              {/* Continue line to next team */}
-                              {!isLastTeam && (
-                                <div className="absolute -left-6 top-[36px] bottom-0 w-0.5 bg-[#9B9B9B]" />
+                            <div key={team.id} className="relative pt-4">
+                              {/* Horizontal connector to team */}
+                              {/* pt-4(16px) + py-3(12px) + half of icon(20px) = 48px */}
+                              <div className="absolute -left-6 top-[48px] w-6 h-0.5 bg-[#9B9B9B]" />
+                              {/* Hide the main vertical line after last team */}
+                              {isLastTeam && (
+                                <div className="absolute -left-6 top-[48px] bottom-0 w-1 bg-[#F8F8F8]" />
                               )}
                               <TeamCard
                                 team={team}
@@ -97,6 +94,11 @@ const HierarchyTree: React.FC<HierarchyTreeProps> = ({
                           );
                         })}
                       </div>
+                    )}
+
+                    {/* Hide vertical line after last item if no teams */}
+                    {department.head && (!department.teams || department.teams.length === 0) && (
+                      <div className="absolute -left-6 top-[62px] bottom-0 w-1 bg-[#F8F8F8]" />
                     )}
                   </div>
                 )}
