@@ -665,6 +665,124 @@ INSERT INTO "notifications" ("recipient_staff_id", "sender_staff_id", "notificat
 (2, 1, 'shift_assigned', 'Ca lam viec moi', 'Ban da duoc phan cong ca sang ngay mai', false);
 
 -- ============================================
+-- STORE INFORMATION DATA (for Store Information Screen)
+-- Based on mockStoreInfo.ts structure
+-- ============================================
+
+-- Add Store-related regions (matching mockStoreInfo.ts regionTabs)
+INSERT INTO "regions" ("region_id", "region_name", "region_code", "description") VALUES
+(10, 'SMBU (Store)', 'SMBU', 'Strategic Management Business Unit - Store Operations'),
+(11, 'OCEAN', 'OCEAN', 'Ocean Park Area - Northern Vietnam'),
+(12, 'HA NOI CENTER', 'HA_NOI_CENTER', 'Ha Noi Central Area'),
+(13, 'ECO PARK', 'ECO_PARK', 'Eco Park Area - Hung Yen'),
+(14, 'HA DONG', 'HA_DONG', 'Ha Dong District Area'),
+(15, 'NGD', 'NGD', 'Nguyen Du Area');
+
+SELECT setval('regions_region_id_seq', 15);
+
+-- Add Stores for OCEAN region (region_id = 11)
+INSERT INTO "stores" ("store_id", "store_name", "store_code", "region_id", "address", "phone", "email", "status") VALUES
+-- Ocean Park stores
+(100, 'Ocean Park S203', '3016', 11, 'S203 Ocean Park, Gia Lam, Ha Noi', '024-8888-3016', 'oceanpark203@aoisora.com', 'active'),
+(101, 'Ocean Park S201', '3014', 11, 'S201 Ocean Park, Gia Lam, Ha Noi', '024-8888-3014', 'oceanpark201@aoisora.com', 'active'),
+(102, 'Ocean Park S202', '3015', 11, 'S202 Ocean Park, Gia Lam, Ha Noi', '024-8888-3015', 'oceanpark202@aoisora.com', 'active'),
+(103, 'Ocean Park S204', '3017', 11, 'S204 Ocean Park, Gia Lam, Ha Noi', '024-8888-3017', 'oceanpark204@aoisora.com', 'active'),
+(104, 'Ocean Park S205', '3018', 11, 'S205 Ocean Park, Gia Lam, Ha Noi', '024-8888-3018', 'oceanpark205@aoisora.com', 'active'),
+-- More Ocean stores for demo
+(105, 'Vinhomes Ocean Park 1', '3019', 11, 'Vinhomes Ocean Park 1, Gia Lam', '024-8888-3019', 'vop1@aoisora.com', 'active'),
+(106, 'Vinhomes Ocean Park 2', '3020', 11, 'Vinhomes Ocean Park 2, Gia Lam', '024-8888-3020', 'vop2@aoisora.com', 'active'),
+(107, 'Vinhomes Ocean Park 3', '3021', 11, 'Vinhomes Ocean Park 3, Gia Lam', '024-8888-3021', 'vop3@aoisora.com', 'active');
+
+-- Add Stores for HA NOI CENTER region (region_id = 12)
+INSERT INTO "stores" ("store_id", "store_name", "store_code", "region_id", "address", "phone", "email", "status") VALUES
+(110, 'Vincom Ba Trieu', '2001', 12, '191 Ba Trieu, Hai Ba Trung, Ha Noi', '024-7777-2001', 'batrieu@aoisora.com', 'active'),
+(111, 'Trang Tien Plaza', '2002', 12, '24 Hai Ba Trung, Hoan Kiem, Ha Noi', '024-7777-2002', 'trangtien@aoisora.com', 'active'),
+(112, 'Royal City', '2003', 12, '72A Nguyen Trai, Thanh Xuan, Ha Noi', '024-7777-2003', 'royalcity@aoisora.com', 'active'),
+(113, 'Times City', '2004', 12, '458 Minh Khai, Hai Ba Trung, Ha Noi', '024-7777-2004', 'timescity@aoisora.com', 'active'),
+(114, 'Lotte Center', '2005', 12, '54 Lieu Giai, Ba Dinh, Ha Noi', '024-7777-2005', 'lottecenter@aoisora.com', 'active');
+
+-- Add Stores for ECO PARK region (region_id = 13)
+INSERT INTO "stores" ("store_id", "store_name", "store_code", "region_id", "address", "phone", "email", "status") VALUES
+(120, 'Ecopark Grand Park', '4001', 13, 'Grand Park, Ecopark, Hung Yen', '024-6666-4001', 'grandpark@aoisora.com', 'active'),
+(121, 'Ecopark Lake View', '4002', 13, 'Lake View, Ecopark, Hung Yen', '024-6666-4002', 'lakeview@aoisora.com', 'active'),
+(122, 'Ecopark Sky Oasis', '4003', 13, 'Sky Oasis, Ecopark, Hung Yen', '024-6666-4003', 'skyoasis@aoisora.com', 'active');
+
+-- Add Stores for HA DONG region (region_id = 14)
+INSERT INTO "stores" ("store_id", "store_name", "store_code", "region_id", "address", "phone", "email", "status") VALUES
+(130, 'The Manor Ha Dong', '5001', 14, 'The Manor, Ha Dong, Ha Noi', '024-5555-5001', 'manor@aoisora.com', 'active'),
+(131, 'Ha Dong Plaza', '5002', 14, 'Ha Dong Plaza, Ha Dong, Ha Noi', '024-5555-5002', 'hadongplaza@aoisora.com', 'active'),
+(132, 'Van Phu Victoria', '5003', 14, 'Van Phu Victoria, Ha Dong, Ha Noi', '024-5555-5003', 'vanphu@aoisora.com', 'active'),
+(133, 'Duong Noi New City', '5004', 14, 'Duong Noi, Ha Dong, Ha Noi', '024-5555-5004', 'duongnoi@aoisora.com', 'active');
+
+-- Add Stores for NGD region (region_id = 15)
+INSERT INTO "stores" ("store_id", "store_name", "store_code", "region_id", "address", "phone", "email", "status") VALUES
+(140, 'Nguyen Du Center', '6001', 15, '16 Nguyen Du, Hai Ba Trung, Ha Noi', '024-4444-6001', 'nguyendu@aoisora.com', 'active'),
+(141, 'Le Dai Hanh Store', '6002', 15, '25 Le Dai Hanh, Hai Ba Trung, Ha Noi', '024-4444-6002', 'ledaihanh@aoisora.com', 'active');
+
+SELECT setval('stores_store_id_seq', 141);
+
+-- Add Store Managers and Staff (for Store Information screen)
+-- Store managers for Ocean region stores
+INSERT INTO "staff" ("staff_id", "staff_name", "staff_code", "username", "email", "phone", "store_id", "role", "position", "job_grade", "avatar_url", "password_hash", "status", "is_active") VALUES
+-- Ocean Park S203 (store_id = 100) - Manager + 15 staff
+(200, 'Hoang Huong Giang', 'SM3016', 'giang.hh', 'giang.hh@aoisora.com', '0912-345-001', 100, 'STORE_MANAGER', 'Store Manager', 'G3', '/avatars/manager-1.jpg', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active', true),
+(201, 'Nguyen Van Anh', 'ST3016-01', 'anh.nv01', 'anh.nv01@aoisora.com', '0912-345-002', 100, 'STAFF', 'Sales Staff', 'G2', '/avatars/staff-1.jpg', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active', true),
+(202, 'Tran Thi Binh', 'ST3016-02', 'binh.tt02', 'binh.tt02@aoisora.com', '0912-345-003', 100, 'STAFF', 'Cashier', 'G1', '/avatars/staff-2.jpg', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active', true),
+(203, 'Le Van Cuong', 'ST3016-03', 'cuong.lv03', 'cuong.lv03@aoisora.com', '0912-345-004', 100, 'STAFF', 'Stock Keeper', 'G1', '/avatars/staff-3.jpg', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active', true),
+(204, 'Pham Thi Dung', 'ST3016-04', 'dung.pt04', 'dung.pt04@aoisora.com', '0912-345-005', 100, 'STAFF', 'Customer Service', 'G2', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active', true),
+(205, 'Hoang Van Em', 'ST3016-05', 'em.hv05', 'em.hv05@aoisora.com', '0912-345-006', 100, 'STAFF', 'Sales Staff', 'G1', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active', true),
+(206, 'Nguyen Thi Phuong', 'ST3016-06', 'phuong.nt06', 'phuong.nt06@aoisora.com', '0912-345-007', 100, 'STAFF', 'Cashier', 'G1', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active', true),
+(207, 'Tran Van Hai', 'ST3016-07', 'hai.tv07', 'hai.tv07@aoisora.com', '0912-345-008', 100, 'STAFF', 'Perishable Staff', 'G2', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active', true),
+(208, 'Le Thi Lan', 'ST3016-08', 'lan.lt08', 'lan.lt08@aoisora.com', '0912-345-009', 100, 'STAFF', 'Grocery Staff', 'G1', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active', true),
+(209, 'Pham Van Minh', 'ST3016-09', 'minh.pv09', 'minh.pv09@aoisora.com', '0912-345-010', 100, 'STAFF', 'Security', 'G1', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active', true),
+
+-- Ocean Park S201 (store_id = 101) - Manager + staff
+(210, 'Vu Thi Nga', 'SM3014', 'nga.vt', 'nga.vt@aoisora.com', '0912-345-011', 101, 'STORE_MANAGER', 'Store Manager', 'G3', '/avatars/manager-2.jpg', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active', true),
+(211, 'Nguyen Van Hoang', 'ST3014-01', 'hoang.nv01', 'hoang.nv01@aoisora.com', '0912-345-012', 101, 'STAFF', 'Sales Staff', 'G2', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active', true),
+(212, 'Tran Thi Kim', 'ST3014-02', 'kim.tt02', 'kim.tt02@aoisora.com', '0912-345-013', 101, 'STAFF', 'Cashier', 'G1', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active', true),
+
+-- Ha Noi Center stores managers
+(220, 'Dao Van Long', 'SM2001', 'long.dv', 'long.dv@aoisora.com', '0912-345-020', 110, 'STORE_MANAGER', 'Store Manager', 'G3', '/avatars/manager-3.jpg', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active', true),
+(221, 'Nguyen Van Manh', 'ST2001-01', 'manh.nv01', 'manh.nv01@aoisora.com', '0912-345-021', 110, 'STAFF', 'Sales Staff', 'G2', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active', true),
+(222, 'Le Thi Oanh', 'ST2001-02', 'oanh.lt02', 'oanh.lt02@aoisora.com', '0912-345-022', 110, 'STAFF', 'Cashier', 'G1', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active', true),
+
+(230, 'Pham Thi Quynh', 'SM2002', 'quynh.pt', 'quynh.pt@aoisora.com', '0912-345-030', 111, 'STORE_MANAGER', 'Store Manager', 'G3', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active', true),
+(231, 'Hoang Van Son', 'ST2002-01', 'son.hv01', 'son.hv01@aoisora.com', '0912-345-031', 111, 'STAFF', 'Sales Staff', 'G2', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active', true),
+
+-- Eco Park stores managers
+(240, 'Vu Van Tai', 'SM4001', 'tai.vv', 'tai.vv@aoisora.com', '0912-345-040', 120, 'STORE_MANAGER', 'Store Manager', 'G3', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active', true),
+(241, 'Nguyen Thi Uyen', 'ST4001-01', 'uyen.nt01', 'uyen.nt01@aoisora.com', '0912-345-041', 120, 'STAFF', 'Sales Staff', 'G2', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active', true),
+
+-- Ha Dong stores managers
+(250, 'Tran Van Vinh', 'SM5001', 'vinh.tv', 'vinh.tv@aoisora.com', '0912-345-050', 130, 'STORE_MANAGER', 'Store Manager', 'G3', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active', true),
+(251, 'Le Thi Xuan', 'ST5001-01', 'xuan.lt01', 'xuan.lt01@aoisora.com', '0912-345-051', 130, 'STAFF', 'Sales Staff', 'G2', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active', true),
+
+-- NGD stores managers
+(260, 'Pham Van Yen', 'SM6001', 'yen.pv', 'yen.pv@aoisora.com', '0912-345-060', 140, 'STORE_MANAGER', 'Store Manager', 'G3', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active', true),
+(261, 'Hoang Thi Zung', 'ST6001-01', 'zung.ht01', 'zung.ht01@aoisora.com', '0912-345-061', 140, 'STAFF', 'Sales Staff', 'G2', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active', true);
+
+SELECT setval('staff_staff_id_seq', 261);
+
+-- Update stores with manager_id references
+UPDATE "stores" SET "manager_id" = 200 WHERE "store_id" = 100;
+UPDATE "stores" SET "manager_id" = 210 WHERE "store_id" = 101;
+UPDATE "stores" SET "manager_id" = 220 WHERE "store_id" = 110;
+UPDATE "stores" SET "manager_id" = 230 WHERE "store_id" = 111;
+UPDATE "stores" SET "manager_id" = 240 WHERE "store_id" = 120;
+UPDATE "stores" SET "manager_id" = 250 WHERE "store_id" = 130;
+UPDATE "stores" SET "manager_id" = 260 WHERE "store_id" = 140;
+
+-- Add Store-level departments (departments that appear under stores in Store Information)
+-- These are different from SMBU departments - they represent store operational areas
+INSERT INTO "departments" ("department_id", "department_name", "department_code", "description", "parent_id", "sort_order", "icon", "icon_color", "icon_bg") VALUES
+(200, 'ZEN PARK', 'ZENPARK', 'Zen Park Store Area', NULL, 1, 'park', '#109A4A', 'rgba(16, 154, 74, 0.1)'),
+(201, 'CONTROL', 'STORE-CONTROL', 'Store Control Department', NULL, 2, 'control', '#7C3AED', 'rgba(124, 58, 237, 0.1)'),
+(202, 'IMPROVEMENT', 'STORE-IMPROVEMENT', 'Store Improvement Department', NULL, 3, 'rocket', '#2563EB', 'rgba(37, 99, 235, 0.1)'),
+(203, 'HR', 'STORE-HR', 'Store HR Department', NULL, 4, 'hr', '#E11D48', 'rgba(225, 29, 72, 0.1)');
+
+SELECT setval('departments_department_id_seq', 203);
+
+-- ============================================
 -- VERIFICATION QUERIES
 -- ============================================
 
