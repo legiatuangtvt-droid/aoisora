@@ -16,12 +16,11 @@ const MemberCard: React.FC<MemberCardProps> = ({
 
   return (
     <div
-      className="flex items-center cursor-pointer"
+      className="bg-white rounded-[10px] border border-[#E8E8E8] p-3 cursor-pointer hover:bg-gray-50 transition-colors"
       onClick={() => onClick?.(member)}
     >
-
       {/* Member Card */}
-      <div className="flex items-center gap-3 py-2 hover:bg-gray-50 rounded-lg px-2 -mx-2 transition-colors">
+      <div className="flex items-center gap-3">
         {/* Avatar with grade badge */}
         <div className="relative">
           <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center">
