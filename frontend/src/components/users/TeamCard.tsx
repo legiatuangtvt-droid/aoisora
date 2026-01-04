@@ -164,15 +164,13 @@ const TeamCard: React.FC<TeamCardProps> = ({
         {team.isExpanded && membersCount > 0 && (
           <div className="px-4 pb-4 pt-2 border-t border-[#E8E8E8]">
             <div className="relative ml-6 pl-6">
+              {/* Vertical line from team header border to first member connector */}
+              <div className="absolute -left-6 -top-2 h-[calc(12px+2px+40px)] w-0.5 bg-[#9B9B9B]" />
               {team.members.map((member, index) => {
                 const isLastMember = index === membersCount - 1;
 
                 return (
                   <div key={member.id} className="relative pt-3">
-                    {/* Vertical line - from top to horizontal connector position */}
-                    {/* pt-3(12px) + py-2(8px) + half of h-10(20px) = 40px */}
-                    <div className="absolute -left-6 top-0 h-[40px] w-0.5 bg-[#9B9B9B]" />
-
                     {/* Vertical line - continues down to next sibling (not for last member) */}
                     {!isLastMember && (
                       <div className="absolute -left-6 top-[40px] bottom-0 w-0.5 bg-[#9B9B9B]" />
