@@ -161,6 +161,16 @@ export default function StoreInformationPage() {
     console.log('Open add new modal');
   };
 
+  const handleEditStaff = (staffId: string) => {
+    // TODO: Implement edit staff modal
+    console.log('Edit staff:', staffId);
+  };
+
+  const handleDeleteStaff = (staffId: string) => {
+    // TODO: Implement delete staff confirmation
+    console.log('Delete staff:', staffId);
+  };
+
   const handleSavePermissions = async (storeId: string, permissions: string[]) => {
     await saveStorePermissions({ storeId, permissions });
   };
@@ -218,6 +228,8 @@ export default function StoreInformationPage() {
             onToggleStore={handleToggleStore}
             onToggleDepartment={handleToggleDepartment}
             onAddNew={handleAddNew}
+            onEditStaff={handleEditStaff}
+            onDeleteStaff={handleDeleteStaff}
           />
         )}
       </div>

@@ -1,10 +1,11 @@
 'use client';
 
 import React from 'react';
-import { Region, Area, Store, StoreDepartment } from '@/types/storeInfo';
+import { Region } from '@/types/storeInfo';
 import AreaCard from './AreaCard';
 import StoreCard from './StoreCard';
 import StoreDepartmentCard from './StoreDepartmentCard';
+import StaffCard from './StaffCard';
 import AddNewButton from './AddNewButton';
 
 interface StoreHierarchyTreeProps {
@@ -13,6 +14,8 @@ interface StoreHierarchyTreeProps {
   onToggleStore: (storeId: string) => void;
   onToggleDepartment: (departmentId: string) => void;
   onAddNew: () => void;
+  onEditStaff?: (staffId: string) => void;
+  onDeleteStaff?: (staffId: string) => void;
 }
 
 const StoreHierarchyTree: React.FC<StoreHierarchyTreeProps> = ({
@@ -21,14 +24,12 @@ const StoreHierarchyTree: React.FC<StoreHierarchyTreeProps> = ({
   onToggleStore,
   onToggleDepartment,
   onAddNew,
+  onEditStaff,
+  onDeleteStaff,
 }) => {
   return (
     <div className="space-y-4">
       {region.areas.map((area) => {
-        // Combine stores and departments to determine last item
-        const allItems = [...area.stores, ...area.departments];
-        const totalItems = allItems.length;
-
         return (
           <div key={area.id} className="relative">
             {/* Area Card */}
@@ -39,16 +40,16 @@ const StoreHierarchyTree: React.FC<StoreHierarchyTreeProps> = ({
               <div className="relative ml-6 pl-6">
                 {/* Stores */}
                 {area.stores.map((store, storeIndex) => {
-                  const isLastItem = storeIndex === area.stores.length - 1 && area.departments.length === 0;
+                  const isLastStoreItem = storeIndex === area.stores.length - 1 && area.departments.length === 0;
+                  const hasStaffList = store.staffList && store.staffList.length > 0;
 
                   return (
                     <div key={store.id} className="relative pt-4">
                       {/* Vertical line - from top to horizontal connector position */}
-                      {/* py-5(20px) + half of card height (approx 50px) = 50px from pt-4 */}
                       <div className="absolute -left-6 top-0 h-[50px] w-0.5 bg-[#9B9B9B]" />
 
-                      {/* Vertical line - continues down to next sibling (not for last item) */}
-                      {!isLastItem && (
+                      {/* Vertical line - continues down to next sibling (not for last item without expanded content) */}
+                      {(!isLastStoreItem || store.isExpanded) && (
                         <div className="absolute -left-6 top-[50px] bottom-0 w-0.5 bg-[#9B9B9B]" />
                       )}
 
@@ -59,6 +60,79 @@ const StoreHierarchyTree: React.FC<StoreHierarchyTreeProps> = ({
                         store={store}
                         onToggle={onToggleStore}
                       />
+
+                      {/* Expanded Store Content - Staff List */}
+                      {store.isExpanded && hasStaffList && (
+                        <div className="relative ml-6 pl-6 mt-2">
+                          {store.staffList!.map((staff, staffIndex) => {
+                            const isLastStaff = staffIndex === store.staffList!.length - 1;
+
+                            return (
+                              <div key={staff.id} className="relative pt-3">
+                                {/* Vertical line - from top to horizontal connector position */}
+                                <div className="absolute -left-6 top-0 h-[30px] w-0.5 bg-[#D1D5DB]" />
+
+                                {/* Vertical line - continues down to next sibling (not for last item) */}
+                                {!isLastStaff && (
+                                  <div className="absolute -left-6 top-[30px] bottom-0 w-0.5 bg-[#D1D5DB]" />
+                                )}
+
+                                {/* Horizontal connector line - from vertical line to card */}
+                                <div className="absolute -left-6 top-[30px] w-6 h-0.5 bg-[#D1D5DB]" />
+
+                                <StaffCard
+                                  staff={staff}
+                                  onEdit={onEditStaff}
+                                  onDelete={onDeleteStaff}
+                                />
+                              </div>
+                            );
+                          })}
+
+                          {/* Add Staff Button */}
+                          <div className="relative pt-3">
+                            {/* Vertical line to add button */}
+                            <div className="absolute -left-6 top-0 h-[30px] w-0.5 bg-[#D1D5DB]" />
+                            {/* Horizontal connector line */}
+                            <div className="absolute -left-6 top-[30px] w-6 h-0.5 bg-[#D1D5DB]" />
+
+                            <button
+                              onClick={() => console.log('Add staff to store:', store.id)}
+                              className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-[#D1D5DB] rounded-[10px] text-[#6B6B6B] hover:border-[#0664E9] hover:text-[#0664E9] transition-colors"
+                            >
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <line x1="12" y1="5" x2="12" y2="19" />
+                                <line x1="5" y1="12" x2="19" y2="12" />
+                              </svg>
+                              <span className="text-[13px]">Add Staff</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Empty state when store is expanded but no staff */}
+                      {store.isExpanded && !hasStaffList && (
+                        <div className="relative ml-6 pl-6 mt-2">
+                          <div className="relative pt-3">
+                            <div className="absolute -left-6 top-0 h-[30px] w-0.5 bg-[#D1D5DB]" />
+                            <div className="absolute -left-6 top-[30px] w-6 h-0.5 bg-[#D1D5DB]" />
+
+                            <div className="px-4 py-6 bg-gray-50 border border-dashed border-[#D1D5DB] rounded-[10px] text-center">
+                              <p className="text-[14px] text-[#6B6B6B] mb-2">No staff assigned to this store</p>
+                              <button
+                                onClick={() => console.log('Add first staff to store:', store.id)}
+                                className="inline-flex items-center gap-2 px-4 py-2 text-[13px] text-[#0664E9] hover:underline"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <line x1="12" y1="5" x2="12" y2="19" />
+                                  <line x1="5" y1="12" x2="19" y2="12" />
+                                </svg>
+                                Add first staff member
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -84,6 +158,31 @@ const StoreHierarchyTree: React.FC<StoreHierarchyTreeProps> = ({
                         department={department}
                         onToggle={onToggleDepartment}
                       />
+
+                      {/* Expanded Department Content */}
+                      {department.isExpanded && department.staffList && department.staffList.length > 0 && (
+                        <div className="relative ml-6 pl-6 mt-2">
+                          {department.staffList.map((staff, staffIndex) => {
+                            const isLastStaff = staffIndex === department.staffList!.length - 1;
+
+                            return (
+                              <div key={staff.id} className="relative pt-3">
+                                <div className="absolute -left-6 top-0 h-[30px] w-0.5 bg-[#D1D5DB]" />
+                                {!isLastStaff && (
+                                  <div className="absolute -left-6 top-[30px] bottom-0 w-0.5 bg-[#D1D5DB]" />
+                                )}
+                                <div className="absolute -left-6 top-[30px] w-6 h-0.5 bg-[#D1D5DB]" />
+
+                                <StaffCard
+                                  staff={staff}
+                                  onEdit={onEditStaff}
+                                  onDelete={onDeleteStaff}
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   );
                 })}

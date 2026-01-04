@@ -297,3 +297,6 @@ StoreInformationPage/
 | 2026-01-04 | Implemented Permissions modal with store-specific permissions |
 | 2026-01-04 | Implemented Import Excel modal with CSV import functionality |
 | 2026-01-04 | Added backend APIs for permissions and store import |
+| 2026-01-04 | Implemented store expand functionality to show staff list |
+| 2026-01-04 | Created StaffCard component with edit/delete menu |
+| 2026-01-04 | Added empty state and Add Staff button for stores |
