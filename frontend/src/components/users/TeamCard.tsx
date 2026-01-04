@@ -97,6 +97,17 @@ const TeamCard: React.FC<TeamCardProps> = ({
 
           {/* Actions */}
           <div className="flex items-center gap-2">
+            {/* Expand/Collapse indicator */}
+            <svg
+              className={`w-5 h-5 text-[#6B6B6B] transition-transform ${team.isExpanded ? 'rotate-180' : ''}`}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+
             {/* Dropdown menu */}
             <div className="relative">
               <button
@@ -146,17 +157,6 @@ const TeamCard: React.FC<TeamCardProps> = ({
                 </div>
               )}
             </div>
-
-            {/* Expand/Collapse indicator */}
-            <svg
-              className={`w-5 h-5 text-[#6B6B6B] transition-transform ${team.isExpanded ? 'rotate-180' : ''}`}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
           </div>
         </div>
 
