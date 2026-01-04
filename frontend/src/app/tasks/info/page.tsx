@@ -165,12 +165,28 @@ export default function UserInfoPage() {
   const handleToggleTeam = useCallback((teamId: string) => {
     setSelectedDepartment(prev => {
       if (!prev || !prev.teams) return prev;
+      const team = prev.teams.find((t: Team) => t.id === teamId);
+      if (!team) return prev;
+
+      // If already expanded, just collapse it
+      if (team.isExpanded) {
+        return {
+          ...prev,
+          teams: prev.teams.map((t: Team) =>
+            t.id === teamId
+              ? { ...t, isExpanded: false }
+              : t
+          ),
+        };
+      }
+
+      // Expand this team and collapse others
       return {
         ...prev,
-        teams: prev.teams.map((team: Team) =>
-          team.id === teamId
-            ? { ...team, isExpanded: !team.isExpanded }
-            : team
+        teams: prev.teams.map((t: Team) =>
+          t.id === teamId
+            ? { ...t, isExpanded: true }
+            : { ...t, isExpanded: false }
         ),
       };
     });
@@ -180,19 +196,46 @@ export default function UserInfoPage() {
   const handleToggleTeamInHierarchy = useCallback((departmentId: DepartmentId, teamId: string) => {
     setHierarchy(prev => {
       if (!prev) return prev;
+
+      const dept = prev.departments.find(d => d.id === departmentId);
+      if (!dept || !dept.teams) return prev;
+
+      const team = dept.teams.find((t: Team) => t.id === teamId);
+      if (!team) return prev;
+
+      // If already expanded, just collapse it
+      if (team.isExpanded) {
+        return {
+          ...prev,
+          departments: prev.departments.map(d =>
+            d.id === departmentId && d.teams
+              ? {
+                  ...d,
+                  teams: d.teams.map((t: Team) =>
+                    t.id === teamId
+                      ? { ...t, isExpanded: false }
+                      : t
+                  ),
+                }
+              : d
+          ),
+        };
+      }
+
+      // Expand this team and collapse others in the same department
       return {
         ...prev,
-        departments: prev.departments.map(dept =>
-          dept.id === departmentId && dept.teams
+        departments: prev.departments.map(d =>
+          d.id === departmentId && d.teams
             ? {
-                ...dept,
-                teams: dept.teams.map((team: Team) =>
-                  team.id === teamId
-                    ? { ...team, isExpanded: !team.isExpanded }
-                    : team
+                ...d,
+                teams: d.teams.map((t: Team) =>
+                  t.id === teamId
+                    ? { ...t, isExpanded: true }
+                    : { ...t, isExpanded: false }
                 ),
               }
-            : dept
+            : d
         ),
       };
     });
