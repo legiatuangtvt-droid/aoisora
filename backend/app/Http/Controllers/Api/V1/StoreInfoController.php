@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Area;
 use App\Models\Department;
 use App\Models\Region;
 use App\Models\Staff;
@@ -65,6 +66,7 @@ class StoreInfoController extends Controller
     /**
      * Get hierarchy for a specific region
      * Returns areas with stores and staff
+     * Hierarchy: Region → Area → Store → Staff
      */
     public function regionHierarchy($regionName)
     {
@@ -76,13 +78,17 @@ class StoreInfoController extends Controller
             ], 404);
         }
 
-        // Get stores in this region with their staff
-        $stores = Store::where('region_id', $region->region_id)
-            ->where('status', 'active')
-            ->with(['staff' => function ($query) {
-                $query->where('is_active', true)
-                    ->orderByRaw(self::JOB_GRADE_ORDER_SQL);
-            }])
+        // Get areas in this region with their stores and staff
+        $areas = Area::where('region_id', $region->region_id)
+            ->where('is_active', true)
+            ->with(['stores' => function ($query) {
+                $query->where('status', 'active')
+                    ->with(['staff' => function ($q) {
+                        $q->where('is_active', true)
+                            ->orderByRaw(self::JOB_GRADE_ORDER_SQL);
+                    }]);
+            }, 'manager'])
+            ->orderBy('sort_order')
             ->get();
 
         // Get store-level departments (departments with parent_id = 200+ are store departments)
@@ -102,38 +108,45 @@ class StoreInfoController extends Controller
                 ];
             });
 
-        // Format stores as area items
-        $formattedStores = $stores->map(function ($store) {
-            $manager = $store->staff->first(function ($s) {
-                return in_array($s->position, ['Store Manager', 'Manager', 'Area Manager']);
+        // Format areas with their stores
+        $formattedAreas = $areas->map(function ($area, $index) use ($storeDepartments) {
+            $formattedStores = $area->stores->map(function ($store) {
+                $manager = $store->staff->first(function ($s) {
+                    return in_array($s->position, ['Store Manager', 'Manager', 'Store Leader G3']);
+                });
+
+                return [
+                    'id' => 'store-' . $store->store_id,
+                    'code' => $store->store_code,
+                    'name' => $store->store_name,
+                    'manager' => $manager ? $this->formatStaffMember($manager) : null,
+                    'staffCount' => $store->staff->count(),
+                    'staffList' => $store->staff->map(fn($s) => $this->formatStaffMember($s))->values(),
+                    'isExpanded' => false,
+                ];
             });
 
             return [
-                'id' => 'store-' . $store->store_id,
-                'code' => $store->store_code,
-                'name' => $store->store_name,
-                'manager' => $manager ? $this->formatStaffMember($manager) : null,
-                'staffCount' => $store->staff->count(),
-                'staffList' => $store->staff->map(fn($s) => $this->formatStaffMember($s))->values(),
-                'isExpanded' => false,
+                'id' => 'area-' . $area->area_id,
+                'code' => $area->area_code,
+                'name' => $area->area_name,
+                'nameVi' => $area->area_name_vi,
+                'manager' => $area->manager ? $this->formatStaffMember($area->manager) : null,
+                'storeCount' => $area->stores->count(),
+                'stores' => $formattedStores,
+                'departments' => $storeDepartments,
+                'isExpanded' => $index === 0, // First area expanded by default
             ];
         });
 
-        // Create area structure based on region
-        $area = [
-            'id' => 'area-' . strtolower(str_replace(' ', '-', $region->region_name)),
-            'name' => $this->getAreaDisplayName($region),
-            'storeCount' => $stores->count(),
-            'stores' => $formattedStores,
-            'departments' => $storeDepartments,
-            'isExpanded' => true, // Default expanded for first load
-        ];
+        // Clean up region name for display
+        $displayName = preg_replace('/\s*\(Store\)\s*$/i', '', $region->region_name);
 
         return response()->json([
             'id' => $region->region_name,
-            'name' => $region->region_name,
-            'label' => $region->region_name,
-            'areas' => [$area],
+            'name' => $displayName,
+            'label' => $displayName,
+            'areas' => $formattedAreas,
         ]);
     }
 
@@ -226,23 +239,6 @@ class StoreInfoController extends Controller
             });
 
         return response()->json($departments);
-    }
-
-    /**
-     * Get area display name based on region
-     */
-    private function getAreaDisplayName(Region $region): string
-    {
-        $nameMap = [
-            'SMBU' => 'Tổng quan SMBU',
-            'OCEAN' => 'Miền Bắc - OCEAN AREA',
-            'HA NOI CENTER' => 'Khu vực Hà Nội Trung Tâm',
-            'ECO PARK' => 'Khu vực Eco Park',
-            'HA DONG' => 'Khu vực Hà Đông',
-            'NGD' => 'Khu vực NGD',
-        ];
-
-        return $nameMap[$region->region_name] ?? 'Khu vực ' . $region->region_name;
     }
 
     /**

@@ -14,6 +14,7 @@ class Store extends Model
         'store_name',
         'store_code',
         'region_id',
+        'area_id',
         'address',
         'phone',
         'email',
@@ -28,6 +29,11 @@ class Store extends Model
     public function region()
     {
         return $this->belongsTo(Region::class, 'region_id', 'region_id');
+    }
+
+    public function area()
+    {
+        return $this->belongsTo(Area::class, 'area_id', 'area_id');
     }
 
     public function staff()

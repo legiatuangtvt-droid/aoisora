@@ -92,7 +92,10 @@ export interface StoreDepartment {
 
 export interface Area {
   id: string;
+  code?: string;
   name: string;
+  nameVi?: string;
+  manager?: StoreStaff;
   storeCount: number;
   stores: Store[];
   departments: StoreDepartment[];

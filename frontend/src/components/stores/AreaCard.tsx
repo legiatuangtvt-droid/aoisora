@@ -16,20 +16,42 @@ const AreaCard: React.FC<AreaCardProps> = ({ area, onToggle }) => {
     >
       {/* Left Section */}
       <div className="flex flex-col gap-1">
+        {/* Area Code Badge */}
+        {area.code && (
+          <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium text-[#0664E9] bg-white rounded-md mb-1 w-fit">
+            {area.code}
+          </span>
+        )}
+
         {/* Area Name */}
         <h3 className="text-2xl font-bold text-black">
-          {area.name}
+          {area.nameVi || area.name}
         </h3>
 
-        {/* Store Count */}
-        <div className="flex items-center gap-1.5">
-          {/* Store Icon */}
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M1.75 5.25V12.25H5.25V9.625C5.25 9.16041 5.43437 8.71479 5.76256 8.38661C6.09075 8.05842 6.53587 7.875 7 7.875C7.46413 7.875 7.90925 8.05842 8.23744 8.38661C8.56563 8.71479 8.75 9.16041 8.75 9.625V12.25H12.25V5.25M0.583333 6.41667L7 1.16667L13.4167 6.41667" stroke="#6B6B6B" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          <span className="text-[13px] text-[#6B6B6B]">
-            {area.storeCount} Stores
-          </span>
+        {/* Store Count & Manager */}
+        <div className="flex items-center gap-4">
+          {/* Store Count */}
+          <div className="flex items-center gap-1.5">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M1.75 5.25V12.25H5.25V9.625C5.25 9.16041 5.43437 8.71479 5.76256 8.38661C6.09075 8.05842 6.53587 7.875 7 7.875C7.46413 7.875 7.90925 8.05842 8.23744 8.38661C8.56563 8.71479 8.75 9.16041 8.75 9.625V12.25H12.25V5.25M0.583333 6.41667L7 1.16667L13.4167 6.41667" stroke="#6B6B6B" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span className="text-[13px] text-[#6B6B6B]">
+              {area.storeCount} Stores
+            </span>
+          </div>
+
+          {/* Area Manager */}
+          {area.manager && (
+            <div className="flex items-center gap-1.5">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B6B6B" strokeWidth="1.5">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              <span className="text-[13px] text-[#6B6B6B]">
+                {area.manager.name}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
