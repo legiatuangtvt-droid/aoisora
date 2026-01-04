@@ -21,6 +21,8 @@ import HierarchyTree from '@/components/users/HierarchyTree';
 import DepartmentDetailView from '@/components/users/DepartmentDetailView';
 import AddTeamMemberModal, { TeamFormData, MemberFormData } from '@/components/users/AddTeamMemberModal';
 import EmployeeDetailModal from '@/components/users/EmployeeDetailModal';
+import PermissionsModal from '@/components/users/PermissionsModal';
+import { getRolesList, getUsersList, savePermissions, RoleItem, UserItem } from '@/lib/api';
 
 // Department code to ID mapping (from database)
 const DEPARTMENT_CODE_TO_ID: Record<string, number> = {
@@ -48,6 +50,11 @@ export default function UserInfoPage() {
   // Employee detail modal state
   const [isEmployeeModalOpen, setIsEmployeeModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+
+  // Permissions modal state
+  const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(false);
+  const [permissionsRoles, setPermissionsRoles] = useState<RoleItem[]>([]);
+  const [permissionsUsers, setPermissionsUsers] = useState<UserItem[]>([]);
 
   // Fetch SMBU hierarchy on mount
   useEffect(() => {
@@ -241,9 +248,23 @@ export default function UserInfoPage() {
     });
   }, []);
 
-  const handlePermissionsClick = () => {
-    // TODO: Implement permissions modal
-    console.log('Open permissions modal');
+  const handlePermissionsClick = async () => {
+    try {
+      const [roles, users] = await Promise.all([
+        getRolesList(),
+        getUsersList(),
+      ]);
+      setPermissionsRoles(roles);
+      setPermissionsUsers(users);
+      setIsPermissionsModalOpen(true);
+    } catch (err) {
+      console.error('Error fetching permissions data:', err);
+      setError('Failed to load permissions data. Please try again.');
+    }
+  };
+
+  const handleSavePermissions = async (targetId: number, targetType: 'user' | 'role', permissions: string[]) => {
+    await savePermissions({ targetId, targetType, permissions });
   };
 
   const handleImportClick = () => {
@@ -416,6 +437,15 @@ export default function UserInfoPage() {
           setSelectedEmployee(null);
         }}
         employee={selectedEmployee}
+      />
+
+      {/* Permissions Modal */}
+      <PermissionsModal
+        isOpen={isPermissionsModalOpen}
+        onClose={() => setIsPermissionsModalOpen(false)}
+        onSave={handleSavePermissions}
+        users={permissionsUsers.map(u => ({ id: u.id, name: u.name, type: 'user' as const }))}
+        roles={permissionsRoles.map(r => ({ id: r.id, name: r.name, type: 'role' as const }))}
       />
     </div>
   );

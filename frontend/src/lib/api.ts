@@ -1081,3 +1081,42 @@ export async function createMember(data: CreateMemberRequest): Promise<{ message
     skipAuth: true,
   });
 }
+
+// ============================================
+// Permissions API
+// ============================================
+
+export interface RoleItem {
+  id: number;
+  name: string;
+}
+
+export interface UserItem {
+  id: number;
+  name: string;
+}
+
+// Get list of roles for permissions dropdown
+export async function getRolesList(): Promise<RoleItem[]> {
+  return fetchApi<RoleItem[]>('/user-info/roles-list', { skipAuth: true });
+}
+
+// Get list of users for permissions dropdown
+export async function getUsersList(): Promise<UserItem[]> {
+  return fetchApi<UserItem[]>('/user-info/users-list', { skipAuth: true });
+}
+
+// Save permissions for a user or role
+export interface SavePermissionsRequest {
+  targetId: number;
+  targetType: 'user' | 'role';
+  permissions: string[];
+}
+
+export async function savePermissions(data: SavePermissionsRequest): Promise<{ message: string }> {
+  return fetchApi<{ message: string }>('/user-info/permissions', {
+    method: 'POST',
+    body: JSON.stringify(data),
+    skipAuth: true,
+  });
+}

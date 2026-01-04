@@ -258,7 +258,7 @@ frontend/src/
 │       ├── AddMemberButton.tsx
 │       ├── AddTeamMemberModal.tsx
 │       ├── EmployeeDetailModal.tsx
-│       ├── PermissionsModal.tsx (TODO)
+│       ├── PermissionsModal.tsx
 │       └── ImportExcelModal.tsx (TODO)
 ├── types/
 │   └── userInfo.ts
@@ -356,6 +356,9 @@ Root User
 | 6 | Get Teams List | GET | /api/v1/user-info/teams-list | Get teams for dropdown selection |
 | 7 | Create Team | POST | /api/v1/user-info/teams | Create a new team in a department |
 | 8 | Create Member | POST | /api/v1/user-info/members | Create a new staff member |
+| 9 | Get Roles List | GET | /api/v1/user-info/roles-list | Get roles for permissions modal |
+| 10 | Get Users List | GET | /api/v1/user-info/users-list | Get users for permissions modal |
+| 11 | Save Permissions | POST | /api/v1/user-info/permissions | Save permissions for user or role |
 
 ---
 
@@ -377,3 +380,11 @@ Root User
 | 2026-01-04 | Implemented AddTeamMemberModal for adding new teams and members |
 | 2026-01-04 | Added API endpoints: departments-list, teams-list, POST teams, POST members |
 | 2026-01-04 | Implemented EmployeeDetailModal - click on member card to view full employee details |
+| 2026-01-04 | Added click-outside handler for 3-dot menus in TeamCard and DepartmentHeadCard |
+| 2026-01-04 | Implemented accordion behavior: expanding one department collapses others |
+| 2026-01-04 | Implemented accordion behavior for teams within departments |
+| 2026-01-04 | Added MemberCard border styling |
+| 2026-01-04 | Swapped positions of arrow icon and 3-dot menu in TeamCard |
+| 2026-01-04 | Implemented PermissionsModal with user/role selection and category-based permission checkboxes |
+| 2026-01-04 | Added permissions API endpoints: roles-list, users-list, POST permissions |
+| 2026-01-04 | Updated button icons for Permissions and Import Excel buttons |

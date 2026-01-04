@@ -53,6 +53,9 @@ Route::prefix('v1')->group(function () {
         Route::get('teams-list', [UserInfoController::class, 'teams']);
         Route::post('teams', [UserInfoController::class, 'storeTeam']);
         Route::post('members', [UserInfoController::class, 'storeMember']);
+        Route::get('roles-list', [UserInfoController::class, 'roles']);
+        Route::get('users-list', [UserInfoController::class, 'users']);
+        Route::post('permissions', [UserInfoController::class, 'savePermissions']);
     });
 
     // Teams (public read-only)

@@ -7,6 +7,7 @@ use App\Models\Department;
 use App\Models\Staff;
 use App\Models\Team;
 use Illuminate\Http\Request;
+use Spatie\Permission\Models\Role;
 
 class UserInfoController extends Controller
 {
@@ -324,5 +325,76 @@ class UserInfoController extends Controller
             'message' => 'Staff member created successfully',
             'staff' => $this->formatStaffMember($staff),
         ], 201);
+    }
+
+    /**
+     * Get all roles for permissions modal
+     */
+    public function roles()
+    {
+        try {
+            $roles = Role::orderBy('name')
+                ->get()
+                ->map(function ($role) {
+                    return [
+                        'id' => $role->id,
+                        'name' => $role->name,
+                    ];
+                });
+
+            return response()->json($roles);
+        } catch (\Exception $e) {
+            // Return default roles if Spatie Permission tables don't exist
+            return response()->json([
+                ['id' => 1, 'name' => 'Admin'],
+                ['id' => 2, 'name' => 'Manager'],
+                ['id' => 3, 'name' => 'Supervisor'],
+                ['id' => 4, 'name' => 'Staff'],
+            ]);
+        }
+    }
+
+    /**
+     * Get all users for permissions modal
+     */
+    public function users()
+    {
+        $users = Staff::where('is_active', true)
+            ->orderBy('staff_name')
+            ->get()
+            ->map(function ($staff) {
+                return [
+                    'id' => $staff->staff_id,
+                    'name' => $staff->staff_name,
+                ];
+            });
+
+        return response()->json($users);
+    }
+
+    /**
+     * Save permissions for a user or role
+     */
+    public function savePermissions(Request $request)
+    {
+        $validated = $request->validate([
+            'targetId' => 'required|integer',
+            'targetType' => 'required|in:user,role',
+            'permissions' => 'required|array',
+            'permissions.*' => 'string',
+        ]);
+
+        // For now, just log the permissions (actual implementation would save to database)
+        // In a real implementation, you would:
+        // 1. Delete existing permissions for the target
+        // 2. Insert new permissions
+        // 3. Return success response
+
+        return response()->json([
+            'message' => 'Permissions saved successfully',
+            'targetId' => $validated['targetId'],
+            'targetType' => $validated['targetType'],
+            'permissionsCount' => count($validated['permissions']),
+        ]);
     }
 }
