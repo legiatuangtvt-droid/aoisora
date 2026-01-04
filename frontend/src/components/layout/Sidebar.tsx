@@ -441,7 +441,7 @@ export default function Sidebar() {
 
     const implemented = isImplemented(item.route);
     // When sidebar is collapsed, child items have slight left padding to show hierarchy
-    const collapsedChildStyle = isChild && !showExpanded ? 'pl-5 pr-2' : 'px-3';
+    const collapsedChildStyle = isChild && !showExpanded ? 'pl-6 pr-2' : 'px-3';
 
     return (
       <Link
@@ -456,6 +456,11 @@ export default function Sidebar() {
           }
           hover:scale-[1.02] hover:shadow-sm active:scale-[0.98] transform-gpu`}
       >
+        {/* Child item indent border when collapsed */}
+        {isChild && !showExpanded && (
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-gray-300 dark:bg-gray-600 rounded-full" />
+        )}
+
         {/* Active indicator bar */}
         <div
           className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 rounded-r-full transition-all duration-300 ease-out ${
