@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Employee, JOB_GRADE_COLORS, JOB_GRADE_TITLES } from '@/types/userInfo';
 
 interface DepartmentHeadCardProps {
@@ -10,6 +10,17 @@ interface DepartmentHeadCardProps {
 
 const DepartmentHeadCard: React.FC<DepartmentHeadCardProps> = ({ head, onClick }) => {
   const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleCardClick = (e: React.MouseEvent) => {
     // Don't trigger if clicking on menu button or menu
@@ -67,7 +78,7 @@ const DepartmentHeadCard: React.FC<DepartmentHeadCardProps> = ({ head, onClick }
         </div>
 
         {/* Actions menu */}
-        <div className="relative" data-menu>
+        <div className="relative" ref={menuRef} data-menu>
           <button
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             onClick={(e) => {
