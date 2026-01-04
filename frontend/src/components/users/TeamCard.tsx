@@ -162,22 +162,39 @@ const TeamCard: React.FC<TeamCardProps> = ({
 
         {/* Expanded Members List */}
         {team.isExpanded && membersCount > 0 && (
-          <div className="px-4 pb-4 pt-2 border-t border-[#E8E8E8]">
+          <div className="px-4 pb-4 border-t border-[#E8E8E8]">
             <div className="relative ml-6 pl-6">
-              {/* Vertical line from team header border to first member connector */}
-              <div className="absolute -left-6 -top-2 h-[calc(12px+2px+40px)] w-0.5 bg-[#9B9B9B]" />
               {team.members.map((member, index) => {
+                const isFirstMember = index === 0;
                 const isLastMember = index === membersCount - 1;
+                // MemberCard has p-3 (12px) + h-10 avatar (40px) / 2 = 32px from top of card to center
+                // pt-3 = 12px, so connector position = 12 + 12 + 20 = 44px from container top
+                const connectorTop = 44;
 
                 return (
                   <div key={member.id} className="relative pt-3">
+                    {/* Vertical line - from top of container (or border-t for first) to horizontal connector */}
+                    <div
+                      className="absolute -left-6 w-0.5 bg-[#9B9B9B]"
+                      style={{
+                        top: isFirstMember ? -0 : 0,
+                        height: `${connectorTop}px`,
+                      }}
+                    />
+
                     {/* Vertical line - continues down to next sibling (not for last member) */}
                     {!isLastMember && (
-                      <div className="absolute -left-6 top-[40px] bottom-0 w-0.5 bg-[#9B9B9B]" />
+                      <div
+                        className="absolute -left-6 bottom-0 w-0.5 bg-[#9B9B9B]"
+                        style={{ top: `${connectorTop}px` }}
+                      />
                     )}
 
-                    {/* Horizontal connector line - from vertical line to card center */}
-                    <div className="absolute -left-6 top-[40px] w-6 h-0.5 bg-[#9B9B9B]" />
+                    {/* Horizontal connector line - from vertical line to card */}
+                    <div
+                      className="absolute -left-6 w-6 h-0.5 bg-[#9B9B9B]"
+                      style={{ top: `${connectorTop}px` }}
+                    />
 
                     {/* Member Card */}
                     <MemberCard member={member} onClick={onMemberClick} />
