@@ -1,17 +1,67 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
-import { RegionId, Region, Area } from '@/types/storeInfo';
-import { regionTabs, regionsMap, getRegionById } from '@/data/mockStoreInfo';
+import React, { useState, useCallback, useEffect } from 'react';
+import { RegionId, Region, RegionTab } from '@/types/storeInfo';
+import { getStoreInfoRegionTabs, getStoreInfoRegionHierarchy } from '@/lib/api';
 import StoreInfoHeader from '@/components/stores/StoreInfoHeader';
 import RegionTabs from '@/components/stores/RegionTabs';
 import StoreHierarchyTree from '@/components/stores/StoreHierarchyTree';
 
 export default function StoreInformationPage() {
-  const [activeTab, setActiveTab] = useState<RegionId>('OCEAN');
-  const [regions, setRegions] = useState<Record<string, Region>>(regionsMap);
+  const [activeTab, setActiveTab] = useState<RegionId>('');
+  const [regionTabs, setRegionTabs] = useState<RegionTab[]>([]);
+  const [regions, setRegions] = useState<Record<string, Region>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const currentRegion = regions[activeTab];
+
+  // Fetch region tabs on mount
+  useEffect(() => {
+    async function fetchTabs() {
+      try {
+        const tabs = await getStoreInfoRegionTabs();
+        setRegionTabs(tabs);
+        // Set first tab as active if available
+        if (tabs.length > 0) {
+          setActiveTab(tabs[0].id);
+        }
+      } catch (err) {
+        console.error('Failed to fetch region tabs:', err);
+        setError('Failed to load region tabs');
+      }
+    }
+    fetchTabs();
+  }, []);
+
+  // Fetch region hierarchy when active tab changes
+  useEffect(() => {
+    if (!activeTab) return;
+
+    async function fetchHierarchy() {
+      setLoading(true);
+      setError(null);
+      try {
+        // Check if we already have data for this region
+        if (regions[activeTab]) {
+          setLoading(false);
+          return;
+        }
+
+        const regionData = await getStoreInfoRegionHierarchy(activeTab);
+        setRegions((prev) => ({
+          ...prev,
+          [activeTab]: regionData,
+        }));
+      } catch (err) {
+        console.error('Failed to fetch region hierarchy:', err);
+        setError('Failed to load region data');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchHierarchy();
+  }, [activeTab, regions]);
 
   const handleTabChange = (tabId: RegionId) => {
     setActiveTab(tabId);
@@ -101,6 +151,21 @@ export default function StoreInformationPage() {
           activeTab={activeTab}
           onTabChange={handleTabChange}
         />
+
+        {/* Error State */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 mb-4">
+            {error}
+          </div>
+        )}
+
+        {/* Loading State */}
+        {loading && !currentRegion && (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#003E95]"></div>
+            <span className="ml-3 text-gray-600">Loading...</span>
+          </div>
+        )}
 
         {/* Content - Hierarchy Tree */}
         {currentRegion && (

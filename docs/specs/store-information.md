@@ -152,17 +152,24 @@
 
 ## 4. API INTEGRATION
 
+### Store Information API Endpoints
+
 | # | Action | Method | Endpoint | Description |
 |---|--------|--------|----------|-------------|
-| 1 | Get Regions | GET | /api/v1/regions | Get list of regions |
-| 2 | Get Areas by Region | GET | /api/v1/regions/{id}/areas | Get areas by region |
-| 3 | Get Stores by Area | GET | /api/v1/areas/{id}/stores | Get stores by area |
-| 4 | Get Store Detail | GET | /api/v1/stores/{id} | Get store detail information |
-| 5 | Get Store Staff | GET | /api/v1/stores/{id}/staff | Get store staff list |
-| 6 | Add Store | POST | /api/v1/stores | Add new store |
-| 7 | Update Store | PUT | /api/v1/stores/{id} | Update store information |
-| 8 | Delete Store | DELETE | /api/v1/stores/{id} | Delete store |
-| 9 | Add Staff to Store | POST | /api/v1/stores/{id}/staff | Add staff to store |
+| 1 | Get Region Tabs | GET | /api/v1/store-info/region-tabs | Get list of region tabs for navigation |
+| 2 | Get Region Hierarchy | GET | /api/v1/store-info/regions/{region}/hierarchy | Get full hierarchy (areas, stores, staff) by region name |
+| 3 | Get Stores by Region | GET | /api/v1/store-info/regions/{region}/stores | Get stores list by region name |
+| 4 | Get Store Detail | GET | /api/v1/store-info/stores/{id} | Get store detail with staff list |
+| 5 | Get Store Departments | GET | /api/v1/store-info/store-departments | Get store-level departments (ZEN PARK, CONTROL, etc.) |
+
+### General Store/Region APIs
+
+| # | Action | Method | Endpoint | Description |
+|---|--------|--------|----------|-------------|
+| 6 | Get All Regions | GET | /api/v1/regions | Get list of all regions |
+| 7 | Add Store | POST | /api/v1/stores | Add new store |
+| 8 | Update Store | PUT | /api/v1/stores/{id} | Update store information |
+| 9 | Delete Store | DELETE | /api/v1/stores/{id} | Delete store |
 | 10 | Import Stores | POST | /api/v1/stores/import | Import stores from Excel |
 
 ---
@@ -283,3 +290,7 @@ StoreInformationPage/
 | 2026-01-02 | Updated icons: Permissions button (user+gear), Import Excel button (file+arrow), Staff icon |
 | 2026-01-02 | Fixed badge G3 positioning near avatar |
 | 2026-01-02 | Translated specification to English |
+| 2026-01-04 | Added seed data for Store Information (regions, stores, staff, departments) |
+| 2026-01-04 | Created StoreInfoController with API endpoints |
+| 2026-01-04 | Updated frontend to fetch data from API instead of mock data |
+| 2026-01-04 | Updated API Integration section with new endpoints |

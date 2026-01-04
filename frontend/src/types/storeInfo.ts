@@ -1,6 +1,7 @@
 // Store Information Types - SCR_STORE_INFO
 
-export type RegionId = 'SMBU' | 'OCEAN' | 'HA_NOI_CENTER' | 'ECO_PARK' | 'HA_DONG' | 'NGD';
+// RegionId can be any string since it comes from database
+export type RegionId = string;
 
 export interface StoreStaff {
   id: string;

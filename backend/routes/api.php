@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\V1\ManualStepController;
 use App\Http\Controllers\Api\V1\ManualMediaController;
 use App\Http\Controllers\Api\V1\TeamController;
 use App\Http\Controllers\Api\V1\UserInfoController;
+use App\Http\Controllers\Api\V1\StoreInfoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -57,6 +58,15 @@ Route::prefix('v1')->group(function () {
         Route::get('users-list', [UserInfoController::class, 'users']);
         Route::post('permissions', [UserInfoController::class, 'savePermissions']);
         Route::post('import', [UserInfoController::class, 'importUsers']);
+    });
+
+    // Store Information (public read-only)
+    Route::prefix('store-info')->group(function () {
+        Route::get('region-tabs', [StoreInfoController::class, 'regionTabs']);
+        Route::get('regions/{region}/hierarchy', [StoreInfoController::class, 'regionHierarchy']);
+        Route::get('regions/{region}/stores', [StoreInfoController::class, 'storesByRegion']);
+        Route::get('stores/{store}', [StoreInfoController::class, 'storeDetail']);
+        Route::get('store-departments', [StoreInfoController::class, 'storeDepartments']);
     });
 
     // Teams (public read-only)

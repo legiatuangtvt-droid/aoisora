@@ -1148,3 +1148,34 @@ export async function importUsersFromExcel(file: File): Promise<ImportUsersResul
 
   return response.json();
 }
+
+// ============================================
+// Store Information API (SCR_STORE_INFO)
+// ============================================
+
+import type { RegionTab, Region as StoreInfoRegion, Store as StoreInfoStore, StoreStaff, StoreDepartment } from '@/types/storeInfo';
+
+// Get region tabs for Store Information navigation
+export async function getStoreInfoRegionTabs(): Promise<RegionTab[]> {
+  return fetchApi<RegionTab[]>('/store-info/region-tabs', { skipAuth: true });
+}
+
+// Get region hierarchy with stores and staff
+export async function getStoreInfoRegionHierarchy(regionName: string): Promise<StoreInfoRegion> {
+  return fetchApi<StoreInfoRegion>(`/store-info/regions/${encodeURIComponent(regionName)}/hierarchy`, { skipAuth: true });
+}
+
+// Get stores for a specific region
+export async function getStoreInfoStoresByRegion(regionName: string): Promise<StoreInfoStore[]> {
+  return fetchApi<StoreInfoStore[]>(`/store-info/regions/${encodeURIComponent(regionName)}/stores`, { skipAuth: true });
+}
+
+// Get store detail with all staff
+export async function getStoreInfoStoreDetail(storeId: number): Promise<StoreInfoStore> {
+  return fetchApi<StoreInfoStore>(`/store-info/stores/${storeId}`, { skipAuth: true });
+}
+
+// Get store-level departments
+export async function getStoreInfoDepartments(): Promise<StoreDepartment[]> {
+  return fetchApi<StoreDepartment[]>('/store-info/store-departments', { skipAuth: true });
+}
