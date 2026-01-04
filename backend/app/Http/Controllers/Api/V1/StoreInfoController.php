@@ -65,7 +65,8 @@ class StoreInfoController extends Controller
 
     /**
      * Get hierarchy for a specific region
-     * Returns areas with stores and staff
+     * For SMBU tab: Returns all regions as "areas" (overview mode)
+     * For other tabs: Returns areas with stores and staff
      * Hierarchy: Region → Area → Store → Staff
      */
     public function regionHierarchy($regionName)
@@ -76,6 +77,13 @@ class StoreInfoController extends Controller
             return response()->json([
                 'error' => 'Region not found'
             ], 404);
+        }
+
+        // Check if this is the SMBU overview tab
+        $isSMBU = str_starts_with($region->region_name, 'SMBU');
+
+        if ($isSMBU) {
+            return $this->getSMBUOverviewHierarchy($region);
         }
 
         // Get areas in this region with their stores and staff
@@ -91,25 +99,8 @@ class StoreInfoController extends Controller
             ->orderBy('sort_order')
             ->get();
 
-        // Get store-level departments (departments with parent_id = 200+ are store departments)
-        $storeDepartments = Department::where('department_id', '>=', 200)
-            ->where('department_id', '<', 300)
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->get()
-            ->map(function ($dept) {
-                return [
-                    'id' => 'dept-' . strtolower($dept->department_code ?? $dept->department_name),
-                    'name' => $dept->department_name,
-                    'icon' => $dept->icon ?? 'building',
-                    'iconColor' => $dept->icon_color ?? '#666666',
-                    'iconBg' => $dept->icon_bg ?? 'rgba(102, 102, 102, 0.1)',
-                    'isExpanded' => false,
-                ];
-            });
-
-        // Format areas with their stores
-        $formattedAreas = $areas->map(function ($area, $index) use ($storeDepartments) {
+        // Format areas with their stores (no departments at area level)
+        $formattedAreas = $areas->map(function ($area, $index) {
             $formattedStores = $area->stores->map(function ($store) {
                 $manager = $store->staff->first(function ($s) {
                     return in_array($s->position, ['Store Manager', 'Manager', 'Store Leader G3']);
@@ -134,7 +125,7 @@ class StoreInfoController extends Controller
                 'manager' => $area->manager ? $this->formatStaffMember($area->manager) : null,
                 'storeCount' => $area->stores->count(),
                 'stores' => $formattedStores,
-                'departments' => $storeDepartments,
+                'departments' => [], // Departments are at store level, not area level
                 'isExpanded' => $index === 0, // First area expanded by default
             ];
         });
@@ -148,6 +139,82 @@ class StoreInfoController extends Controller
             'label' => $displayName,
             'areas' => $formattedAreas,
         ]);
+    }
+
+    /**
+     * Get SMBU overview hierarchy - shows all regions as expandable items
+     * Each region shows its areas and total store count
+     */
+    private function getSMBUOverviewHierarchy(Region $smbuRegion)
+    {
+        // Get all store regions (region_id >= 10, excluding SMBU itself)
+        $storeRegions = Region::where('region_id', '>=', 10)
+            ->where('region_id', '!=', $smbuRegion->region_id)
+            ->orderBy('region_id')
+            ->get();
+
+        // Format regions as "areas" for the hierarchy view
+        $formattedRegions = $storeRegions->map(function ($region, $index) {
+            // Get areas in this region with store counts
+            $areas = Area::where('region_id', $region->region_id)
+                ->where('is_active', true)
+                ->withCount(['stores' => function ($query) {
+                    $query->where('status', 'active');
+                }])
+                ->orderBy('sort_order')
+                ->get();
+
+            $totalStores = $areas->sum('stores_count');
+
+            // Format areas as "stores" in the view (one level deeper)
+            $formattedAreas = $areas->map(function ($area) {
+                return [
+                    'id' => 'area-' . $area->area_id,
+                    'code' => $area->area_code,
+                    'name' => $area->area_name_vi ?? $area->area_name,
+                    'manager' => null,
+                    'staffCount' => $area->stores_count,
+                    'staffList' => [],
+                    'isExpanded' => false,
+                ];
+            });
+
+            return [
+                'id' => 'region-' . $region->region_id,
+                'code' => $region->region_name,
+                'name' => $region->region_name,
+                'nameVi' => $this->getRegionVietnameseName($region->region_name),
+                'manager' => null,
+                'storeCount' => $totalStores,
+                'stores' => $formattedAreas, // Areas shown as sub-items
+                'departments' => [],
+                'isExpanded' => $index === 0,
+            ];
+        });
+
+        return response()->json([
+            'id' => $smbuRegion->region_name,
+            'name' => 'SMBU',
+            'label' => 'SMBU - Tổng quan',
+            'areas' => $formattedRegions,
+        ]);
+    }
+
+    /**
+     * Get Vietnamese name for region
+     */
+    private function getRegionVietnameseName(string $regionName): string
+    {
+        $nameMap = [
+            'OCEAN' => 'Miền Bắc - Ocean',
+            'HA NOI CENTER' => 'Hà Nội Trung tâm',
+            'ECO PARK' => 'Khu vực Ecopark',
+            'HA DONG' => 'Khu vực Hà Đông',
+            'NGD' => 'Khu vực Nguyễn Du',
+            'Ha Noi' => 'Hà Nội (Legacy)',
+        ];
+
+        return $nameMap[$regionName] ?? $regionName;
     }
 
     /**
