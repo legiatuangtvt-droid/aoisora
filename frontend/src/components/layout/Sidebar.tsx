@@ -440,8 +440,8 @@ export default function Sidebar() {
     }
 
     const implemented = isImplemented(item.route);
-    // When sidebar is collapsed, child items have slight left padding to show hierarchy
-    const collapsedChildStyle = isChild && !showExpanded ? 'pl-6 pr-2' : 'px-3';
+    // Child items always have ml-2 margin for hierarchy indication (both expanded and collapsed)
+    const childMarginStyle = isChild ? 'ml-2' : '';
 
     return (
       <Link
@@ -449,17 +449,13 @@ export default function Sidebar() {
         href={implemented ? item.route : '#'}
         onClick={(e) => handleNavigation(e, item.route, isChild, implemented)}
         title={!showExpanded ? item.label : undefined}
-        className={`group relative flex items-center gap-3 py-3 md:py-2.5 rounded-lg transition-all duration-200 ${collapsedChildStyle} ${isChild && showExpanded ? 'ml-2 px-3' : ''}
+        className={`group relative flex items-center gap-3 px-3 py-3 md:py-2.5 rounded-lg transition-all duration-200 ${childMarginStyle}
           ${isActive(item.route)
             ? 'bg-gradient-to-r from-pink-50 to-pink-100/50 dark:from-pink-900/20 dark:to-pink-800/10 text-[#C5055B] dark:text-pink-400 shadow-sm'
             : 'text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100/50 dark:hover:from-gray-700 dark:hover:to-gray-600/50'
           }
           hover:scale-[1.02] hover:shadow-sm active:scale-[0.98] transform-gpu`}
       >
-        {/* Child item indent border when collapsed */}
-        {isChild && !showExpanded && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-gray-300 dark:bg-gray-600 rounded-full" />
-        )}
 
         {/* Active indicator bar */}
         <div
