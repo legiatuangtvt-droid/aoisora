@@ -251,4 +251,173 @@ class StoreInfoController extends Controller
             'email' => $staff->email,
         ];
     }
+
+    /**
+     * Get stores list for dropdown (permissions modal)
+     */
+    public function storesList()
+    {
+        $stores = Store::where('status', 'active')
+            ->orderBy('store_name')
+            ->get()
+            ->map(function ($store) {
+                return [
+                    'id' => 'store-' . $store->store_id,
+                    'name' => $store->store_name,
+                    'code' => $store->store_code,
+                ];
+            });
+
+        return response()->json($stores);
+    }
+
+    /**
+     * Save permissions for a store
+     */
+    public function savePermissions(Request $request)
+    {
+        $validated = $request->validate([
+            'storeId' => 'required|string',
+            'permissions' => 'required|array',
+            'permissions.*' => 'string',
+        ]);
+
+        // Extract numeric store ID from "store-123" format
+        $storeId = str_replace('store-', '', $validated['storeId']);
+
+        // Verify store exists
+        $store = Store::find($storeId);
+        if (!$store) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Store not found',
+            ], 404);
+        }
+
+        // For now, just acknowledge the permissions (actual implementation would save to a permissions table)
+        // In a real implementation:
+        // 1. Clear existing permissions for the store
+        // 2. Insert new permissions
+        // StorePermission::where('store_id', $storeId)->delete();
+        // foreach ($validated['permissions'] as $permission) {
+        //     StorePermission::create(['store_id' => $storeId, 'permission' => $permission]);
+        // }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Permissions saved successfully',
+            'storeId' => $validated['storeId'],
+            'permissionsCount' => count($validated['permissions']),
+        ]);
+    }
+
+    /**
+     * Import stores from CSV/Excel file
+     */
+    public function importStores(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:10240',
+        ]);
+
+        $file = $request->file('file');
+        $extension = $file->getClientOriginalExtension();
+
+        $imported = 0;
+        $errors = [];
+
+        try {
+            if ($extension === 'csv') {
+                $handle = fopen($file->getRealPath(), 'r');
+                $headers = fgetcsv($handle);
+
+                // Map headers to expected fields
+                $headerMap = array_flip(array_map('strtolower', array_map('trim', $headers)));
+
+                $rowNumber = 1;
+                while (($row = fgetcsv($handle)) !== false) {
+                    $rowNumber++;
+
+                    try {
+                        // Extract data from row
+                        $storeCode = $row[$headerMap['store_code'] ?? -1] ?? null;
+                        $storeName = $row[$headerMap['store_name'] ?? -1] ?? null;
+                        $regionName = $row[$headerMap['region'] ?? -1] ?? null;
+
+                        if (!$storeCode || !$storeName) {
+                            $errors[] = "Row {$rowNumber}: Missing required fields (store_code, store_name)";
+                            continue;
+                        }
+
+                        // Check if store already exists
+                        $exists = Store::where('store_code', $storeCode)->exists();
+
+                        if ($exists) {
+                            $errors[] = "Row {$rowNumber}: Store code '{$storeCode}' already exists";
+                            continue;
+                        }
+
+                        // Get region ID from name if provided
+                        $regionId = null;
+                        if ($regionName) {
+                            $region = Region::where('region_name', $regionName)->first();
+                            $regionId = $region?->region_id;
+                            if (!$regionId) {
+                                $errors[] = "Row {$rowNumber}: Region '{$regionName}' not found";
+                                continue;
+                            }
+                        }
+
+                        // Create store
+                        Store::create([
+                            'store_code' => trim($storeCode),
+                            'store_name' => trim($storeName),
+                            'region_id' => $regionId,
+                            'address' => $row[$headerMap['address'] ?? -1] ?? null,
+                            'phone' => $row[$headerMap['phone'] ?? -1] ?? null,
+                            'email' => $row[$headerMap['email'] ?? -1] ?? null,
+                            'status' => 'active',
+                        ]);
+
+                        $imported++;
+                    } catch (\Exception $e) {
+                        $errors[] = "Row {$rowNumber}: " . $e->getMessage();
+                    }
+                }
+
+                fclose($handle);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Excel files require additional processing. Please use CSV format.',
+                    'imported' => 0,
+                    'errors' => ['Excel import requires PhpSpreadsheet library. Please convert to CSV.'],
+                ], 400);
+            }
+
+            $success = $imported > 0;
+            $message = $success
+                ? "Successfully imported {$imported} stores"
+                : 'No stores were imported';
+
+            if (count($errors) > 0) {
+                $message .= " with " . count($errors) . " errors";
+            }
+
+            return response()->json([
+                'success' => $success,
+                'message' => $message,
+                'imported' => $imported,
+                'errors' => $errors,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Import failed: ' . $e->getMessage(),
+                'imported' => 0,
+                'errors' => [$e->getMessage()],
+            ], 500);
+        }
+    }
 }

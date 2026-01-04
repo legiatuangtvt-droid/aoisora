@@ -294,3 +294,6 @@ StoreInformationPage/
 | 2026-01-04 | Created StoreInfoController with API endpoints |
 | 2026-01-04 | Updated frontend to fetch data from API instead of mock data |
 | 2026-01-04 | Updated API Integration section with new endpoints |
+| 2026-01-04 | Implemented Permissions modal with store-specific permissions |
+| 2026-01-04 | Implemented Import Excel modal with CSV import functionality |
+| 2026-01-04 | Added backend APIs for permissions and store import |

@@ -1179,3 +1179,55 @@ export async function getStoreInfoStoreDetail(storeId: number): Promise<StoreInf
 export async function getStoreInfoDepartments(): Promise<StoreDepartment[]> {
   return fetchApi<StoreDepartment[]>('/store-info/store-departments', { skipAuth: true });
 }
+
+// Get stores list for dropdown (permissions modal)
+export interface StoreListItem {
+  id: string;
+  name: string;
+  code: string;
+}
+
+export async function getStoreInfoStoresList(): Promise<StoreListItem[]> {
+  return fetchApi<StoreListItem[]>('/store-info/stores-list', { skipAuth: true });
+}
+
+// Save store permissions
+export interface SaveStorePermissionsRequest {
+  storeId: string;
+  permissions: string[];
+}
+
+export async function saveStorePermissions(data: SaveStorePermissionsRequest): Promise<{ success: boolean; message: string }> {
+  return fetchApi<{ success: boolean; message: string }>('/store-info/permissions', {
+    method: 'POST',
+    body: JSON.stringify(data),
+    skipAuth: true,
+  });
+}
+
+// Import stores from file
+export interface StoreImportResult {
+  success: boolean;
+  message: string;
+  imported?: number;
+  errors?: string[];
+}
+
+const API_BASE_URL_FOR_UPLOAD = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+
+export async function importStoresFromFile(file: File): Promise<StoreImportResult> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await fetch(`${API_BASE_URL_FOR_UPLOAD}/store-info/import`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Import failed');
+  }
+
+  return response.json();
+}

@@ -2,10 +2,19 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { RegionId, Region, RegionTab } from '@/types/storeInfo';
-import { getStoreInfoRegionTabs, getStoreInfoRegionHierarchy } from '@/lib/api';
+import {
+  getStoreInfoRegionTabs,
+  getStoreInfoRegionHierarchy,
+  getStoreInfoStoresList,
+  saveStorePermissions,
+  importStoresFromFile,
+  StoreListItem,
+} from '@/lib/api';
 import StoreInfoHeader from '@/components/stores/StoreInfoHeader';
 import RegionTabs from '@/components/stores/RegionTabs';
 import StoreHierarchyTree from '@/components/stores/StoreHierarchyTree';
+import StorePermissionsModal from '@/components/stores/StorePermissionsModal';
+import StoreImportExcelModal from '@/components/stores/StoreImportExcelModal';
 
 export default function StoreInformationPage() {
   const [activeTab, setActiveTab] = useState<RegionId>('');
@@ -13,6 +22,11 @@ export default function StoreInformationPage() {
   const [regions, setRegions] = useState<Record<string, Region>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Modal states
+  const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [storesList, setStoresList] = useState<StoreListItem[]>([]);
 
   const currentRegion = regions[activeTab];
 
@@ -22,7 +36,6 @@ export default function StoreInformationPage() {
       try {
         const tabs = await getStoreInfoRegionTabs();
         setRegionTabs(tabs);
-        // Set first tab as active if available
         if (tabs.length > 0) {
           setActiveTab(tabs[0].id);
         }
@@ -42,7 +55,6 @@ export default function StoreInformationPage() {
       setLoading(true);
       setError(null);
       try {
-        // Check if we already have data for this region
         if (regions[activeTab]) {
           setLoading(false);
           return;
@@ -62,6 +74,21 @@ export default function StoreInformationPage() {
     }
     fetchHierarchy();
   }, [activeTab, regions]);
+
+  // Fetch stores list when permissions modal opens
+  useEffect(() => {
+    if (isPermissionsModalOpen && storesList.length === 0) {
+      async function fetchStores() {
+        try {
+          const stores = await getStoreInfoStoresList();
+          setStoresList(stores);
+        } catch (err) {
+          console.error('Failed to fetch stores list:', err);
+        }
+      }
+      fetchStores();
+    }
+  }, [isPermissionsModalOpen, storesList.length]);
 
   const handleTabChange = (tabId: RegionId) => {
     setActiveTab(tabId);
@@ -122,18 +149,34 @@ export default function StoreInformationPage() {
   }, [activeTab]);
 
   const handlePermissionsClick = () => {
-    // TODO: Implement permissions modal
-    console.log('Open permissions modal');
+    setIsPermissionsModalOpen(true);
   };
 
   const handleImportClick = () => {
-    // TODO: Implement import Excel modal
-    console.log('Open import Excel modal');
+    setIsImportModalOpen(true);
   };
 
   const handleAddNew = () => {
-    // TODO: Implement add new team or member modal
+    // TODO: Implement add new store or staff modal
     console.log('Open add new modal');
+  };
+
+  const handleSavePermissions = async (storeId: string, permissions: string[]) => {
+    await saveStorePermissions({ storeId, permissions });
+  };
+
+  const handleImportStores = async (file: File) => {
+    const result = await importStoresFromFile(file);
+
+    // Refresh data if import was successful
+    if (result.success && result.imported && result.imported > 0) {
+      // Clear cached regions to force refresh
+      setRegions({});
+      // Refresh stores list for permissions modal
+      setStoresList([]);
+    }
+
+    return result;
   };
 
   return (
@@ -178,6 +221,21 @@ export default function StoreInformationPage() {
           />
         )}
       </div>
+
+      {/* Permissions Modal */}
+      <StorePermissionsModal
+        isOpen={isPermissionsModalOpen}
+        onClose={() => setIsPermissionsModalOpen(false)}
+        onSave={handleSavePermissions}
+        stores={storesList}
+      />
+
+      {/* Import Excel Modal */}
+      <StoreImportExcelModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onImport={handleImportStores}
+      />
     </div>
   );
 }

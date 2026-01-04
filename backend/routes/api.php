@@ -67,6 +67,9 @@ Route::prefix('v1')->group(function () {
         Route::get('regions/{region}/stores', [StoreInfoController::class, 'storesByRegion']);
         Route::get('stores/{store}', [StoreInfoController::class, 'storeDetail']);
         Route::get('store-departments', [StoreInfoController::class, 'storeDepartments']);
+        Route::get('stores-list', [StoreInfoController::class, 'storesList']);
+        Route::post('permissions', [StoreInfoController::class, 'savePermissions']);
+        Route::post('import', [StoreInfoController::class, 'importStores']);
     });
 
     // Teams (public read-only)
