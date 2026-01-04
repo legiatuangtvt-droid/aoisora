@@ -25,7 +25,7 @@ const DepartmentDetailView: React.FC<DepartmentDetailViewProps> = ({
     <div className="flex flex-col">
       {/* Department Head Card */}
       {department.head && (
-        <DepartmentHeadCard head={department.head} />
+        <DepartmentHeadCard head={department.head} onClick={onMemberClick} />
       )}
 
       {/* Teams with connector lines */}

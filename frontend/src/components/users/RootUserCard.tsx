@@ -6,9 +6,10 @@ import { Employee, JOB_GRADE_COLORS } from '@/types/userInfo';
 interface RootUserCardProps {
   user: Employee;
   onMenuAction?: (action: 'edit' | 'delete', user: Employee) => void;
+  onClick?: (user: Employee) => void;
 }
 
-const RootUserCard: React.FC<RootUserCardProps> = ({ user, onMenuAction }) => {
+const RootUserCard: React.FC<RootUserCardProps> = ({ user, onMenuAction, onClick }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -24,8 +25,19 @@ const RootUserCard: React.FC<RootUserCardProps> = ({ user, onMenuAction }) => {
 
   const gradeColor = JOB_GRADE_COLORS[user.jobGrade];
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't trigger if clicking on menu button or menu
+    if ((e.target as HTMLElement).closest('[data-menu]')) {
+      return;
+    }
+    onClick?.(user);
+  };
+
   return (
-    <div className="bg-white border border-[#9B9B9B] rounded-[10px] p-4 flex items-center justify-between">
+    <div
+      className="bg-white border border-[#9B9B9B] rounded-[10px] p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
+      onClick={handleCardClick}
+    >
       <div className="flex items-center gap-3">
         {/* Avatar with Grade Badge */}
         <div className="relative">
@@ -63,7 +75,7 @@ const RootUserCard: React.FC<RootUserCardProps> = ({ user, onMenuAction }) => {
       </div>
 
       {/* Menu Button */}
-      <div className="relative" ref={menuRef}>
+      <div className="relative" ref={menuRef} data-menu>
         <button
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"

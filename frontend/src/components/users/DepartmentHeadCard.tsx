@@ -5,15 +5,27 @@ import { Employee, JOB_GRADE_COLORS, JOB_GRADE_TITLES } from '@/types/userInfo';
 
 interface DepartmentHeadCardProps {
   head: Employee;
+  onClick?: (employee: Employee) => void;
 }
 
-const DepartmentHeadCard: React.FC<DepartmentHeadCardProps> = ({ head }) => {
+const DepartmentHeadCard: React.FC<DepartmentHeadCardProps> = ({ head, onClick }) => {
   const [showMenu, setShowMenu] = useState(false);
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't trigger if clicking on menu button or menu
+    if ((e.target as HTMLElement).closest('[data-menu]')) {
+      return;
+    }
+    onClick?.(head);
+  };
   const gradeColor = JOB_GRADE_COLORS[head.jobGrade];
   const gradeTitle = JOB_GRADE_TITLES[head.jobGrade];
 
   return (
-    <div className="relative bg-white rounded-[10px] border border-[#E8E8E8] p-4">
+    <div
+      className="relative bg-white rounded-[10px] border border-[#E8E8E8] p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+      onClick={handleCardClick}
+    >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           {/* Avatar with grade badge */}
@@ -55,10 +67,13 @@ const DepartmentHeadCard: React.FC<DepartmentHeadCardProps> = ({ head }) => {
         </div>
 
         {/* Actions menu */}
-        <div className="relative">
+        <div className="relative" data-menu>
           <button
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            onClick={() => setShowMenu(!showMenu)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowMenu(!showMenu);
+            }}
           >
             <svg className="w-5 h-5 text-[#6B6B6B]" viewBox="0 0 24 24" fill="currentColor">
               <circle cx="12" cy="5" r="2" />

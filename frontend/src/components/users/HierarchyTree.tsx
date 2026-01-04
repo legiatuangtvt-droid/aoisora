@@ -28,7 +28,7 @@ const HierarchyTree: React.FC<HierarchyTreeProps> = ({
   return (
     <div className="flex flex-col">
       {/* Root User Card */}
-      <RootUserCard user={hierarchy.rootUser} />
+      <RootUserCard user={hierarchy.rootUser} onClick={onMemberClick} />
 
       {/* Departments with connector lines */}
       {departmentsCount > 0 && (
@@ -90,7 +90,7 @@ const HierarchyTree: React.FC<HierarchyTreeProps> = ({
                           <div className="absolute left-0 top-0 w-0.5 bg-[#9B9B9B]" style={{ height: hasTeams ? '100%' : '62px' }} />
                           {/* Horizontal connector to head */}
                           <div className="absolute left-0 top-[62px] w-6 h-0.5 bg-[#9B9B9B]" />
-                          <DepartmentHeadCard head={department.head!} />
+                          <DepartmentHeadCard head={department.head!} onClick={onMemberClick} />
                         </div>
                       )}
 
