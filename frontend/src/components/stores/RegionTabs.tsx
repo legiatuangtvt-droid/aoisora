@@ -29,7 +29,7 @@ const RegionTabs: React.FC<RegionTabsProps> = ({
                 : 'text-[#6B6B6B] border-[#6B6B6B] hover:text-gray-800'
             }`}
             style={{
-              minWidth: tab.id === 'SMBU' ? '240px' : undefined,
+              minWidth: tab.id.startsWith('SMBU') ? '240px' : undefined,
             }}
           >
             {tab.label}

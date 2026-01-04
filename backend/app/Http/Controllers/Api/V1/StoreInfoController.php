@@ -39,18 +39,23 @@ class StoreInfoController extends Controller
     /**
      * Get region tabs for Store Information screen navigation
      * Returns regions that have stores (store-level regions, not head office departments)
+     * SMBU is always first as it's the overview/summary tab
      */
     public function regionTabs()
     {
         // Get regions that have stores associated (region_id >= 10 are store regions based on seed data)
+        // SMBU is sorted first as it's the overview tab
         $regions = Region::whereHas('stores')
             ->orWhere('region_id', '>=', 10)
+            ->orderByRaw("CASE WHEN region_name LIKE 'SMBU%' THEN 0 ELSE 1 END")
             ->orderBy('region_id')
             ->get()
             ->map(function ($region) {
+                // Clean up region name for display (remove " (Store)" suffix if present)
+                $displayName = preg_replace('/\s*\(Store\)\s*$/i', '', $region->region_name);
                 return [
                     'id' => $region->region_name,
-                    'label' => $region->region_name,
+                    'label' => $displayName,
                 ];
             });
 
