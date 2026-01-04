@@ -1,9 +1,23 @@
 // Store Information Types - SCR_STORE_INFO
 
+// Import from centralized staff types
+import {
+  StaffType,
+  StoreJobGrade as StoreGradeType,
+  STORE_JOB_GRADES,
+  STORE_JOB_GRADE_COLORS as STORE_GRADE_COLORS,
+  getGradeColor,
+  getGradeName,
+} from './staff';
+
+// Re-export for backward compatibility
+export { getGradeColor, getGradeName };
+
 // RegionId can be any string since it comes from database
 export type RegionId = string;
 
-export type StoreJobGrade = 'G1' | 'G2' | 'G3' | 'G4' | 'G5' | 'G6' | 'G7' | 'G8';
+// Legacy type - use StoreGradeType from staff.ts instead
+export type StoreJobGrade = 'G1' | 'G2' | 'G3' | 'G4' | 'G5' | 'G6' | 'G7' | 'G8' | StoreGradeType;
 
 export interface StoreStaff {
   id: string;
@@ -11,6 +25,7 @@ export interface StoreStaff {
   avatar?: string;
   position: string;
   jobGrade: string;
+  staffType?: StaffType;
   sapCode?: string;
   phone?: string;
   email?: string;
@@ -20,8 +35,11 @@ export interface StoreStaff {
   status?: 'Active' | 'Inactive';
 }
 
-// Job Grade colors for store staff
+// Job Grade colors for store staff (using centralized colors)
 export const STORE_JOB_GRADE_COLORS: Record<string, string> = {
+  // Store grades (S1-S6)
+  ...STORE_GRADE_COLORS,
+  // Legacy HQ grades displayed in store context (G1-G8)
   'G1': '#9CA3AF', // gray
   'G2': '#81AADB', // light blue
   'G3': '#22A6A1', // teal/green
@@ -34,6 +52,14 @@ export const STORE_JOB_GRADE_COLORS: Record<string, string> = {
 
 // Job Grade titles for store staff
 export const STORE_JOB_GRADE_TITLES: Record<string, string> = {
+  // Store grades (S1-S6)
+  'S1': STORE_JOB_GRADES.S1.name,
+  'S2': STORE_JOB_GRADES.S2.name,
+  'S3': STORE_JOB_GRADES.S3.name,
+  'S4': STORE_JOB_GRADES.S4.name,
+  'S5': STORE_JOB_GRADES.S5.name,
+  'S6': STORE_JOB_GRADES.S6.name,
+  // Legacy HQ grades (G1-G8)
   'G1': 'Officer',
   'G2': 'Senior Officer',
   'G3': 'Executive',

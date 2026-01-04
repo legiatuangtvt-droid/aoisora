@@ -836,11 +836,41 @@ Step 9: [P3] Salary tables
 
 ---
 
-*Chưa có issues được ghi nhận. Section này sẽ được cập nhật khi phát hiện vấn đề trong quá trình development.*
+### 2026-01-04 Workaround: HQ/Store Staff Classification
+
+- **Table**: `code_master`, `staff`
+- **Current**: `staff.job_grade` là VARCHAR, `staff.role` dùng cho cả system role và position
+- **Problem**: Không phân biệt được HQ staff (G2-G9) và Store staff (S1-S6)
+- **Workaround Applied**:
+  1. Thêm data vào `code_master` với các code_type mới:
+     - `staff_type`: HQ, STORE
+     - `job_grade_hq`: G2-G9
+     - `job_grade_store`: S1-S6
+     - `position_hq`, `position_store`: Các vị trí cụ thể
+     - `system_role`: SUPER_ADMIN, ADMIN, MANAGER, SUPERVISOR, STAFF, VIEWER
+     - `grade_color`: Màu hiển thị cho từng grade
+     - `management_scope`: Phạm vi quản lý
+  2. Frontend types (`frontend/src/types/staff.ts`):
+     - HQ_JOB_GRADES, STORE_JOB_GRADES constants
+     - Helper functions: isHQStaff(), isStoreStaff(), getGradeColor(), etc.
+  3. Migration file: `database/migrations/add_job_grades_positions_to_code_master.sql`
+- **Impact**: Không thay đổi schema, chỉ thêm lookup data
+- **Priority**: Implemented as workaround
+- **Future**: Khi có approval, tạo dedicated tables như đề xuất trong Phase 1
 
 ---
 
-## Appendix: ER Diagram
+## Appendix A: Workaround Implementation Files
+
+| File | Purpose |
+|------|---------|
+| `database/migrations/add_job_grades_positions_to_code_master.sql` | SQL để thêm grades, positions vào code_master |
+| `frontend/src/types/staff.ts` | Centralized staff types và helper functions |
+| `frontend/src/types/storeInfo.ts` | Updated để import từ staff.ts |
+
+---
+
+## Appendix B: ER Diagram
 
 ```
                                     ┌─────────────┐
