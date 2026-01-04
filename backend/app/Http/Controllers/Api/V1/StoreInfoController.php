@@ -12,6 +12,31 @@ use Illuminate\Http\Request;
 class StoreInfoController extends Controller
 {
     /**
+     * SQL CASE statement for ordering staff by job grade
+     * Supports both Store grades (S1-S6) and HQ grades (G1-G9)
+     * Store grades: S6 (Region Manager) > S5 (Area Manager) > S4 (SI) > S3 (Store Leader G3) > S2 (Store Leader G2) > S1 (Staff)
+     * HQ grades: G9 (GD) > G8 (CCO) > G7 (SGM) > G6 (GM) > G5 (Manager) > G4 (Deputy) > G3 (Executive) > G2 (Officer)
+     */
+    private const JOB_GRADE_ORDER_SQL = "CASE
+        WHEN job_grade = 'S6' THEN 1
+        WHEN job_grade = 'S5' THEN 2
+        WHEN job_grade = 'S4' THEN 3
+        WHEN job_grade = 'S3' THEN 4
+        WHEN job_grade = 'S2' THEN 5
+        WHEN job_grade = 'S1' THEN 6
+        WHEN job_grade = 'G9' THEN 7
+        WHEN job_grade = 'G8' THEN 8
+        WHEN job_grade = 'G7' THEN 9
+        WHEN job_grade = 'G6' THEN 10
+        WHEN job_grade = 'G5' THEN 11
+        WHEN job_grade = 'G4' THEN 12
+        WHEN job_grade = 'G3' THEN 13
+        WHEN job_grade = 'G2' THEN 14
+        WHEN job_grade = 'G1' THEN 15
+        ELSE 99
+    END";
+
+    /**
      * Get region tabs for Store Information screen navigation
      * Returns regions that have stores (store-level regions, not head office departments)
      */
@@ -51,17 +76,7 @@ class StoreInfoController extends Controller
             ->where('status', 'active')
             ->with(['staff' => function ($query) {
                 $query->where('is_active', true)
-                    ->orderByRaw("CASE
-                        WHEN job_grade = 'G8' THEN 1
-                        WHEN job_grade = 'G7' THEN 2
-                        WHEN job_grade = 'G6' THEN 3
-                        WHEN job_grade = 'G5' THEN 4
-                        WHEN job_grade = 'G4' THEN 5
-                        WHEN job_grade = 'G3' THEN 6
-                        WHEN job_grade = 'G2' THEN 7
-                        WHEN job_grade = 'G1' THEN 8
-                        ELSE 9
-                    END");
+                    ->orderByRaw(self::JOB_GRADE_ORDER_SQL);
             }])
             ->get();
 
@@ -161,17 +176,7 @@ class StoreInfoController extends Controller
     {
         $store = Store::with(['staff' => function ($query) {
             $query->where('is_active', true)
-                ->orderByRaw("CASE
-                    WHEN job_grade = 'G8' THEN 1
-                    WHEN job_grade = 'G7' THEN 2
-                    WHEN job_grade = 'G6' THEN 3
-                    WHEN job_grade = 'G5' THEN 4
-                    WHEN job_grade = 'G4' THEN 5
-                    WHEN job_grade = 'G3' THEN 6
-                    WHEN job_grade = 'G2' THEN 7
-                    WHEN job_grade = 'G1' THEN 8
-                    ELSE 9
-                END");
+                ->orderByRaw(self::JOB_GRADE_ORDER_SQL);
         }, 'region'])
             ->findOrFail($storeId);
 
@@ -240,15 +245,27 @@ class StoreInfoController extends Controller
      */
     private function formatStaffMember($staff): array
     {
+        // Determine staff type based on job grade prefix or store assignment
+        $jobGrade = $staff->job_grade ?? '';
+        $staffType = str_starts_with($jobGrade, 'S') ? 'STORE' : 'HQ';
+
+        // If staff has store_id, they are store staff
+        if ($staff->store_id) {
+            $staffType = 'STORE';
+        }
+
         return [
             'id' => (string) $staff->staff_id,
             'name' => $staff->staff_name,
             'avatar' => $staff->avatar_url,
             'position' => $staff->position,
             'jobGrade' => $staff->job_grade,
+            'staffType' => $staffType,
             'sapCode' => $staff->sap_code,
             'phone' => $staff->phone,
             'email' => $staff->email,
+            'joiningDate' => $staff->joining_date?->format('Y-m-d'),
+            'status' => $staff->is_active ? 'Active' : 'Inactive',
         ];
     }
 
