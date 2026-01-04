@@ -18,6 +18,10 @@ interface StoreHierarchyTreeProps {
   onDeleteStaff?: (staffId: string) => void;
 }
 
+// StaffCard height: py-3 (12px*2) + content height (~34px) = ~58px
+// Midpoint = 29px, plus pt-3 (12px) = 41px from container top
+const STAFF_CARD_MIDPOINT = 41;
+
 const StoreHierarchyTree: React.FC<StoreHierarchyTreeProps> = ({
   region,
   onToggleArea,
@@ -69,16 +73,24 @@ const StoreHierarchyTree: React.FC<StoreHierarchyTreeProps> = ({
 
                             return (
                               <div key={staff.id} className="relative pt-3">
-                                {/* Vertical line - from top to horizontal connector position */}
-                                <div className="absolute -left-6 top-0 h-[30px] w-0.5 bg-[#D1D5DB]" />
-
-                                {/* Vertical line - continues down to next sibling (not for last item) */}
+                                {/* Continuous vertical line for all items except last */}
                                 {!isLastStaff && (
-                                  <div className="absolute -left-6 top-[30px] bottom-0 w-0.5 bg-[#D1D5DB]" />
+                                  <div className="absolute -left-6 top-0 bottom-0 w-0.5 bg-[#D1D5DB]" />
                                 )}
 
-                                {/* Horizontal connector line - from vertical line to card */}
-                                <div className="absolute -left-6 top-[30px] w-6 h-0.5 bg-[#D1D5DB]" />
+                                {/* Vertical line segment - only to midpoint for last item */}
+                                {isLastStaff && (
+                                  <div
+                                    className="absolute -left-6 top-0 w-0.5 bg-[#D1D5DB]"
+                                    style={{ height: `${STAFF_CARD_MIDPOINT}px` }}
+                                  />
+                                )}
+
+                                {/* Horizontal connector line - to card midpoint */}
+                                <div
+                                  className="absolute -left-6 w-6 h-0.5 bg-[#D1D5DB]"
+                                  style={{ top: `${STAFF_CARD_MIDPOINT}px` }}
+                                />
 
                                 <StaffCard
                                   staff={staff}
@@ -89,13 +101,8 @@ const StoreHierarchyTree: React.FC<StoreHierarchyTreeProps> = ({
                             );
                           })}
 
-                          {/* Add Staff Button */}
-                          <div className="relative pt-3">
-                            {/* Vertical line to add button */}
-                            <div className="absolute -left-6 top-0 h-[30px] w-0.5 bg-[#D1D5DB]" />
-                            {/* Horizontal connector line */}
-                            <div className="absolute -left-6 top-[30px] w-6 h-0.5 bg-[#D1D5DB]" />
-
+                          {/* Add Staff Button - no connector lines */}
+                          <div className="pt-3">
                             <button
                               onClick={() => console.log('Add staff to store:', store.id)}
                               className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-[#D1D5DB] rounded-[10px] text-[#6B6B6B] hover:border-[#0664E9] hover:text-[#0664E9] transition-colors"
@@ -110,13 +117,10 @@ const StoreHierarchyTree: React.FC<StoreHierarchyTreeProps> = ({
                         </div>
                       )}
 
-                      {/* Empty state when store is expanded but no staff */}
+                      {/* Empty state when store is expanded but no staff - no connector lines */}
                       {store.isExpanded && !hasStaffList && (
-                        <div className="relative ml-6 pl-6 mt-2">
-                          <div className="relative pt-3">
-                            <div className="absolute -left-6 top-0 h-[30px] w-0.5 bg-[#D1D5DB]" />
-                            <div className="absolute -left-6 top-[30px] w-6 h-0.5 bg-[#D1D5DB]" />
-
+                        <div className="ml-6 pl-6 mt-2">
+                          <div className="pt-3">
                             <div className="px-4 py-6 bg-gray-50 border border-dashed border-[#D1D5DB] rounded-[10px] text-center">
                               <p className="text-[14px] text-[#6B6B6B] mb-2">No staff assigned to this store</p>
                               <button
@@ -167,11 +171,24 @@ const StoreHierarchyTree: React.FC<StoreHierarchyTreeProps> = ({
 
                             return (
                               <div key={staff.id} className="relative pt-3">
-                                <div className="absolute -left-6 top-0 h-[30px] w-0.5 bg-[#D1D5DB]" />
+                                {/* Continuous vertical line for all items except last */}
                                 {!isLastStaff && (
-                                  <div className="absolute -left-6 top-[30px] bottom-0 w-0.5 bg-[#D1D5DB]" />
+                                  <div className="absolute -left-6 top-0 bottom-0 w-0.5 bg-[#D1D5DB]" />
                                 )}
-                                <div className="absolute -left-6 top-[30px] w-6 h-0.5 bg-[#D1D5DB]" />
+
+                                {/* Vertical line segment - only to midpoint for last item */}
+                                {isLastStaff && (
+                                  <div
+                                    className="absolute -left-6 top-0 w-0.5 bg-[#D1D5DB]"
+                                    style={{ height: `${STAFF_CARD_MIDPOINT}px` }}
+                                  />
+                                )}
+
+                                {/* Horizontal connector line - to card midpoint */}
+                                <div
+                                  className="absolute -left-6 w-6 h-0.5 bg-[#D1D5DB]"
+                                  style={{ top: `${STAFF_CARD_MIDPOINT}px` }}
+                                />
 
                                 <StaffCard
                                   staff={staff}
