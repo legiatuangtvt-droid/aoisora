@@ -116,7 +116,35 @@ app/
     └── UserInfoService.php           # Business logic
 ```
 
-### 9. Session Start (Optional)
+### 9. Database Improvement Tracking
+
+Trong quá trình phát triển, ghi lại các cải tiến DB cần thiết vào `docs/database/enterprise-schema-design.md`:
+
+| Khi nào ghi | Ghi gì |
+|-------------|--------|
+| Phát hiện duplicate data | Thêm vào "Discovered Issues" với table name, vấn đề cụ thể |
+| Cần normalize column | Ghi column name, suggest FK relationship |
+| Thiếu index | Ghi query pattern và suggested index |
+| Cần thêm constraint | Ghi constraint type và reason |
+| Schema limitation | Ghi limitation và proposed solution |
+
+**Format entry:**
+```markdown
+### [DATE] Issue: [Tên vấn đề]
+- **Table**: [table_name]
+- **Current**: [mô tả hiện tại]
+- **Problem**: [vấn đề gặp phải]
+- **Proposed Solution**: [giải pháp đề xuất]
+- **Impact**: [ảnh hưởng nếu thay đổi]
+- **Priority**: [High/Medium/Low]
+```
+
+**File reference:**
+- Current Schema: `docs/04-database/DB_DATABASE_STRUCTURE.md`
+- Proposed Schema: `docs/database/enterprise-schema-design.md`
+- SQL Implementation: `database/schema_v2.sql`
+
+### 10. Session Start (Optional)
 
 Nếu user yêu cầu khởi động servers, thực hiện theo thứ tự:
 

@@ -5,11 +5,12 @@ import { StoreStaff } from '@/types/storeInfo';
 
 interface StaffCardProps {
   staff: StoreStaff;
+  onViewDetail?: (staff: StoreStaff) => void;
   onEdit?: (staffId: string) => void;
   onDelete?: (staffId: string) => void;
 }
 
-const StaffCard: React.FC<StaffCardProps> = ({ staff, onEdit, onDelete }) => {
+const StaffCard: React.FC<StaffCardProps> = ({ staff, onViewDetail, onEdit, onDelete }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleMenuClick = (e: React.MouseEvent) => {
@@ -44,8 +45,15 @@ const StaffCard: React.FC<StaffCardProps> = ({ staff, onEdit, onDelete }) => {
     return gradeColors[grade] || '#22A6A1';
   };
 
+  const handleCardClick = () => {
+    onViewDetail?.(staff);
+  };
+
   return (
-    <div className="flex items-center justify-between px-4 py-3 bg-white border border-[#E8E8E8] rounded-[10px] hover:bg-gray-50 transition-colors">
+    <div
+      className="flex items-center justify-between px-4 py-3 bg-white border border-[#E8E8E8] rounded-[10px] hover:bg-gray-50 transition-colors cursor-pointer"
+      onClick={handleCardClick}
+    >
       {/* Left Section - Staff Info */}
       <div className="flex items-center gap-3">
         {/* Avatar with Grade Badge */}

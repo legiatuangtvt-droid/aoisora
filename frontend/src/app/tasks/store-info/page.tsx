@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { RegionId, Region, RegionTab } from '@/types/storeInfo';
+import { RegionId, Region, RegionTab, StoreStaff } from '@/types/storeInfo';
 import {
   getStoreInfoRegionTabs,
   getStoreInfoRegionHierarchy,
@@ -15,6 +15,7 @@ import RegionTabs from '@/components/stores/RegionTabs';
 import StoreHierarchyTree from '@/components/stores/StoreHierarchyTree';
 import StorePermissionsModal from '@/components/stores/StorePermissionsModal';
 import StoreImportExcelModal from '@/components/stores/StoreImportExcelModal';
+import StaffDetailModal from '@/components/stores/StaffDetailModal';
 
 export default function StoreInformationPage() {
   const [activeTab, setActiveTab] = useState<RegionId>('');
@@ -26,6 +27,8 @@ export default function StoreInformationPage() {
   // Modal states
   const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isStaffDetailModalOpen, setIsStaffDetailModalOpen] = useState(false);
+  const [selectedStaff, setSelectedStaff] = useState<StoreStaff | null>(null);
   const [storesList, setStoresList] = useState<StoreListItem[]>([]);
 
   const currentRegion = regions[activeTab];
@@ -171,6 +174,11 @@ export default function StoreInformationPage() {
     console.log('Delete staff:', staffId);
   };
 
+  const handleViewStaffDetail = (staff: StoreStaff) => {
+    setSelectedStaff(staff);
+    setIsStaffDetailModalOpen(true);
+  };
+
   const handleSavePermissions = async (storeId: string, permissions: string[]) => {
     await saveStorePermissions({ storeId, permissions });
   };
@@ -228,6 +236,7 @@ export default function StoreInformationPage() {
             onToggleStore={handleToggleStore}
             onToggleDepartment={handleToggleDepartment}
             onAddNew={handleAddNew}
+            onViewStaffDetail={handleViewStaffDetail}
             onEditStaff={handleEditStaff}
             onDeleteStaff={handleDeleteStaff}
           />
@@ -247,6 +256,13 @@ export default function StoreInformationPage() {
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
         onImport={handleImportStores}
+      />
+
+      {/* Staff Detail Modal */}
+      <StaffDetailModal
+        isOpen={isStaffDetailModalOpen}
+        onClose={() => setIsStaffDetailModalOpen(false)}
+        staff={selectedStaff}
       />
     </div>
   );

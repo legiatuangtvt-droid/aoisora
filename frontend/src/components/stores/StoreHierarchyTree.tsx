@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Region } from '@/types/storeInfo';
+import { Region, StoreStaff } from '@/types/storeInfo';
 import AreaCard from './AreaCard';
 import StoreCard from './StoreCard';
 import StoreDepartmentCard from './StoreDepartmentCard';
@@ -14,6 +14,7 @@ interface StoreHierarchyTreeProps {
   onToggleStore: (storeId: string) => void;
   onToggleDepartment: (departmentId: string) => void;
   onAddNew: () => void;
+  onViewStaffDetail?: (staff: StoreStaff) => void;
   onEditStaff?: (staffId: string) => void;
   onDeleteStaff?: (staffId: string) => void;
 }
@@ -28,6 +29,7 @@ const StoreHierarchyTree: React.FC<StoreHierarchyTreeProps> = ({
   onToggleStore,
   onToggleDepartment,
   onAddNew,
+  onViewStaffDetail,
   onEditStaff,
   onDeleteStaff,
 }) => {
@@ -68,6 +70,9 @@ const StoreHierarchyTree: React.FC<StoreHierarchyTreeProps> = ({
                       {/* Expanded Store Content - Staff List */}
                       {store.isExpanded && hasStaffList && (
                         <div className="relative ml-6 pl-6 mt-2">
+                          {/* Vertical line connecting from store card to first staff item */}
+                          <div className="absolute left-0 -top-2 h-2 w-0.5 bg-[#D1D5DB]" />
+
                           {store.staffList!.map((staff, staffIndex) => {
                             const isLastStaff = staffIndex === store.staffList!.length - 1;
 
@@ -93,7 +98,12 @@ const StoreHierarchyTree: React.FC<StoreHierarchyTreeProps> = ({
                                 />
 
                                 <StaffCard
-                                  staff={staff}
+                                  staff={{
+                                    ...staff,
+                                    storeName: store.name,
+                                    storeCode: store.code,
+                                  }}
+                                  onViewDetail={onViewStaffDetail}
                                   onEdit={onEditStaff}
                                   onDelete={onDeleteStaff}
                                 />
@@ -166,6 +176,9 @@ const StoreHierarchyTree: React.FC<StoreHierarchyTreeProps> = ({
                       {/* Expanded Department Content */}
                       {department.isExpanded && department.staffList && department.staffList.length > 0 && (
                         <div className="relative ml-6 pl-6 mt-2">
+                          {/* Vertical line connecting from department card to first staff item */}
+                          <div className="absolute left-0 -top-2 h-2 w-0.5 bg-[#D1D5DB]" />
+
                           {department.staffList.map((staff, staffIndex) => {
                             const isLastStaff = staffIndex === department.staffList!.length - 1;
 
@@ -192,6 +205,7 @@ const StoreHierarchyTree: React.FC<StoreHierarchyTreeProps> = ({
 
                                 <StaffCard
                                   staff={staff}
+                                  onViewDetail={onViewStaffDetail}
                                   onEdit={onEditStaff}
                                   onDelete={onDeleteStaff}
                                 />
