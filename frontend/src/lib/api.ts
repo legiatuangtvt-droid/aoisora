@@ -1120,3 +1120,31 @@ export async function savePermissions(data: SavePermissionsRequest): Promise<{ m
     skipAuth: true,
   });
 }
+
+// ============================================
+// User Info - Import Excel
+// ============================================
+
+export interface ImportUsersResult {
+  success: boolean;
+  message: string;
+  imported?: number;
+  errors?: string[];
+}
+
+export async function importUsersFromExcel(file: File): Promise<ImportUsersResult> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await fetch(`${API_BASE_URL}/user-info/import`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Import failed');
+  }
+
+  return response.json();
+}

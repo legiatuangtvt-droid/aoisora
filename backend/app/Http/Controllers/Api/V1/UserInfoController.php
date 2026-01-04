@@ -397,4 +397,123 @@ class UserInfoController extends Controller
             'permissionsCount' => count($validated['permissions']),
         ]);
     }
+
+    /**
+     * Import users from Excel/CSV file
+     */
+    public function importUsers(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:10240', // 10MB max
+        ]);
+
+        $file = $request->file('file');
+        $extension = $file->getClientOriginalExtension();
+
+        $imported = 0;
+        $errors = [];
+
+        try {
+            if ($extension === 'csv') {
+                // Parse CSV file
+                $handle = fopen($file->getRealPath(), 'r');
+                $headers = fgetcsv($handle);
+
+                // Map headers to expected fields
+                $headerMap = array_flip(array_map('strtolower', $headers));
+
+                $rowNumber = 1;
+                while (($row = fgetcsv($handle)) !== false) {
+                    $rowNumber++;
+
+                    try {
+                        // Extract data from row
+                        $staffCode = $row[$headerMap['staff_code'] ?? -1] ?? null;
+                        $staffName = $row[$headerMap['staff_name'] ?? -1] ?? null;
+                        $email = $row[$headerMap['email'] ?? -1] ?? null;
+
+                        if (!$staffCode || !$staffName || !$email) {
+                            $errors[] = "Row {$rowNumber}: Missing required fields (staff_code, staff_name, email)";
+                            continue;
+                        }
+
+                        // Check if staff already exists
+                        $exists = Staff::where('staff_code', $staffCode)
+                            ->orWhere('email', $email)
+                            ->exists();
+
+                        if ($exists) {
+                            $errors[] = "Row {$rowNumber}: Staff code or email already exists";
+                            continue;
+                        }
+
+                        // Get department ID from code if provided
+                        $departmentId = null;
+                        $deptCode = $row[$headerMap['department_code'] ?? -1] ?? null;
+                        if ($deptCode) {
+                            $dept = Department::where('department_code', $deptCode)->first();
+                            $departmentId = $dept?->department_id;
+                        }
+
+                        // Create staff member
+                        Staff::create([
+                            'staff_code' => $staffCode,
+                            'staff_name' => $staffName,
+                            'username' => explode('@', $email)[0],
+                            'password_hash' => bcrypt('password123'),
+                            'email' => $email,
+                            'phone' => $row[$headerMap['phone'] ?? -1] ?? null,
+                            'position' => $row[$headerMap['position'] ?? -1] ?? 'Staff',
+                            'job_grade' => $row[$headerMap['job_grade'] ?? -1] ?? 'G1',
+                            'department_id' => $departmentId,
+                            'team_id' => $row[$headerMap['team_id'] ?? -1] ?? null,
+                            'sap_code' => $row[$headerMap['sap_code'] ?? -1] ?? null,
+                            'joining_date' => now(),
+                            'is_active' => true,
+                            'status' => 'active',
+                        ]);
+
+                        $imported++;
+                    } catch (\Exception $e) {
+                        $errors[] = "Row {$rowNumber}: " . $e->getMessage();
+                    }
+                }
+
+                fclose($handle);
+            } else {
+                // For Excel files, we would need a library like PhpSpreadsheet
+                // For now, return an error suggesting CSV
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Excel files require additional processing. Please use CSV format.',
+                    'imported' => 0,
+                    'errors' => ['Excel import requires PhpSpreadsheet library. Please convert to CSV.'],
+                ], 400);
+            }
+
+            $success = $imported > 0;
+            $message = $success
+                ? "Successfully imported {$imported} users"
+                : 'No users were imported';
+
+            if (count($errors) > 0) {
+                $message .= " with " . count($errors) . " errors";
+            }
+
+            return response()->json([
+                'success' => $success,
+                'message' => $message,
+                'imported' => $imported,
+                'errors' => $errors,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Import failed: ' . $e->getMessage(),
+                'imported' => 0,
+                'errors' => [$e->getMessage()],
+            ], 500);
+        }
+    }
 }

@@ -22,7 +22,8 @@ import DepartmentDetailView from '@/components/users/DepartmentDetailView';
 import AddTeamMemberModal, { TeamFormData, MemberFormData } from '@/components/users/AddTeamMemberModal';
 import EmployeeDetailModal from '@/components/users/EmployeeDetailModal';
 import PermissionsModal from '@/components/users/PermissionsModal';
-import { getRolesList, getUsersList, savePermissions, RoleItem, UserItem } from '@/lib/api';
+import ImportExcelModal from '@/components/users/ImportExcelModal';
+import { getRolesList, getUsersList, savePermissions, importUsersFromExcel, RoleItem, UserItem } from '@/lib/api';
 
 // Department code to ID mapping (from database)
 const DEPARTMENT_CODE_TO_ID: Record<string, number> = {
@@ -55,6 +56,9 @@ export default function UserInfoPage() {
   const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(false);
   const [permissionsRoles, setPermissionsRoles] = useState<RoleItem[]>([]);
   const [permissionsUsers, setPermissionsUsers] = useState<UserItem[]>([]);
+
+  // Import Excel modal state
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   // Fetch SMBU hierarchy on mount
   useEffect(() => {
@@ -268,8 +272,19 @@ export default function UserInfoPage() {
   };
 
   const handleImportClick = () => {
-    // TODO: Implement import Excel modal
-    console.log('Open import Excel modal');
+    setIsImportModalOpen(true);
+  };
+
+  const handleImportUsers = async (file: File) => {
+    const result = await importUsersFromExcel(file);
+
+    // Refresh hierarchy data after successful import
+    if (result.success && result.imported && result.imported > 0) {
+      const hierarchyData = await getSMBUHierarchy();
+      setHierarchy(hierarchyData);
+    }
+
+    return result;
   };
 
   const handleAddMember = async () => {
@@ -446,6 +461,13 @@ export default function UserInfoPage() {
         onSave={handleSavePermissions}
         users={permissionsUsers.map(u => ({ id: u.id, name: u.name, type: 'user' as const }))}
         roles={permissionsRoles.map(r => ({ id: r.id, name: r.name, type: 'role' as const }))}
+      />
+
+      {/* Import Excel Modal */}
+      <ImportExcelModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onImport={handleImportUsers}
       />
     </div>
   );

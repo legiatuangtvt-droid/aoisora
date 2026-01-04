@@ -259,7 +259,7 @@ frontend/src/
 │       ├── AddTeamMemberModal.tsx
 │       ├── EmployeeDetailModal.tsx
 │       ├── PermissionsModal.tsx
-│       └── ImportExcelModal.tsx (TODO)
+│       └── ImportExcelModal.tsx
 ├── types/
 │   └── userInfo.ts
 └── data/
@@ -359,6 +359,7 @@ Root User
 | 9 | Get Roles List | GET | /api/v1/user-info/roles-list | Get roles for permissions modal |
 | 10 | Get Users List | GET | /api/v1/user-info/users-list | Get users for permissions modal |
 | 11 | Save Permissions | POST | /api/v1/user-info/permissions | Save permissions for user or role |
+| 12 | Import Users | POST | /api/v1/user-info/import | Import users from Excel/CSV file |
 
 ---
 
@@ -388,3 +389,5 @@ Root User
 | 2026-01-04 | Implemented PermissionsModal with user/role selection and category-based permission checkboxes |
 | 2026-01-04 | Added permissions API endpoints: roles-list, users-list, POST permissions |
 | 2026-01-04 | Updated button icons for Permissions and Import Excel buttons |
+| 2026-01-04 | Implemented ImportExcelModal with drag-and-drop, file preview, and template download |
+| 2026-01-04 | Added import API endpoint for CSV file processing |

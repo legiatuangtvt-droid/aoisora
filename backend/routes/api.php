@@ -56,6 +56,7 @@ Route::prefix('v1')->group(function () {
         Route::get('roles-list', [UserInfoController::class, 'roles']);
         Route::get('users-list', [UserInfoController::class, 'users']);
         Route::post('permissions', [UserInfoController::class, 'savePermissions']);
+        Route::post('import', [UserInfoController::class, 'importUsers']);
     });
 
     // Teams (public read-only)
