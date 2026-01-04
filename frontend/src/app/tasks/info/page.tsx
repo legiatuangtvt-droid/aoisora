@@ -105,8 +105,24 @@ export default function UserInfoPage() {
     const dept = hierarchy.departments.find(d => d.id === departmentId);
     if (!dept) return;
 
+    // If already expanded, just collapse it
+    if (dept.isExpanded) {
+      setHierarchy(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          departments: prev.departments.map(d =>
+            d.id === departmentId
+              ? { ...d, isExpanded: false }
+              : d
+          ),
+        };
+      });
+      return;
+    }
+
     // If expanding and no teams loaded yet, fetch department details
-    if (!dept.isExpanded && !dept.teams) {
+    if (!dept.teams) {
       const deptCode = departmentId.toUpperCase();
       const deptId = DEPARTMENT_CODE_TO_ID[deptCode];
 
@@ -120,7 +136,7 @@ export default function UserInfoPage() {
               departments: prev.departments.map(d =>
                 d.id === departmentId
                   ? { ...d, ...deptData, isExpanded: true }
-                  : d
+                  : { ...d, isExpanded: false }
               ),
             };
           });
@@ -131,15 +147,15 @@ export default function UserInfoPage() {
       }
     }
 
-    // Just toggle expanded state
+    // Expand this department and collapse others
     setHierarchy(prev => {
       if (!prev) return prev;
       return {
         ...prev,
         departments: prev.departments.map(d =>
           d.id === departmentId
-            ? { ...d, isExpanded: !d.isExpanded }
-            : d
+            ? { ...d, isExpanded: true }
+            : { ...d, isExpanded: false }
         ),
       };
     });
