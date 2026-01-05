@@ -20,7 +20,7 @@ This document covers the authentication flow including Sign Up, Sign In, and For
 |-------|------|------|-------------|----------|
 | Full name | Text Input | Group icon | "Full name" | Yes |
 | Role | Dropdown Select | People icon | "Select Role" | Yes |
-| Email/Phone | Text Input | Person icon | "Email or Phone Number" | Yes |
+| Email/Phone/SAP | Text Input | Person icon | "Email or Phone Number or SAP Code" | Yes |
 | Password | Password Input | Lock icon | "Password" | Yes |
 
 #### Input States
@@ -49,7 +49,7 @@ This document covers the authentication flow including Sign Up, Sign In, and For
 |-------|-------|
 | Full name | Required, min 2 characters, max 100 characters |
 | Role | Required, must be valid role from dropdown |
-| Email/Phone | Required, valid email format OR valid phone number |
+| Email/Phone/SAP | Required, valid email format OR valid phone number OR valid SAP code |
 | Password | Required, min 8 characters, must contain uppercase, lowercase, number |
 
 ### 1.3 API Endpoints
@@ -61,7 +61,7 @@ This document covers the authentication flow including Sign Up, Sign In, and For
 1. User mở app → Hiển thị Sign Up screen
 2. User nhập Full name
 3. User chọn Role từ dropdown
-4. User nhập Email hoặc Phone Number
+4. User nhập Email hoặc Phone Number hoặc SAP Code
 5. User nhập Password
 6. User nhấn "Sign up" hoặc "Sign up with Google"
 7. Nếu thành công → Redirect to main app
