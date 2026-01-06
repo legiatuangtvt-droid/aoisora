@@ -11,7 +11,7 @@ export default function DWSNotFound() {
           Page Not Found
         </h2>
         <p className="text-gray-600 dark:text-gray-400 mb-6">
-          Trang ban dang tim khong ton tai hoac da duoc di chuyen.
+          The page you are looking for does not exist or has been moved.
         </p>
         <Link
           href="/dws/re-task-list"
@@ -30,7 +30,7 @@ export default function DWSNotFound() {
               d="M10 19l-7-7m0 0l7-7m-7 7h18"
             />
           </svg>
-          Quay lai DWS
+          Back to DWS
         </Link>
       </div>
     </div>

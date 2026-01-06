@@ -6,7 +6,7 @@ export default function StoresPage() {
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
         <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-          Cua Hang
+          Stores
         </h1>
       </div>
 
@@ -19,10 +19,10 @@ export default function StoresPage() {
             </svg>
           </div>
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            Cua Hang - Stores
+            Stores
           </h2>
           <p className="text-gray-600 dark:text-gray-400">
-            Chuc nang dang duoc phat trien. Vui long quay lai sau.
+            This feature is under development. Please check back later.
           </p>
         </div>
       </div>

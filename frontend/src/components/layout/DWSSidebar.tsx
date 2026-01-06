@@ -32,23 +32,23 @@ interface MenuGroup {
 export const dwsMenuGroups: MenuGroup[] = [
   {
     id: 'schedule',
-    label: 'LICH TRINH',
+    label: 'SCHEDULE',
     items: [
       {
         id: 'daily-schedule',
-        label: 'Lich hang ngay',
+        label: 'Daily Schedule',
         icon: 'calendar-day',
         route: '/dws/daily-schedule',
       },
       {
         id: 'monthly-schedule',
-        label: 'Lich hang thang',
+        label: 'Monthly Schedule',
         icon: 'calendar-month',
         route: '/dws/monthly-schedule',
       },
       {
         id: 'workforce-dispatch',
-        label: 'Dieu phoi nhan luc',
+        label: 'Workforce Dispatch',
         icon: 'users-dispatch',
         route: '/dws/workforce-dispatch',
       },
@@ -56,17 +56,17 @@ export const dwsMenuGroups: MenuGroup[] = [
   },
   {
     id: 'organization',
-    label: 'TO CHUC',
+    label: 'ORGANIZATION',
     items: [
       {
         id: 'stores',
-        label: 'Cua Hang',
+        label: 'Stores',
         icon: 'store',
         route: '/dws/stores',
       },
       {
         id: 'staff',
-        label: 'Nhan Vien',
+        label: 'Staff',
         icon: 'users',
         route: '/dws/staff',
       },
@@ -74,23 +74,23 @@ export const dwsMenuGroups: MenuGroup[] = [
   },
   {
     id: 'work-management',
-    label: 'QUAN LY CONG VIEC',
+    label: 'WORK MANAGEMENT',
     items: [
       {
         id: 'daily-template',
-        label: 'Mau Ngay',
+        label: 'Daily Template',
         icon: 'template',
         route: '/dws/daily-template',
       },
       {
         id: 'shift-codes',
-        label: 'Ma Ca Lam Viec',
+        label: 'Shift Codes',
         icon: 'shift-code',
         route: '/dws/shift-codes',
       },
       {
         id: 'task-groups',
-        label: 'Nhom Cong Viec',
+        label: 'Task Groups',
         icon: 'task-group',
         route: '/dws/task-groups',
       },
