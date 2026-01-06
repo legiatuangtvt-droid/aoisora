@@ -10,7 +10,7 @@ import { useToast } from '@/components/ui/Toast';
 import { MenuItem } from '@/types/layout';
 
 // Routes that are implemented
-const implementedRoutes = ['/tasks/list', '/tasks/new', '/tasks/detail', '/tasks/', '/tasks/messages', '/tasks/todo', '/tasks/library', '/tasks/info', '/tasks/store-info', '/tasks/report'];
+const implementedRoutes = ['/tasks/list', '/tasks/new', '/tasks/detail', '/tasks/', '/tasks/messages', '/tasks/todo', '/tasks/library', '/tasks/info', '/tasks/store-info', '/tasks/report', '/dws/re-task-list', '/dws/daily-schedule', '/dws/shift-codes', '/dws/workforce-dispatch'];
 
 // Menu items configuration with parent-child structure
 export const menuItems: MenuItem[] = [
@@ -77,6 +77,25 @@ export const menuItems: MenuItem[] = [
         route: '/tasks/store-info',
       },
     ],
+  },
+  // DWS Module - Dispatch Work Schedule
+  {
+    id: 'dws-re-task',
+    label: 'Quan Ly RE Task',
+    icon: 'invoice-scheduled',
+    route: '/dws/re-task-list',
+  },
+  {
+    id: 'dws-schedule',
+    label: 'Daily Schedule',
+    icon: 'last-updates',
+    route: '/dws/daily-schedule',
+  },
+  {
+    id: 'dws-shift',
+    label: 'Shift Codes',
+    icon: 'gridicons-types',
+    route: '/dws/shift-codes',
   },
 ];
 
@@ -332,6 +351,10 @@ export default function Sidebar() {
       pathname.startsWith('/tasks/report')
     )) {
       return false;
+    }
+    // DWS routes - exact match only for top-level items
+    if (route.startsWith('/dws/')) {
+      return pathname === route;
     }
     return pathname.startsWith(route + '/');
   };
