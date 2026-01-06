@@ -2,13 +2,33 @@
 
 ## Overview
 
-This document covers the authentication flow including Sign Up, Sign In, and Forgot Password screens.
+This document covers the authentication flow including Sign In, Sign Up, and Forgot Password screens.
 
 ---
 
-## 1. Sign Up Screen
+## 1. Sign In Screen
 
 ### 1.1 UI Components
+
+<!-- TODO: Add UI components -->
+
+### 1.2 Validation Rules
+
+<!-- TODO: Add validation rules -->
+
+### 1.3 API Endpoints
+
+<!-- TODO: Add API endpoints -->
+
+### 1.4 User Flow
+
+<!-- TODO: Add user flow -->
+
+---
+
+## 2. Sign Up Screen
+
+### 2.1 UI Components
 
 #### Header
 - **App Logo**: "AOI SORA" text với subtitle "OptiChain"
@@ -56,12 +76,12 @@ Button "Sign up" chỉ được enable (đổi màu xanh đậm) khi **TẤT C�
 4. Password đã được nhập và đạt độ mạnh tối thiểu "Medium"
 
 #### Footer Links
-- Text: "Don't have an account?" với link "Sign in" (màu đỏ)
+- Text: "Already have an account?" với link "Sign in" (màu đỏ)
 
 #### Background
 - Gradient sky với clouds (sunrise/sunset theme)
 
-### 1.2 Validation Rules
+### 2.2 Validation Rules
 
 | Field | Rules |
 |-------|-------|
@@ -70,13 +90,13 @@ Button "Sign up" chỉ được enable (đổi màu xanh đậm) khi **TẤT C�
 | Email/Phone/SAP | Required, valid email format OR valid phone number OR valid SAP code |
 | Password | Required, min 8 characters, must contain uppercase, lowercase, number |
 
-### 1.3 API Endpoints
+### 2.3 API Endpoints
 
 <!-- TODO: Add API endpoints -->
 
-### 1.4 User Flow
+### 2.4 User Flow
 
-1. User mở app → Hiển thị Sign Up screen
+1. User chưa có account → Click "Sign up" từ Sign In screen
 2. User nhập Full name
 3. User chọn Role từ dropdown
 4. User nhập Email hoặc Phone Number hoặc SAP Code
@@ -84,26 +104,6 @@ Button "Sign up" chỉ được enable (đổi màu xanh đậm) khi **TẤT C�
 6. User nhấn "Sign up" hoặc "Sign up with Google"
 7. Nếu thành công → Redirect to main app
 8. Nếu đã có account → Click "Sign in" → Redirect to Sign In screen
-
----
-
-## 2. Sign In Screen
-
-### 2.1 UI Components
-
-<!-- TODO: Add UI components -->
-
-### 2.2 Validation Rules
-
-<!-- TODO: Add validation rules -->
-
-### 2.3 API Endpoints
-
-<!-- TODO: Add API endpoints -->
-
-### 2.4 User Flow
-
-<!-- TODO: Add user flow -->
 
 ---
 
