@@ -1,14 +1,113 @@
 # Authentication Screens Specification
 
-## Overview
+---
 
-This document covers the authentication flow including Sign In, Sign Up, and Forgot Password screens.
+# BASIC SPEC
+
+## 1. Overview
+
+- **Module**: Shared (tất cả modules)
+- **Purpose**: Xác thực người dùng trước khi truy cập hệ thống
+- **Target Users**: Tất cả nhân viên (Staff, Manager, Admin)
+
+## 2. Screens Summary
+
+| Screen | Purpose | Entry Point |
+|--------|---------|-------------|
+| Sign In | Đăng nhập vào hệ thống | App launch, Logout |
+| Sign Up | Đăng ký tài khoản mới | Link từ Sign In |
+| Forgot Password | Yêu cầu reset mật khẩu | Link từ Sign In |
+| Code Verification | Xác thực OTP | Sau Forgot Password |
+| Reset Password | Đặt mật khẩu mới | Sau Code Verification |
+
+## 3. User Stories
+
+| ID | As a... | I want to... | So that... |
+|----|---------|--------------|------------|
+| US-01 | Staff | Sign in with my credentials | I can access the system |
+| US-02 | Staff | Reset my password | I can recover my account |
+| US-03 | Staff | Remember my login | I don't have to sign in every time |
+| US-04 | New User | Sign up for an account | I can use the system |
+
+## 4. Screen Components Summary
+
+### 4.1 Sign In Screen
+| Component | Description |
+|-----------|-------------|
+| Header | Logo "AOI SORA", title "Welcome back" |
+| Form | Email/Phone input, Password input |
+| Options | Remember 30 days checkbox, Forgot password link |
+| Actions | Sign in button, Google sign in button |
+| Footer | Sign up link |
+
+### 4.2 Sign Up Screen
+| Component | Description |
+|-----------|-------------|
+| Header | Logo, title "Get Started" |
+| Form | Full name, Role dropdown, Email/Phone/SAP, Password |
+| Password | Strength indicator (Weak/Medium/Strong) |
+| Actions | Sign up button, Google sign up button |
+| Footer | Sign in link |
+
+### 4.3 Forgot Password Flow
+| Step | Screen | Action |
+|------|--------|--------|
+| 1 | Forgot Password | Enter email → Send OTP |
+| 2 | Code Verification | Enter 5-digit OTP |
+| 3 | Reset Password | Enter new password + confirm |
+
+## 5. Navigation Flow
+
+```
+Sign In ─── (Forgot password?) ───> Forgot Password
+   │                                      │
+   │                               (Submit email)
+   │                                      ▼
+   │                               Code Verification
+   │                                      │
+   │                               (Verify code)
+   │                                      ▼
+   │                               Reset Password
+   │                                      │
+   │                         (Password reset success)
+   │                                      │
+   └──────── (Sign in) ◄──────────────────┘
+   │
+   │ (Don't have account?)
+   ▼
+Sign Up ─── (Already have account?) ───> Sign In
+```
+
+## 6. API Endpoints Summary
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/auth/login` | POST | Đăng nhập |
+| `/api/v1/auth/logout` | POST | Đăng xuất |
+| `/api/v1/auth/me` | GET | Lấy thông tin user hiện tại |
+| `/api/v1/auth/forgot-password` | POST | Gửi OTP qua email |
+| `/api/v1/auth/verify-code` | POST | Xác thực OTP |
+| `/api/v1/auth/reset-password` | POST | Đặt mật khẩu mới |
+| `/api/v1/auth/resend-code` | POST | Gửi lại OTP |
+| `/api/v1/auth/check-password-strength` | POST | Kiểm tra độ mạnh password |
+
+## 7. Implementation Status
+
+| Feature | Backend | Frontend | Notes |
+|---------|---------|----------|-------|
+| Sign In | ✅ Done | ✅ Done | Full flow |
+| Sign Up | ⏳ Pending | ⏳ Pending | - |
+| Forgot Password | ✅ Done | ⏳ Pending | Backend ready |
+| Code Verification | ✅ Done | ⏳ Pending | Backend ready |
+| Reset Password | ✅ Done | ⏳ Pending | Backend ready |
 
 ---
 
-## 1. Sign In Screen
+# DETAIL SPEC
 
-### 1.1 UI Components
+## 8. Sign In Screen - Detail
+
+### 8.1 UI Components
 
 #### Header
 - **App Logo**: "AOI SORA" text (màu xanh đậm #1E3A5F) với subtitle "OptiChain"
@@ -69,18 +168,16 @@ Button "Sign in" chỉ được enable (đổi màu xanh đậm) khi **TẤT C�
 - Gradient sky với clouds (sunrise/sunset theme)
 - Màu chủ đạo: xanh dương nhạt phía trên, cam/hồng phía dưới
 
-### 1.2 Validation Rules
+### 8.2 Validation Rules
 
 | Field | Rules |
 |-------|-------|
 | Email/Phone | Required, valid email format OR valid phone number |
 | Password | Required, min 1 character |
 
-### 1.3 API Endpoints
+### 8.3 API: Login
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/v1/auth/login` | POST | Đăng nhập với email/phone/sap_code/username |
+**Endpoint:** `POST /api/v1/auth/login`
 
 **Request:**
 ```json
@@ -130,7 +227,7 @@ Button "Sign in" chỉ được enable (đổi màu xanh đậm) khi **TẤT C�
 | `INCORRECT_PASSWORD` | Mật khẩu không đúng |
 | `ACCOUNT_INACTIVE` | Tài khoản không active |
 
-### 1.4 User Flow
+### 8.4 User Flow
 
 1. User mở app → Hiển thị Sign In screen (trạng thái empty)
 2. User click vào Email/Phone field → Focus state với cursor
@@ -145,9 +242,9 @@ Button "Sign in" chỉ được enable (đổi màu xanh đậm) khi **TẤT C�
 
 ---
 
-## 2. Sign Up Screen
+## 9. Sign Up Screen - Detail
 
-### 2.1 UI Components
+### 9.1 UI Components
 
 #### Header
 - **App Logo**: "AOI SORA" text với subtitle "OptiChain"
@@ -200,7 +297,7 @@ Button "Sign up" chỉ được enable (đổi màu xanh đậm) khi **TẤT C�
 #### Background
 - Gradient sky với clouds (sunrise/sunset theme)
 
-### 2.2 Validation Rules
+### 9.2 Validation Rules
 
 | Field | Rules |
 |-------|-------|
@@ -209,11 +306,11 @@ Button "Sign up" chỉ được enable (đổi màu xanh đậm) khi **TẤT C�
 | Email/Phone/SAP | Required, valid email format OR valid phone number OR valid SAP code |
 | Password | Required, min 8 characters, must contain uppercase, lowercase, number |
 
-### 2.3 API Endpoints
+### 9.3 API Endpoints
 
-<!-- TODO: Add API endpoints -->
+<!-- TODO: Add API endpoints when implemented -->
 
-### 2.4 User Flow
+### 9.4 User Flow
 
 1. User chưa có account → Click "Sign up" từ Sign In screen
 2. User nhập Full name
@@ -226,13 +323,9 @@ Button "Sign up" chỉ được enable (đổi màu xanh đậm) khi **TẤT C�
 
 ---
 
-## 3. Forgot Password Flow
+## 10. Forgot Password Flow - Detail
 
-Forgot Password flow gồm 3 bước: Request Reset → Code Verification → Reset Password
-
----
-
-### 3.1 Step 1: Forgot Password Screen
+### 10.1 Step 1: Forgot Password Screen
 
 #### UI Components
 
@@ -253,6 +346,32 @@ Forgot Password flow gồm 3 bước: Request Reset → Code Verification → Re
 ##### Footer Links
 - Text: "Don't have an account?" với link "Sign up" (màu đỏ #EF4444)
 
+#### API: Forgot Password
+
+**Endpoint:** `POST /api/v1/auth/forgot-password`
+
+**Request:**
+```json
+{
+  "email": "admin@aoisora.com"
+}
+```
+
+**Response (Success):**
+```json
+{
+  "success": true,
+  "message": "Verification code sent to your email",
+  "email": "ad***@aoisora.com",
+  "debug_code": "34819"
+}
+```
+
+**Error Codes:**
+| Code | Description |
+|------|-------------|
+| `EMAIL_NOT_FOUND` | Email không tồn tại trong hệ thống |
+
 #### User Flow
 1. User click "Forgot password" từ Sign In screen
 2. User nhập Email đã đăng ký
@@ -262,7 +381,7 @@ Forgot Password flow gồm 3 bước: Request Reset → Code Verification → Re
 
 ---
 
-### 3.2 Step 2: Code Verification Screen
+### 10.2 Step 2: Code Verification Screen
 
 #### UI Components
 
@@ -284,6 +403,58 @@ Forgot Password flow gồm 3 bước: Request Reset → Code Verification → Re
 ##### Footer Links
 - Text: "Didn't receive code?" với link "Resend" (màu xanh đậm)
 
+#### API: Verify Code
+
+**Endpoint:** `POST /api/v1/auth/verify-code`
+
+**Request:**
+```json
+{
+  "email": "admin@aoisora.com",
+  "code": "34819"
+}
+```
+
+**Response (Success):**
+```json
+{
+  "success": true,
+  "message": "Code verified successfully",
+  "reset_token": "W8aTbhdkgfNHbk76U2DgzOHC..."
+}
+```
+
+**Error Codes:**
+| Code | Description |
+|------|-------------|
+| `NO_RESET_REQUEST` | Không có yêu cầu reset cho email này |
+| `CODE_EXPIRED` | Mã xác thực đã hết hạn (15 phút) |
+| `INVALID_CODE` | Mã xác thực không đúng |
+
+#### API: Resend Code
+
+**Endpoint:** `POST /api/v1/auth/resend-code`
+
+**Request:**
+```json
+{
+  "email": "admin@aoisora.com"
+}
+```
+
+**Response (Success):**
+```json
+{
+  "success": true,
+  "message": "New verification code sent to your email"
+}
+```
+
+**Error Codes:**
+| Code | Description |
+|------|-------------|
+| `RATE_LIMITED` | Vui lòng đợi trước khi gửi lại (kèm `retry_after` giây) |
+
 #### User Flow
 1. User nhận email với verification code (5 số)
 2. User nhập code vào 5 ô input
@@ -293,7 +464,7 @@ Forgot Password flow gồm 3 bước: Request Reset → Code Verification → Re
 
 ---
 
-### 3.3 Step 3: Reset Password Screen
+### 10.3 Step 3: Reset Password Screen
 
 #### UI Components
 
@@ -352,97 +523,9 @@ Button "Verify Account" chỉ được enable khi **TẤT CẢ** điều kiện 
 | Error (Not Match) | Lock icon đỏ, border bottom đỏ |
 | Valid (Match) | Lock icon xanh, border bottom xanh |
 
-#### User Flow
-1. User nhập New Password
-2. Password strength indicator cập nhật real-time
-3. User nhập Confirm New Password
-4. Hệ thống validate match:
-   - Nếu không khớp → Hiển thị "Passwords do not match." (đỏ)
-   - Nếu khớp → Hiển thị "Passwords match." (xám)
-5. Khi tất cả điều kiện thỏa mãn → Button "Verify Account" enable
-6. User nhấn "Verify Account"
-7. Nếu thành công → Redirect to Sign In screen
+#### API: Reset Password
 
----
-
-### 3.4 Validation Rules
-
-| Field | Rules |
-|-------|-------|
-| Email (Step 1) | Required, valid email format, must exist in system |
-| Verification Code (Step 2) | Required, exactly 5 digits |
-| New Password (Step 3) | Required, min 8 characters, must contain uppercase, number, special character |
-| Confirm Password (Step 3) | Required, must match New Password |
-
-### 3.5 API Endpoints
-
-#### Step 1: Request Password Reset
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/v1/auth/forgot-password` | POST | Gửi mã OTP 5 số qua email |
-
-**Request:**
-```json
-{
-  "email": "admin@aoisora.com"
-}
-```
-
-**Response (Success):**
-```json
-{
-  "success": true,
-  "message": "Verification code sent to your email",
-  "email": "ad***@aoisora.com",
-  "debug_code": "34819"  // Chỉ hiển thị trong debug mode
-}
-```
-
-**Error Codes:**
-| Code | Description |
-|------|-------------|
-| `EMAIL_NOT_FOUND` | Email không tồn tại trong hệ thống |
-
----
-
-#### Step 2: Verify Code
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/v1/auth/verify-code` | POST | Xác thực mã OTP |
-
-**Request:**
-```json
-{
-  "email": "admin@aoisora.com",
-  "code": "34819"
-}
-```
-
-**Response (Success):**
-```json
-{
-  "success": true,
-  "message": "Code verified successfully",
-  "reset_token": "W8aTbhdkgfNHbk76U2DgzOHC..."
-}
-```
-
-**Error Codes:**
-| Code | Description |
-|------|-------------|
-| `NO_RESET_REQUEST` | Không có yêu cầu reset cho email này |
-| `CODE_EXPIRED` | Mã xác thực đã hết hạn (15 phút) |
-| `INVALID_CODE` | Mã xác thực không đúng |
-
----
-
-#### Step 3: Reset Password
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/v1/auth/reset-password` | POST | Đặt lại mật khẩu mới |
+**Endpoint:** `POST /api/v1/auth/reset-password`
 
 **Request:**
 ```json
@@ -469,41 +552,9 @@ Button "Verify Account" chỉ được enable khi **TẤT CẢ** điều kiện 
 | `RESET_TOKEN_EXPIRED` | Token đã hết hạn (30 phút) |
 | `ACCOUNT_NOT_FOUND` | Tài khoản không tồn tại |
 
----
+#### API: Check Password Strength
 
-#### Resend Verification Code
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/v1/auth/resend-code` | POST | Gửi lại mã OTP (rate limit: 1 phút) |
-
-**Request:**
-```json
-{
-  "email": "admin@aoisora.com"
-}
-```
-
-**Response (Success):**
-```json
-{
-  "success": true,
-  "message": "New verification code sent to your email"
-}
-```
-
-**Error Codes:**
-| Code | Description |
-|------|-------------|
-| `RATE_LIMITED` | Vui lòng đợi trước khi gửi lại (kèm `retry_after` giây) |
-
----
-
-#### Check Password Strength
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/v1/auth/check-password-strength` | POST | Kiểm tra độ mạnh mật khẩu |
+**Endpoint:** `POST /api/v1/auth/check-password-strength`
 
 **Request:**
 ```json
@@ -529,11 +580,33 @@ Button "Verify Account" chỉ được enable khi **TẤT CẢ** điều kiện 
 | `medium` | 3-4 | Mật khẩu trung bình |
 | `strong` | 5-6 | Mật khẩu mạnh |
 
+#### User Flow
+1. User nhập New Password
+2. Password strength indicator cập nhật real-time
+3. User nhập Confirm New Password
+4. Hệ thống validate match:
+   - Nếu không khớp → Hiển thị "Passwords do not match." (đỏ)
+   - Nếu khớp → Hiển thị "Passwords match." (xám)
+5. Khi tất cả điều kiện thỏa mãn → Button "Verify Account" enable
+6. User nhấn "Verify Account"
+7. Nếu thành công → Redirect to Sign In screen
+
 ---
 
-## 4. Shared Components
+### 10.4 Validation Rules Summary
 
-### 4.1 Form Layout
+| Field | Rules |
+|-------|-------|
+| Email (Step 1) | Required, valid email format, must exist in system |
+| Verification Code (Step 2) | Required, exactly 5 digits |
+| New Password (Step 3) | Required, min 8 characters, must contain uppercase, number, special character |
+| Confirm Password (Step 3) | Required, must match New Password |
+
+---
+
+## 11. Shared Components - Detail
+
+### 11.1 Form Layout
 
 #### Container
 - **Max Width**: 400px
@@ -566,7 +639,7 @@ Button "Verify Account" chỉ được enable khi **TẤT CẢ** điều kiện 
 - **Full Width**: 100%
 - **Transition**: background-color 0.2s ease
 
-### 4.2 Error Handling
+### 11.2 Error Handling
 
 #### Error Display
 | Type | Display Location | Style |
@@ -580,47 +653,11 @@ Button "Verify Account" chỉ được enable khi **TẤT CẢ** điều kiện 
 2. Form errors tự động ẩn sau 5 giây hoặc khi user dismiss
 3. Network errors có thể retry bằng cách submit lại
 
-### 4.3 Navigation
-
-#### Screen Flow
-```
-Sign In ─── (Forgot password?) ───> Forgot Password
-   │                                      │
-   │                               (Submit email)
-   │                                      ▼
-   │                               Code Verification
-   │                                      │
-   │                               (Verify code)
-   │                                      ▼
-   │                               Reset Password
-   │                                      │
-   │                         (Password reset success)
-   │                                      │
-   └──────── (Sign in) ◄──────────────────┘
-   │
-   │ (Don't have account?)
-   ▼
-Sign Up ─── (Already have account?) ───> Sign In
-```
-
-#### Navigation Actions
-| From | Action | To |
-|------|--------|-----|
-| Sign In | Click "Forgot password" | Forgot Password |
-| Sign In | Click "Sign up" | Sign Up |
-| Sign In | Login success | Main App (Module Selection) |
-| Sign Up | Click "Sign in" | Sign In |
-| Sign Up | Register success | Main App |
-| Forgot Password | Click "Sign up" | Sign Up |
-| Forgot Password | Submit email | Code Verification |
-| Code Verification | Verify success | Reset Password |
-| Reset Password | Reset success | Sign In |
-
 ---
 
-## 5. Database Schema
+## 12. Database Schema
 
-### 5.1 Staff Table (Authentication Fields)
+### 12.1 Staff Table (Authentication Fields)
 
 | Column | Type | Description |
 |--------|------|-------------|
@@ -634,7 +671,7 @@ Sign Up ─── (Already have account?) ───> Sign In
 | `created_at` | TIMESTAMP | Ngày tạo |
 | `updated_at` | TIMESTAMP | Ngày cập nhật |
 
-### 5.2 Password Reset Tokens Table
+### 12.2 Password Reset Tokens Table
 
 | Column | Type | Description |
 |--------|------|-------------|
@@ -646,7 +683,7 @@ Sign Up ─── (Already have account?) ───> Sign In
 | `verified_at` | TIMESTAMP | Thời gian xác thực OTP thành công |
 | `created_at` | TIMESTAMP | Thời gian tạo |
 
-### 5.3 Personal Access Tokens Table (Laravel Sanctum)
+### 12.3 Personal Access Tokens Table (Laravel Sanctum)
 
 | Column | Type | Description |
 |--------|------|-------------|
@@ -661,7 +698,7 @@ Sign Up ─── (Already have account?) ───> Sign In
 | `created_at` | TIMESTAMP | Thời gian tạo |
 | `updated_at` | TIMESTAMP | Thời gian cập nhật |
 
-### 5.4 Token Expiration
+### 12.4 Token Expiration
 
 | Remember Me | Token Lifetime |
 |-------------|----------------|
@@ -670,9 +707,9 @@ Sign Up ─── (Already have account?) ───> Sign In
 
 ---
 
-## 6. Security Considerations
+## 13. Security Considerations
 
-### 6.1 Password Security
+### 13.1 Password Security
 
 | Measure | Implementation |
 |---------|----------------|
@@ -681,7 +718,7 @@ Sign Up ─── (Already have account?) ───> Sign In
 | Complexity | Uppercase, lowercase, number, special character |
 | Storage | Chỉ lưu hash, không bao giờ lưu plain text |
 
-### 6.2 Token Security
+### 13.2 Token Security
 
 | Measure | Implementation |
 |---------|----------------|
@@ -690,7 +727,7 @@ Sign Up ─── (Already have account?) ───> Sign In
 | Token Transmission | Bearer token trong Authorization header |
 | Token Expiration | 24h (default) hoặc 30 ngày (remember me) |
 
-### 6.3 OTP Security
+### 13.3 OTP Security
 
 | Measure | Implementation |
 |---------|----------------|
@@ -700,7 +737,7 @@ Sign Up ─── (Already have account?) ───> Sign In
 | Rate Limiting | 1 phút giữa các lần resend |
 | Reset Token | 64-character random string, valid 30 phút sau verify |
 
-### 6.4 API Security
+### 13.4 API Security
 
 | Measure | Implementation |
 |---------|----------------|
@@ -710,7 +747,7 @@ Sign Up ─── (Already have account?) ───> Sign In
 | SQL Injection | Eloquent ORM parameterized queries |
 | XSS Prevention | JSON responses only |
 
-### 6.5 Frontend Security
+### 13.5 Frontend Security
 
 | Measure | Implementation |
 |---------|----------------|
@@ -719,7 +756,7 @@ Sign Up ─── (Already have account?) ───> Sign In
 | HTTPS | Required cho production |
 | Sensitive Data | Không log password hoặc token |
 
-### 6.6 Login Identifier Support
+### 13.6 Login Identifier Support
 
 Hệ thống hỗ trợ đăng nhập bằng nhiều loại identifier:
 
@@ -730,47 +767,27 @@ Hệ thống hỗ trợ đăng nhập bằng nhiều loại identifier:
 | SAP Code | NVxxx hoặc số | NV001 |
 | Username | Alphanumeric | admin |
 
-### 6.7 Test Accounts
-
-| Username | Password | Role | Notes |
-|----------|----------|------|-------|
-| admin | Password123! | MANAGER | Store Ha Dong |
-| manager01 | Password123! | MANAGER | Test account |
-| staff01-05 | Password123! | STAFF | Test staff accounts |
-
 ---
 
-## 7. Implementation Status
+## 14. Files Reference
 
-### 7.1 Backend (Laravel)
+### 14.1 Backend (Laravel)
 
-| Feature | Status | File |
-|---------|--------|------|
-| Login API | ✅ Done | `AuthController@login` |
-| Forgot Password | ✅ Done | `AuthController@forgotPassword` |
-| Verify Code | ✅ Done | `AuthController@verifyResetCode` |
-| Reset Password | ✅ Done | `AuthController@resetPassword` |
-| Resend Code | ✅ Done | `AuthController@resendCode` |
-| Password Strength | ✅ Done | `AuthController@checkPasswordStrength` |
-| Logout | ✅ Done | `AuthController@logout` |
-| Get User Info | ✅ Done | `AuthController@me` |
+| Feature | File |
+|---------|------|
+| Login API | `app/Http/Controllers/Api/V1/AuthController.php@login` |
+| Forgot Password | `app/Http/Controllers/Api/V1/AuthController.php@forgotPassword` |
+| Verify Code | `app/Http/Controllers/Api/V1/AuthController.php@verifyResetCode` |
+| Reset Password | `app/Http/Controllers/Api/V1/AuthController.php@resetPassword` |
+| Resend Code | `app/Http/Controllers/Api/V1/AuthController.php@resendCode` |
+| Password Strength | `app/Http/Controllers/Api/V1/AuthController.php@checkPasswordStrength` |
+| Routes | `routes/api.php` |
+| Model | `app/Models/Staff.php`, `app/Models/PasswordResetToken.php` |
 
-### 7.2 Frontend (Next.js)
+### 14.2 Frontend (Next.js)
 
-| Feature | Status | File |
-|---------|--------|------|
-| Sign In Screen | ✅ Done | `app/auth/signin/page.tsx` |
-| Auth Context | ✅ Done | `contexts/AuthContext.tsx` |
-| Auth Guard | ✅ Done | `components/auth/AuthGuard.tsx` |
-| Sign Up Screen | ⏳ Pending | - |
-| Forgot Password Screen | ⏳ Pending | - |
-| Code Verification Screen | ⏳ Pending | - |
-| Reset Password Screen | ⏳ Pending | - |
-
-### 7.3 Database
-
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Staff table | ✅ Done | With password_hash column |
-| Password Reset Tokens | ✅ Done | Migration applied |
-| Personal Access Tokens | ✅ Done | Laravel Sanctum default |
+| Feature | File |
+|---------|------|
+| Sign In Screen | `frontend/src/app/auth/signin/page.tsx` |
+| Auth Context | `frontend/src/contexts/AuthContext.tsx` |
+| Auth Guard | `frontend/src/components/auth/AuthGuard.tsx` |

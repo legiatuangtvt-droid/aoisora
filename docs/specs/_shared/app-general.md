@@ -1,19 +1,37 @@
 # App General Layout Specification
 
-> **Status**: Implementation Complete (Frontend)
-> **Last Updated**: 2026-01-02
-> **Screen ID**: APP_GENERAL
-> **Applies to**: All screens
-
 ---
+
+# BASIC SPEC
 
 ## 1. Overview
 
-This specification defines the general application layout including Top Bar, Sidebar Menu, User Menu Dropdown, Dark/Light Mode, and Language switching.
+- **Screen ID**: APP_GENERAL
+- **Applies to**: All screens
+- **Purpose**: Define the general application layout including Top Bar, Sidebar Menu, User Menu, Dark/Light Mode, and Language switching
+- **Status**: Implementation Complete (Frontend)
 
----
+## 2. User Stories
 
-## 2. Screen Layout
+| ID | As a... | I want to... | So that... |
+|----|---------|--------------|------------|
+| US-01 | User | See consistent navigation | I can easily move between screens |
+| US-02 | User | Toggle dark/light mode | I can choose my preferred theme |
+| US-03 | User | Switch language | I can use the app in my language |
+| US-04 | User | View notifications | I can see important updates |
+| US-05 | User | Access my profile | I can manage my account |
+| US-06 | User | Collapse sidebar | I can have more screen space |
+
+## 3. Screen Components Summary
+
+| Component | Description |
+|-----------|-------------|
+| Top Bar | Logo, notification, user info, company logo |
+| Sidebar Menu | Navigation menu with expandable items |
+| User Menu Dropdown | Profile, settings, theme, language, logout |
+| Main Content Area | Screen-specific content |
+
+## 4. Screen Layout
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -30,54 +48,68 @@ This specification defines the general application layout including Top Bar, Sid
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
+## 5. Navigation (Sidebar Menu)
+
+| Icon | Label | Route | Parent |
+|------|-------|-------|--------|
+| 📋 | Task list HQ-Store | /tasks | - |
+| ├─ 📝 | List task | /tasks/list | HQ-Store |
+| ├─ 📄 | Detail | /tasks/detail | HQ-Store |
+| └─ 💬 | Message | /tasks/messages | HQ-Store |
+| ✅ | To-do Task | /tasks/todo | - |
+| 📚 | Task Library | /tasks/library | - |
+| 📊 | Report | /tasks/report | - |
+| 👥 | User management | /users | - |
+| ├─ 👤 | User information | /tasks/info | User management |
+| └─ 🏪 | Store information | /tasks/store-info | User management |
+
+## 6. Implementation Status
+
+| Feature | Backend | Frontend | Notes |
+|---------|---------|----------|-------|
+| Top Bar | - | ✅ Done | - |
+| Sidebar Menu | - | ✅ Done | - |
+| User Menu Dropdown | - | ✅ Done | - |
+| Dark/Light Mode | - | ✅ Done | - |
+| Language Switching | - | ✅ Done | - |
+| Responsive Design | - | ✅ Done | - |
+
 ---
 
-## 3. Components
+# DETAIL SPEC
 
-### 3.1 Top Bar
+## 7. Top Bar - Detail
 
-| Element | Description | Position | Status |
-|---------|-------------|----------|--------|
-| Logo | Application logo (OptiChain) | Left | ✅ Implemented |
-| Notification Icon | Bell icon with badge counter | Right side | ✅ Implemented |
-| User Avatar | Circular user profile image | Right of notification | ✅ Implemented |
-| User Name | Display name of logged-in user | Right of avatar | ✅ Implemented |
-| User Role | Role badge (e.g., "Admin", "User") | Below user name | ✅ Implemented |
-| Dropdown Arrow | Opens User Menu Dropdown | Right of user info | ✅ Implemented |
-| Company Logo | Partner/Company logo | Far right | ✅ Implemented |
+| Element | Description | Position |
+|---------|-------------|----------|
+| Logo | Application logo (OptiChain) | Left |
+| Notification Icon | Bell icon with badge counter | Right side |
+| User Avatar | Circular user profile image | Right of notification |
+| User Name | Display name of logged-in user | Right of avatar |
+| User Role | Role badge (e.g., "Admin", "User") | Below user name |
+| Dropdown Arrow | Opens User Menu Dropdown | Right of user info |
+| Company Logo | Partner/Company logo | Far right |
 
-**Styling:**
+### 7.1 Top Bar Styling
+
 - Background: White (light mode) / Dark gray (dark mode)
 - Height: 64px
 - Shadow: subtle bottom shadow
 - Fixed position at top
 
-### 3.2 Sidebar Menu
+---
 
-| Feature | Description | Status |
-|---------|-------------|--------|
-| Toggle Button | Expand/Collapse sidebar | ✅ Implemented |
-| Expanded Width | 240px | ✅ Implemented |
-| Collapsed Width | 64px (icons only) | ✅ Implemented |
-| Active Item | Highlighted with accent color | ✅ Implemented |
-| Hover Effect | Light background on hover | ✅ Implemented |
+## 8. Sidebar Menu - Detail
 
-**Menu Items (Hierarchical Structure):**
+### 8.1 Dimensions
 
-| Icon | Label | Route | Parent | Status |
-|------|-------|-------|--------|--------|
-| 📋 | Task list HQ-Store | /tasks | - | ✅ Parent menu |
-| ├─ 📝 | List task | /tasks/list | HQ-Store | ✅ Implemented |
-| ├─ 📄 | Detail | /tasks/detail | HQ-Store | ✅ Implemented |
-| └─ 💬 | Message | /tasks/messages | HQ-Store | ✅ Implemented |
-| ✅ | To-do Task | /tasks/todo | - | ✅ Implemented |
-| 📚 | Task Library | /tasks/library | - | ✅ Implemented |
-| 📊 | Report | /reports | - | ✅ Menu item added |
-| 👥 | User management | /users | - | ✅ Parent menu |
-| ├─ 👤 | User information | /tasks/info | User management | ✅ Implemented |
-| └─ 🏪 | Store information | /tasks/store-info | User management | ✅ Implemented |
+| Property | Value |
+|----------|-------|
+| Expanded Width | 240px |
+| Collapsed Width | 64px (icons only) |
 
-**Behavior:**
+### 8.2 Behavior
+
 - Expanded mode: Show icon + label
 - Collapsed mode: Show icon only with tooltip on hover
 - State persisted in localStorage
@@ -85,72 +117,75 @@ This specification defines the general application layout including Top Bar, Sid
 - Parent menus are expandable/collapsible with arrow indicator
 - Child items indented with left border line
 
-**UI/UX Enhancements (v2):**
+### 8.3 UI/UX Enhancements
+
 - Gradient background for active/hover states
 - Scale animation on hover (`scale-[1.02]`) and click (`scale-[0.98]`)
 - Icon rotation on hover (`rotate-3`)
 - Ripple effect on click
 - Gradient active indicator bar (from `#C5055B` to `#E5457B`)
 - Children count badge when sidebar is collapsed
-- Tooltip with item count preview (e.g., "Task list HQ-Store (3 items)")
-- Scroll improvements:
-  - Custom thin scrollbar with hover effect
-  - Top/bottom fade gradients
-  - Smooth scrolling
+- Tooltip with item count preview
+- Custom thin scrollbar with hover effect
+- Top/bottom fade gradients
+- Smooth scrolling
 
-### 3.3 User Menu Dropdown
+---
 
-| Item | Icon | Action | Status |
-|------|------|--------|--------|
-| Light Mode / Dark Mode | 🌙/☀️ | Toggle dark/light mode (text changes based on current state) | ✅ Implemented |
-| My Profile | 👤 | Navigate to /profile | ✅ Implemented |
-| Account Settings | ⚙️ | Navigate to /settings | ✅ Implemented |
-| Language | 🌐 | Open language submenu | ✅ Implemented |
-| Help / Support | ❓ | Navigate to /help | ✅ Implemented |
-| Logout | 🚪 | Logout and redirect to /login | ✅ Implemented |
+## 9. User Menu Dropdown - Detail
 
-**Styling:**
+| Item | Icon | Action |
+|------|------|--------|
+| Light Mode / Dark Mode | 🌙/☀️ | Toggle dark/light mode |
+| My Profile | 👤 | Navigate to /profile |
+| Account Settings | ⚙️ | Navigate to /settings |
+| Language | 🌐 | Open language submenu |
+| Help / Support | ❓ | Navigate to /help |
+| Logout | 🚪 | Logout and redirect to /login |
+
+### 9.1 Dropdown Styling
+
 - Dropdown width: 240px
 - Border radius: 8px
 - Shadow: medium elevation
 - Position: Below user avatar, right-aligned
 
-### 3.4 Dark/Light Mode
+---
+
+## 10. Dark/Light Mode - Detail
 
 | Mode | Background | Text | Primary Color |
 |------|------------|------|---------------|
 | Light | #FFFFFF | #1F2937 | #C5055B |
 | Dark | #1F2937 | #F9FAFB | #E91E8C |
 
-**Implementation:**
+### 10.1 Implementation
+
 - Use CSS variables for theme colors
 - Toggle via User Menu or system preference
 - Store preference in localStorage
 - Apply `dark` class to `<html>` element
-- Global dark mode styles in `globals.css` automatically override:
-  - Background colors (white → gray-800, gray-50 → gray-900)
-  - Text colors (gray-900 → gray-100, etc.)
-  - Border colors
-  - Form input styles
-  - Table header backgrounds
-  - Hover states
+- Global dark mode styles in `globals.css`
 
-### 3.5 Language Switching
+---
 
-| Code | Label | Flag | Status |
-|------|-------|------|--------|
-| vi-VN | Tieng Viet | 🇻🇳 | ✅ Implemented |
-| en-US | English | 🇺🇸 | ✅ Implemented |
-| ja-JP | 日本語 | 🇯🇵 | ✅ Implemented |
+## 11. Language Switching - Detail
 
-**Implementation:**
+| Code | Label | Flag |
+|------|-------|------|
+| vi-VN | Tieng Viet | 🇻🇳 |
+| en-US | English | 🇺🇸 |
+| ja-JP | 日本語 | 🇯🇵 |
+
+### 11.1 Implementation
+
 - Use next-intl or similar i18n library
 - Store preference in localStorage
 - Default to browser language or vi-VN
 
 ---
 
-## 4. Data Types
+## 12. Data Types
 
 ```typescript
 // User interface
@@ -196,7 +231,7 @@ interface SidebarState {
 
 ---
 
-## 5. File Structure
+## 13. Files Reference
 
 ```
 frontend/src/
@@ -224,7 +259,7 @@ frontend/src/
 
 ---
 
-## 6. Responsive Behavior
+## 14. Responsive Behavior
 
 | Breakpoint | Sidebar | Top Bar |
 |------------|---------|---------|
@@ -234,14 +269,14 @@ frontend/src/
 
 ---
 
-## 7. Changelog
+## 15. Changelog
 
 | Date | Changes |
 |------|---------|
+| 2024-12-28 | Initial spec documentation |
+| 2025-12-29 | Apply global dark mode styles to all pages via globals.css |
+| 2025-12-29 | Update theme toggle to show current state (Light Mode/Dark Mode) |
 | 2026-01-02 | Enhanced sidebar UI/UX: gradient states, animations, scroll improvements |
 | 2026-01-02 | Added User management submenu (User info, Store info) |
 | 2026-01-02 | Added custom scrollbar styles to globals.css |
-| 2025-12-29 | Apply global dark mode styles to all pages via globals.css |
-| 2025-12-29 | Update theme toggle to show current state (Light Mode/Dark Mode) |
-| 2024-12-28 | Initial spec documentation |
-
+| 2026-01-06 | Restructured spec with Basic/Detail sections |

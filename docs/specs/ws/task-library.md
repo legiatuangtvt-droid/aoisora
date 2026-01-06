@@ -1,221 +1,266 @@
-# TASK LIBRARY SCREEN SPECIFICATION (SCR_TASK_LIBRARY)
+# Task Library Screen Specification
 
 ---
 
-## 1. GENERAL DESCRIPTION
+# BASIC SPEC
 
-| No | Attribute | Value |
-|----|-----------|-------|
-| 1 | Screen Name | Task Library Screen |
-| 2 | Screen Code | SCR_TASK_LIBRARY |
-| 3 | Target Users | HQ (Headquarter) Staff |
-| 4 | Access Point | From Sidebar Menu: "Task Library" |
+## 1. Overview
 
-*Purpose: Admin manages and organizes common task templates for recurring tasks for office and store operations. Allows creating, editing and deleting task templates.*
+- **Module**: WS (Task from HQ)
+- **Screen ID**: SCR_TASK_LIBRARY
+- **Route**: `/tasks/library`
+- **Purpose**: Manage and organize common task templates for recurring office and store operations
+- **Target Users**: HQ (Headquarter) Staff
 
-### Access Flow:
+## 2. User Stories
 
-| Step | Action |
-|------|--------|
-| 1 | From Sidebar Menu, select "Task Library" |
-| 2 | Screen displays with 2 tabs: OFFICE TASKS and STORE TASKS |
+| ID | As a... | I want to... | So that... |
+|----|---------|--------------|------------|
+| US-01 | HQ Staff | View all task templates | I can see available templates for task creation |
+| US-02 | HQ Staff | Filter tasks by Office/Store tab | I can focus on relevant task types |
+| US-03 | HQ Staff | Filter tasks by department | I can find department-specific templates |
+| US-04 | HQ Staff | Search task templates | I can quickly find specific tasks |
+| US-05 | HQ Staff | Create new task template | I can add reusable task templates |
+| US-06 | HQ Staff | Edit/Delete/Duplicate templates | I can manage existing templates |
 
----
+## 3. Screen Components Summary
 
-## 2. FUNCTIONAL SPECIFICATION
+| Component | Description |
+|-----------|-------------|
+| Header | Title "TASK LIBRARY" with "+ Create New" button |
+| Tab Navigation | OFFICE TASKS / STORE TASKS tabs |
+| Department Filter Chips | Quick filter by Admin, HR, Legal, etc. |
+| Search Bar | Text search with filter button |
+| Task Group Sections | Expandable department groups with task tables |
 
-*Interface divided into: Header (Title + Actions), Tab Navigation, Filter Bar, and Content Area (Task Groups).*
+## 4. Screen Layout
 
-### A. Page Header
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ TASK LIBRARY                                      [+ Create New]    │
+│ Manage and organize recurring tasks for office and store operations │
+├─────────────────────────────────────────────────────────────────────┤
+│ [OFFICE TASKS]  [STORE TASKS]                                       │
+├─────────────────────────────────────────────────────────────────────┤
+│ [Admin] [HR] [Legal]           [Search...] [Filter]                 │
+├─────────────────────────────────────────────────────────────────────┤
+│ ▼ ADMIN TASKS                              [3 GROUP TASKS]          │
+│ ┌───────────────────────────────────────────────────────────────┐   │
+│ │ No │ Type │ Task Name │ Owner │ Last Update │ Status │ Usage │   │
+│ │ 1  │ Daily│ Opening...│ Thu OP│ 25 Dec, 25  │In prog │  565  │   │
+│ │ 2  │ Weekly│ Check SS │Nguyen │ 23 Dec, 25  │ Draft  │   52  │   │
+│ └───────────────────────────────────────────────────────────────┘   │
+│ ▶ HR TASKS                                 [2 GROUP TASKS]          │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
-| No | Component | Description | Notes |
-|----|-----------|-------------|-------|
-| 1 | Page Title | "TASK LIBRARY" | Font 16m, bold, black color |
-| 2 | Subtitle | "Manage and organize recurring tasks for office and store operations." | Gray text |
-| 3 | Create New Document | Button "+ Create New" | Filled button, pink/red color, right corner |
+## 5. Navigation
 
-### B. Tab Navigation (Task Type Navigation)
+| Action | Destination |
+|--------|-------------|
+| Click Sidebar "Task Library" | `/tasks/library` |
+| Click "+ Create New" | Open create task form |
+| Click Task Row | Open task detail/edit form |
+| Click Edit menu | Edit task template |
+| Click Duplicate menu | Create copy of task |
 
-*Categorize tasks by target users: Office (headquarters) or Store (stores).*
+## 6. API Endpoints Summary
 
-| No | Tab | Icon | Description |
-|----|-----|------|-------------|
-| 1 | OFFICE TASKS | Building icon | Tasks for office staff (HQ) |
-| 2 | STORE TASKS | Store icon | Tasks for store staff |
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/task-library` | GET | Get task template list |
+| `/api/v1/task-library/{id}` | GET | Get task template detail |
+| `/api/v1/task-library` | POST | Create new task template |
+| `/api/v1/task-library/{id}` | PUT/DELETE | Update/Delete template |
 
-*Active tab has pink underline and pink text.*
+## 7. Implementation Status
 
-### C. Department Filter Chips
-
-*Quick filter tasks by department, displayed as chips/buttons.*
-
-| No | Chip | Icon | Description |
-|----|------|------|-------------|
-| 1 | Admin | Person/admin icon | Filter Admin department tasks |
-| 2 | HR | People icon | Filter HR department tasks |
-| 3 | Legal | - | Filter Legal department tasks |
-
-*Active chip has light pink background, pink color. Multiple chips can be selected simultaneously.*
-
-### D. Search & Filter Bar
-
-| No | Component | Type | Description |
-|----|-----------|------|-------------|
-| 1 | Search Input | Text input | Placeholder: "Search in task library..." |
-| 2 | Search Icon | Magnifying glass icon | Left side of input |
-| 3 | Filter Button | Button | "Filter" button with funnel icon, right corner |
-
-### E. Task Group Section (Task Groups)
-
-*Each department has a section containing task list, expandable/collapsible*
-
-#### E.1. Task Group Header
-
-| No | Component | Description | Notes |
-|----|-----------|-------------|-------|
-| 1 | Department Icon | Department icon | Color by department |
-| 2 | Department Name | Department name + "TASKS" | e.g., "ADMIN TASKS", Bold font |
-| 3 | Group Tasks Count | Number of group tasks | Badge "X GROUP TASKS" right corner |
-| 4 | Expand/Collapse Icon | Arrow icon (V/A) | Right corner, click to toggle |
-
-#### E.2. Task Data Table
-
-| No | Column | Description | Notes |
-|----|--------|-------------|-------|
-| 1 | No | Sequential number | Incrementing numbers |
-| 2 | Type | Task type | Daily, Weekly, Ad hoc - with sort icon (^) |
-| 3 | Task Name | Task name | e.g., "Opening Store", "Check SS" - with sort icon |
-| 4 | Owner | Task owner/creator | Avatar + Name (e.g., Thu OP, Nguyen GD) |
-| 5 | Last Update | Last update date | Format: DD MMM, YY (e.g., 25 Dec, 25) |
-| 6 | Status | Status | Color badge: In progress (yellow), Draft (blue), Available (green) |
-| 7 | Usage | Usage count | e.g., 565, 52, 1 |
-| 8 | Menu (three dots) | Action menu | Edit, Delete, Duplicate options |
-
-### F. Task Types
-
-| No | Type | Icon | Description |
-|----|------|------|-------------|
-| 1 | Daily | - | Daily tasks | Opening Store, Closing Store |
-| 2 | Weekly | - | Weekly tasks | Check SS, Weekly Report |
-| 3 | Ad hoc | - | Ad-hoc tasks | Report competitor, Special tasks |
-
-### G. Status Types
-
-| No | Status | Color | Description |
-|----|--------|-------|-------------|
-| 1 | In progress | Yellow/Orange (#FFC107) | Task is being used |
-| 2 | Draft | Blue (#E91E63) | Task in draft status |
-| 3 | Available | Green (#4CAF50) | Task is ready |
-
-### H. Department Task Groups
-
-*List of task groups by department with the following groups:*
-
-| No | Department | Icon | Color |
-|----|------------|------|-------|
-| 1 | ADMIN TASKS | Person/admin icon | Pink (#E91E63) |
-| 2 | HR | People icon | Purple (#9C27B0) |
-| 3 | Create New group | Green (#4CAF50) | Green (#4CAF50) |
-
-### I. Create New Document
-
-| No | Component | Description | Notes |
-|----|-----------|-------------|-------|
-| 1 | Button Label | "+ Create New" | Icon (+) before text |
-| 2 | Button Style | Filled button, colored | Hover: darker shade |
-| 3 | Click Action | Open create task form | Navigate to create new screen |
-
-### J. Row Actions Menu (Three Dots Menu)
-
-*Menu displayed when clicking three dots icon on each row*
-
-| No | Action | Icon | Description |
-|----|--------|------|-------------|
-| 1 | Edit | Pencil icon | Edit task template |
-| 2 | Duplicate | Copy icon | Create copy of task template |
-| 3 | Delete | Trash icon | Delete task template |
-| 4 | View Usage | Chart icon | View usage statistics |
+| Feature | Backend | Frontend | Notes |
+|---------|---------|----------|-------|
+| Task Library Page | ⏳ Pending | ✅ Done | Mock data |
+| Tab Navigation | - | ✅ Done | Frontend only |
+| Department Filter Chips | - | ✅ Done | Frontend only |
+| Search | ⏳ Pending | ✅ Done | Client-side |
+| Task Group Table | ⏳ Pending | ✅ Done | Mock data |
+| CRUD Operations | ⏳ Pending | ⏳ Pending | - |
 
 ---
 
-## 3. VALIDATION RULES
+# DETAIL SPEC
 
-| No | Rule | Description |
-|----|------|-------------|
-| 1 | Task name required | Task name cannot be empty |
-| 2 | Task name unique | Task name must be unique within same department |
-| 3 | Type required | Must select task type (Daily/Weekly/Ad hoc) |
-| 4 | Owner required | Must have task owner |
-| 5 | Department required | Task must belong to a department |
-| 6 | Search min length | Search requires minimum 2 characters |
+## 8. Header Section - Detail
 
----
+### 8.1 Components
 
-## 4. API INTEGRATION
-
-| No | Action | Method | Endpoint | Description |
-|----|--------|--------|----------|-------------|
-| 1 | Get Task Library | GET | /api/v1/task-library | Get task template list |
-| 2 | Get by Department | GET | /api/v1/task-library?dept={id} | Get tasks by department |
-| 3 | Get Task Detail | GET | /api/v1/task-library/{id} | Get task template detail |
-| 4 | Create Task | POST | /api/v1/task-library | Create new task template |
-| 5 | Update Task | PUT | /api/v1/task-library/{id} | Update task template |
-| 6 | Delete Task | DELETE | /api/v1/task-library/{id} | Delete task template |
-| 7 | Duplicate Task | POST | /api/v1/task-library/{id}/duplicate | Create task copy |
-| 8 | Search Tasks | GET | /api/v1/task-library/search?q={query} | Search tasks |
-| 9 | Get Usage Stats | GET | /api/v1/task-library/{id}/stats | Get usage statistics |
+| Component | Description | Notes |
+|-----------|-------------|-------|
+| Page Title | "TASK LIBRARY" | Font 16m, bold, black color |
+| Subtitle | "Manage and organize recurring tasks for office and store operations." | Gray text |
+| Create New Button | "+ Create New" | Filled button, pink/red color, right corner |
 
 ---
 
-## 5. UI STATES
+## 9. Tab Navigation - Detail
 
-| No | State Type | State | Display |
-|----|------------|-------|---------|
-| 1 | Loading | Initial load | Skeleton loader for table |
-| 2 | Loading | Searching | Spinner in search input |
-| 3 | Loading | Deleting | Spinner on row being deleted |
-| 4 | Empty | No tasks | "No tasks found in this department" |
-| 5 | Empty | Search no results | "No matching tasks found" |
-| 6 | Error | Load failed | Error message with retry button |
-| 7 | Error | Delete failed | Toast error message |
-| 8 | Success | Task created | Toast "Task template created successfully" |
-| 9 | Success | Task deleted | Toast "Task template deleted" |
-| 10 | Active | Tab selected | Tab has pink underline |
-| 11 | Active | Chip selected | Chip has light pink background |
-| 12 | Expanded | Group open | Arrow icon rotates up (A) |
-| 13 | Collapsed | Group closed | Arrow icon rotates down (V) |
+### 9.1 Tabs
+
+| Tab | Icon | Description |
+|-----|------|-------------|
+| OFFICE TASKS | Building icon | Tasks for office staff (HQ) |
+| STORE TASKS | Store icon | Tasks for store staff |
+
+### 9.2 Tab Styling
+
+- Active tab: Pink underline and pink text
+- Inactive tab: Gray text, no underline
 
 ---
 
-## 6. TEST SCENARIOS
+## 10. Department Filter Chips - Detail
 
-### A. UI/UX Testing
+### 10.1 Available Chips
 
-| No | Test Case | Scenario | Expected |
-|----|-----------|----------|----------|
-| 1 | Layout check | Open Task Library screen | Header, tabs, filter, table display correctly |
-| 2 | Tab switch | Click tab STORE TASKS | Content changes, underline moves |
-| 3 | Chip filter | Click chip "Admin" | Chip active, table filters by Admin |
-| 4 | Expand/Collapse | Click on group header | Toggle show/hide table |
-| 5 | Status colors | View status badges | Colors correct: yellow, blue, green |
-| 6 | Sort columns | Click on header Type, Task Name | Table sorts by column |
+| Chip | Icon | Description |
+|------|------|-------------|
+| Admin | Person/admin icon | Filter Admin department tasks |
+| HR | People icon | Filter HR department tasks |
+| Legal | - | Filter Legal department tasks |
 
-### B. Functional Testing
+### 10.2 Chip Behavior
 
-| No | Test Case | Scenario | Expected |
-|----|-----------|----------|----------|
-| 1 | Search task | Enter "Opening" in search | Results filter to tasks containing "Opening" |
-| 2 | Search no result | Enter text not found | Display "No matching tasks found" |
-| 3 | Create task | Click "+ Create New Document" | Navigate to create new form |
-| 4 | Edit task | Click menu -> Edit | Open edit task template form |
-| 5 | Delete task | Click menu -> Delete -> Confirm | Task deleted, success toast |
-| 6 | Duplicate task | Click menu -> Duplicate | New task created with name "(Copy)" |
-| 7 | Filter by chip | Click chip Admin | Only show Admin tasks |
-| 8 | Multi-chip filter | Click chip Admin + HR | Table shows tasks from both Admin and HR |
+- Active chip: Light pink background, pink color
+- Multiple chips can be selected simultaneously
+- Click to toggle selection
 
 ---
 
-## 7. FILE STRUCTURE
+## 11. Search & Filter Bar - Detail
+
+| Component | Type | Description |
+|-----------|------|-------------|
+| Search Input | Text input | Placeholder: "Search in task library..." |
+| Search Icon | Magnifying glass icon | Left side of input |
+| Filter Button | Button | "Filter" button with funnel icon, right corner |
+
+---
+
+## 12. Task Group Section - Detail
+
+### 12.1 Task Group Header
+
+| Component | Description | Notes |
+|-----------|-------------|-------|
+| Department Icon | Department icon | Color by department |
+| Department Name | Department name + "TASKS" | e.g., "ADMIN TASKS", Bold font |
+| Group Tasks Count | Number of group tasks | Badge "X GROUP TASKS" right corner |
+| Expand/Collapse Icon | Arrow icon (V/A) | Right corner, click to toggle |
+
+### 12.2 Task Data Table Columns
+
+| Column | Description | Sortable | Notes |
+|--------|-------------|----------|-------|
+| No | Sequential number | No | Incrementing numbers |
+| Type | Task type (Daily, Weekly, Ad hoc) | Yes | With sort icon (^) |
+| Task Name | Task name | Yes | e.g., "Opening Store" |
+| Owner | Task owner/creator | No | Avatar + Name |
+| Last Update | Last update date | No | Format: DD MMM, YY |
+| Status | Status | No | Color badge |
+| Usage | Usage count | No | e.g., 565, 52, 1 |
+| Menu | Action menu | No | 3-dot icon |
+
+---
+
+## 13. Task Types - Detail
+
+| Type | Description | Example |
+|------|-------------|---------|
+| Daily | Daily recurring tasks | Opening Store, Closing Store |
+| Weekly | Weekly recurring tasks | Check SS, Weekly Report |
+| Ad hoc | One-time tasks | Report competitor, Special tasks |
+
+---
+
+## 14. Status Types - Detail
+
+| Status | Color | Hex Code | Description |
+|--------|-------|----------|-------------|
+| In progress | Yellow/Orange | #FFC107 | Task is being used |
+| Draft | Blue | #E91E63 | Task in draft status |
+| Available | Green | #4CAF50 | Task is ready |
+
+---
+
+## 15. Row Actions Menu - Detail
+
+| Action | Icon | Description |
+|--------|------|-------------|
+| Edit | Pencil icon | Edit task template |
+| Duplicate | Copy icon | Create copy of task template |
+| Delete | Trash icon | Delete task template |
+| View Usage | Chart icon | View usage statistics |
+
+---
+
+## 16. Department Colors - Detail
+
+| Department | Icon | Color |
+|------------|------|-------|
+| ADMIN TASKS | Person/admin icon | Pink (#E91E63) |
+| HR | People icon | Purple (#9C27B0) |
+| Create New group | Green (#4CAF50) | Green (#4CAF50) |
+
+---
+
+## 17. Validation Rules
+
+| Rule | Description |
+|------|-------------|
+| Task name required | Task name cannot be empty |
+| Task name unique | Task name must be unique within same department |
+| Type required | Must select task type (Daily/Weekly/Ad hoc) |
+| Owner required | Must have task owner |
+| Department required | Task must belong to a department |
+| Search min length | Search requires minimum 2 characters |
+
+---
+
+## 18. API Endpoints - Detail
+
+| Action | Method | Endpoint | Description |
+|--------|--------|----------|-------------|
+| Get Task Library | GET | /api/v1/task-library | Get task template list |
+| Get by Department | GET | /api/v1/task-library?dept={id} | Get tasks by department |
+| Get Task Detail | GET | /api/v1/task-library/{id} | Get task template detail |
+| Create Task | POST | /api/v1/task-library | Create new task template |
+| Update Task | PUT | /api/v1/task-library/{id} | Update task template |
+| Delete Task | DELETE | /api/v1/task-library/{id} | Delete task template |
+| Duplicate Task | POST | /api/v1/task-library/{id}/duplicate | Create task copy |
+| Search Tasks | GET | /api/v1/task-library/search?q={query} | Search tasks |
+| Get Usage Stats | GET | /api/v1/task-library/{id}/stats | Get usage statistics |
+
+---
+
+## 19. UI States - Detail
+
+| State Type | State | Display |
+|------------|-------|---------|
+| Loading | Initial load | Skeleton loader for table |
+| Loading | Searching | Spinner in search input |
+| Loading | Deleting | Spinner on row being deleted |
+| Empty | No tasks | "No tasks found in this department" |
+| Empty | Search no results | "No matching tasks found" |
+| Error | Load failed | Error message with retry button |
+| Error | Delete failed | Toast error message |
+| Success | Task created | Toast "Task template created successfully" |
+| Success | Task deleted | Toast "Task template deleted" |
+| Active | Tab selected | Tab has pink underline |
+| Active | Chip selected | Chip has light pink background |
+| Expanded | Group open | Arrow icon rotates up (A) |
+| Collapsed | Group closed | Arrow icon rotates down (V) |
+
+---
+
+## 20. Files Reference
 
 ```
 frontend/src/
@@ -242,10 +287,39 @@ frontend/src/
 
 ---
 
-## CHANGELOG
+## 21. Test Scenarios
+
+### A. UI/UX Testing
+
+| Test Case | Scenario | Expected |
+|-----------|----------|----------|
+| Layout check | Open Task Library screen | Header, tabs, filter, table display correctly |
+| Tab switch | Click tab STORE TASKS | Content changes, underline moves |
+| Chip filter | Click chip "Admin" | Chip active, table filters by Admin |
+| Expand/Collapse | Click on group header | Toggle show/hide table |
+| Status colors | View status badges | Colors correct: yellow, blue, green |
+| Sort columns | Click on header Type, Task Name | Table sorts by column |
+
+### B. Functional Testing
+
+| Test Case | Scenario | Expected |
+|-----------|----------|----------|
+| Search task | Enter "Opening" in search | Results filter to tasks containing "Opening" |
+| Search no result | Enter text not found | Display "No matching tasks found" |
+| Create task | Click "+ Create New Document" | Navigate to create new form |
+| Edit task | Click menu -> Edit | Open edit task template form |
+| Delete task | Click menu -> Delete -> Confirm | Task deleted, success toast |
+| Duplicate task | Click menu -> Duplicate | New task created with name "(Copy)" |
+| Filter by chip | Click chip Admin | Only show Admin tasks |
+| Multi-chip filter | Click chip Admin + HR | Table shows tasks from both Admin and HR |
+
+---
+
+## 22. Changelog
 
 | Date | Change |
 |------|--------|
 | 2026-01-02 | Initial specification created |
 | 2026-01-02 | Implemented UI: route /tasks/library, all components created, sidebar menu highlight fix |
 | 2026-01-02 | Translated specification to English |
+| 2026-01-06 | Restructured spec with Basic/Detail sections |

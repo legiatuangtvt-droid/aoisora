@@ -1,255 +1,335 @@
-# TO DO TASK SCREEN SPECIFICATION (SCR_TODO_TASK)
+# To Do Task Screen Specification
 
 ---
 
-## 1. GENERAL DESCRIPTION
+# BASIC SPEC
 
-| No | Attribute | Value |
-|----|-----------|-------|
-| 1 | Screen Name | To Do Task Screen |
-| 2 | Screen Code | SCR_TODO_TASK |
-| 3 | Target Users | HQ (Headquarter) Staff |
-| 4 | Access Point | From Sidebar Menu: "To-do Task" |
+## 1. Overview
 
-*Purpose: Main screen showing task management overview with weekly progress, calendar view, and daily tasks.*
+- **Module**: WS (Task from HQ)
+- **Screen ID**: SCR_TODO_TASK
+- **Route**: `/tasks/todo`
+- **Purpose**: Main screen showing task management overview with weekly progress, calendar view, and daily tasks
+- **Target Users**: HQ (Headquarter) Staff
 
-### Access Flow:
+## 2. User Stories
 
-| Step | Action |
-|------|--------|
-| 1 | From Sidebar Menu, select "To-do Task" |
-| 2 | Screen displays with overall weekly info on the left panel |
+| ID | As a... | I want to... | So that... |
+|----|---------|--------------|------------|
+| US-01 | HQ Staff | View weekly task overview | I can see the week's task summary |
+| US-02 | HQ Staff | Review last week's tasks | I can track progress and bottlenecks |
+| US-03 | HQ Staff | View daily tasks in calendar | I know what to do each day |
+| US-04 | HQ Staff | Add new tasks | I can plan my work |
+| US-05 | HQ Staff | Filter tasks by status/type | I can focus on specific tasks |
+| US-06 | Manager | Add comments | I can provide feedback to staff |
 
----
+## 3. Screen Components Summary
 
-## 2. FUNCTIONAL SPECIFICATION
+| Component | Description |
+|-----------|-------------|
+| Week Header | Week title, date range, "+ Add New" button |
+| Overall Week Panel | Current week task summary table |
+| Last Week Review Panel | Previous week review with progress/output |
+| Filter Bar | User, Status, Type dropdowns |
+| Calendar View | Weekly calendar with daily tasks |
+| Manager Comment Panel | Right sidebar for manager comments |
 
-*Screen contains 3 main areas: Header (Week Info + Actions), Overview Panels (Current Week + Last Week), and Calendar View (Daily Tasks).*
+## 4. Screen Layout
 
-### A. Week Header
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ WEEK 51, 2025                                        [+ Add New]     │
+│ December 15 - December 21                                            │
+├─────────────────────────────────┬───────────────────────────────────┤
+│ ▼ Overall Week 51              │ ▼ Last Week Review                 │
+│ ┌─────────────────────────────┐│ ┌─────────────────────────────────┐│
+│ │ W51 Task │ Means │ Target   ││ │ W50 Task │ Progress │ Output    ││
+│ │ Opening  │ ...   │ ...      ││ │ Opening  │ ...      │ ...       ││
+│ └─────────────────────────────┘│ └─────────────────────────────────┘│
+├─────────────────────────────────┴───────────────────────────────────┤
+│ [All Users ▼] [All Statuses ▼] [All Types ▼]                        │
+├─────────────────────────────────────────────────────────────────────┤
+│ ▼ Week 51, 2025                    │ Manager Comment              │
+│ ┌──────────────────────────────────┤ ┌───────────────────────────┐│
+│ │ MON/15 │ Tasks... │ In Process   │ │ Comment from manager...   ││
+│ │ TUE/16 │ Tasks... │ Done         │ │                           ││
+│ │ WED/17 │ Tasks... │ Draft        │ └───────────────────────────┘│
+│ └──────────────────────────────────┘                               │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
-| No | Component | Value | Notes |
-|----|-----------|-------|-------|
-| 1 | Week Title | "WEEK 51, 2025" | Font bold, large, black color |
-| 2 | Date Range | "December 15- December 21" | Gray text, smaller, below title |
-| 3 | Add New Button | "+ Add New" button | Filled button pink/red, bold text |
+## 5. Navigation
 
-### B. Overall Week Panel (Current Week Overview)
+| Action | Destination |
+|--------|-------------|
+| Click Sidebar "To-do Task" | `/tasks/todo` |
+| Click "+ Add New" | Open add task modal |
+| Click week arrows | Navigate to previous/next week |
+| Click task item | Open task detail modal |
 
-*Panel shows current week task summary statistics.*
+## 6. API Endpoints Summary
 
-#### B.1. Panel Header
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/todo/week/{weekNum}` | GET | Get tasks for a week |
+| `/api/v1/todo/date/{date}` | GET | Get tasks by specific day |
+| `/api/v1/todo` | POST | Create new task |
+| `/api/v1/todo/{id}/status` | PATCH | Update task status |
 
-| No | Component | Value | Notes |
-|----|-----------|-------|-------|
-| 1 | Icon | Calendar/checklist icon | Pink color |
-| 2 | Title | "Overall Week 51" | Font bold |
+## 7. Implementation Status
 
-#### B.2. Table Columns
-
-| No | Column | Value | Notes |
-|----|--------|-------|-------|
-| 1 | W51 Task | Total tasks in week 51 | Header pink color/highlight |
-| 2 | Means/Method | Method to complete task | Has tooltip icon (i) |
-| 3 | Target | Target value | Example: "Typing..." (placeholder) |
-
-#### B.3. Task Rows
-
-| No | Task | Description |
-|----|------|-------------|
-| 1 | 1. Opening Store | Store opening tasks |
-| 2 | 2. Plan for 2026 | Planning for next year 2026 |
-| 3 | 3. Support Store | Store support tasks |
-
-### C. Last Week Review Panel (Previous Week Review)
-
-*Panel shows last week review with completion results.*
-
-#### C.1. Panel Header
-
-| No | Component | Value | Notes |
-|----|-----------|-------|-------|
-| 1 | Title | "Last Week Review" | Font bold, pink color |
-
-#### C.2. Table Columns
-
-| No | Column | Value | Notes |
-|----|--------|-------|-------|
-| 1 | W50 Task | Total tasks in week 50 | Header pink color/highlight |
-| 2 | Progress/Bottleneck | Progress and bottleneck notes | Notes on bottleneck |
-| 3 | Output | Output/result of task | Output of each task |
-
-### D. Filter Bar (Filter Options)
-
-| No | Component | Type | Description |
-|----|-----------|------|-------------|
-| 1 | All Statuses | Dropdown | Filter by status: All, In Progress, Done, Pending |
-| 2 | All Types | Dropdown | Filter by type: All, Personal, Team, Store |
-
-### E. Calendar View (Weekly Calendar View)
-
-*Displays tasks organized by day in a weekly calendar format.*
-
-#### E.1. Calendar Header
-
-| No | Component | Value | Notes |
-|----|-----------|-------|-------|
-| 1 | Calendar Icon | Checkmark icon | Pink color |
-| 2 | Week Title | "Week 51, 2025" | Font bold |
-| 3 | Navigation Arrows | Left/right arrows | Switch week previous/next |
-| 4 | Placeholder | Area on right side | Can display mini calendar |
-
-#### E.2. Daily Task Table
-
-| No | Column | Value | Notes |
-|----|--------|-------|-------|
-| 1 | Date | Day of week | Format: "MON/15 Dec" (day + date) |
-| 2 | Productivity | Task list for day | List tasks, numbered sequentially |
-| 3 | Type | Task type | Example: "Personal" with icon bullet |
-| 4 | Status | Completion status | Badge style: in progress (orange) |
-
-#### E.3. Date Cell Format
-
-| No | Component | Value | Notes |
-|----|-----------|-------|-------|
-| 1 | Day of Week | Day name (MON, TUE, WED...) | Text small, uppercase |
-| 2 | Day Number | Day number (15, 16, 17...) | Font bold, large |
-| 3 | Month | Month name (Dec) | Text small, same row with Day |
-
-#### E.4. Productivity Cell Format
-
-| No | Component | Value | Notes |
-|----|-----------|-------|-------|
-| 1 | Location Header | Work location | Example: "V917: Long Bien -> Ocean", font bold |
-| 2 | Task List | Task list for the day | Numbered: 1, 2, 3... |
-| 3 | Task Item | Task name | Example: "Survey competitor", "Check store" |
-
-### F. Task Types (Task Categories)
-
-| No | Type | Icon | Description |
-|----|------|------|-------------|
-| 1 | Personal | Pink bullet | Personal individual tasks |
-| 2 | Team | Cyan bullet | Team collaborative tasks |
-| 3 | Store | Green bullet | Store-related tasks |
-
-### G. Status Types (Task Statuses)
-
-| No | Status | Color | Description |
-|----|--------|-------|-------------|
-| 1 | In Process | Yellow/Orange (#FFC107) | Task in progress |
-| 2 | Done | Green (#4CAF50) | Task completed |
-| 3 | Draft | Gray (#9E9E9E) | Draft status |
-| 4 | Not Yet | Red (#F44336) | Not started yet |
-
-### H. Location Dropdowns (Per Day Row)
-
-*Each daily task row includes location selection dropdowns.*
-
-| No | Field | Type | Description |
-|----|-------|------|-------------|
-| 1 | Location Header | Text | Format: "V917: [Region] -> [Zone]" |
-| 2 | Region | Dropdown | Select region |
-| 3 | Zone | Dropdown | Dependent on Region |
-| 4 | Area | Dropdown | Dependent on Zone |
-| 5 | Store | Dropdown | Dependent on Area |
-
-### I. Manager Comment Panel (Right Sidebar)
-
-*Panel on the right side for manager comments and feedback.*
-
-| No | Component | Type | Description |
-|----|-----------|------|-------------|
-| 1 | Panel Title | Text | "Manager Comment" with pink underline |
-| 2 | Comment Input | Textarea | Input field for manager comments |
-| 3 | Other Comment | Textarea | Secondary comment section |
-
-### J. Weekend Display
-
-| No | Day | Display |
-|----|-----|---------|
-| 1 | Saturday | "OFF" - no tasks displayed |
-| 2 | Sunday | "OFF" - no tasks displayed |
-
-### K. Add New Task
-
-| No | Component | Value | Notes |
-|----|-----------|-------|-------|
-| 1 | Button Label | "+ Add New" | Icon (+) plus text |
-| 2 | Button Style | Filled button, pink/red | Hover: darker shade |
-| 3 | Click Action | Opens add new task modal | Modal or navigate to add screen |
+| Feature | Backend | Frontend | Notes |
+|---------|---------|----------|-------|
+| Todo Task Page | ⏳ Pending | ✅ Done | Mock data |
+| Week Header | - | ✅ Done | UI only |
+| Overall Week Panel | - | ✅ Done | Mock data |
+| Last Week Review | - | ✅ Done | Mock data |
+| Filter Bar | - | ✅ Done | Client-side |
+| Calendar View | - | ✅ Done | Mock data |
+| Manager Comment Panel | - | ✅ Done | Mock data |
+| Responsive Design | - | ✅ Done | Mobile/Tablet/Desktop |
+| API Integration | ⏳ Pending | ⏳ Pending | - |
 
 ---
 
-## 3. VALIDATION RULES
+# DETAIL SPEC
 
-| No | Rule | Description |
-|----|------|-------------|
-| 1 | Task name required | Task name cannot be empty |
-| 2 | Date required | Must select date for task |
-| 3 | Type required | Must select task type |
-| 4 | Week range valid | Week must be within valid range |
-| 5 | Target optional | Target can be left empty |
+## 8. Week Header - Detail
 
----
-
-## 4. API INTEGRATION
-
-| No | Action | Method | Endpoint | Description |
-|----|--------|--------|----------|-------------|
-| 1 | Get Week Tasks | GET | /api/v1/todo/week/{weekNum} | Get tasks for a week |
-| 2 | Get Daily Tasks | GET | /api/v1/todo/date/{date} | Get tasks by specific day |
-| 3 | Get Week Overview | GET | /api/v1/todo/overview/week/{weekNum} | Get week overview summary |
-| 4 | Get Last Week Review | GET | /api/v1/todo/review/week/{weekNum} | Get review from previous week |
-| 5 | Create Task | POST | /api/v1/todo | Create new task |
-| 6 | Update Task | PUT | /api/v1/todo/{id} | Update existing task |
-| 7 | Delete Task | DELETE | /api/v1/todo/{id} | Delete task |
-| 8 | Update Status | PATCH | /api/v1/todo/{id}/status | Update task status |
+| Component | Value | Notes |
+|-----------|-------|-------|
+| Week Title | "WEEK 51, 2025" | Font bold, large, black color |
+| Date Range | "December 15- December 21" | Gray text, smaller, below title |
+| Add New Button | "+ Add New" button | Filled button pink/red, bold text |
 
 ---
 
-## 5. UI STATES
+## 9. Overall Week Panel - Detail
 
-| No | State Type | State | Display |
-|----|------------|-------|---------|
-| 1 | Loading | Initial load | Skeleton loader on panels and calendar |
-| 2 | Loading | Week change | Spinner when switching weeks |
-| 3 | Empty | No tasks | "No tasks for this week" |
-| 4 | Empty | No daily tasks | "No tasks for this day" |
-| 5 | Error | Load failed | Error message with retry button |
-| 6 | Success | Task added | Toast "Task added successfully" |
-| 7 | Success | Status updated | Toast "Status updated" |
-| 8 | Active | Current day | Highlight current day row |
-| 9 | Editable | Target input | Input box with placeholder "Typing..." |
+### 9.1 Panel Header
 
----
+| Component | Value | Notes |
+|-----------|-------|-------|
+| Icon | Calendar/checklist icon | Pink color |
+| Title | "Overall Week 51" | Font bold |
 
-## 6. TEST SCENARIOS
+### 9.2 Table Columns
 
-### A. UI/UX Testing
+| Column | Value | Notes |
+|--------|-------|-------|
+| W51 Task | Total tasks in week 51 | Header pink color/highlight |
+| Means/Method | Method to complete task | Has tooltip icon (i) |
+| Target | Target value | Example: "Typing..." (placeholder) |
 
-| No | Test Case | Scenario | Expected |
-|----|-----------|----------|----------|
-| 1 | Layout check | Open To Do Task screen | Header, panels, calendar display correctly |
-| 2 | Week display | View week info | Display week number and date range |
-| 3 | Panel layout | View 2 panels Overview | 2 panels side by side, table inside |
-| 4 | Calendar layout | View calendar view | Display all days in current week |
-| 5 | Status colors | View status badges | Colors match status type |
+### 9.3 Task Rows
 
-### B. Functional Testing
-
-| No | Test Case | Scenario | Expected |
-|----|-----------|----------|----------|
-| 1 | Add new task | Click "+ Add New" -> Save | Task appears in calendar |
-| 2 | Filter by status | Select from dropdown | Only show tasks matching filter type |
-| 3 | Filter by type | Click "Personal" filter | Only show tasks of that type |
-| 4 | Navigate week | Click left/right arrows | Switch to previous/next week |
-| 5 | Edit target | Click on Target -> Edit | Target updated successfully |
-| 6 | Update status | Click on status badge | Dropdown appears, select new status |
-| 7 | View task detail | Click on task in calendar | Modal displays task details |
+| Task | Description |
+|------|-------------|
+| 1. Opening Store | Store opening tasks |
+| 2. Plan for 2026 | Planning for next year 2026 |
+| 3. Support Store | Store support tasks |
 
 ---
 
-## 7. FILE STRUCTURE
+## 10. Last Week Review Panel - Detail
+
+### 10.1 Panel Header
+
+| Component | Value | Notes |
+|-----------|-------|-------|
+| Title | "Last Week Review" | Font bold, pink color |
+
+### 10.2 Table Columns
+
+| Column | Value | Notes |
+|--------|-------|-------|
+| W50 Task | Total tasks in week 50 | Header pink color/highlight |
+| Progress/Bottleneck | Progress and bottleneck notes | Notes on bottleneck |
+| Output | Output/result of task | Output of each task |
+
+---
+
+## 11. Filter Bar - Detail
+
+| Component | Type | Description |
+|-----------|------|-------------|
+| All Users | Dropdown | Filter by user with user icon |
+| All Statuses | Dropdown | Filter by status: All, In Progress, Done, Pending |
+| All Types | Dropdown | Filter by type: All, Personal, Team, Store |
+
+---
+
+## 12. Calendar View - Detail
+
+### 12.1 Calendar Header
+
+| Component | Value | Notes |
+|-----------|-------|-------|
+| Calendar Icon | Checkmark icon | Pink color |
+| Week Title | "Week 51, 2025" | Font bold |
+| Navigation Arrows | Left/right arrows | Switch week previous/next |
+| Placeholder | Area on right side | Can display mini calendar |
+
+### 12.2 Daily Task Table
+
+| Column | Value | Notes |
+|--------|-------|-------|
+| Date | Day of week | Format: "MON/15 Dec" (day + date) |
+| Productivity | Task list for day | List tasks, numbered sequentially |
+| Status | Completion status | Badge style: in progress (orange) |
+
+### 12.3 Date Cell Format
+
+| Component | Value | Notes |
+|-----------|-------|-------|
+| Day of Week | Day name (MON, TUE, WED...) | Text small, uppercase |
+| Day Number | Day number (15, 16, 17...) | Font bold, large |
+| Month | Month name (Dec) | Text small, same row with Day |
+
+### 12.4 Productivity Cell Format
+
+| Component | Value | Notes |
+|-----------|-------|-------|
+| Location Header | Work location | Example: "V917: Long Bien -> Ocean", font bold |
+| Task List | Task list for the day | Numbered: 1, 2, 3... |
+| Task Item | Task name | Example: "Survey competitor", "Check store" |
+
+### 12.5 Location Dropdowns (Per Day Row)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Location Header | Text | Format: "V917: [Region] -> [Zone]" |
+| Region | Dropdown | Select region |
+| Zone | Dropdown | Dependent on Region |
+| Area | Dropdown | Dependent on Zone |
+| Store | Dropdown | Dependent on Area |
+
+---
+
+## 13. Task Types - Detail
+
+| Type | Icon | Description |
+|------|------|-------------|
+| Personal | Pink bullet | Personal individual tasks |
+| Team | Cyan bullet | Team collaborative tasks |
+| Store | Green bullet | Store-related tasks |
+
+---
+
+## 14. Status Types - Detail
+
+| Status | Color | Hex Code | Description |
+|--------|-------|----------|-------------|
+| In Process | Yellow/Orange | #EDA600 | Task in progress |
+| Done | Blue | #297EF6 | Task completed |
+| Draft | Green | #1BBA5E | Draft status |
+| Not Yet | Red | #F44336 | Not started yet |
+
+### 14.1 Status Badge Styling
+
+| Status | Border | Background | Dot Color |
+|--------|--------|------------|-----------|
+| In Process | #EDA600 | #EDA600 10% | #EDA600 |
+| Done | #297EF6 | #E5F0FF | #297EF6 |
+| Draft | #1BBA5E | #EBFFF3 | #1BBA5E |
+
+---
+
+## 15. Manager Comment Panel - Detail
+
+| Component | Type | Description |
+|-----------|------|-------------|
+| Panel Title | Text | "Manager Comment" with pink underline |
+| Comment Header | Icon + Title | Comment icon with "Manager Comment" |
+| Comment Message | Card | Gray background box with avatar, author, time |
+| Reply Input | Input | Input field with send button |
+| Other Comment | Section | Secondary comment section with same styling |
+
+### 15.1 Comment Styling
+
+| Element | Style |
+|---------|-------|
+| Avatar background | #E5F0FF |
+| Avatar text | #003E95 |
+| Message background | #F4F4F4 |
+| Message border-radius | 0px 10px 10px 10px |
+| Reply border | #9B9B9B |
+| Send icon color | #C5055B |
+
+---
+
+## 16. Weekend Display - Detail
+
+| Day | Display |
+|-----|---------|
+| Saturday | "OFF" - no tasks displayed |
+| Sunday | "OFF" - no tasks displayed |
+
+---
+
+## 17. Validation Rules
+
+| Rule | Description |
+|------|-------------|
+| Task name required | Task name cannot be empty |
+| Date required | Must select date for task |
+| Type required | Must select task type |
+| Week range valid | Week must be within valid range |
+| Target optional | Target can be left empty |
+
+---
+
+## 18. API Endpoints - Detail
+
+| Action | Method | Endpoint | Description |
+|--------|--------|----------|-------------|
+| Get Week Tasks | GET | /api/v1/todo/week/{weekNum} | Get tasks for a week |
+| Get Daily Tasks | GET | /api/v1/todo/date/{date} | Get tasks by specific day |
+| Get Week Overview | GET | /api/v1/todo/overview/week/{weekNum} | Get week overview summary |
+| Get Last Week Review | GET | /api/v1/todo/review/week/{weekNum} | Get review from previous week |
+| Create Task | POST | /api/v1/todo | Create new task |
+| Update Task | PUT | /api/v1/todo/{id} | Update existing task |
+| Delete Task | DELETE | /api/v1/todo/{id} | Delete task |
+| Update Status | PATCH | /api/v1/todo/{id}/status | Update task status |
+
+---
+
+## 19. UI States - Detail
+
+| State Type | State | Display |
+|------------|-------|---------|
+| Loading | Initial load | Skeleton loader on panels and calendar |
+| Loading | Week change | Spinner when switching weeks |
+| Empty | No tasks | "No tasks for this week" |
+| Empty | No daily tasks | "No tasks for this day" |
+| Error | Load failed | Error message with retry button |
+| Success | Task added | Toast "Task added successfully" |
+| Success | Status updated | Toast "Status updated" |
+| Active | Current day | Highlight current day row |
+| Editable | Target input | Input box with placeholder "Typing..." |
+
+---
+
+## 20. Responsive Design - Detail
+
+| Breakpoint | Description |
+|------------|-------------|
+| Mobile (<768px) | Stacked layout, FAB for Add New, tab navigation |
+| Tablet (768-1023px) | Sidebar overlay, adapted panels |
+| Desktop (≥1024px) | Full layout with sidebar |
+
+### 20.1 Mobile Specific Features
+
+- WeekHeader: Stack vertical, centered text, hide Add button (use FAB)
+- Panels: Card view with smaller icons and fonts
+- FilterBar: Horizontal scroll with flex-shrink-0
+- CalendarView: Vertical timeline layout with day cards
+- ManagerCommentPanel: Tab navigation (Manager/Other)
+- FAB: Floating Action Button for Add New, positioned bottom-right
+
+---
+
+## 21. Files Reference
 
 ```
 frontend/src/
@@ -278,69 +358,47 @@ frontend/src/
 
 ---
 
-## CHANGELOG
+## 22. Test Scenarios
+
+### A. UI/UX Testing
+
+| Test Case | Scenario | Expected |
+|-----------|----------|----------|
+| Layout check | Open To Do Task screen | Header, panels, calendar display correctly |
+| Week display | View week info | Display week number and date range |
+| Panel layout | View 2 panels Overview | 2 panels side by side, table inside |
+| Calendar layout | View calendar view | Display all days in current week |
+| Status colors | View status badges | Colors match status type |
+
+### B. Functional Testing
+
+| Test Case | Scenario | Expected |
+|-----------|----------|----------|
+| Add new task | Click "+ Add New" -> Save | Task appears in calendar |
+| Filter by status | Select from dropdown | Only show tasks matching filter type |
+| Filter by type | Click "Personal" filter | Only show tasks of that type |
+| Navigate week | Click left/right arrows | Switch to previous/next week |
+| Edit target | Click on Target -> Edit | Target updated successfully |
+| Update status | Click on status badge | Dropdown appears, select new status |
+| View task detail | Click on task in calendar | Modal displays task details |
+
+---
+
+## 23. Changelog
 
 | Date | Change |
 |------|--------|
 | 2026-01-01 | Initial specification created |
-| 2026-01-01 | Added sections H (Location Dropdowns), I (Manager Comment Panel), J (Weekend Display), K (Add New Task) |
-| 2026-01-01 | Implemented full UI: TypeScript types, mock data, all components (WeekHeader, OverallWeekPanel, LastWeekReviewPanel, FilterBar, CalendarView, ManagerCommentPanel) |
-| 2026-01-01 | Added sidebar menu navigation: To-do Task menu item with route /tasks/todo |
-| 2026-01-01 | Layout: Row 1 = Overview panels, Row 2 = Calendar + Manager Comments side by side |
-| 2026-01-01 | UI: OverallWeekPanel - collapsible card with icon, vertical borders in table |
-| 2026-01-01 | UI: LastWeekReviewPanel - same collapsible style, use stash_last-updates-solid.png icon |
-| 2026-01-01 | UI: Sync expand/collapse state between OverallWeek and LastWeekReview panels |
-| 2026-01-01 | UI: FilterBar User selector - added user icon (flowbite_user-solid.png) |
-| 2026-01-01 | UI: FilterBar Status selector - added filter icon (flowbite_filter-outline.png) |
-| 2026-01-01 | UI: FilterBar Type selector - added types icon (gridicons_types.png) |
-| 2026-01-01 | UI: CalendarView - added calendar icon (mdi_invoice-text-scheduled-outline.png) |
-| 2026-01-01 | UI: DailyTaskRow - 4 location dropdowns (Region, Zone, Area, Store), numbered task badges, single status per row |
-| 2026-01-01 | UI: TaskStatusBadge - added dot indicator, removed Type column from calendar table |
-| 2026-01-01 | UI: CalendarView - removed table header row |
-| 2026-01-01 | UI: TaskStatusBadge - In Process status with custom colors (border/text: #EDA600, bg: #EDA600 5%) |
-| 2026-01-01 | UI: TaskStatusBadge - Draft status with custom colors (border/text: #1BBA5E, bg: #EBFFF3) |
-| 2026-01-01 | UI: TaskStatusBadge - Done status with custom colors (border/text: #297EF6, bg: #E5F0FF) |
-| 2026-01-01 | UI: TaskStatusBadge - Increased background opacity to 10% for In Process, Done, Draft |
-| 2026-01-01 | UI: TaskStatusBadge - Done status: exact Figma CSS (bg: #E5F0FF, border: 0.5px solid #297EF6, dot: 6px, font: 13px normal, height: 25px, border-radius: 26px) |
-| 2026-01-01 | UI: ManagerCommentPanel - Redesigned to match Figma (header with comment icon, card with 0.5px border #6B6B6B, rounded-[10px], avatar with initials, author name + time, reply input with send button) |
-| 2026-01-01 | UI: ManagerCommentPanel - Use material-symbols_comment-rounded.png icon instead of SVG |
-| 2026-01-01 | UI: ManagerCommentPanel - Added gray background to comment messages (bg-gray-100) |
-| 2026-01-01 | UI: ManagerCommentPanel - Avatar outside message box, only content has gray background |
-| 2026-01-01 | UI: ManagerCommentPanel - Added border to reply input box |
-| 2026-01-01 | UI: ManagerCommentPanel - Added Other Comment section with same styling as Manager Comment (avatar bg: #E5F0FF, text: #003E95, message bg: #F4F4F4, border-radius: 0px 10px 10px 10px, reply border: #9B9B9B, send icon: #C5055B) |
-| 2026-01-01 | UX: Sidebar - Accordion behavior: only one parent menu can be expanded at a time |
-| 2026-01-01 | UX: Sidebar - Clicking non-child menu items collapses all expanded menus |
-| 2026-01-01 | UX: Sidebar - Menu expand/collapse state saved to localStorage |
-| 2026-01-01 | UX: Sidebar - Active state with left border indicator (#C5055B) |
-| 2026-01-01 | UX: Sidebar - Icon scale animation on hover (scale-110) |
-| 2026-01-01 | UX: Sidebar - Ripple effect on click |
-| 2026-01-01 | UX: Sidebar - Smooth submenu expand/collapse animation (300ms ease-out) |
-| 2026-01-01 | UX: Navigation - Loading progress bar when navigating between pages |
-| 2026-01-01 | UX: Navigation - Page transition fade effect (150ms) |
-| 2026-01-01 | UX: Added NavigationContext for managing navigation state |
-| 2026-01-01 | UX: Added Skeleton components for loading states (TableRowSkeleton, CardSkeleton, TodoTaskPageSkeleton, TaskListPageSkeleton) |
-| 2026-01-02 | Responsive: SidebarContext updated with device detection (mobile/tablet/desktop), isMobileMenuOpen state |
-| 2026-01-02 | Responsive: Sidebar overlay mode for mobile/tablet with backdrop blur, slide-in animation |
-| 2026-01-02 | Responsive: TopBar hamburger menu button for mobile/tablet |
-| 2026-01-02 | Responsive: BottomNavigation component for mobile (4 items: Tasks, To-do, Messages, More) |
-| 2026-01-02 | Responsive: Layout adjusts padding based on device type (no sidebar padding on mobile/tablet) |
-| 2026-01-02 | Responsive: Touch-friendly styles - minimum 44px tap targets, safe-area support for notched devices |
-| 2026-01-02 | Responsive: CSS utilities - grid-responsive, touch-target, safe-area-*, slide-up/slide-down animations |
-| 2026-01-02 | Responsive: Breakpoints - mobile (<768px), tablet (768-1023px), desktop (≥1024px) |
-| 2026-01-02 | Fix: Next.js Image aspect ratio warning - added style={{ width: 'auto', height: 'auto' }} to PNG icons in Sidebar and BottomNavigation |
-| 2026-01-02 | Fix: ManagerCommentPanel border color for dark mode - replaced inline style with Tailwind classes (border-gray-300 dark:border-gray-500) |
-| 2026-01-02 | Responsive: WeekHeader - stack vertical on mobile, centered text, hide Add button (use FAB instead) |
-| 2026-01-02 | Responsive: OverallWeekPanel & LastWeekReviewPanel - card view on mobile with smaller icons and fonts |
-| 2026-01-02 | Responsive: FilterBar - horizontal scroll on mobile, flex-shrink-0 for dropdowns |
-| 2026-01-02 | Responsive: CalendarViewMobile component - vertical timeline layout for mobile with day cards, task preview, status badges |
-| 2026-01-02 | Responsive: CalendarView - shows mobile timeline on small screens, table view on desktop |
-| 2026-01-02 | Responsive: TaskStatusBadge - added compact prop for smaller mobile version |
-| 2026-01-02 | Responsive: ManagerCommentPanel - tab navigation on mobile (Manager/Other), both sections on desktop |
-| 2026-01-02 | Responsive: TodoTaskPage layout - stacked panels on mobile, tab navigation for Calendar/Comments, 12-col grid on desktop |
-| 2026-01-02 | Responsive: FAB (Floating Action Button) for Add New task on mobile, positioned bottom-right above bottom nav |
-| 2026-01-02 | Fix: Sidebar MenuIcon - fixed size with minWidth/minHeight to prevent shrinking |
-| 2026-01-02 | UI: Sidebar child menu icons smaller (w-4 h-4 = 16px) than parent icons (w-5 h-5 = 20px) to show hierarchy |
-| 2026-01-02 | UI: Sidebar collapsed child menu items - slight left padding (pl-5) to indicate parent-child relationship |
-| 2026-01-02 | UI: Sidebar User Management - converted to parent menu with 2 children: User information (user-cog icon), Store information (store-cog icon) |
-| 2026-01-02 | UI: Sidebar MenuIcon - added isActive prop with CSS filter for color change (gray default, pink #C5055B when active) |
+| 2026-01-01 | Implemented full UI: all components |
+| 2026-01-01 | Added sidebar menu navigation |
+| 2026-01-01 | UI: OverallWeekPanel, LastWeekReviewPanel collapsible |
+| 2026-01-01 | UI: FilterBar with icons |
+| 2026-01-01 | UI: CalendarView with daily task rows |
+| 2026-01-01 | UI: ManagerCommentPanel redesigned to match Figma |
+| 2026-01-01 | UX: Sidebar accordion behavior |
+| 2026-01-01 | UX: Navigation loading states |
+| 2026-01-02 | Responsive: Mobile/Tablet/Desktop breakpoints |
+| 2026-01-02 | Responsive: Sidebar overlay, bottom navigation, FAB |
+| 2026-01-02 | Fix: Various UI fixes for responsive design |
 | 2026-01-02 | Translated specification to English |
+| 2026-01-06 | Restructured spec with Basic/Detail sections |

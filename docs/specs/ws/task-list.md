@@ -1,19 +1,40 @@
 # Task List Screen Specification
 
-> **Status**: Implementation Complete (Frontend Mock)
-> **Last Updated**: 2025-12-28
-> **Screen ID**: SCR_TASK_LIST
-> **Route**: `/tasks/list`
-
 ---
+
+# BASIC SPEC
 
 ## 1. Overview
 
-The Task List screen displays a paginated table of task groups with filtering, sorting, and navigation capabilities.
+- **Module**: WS (Task from HQ)
+- **Screen ID**: SCR_TASK_LIST
+- **Route**: `/tasks/list`
+- **Purpose**: Hiển thị danh sách task groups với khả năng lọc, sắp xếp và điều hướng
+- **Target Users**: Manager, Staff
 
----
+## 2. User Stories
 
-## 2. Screen Layout
+| ID | As a... | I want to... | So that... |
+|----|---------|--------------|------------|
+| US-01 | Manager | View all task groups | I can monitor team progress |
+| US-02 | Manager | Filter tasks by date/dept/status | I can focus on specific tasks |
+| US-03 | Manager | Sort tasks by column | I can organize the list |
+| US-04 | Staff | View my assigned tasks | I know what to work on |
+| US-05 | Manager | Create new task | I can assign work to team |
+
+## 3. Screen Components Summary
+
+| Component | Description |
+|-----------|-------------|
+| Header | Title "List tasks" |
+| DatePicker | DAY/WEEK/CUSTOM date selection |
+| Search | Text search for task name/dept |
+| Filter Button | Opens filter modal |
+| ADD NEW Button | Navigate to create task |
+| Data Table | Task groups with sortable columns |
+| Pagination | 10 items per page |
+
+## 4. Screen Layout
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -30,11 +51,41 @@ The Task List screen displays a paginated table of task groups with filtering, s
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
+## 5. Navigation
+
+| Action | Destination |
+|--------|-------------|
+| Click row | Task Detail `/tasks/{id}` |
+| Click ADD NEW | Create Task `/tasks/new` |
+| Click Filter | Open Filter Modal |
+
+## 6. API Endpoints Summary
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/tasks` | GET | Get task list with filters |
+| `/api/v1/tasks/{id}` | GET | Get task detail |
+| `/api/v1/departments` | GET | Get department list |
+
+## 7. Implementation Status
+
+| Feature | Backend | Frontend | Notes |
+|---------|---------|----------|-------|
+| Task List Table | ✅ Done | ✅ Done | Mock data |
+| DatePicker | - | ✅ Done | Frontend only |
+| Search | - | ✅ Done | Client-side |
+| Filter Modal | - | ✅ Done | Client-side |
+| Sorting | - | ✅ Done | Client-side |
+| Pagination | - | ✅ Done | Client-side |
+| API Integration | ⏳ Pending | ⏳ Pending | - |
+
 ---
 
-## 3. Components
+# DETAIL SPEC
 
-### 3.1 Header Section
+## 8. Header Section - Detail
+
+### 8.1 Components
 
 | Component | Description | Status |
 |-----------|-------------|--------|
@@ -44,7 +95,7 @@ The Task List screen displays a paginated table of task groups with filtering, s
 | Filter Button | Opens filter modal | ✅ Implemented |
 | ADD NEW Button | Navigate to `/tasks/new` | ✅ Implemented |
 
-### 3.2 DatePicker Component
+### 8.2 DatePicker Component
 
 | Feature | Description | Status |
 |---------|-------------|--------|
@@ -62,7 +113,11 @@ The Task List screen displays a paginated table of task groups with filtering, s
 | Validation | Start date must be ≤ End date |
 | Auto-adjust | If selected date violates validation, both dates set to selected date |
 
-### 3.3 Table Columns
+---
+
+## 9. Data Table - Detail
+
+### 9.1 Columns
 
 | Column | Sortable | Filterable | Status |
 |--------|----------|------------|--------|
@@ -75,7 +130,7 @@ The Task List screen displays a paginated table of task groups with filtering, s
 | Status | ✅ Yes | ✅ Yes (dropdown) | ✅ Implemented |
 | HQ Check | ✅ Yes | ✅ Yes (dropdown) | ✅ Implemented |
 
-### 3.4 Sorting Behavior
+### 9.2 Sorting Behavior
 
 - **3-state cycle**: None → Ascending → Descending → None
 - **Visual indicators**:
@@ -83,7 +138,7 @@ The Task List screen displays a paginated table of task groups with filtering, s
   - Ascending: Pink up arrow
   - Descending: Pink down arrow
 
-### 3.5 Column Filter Dropdowns
+### 9.3 Column Filter Dropdowns
 
 - Available on: Dept, Status, HQ Check columns
 - Features:
@@ -92,29 +147,22 @@ The Task List screen displays a paginated table of task groups with filtering, s
   - "Clear" button to deselect all
   - Badge showing number of active filters
 
-### 3.6 Row Expansion (Accordion)
+### 9.4 Row Expansion (Accordion)
 
 - Click expand icon to show sub-tasks
 - Only one row can be expanded at a time
 - Sub-tasks display: name, assignee, status
 
-### 3.7 Row Click Navigation
+### 9.5 Row Click Navigation
 
 - Click on row navigates to `/tasks/{id}` detail page
 - Expand button click does NOT trigger navigation (stopPropagation)
 
-### 3.8 Pagination
-
-| Feature | Value | Status |
-|---------|-------|--------|
-| Items per page | 10 (fixed) | ✅ Implemented |
-| Page numbers | Displayed as buttons | ✅ Implemented |
-| Previous/Next | Arrow buttons | ✅ Implemented |
-| Total count | "Total: X tasks group" | ✅ Implemented |
-
 ---
 
-## 4. Filter Modal
+## 10. Filter Modal - Detail
+
+### 10.1 Filter Options
 
 | Filter | Options | Status |
 |--------|---------|--------|
@@ -123,7 +171,7 @@ The Task List screen displays a paginated table of task groups with filtering, s
 | Status | NOT_YET, DRAFT, DONE (chip buttons) | ✅ Implemented |
 | HQ Check | NOT_YET, DRAFT, DONE (chip buttons) | ✅ Implemented |
 
-### 4.1 Department Checkbox Logic
+### 10.2 Department Checkbox Logic
 
 | Action | Behavior |
 |--------|----------|
@@ -136,7 +184,18 @@ The Task List screen displays a paginated table of task groups with filtering, s
 
 ---
 
-## 5. Data Types
+## 11. Pagination - Detail
+
+| Feature | Value | Status |
+|---------|-------|--------|
+| Items per page | 10 (fixed) | ✅ Implemented |
+| Page numbers | Displayed as buttons | ✅ Implemented |
+| Previous/Next | Arrow buttons | ✅ Implemented |
+| Total count | "Total: X tasks group" | ✅ Implemented |
+
+---
+
+## 12. Data Types
 
 ```typescript
 type TaskStatus = 'NOT_YET' | 'DRAFT' | 'DONE';
@@ -167,7 +226,58 @@ interface SubTask {
 
 ---
 
-## 6. File Structure
+## 13. API Endpoints - Detail
+
+### 13.1 Get Task List
+
+**Endpoint:** `GET /api/v1/tasks`
+
+**Query Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `date_from` | string | Start date (YYYY-MM-DD) |
+| `date_to` | string | End date (YYYY-MM-DD) |
+| `search` | string | Search term |
+| `dept` | string[] | Department IDs |
+| `status` | string[] | Status filter |
+| `hq_check` | string[] | HQ Check filter |
+| `page` | number | Page number |
+| `per_page` | number | Items per page |
+| `sort_by` | string | Column to sort |
+| `sort_dir` | string | asc/desc |
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "1",
+      "dept": "MKT",
+      "task_group_name": "Marketing Campaign Q1",
+      "start_date": "2026-01-01",
+      "end_date": "2026-01-31",
+      "progress": { "completed": 5, "total": 10 },
+      "unable": 2,
+      "status": "DRAFT",
+      "hq_check": "NOT_YET",
+      "sub_tasks": [...]
+    }
+  ],
+  "meta": {
+    "total": 50,
+    "page": 1,
+    "per_page": 10,
+    "total_pages": 5
+  }
+}
+```
+
+---
+
+## 14. Files Reference
+
+### 14.1 Frontend Files
 
 ```
 frontend/src/
@@ -189,9 +299,17 @@ frontend/src/
     └── mockTasks.ts           # Mock data (temporary)
 ```
 
+### 14.2 Backend Files
+
+| Feature | File |
+|---------|------|
+| Controller | `app/Http/Controllers/Api/V1/TaskController.php` |
+| Model | `app/Models/Task.php` |
+| Resource | `app/Http/Resources/TaskResource.php` |
+
 ---
 
-## 7. Pending Features
+## 15. Pending Features
 
 | Feature | Priority | Status |
 |---------|----------|--------|
@@ -201,7 +319,7 @@ frontend/src/
 
 ---
 
-## 8. Changelog
+## 16. Changelog
 
 | Date | Changes |
 |------|---------|
@@ -218,36 +336,4 @@ frontend/src/
 | 2026-01-03 | Added search clear button (X icon) |
 | 2026-01-03 | Updated default DatePicker from WEEK to DAY (today) |
 | 2026-01-03 | Added parent-child checkbox logic in Filter Modal Department section |
-
----
-
-## 9. Comparison with Original Spec (SCR_TASK_LIST)
-
-| Spec Item | Original Spec | Current Implementation | Status |
-|-----------|---------------|------------------------|--------|
-| **A.1 Date Display** |
-| DAY | Chọn 1 ngày cụ thể để lọc task | ✅ Filter tasks by date overlap | ✅ Fixed |
-| WEEK | Hover hiển thị tooltip khoảng ngày | ✅ Tooltip on hover | ✅ Fixed |
-| CUSTOM | 2 Calendar, highlight màu hồng nhạt | ✅ Dual calendar with pink highlight | ✅ Fixed |
-| **A.2 Search Bar** |
-| Logic | Tìm kiếm theo "Task Group" hoặc "Dept" | ✅ Search by taskGroupName or dept | ✅ OK |
-| Cơ chế | Real-time hoặc nhấn Enter | ✅ Real-time search | ✅ OK |
-| **A.3 Filter Modal** |
-| View Scope | Dropdown "All team" mặc định | ✅ Implemented | ✅ OK |
-| Department | Cấu trúc phân cấp: Level 1 (Khối), Level 2 (Phòng ban) | ✅ Hierarchical checkboxes | ✅ OK |
-| Status | Chips/Tags - Not Yet, Done, Draft | ✅ Chip buttons | ✅ OK |
-| HQ Check | Chips/Tags | ✅ Chip buttons | ✅ OK |
-| Nút RESET | Reset tất cả điều kiện lọc | ✅ RESET button in footer | ✅ OK |
-| **A.4 ADD NEW** |
-| Action | Mở màn hình Add Task | ✅ Navigate to /tasks/new | ✅ OK |
-| **B. Data Grid** |
-| No | Đánh số thứ tự tăng dần theo danh sách hiển thị | ✅ Dynamic index (startIndex + index + 1) | ✅ Fixed |
-| Dept | Icon + tên, có icon phễu lọc | ✅ Icon + name + column filter | ✅ OK |
-| Task Group | Accordion mở rộng/thu gọn sub-tasks | ✅ Expandable rows | ✅ OK |
-| Start -> End | Định dạng DD/MM | ✅ Format DD/MM | ✅ OK |
-| Progress | [Đã xong]/[Tổng] | ✅ completed/total | ✅ OK |
-| Status | Pills màu, có icon phễu | ✅ StatusPill + column filter | ✅ OK |
-| HQ Check | Pills màu, có icon phễu | ✅ StatusPill + column filter | ✅ OK |
-| **C. Pagination** |
-| Tổng số lượng | "Total: [X] tasks group" | ✅ Implemented | ✅ OK |
-| Điều hướng | Các nút phân trang | ✅ Page buttons | ✅ OK |
+| 2026-01-06 | Restructured spec with Basic/Detail sections |

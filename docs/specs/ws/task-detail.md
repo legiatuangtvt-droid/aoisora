@@ -1,42 +1,41 @@
 # Task Detail Screen Specification
 
-> **Status**: In Development
-> **Last Updated**: 2025-12-29
-> **Screen ID**: SCR_TASK_DETAIL
-> **Routes**:
-> - `/tasks/[id]` - Direct access with task ID
-> - `/tasks/detail` - Auto-redirect to nearest deadline task
-
 ---
+
+# BASIC SPEC
 
 ## 1. Overview
 
-This screen displays detailed task information from HQ to stores. It supports multiple view modes:
+- **Module**: WS (Task from HQ)
+- **Screen ID**: SCR_TASK_DETAIL
+- **Routes**:
+  - `/tasks/[id]` - Direct access with task ID
+  - `/tasks/detail` - Auto-redirect to nearest deadline task
+- **Purpose**: Display detailed task information from HQ to stores with multiple view modes
+- **Target Users**: Manager, Staff
 
-### 1.1 Navigation Flow
+## 2. User Stories
 
-| Access Method | Route | Behavior |
-|---------------|-------|----------|
-| Click row in Task List | `/tasks/{id}` | Displays detail of specific task |
-| Click "Detail" menu in Sidebar | `/tasks/detail` | Auto-redirects to task with nearest deadline |
+| ID | As a... | I want to... | So that... |
+|----|---------|--------------|------------|
+| US-01 | Manager | View task details with store results | I can monitor store completion status |
+| US-02 | Manager | Switch between Results/Comment/Staff views | I can see different aspects of task progress |
+| US-03 | Manager | Filter results by region/area/store | I can focus on specific locations |
+| US-04 | Manager | View workflow steps | I can track task approval process |
+| US-05 | Staff | View task instructions and images | I know what to do for the task |
+| US-06 | Manager | Like and comment on store results | I can provide feedback to stores |
 
-#### Auto-redirect Logic (`/tasks/detail`)
-1. Parse all task end dates
-2. Filter tasks where `endDate >= today` (not expired)
-3. Sort by `endDate` ascending (nearest first)
-4. Redirect to first task in sorted list
-5. Fallback: If no upcoming tasks, redirect to first task in list
-6. Fallback: If no tasks at all, redirect to `/tasks/list`
+## 3. Screen Components Summary
 
-### 1.2 View Modes
+| Component | Description |
+|-----------|-------------|
+| Task Header | Level badge, name, dates, status, statistics cards |
+| Filter Bar | Region/Area/Store dropdowns, status filter, search, view mode toggle |
+| Store Results | Cards showing store completion with images and comments |
+| Staff Cards | Individual staff progress with requirements grid |
+| Workflow Panel | Slide-in panel showing task approval steps |
 
-- **Store View (Results View)**: View task results grouped by store with images and comments
-- **Comment View**: View all comments across stores
-- **Staff View (Card-based)**: View individual staff progress with images and comments
-
----
-
-## 2. Screen Layout
+## 4. Screen Layout
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -51,7 +50,6 @@ This screen displays detailed task information from HQ to stores. It supports mu
 │          │ └─────────────────────────────────────────────────────────────┘  │
 │          │ ┌─────────────────────────────────────────────────────────────┐  │
 │          │ │ Results Content (Store Cards / Staff Cards based on view)  │  │
-│          │ │                                                             │  │
 │          │ │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐         │  │
 │          │ │  │ Store Card  │  │ Store Card  │  │ Store Card  │         │  │
 │          │ │  │ - Images    │  │ - Images    │  │ - Images    │         │  │
@@ -61,13 +59,67 @@ This screen displays detailed task information from HQ to stores. It supports mu
 └──────────┴──────────────────────────────────────────────────────────────────┘
 ```
 
+## 5. Navigation
+
+| Action | Destination |
+|--------|-------------|
+| Click row in Task List | `/tasks/{id}` - Display detail of specific task |
+| Click "Detail" menu in Sidebar | `/tasks/detail` - Auto-redirect to nearest deadline task |
+| Click breadcrumb "List task" | `/tasks/list` - Return to task list |
+
+## 6. API Endpoints Summary
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/tasks/{id}` | GET | Get full task details |
+| `/api/v1/tasks/{id}/stores` | GET | Get results by store |
+| `/api/v1/tasks/{id}/staffs` | GET | Get results by staff |
+| `/api/v1/tasks/{id}/comments` | GET/POST | Get/Add comments |
+| `/api/v1/tasks/{id}/like` | POST | Like a task result |
+
+## 7. Implementation Status
+
+| Feature | Backend | Frontend | Notes |
+|---------|---------|----------|-------|
+| Task Header | ⏳ Pending | ✅ Done | Mock data |
+| Filter Bar | ⏳ Pending | ✅ Done | Client-side |
+| Store Results View | ⏳ Pending | ✅ Done | Mock data |
+| Staff View | ⏳ Pending | ✅ Done | Mock data |
+| Comments Section | ⏳ Pending | ✅ Done | Mock data |
+| Image Lightbox | - | ✅ Done | Frontend only |
+| Workflow Steps Panel | ⏳ Pending | ✅ Done | Mock data |
+| API Integration | ⏳ Pending | ⏳ Pending | - |
+
 ---
 
-## 3. Components
+# DETAIL SPEC
 
-### 3.1 Task Header (A. Khu vuc Header)
+## 8. Navigation Flow - Detail
 
-#### A.1 Task Information
+### 8.1 Auto-redirect Logic (`/tasks/detail`)
+
+| Step | Action |
+|------|--------|
+| 1 | Parse all task end dates |
+| 2 | Filter tasks where `endDate >= today` (not expired) |
+| 3 | Sort by `endDate` ascending (nearest first) |
+| 4 | Redirect to first task in sorted list |
+| 5 | Fallback: If no upcoming tasks, redirect to first task in list |
+| 6 | Fallback: If no tasks at all, redirect to `/tasks/list` |
+
+### 8.2 View Modes
+
+| Mode | Description |
+|------|-------------|
+| Results View (Store View) | View task results grouped by store with images and comments |
+| Comment View | View all comments across stores |
+| Staff View | View individual staff progress with images and comments |
+
+---
+
+## 9. Task Header - Detail
+
+### 9.1 Task Information (Left Side)
 
 | Element | Description | Example |
 |---------|-------------|---------|
@@ -75,9 +127,9 @@ This screen displays detailed task information from HQ to stores. It supports mu
 | Task Name | Bold text, large font | "Trưng bày hoa ngày rằm" |
 | Date Range | Start → End dates | "04 Nov - 21 Dec" |
 | HQ Check Status | Status badge | "HQ Check: D097" |
-| Bottom Row | Task Type + Manual Link + User Icon on same line at bottom of left side (Task Info column) | "Task type: Image | Manual link: link | [user icon]" |
+| Bottom Row | Task Type + Manual Link + User Icon | "Task type: Image \| Manual link: link \| [user icon]" |
 
-#### A.2 Statistics Cards
+### 9.2 Statistics Cards (Right Side)
 
 | Card | Icon | Description | Color |
 |------|------|-------------|-------|
@@ -86,7 +138,9 @@ This screen displays detailed task information from HQ to stores. It supports mu
 | Unable to Complete | X mark | Count of unable to complete | Red/Orange |
 | Average Completion Time | Clock | Average time (e.g., "60min") | Blue |
 
-### 3.2 Filter Bar (B. Filter Bar)
+---
+
+## 10. Filter Bar - Detail
 
 | Element | Type | Description |
 |---------|------|-------------|
@@ -96,9 +150,23 @@ This screen displays detailed task information from HQ to stores. It supports mu
 | All Location | Dropdown | Filter all locations (Staff view) |
 | All Status | Dropdown | Filter by task status (Staff view) |
 | Search | Text input | Search by staff name or ID |
-| View Mode Toggle | Toggle group | Switch between Results/Comment view (pill-style toggle with gray background, active button has white bg with pink text). Features: sliding indicator animation, keyboard navigation (Arrow keys), badge counts, loading state, press feedback, scroll position preservation, fade transition on content switch |
+| View Mode Toggle | Toggle group | Pill-style toggle with gray background, active button has white bg with pink text |
 
-### 3.3 Store Card - Results View (C.1 Store Card)
+### 10.1 View Mode Toggle Features
+
+- Sliding indicator animation
+- Keyboard navigation (Arrow keys)
+- Badge counts
+- Loading state
+- Press feedback
+- Scroll position preservation
+- Fade transition on content switch
+
+---
+
+## 11. Store Result Card - Detail
+
+### 11.1 Card Header
 
 | Element | Description |
 |---------|-------------|
@@ -108,7 +176,7 @@ This screen displays detailed task information from HQ to stores. It supports mu
 | Completed Time | Label (teal) + datetime, same row with Start Time |
 | Menu Button | 3-dot icon for options |
 
-### 3.4 Image Grid (C.2 Image Grid)
+### 11.2 Image Grid
 
 | Element | Description |
 |---------|-------------|
@@ -118,7 +186,7 @@ This screen displays detailed task information from HQ to stores. It supports mu
 | Uploaded Date | "Uploaded: Dec 01, 2025" format below image |
 | Scroll Buttons | Circular buttons with arrow icons, positioned at left/right edges when scrollable |
 
-### 3.5 Image Lightbox (C.3 Image Lightbox)
+### 11.3 Image Lightbox
 
 | Element | Description |
 |---------|-------------|
@@ -129,7 +197,7 @@ This screen displays detailed task information from HQ to stores. It supports mu
 | Thumbnail Strip | Horizontal strip of all images |
 | Close | Click overlay to close |
 
-### 3.6 Comments Section (C.4 Comments Section)
+### 11.4 Comments Section
 
 | Element | Description |
 |---------|-------------|
@@ -139,10 +207,12 @@ This screen displays detailed task information from HQ to stores. It supports mu
 | Comment Item | Avatar + Name + Time + Content |
 | Comment Input | Text input with send button (pink arrow) |
 
-### 3.7 Task Status Cards (D. Task Status Cards)
+---
 
-| Status | Badge | Color | Text |
-|--------|-------|-------|------|
+## 12. Task Status Cards - Detail
+
+| Status | Badge | Color Theme | Text |
+|--------|-------|-------------|------|
 | SUCCESS | Dot (teal) + "SUCCESS" | Blue (bg-blue-50, border-l-4 border-teal-400, text-blue-600) | ĐÃ HOÀN THÀNH CÔNG VIỆC |
 | FAILED | Dot (orange) + "FAILED" | Orange (bg-orange-50, border-l-4 border-orange-500, text-orange-700) | KHÔNG HOÀN THÀNH CÔNG VIỆC |
 | IN_PROGRESS | Dot (yellow) + "IN PROCESS" | Yellow (bg-yellow-50, border-l-4 border-yellow-500, text-yellow-700) | CHƯA HOÀN THÀNH CÔNG VIỆC |
@@ -156,7 +226,9 @@ This screen displays detailed task information from HQ to stores. It supports mu
 - User avatars (who liked, stacked with -space-x-2)
 - Like count text (e.g., "2 likes")
 
-### 3.8 Staff Card - Staff View (F.2 Staff Card)
+---
+
+## 13. Staff Card - Detail
 
 | Element | Description |
 |---------|-------------|
@@ -171,15 +243,17 @@ This screen displays detailed task information from HQ to stores. It supports mu
 | Comments | Mini comments section |
 | Send Reminder | Button (for Not Started status) |
 
-### 3.9 Workflow Steps Panel (E. Workflow Steps Panel)
+---
 
-Slide-in panel from right side, triggered by clicking the user-check icon in Task Header.
+## 14. Workflow Steps Panel - Detail
 
-#### Trigger
+### 14.1 Trigger
+
 - User-check icon (SVG with user + checkmark) in bottom row of Task Info section
 - Click opens panel with backdrop overlay
 
-#### Panel Layout
+### 14.2 Panel Layout
+
 | Element | Description |
 |---------|-------------|
 | Backdrop | Dark semi-transparent overlay (bg-black/30), click to close |
@@ -187,7 +261,8 @@ Slide-in panel from right side, triggered by clicking the user-check icon in Tas
 | Round Tabs | Centered tab group for Round 1, Round 2 (gray bg, active: white bg + pink text) |
 | Steps Timeline | Vertical timeline with step icons and connecting lines |
 
-#### Step Icons (30x30 rounded circle with border)
+### 14.3 Step Icons (30x30 rounded circle with border)
+
 | Step | Icon | Active Border |
 |------|------|---------------|
 | Step 1 | Document with export arrow (SUBMIT) | #C5055B (pink) |
@@ -199,15 +274,17 @@ Slide-in panel from right side, triggered by clicking the user-check icon in Tas
 - Active (non-pending): #C5055B (pink)
 - Inactive (pending): #9B9B9B (gray)
 
-#### Step Status Badges
+### 14.4 Step Status Badges
+
 | Status | Label | Dot Color | Background | Border | Text |
 |--------|-------|-----------|------------|--------|------|
 | completed | Done | #297EF6 | #E5F0FF | #297EF6 | #297EF6 |
 | in_progress | In process | #EDA600 | #EDA600/5 | #EDA600 | #EDA600 |
 | pending | Pending | gray-400 | gray-100 | gray-400 | gray-500 |
-| submitted (Step 1 completed) | Submited | #1BBA5E | #EBFFF3 | #1BBA5E | #1BBA5E |
+| submitted | Submited | #1BBA5E | #EBFFF3 | #1BBA5E | #1BBA5E |
 
-#### Step Card Elements
+### 14.5 Step Card Elements
+
 | Element | Description |
 |---------|-------------|
 | Step Title | "Step N: {name}" - bold, large font |
@@ -217,23 +294,29 @@ Slide-in panel from right side, triggered by clicking the user-check icon in Tas
 | Start Day / End Day | Two columns with dates |
 | Comment Section | Gray background box with quote marks |
 
-#### Timeline Connecting Lines
+### 14.6 Timeline Connecting Lines
+
 - 2px width, #C5055B color
 - Uses absolute positioning to extend from bottom of icon to next step's icon
-- Line starts at top: 30px (bottom of icon) and extends to bottom: -20px (through padding gap)
+- Line starts at top: 30px and extends to bottom: -20px
 - Creates seamless vertical connection between all steps
 - Hidden for last step
 
-| Steps | Fields |
-|-------|--------|
-| Step 1: SUBMIT | Assignee, Start Day, End Day, Comment |
-| Step 2: APPROVE | Assignee, Start Day, End Day, Comment |
-| Step 3: DO TASK | Skip info (e.g., "27 Stores"), Start Day, End Day |
-| Step 4: CHECK | Assignee, Start Day, End Day |
+---
+
+## 15. Store Results Display Order
+
+| Priority | Status | Description |
+|----------|--------|-------------|
+| 1 (Top) | `in_progress` / `not_started` | Stores that haven't completed the task yet |
+| 2 | `failed` | Stores that could not complete the task |
+| 3 (Bottom) | `success` | Stores that completed the task successfully |
+
+**Within `success` status:** Stores are sorted by completion time (descending), meaning stores that completed earlier appear at the bottom of the success group.
 
 ---
 
-## 4. Data Types
+## 16. Data Types
 
 ```typescript
 // View modes
@@ -357,7 +440,21 @@ interface TaskDetailFilters {
 
 ---
 
-## 5. File Structure
+## 17. API Endpoints - Detail
+
+| Action | Method | Endpoint | Description |
+|--------|--------|----------|-------------|
+| Get Task Detail | GET | /api/v1/tasks/{id} | Get full task details |
+| Get Store Results | GET | /api/v1/tasks/{id}/stores | Get results by store |
+| Get Staff Results | GET | /api/v1/tasks/{id}/staffs | Get results by staff |
+| Get Comments | GET | /api/v1/tasks/{id}/comments | Get all comments |
+| Post Comment | POST | /api/v1/tasks/{id}/comments | Add new comment |
+| Like Task | POST | /api/v1/tasks/{id}/like | Like a task result |
+| Send Reminder | POST | /api/v1/tasks/{id}/reminder | Send reminder to staff |
+
+---
+
+## 18. Files Reference
 
 ```
 frontend/src/
@@ -389,72 +486,7 @@ frontend/src/
 
 ---
 
-## 5.1 Store Results Display Order
-
-Store results are sorted according to the following priority:
-
-| Priority | Status | Description |
-|----------|--------|-------------|
-| 1 (Top) | `in_progress` / `not_started` | Stores that haven't completed the task yet |
-| 2 | `failed` | Stores that could not complete the task |
-| 3 (Bottom) | `success` | Stores that completed the task successfully |
-
-**Within `success` status:** Stores are sorted by completion time (descending), meaning stores that completed earlier appear at the bottom of the success group.
-
-```typescript
-// Sorting logic implementation
-const sortedStoreResults = useMemo(() => {
-  const getStatusPriority = (status: StoreResult['status']): number => {
-    switch (status) {
-      case 'in_progress':
-      case 'not_started':
-        return 1; // Highest priority - show first
-      case 'failed':
-        return 2; // Second priority
-      case 'success':
-        return 3; // Lowest priority - show last
-      default:
-        return 4;
-    }
-  };
-
-  return [...taskDetail.storeResults].sort((a, b) => {
-    const priorityA = getStatusPriority(a.status);
-    const priorityB = getStatusPriority(b.status);
-
-    if (priorityA !== priorityB) {
-      return priorityA - priorityB;
-    }
-
-    // Within success status, sort by completion time (earlier at bottom)
-    if (a.status === 'success' && b.status === 'success') {
-      const timeA = parseCompletedTime(a.completedTime);
-      const timeB = parseCompletedTime(b.completedTime);
-      return timeB - timeA;
-    }
-
-    return 0;
-  });
-}, [taskDetail?.storeResults]);
-```
-
----
-
-## 6. API Integration
-
-| Action | Method | Endpoint | Description |
-|--------|--------|----------|-------------|
-| Get Task Detail | GET | /api/v1/tasks/{id} | Get full task details |
-| Get Store Results | GET | /api/v1/tasks/{id}/stores | Get results by store |
-| Get Staff Results | GET | /api/v1/tasks/{id}/staffs | Get results by staff |
-| Get Comments | GET | /api/v1/tasks/{id}/comments | Get all comments |
-| Post Comment | POST | /api/v1/tasks/{id}/comments | Add new comment |
-| Like Task | POST | /api/v1/tasks/{id}/like | Like a task result |
-| Send Reminder | POST | /api/v1/tasks/{id}/reminder | Send reminder to staff |
-
----
-
-## 7. Test Scenarios
+## 19. Test Scenarios
 
 ### View Mode Testing
 
@@ -466,7 +498,7 @@ const sortedStoreResults = useMemo(() => {
 
 ---
 
-## 8. Changelog
+## 20. Changelog
 
 | Date | Changes |
 |------|---------|
@@ -495,3 +527,4 @@ const sortedStoreResults = useMemo(() => {
 | 2025-12-31 | StoreResultCard: Added taskType prop to conditionally render ImageGrid (image) or YesNoStatusSection (yes_no) |
 | 2026-01-03 | Store Results Sorting: Added display order logic - in_progress/not_started first → failed second → success last (success sorted by completion time, earliest at bottom) |
 | 2026-01-03 | WorkflowStepsPanel: New slide-in panel component with round tabs, timeline, step icons, status badges. Triggered by user-check icon in Task Header |
+| 2026-01-06 | Restructured spec with Basic/Detail sections |

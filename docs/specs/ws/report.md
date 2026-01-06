@@ -1,14 +1,38 @@
 # Report Screen Specification
 
-## 1. Overview
-
-The Report screen displays task completion statistics across stores and departments. It provides weekly tracking data with visual charts and detailed tabular reports.
-
-**Route:** `/tasks/report`
-
 ---
 
-## 2. Layout Structure
+# BASIC SPEC
+
+## 1. Overview
+
+- **Module**: WS (Task from HQ)
+- **Screen ID**: SCR_REPORT
+- **Route**: `/tasks/report`
+- **Purpose**: Display task completion statistics across stores and departments with weekly tracking
+- **Target Users**: HQ (Headquarter) Staff, Manager
+
+## 2. User Stories
+
+| ID | As a... | I want to... | So that... |
+|----|---------|--------------|------------|
+| US-01 | Manager | View weekly completion by store | I can track store performance |
+| US-02 | Manager | See completion % with color coding | I can quickly identify issues |
+| US-03 | Manager | View stacked bar chart | I can see completion trends |
+| US-04 | Manager | Filter by department | I can focus on specific areas |
+| US-05 | Manager | View detailed store breakdown | I can see department-level data |
+| US-06 | Manager | Export report | I can share with stakeholders |
+
+## 3. Screen Components Summary
+
+| Component | Description |
+|-----------|-------------|
+| Week Selector Grid | Store x Week matrix with completion % |
+| Stacked Bar Chart | Visual completion trends by week |
+| Filter Dropdown | Department filter |
+| Store Report Table | Detailed breakdown by department |
+
+## 4. Screen Layout
 
 ```
 +------------------------------------------------------------------+
@@ -23,13 +47,40 @@ The Report screen displays task completion statistics across stores and departme
 +------------------------------------------------------------------+
 ```
 
+## 5. Navigation
+
+| Action | Destination |
+|--------|-------------|
+| Click Sidebar "Report" | `/tasks/report` |
+| Click week header | Filter data by week |
+| Click store row | Drill down to store detail |
+| Click Export | Download report |
+
+## 6. API Endpoints Summary
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/reports/weekly-completion` | GET | Get weekly completion data |
+| `/api/v1/reports/store-weekly` | GET | Get store weekly grid |
+| `/api/v1/reports/store-detail` | GET | Get detailed store report |
+
+## 7. Implementation Status
+
+| Feature | Backend | Frontend | Notes |
+|---------|---------|----------|-------|
+| Report Page | ⏳ Pending | ✅ Done | Mock data |
+| Weekly Completion Grid | ⏳ Pending | ✅ Done | Mock data |
+| Stacked Bar Chart | - | ✅ Done | Custom chart |
+| Store Report Table | ⏳ Pending | ✅ Done | Mock data |
+| API Integration | ⏳ Pending | ⏳ Pending | - |
+
 ---
 
-## 3. Components
+# DETAIL SPEC
 
-### 3.1 Week Selector Grid (Top Left)
+## 8. Week Selector Grid - Detail
 
-A table showing completion percentages by store and week.
+### 8.1 Structure
 
 | Element | Description |
 |---------|-------------|
@@ -37,16 +88,8 @@ A table showing completion percentages by store and week.
 | Store Rows | Store name + completion % per week |
 | Cell Colors | Color-coded based on completion % |
 
-#### Store List
-- Eco
-- Oasic
-- Haven
-- Land Mark
-- Ocean
-- Zen
-- Hawaii
+### 8.2 Cell Color Coding
 
-#### Cell Color Coding
 | Completion % | Background Color |
 |--------------|------------------|
 | 100% | Green (#22C55E) |
@@ -55,9 +98,9 @@ A table showing completion percentages by store and week.
 | 70-79% | Orange (#FB923C) |
 | < 70% | Red (#EF4444) |
 
-### 3.2 Stacked Bar Chart (Top Right)
+---
 
-Visual representation of task completion status by week.
+## 9. Stacked Bar Chart - Detail
 
 | Element | Description |
 |---------|-------------|
@@ -67,23 +110,18 @@ Visual representation of task completion status by week.
 | Y-Axis | Task count |
 | Bar Segments | Stacked showing completed vs incomplete |
 
-#### Bar Colors
+### 9.1 Bar Colors
+
 | Status | Color |
 |--------|-------|
 | Completed | Blue (#3B82F6) |
 | Incomplete/Failed | Red (#EF4444) |
 
-#### Chart Data Display
-- Numbers shown inside bar segments
-- Total height represents total tasks
-- Blue section = completed tasks
-- Red section = incomplete/failed tasks
+---
 
-### 3.3 Detailed Store Report Table (Bottom)
+## 10. Store Report Table - Detail
 
-Comprehensive table with store-level task completion data broken down by department.
-
-#### Table Structure
+### 10.1 Table Structure
 
 | Column Group | Columns |
 |--------------|---------|
@@ -96,7 +134,8 @@ Comprehensive table with store-level task completion data broken down by departm
 | DRY FOOD | Total Task, Completed (task actual), Complete % |
 | Aeon CF | Total Task, Completed (task actual), Complete % |
 
-#### Column Header Styling
+### 10.2 Column Header Styling
+
 | Department | Background Color |
 |------------|------------------|
 | Total Task | Light Gray |
@@ -107,47 +146,17 @@ Comprehensive table with store-level task completion data broken down by departm
 | DRY FOOD | Light Orange (#FED7AA) |
 | Aeon CF | Light Purple (#E9D5FF) |
 
-#### Cell Highlighting
+### 10.3 Cell Highlighting
+
 | Condition | Style |
 |-----------|-------|
 | Complete % = 100% | Green background |
 | Complete % < 100% | Red/Pink background |
 | Empty/No task | White background |
 
-#### Store List (Sample)
-| Code | Store Name |
-|------|------------|
-| 3002 | Ecopark |
-| 3003 | Riverside |
-| 3005 | Poxton |
-| 3008 | Phuride |
-| 3011 | Thang Long |
-| 3013 | Lotus |
-| 3014 | Linh Dam |
-| 3015 | Westbay |
-| 3016 | Ocean Park |
-| 3018 | Lich Nam |
-| 3019 | The Five |
-| 3020 | Eco Phung Cr |
-| 3022 | Kosmo |
-| 3024 | Lacasta |
-| 3027 | Zenpark |
-| 3029 | Nam Trung Yen |
-| 3030 | SkyDarttr |
-| 3031 | Symphony |
-| 3032 | Five Star |
-| 3033 | Sapphire |
-| 3034 | Landmark |
-| 3035 | Flaster |
-| 3036 | Royal City |
-| 3037 | Havenpark |
-| 3038 | Hanah |
-| 3040 | Masteri Smart City |
-| 3040 | Mayala cepura |
-
 ---
 
-## 4. Data Types
+## 11. Data Types
 
 ```typescript
 // Week completion data for chart
@@ -200,9 +209,10 @@ interface ReportFilter {
 
 ---
 
-## 5. API Requirements
+## 12. API Endpoints - Detail
 
-### 5.1 Get Weekly Completion Data
+### 12.1 Get Weekly Completion Data
+
 ```
 GET /api/v1/reports/weekly-completion
 Query params:
@@ -211,7 +221,8 @@ Query params:
   - department_id?: number (optional filter)
 ```
 
-### 5.2 Get Store Weekly Grid
+### 12.2 Get Store Weekly Grid
+
 ```
 GET /api/v1/reports/store-weekly
 Query params:
@@ -219,7 +230,8 @@ Query params:
   - end_week: string
 ```
 
-### 5.3 Get Detailed Store Report
+### 12.3 Get Detailed Store Report
+
 ```
 GET /api/v1/reports/store-detail
 Query params:
@@ -229,30 +241,19 @@ Query params:
 
 ---
 
-## 6. Interactions
+## 13. Interactions - Detail
 
-### 6.1 Week Selection
-- Click on week header to filter data for specific week
-- Chart updates to show selected week range
-
-### 6.2 Department Filter
-- Dropdown "Filter: All dept" filters chart data
-- Options: All dept, ADMIN, PLANNING, SPA&MKT, IMPROVEMENT, DRY FOOD, Aeon CF
-
-### 6.3 Store Row Click
-- Click on store row to drill down into store detail
-- Navigate to store-specific report page
-
-### 6.4 Table Sorting
-- Click column header to sort by that column
-- Toggle ascending/descending
-
-### 6.5 Export
-- Export button to download report as Excel/CSV
+| Interaction | Description |
+|-------------|-------------|
+| Week Selection | Click on week header to filter data |
+| Department Filter | Dropdown filters chart data |
+| Store Row Click | Drill down to store detail |
+| Table Sorting | Click column header to sort |
+| Export | Download report as Excel/CSV |
 
 ---
 
-## 7. Responsive Behavior
+## 14. Responsive Behavior
 
 | Breakpoint | Behavior |
 |------------|----------|
@@ -262,31 +263,32 @@ Query params:
 
 ---
 
-## 8. Implementation Status
+## 15. Files Reference
 
-### Completed Components
-
-| Component | File | Status |
-|-----------|------|--------|
-| ReportPage | `frontend/src/app/tasks/report/page.tsx` | ✅ Implemented |
-| WeeklyCompletionGrid | `frontend/src/components/report/WeeklyCompletionGrid.tsx` | ✅ Implemented |
-| StackedBarChart | `frontend/src/components/report/StackedBarChart.tsx` | ✅ Implemented |
-| StoreReportTable | `frontend/src/components/report/StoreReportTable.tsx` | ✅ Implemented |
-| Mock Data | `frontend/src/data/mockReportData.ts` | ✅ Implemented |
-
-### Implementation Notes
-
-1. **WeeklyCompletionGrid**: Displays store completion % by week with color-coded cells
-2. **StackedBarChart**: Custom stacked bar chart (no external library) with blue/red segments
-3. **StoreReportTable**: Complex table with department breakdowns, supports dynamic department columns
-4. **Mock Data**: Sample data for development, includes DEPARTMENTS array with color mappings
+```
+frontend/src/
+├── app/
+│   └── tasks/
+│       └── report/
+│           └── page.tsx
+├── components/
+│   └── report/
+│       ├── WeeklyCompletionGrid.tsx
+│       ├── StackedBarChart.tsx
+│       └── StoreReportTable.tsx
+├── types/
+│   └── report.ts
+└── data/
+    └── mockReportData.ts
+```
 
 ---
 
-## 9. Changelog
+## 16. Changelog
 
 | Date | Change |
 |------|--------|
 | 2026-01-03 | Initial specification created from wireframe |
 | 2026-01-03 | Implemented Report screen with all components |
 | 2026-01-03 | Moved to `/tasks/report` route, fixed menu highlight |
+| 2026-01-06 | Restructured spec with Basic/Detail sections |

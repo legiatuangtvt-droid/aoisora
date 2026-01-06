@@ -1,49 +1,110 @@
-# ADD TASK SCREEN SPECIFICATION (SCR_TASK_ADD)
+# Add Task Screen Specification
 
 ---
 
-## 1. GENERAL DESCRIPTION
+# BASIC SPEC
 
-| No | Attribute | Value |
-|----|-----------|-------|
-| 1 | Screen Name | Add New Task Screen |
-| 2 | Screen Code | SCR_TASK_ADD |
-| 3 | Target Users | HQ (Headquarter) Staff |
-| 4 | Access Point | Click "+ ADD NEW" button on Task List screen (SCR_TASK_LIST) |
+## 1. Overview
 
-*Purpose: Screen for creating new task groups with multi-level hierarchical structure (up to 5 levels).*
+- **Module**: WS (Task from HQ)
+- **Screen ID**: SCR_TASK_ADD
+- **Route**: `/tasks/new`
+- **Purpose**: Create new task groups with multi-level hierarchical structure (up to 5 levels)
+- **Target Users**: HQ (Headquarter) Staff
 
-### Main Workflow:
+## 2. User Stories
 
-| No | Activity |
-|----|----------|
-| 1 | User enters Task Level 1 information (parent/main task) |
-| 2 | Can add Task Level 2, 3, 4, 5 if detailed breakdown needed |
-| 3 | Fill information in 4 sections: Task Information, Instructions, Scope, Approval Process |
-| 4 | Save as draft or Submit for approval |
-| 5 | View hierarchical structure via Maps tab |
+| ID | As a... | I want to... | So that... |
+|----|---------|--------------|------------|
+| US-01 | HQ Staff | Create a new task group | I can assign work to stores |
+| US-02 | HQ Staff | Add multiple task levels (2-5) | I can create detailed task breakdowns |
+| US-03 | HQ Staff | View task hierarchy in Maps tab | I can visualize task structure |
+| US-04 | HQ Staff | Save task as draft | I can continue editing later |
+| US-05 | HQ Staff | Submit task for approval | I can start the task workflow |
+
+## 3. Screen Components Summary
+
+| Component | Description |
+|-----------|-------------|
+| Header | Breadcrumb navigation + Detail/Maps tabs |
+| Task Level Cards | Hierarchical cards for each task level (1-5) |
+| Section Accordion | Collapsible sections: Task Info, Instructions, Scope, Approval |
+| Footer | Save as Draft / Submit buttons |
+
+## 4. Screen Layout
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ List task → Add task                           [Detail] [Maps]       │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  ┌──────────────────────┐  ┌──────────────────────┐                 │
+│  │ Task Level 1         │  │ Task Level 2         │                 │
+│  │ Main task       [⋮]  │  │ Sub-task        [⋮]  │                 │
+│  ├──────────────────────┤  ├──────────────────────┤                 │
+│  │ [Task name input]    │  │ [Task name input]    │                 │
+│  │ ▶ A. Task Information│  │ ▶ A. Task Information│                 │
+│  │ ▶ B. Instructions    │  │ ▶ B. Instructions    │                 │
+│  │ ▶ C. Scope          │  │ ▶ C. Scope          │                 │
+│  │ ▶ D. Approval Process│  │ ▶ D. Approval Process│                 │
+│  └──────────────────────┘  └──────────────────────┘                 │
+│                                                                      │
+├─────────────────────────────────────────────────────────────────────┤
+│                        [Save as draft]  [Submit]                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+## 5. Navigation
+
+| Action | Destination |
+|--------|-------------|
+| Click "+ ADD NEW" on Task List | `/tasks/new` |
+| Click "List task" breadcrumb | `/tasks/list` - Return to list |
+| Click "Save as draft" | Save and redirect to `/tasks/list` |
+| Click "Submit" | Submit and redirect to `/tasks/list` |
+| Click "Maps" tab | Show hierarchical flowchart view |
+
+## 6. API Endpoints Summary
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/tasks` | POST | Create new task (SUBMITTED) |
+| `/api/v1/tasks/draft` | POST | Save draft (DRAFT) |
+| `/api/v1/regions` | GET | Get region list |
+| `/api/v1/zones` | GET | Get zones by region |
+| `/api/v1/areas` | GET | Get areas by zone |
+| `/api/v1/stores` | GET | Get stores by area |
+
+## 7. Implementation Status
+
+| Feature | Backend | Frontend | Notes |
+|---------|---------|----------|-------|
+| Add Task Page | ⏳ Pending | ✅ Done | Mock data |
+| Task Level Cards | - | ✅ Done | UI only |
+| Section Accordion | - | ✅ Done | Frontend only |
+| Detail Tab | - | ✅ Done | Form inputs |
+| Maps Tab | - | ✅ Done | Flowchart view |
+| API Integration | ⏳ Pending | ⏳ Pending | - |
 
 ---
 
-## 2. FUNCTIONAL SPECIFICATION
+# DETAIL SPEC
 
-*Interface divided into 3 areas: Header (Navigation), Body (Input Form), Footer (Action Buttons).*
+## 8. Header Area - Detail
 
-### A. Header Area (Navigation)
+| Component | Detail | Description |
+|-----------|--------|-------------|
+| Breadcrumb | List task → Add task | Click "List task" to return to list screen |
+| Detail Tab | Default tab | Display detailed input form for each task level |
+| Maps Tab | Secondary tab | Display hierarchical task structure as flowchart/tree |
 
-| No | Component | Detail | Description |
-|----|-----------|--------|-------------|
-| 1 | Breadcrumb | List task → Add task | Click "List task" to return to list screen |
-| 2 | Detail Tab | Default tab | Display detailed input form for each task level |
-| 3 | Maps Tab | Secondary tab | Display hierarchical task structure as flowchart/tree |
+**Note:** Tab navigation (Detail/Maps) is positioned at the right edge of the viewport.
 
-*Note: Tab navigation (Detail/Maps) is positioned at the right edge of the viewport.*
+---
 
-### B. Body Area - Detail Tab
+## 9. Task Level Card Structure - Detail
 
-#### B.1. Task Level Card Structure
-
-*Task Level Card is a unified container with border enclosing both header and all sections.*
+### 9.1 Card Layout
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -66,117 +127,141 @@
 └─────────────────────────────────────────────────────┘
 ```
 
-*Card dimensions: 536px width.*
+### 9.2 Card Specifications
 
-*Layout: Task levels display horizontally. Level 2 appears beside (right of) Level 1, Level 3 beside Level 2, etc. Multiple children of the same parent stack vertically.*
+| Property | Value |
+|----------|-------|
+| Width | 536px |
+| Layout | Task levels display horizontally (Level 2 beside Level 1) |
+| Vertical stacking | Multiple children of same parent stack vertically |
 
-*Accordion behavior: Only 1 section expanded at a time per task level. Default: all sections collapsed. Light red highlight for sections with incomplete required data.*
+### 9.3 Accordion Behavior
 
-*Section header: Darker background (gray-100) to distinguish from content area (gray-50) when expanded.*
-
-#### B.2. Task Level 1 (Main Task)
-
-| No | Component | Type/Detail | Description | Required |
-|----|-----------|-------------|-------------|----------|
-| 1 | Icon + Title | "Task level 1" | Subtitle: "Main task" | |
-| 2 | Menu (...) | Click to display | Options: "+ Add task level 2", "Delete task level 1" | |
-| 3 | Task name | Text input | Placeholder: "Enter task name...", max 255 chars | |
-
-#### B.2.1. Section A: Task Information
-
-| No | Field | Type | Options/Format | Required |
-|----|-------|------|----------------|----------|
-| 1 | Task Type | Dropdown | Daily, Weekly, Monthly, Quarterly, Yearly | Yes |
-| 2 | Applicable Period | Date range picker | mm/dd/yyyy - mm/dd/yyyy | Yes |
-| 3 | Execution Time | Dropdown | 30 min, 1 hour, 2 hours, 4 hours, 8 hours | Yes |
-
-#### B.2.2. Section B: Instructions
-
-| No | Field | Type | Options/Format | Required |
-|----|-------|------|----------------|----------|
-| 1 | Task Type | Dropdown | Image, Document, Checklist | Yes |
-| 2 | Manual Link | Text input | URL format | No |
-| 3 | Note | Textarea | Free text, detailed instructions | No |
-| 4 | Photo Guidelines | Image upload grid | Grid 2x3, max 6 images, each max 5MB (JPG/PNG) | No |
-
-#### B.2.3. Section C: Scope
-
-| No | Field | Type | Logic | Required |
-|----|-------|------|-------|----------|
-| 1.1 | Region | Dropdown | Load from master data | Yes |
-| 1.2 | Zone | Dropdown | Dependent - load based on selected Region | Yes |
-| 1.3 | Area | Dropdown | Dependent - load based on selected Zone | Yes |
-| 1.4 | Store | Dropdown | Dependent - load based on selected Area | Yes |
-| 1.5 | Store Leader | Dropdown | Load Store Leader list | No |
-| 1.6 | Specific Staff | Dropdown | Load Staff list | No |
-
-*Cascade Logic: Changing parent dropdown resets and reloads corresponding child dropdowns.*
-
-#### B.2.4. Section D: Approval Process
-
-| No | Field | Type | Description | Required |
-|----|-------|------|-------------|----------|
-| 1 | Initiator | Dropdown | Task creator | Yes |
-| 2 | Leader | Dropdown | Level 1 approval leader | Yes |
-| 3 | HOD | Dropdown | Head of Department - Level 2 approval | Yes |
-
-### C. Footer Area (Action Buttons)
-
-| No | Button | Type | Action |
-|----|--------|------|--------|
-| 1 | Save as draft | Secondary (outlined) | Save Draft, no required validation. Redirect to List Tasks |
-| 2 | Submit | Primary (filled, pink) | Validate all fields of all levels. Submit and redirect |
+- Only 1 section expanded at a time per task level
+- Default: all sections collapsed
+- Light red highlight for sections with incomplete required data
+- Section header: Darker background (gray-100) to distinguish from content area (gray-50)
 
 ---
 
-## 3. VALIDATION RULES
+## 10. Task Level 1 (Main Task) - Detail
 
-### A. Field Validation
+### 10.1 Header
 
-| No | Field | Rule | Error Message |
-|----|-------|------|---------------|
-| 1 | Task name | Required, max 255 chars | "Task name is required" / "Max 255 characters" |
-| 2 | Task Type (Info) | Required | "Please select task type" |
-| 3 | Applicable Period | Required, End >= Start | "End date must be after start date" |
-| 4 | Execution Time | Required | "Please select execution time" |
-| 5 | Region/Zone/Area/Store | Required | "Please select [field name]" |
-| 6 | Initiator/Leader/HOD | Required | "Please select [field name]" |
-| 7 | Photo upload | Max 5MB, JPG/PNG | "File size must not exceed 5MB" |
+| Component | Type/Detail | Description |
+|-----------|-------------|-------------|
+| Icon + Title | "Task level 1" | Subtitle: "Main task" |
+| Menu (...) | Click to display | Options: "+ Add task level 2", "Delete task level 1" |
+| Task name | Text input | Placeholder: "Enter task name...", max 255 chars |
+
+### 10.2 Section A: Task Information
+
+| Field | Type | Options/Format | Required |
+|-------|------|----------------|----------|
+| Task Type | Dropdown | Daily, Weekly, Monthly, Quarterly, Yearly | Yes |
+| Applicable Period | Date range picker | mm/dd/yyyy - mm/dd/yyyy | Yes |
+| Execution Time | Dropdown | 30 min, 1 hour, 2 hours, 4 hours, 8 hours | Yes |
+
+### 10.3 Section B: Instructions
+
+| Field | Type | Options/Format | Required |
+|-------|------|----------------|----------|
+| Task Type | Dropdown | Image, Document, Checklist | Yes |
+| Manual Link | Text input | URL format | No |
+| Note | Textarea | Free text, detailed instructions | No |
+| Photo Guidelines | Image upload grid | Grid 2x3, max 6 images, each max 5MB (JPG/PNG) | No |
+
+### 10.4 Section C: Scope
+
+| Field | Type | Logic | Required |
+|-------|------|-------|----------|
+| Region | Dropdown | Load from master data | Yes |
+| Zone | Dropdown | Dependent - load based on selected Region | Yes |
+| Area | Dropdown | Dependent - load based on selected Zone | Yes |
+| Store | Dropdown | Dependent - load based on selected Area | Yes |
+| Store Leader | Dropdown | Load Store Leader list | No |
+| Specific Staff | Dropdown | Load Staff list | No |
+
+**Cascade Logic:** Changing parent dropdown resets and reloads corresponding child dropdowns.
+
+### 10.5 Section D: Approval Process
+
+| Field | Type | Description | Required |
+|-------|------|-------------|----------|
+| Initiator | Dropdown | Task creator | Yes |
+| Leader | Dropdown | Level 1 approval leader | Yes |
+| HOD | Dropdown | Head of Department - Level 2 approval | Yes |
 
 ---
 
-## 4. API INTEGRATION
+## 11. Footer Area - Detail
 
-| No | Action | Method | Endpoint | Description |
-|----|--------|--------|----------|-------------|
-| 1 | Get Task Types | GET | /api/v1/task-types | Get task type list |
-| 2 | Get Regions | GET | /api/v1/regions | Get region list |
-| 3 | Get Zones | GET | /api/v1/zones?regionId={id} | Get zones by region |
-| 4 | Get Areas | GET | /api/v1/areas?zoneId={id} | Get areas by zone |
-| 5 | Get Stores | GET | /api/v1/stores?areaId={id} | Get stores by area |
-| 6 | Get Users | GET | /api/v1/users?role={role} | Get users by role |
-| 7 | Create Task | POST | /api/v1/tasks | Create new task (SUBMITTED) |
-| 8 | Save Draft | POST | /api/v1/tasks/draft | Save draft (DRAFT) |
-| 9 | Upload Image | POST | /api/v1/upload/image | Upload instruction image |
+| Button | Type | Action |
+|--------|------|--------|
+| Save as draft | Secondary (outlined) | Save Draft, no required validation. Redirect to List Tasks |
+| Submit | Primary (filled, pink) | Validate all fields of all levels. Submit and redirect |
 
 ---
 
-## 5. UI STATES
+## 12. Validation Rules
 
-| No | State Type | State | Display |
-|----|------------|-------|---------|
-| 1 | Loading | Initial load | Skeleton loader for entire form |
-| 2 | Loading | Dropdown loading | Spinner icon in dropdown |
-| 3 | Loading | Image uploading | Progress bar on image slot |
-| 4 | Loading | Submitting | Button disabled with spinner, text "Submitting..." |
-| 5 | Error | Validation error | Red border around field + red error message below |
-| 6 | Error | API error | Red toast notification at top right corner |
-| 7 | Success | Draft saved | Toast "Task saved as draft successfully" + redirect |
-| 8 | Success | Task submitted | Toast "Task submitted successfully" + redirect |
+| Field | Rule | Error Message |
+|-------|------|---------------|
+| Task name | Required, max 255 chars | "Task name is required" / "Max 255 characters" |
+| Task Type (Info) | Required | "Please select task type" |
+| Applicable Period | Required, End >= Start | "End date must be after start date" |
+| Execution Time | Required | "Please select execution time" |
+| Region/Zone/Area/Store | Required | "Please select [field name]" |
+| Initiator/Leader/HOD | Required | "Please select [field name]" |
+| Photo upload | Max 5MB, JPG/PNG | "File size must not exceed 5MB" |
 
 ---
 
-## 6. FILE STRUCTURE
+## 13. API Endpoints - Detail
+
+| Action | Method | Endpoint | Description |
+|--------|--------|----------|-------------|
+| Get Task Types | GET | /api/v1/task-types | Get task type list |
+| Get Regions | GET | /api/v1/regions | Get region list |
+| Get Zones | GET | /api/v1/zones?regionId={id} | Get zones by region |
+| Get Areas | GET | /api/v1/areas?zoneId={id} | Get areas by zone |
+| Get Stores | GET | /api/v1/stores?areaId={id} | Get stores by area |
+| Get Users | GET | /api/v1/users?role={role} | Get users by role |
+| Create Task | POST | /api/v1/tasks | Create new task (SUBMITTED) |
+| Save Draft | POST | /api/v1/tasks/draft | Save draft (DRAFT) |
+| Upload Image | POST | /api/v1/upload/image | Upload instruction image |
+
+---
+
+## 14. UI States - Detail
+
+| State Type | State | Display |
+|------------|-------|---------|
+| Loading | Initial load | Skeleton loader for entire form |
+| Loading | Dropdown loading | Spinner icon in dropdown |
+| Loading | Image uploading | Progress bar on image slot |
+| Loading | Submitting | Button disabled with spinner, text "Submitting..." |
+| Error | Validation error | Red border around field + red error message below |
+| Error | API error | Red toast notification at top right corner |
+| Success | Draft saved | Toast "Task saved as draft successfully" + redirect |
+| Success | Task submitted | Toast "Task submitted successfully" + redirect |
+
+---
+
+## 15. Maps Tab - Detail
+
+The Maps tab displays the task hierarchy as a flowchart/tree view.
+
+| Element | Description |
+|---------|-------------|
+| Task Level Nodes | Cards showing task level with name |
+| Connector Lines | Lines connecting parent to child tasks |
+| Indentation | Child levels indented to show hierarchy |
+| Visual Structure | Continuous vertical lines between siblings |
+
+---
+
+## 16. Files Reference
 
 ```
 frontend/src/
@@ -204,7 +289,7 @@ frontend/src/
 
 ---
 
-## CHANGELOG
+## 17. Changelog
 
 | Date | Change |
 |------|--------|
@@ -224,3 +309,4 @@ frontend/src/
 | 2026-01-01 | UI: Implement Maps tab with task hierarchy flowchart/tree view |
 | 2026-01-01 | UI: Maps tab - child task levels indented with connector lines to show parent-child hierarchy |
 | 2026-01-01 | Fix: Maps tab connector lines now continuous without gaps between siblings |
+| 2026-01-06 | Restructured spec with Basic/Detail sections |
