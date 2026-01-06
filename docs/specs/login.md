@@ -31,11 +31,29 @@ This document covers the authentication flow including Sign Up, Sign In, and For
 | Focus | Border bottom highlight |
 | Error | Border màu đỏ, error message bên dưới |
 
+#### Password Strength Indicator
+| Strength | Label | Color |
+|----------|-------|-------|
+| Weak | "Weak!" | Red (#EF4444) |
+| Medium | "Medium" | Orange (#F59E0B) |
+| Strong | "Strong!" | Green (#22C55E) |
+
+- Hiển thị bên phải của password field
+- Cập nhật real-time khi user nhập password
+
 #### Buttons
-| Button | Type | Style |
-|--------|------|-------|
-| Sign up | Primary | Solid dark gray, full width |
-| Sign up with Google | Social | White background, Google icon, bordered |
+| Button | State | Style |
+|--------|-------|-------|
+| Sign up | Disabled | Background màu xám nhạt (#D1D5DB), text màu xám (#9CA3AF), không cho phép click |
+| Sign up | Enabled | Background màu xanh đậm (#1E3A5F), text màu trắng, cho phép click |
+| Sign up with Google | Default | White background, Google icon, bordered |
+
+#### Button Enable Conditions
+Button "Sign up" chỉ được enable (đổi màu xanh đậm) khi **TẤT CẢ** điều kiện sau được thỏa mãn:
+1. Full name đã được nhập (không rỗng)
+2. Role đã được chọn từ dropdown
+3. Email/Phone/SAP đã được nhập và đúng format
+4. Password đã được nhập và đạt độ mạnh tối thiểu "Medium"
 
 #### Footer Links
 - Text: "Don't have an account?" với link "Sign in" (màu đỏ)
