@@ -30,8 +30,15 @@ use App\Http\Controllers\Api\V1\StoreInfoController;
 */
 
 Route::prefix('v1')->group(function () {
-    // Public routes
-    Route::post('auth/login', [AuthController::class, 'login']);
+    // Public auth routes
+    Route::prefix('auth')->group(function () {
+        Route::post('login', [AuthController::class, 'login']);
+        Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
+        Route::post('verify-code', [AuthController::class, 'verifyResetCode']);
+        Route::post('reset-password', [AuthController::class, 'resetPassword']);
+        Route::post('resend-code', [AuthController::class, 'resendCode']);
+        Route::post('check-password-strength', [AuthController::class, 'checkPasswordStrength']);
+    });
 
     // Public read-only routes (for listing/browsing)
     Route::get('departments', [DepartmentController::class, 'index']);
