@@ -1,9 +1,9 @@
-import Layout from '@/components/layout/Layout';
+import DWSLayout from '@/components/layout/DWSLayout';
 
-export default function DWSLayout({
+export default function DWSRootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <Layout>{children}</Layout>;
+  return <DWSLayout>{children}</DWSLayout>;
 }
