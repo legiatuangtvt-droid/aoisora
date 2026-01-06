@@ -20,7 +20,7 @@ export default function TaskGroupsStatistics({
     {
       icon: (
         <svg
-          className="w-5 h-5"
+          className="w-4 h-4"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -35,12 +35,13 @@ export default function TaskGroupsStatistics({
       ),
       label: 'Tong so Task:',
       value: statistics.total,
-      color: 'text-gray-600',
+      iconColor: 'text-gray-500',
+      valueColor: 'text-gray-900 dark:text-white',
     },
     {
       icon: (
         <svg
-          className="w-5 h-5"
+          className="w-4 h-4"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -55,12 +56,13 @@ export default function TaskGroupsStatistics({
       ),
       label: 'Daily Task:',
       value: statistics.daily,
-      color: 'text-orange-500',
+      iconColor: 'text-orange-500',
+      valueColor: 'text-orange-600 dark:text-orange-400',
     },
     {
       icon: (
         <svg
-          className="w-5 h-5"
+          className="w-4 h-4"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -75,12 +77,13 @@ export default function TaskGroupsStatistics({
       ),
       label: 'Weekly:',
       value: statistics.weekly,
-      color: 'text-green-500',
+      iconColor: 'text-green-500',
+      valueColor: 'text-green-600 dark:text-green-400',
     },
     {
       icon: (
         <svg
-          className="w-5 h-5"
+          className="w-4 h-4"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -95,12 +98,13 @@ export default function TaskGroupsStatistics({
       ),
       label: 'Monthly:',
       value: statistics.monthly,
-      color: 'text-blue-500',
+      iconColor: 'text-blue-500',
+      valueColor: 'text-blue-600 dark:text-blue-400',
     },
     {
       icon: (
         <svg
-          className="w-5 h-5"
+          className="w-4 h-4"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -115,40 +119,39 @@ export default function TaskGroupsStatistics({
       ),
       label: 'Yearly:',
       value: statistics.yearly,
-      color: 'text-purple-500',
+      iconColor: 'text-purple-500',
+      valueColor: 'text-purple-600 dark:text-purple-400',
     },
     {
       icon: (
         <svg
-          className="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
+          className="w-4 h-4"
+          fill="currentColor"
           viewBox="0 0 24 24"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-          />
+          <path d="M12 2l2.4 7.4h7.6l-6 4.6 2.3 7-6.3-4.6-6.3 4.6 2.3-7-6-4.6h7.6z" />
         </svg>
       ),
       label: 'Khac:',
       value: statistics.other,
-      color: 'text-gray-500',
+      iconColor: 'text-cyan-500',
+      valueColor: 'text-cyan-600 dark:text-cyan-400',
     },
   ];
 
   return (
-    <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
-      <div className="flex items-center gap-8 flex-wrap">
+    <div className="bg-gray-50 dark:bg-gray-900 px-4 py-3">
+      <div className="flex items-center gap-3 flex-wrap">
         {items.map((item, index) => (
-          <div key={index} className="flex items-center gap-2">
-            <span className={item.color}>{item.icon}</span>
-            <span className="text-sm text-gray-600 dark:text-gray-400">
+          <div
+            key={index}
+            className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm"
+          >
+            <span className={item.iconColor}>{item.icon}</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400">
               {item.label}
             </span>
-            <span className="text-xl font-bold text-gray-900 dark:text-white">
+            <span className={`text-lg font-bold ${item.valueColor}`}>
               {item.value}
             </span>
           </div>
