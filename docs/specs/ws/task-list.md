@@ -230,47 +230,595 @@ interface SubTask {
 
 ### 13.1 Get Task List
 
-**Endpoint:** `GET /api/v1/tasks`
+```yaml
+get:
+  tags:
+    - WS-Tasks
+  summary: "Task List API"
+  description: |
+    # Correlation Check
+      - Date Range Check
+        - If date_from > date_to → Return date range validation error
+      - Master Data Existence Check
+        - dept_id: Check against departments table
+        - status_id: Check against code_master table
+        - assigned_staff_id: Check against staff table
 
-**Query Parameters:**
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `date_from` | string | Start date (YYYY-MM-DD) |
-| `date_to` | string | End date (YYYY-MM-DD) |
-| `search` | string | Search term |
-| `dept` | string[] | Department IDs |
-| `status` | string[] | Status filter |
-| `hq_check` | string[] | HQ Check filter |
-| `page` | number | Page number |
-| `per_page` | number | Items per page |
-| `sort_by` | string | Column to sort |
-| `sort_dir` | string | asc/desc |
+    # Business Logic
+      ## 1. Build Query
+        ### Select Columns
+          - tasks.task_id
+          - tasks.task_name
+          - tasks.task_description
+          - tasks.start_date
+          - tasks.end_date
+          - tasks.priority
+          - departments.department_name AS dept
+          - code_master.code_name AS status (WHERE code_type = 'task_status')
+          - staff.staff_name AS assigned_staff_name
+          - COUNT(task_check_list.check_list_id) AS total_checklists
+          - SUM(CASE WHEN task_check_list.is_completed = true THEN 1 ELSE 0 END) AS completed_checklists
 
-**Response:**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": "1",
-      "dept": "MKT",
-      "task_group_name": "Marketing Campaign Q1",
-      "start_date": "2026-01-01",
-      "end_date": "2026-01-31",
-      "progress": { "completed": 5, "total": 10 },
-      "unable": 2,
-      "status": "DRAFT",
-      "hq_check": "NOT_YET",
-      "sub_tasks": [...]
-    }
-  ],
-  "meta": {
-    "total": 50,
-    "page": 1,
-    "per_page": 10,
-    "total_pages": 5
-  }
-}
+        ### Tables
+          - tasks
+          - departments
+          - code_master
+          - staff
+          - task_check_list
+
+        ### Join Conditions
+          - tasks.dept_id = departments.department_id LEFT JOIN
+          - tasks.status_id = code_master.code_master_id LEFT JOIN
+          - tasks.assigned_staff_id = staff.staff_id LEFT JOIN
+          - tasks.task_id = task_check_list.task_id LEFT JOIN
+
+        ### Search Conditions
+          - IF date_from != NULL AND date_to = NULL
+            → tasks.start_date >= request.date_from
+          - IF date_from = NULL AND date_to != NULL
+            → tasks.end_date <= request.date_to
+          - IF date_from != NULL AND date_to != NULL
+            → tasks.start_date >= request.date_from AND tasks.end_date <= request.date_to
+          - IF dept_id != NULL
+            → tasks.dept_id = request.dept_id
+          - IF status_id != NULL
+            → tasks.status_id = request.status_id
+          - IF assigned_staff_id != NULL
+            → tasks.assigned_staff_id = request.assigned_staff_id
+          - IF task_name != NULL
+            → tasks.task_name ILIKE '%' || request.task_name || '%'
+
+        ### Group By
+          - tasks.task_id
+          - departments.department_name
+          - code_master.code_name
+          - staff.staff_name
+
+        ### Order By
+          - Dynamic based on sort_by parameter
+          - Default: tasks.created_at DESC
+
+      ## 2. Pagination
+        - Apply LIMIT = per_page (default: 20)
+        - Apply OFFSET = (page - 1) * per_page
+        - Calculate total_pages = CEIL(total_count / per_page)
+
+      ## 3. Response
+        - Return paginated task list with meta information
+
+  operationId: getTaskList
+  parameters:
+    # Header Parameters
+    - name: Authorization
+      in: header
+      required: false
+      schema:
+        type: string
+      description: Bearer token (optional for public access)
+
+    # Query Parameters
+    - name: date_from
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+      description: Filter start date (YYYY-MM-DD)
+
+    - name: date_to
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+      description: Filter end date (YYYY-MM-DD)
+
+    - name: task_name
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Partial search on task name
+
+    - name: dept_id
+      in: query
+      required: false
+      schema:
+        type: integer
+      description: Filter by department ID
+
+    - name: status_id
+      in: query
+      required: false
+      schema:
+        type: integer
+      description: Filter by status ID (code_master)
+
+    - name: assigned_staff_id
+      in: query
+      required: false
+      schema:
+        type: integer
+      description: Filter by assigned staff ID
+
+    - name: assigned_store_id
+      in: query
+      required: false
+      schema:
+        type: integer
+      description: Filter by assigned store ID
+
+    - name: include
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        Comma-separated relations to include:
+        assignedStaff, createdBy, assignedStore, department, taskType, responseType, status
+
+    - name: sort_by
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [task_id, task_name, start_date, end_date, created_at]
+        default: created_at
+      description: Column to sort by
+
+    - name: sort_dir
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [asc, desc]
+        default: desc
+      description: Sort direction
+
+    - name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 1
+      description: Page number
+
+    - name: per_page
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 20
+        maximum: 100
+      description: Items per page
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Task"
+              links:
+                $ref: "#/components/schemas/PaginationLinks"
+              meta:
+                $ref: "#/components/schemas/PaginationMeta"
+          example:
+            data:
+              - task_id: 1
+                task_name: "Marketing Campaign Q1"
+                task_description: "Quarterly marketing campaign"
+                start_date: "2026-01-01"
+                end_date: "2026-01-31"
+                priority: "high"
+                department:
+                  department_id: 1
+                  department_name: "Marketing"
+                status:
+                  code_master_id: 10
+                  code_name: "DRAFT"
+                assigned_staff:
+                  staff_id: 5
+                  staff_name: "John Doe"
+                progress:
+                  completed: 5
+                  total: 10
+            meta:
+              current_page: 1
+              per_page: 20
+              total: 50
+              last_page: 3
+
+    400:
+      description: Bad Request
+      content:
+        application/json:
+          examples:
+            date_range_error:
+              summary: Date range validation error
+              value:
+                success: false
+                message: "date_from must be before or equal to date_to"
+                errors:
+                  date_from: ["The date from must be a date before or equal to date to."]
+            invalid_parameter:
+              summary: Invalid parameter error
+              value:
+                success: false
+                message: "Validation failed"
+                errors:
+                  dept_id: ["The selected dept id is invalid."]
+
+    500:
+      description: Internal Server Error
+      content:
+        application/json:
+          example:
+            success: false
+            message: "Internal server error"
+```
+
+### 13.2 Get Task Detail
+
+```yaml
+get:
+  tags:
+    - WS-Tasks
+  summary: "Task Detail API"
+  description: |
+    # Correlation Check
+      - Task ID existence check against tasks table
+      - If not found → Return 404 Not Found
+
+    # Business Logic
+      ## 1. Get Task Data
+        ### Select Columns
+          - All columns from tasks table
+          - Related: department, status, taskType, responseType
+          - Related: assignedStaff, createdBy, doStaff
+          - Related: assignedStore, manual
+          - Related: checklists (with pivot data: is_completed, completed_at, completed_by)
+
+        ### Tables
+          - tasks (main)
+          - departments, code_master, staff, stores, manual_documents
+          - task_check_list (pivot), check_lists
+
+        ### Join Conditions
+          - Eager load all relationships via Eloquent
+
+      ## 2. Response
+        - Return single task with all related data
+
+  operationId: getTaskDetail
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+      description: Task ID
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/TaskDetail"
+          example:
+            data:
+              task_id: 1
+              task_name: "Marketing Campaign Q1"
+              task_description: "Quarterly marketing campaign for product launch"
+              start_date: "2026-01-01"
+              end_date: "2026-01-31"
+              start_time: "09:00:00"
+              priority: "high"
+              is_repeat: false
+              repeat_config: null
+              department:
+                department_id: 1
+                department_name: "Marketing"
+              status:
+                code_master_id: 10
+                code_name: "DRAFT"
+              task_type:
+                code_master_id: 5
+                code_name: "PROJECT"
+              assigned_staff:
+                staff_id: 5
+                staff_name: "John Doe"
+              created_by:
+                staff_id: 1
+                staff_name: "Admin"
+              checklists:
+                - check_list_id: 1
+                  check_list_name: "Review materials"
+                  pivot:
+                    is_completed: true
+                    completed_at: "2026-01-05T10:30:00Z"
+                    completed_by: 5
+                - check_list_id: 2
+                  check_list_name: "Submit report"
+                  pivot:
+                    is_completed: false
+                    completed_at: null
+                    completed_by: null
+
+    404:
+      description: Not Found
+      content:
+        application/json:
+          example:
+            success: false
+            message: "Task not found"
+
+    500:
+      description: Internal Server Error
+```
+
+### 13.3 Get Department List
+
+```yaml
+get:
+  tags:
+    - WS-Master
+  summary: "Department List API"
+  description: |
+    # Business Logic
+      ## 1. Get Department Data
+        ### Select Columns
+          - department_id
+          - department_name
+          - department_code
+          - parent_department_id
+          - level
+          - is_active
+
+        ### Tables
+          - departments
+
+        ### Search Conditions
+          - is_active = true (default, unless include_inactive = true)
+
+        ### Order By
+          - level ASC, department_name ASC
+
+      ## 2. Response
+        - Return hierarchical department list
+
+  operationId: getDepartmentList
+  parameters:
+    - name: include_inactive
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+      description: Include inactive departments
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            data:
+              - department_id: 1
+                department_name: "Head Office"
+                department_code: "HO"
+                parent_department_id: null
+                level: 0
+                children:
+                  - department_id: 2
+                    department_name: "Marketing"
+                    department_code: "MKT"
+                    parent_department_id: 1
+                    level: 1
+                  - department_id: 3
+                    department_name: "Sales"
+                    department_code: "SLS"
+                    parent_department_id: 1
+                    level: 1
+```
+
+### 13.4 Schema Definitions
+
+```yaml
+components:
+  schemas:
+    Task:
+      type: object
+      properties:
+        task_id:
+          type: integer
+          description: Primary key
+        task_name:
+          type: string
+          maxLength: 500
+          description: Task name
+        task_description:
+          type: string
+          nullable: true
+          description: Task description
+        start_date:
+          type: string
+          format: date
+          nullable: true
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        priority:
+          type: string
+          enum: [low, normal, high, urgent]
+          default: normal
+        status:
+          $ref: "#/components/schemas/CodeMaster"
+        department:
+          $ref: "#/components/schemas/Department"
+        assigned_staff:
+          $ref: "#/components/schemas/Staff"
+
+    TaskDetail:
+      allOf:
+        - $ref: "#/components/schemas/Task"
+        - type: object
+          properties:
+            start_time:
+              type: string
+              format: time
+              nullable: true
+            due_datetime:
+              type: string
+              format: date-time
+              nullable: true
+            is_repeat:
+              type: boolean
+              default: false
+            repeat_config:
+              type: object
+              nullable: true
+            task_type:
+              $ref: "#/components/schemas/CodeMaster"
+            response_type:
+              $ref: "#/components/schemas/CodeMaster"
+            created_by:
+              $ref: "#/components/schemas/Staff"
+            do_staff:
+              $ref: "#/components/schemas/Staff"
+            assigned_store:
+              $ref: "#/components/schemas/Store"
+            checklists:
+              type: array
+              items:
+                $ref: "#/components/schemas/CheckListWithPivot"
+
+    CodeMaster:
+      type: object
+      properties:
+        code_master_id:
+          type: integer
+        code_type:
+          type: string
+        code_value:
+          type: string
+        code_name:
+          type: string
+
+    Department:
+      type: object
+      properties:
+        department_id:
+          type: integer
+        department_name:
+          type: string
+        department_code:
+          type: string
+        parent_department_id:
+          type: integer
+          nullable: true
+        level:
+          type: integer
+
+    Staff:
+      type: object
+      properties:
+        staff_id:
+          type: integer
+        staff_name:
+          type: string
+        email:
+          type: string
+
+    Store:
+      type: object
+      properties:
+        store_id:
+          type: integer
+        store_name:
+          type: string
+        store_code:
+          type: string
+
+    CheckListWithPivot:
+      type: object
+      properties:
+        check_list_id:
+          type: integer
+        check_list_name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        pivot:
+          type: object
+          properties:
+            is_completed:
+              type: boolean
+            completed_at:
+              type: string
+              format: date-time
+              nullable: true
+            completed_by:
+              type: integer
+              nullable: true
+
+    PaginationLinks:
+      type: object
+      properties:
+        first:
+          type: string
+        last:
+          type: string
+        prev:
+          type: string
+          nullable: true
+        next:
+          type: string
+          nullable: true
+
+    PaginationMeta:
+      type: object
+      properties:
+        current_page:
+          type: integer
+        from:
+          type: integer
+        last_page:
+          type: integer
+        per_page:
+          type: integer
+        to:
+          type: integer
+        total:
+          type: integer
 ```
 
 ---
@@ -337,3 +885,4 @@ frontend/src/
 | 2026-01-03 | Updated default DatePicker from WEEK to DAY (today) |
 | 2026-01-03 | Added parent-child checkbox logic in Filter Modal Department section |
 | 2026-01-06 | Restructured spec with Basic/Detail sections |
+| 2026-01-06 | Updated API section with OpenAPI format (correlation checks, business logic, schemas) |

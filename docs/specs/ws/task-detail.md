@@ -442,15 +442,538 @@ interface TaskDetailFilters {
 
 ## 17. API Endpoints - Detail
 
-| Action | Method | Endpoint | Description |
-|--------|--------|----------|-------------|
-| Get Task Detail | GET | /api/v1/tasks/{id} | Get full task details |
-| Get Store Results | GET | /api/v1/tasks/{id}/stores | Get results by store |
-| Get Staff Results | GET | /api/v1/tasks/{id}/staffs | Get results by staff |
-| Get Comments | GET | /api/v1/tasks/{id}/comments | Get all comments |
-| Post Comment | POST | /api/v1/tasks/{id}/comments | Add new comment |
-| Like Task | POST | /api/v1/tasks/{id}/like | Like a task result |
-| Send Reminder | POST | /api/v1/tasks/{id}/reminder | Send reminder to staff |
+### 17.1 Get Task Detail
+
+```yaml
+get:
+  tags:
+    - WS-Tasks
+  summary: "Task Detail API"
+  description: |
+    # Correlation Check
+      - Task ID existence check against tasks table
+      - If not found → Return 404 Not Found
+
+    # Business Logic
+      ## 1. Get Task Data
+        ### Select Columns
+          - All columns from tasks table
+          - Related: department, status, taskType, responseType
+          - Related: assignedStaff, createdBy, doStaff
+          - Related: assignedStore, manual
+          - Related: checklists (with pivot data)
+          - Computed: stats (notStarted, completed, unableToComplete, avgCompletionTime)
+
+        ### Tables
+          - tasks (main)
+          - departments, code_master, staff, stores
+          - task_check_list (pivot), check_lists
+
+        ### Join Conditions
+          - Eager load all relationships via Eloquent
+
+      ## 2. Response
+        - Return single task with all related data and computed stats
+
+  operationId: getTaskDetail
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+      description: Task ID
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            data:
+              id: "1"
+              level: 1
+              name: "Trưng bày hoa ngày rằm"
+              startDate: "2026-01-04"
+              endDate: "2026-01-21"
+              hqCheckCode: "D097"
+              taskType: "image"
+              manualLink: "https://manual.example.com/task-1"
+              stats:
+                notStarted: 5
+                completed: 20
+                unableToComplete: 2
+                avgCompletionTime: 60
+
+    404:
+      description: Not Found
+      content:
+        application/json:
+          example:
+            success: false
+            message: "Task not found"
+
+    500:
+      description: Internal Server Error
+```
+
+### 17.2 Get Store Results
+
+```yaml
+get:
+  tags:
+    - WS-Tasks
+  summary: "Task Store Results API"
+  description: |
+    # Correlation Check
+      - Task ID existence check
+
+    # Business Logic
+      ## 1. Get Store Results
+        ### Select Columns
+          - store_id, store_name, store_location
+          - start_time, completed_time
+          - status (success, failed, in_progress, not_started)
+          - completed_by (staff info)
+          - images (array of image items)
+          - comments (array of comments)
+          - likes (count + user list)
+
+        ### Tables
+          - task_store_results
+          - stores
+          - staff
+          - task_images
+          - task_comments
+          - task_likes
+
+        ### Order By
+          - status priority: in_progress/not_started → failed → success
+          - Within success: completed_time DESC
+
+      ## 2. Response
+        - Return array of store results with images, comments, likes
+
+  operationId: getTaskStoreResults
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+      description: Task ID
+
+    - name: region
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Filter by region
+
+    - name: area
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Filter by area
+
+    - name: store
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Filter by store
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            data:
+              - id: "1"
+                storeId: "S001"
+                storeName: "OCEAN PARK"
+                storeLocation: "HCM - Q1 - S001"
+                startTime: "2026-01-05T08:30:00Z"
+                completedTime: "2026-01-05T09:30:00Z"
+                status: "success"
+                completedBy:
+                  id: "5"
+                  name: "Nguyen Van A"
+                images:
+                  - id: "1"
+                    title: "Picture at POS"
+                    url: "/images/task-1/pos.jpg"
+                    uploadedAt: "2026-01-05T09:00:00Z"
+                comments:
+                  - id: "1"
+                    userName: "Tùng SM"
+                    content: "Đã hoàn thành"
+                    createdAt: "2026-01-05T09:30:00Z"
+                likes:
+                  count: 5
+                  users:
+                    - id: "1"
+                      name: "Admin"
+
+    404:
+      description: Not Found
+```
+
+### 17.3 Get Staff Results
+
+```yaml
+get:
+  tags:
+    - WS-Tasks
+  summary: "Task Staff Results API"
+  description: |
+    # Business Logic
+      ## 1. Get Staff Results
+        ### Select Columns
+          - staff_id, staff_name, avatar, position
+          - store_id, store_name
+          - progress (percentage), progressText
+          - status (completed, in_progress, not_started)
+          - requirements (array of requirement images)
+          - comments
+
+        ### Tables
+          - task_staff_results
+          - staff
+          - stores
+          - task_requirements
+
+        ### Order By
+          - status: not_started → in_progress → completed
+
+  operationId: getTaskStaffResults
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+
+    - name: location
+      in: query
+      required: false
+      schema:
+        type: string
+
+    - name: status
+      in: query
+      required: false
+      schema:
+        type: string
+
+    - name: search
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Search by staff name or ID
+
+  responses:
+    200:
+      description: OK
+```
+
+### 17.4 Post Comment
+
+```yaml
+post:
+  tags:
+    - WS-Tasks
+  summary: "Add Comment API"
+  description: |
+    # Correlation Check
+      - Task ID existence check
+      - User authentication required
+
+    # Business Logic
+      ## 1. Validate Input
+        - content: required, max 1000 chars
+
+      ## 2. Create Comment
+        - Insert into task_comments table
+        - Set created_at to current timestamp
+        - Set user_id from authenticated user
+
+      ## 3. Response
+        - Return created comment with user info
+
+  operationId: postTaskComment
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            content:
+              type: string
+              maxLength: 1000
+            store_result_id:
+              type: string
+              description: Optional - if commenting on specific store result
+
+  responses:
+    201:
+      description: Created
+      content:
+        application/json:
+          example:
+            data:
+              id: "10"
+              content: "Great work!"
+              userName: "Admin"
+              createdAt: "2026-01-06T10:00:00Z"
+
+    400:
+      description: Bad Request
+      content:
+        application/json:
+          example:
+            success: false
+            message: "Content is required"
+
+    401:
+      description: Unauthorized
+```
+
+### 17.5 Like Task Result
+
+```yaml
+post:
+  tags:
+    - WS-Tasks
+  summary: "Like Task Result API"
+  description: |
+    # Business Logic
+      ## 1. Check Existing Like
+        - If user already liked → Remove like (toggle)
+        - If not liked → Add like
+
+      ## 2. Update Like Count
+        - Recalculate total likes for the result
+
+      ## 3. Response
+        - Return updated like status and count
+
+  operationId: likeTaskResult
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            store_result_id:
+              type: string
+              required: true
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            data:
+              liked: true
+              likeCount: 6
+```
+
+### 17.6 Send Reminder
+
+```yaml
+post:
+  tags:
+    - WS-Tasks
+  summary: "Send Reminder API"
+  description: |
+    # Business Logic
+      ## 1. Validate Target
+        - staff_id must exist
+        - Task must not be completed
+
+      ## 2. Send Notification
+        - Create notification record
+        - Trigger push notification if enabled
+
+      ## 3. Response
+        - Return success status
+
+  operationId: sendTaskReminder
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            staff_id:
+              type: string
+              required: true
+            message:
+              type: string
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            success: true
+            message: "Reminder sent successfully"
+```
+
+### 17.7 Schema Definitions
+
+```yaml
+components:
+  schemas:
+    StoreResult:
+      type: object
+      properties:
+        id:
+          type: string
+        storeId:
+          type: string
+        storeName:
+          type: string
+        storeLocation:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        completedTime:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [success, failed, in_progress, not_started]
+        completedBy:
+          $ref: "#/components/schemas/StaffSimple"
+        images:
+          type: array
+          items:
+            $ref: "#/components/schemas/ImageItem"
+        comments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Comment"
+        likes:
+          type: object
+          properties:
+            count:
+              type: integer
+            users:
+              type: array
+              items:
+                $ref: "#/components/schemas/StaffSimple"
+
+    StaffResult:
+      type: object
+      properties:
+        id:
+          type: string
+        staffId:
+          type: string
+        staffName:
+          type: string
+        avatar:
+          type: string
+        position:
+          type: string
+        store:
+          type: string
+        progress:
+          type: number
+        progressText:
+          type: string
+        status:
+          type: string
+          enum: [completed, in_progress, not_started]
+        requirements:
+          type: array
+          items:
+            $ref: "#/components/schemas/RequirementImage"
+
+    ImageItem:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        url:
+          type: string
+        thumbnailUrl:
+          type: string
+        uploadedAt:
+          type: string
+          format: date-time
+
+    Comment:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        userName:
+          type: string
+        userAvatar:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    StaffSimple:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        avatar:
+          type: string
+
+    RequirementImage:
+      type: object
+      properties:
+        id:
+          type: string
+        url:
+          type: string
+        isCompleted:
+          type: boolean
+```
 
 ---
 
@@ -528,3 +1051,4 @@ frontend/src/
 | 2026-01-03 | Store Results Sorting: Added display order logic - in_progress/not_started first → failed second → success last (success sorted by completion time, earliest at bottom) |
 | 2026-01-03 | WorkflowStepsPanel: New slide-in panel component with round tabs, timeline, step icons, status badges. Triggered by user-check icon in Task Header |
 | 2026-01-06 | Restructured spec with Basic/Detail sections |
+| 2026-01-06 | Updated API section with OpenAPI format (7 endpoints with schemas) |

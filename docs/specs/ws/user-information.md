@@ -278,6 +278,489 @@
 | Save Permissions | POST | /api/v1/user-info/permissions | Save permissions |
 | Import Users | POST | /api/v1/user-info/import | Import from Excel/CSV |
 
+### 15.1 Get SMBU Hierarchy
+
+```yaml
+get:
+  tags:
+    - WS-UserInfo
+  summary: "Get SMBU Hierarchy API"
+  description: |
+    # Business Logic
+      ## 1. Get Root User
+        ### Select Columns
+          - staff.id, staff.full_name, staff.position
+          - staff.job_grade, staff.avatar_url
+
+        ### Search Conditions
+          - staff.is_root = true
+          - OR staff.job_grade IN ('G7', 'G8')
+
+      ## 2. Get Departments
+        ### Select Columns
+          - departments.id, departments.name, departments.icon
+          - COUNT(staff) as member_count
+          - MIN(job_grade), MAX(job_grade) as grade_range
+
+        ### Group By
+          - departments.id
+
+        ### Order By
+          - departments.display_order ASC
+
+      ## 3. Response
+        - Return root user with department list
+
+  operationId: getSMBUHierarchy
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            data:
+              rootUser:
+                id: 1
+                fullName: "VP/Director Name"
+                position: "Vice President"
+                jobGrade: "G7"
+                avatarUrl: "/avatars/vp.jpg"
+              departments:
+                - id: 1
+                  name: "ADMIN"
+                  icon: "admin"
+                  memberCount: 3
+                  gradeRange: "G3-G5"
+                - id: 2
+                  name: "OP"
+                  icon: "op"
+                  memberCount: 15
+                  gradeRange: "G1-G4"
+```
+
+### 15.2 Get Department Hierarchy
+
+```yaml
+get:
+  tags:
+    - WS-UserInfo
+  summary: "Get Department Hierarchy API"
+  description: |
+    # Business Logic
+      ## 1. Get Department Head
+        ### Select Columns
+          - staff.id, staff.full_name, staff.position, staff.job_grade
+
+        ### Search Conditions
+          - staff.department_id = {id}
+          - staff.is_department_head = true
+
+      ## 2. Get Teams
+        ### Select Columns
+          - teams.id, teams.name
+          - COUNT(staff) as member_count
+
+        ### Search Conditions
+          - teams.department_id = {id}
+
+      ## 3. Get Team Members
+        ### For Each Team
+          - Get staff list with avatar, name, position, job_grade
+
+      ## 4. Response
+        - Return department head + teams with members
+
+  operationId: getDepartmentHierarchy
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+      description: Department ID
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            data:
+              departmentHead:
+                id: 10
+                fullName: "Department Manager"
+                position: "Manager"
+                jobGrade: "G5"
+              teams:
+                - id: 1
+                  name: "Account Team"
+                  memberCount: 2
+                  members:
+                    - id: 11
+                      fullName: "Nguyen Thi Hien"
+                      position: "Team Lead"
+                      jobGrade: "G4"
+                    - id: 12
+                      fullName: "Tran Van Nam"
+                      position: "Account Executive"
+                      jobGrade: "G3"
+
+    404:
+      description: Department Not Found
+```
+
+### 15.3 Get Staff Detail
+
+```yaml
+get:
+  tags:
+    - WS-UserInfo
+  summary: "Get Staff Detail API"
+  description: |
+    # Business Logic
+      ## 1. Get Staff Info
+        ### Select Columns
+          - All staff fields
+          - department.name as department_name
+          - team.name as team_name
+          - manager.full_name as line_manager_name
+
+        ### Join Conditions
+          - LEFT JOIN departments ON staff.department_id
+          - LEFT JOIN teams ON staff.team_id
+          - LEFT JOIN staff manager ON staff.manager_id
+
+      ## 2. Response
+        - Return full staff profile
+
+  operationId: getStaffDetail
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            data:
+              id: 11
+              sapCode: "00279857"
+              fullName: "Nguyen Thi Hue"
+              position: "Team Lead"
+              jobGrade: "G5"
+              status: "Active"
+              phone: "0901234567"
+              joiningDate: "2017-08-17"
+              lineManager:
+                id: 10
+                fullName: "Manager Name"
+                sapCode: "00279800"
+              division: "SMMH (Head Office)"
+              department: "Account Team"
+              section: ""
+              location: "Ha Noi"
+
+    404:
+      description: Staff Not Found
+```
+
+### 15.4 Create Team
+
+```yaml
+post:
+  tags:
+    - WS-UserInfo
+  summary: "Create Team API"
+  description: |
+    # Correlation Check
+      - department_id: Must exist
+      - name: Must be unique within department
+
+    # Business Logic
+      ## 1. Validate Input
+        - Check department exists
+        - Check team name unique
+
+      ## 2. Create Team
+        - Insert into teams table
+
+      ## 3. Response
+        - Return created team
+
+  operationId: createTeam
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "#/components/schemas/CreateTeamRequest"
+        example:
+          department_id: 1
+          name: "New Team"
+          description: "Team description"
+
+  responses:
+    201:
+      description: Created
+      content:
+        application/json:
+          example:
+            success: true
+            data:
+              id: 5
+              name: "New Team"
+            message: "Team created successfully"
+
+    400:
+      description: Bad Request
+```
+
+### 15.5 Create Member
+
+```yaml
+post:
+  tags:
+    - WS-UserInfo
+  summary: "Create Staff Member API"
+  description: |
+    # Correlation Check
+      - email: Must be unique
+      - sap_code: Must be unique
+      - department_id: Must exist
+      - team_id: Must exist and belong to department
+
+    # Business Logic
+      ## 1. Validate Input
+        - Check uniqueness
+        - Check relationships
+
+      ## 2. Create Staff
+        - Insert into staff table
+        - Generate temporary password
+
+      ## 3. Response
+        - Return created staff info
+
+  operationId: createMember
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "#/components/schemas/CreateMemberRequest"
+        example:
+          full_name: "New Staff Member"
+          email: "newstaff@aoisora.com"
+          phone: "0901234568"
+          sap_code: "NV100"
+          department_id: 1
+          team_id: 1
+          position: "Staff"
+          job_grade: "G3"
+
+  responses:
+    201:
+      description: Created
+
+    400:
+      description: Bad Request
+```
+
+### 15.6 Save Permissions
+
+```yaml
+post:
+  tags:
+    - WS-UserInfo
+  summary: "Save Permissions API"
+  description: |
+    # Business Logic
+      ## 1. Delete Existing Permissions
+        - Remove current permissions for user/role
+
+      ## 2. Insert New Permissions
+        - Bulk insert permission records
+
+      ## 3. Response
+        - Return success
+
+  operationId: savePermissions
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [user, role]
+            target_id:
+              type: integer
+            permissions:
+              type: array
+              items:
+                type: object
+                properties:
+                  module:
+                    type: string
+                  actions:
+                    type: array
+                    items:
+                      type: string
+        example:
+          type: "user"
+          target_id: 11
+          permissions:
+            - module: "tasks"
+              actions: ["view", "create", "edit"]
+            - module: "reports"
+              actions: ["view"]
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            success: true
+            message: "Permissions saved successfully"
+```
+
+### 15.7 Import Users
+
+```yaml
+post:
+  tags:
+    - WS-UserInfo
+  summary: "Import Users API"
+  description: |
+    # Business Logic
+      ## 1. Parse File
+        - Support Excel, CSV formats
+        - Validate column headers
+
+      ## 2. Validate Each Row
+        - Check required fields
+        - Check email/sap_code uniqueness
+
+      ## 3. Bulk Insert
+        - Insert valid records
+        - Track errors per row
+
+      ## 4. Response
+        - Return import summary
+
+  operationId: importUsers
+  requestBody:
+    required: true
+    content:
+      multipart/form-data:
+        schema:
+          type: object
+          properties:
+            file:
+              type: string
+              format: binary
+            format:
+              type: string
+              enum: [excel, csv]
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            success: true
+            data:
+              imported: 25
+              skipped: 3
+              errors:
+                - row: 5
+                  error: "Email already exists"
+                - row: 12
+                  error: "Invalid department"
+```
+
+### 15.8 Schema Definitions
+
+```yaml
+components:
+  schemas:
+    CreateTeamRequest:
+      type: object
+      required:
+        - department_id
+        - name
+      properties:
+        department_id:
+          type: integer
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+
+    CreateMemberRequest:
+      type: object
+      required:
+        - full_name
+        - email
+        - department_id
+        - position
+        - job_grade
+      properties:
+        full_name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        sap_code:
+          type: string
+        department_id:
+          type: integer
+        team_id:
+          type: integer
+        position:
+          type: string
+        job_grade:
+          type: string
+          enum: [G1, G2, G3, G4, G5, G6, G7, G8]
+
+    StaffResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        sapCode:
+          type: string
+        fullName:
+          type: string
+        position:
+          type: string
+        jobGrade:
+          type: string
+        status:
+          type: string
+        phone:
+          type: string
+        joiningDate:
+          type: string
+          format: date
+        department:
+          type: string
+        team:
+          type: string
+```
+
 ---
 
 ## 16. Files Reference

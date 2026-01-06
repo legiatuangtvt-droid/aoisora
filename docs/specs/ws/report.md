@@ -213,30 +213,287 @@ interface ReportFilter {
 
 ### 12.1 Get Weekly Completion Data
 
-```
-GET /api/v1/reports/weekly-completion
-Query params:
-  - start_week: string (e.g., "W40")
-  - end_week: string (e.g., "W45")
-  - department_id?: number (optional filter)
+```yaml
+get:
+  tags:
+    - WS-Reports
+  summary: "Get Weekly Completion Data API"
+  description: |
+    # Business Logic
+      ## 1. Get Completion Stats
+        ### Select Columns
+          - week_number
+          - COUNT(tasks) as total
+          - COUNT(completed) as completed
+          - COUNT(incomplete) as incomplete
+
+        ### Search Conditions
+          - week_number BETWEEN start_week AND end_week
+          - IF department_id → tasks.department_id = department_id
+
+        ### Group By
+          - week_number
+
+        ### Order By
+          - week_number ASC
+
+      ## 2. Response
+        - Return weekly completion statistics
+
+  operationId: getWeeklyCompletion
+  parameters:
+    - name: start_week
+      in: query
+      required: true
+      schema:
+        type: string
+      description: Start week (e.g., "W40")
+
+    - name: end_week
+      in: query
+      required: true
+      schema:
+        type: string
+      description: End week (e.g., "W45")
+
+    - name: department_id
+      in: query
+      required: false
+      schema:
+        type: integer
+      description: Filter by department
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            data:
+              - week: "W40"
+                completed: 85
+                incomplete: 15
+                total: 100
+              - week: "W41"
+                completed: 90
+                incomplete: 10
+                total: 100
+              - week: "W42"
+                completed: 78
+                incomplete: 22
+                total: 100
 ```
 
 ### 12.2 Get Store Weekly Grid
 
-```
-GET /api/v1/reports/store-weekly
-Query params:
-  - start_week: string
-  - end_week: string
+```yaml
+get:
+  tags:
+    - WS-Reports
+  summary: "Get Store Weekly Grid API"
+  description: |
+    # Business Logic
+      ## 1. Get Stores
+        ### Select Columns
+          - stores.id, stores.name
+
+      ## 2. Get Completion Per Store Per Week
+        ### Select Columns
+          - week_number
+          - (completed / total * 100) as completion_percent
+
+        ### Group By
+          - stores.id, week_number
+
+      ## 3. Response
+        - Return store x week matrix with completion %
+
+  operationId: getStoreWeeklyGrid
+  parameters:
+    - name: start_week
+      in: query
+      required: true
+      schema:
+        type: string
+
+    - name: end_week
+      in: query
+      required: true
+      schema:
+        type: string
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            data:
+              weeks: ["W40", "W41", "W42", "W43", "W44", "W45"]
+              stores:
+                - storeName: "Ocean Park 1"
+                  weeks:
+                    - week: "W40"
+                      completionPercent: 100
+                    - week: "W41"
+                      completionPercent: 95
+                    - week: "W42"
+                      completionPercent: 88
+                - storeName: "Eco Park"
+                  weeks:
+                    - week: "W40"
+                      completionPercent: 92
+                    - week: "W41"
+                      completionPercent: 100
 ```
 
 ### 12.3 Get Detailed Store Report
 
+```yaml
+get:
+  tags:
+    - WS-Reports
+  summary: "Get Detailed Store Report API"
+  description: |
+    # Business Logic
+      ## 1. Get Store List
+        ### Select Columns
+          - stores.code, stores.name
+
+      ## 2. Get Task Summary Per Department
+        ### Select Columns
+          - departments.name
+          - COUNT(tasks) as total_task
+          - COUNT(completed) as completed_task
+          - (completed / total * 100) as complete_percent
+
+        ### Search Conditions
+          - tasks.week_number = week
+          - IF department_id → tasks.department_id = department_id
+
+        ### Group By
+          - stores.id, departments.id
+
+      ## 3. Response
+        - Return detailed breakdown by store and department
+
+  operationId: getStoreDetailReport
+  parameters:
+    - name: week
+      in: query
+      required: true
+      schema:
+        type: string
+      description: Week number (e.g., "W44")
+
+    - name: department_id
+      in: query
+      required: false
+      schema:
+        type: integer
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            data:
+              - storeCode: "1234"
+                storeName: "Ocean Park 1"
+                totalTask:
+                  total: 50
+                  completed: 48
+                  percent: 96
+                admin:
+                  total: 10
+                  completed: 10
+                  percent: 100
+                planning:
+                  total: 8
+                  completed: 7
+                  percent: 87.5
+                spaMkt:
+                  total: 12
+                  completed: 12
+                  percent: 100
+                improvement:
+                  total: 5
+                  completed: 5
+                  percent: 100
+                dryFood:
+                  total: 10
+                  completed: 9
+                  percent: 90
+                aeonCf:
+                  total: 5
+                  completed: 5
+                  percent: 100
 ```
-GET /api/v1/reports/store-detail
-Query params:
-  - week: string (e.g., "W44")
-  - department_id?: number (optional)
+
+### 12.4 Schema Definitions
+
+```yaml
+components:
+  schemas:
+    WeeklyCompletion:
+      type: object
+      properties:
+        week:
+          type: string
+        completed:
+          type: integer
+        incomplete:
+          type: integer
+        total:
+          type: integer
+
+    StoreWeeklyData:
+      type: object
+      properties:
+        storeName:
+          type: string
+        weeks:
+          type: array
+          items:
+            type: object
+            properties:
+              week:
+                type: string
+              completionPercent:
+                type: number
+
+    DepartmentTaskSummary:
+      type: object
+      properties:
+        total:
+          type: integer
+        completed:
+          type: integer
+        percent:
+          type: number
+
+    StoreReportRow:
+      type: object
+      properties:
+        storeCode:
+          type: string
+        storeName:
+          type: string
+        totalTask:
+          $ref: "#/components/schemas/DepartmentTaskSummary"
+        admin:
+          $ref: "#/components/schemas/DepartmentTaskSummary"
+        planning:
+          $ref: "#/components/schemas/DepartmentTaskSummary"
+        spaMkt:
+          $ref: "#/components/schemas/DepartmentTaskSummary"
+        improvement:
+          $ref: "#/components/schemas/DepartmentTaskSummary"
+        dryFood:
+          $ref: "#/components/schemas/DepartmentTaskSummary"
+        aeonCf:
+          $ref: "#/components/schemas/DepartmentTaskSummary"
 ```
 
 ---

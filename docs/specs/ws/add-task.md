@@ -219,17 +219,436 @@
 
 ## 13. API Endpoints - Detail
 
-| Action | Method | Endpoint | Description |
-|--------|--------|----------|-------------|
-| Get Task Types | GET | /api/v1/task-types | Get task type list |
-| Get Regions | GET | /api/v1/regions | Get region list |
-| Get Zones | GET | /api/v1/zones?regionId={id} | Get zones by region |
-| Get Areas | GET | /api/v1/areas?zoneId={id} | Get areas by zone |
-| Get Stores | GET | /api/v1/stores?areaId={id} | Get stores by area |
-| Get Users | GET | /api/v1/users?role={role} | Get users by role |
-| Create Task | POST | /api/v1/tasks | Create new task (SUBMITTED) |
-| Save Draft | POST | /api/v1/tasks/draft | Save draft (DRAFT) |
-| Upload Image | POST | /api/v1/upload/image | Upload instruction image |
+### 13.1 Create Task (Submit)
+
+```yaml
+post:
+  tags:
+    - WS-Tasks
+  summary: "Create Task API"
+  description: |
+    # Correlation Check
+      - All required fields must be present
+      - Master Data Existence Check:
+        - task_type_id: Check against code_master
+        - region_id, zone_id, area_id: Check against location tables
+        - store_id: Check against stores table
+        - initiator_id, leader_id, hod_id: Check against staff table
+
+    # Business Logic
+      ## 1. Validate Input
+        - Validate all required fields
+        - Validate date range (end_date >= start_date)
+        - Validate file uploads (max 5MB, JPG/PNG)
+
+      ## 2. Create Task Records
+        ### Insert into tasks table
+          - task_name
+          - task_type_id
+          - start_date, end_date
+          - execution_time
+          - manual_link, note
+          - status_id = SUBMITTED
+          - created_staff_id from authenticated user
+
+      ## 3. Create Task Levels
+        - For each level (1-5), insert task_level record
+        - Link to parent task_level if applicable
+
+      ## 4. Create Scope Assignments
+        - Insert into task_scope (region, zone, area, store)
+
+      ## 5. Create Approval Workflow
+        - Insert into task_workflow (initiator, leader, hod)
+
+      ## 6. Handle Image Uploads
+        - Move uploaded images to permanent storage
+        - Create task_images records
+
+      ## 7. Response
+        - Return created task with all levels
+
+  operationId: createTask
+  parameters:
+    - name: Authorization
+      in: header
+      required: true
+      schema:
+        type: string
+      description: Bearer token
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "#/components/schemas/CreateTaskRequest"
+        example:
+          task_name: "Q1 Marketing Campaign"
+          task_type_id: 1
+          applicable_period:
+            start: "2026-01-01"
+            end: "2026-03-31"
+          execution_time: "2 hours"
+          instructions:
+            type: "image"
+            manual_link: "https://manual.example.com/task-1"
+            note: "Follow the guidelines carefully"
+          scope:
+            region_id: 1
+            zone_id: 2
+            area_id: 3
+            store_ids: [1, 2, 3]
+          approval:
+            initiator_id: 1
+            leader_id: 2
+            hod_id: 3
+          sub_levels:
+            - level: 2
+              task_name: "Sub-task 1"
+              parent_level: 1
+
+  responses:
+    201:
+      description: Created
+      content:
+        application/json:
+          example:
+            success: true
+            data:
+              task_id: 1
+              task_name: "Q1 Marketing Campaign"
+              status: "SUBMITTED"
+              created_at: "2026-01-06T10:00:00Z"
+            message: "Task submitted successfully"
+
+    400:
+      description: Bad Request
+      content:
+        application/json:
+          examples:
+            validation_error:
+              value:
+                success: false
+                message: "Validation failed"
+                errors:
+                  task_name: ["Task name is required"]
+                  end_date: ["End date must be after start date"]
+
+    401:
+      description: Unauthorized
+
+    500:
+      description: Internal Server Error
+```
+
+### 13.2 Save Draft
+
+```yaml
+post:
+  tags:
+    - WS-Tasks
+  summary: "Save Task as Draft API"
+  description: |
+    # Business Logic
+      ## 1. Validate Input
+        - Only task_name is required for draft
+        - Other fields can be partial/empty
+
+      ## 2. Create/Update Draft
+        - If task_id provided → Update existing draft
+        - If no task_id → Create new draft
+        - Set status_id = DRAFT
+
+      ## 3. Response
+        - Return draft task_id for later editing
+
+  operationId: saveTaskDraft
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "#/components/schemas/CreateTaskRequest"
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            success: true
+            data:
+              task_id: 1
+              status: "DRAFT"
+            message: "Task saved as draft successfully"
+```
+
+### 13.3 Get Master Data APIs
+
+```yaml
+# Get Regions
+get:
+  tags:
+    - WS-Master
+  summary: "Get Regions API"
+  operationId: getRegions
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            data:
+              - id: 1
+                name: "North Region"
+                code: "NR"
+              - id: 2
+                name: "South Region"
+                code: "SR"
+
+---
+# Get Zones by Region
+get:
+  tags:
+    - WS-Master
+  summary: "Get Zones API"
+  operationId: getZones
+  parameters:
+    - name: region_id
+      in: query
+      required: true
+      schema:
+        type: integer
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            data:
+              - id: 1
+                name: "Zone A"
+                region_id: 1
+              - id: 2
+                name: "Zone B"
+                region_id: 1
+
+---
+# Get Areas by Zone
+get:
+  tags:
+    - WS-Master
+  summary: "Get Areas API"
+  operationId: getAreas
+  parameters:
+    - name: zone_id
+      in: query
+      required: true
+      schema:
+        type: integer
+  responses:
+    200:
+      description: OK
+
+---
+# Get Stores by Area
+get:
+  tags:
+    - WS-Master
+  summary: "Get Stores API"
+  operationId: getStoresByArea
+  parameters:
+    - name: area_id
+      in: query
+      required: true
+      schema:
+        type: integer
+  responses:
+    200:
+      description: OK
+
+---
+# Get Users by Role
+get:
+  tags:
+    - WS-Master
+  summary: "Get Users by Role API"
+  operationId: getUsersByRole
+  parameters:
+    - name: role
+      in: query
+      required: true
+      schema:
+        type: string
+        enum: [initiator, leader, hod]
+  responses:
+    200:
+      description: OK
+```
+
+### 13.4 Upload Image
+
+```yaml
+post:
+  tags:
+    - WS-Tasks
+  summary: "Upload Task Image API"
+  description: |
+    # Correlation Check
+      - File type must be JPG or PNG
+      - File size must not exceed 5MB
+
+    # Business Logic
+      ## 1. Validate File
+        - Check file type (JPG, PNG)
+        - Check file size (max 5MB)
+
+      ## 2. Store Temporarily
+        - Save to temp storage
+        - Return temp file path
+
+      ## 3. Response
+        - Return temp file URL for preview
+
+  operationId: uploadTaskImage
+  requestBody:
+    required: true
+    content:
+      multipart/form-data:
+        schema:
+          type: object
+          properties:
+            file:
+              type: string
+              format: binary
+            slot:
+              type: integer
+              description: Image slot index (0-5)
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            success: true
+            data:
+              temp_url: "/tmp/uploads/abc123.jpg"
+              slot: 0
+
+    400:
+      description: Bad Request
+      content:
+        application/json:
+          examples:
+            file_too_large:
+              value:
+                success: false
+                message: "File size must not exceed 5MB"
+            invalid_type:
+              value:
+                success: false
+                message: "Only JPG and PNG files are allowed"
+```
+
+### 13.5 Schema Definitions
+
+```yaml
+components:
+  schemas:
+    CreateTaskRequest:
+      type: object
+      required:
+        - task_name
+      properties:
+        task_name:
+          type: string
+          maxLength: 255
+        task_type_id:
+          type: integer
+        applicable_period:
+          type: object
+          properties:
+            start:
+              type: string
+              format: date
+            end:
+              type: string
+              format: date
+        execution_time:
+          type: string
+          enum: ["30 min", "1 hour", "2 hours", "4 hours", "8 hours"]
+        instructions:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [image, document, checklist]
+            manual_link:
+              type: string
+              format: uri
+            note:
+              type: string
+            images:
+              type: array
+              items:
+                type: string
+              maxItems: 6
+        scope:
+          type: object
+          properties:
+            region_id:
+              type: integer
+            zone_id:
+              type: integer
+            area_id:
+              type: integer
+            store_ids:
+              type: array
+              items:
+                type: integer
+            store_leader_id:
+              type: integer
+            specific_staff_id:
+              type: integer
+        approval:
+          type: object
+          properties:
+            initiator_id:
+              type: integer
+            leader_id:
+              type: integer
+            hod_id:
+              type: integer
+        sub_levels:
+          type: array
+          items:
+            type: object
+            properties:
+              level:
+                type: integer
+                minimum: 2
+                maximum: 5
+              task_name:
+                type: string
+              parent_level:
+                type: integer
+
+    TaskResponse:
+      type: object
+      properties:
+        task_id:
+          type: integer
+        task_name:
+          type: string
+        status:
+          type: string
+          enum: [DRAFT, SUBMITTED, APPROVED, IN_PROGRESS, COMPLETED]
+        created_at:
+          type: string
+          format: date-time
+```
 
 ---
 
@@ -310,3 +729,4 @@ frontend/src/
 | 2026-01-01 | UI: Maps tab - child task levels indented with connector lines to show parent-child hierarchy |
 | 2026-01-01 | Fix: Maps tab connector lines now continuous without gaps between siblings |
 | 2026-01-06 | Restructured spec with Basic/Detail sections |
+| 2026-01-06 | Updated API section with OpenAPI format (5 endpoints with schemas) |

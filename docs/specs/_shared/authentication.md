@@ -91,6 +91,584 @@ Sign Up ─── (Already have account?) ───> Sign In
 | `/api/v1/auth/resend-code` | POST | Gửi lại OTP |
 | `/api/v1/auth/check-password-strength` | POST | Kiểm tra độ mạnh password |
 
+### 6.1 API Endpoints - Detail
+
+#### Login API
+
+```yaml
+post:
+  tags:
+    - Auth
+  summary: "Login API"
+  description: |
+    # Correlation Check
+      - identifier: Required, must be valid email/phone/SAP code/username
+      - password: Required
+
+    # Business Logic
+      ## 1. Find User
+        ### Search Conditions
+          - staff.email = identifier
+          OR staff.phone = identifier
+          OR staff.sap_code = identifier
+          OR staff.username = identifier
+
+      ## 2. Validate Password
+        - Compare password with password_hash using bcrypt
+
+      ## 3. Check Account Status
+        - If status != ACTIVE → Return ACCOUNT_INACTIVE error
+
+      ## 4. Generate Token
+        - Create Sanctum token
+        - Set expiration based on remember_me (24h or 30 days)
+
+      ## 5. Response
+        - Return access_token and user info
+
+  operationId: login
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "#/components/schemas/LoginRequest"
+        example:
+          identifier: "admin@aoisora.com"
+          password: "Password123!"
+          remember_me: false
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            success: true
+            access_token: "1|abc..."
+            token_type: "bearer"
+            expires_at: "2026-01-07T03:47:08Z"
+            user:
+              id: 1
+              staff_code: "NV001"
+              full_name: "Nguyen Van A"
+              email: "admin@aoisora.com"
+              phone: "0901234567"
+              role: "MANAGER"
+              position: "Store Manager"
+              store_id: 1
+              store_name: "Store Ha Dong"
+              department_id: 1
+              department_name: "OP"
+
+    401:
+      description: Unauthorized
+      content:
+        application/json:
+          examples:
+            account_not_found:
+              value:
+                success: false
+                error: "Account not found"
+                error_code: "ACCOUNT_NOT_FOUND"
+            incorrect_password:
+              value:
+                success: false
+                error: "Incorrect password"
+                error_code: "INCORRECT_PASSWORD"
+            account_inactive:
+              value:
+                success: false
+                error: "Account is inactive"
+                error_code: "ACCOUNT_INACTIVE"
+```
+
+#### Logout API
+
+```yaml
+post:
+  tags:
+    - Auth
+  summary: "Logout API"
+  description: |
+    # Business Logic
+      ## 1. Revoke Token
+        - Delete current access token from personal_access_tokens
+
+      ## 2. Response
+        - Return success message
+
+  operationId: logout
+  parameters:
+    - name: Authorization
+      in: header
+      required: true
+      schema:
+        type: string
+      description: Bearer token
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            success: true
+            message: "Logged out successfully"
+
+    401:
+      description: Unauthorized
+```
+
+#### Get Current User API
+
+```yaml
+get:
+  tags:
+    - Auth
+  summary: "Get Current User API"
+  description: |
+    # Business Logic
+      ## 1. Get User from Token
+        - Extract user from authenticated token
+
+      ## 2. Load Relations
+        - Load store, department info
+
+      ## 3. Response
+        - Return user profile
+
+  operationId: getCurrentUser
+  parameters:
+    - name: Authorization
+      in: header
+      required: true
+      schema:
+        type: string
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            success: true
+            data:
+              id: 1
+              staff_code: "NV001"
+              full_name: "Nguyen Van A"
+              email: "admin@aoisora.com"
+              role: "MANAGER"
+
+    401:
+      description: Unauthorized
+```
+
+#### Forgot Password API
+
+```yaml
+post:
+  tags:
+    - Auth
+  summary: "Forgot Password API"
+  description: |
+    # Correlation Check
+      - email: Must exist in staff table
+
+    # Business Logic
+      ## 1. Find User by Email
+        - If not found → Return EMAIL_NOT_FOUND
+
+      ## 2. Generate OTP
+        - Generate 5-digit random code
+        - Set expiration to 15 minutes
+
+      ## 3. Store Reset Token
+        - Insert/Update password_reset_tokens table
+
+      ## 4. Send Email
+        - Send OTP code via email
+
+      ## 5. Response
+        - Return masked email confirmation
+
+  operationId: forgotPassword
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - email
+          properties:
+            email:
+              type: string
+              format: email
+        example:
+          email: "admin@aoisora.com"
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            success: true
+            message: "Verification code sent to your email"
+            email: "ad***@aoisora.com"
+
+    404:
+      description: Not Found
+      content:
+        application/json:
+          example:
+            success: false
+            error: "Email not found"
+            error_code: "EMAIL_NOT_FOUND"
+```
+
+#### Verify Code API
+
+```yaml
+post:
+  tags:
+    - Auth
+  summary: "Verify OTP Code API"
+  description: |
+    # Correlation Check
+      - email: Must have pending reset request
+      - code: Must match and not expired
+
+    # Business Logic
+      ## 1. Find Reset Request
+        - Query password_reset_tokens by email
+        - If not found → Return NO_RESET_REQUEST
+
+      ## 2. Check Expiration
+        - If expires_at < now → Return CODE_EXPIRED
+
+      ## 3. Verify Code
+        - If code != request.code → Return INVALID_CODE
+
+      ## 4. Generate Reset Token
+        - Generate 64-char random reset_token
+        - Set verified_at = now
+
+      ## 5. Response
+        - Return reset_token for password reset
+
+  operationId: verifyResetCode
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - email
+            - code
+          properties:
+            email:
+              type: string
+            code:
+              type: string
+              pattern: "^[0-9]{5}$"
+        example:
+          email: "admin@aoisora.com"
+          code: "34819"
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            success: true
+            message: "Code verified successfully"
+            reset_token: "W8aTbhdkgfNHbk76U2DgzOHC..."
+
+    400:
+      description: Bad Request
+      content:
+        application/json:
+          examples:
+            no_reset_request:
+              value:
+                success: false
+                error: "No reset request found"
+                error_code: "NO_RESET_REQUEST"
+            code_expired:
+              value:
+                success: false
+                error: "Verification code has expired"
+                error_code: "CODE_EXPIRED"
+            invalid_code:
+              value:
+                success: false
+                error: "Invalid verification code"
+                error_code: "INVALID_CODE"
+```
+
+#### Reset Password API
+
+```yaml
+post:
+  tags:
+    - Auth
+  summary: "Reset Password API"
+  description: |
+    # Correlation Check
+      - reset_token: Must be valid and not expired (30 min after verify)
+      - password: Must meet strength requirements
+      - password_confirmation: Must match password
+
+    # Business Logic
+      ## 1. Validate Reset Token
+        - Query password_reset_tokens by email and reset_token
+        - Check verified_at + 30 minutes > now
+
+      ## 2. Update Password
+        - Hash new password with bcrypt
+        - Update staff.password_hash
+
+      ## 3. Cleanup
+        - Delete password_reset_tokens record
+
+      ## 4. Response
+        - Return success message
+
+  operationId: resetPassword
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - email
+            - reset_token
+            - password
+            - password_confirmation
+          properties:
+            email:
+              type: string
+            reset_token:
+              type: string
+            password:
+              type: string
+              minLength: 8
+            password_confirmation:
+              type: string
+        example:
+          email: "admin@aoisora.com"
+          reset_token: "W8aTbhdkgfNHbk76U2DgzOHC..."
+          password: "NewPassword123!"
+          password_confirmation: "NewPassword123!"
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            success: true
+            message: "Password reset successfully. Please sign in with your new password."
+
+    400:
+      description: Bad Request
+      content:
+        application/json:
+          examples:
+            invalid_token:
+              value:
+                success: false
+                error: "Invalid reset token"
+                error_code: "INVALID_RESET_TOKEN"
+            token_expired:
+              value:
+                success: false
+                error: "Reset token has expired"
+                error_code: "RESET_TOKEN_EXPIRED"
+```
+
+#### Resend Code API
+
+```yaml
+post:
+  tags:
+    - Auth
+  summary: "Resend OTP Code API"
+  description: |
+    # Correlation Check
+      - email: Must have pending reset request
+      - Rate limit: 1 minute between resends
+
+    # Business Logic
+      ## 1. Check Rate Limit
+        - If last send < 1 minute ago → Return RATE_LIMITED
+
+      ## 2. Generate New OTP
+        - Generate new 5-digit code
+        - Update expires_at to 15 minutes from now
+
+      ## 3. Send Email
+        - Send new OTP via email
+
+      ## 4. Response
+        - Return success message
+
+  operationId: resendCode
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - email
+          properties:
+            email:
+              type: string
+        example:
+          email: "admin@aoisora.com"
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            success: true
+            message: "New verification code sent to your email"
+
+    429:
+      description: Too Many Requests
+      content:
+        application/json:
+          example:
+            success: false
+            error: "Please wait before requesting a new code"
+            error_code: "RATE_LIMITED"
+            retry_after: 45
+```
+
+#### Check Password Strength API
+
+```yaml
+post:
+  tags:
+    - Auth
+  summary: "Check Password Strength API"
+  description: |
+    # Business Logic
+      ## 1. Calculate Score
+        - +1 for length >= 8
+        - +1 for lowercase letter
+        - +1 for uppercase letter
+        - +1 for number
+        - +1 for special character
+        - +1 for length >= 12
+
+      ## 2. Determine Strength
+        - 0-2: weak
+        - 3-4: medium
+        - 5-6: strong
+
+      ## 3. Response
+        - Return strength and feedback
+
+  operationId: checkPasswordStrength
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - password
+          properties:
+            password:
+              type: string
+        example:
+          password: "Test123!"
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            success: true
+            strength: "strong"
+            score: 6
+            feedback: []
+```
+
+#### Schema Definitions
+
+```yaml
+components:
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - identifier
+        - password
+      properties:
+        identifier:
+          type: string
+          description: Email, phone, SAP code, or username
+        password:
+          type: string
+        remember_me:
+          type: boolean
+          default: false
+
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        staff_code:
+          type: string
+        full_name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        role:
+          type: string
+          enum: [ADMIN, MANAGER, STAFF]
+        position:
+          type: string
+        store_id:
+          type: integer
+        store_name:
+          type: string
+        department_id:
+          type: integer
+        department_name:
+          type: string
+
+    AuthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        access_token:
+          type: string
+        token_type:
+          type: string
+          enum: [bearer]
+        expires_at:
+          type: string
+          format: date-time
+        user:
+          $ref: "#/components/schemas/UserResponse"
+```
+
 ## 7. Implementation Status
 
 | Feature | Backend | Frontend | Notes |

@@ -92,6 +92,138 @@
 | `/api/v1/dws/task-groups` | GET | Get group configurations |
 | `/api/v1/dws/task-groups/{id}` | PUT | Update group settings |
 
+### 6.1 API Endpoints - Detail
+
+#### Get Tasks By Group
+
+```yaml
+get:
+  tags:
+    - DWS-TaskGroups
+  summary: "Get RE Tasks By Group API"
+  description: |
+    # Business Logic
+      ## 1. Get All Groups
+        ### Select Groups
+          - Get distinct groups from re_tasks
+          - Get group configurations (color, display_order)
+
+      ## 2. Get Tasks Per Group
+        ### Select Columns
+          - id, sequence_number, task_name, task_id_display
+
+        ### Group By
+          - re_tasks.group
+
+        ### Order By
+          - display_order ASC within each group
+
+      ## 3. Response
+        - Return grouped task list with statistics
+
+  operationId: getTasksByGroup
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            data:
+              groups:
+                - id: "1"
+                  name: "POS"
+                  displayOrder: 1
+                  color: "#059669"
+                  bgColor: "#D1FAE5"
+                  totalTasks: 13
+                  tasks:
+                    - id: 1
+                      sequenceNumber: 1
+                      taskName: "Mo POS"
+                      taskId: "1101"
+                    - id: 2
+                      sequenceNumber: 2
+                      taskName: "EOD POS"
+                      taskId: "1102"
+              statistics:
+                total: 110
+                daily: 93
+                weekly: 9
+                monthly: 6
+                yearly: 2
+                other: 0
+```
+
+#### Get Statistics
+
+```yaml
+get:
+  tags:
+    - DWS-TaskGroups
+  summary: "Get Task Statistics API"
+  description: |
+    # Business Logic
+      ## 1. Count Tasks by Frequency
+        - COUNT(*) GROUP BY frequency_type
+
+      ## 2. Response
+        - Return counts per frequency type
+
+  operationId: getTaskStatistics
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            data:
+              total: 110
+              daily: 93
+              weekly: 9
+              monthly: 6
+              yearly: 2
+              other: 0
+```
+
+#### Update Group Settings
+
+```yaml
+put:
+  tags:
+    - DWS-TaskGroups
+  summary: "Update Task Group Settings API"
+  description: |
+    # Business Logic
+      ## 1. Update Group Config
+        - Update display_order, color, bgColor
+
+  operationId: updateTaskGroup
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            displayOrder:
+              type: integer
+            color:
+              type: string
+            bgColor:
+              type: string
+
+  responses:
+    200:
+      description: OK
+```
+
 ## 7. Implementation Status
 
 | Feature | Backend | Frontend | Notes |
@@ -439,3 +571,4 @@ frontend/src/
 | 2026-01-06 | Added TaskGroupRow with horizontal scroll and fade indicators |
 | 2026-01-06 | Added TaskCard component with hover effects |
 | 2026-01-06 | Integrated AddRETaskModal with defaultGroup prop |
+| 2026-01-06 | Added API Endpoints Detail section with OpenAPI format |

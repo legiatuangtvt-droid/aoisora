@@ -257,45 +257,473 @@ interface RETaskFilters {
 
 ### 15.1 Get RE Tasks
 
-```
-GET /api/v1/dws/re-tasks
-Query params:
-  - page: number (default: 1)
-  - per_page: number (default: 25)
-  - search: string (optional)
-  - group: string[] (optional)
-  - frequency_type: string (optional)
-  - sort_by: string (optional)
-  - sort_dir: 'asc' | 'desc' (optional)
+```yaml
+get:
+  tags:
+    - DWS-RETasks
+  summary: "RE Task List API"
+  description: |
+    # Business Logic
+      ## 1. Build Query
+        ### Select Columns
+          - re_tasks.id
+          - re_tasks.group
+          - re_tasks.type_task
+          - re_tasks.task_name
+          - re_tasks.frequency_type
+          - re_tasks.frequency_number
+          - re_tasks.re_unit
+          - re_tasks.manual_number
+          - re_tasks.manual_link
+          - re_tasks.note
+
+        ### Tables
+          - re_tasks
+
+        ### Search Conditions
+          - IF search != NULL
+            → re_tasks.group ILIKE '%' || search || '%'
+            OR re_tasks.task_name ILIKE '%' || search || '%'
+          - IF group != NULL
+            → re_tasks.group IN (request.group)
+          - IF frequency_type != NULL
+            → re_tasks.frequency_type = request.frequency_type
+
+        ### Order By
+          - Dynamic based on sort_by parameter
+          - Default: re_tasks.id ASC
+
+      ## 2. Pagination
+        - Apply LIMIT = per_page (default: 25)
+        - Apply OFFSET = (page - 1) * per_page
+
+      ## 3. Response
+        - Return paginated RE task list
+
+  operationId: getRETaskList
+  parameters:
+    - name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 1
+
+    - name: per_page
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 25
+
+    - name: search
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Search by group or task name
+
+    - name: group
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+      description: Filter by group(s)
+
+    - name: frequency_type
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [Daily, Weekly, Monthly, Quarterly, Yearly]
+
+    - name: sort_by
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [id, group, task_name, frequency_type]
+        default: id
+
+    - name: sort_dir
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [asc, desc]
+        default: asc
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            data:
+              - id: 1
+                group: "DELICA"
+                typeTask: "CTM"
+                taskName: "Pha che Cafe"
+                frequencyType: "Daily"
+                frequencyNumber: 1
+                reUnit: 20
+                manualNumber: "DEL-001"
+                manualLink: "https://manual.example.com/del-001"
+                note: ""
+            meta:
+              current_page: 1
+              per_page: 25
+              total: 110
+              last_page: 5
+
+    500:
+      description: Internal Server Error
 ```
 
 ### 15.2 Create RE Task
 
-```
-POST /api/v1/dws/re-tasks
-Body:
-  - group: string (required)
-  - type_task: string (required)
-  - task_name: string (required)
-  - frequency_type: string (required)
-  - frequency_number: number (required)
-  - re_unit: number (required)
-  - manual_number: string (required)
-  - manual_link: string (optional)
-  - note: string (optional)
+```yaml
+post:
+  tags:
+    - DWS-RETasks
+  summary: "Create RE Task API"
+  description: |
+    # Correlation Check
+      - manual_number must be unique
+
+    # Business Logic
+      ## 1. Validate Input
+        - All required fields present
+        - manual_number unique check
+
+      ## 2. Insert Record
+        - Insert into re_tasks table
+
+      ## 3. Response
+        - Return created RE task
+
+  operationId: createRETask
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "#/components/schemas/RETaskRequest"
+        example:
+          group: "DELICA"
+          type_task: "CTM"
+          task_name: "Pha che Cafe"
+          frequency_type: "Daily"
+          frequency_number: 1
+          re_unit: 20
+          manual_number: "DEL-001"
+          manual_link: "https://manual.example.com/del-001"
+          note: "Morning shift only"
+
+  responses:
+    201:
+      description: Created
+      content:
+        application/json:
+          example:
+            success: true
+            data:
+              id: 111
+              group: "DELICA"
+              taskName: "Pha che Cafe"
+            message: "Task created successfully"
+
+    400:
+      description: Bad Request
+      content:
+        application/json:
+          examples:
+            validation_error:
+              value:
+                success: false
+                message: "Validation failed"
+                errors:
+                  task_name: ["Task name is required"]
+            duplicate_manual:
+              value:
+                success: false
+                message: "Manual Number already exists"
+
+    500:
+      description: Internal Server Error
 ```
 
 ### 15.3 Update RE Task
 
-```
-PUT /api/v1/dws/re-tasks/{id}
-Body: Same as Create
+```yaml
+put:
+  tags:
+    - DWS-RETasks
+  summary: "Update RE Task API"
+  description: |
+    # Correlation Check
+      - Task ID must exist
+      - manual_number must be unique (excluding current task)
+
+    # Business Logic
+      ## 1. Find Existing Task
+        - If not found → Return 404
+
+      ## 2. Validate Input
+        - Same as Create
+
+      ## 3. Update Record
+        - Update re_tasks record
+
+      ## 4. Response
+        - Return updated RE task
+
+  operationId: updateRETask
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "#/components/schemas/RETaskRequest"
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            success: true
+            data:
+              id: 1
+              group: "DELICA"
+              taskName: "Updated Task Name"
+            message: "Task updated successfully"
+
+    404:
+      description: Not Found
+      content:
+        application/json:
+          example:
+            success: false
+            message: "Task not found"
+
+    400:
+      description: Bad Request
 ```
 
 ### 15.4 Delete RE Task
 
+```yaml
+delete:
+  tags:
+    - DWS-RETasks
+  summary: "Delete RE Task API"
+  description: |
+    # Correlation Check
+      - Task ID must exist
+
+    # Business Logic
+      ## 1. Find Existing Task
+        - If not found → Return 404
+
+      ## 2. Delete Record
+        - Delete from re_tasks table
+
+      ## 3. Response
+        - Return success message
+
+  operationId: deleteRETask
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            success: true
+            message: "Task deleted successfully"
+
+    404:
+      description: Not Found
 ```
-DELETE /api/v1/dws/re-tasks/{id}
+
+### 15.5 Import RE Tasks
+
+```yaml
+post:
+  tags:
+    - DWS-RETasks
+  summary: "Import RE Tasks API"
+  description: |
+    # Business Logic
+      ## 1. Parse File
+        - Support CSV, JSON, Excel formats
+        - Validate file structure
+
+      ## 2. Validate Each Row
+        - Check required fields
+        - Check manual_number uniqueness
+
+      ## 3. Bulk Insert
+        - Insert all valid records
+        - Return count of imported/skipped
+
+  operationId: importRETasks
+  requestBody:
+    required: true
+    content:
+      multipart/form-data:
+        schema:
+          type: object
+          properties:
+            file:
+              type: string
+              format: binary
+            format:
+              type: string
+              enum: [csv, json, excel]
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            success: true
+            data:
+              imported: 50
+              skipped: 2
+              errors:
+                - row: 15
+                  error: "Manual Number already exists"
+```
+
+### 15.6 Export RE Tasks
+
+```yaml
+get:
+  tags:
+    - DWS-RETasks
+  summary: "Export RE Tasks API"
+  description: |
+    # Business Logic
+      ## 1. Get All Tasks
+        - Apply current filters if any
+
+      ## 2. Generate File
+        - Support CSV, JSON, Excel formats
+
+      ## 3. Response
+        - Return downloadable file
+
+  operationId: exportRETasks
+  parameters:
+    - name: format
+      in: query
+      required: true
+      schema:
+        type: string
+        enum: [csv, json, excel]
+
+    - name: group
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Filter by group before export
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/octet-stream:
+          schema:
+            type: string
+            format: binary
+```
+
+### 15.7 Schema Definitions
+
+```yaml
+components:
+  schemas:
+    RETaskRequest:
+      type: object
+      required:
+        - group
+        - type_task
+        - task_name
+        - frequency_type
+        - frequency_number
+        - re_unit
+        - manual_number
+      properties:
+        group:
+          type: string
+          enum: [DELICA, D&D, DRY, POS, PERI, MMD, LEADER, QC-FSH, OTHER]
+        type_task:
+          type: string
+          enum: [CTM, Product, Service, Quality, Safety]
+        task_name:
+          type: string
+          maxLength: 255
+        frequency_type:
+          type: string
+          enum: [Daily, Weekly, Monthly, Quarterly, Yearly]
+        frequency_number:
+          type: integer
+          minimum: 1
+        re_unit:
+          type: integer
+          minimum: 0
+          description: RE Unit in minutes
+        manual_number:
+          type: string
+          maxLength: 20
+        manual_link:
+          type: string
+          format: uri
+        note:
+          type: string
+
+    RETaskResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        group:
+          type: string
+        typeTask:
+          type: string
+        taskName:
+          type: string
+        frequencyType:
+          type: string
+        frequencyNumber:
+          type: integer
+        reUnit:
+          type: integer
+        manualNumber:
+          type: string
+        manualLink:
+          type: string
+        note:
+          type: string
 ```
 
 ---
@@ -369,3 +797,4 @@ frontend/src/
 | 2026-01-06 | Added Delete Confirmation dialog with task info preview |
 | 2026-01-06 | Added Empty State component (no-data, no-results, error states) |
 | 2026-01-06 | Made Manual Link column clickable (opens in new tab) |
+| 2026-01-06 | Updated API section with OpenAPI format (6 endpoints with schemas) |

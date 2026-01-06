@@ -292,6 +292,488 @@
 | Delete Task | DELETE | /api/v1/todo/{id} | Delete task |
 | Update Status | PATCH | /api/v1/todo/{id}/status | Update task status |
 
+### 18.1 Get Week Tasks
+
+```yaml
+get:
+  tags:
+    - WS-TodoTask
+  summary: "Get Week Tasks API"
+  description: |
+    # Business Logic
+      ## 1. Get Tasks for Week
+        ### Select Columns
+          - todo_tasks.id, todo_tasks.name
+          - todo_tasks.date, todo_tasks.type
+          - todo_tasks.status, todo_tasks.location
+
+        ### Search Conditions
+          - EXTRACT(WEEK FROM todo_tasks.date) = weekNum
+          - todo_tasks.user_id = authenticated_user
+          - IF user filter → todo_tasks.user_id IN (filter)
+          - IF status filter → todo_tasks.status IN (filter)
+          - IF type filter → todo_tasks.type IN (filter)
+
+        ### Order By
+          - todo_tasks.date ASC
+
+      ## 2. Group by Date
+        - Group tasks by day for calendar display
+
+      ## 3. Response
+        - Return tasks grouped by date
+
+  operationId: getWeekTasks
+  parameters:
+    - name: weekNum
+      in: path
+      required: true
+      schema:
+        type: integer
+      description: Week number (1-52)
+
+    - name: year
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 2025
+
+    - name: user
+      in: query
+      required: false
+      schema:
+        type: integer
+      description: Filter by user ID
+
+    - name: status
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [in_progress, done, draft, not_yet]
+
+    - name: type
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [personal, team, store]
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            data:
+              weekNumber: 51
+              year: 2025
+              dateRange: "December 15 - December 21"
+              days:
+                - date: "2025-12-15"
+                  dayOfWeek: "MON"
+                  tasks:
+                    - id: 1
+                      name: "Survey competitor"
+                      type: "personal"
+                      status: "in_progress"
+                      location: "V917: Long Bien -> Ocean"
+                    - id: 2
+                      name: "Check store"
+                      type: "store"
+                      status: "done"
+                - date: "2025-12-16"
+                  dayOfWeek: "TUE"
+                  tasks: []
+                - date: "2025-12-20"
+                  dayOfWeek: "SAT"
+                  isOff: true
+                - date: "2025-12-21"
+                  dayOfWeek: "SUN"
+                  isOff: true
+```
+
+### 18.2 Get Week Overview
+
+```yaml
+get:
+  tags:
+    - WS-TodoTask
+  summary: "Get Week Overview API"
+  description: |
+    # Business Logic
+      ## 1. Get Current Week Tasks
+        ### Select Columns
+          - todo_tasks.name
+          - todo_tasks.means, todo_tasks.target
+
+        ### Search Conditions
+          - EXTRACT(WEEK FROM todo_tasks.date) = weekNum
+          - todo_tasks.user_id = authenticated_user
+
+      ## 2. Response
+        - Return overview table data
+
+  operationId: getWeekOverview
+  parameters:
+    - name: weekNum
+      in: path
+      required: true
+      schema:
+        type: integer
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            data:
+              weekNumber: 51
+              tasks:
+                - name: "Opening Store"
+                  means: "Follow SOP checklist"
+                  target: "100% completion"
+                - name: "Plan for 2026"
+                  means: "Team meeting"
+                  target: "Draft plan ready"
+                - name: "Support Store"
+                  means: "On-site visit"
+                  target: "3 stores visited"
+```
+
+### 18.3 Get Last Week Review
+
+```yaml
+get:
+  tags:
+    - WS-TodoTask
+  summary: "Get Last Week Review API"
+  description: |
+    # Business Logic
+      ## 1. Get Previous Week Tasks
+        ### Select Columns
+          - todo_tasks.name
+          - todo_tasks.progress, todo_tasks.bottleneck
+          - todo_tasks.output
+
+        ### Search Conditions
+          - EXTRACT(WEEK FROM todo_tasks.date) = weekNum - 1
+
+      ## 2. Response
+        - Return review table data
+
+  operationId: getLastWeekReview
+  parameters:
+    - name: weekNum
+      in: path
+      required: true
+      schema:
+        type: integer
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            data:
+              weekNumber: 50
+              tasks:
+                - name: "Opening Store"
+                  progress: "Completed all days"
+                  bottleneck: "None"
+                  output: "100% on-time"
+                - name: "Plan for 2026"
+                  progress: "80% complete"
+                  bottleneck: "Waiting for budget approval"
+                  output: "Draft submitted"
+```
+
+### 18.4 Create Task
+
+```yaml
+post:
+  tags:
+    - WS-TodoTask
+  summary: "Create Todo Task API"
+  description: |
+    # Correlation Check
+      - name: Required
+      - date: Required, valid date
+
+    # Business Logic
+      ## 1. Validate Input
+        - Check required fields
+        - Validate date format
+
+      ## 2. Create Task
+        - Insert into todo_tasks
+        - Set user_id = authenticated_user
+        - Set status = 'draft' by default
+
+      ## 3. Response
+        - Return created task
+
+  operationId: createTodoTask
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "#/components/schemas/CreateTodoTaskRequest"
+        example:
+          name: "Visit Ocean Park store"
+          date: "2025-12-16"
+          type: "store"
+          location:
+            region: "North"
+            zone: "Ha Noi"
+            area: "Long Bien"
+            store: "Ocean Park"
+
+  responses:
+    201:
+      description: Created
+      content:
+        application/json:
+          example:
+            success: true
+            data:
+              id: 100
+              name: "Visit Ocean Park store"
+              status: "draft"
+            message: "Task created successfully"
+
+    400:
+      description: Bad Request
+```
+
+### 18.5 Update Task
+
+```yaml
+put:
+  tags:
+    - WS-TodoTask
+  summary: "Update Todo Task API"
+  description: |
+    # Correlation Check
+      - id: Must exist
+
+    # Business Logic
+      ## 1. Find Task
+        - If not found → Return 404
+
+      ## 2. Update Task
+        - Update todo_tasks record
+
+      ## 3. Response
+        - Return updated task
+
+  operationId: updateTodoTask
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "#/components/schemas/CreateTodoTaskRequest"
+
+  responses:
+    200:
+      description: OK
+
+    404:
+      description: Task Not Found
+```
+
+### 18.6 Update Task Status
+
+```yaml
+patch:
+  tags:
+    - WS-TodoTask
+  summary: "Update Task Status API"
+  description: |
+    # Business Logic
+      ## 1. Find Task
+        - If not found → Return 404
+
+      ## 2. Update Status
+        - Update todo_tasks.status
+
+      ## 3. Response
+        - Return success
+
+  operationId: updateTodoTaskStatus
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - status
+          properties:
+            status:
+              type: string
+              enum: [in_progress, done, draft, not_yet]
+        example:
+          status: "done"
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            success: true
+            message: "Status updated"
+
+    404:
+      description: Task Not Found
+```
+
+### 18.7 Delete Task
+
+```yaml
+delete:
+  tags:
+    - WS-TodoTask
+  summary: "Delete Todo Task API"
+  description: |
+    # Business Logic
+      ## 1. Find Task
+        - If not found → Return 404
+
+      ## 2. Delete Task
+        - Delete from todo_tasks
+
+      ## 3. Response
+        - Return success
+
+  operationId: deleteTodoTask
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            success: true
+            message: "Task deleted"
+
+    404:
+      description: Task Not Found
+```
+
+### 18.8 Schema Definitions
+
+```yaml
+components:
+  schemas:
+    CreateTodoTaskRequest:
+      type: object
+      required:
+        - name
+        - date
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        date:
+          type: string
+          format: date
+        type:
+          type: string
+          enum: [personal, team, store]
+          default: personal
+        location:
+          type: object
+          properties:
+            region:
+              type: string
+            zone:
+              type: string
+            area:
+              type: string
+            store:
+              type: string
+        means:
+          type: string
+        target:
+          type: string
+
+    TodoTaskResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        date:
+          type: string
+          format: date
+        type:
+          type: string
+          enum: [personal, team, store]
+        status:
+          type: string
+          enum: [in_progress, done, draft, not_yet]
+        location:
+          type: string
+        means:
+          type: string
+        target:
+          type: string
+
+    WeekTasksResponse:
+      type: object
+      properties:
+        weekNumber:
+          type: integer
+        year:
+          type: integer
+        dateRange:
+          type: string
+        days:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              dayOfWeek:
+                type: string
+              isOff:
+                type: boolean
+              tasks:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TodoTaskResponse"
+```
+
 ---
 
 ## 19. UI States - Detail

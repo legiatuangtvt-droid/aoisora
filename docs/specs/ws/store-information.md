@@ -214,6 +214,425 @@
 | Delete Store | DELETE | /api/v1/stores/{id} | Delete store |
 | Import Stores | POST | /api/v1/stores/import | Import stores from Excel |
 
+### 15.1 Get Region Tabs
+
+```yaml
+get:
+  tags:
+    - WS-StoreInfo
+  summary: "Get Region Tabs API"
+  description: |
+    # Business Logic
+      ## 1. Get Regions
+        ### Select Columns
+          - regions.id, regions.name, regions.code
+
+        ### Order By
+          - regions.display_order ASC
+
+      ## 2. Response
+        - Return region list for tab navigation
+
+  operationId: getRegionTabs
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            data:
+              - id: 1
+                name: "SMBU"
+                code: "SMBU"
+              - id: 2
+                name: "OCEAN"
+                code: "OCEAN"
+              - id: 3
+                name: "HA NOI CENTER"
+                code: "HNC"
+```
+
+### 15.2 Get Region Hierarchy
+
+```yaml
+get:
+  tags:
+    - WS-StoreInfo
+  summary: "Get Region Hierarchy API"
+  description: |
+    # Business Logic
+      ## 1. Get Areas in Region
+        ### Select Columns
+          - areas.id, areas.name
+          - COUNT(stores) as store_count
+
+        ### Search Conditions
+          - areas.region_id = {region}
+
+        ### Group By
+          - areas.id
+
+      ## 2. Get Stores Per Area
+        ### Select Columns
+          - stores.id, stores.code, stores.name
+          - manager.full_name as manager_name
+          - COUNT(staff) as staff_count
+
+        ### Join Conditions
+          - LEFT JOIN staff manager ON stores.manager_id
+
+      ## 3. Response
+        - Return areas with stores hierarchy
+
+  operationId: getRegionHierarchy
+  parameters:
+    - name: region
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Region code or ID
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            data:
+              areas:
+                - id: 1
+                  name: "AREA HA NAM"
+                  storeCount: 23
+                  stores:
+                    - id: 1
+                      code: "1234"
+                      name: "Ocean Park 1"
+                      managerName: "Hoang Huong Giang"
+                      staffCount: 15
+                    - id: 2
+                      code: "5678"
+                      name: "Ocean Park 2"
+                      managerName: "Manager Name"
+                      staffCount: 10
+                - id: 2
+                  name: "AREA THANH HOA"
+                  storeCount: 15
+                  stores: []
+
+    404:
+      description: Region Not Found
+```
+
+### 15.3 Get Store Detail
+
+```yaml
+get:
+  tags:
+    - WS-StoreInfo
+  summary: "Get Store Detail API"
+  description: |
+    # Business Logic
+      ## 1. Get Store Info
+        ### Select Columns
+          - stores.*
+          - area.name as area_name
+          - region.name as region_name
+          - manager.full_name as manager_name
+
+        ### Join Conditions
+          - JOIN areas ON stores.area_id
+          - JOIN regions ON areas.region_id
+          - LEFT JOIN staff manager ON stores.manager_id
+
+      ## 2. Get Staff List
+        ### Select Columns
+          - staff.id, staff.full_name, staff.position
+          - staff.job_grade, staff.avatar_url
+
+        ### Search Conditions
+          - staff.store_id = {id}
+
+        ### Order By
+          - staff.job_grade DESC, staff.full_name ASC
+
+      ## 3. Response
+        - Return store with staff list
+
+  operationId: getStoreDetail
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            data:
+              id: 1
+              code: "1234"
+              name: "Ocean Park 1"
+              area: "AREA HA NAM"
+              region: "OCEAN"
+              manager:
+                id: 10
+                fullName: "Hoang Huong Giang"
+                position: "Store Manager"
+              staff:
+                - id: 11
+                  fullName: "Staff Member 1"
+                  position: "Cashier"
+                  jobGrade: "G3"
+                - id: 12
+                  fullName: "Staff Member 2"
+                  position: "Sales"
+                  jobGrade: "G2"
+
+    404:
+      description: Store Not Found
+```
+
+### 15.4 Add Store
+
+```yaml
+post:
+  tags:
+    - WS-StoreInfo
+  summary: "Add Store API"
+  description: |
+    # Correlation Check
+      - code: Must be unique
+      - area_id: Must exist
+
+    # Business Logic
+      ## 1. Validate Input
+        - Check store code unique
+        - Check area exists
+
+      ## 2. Create Store
+        - Insert into stores table
+
+      ## 3. Response
+        - Return created store
+
+  operationId: addStore
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "#/components/schemas/CreateStoreRequest"
+        example:
+          code: "9999"
+          name: "New Store"
+          area_id: 1
+          address: "123 Street, District"
+          manager_id: 10
+
+  responses:
+    201:
+      description: Created
+      content:
+        application/json:
+          example:
+            success: true
+            data:
+              id: 50
+              code: "9999"
+              name: "New Store"
+            message: "Store created successfully"
+
+    400:
+      description: Bad Request
+      content:
+        application/json:
+          example:
+            success: false
+            message: "Store code already exists"
+```
+
+### 15.5 Update Store
+
+```yaml
+put:
+  tags:
+    - WS-StoreInfo
+  summary: "Update Store API"
+  description: |
+    # Correlation Check
+      - id: Must exist
+      - code: Must be unique (excluding current store)
+
+    # Business Logic
+      ## 1. Find Store
+        - If not found → Return 404
+
+      ## 2. Validate Input
+        - Check code unique if changed
+
+      ## 3. Update Store
+        - Update stores record
+
+      ## 4. Response
+        - Return updated store
+
+  operationId: updateStore
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "#/components/schemas/CreateStoreRequest"
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            success: true
+            data:
+              id: 1
+              code: "1234"
+              name: "Updated Store Name"
+            message: "Store updated successfully"
+
+    404:
+      description: Store Not Found
+```
+
+### 15.6 Import Stores
+
+```yaml
+post:
+  tags:
+    - WS-StoreInfo
+  summary: "Import Stores API"
+  description: |
+    # Business Logic
+      ## 1. Parse File
+        - Support Excel, CSV formats
+        - Validate column headers (code, name, area, address)
+
+      ## 2. Validate Each Row
+        - Check required fields
+        - Check store code uniqueness
+        - Check area exists
+
+      ## 3. Bulk Insert
+        - Insert valid records
+        - Track errors per row
+
+      ## 4. Response
+        - Return import summary
+
+  operationId: importStores
+  requestBody:
+    required: true
+    content:
+      multipart/form-data:
+        schema:
+          type: object
+          properties:
+            file:
+              type: string
+              format: binary
+            format:
+              type: string
+              enum: [excel, csv]
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            success: true
+            data:
+              imported: 15
+              skipped: 2
+              errors:
+                - row: 8
+                  error: "Store code already exists"
+                - row: 14
+                  error: "Invalid area"
+```
+
+### 15.7 Schema Definitions
+
+```yaml
+components:
+  schemas:
+    CreateStoreRequest:
+      type: object
+      required:
+        - code
+        - name
+        - area_id
+      properties:
+        code:
+          type: string
+          maxLength: 20
+        name:
+          type: string
+          maxLength: 100
+        area_id:
+          type: integer
+        address:
+          type: string
+        manager_id:
+          type: integer
+
+    StoreResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        name:
+          type: string
+        area:
+          type: string
+        region:
+          type: string
+        managerName:
+          type: string
+        staffCount:
+          type: integer
+
+    RegionHierarchy:
+      type: object
+      properties:
+        areas:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+              storeCount:
+                type: integer
+              stores:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StoreResponse"
+```
+
 ---
 
 ## 16. UI States - Detail

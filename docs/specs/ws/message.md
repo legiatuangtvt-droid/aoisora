@@ -185,6 +185,359 @@
 | Search Conversations | GET | /api/v1/messages/search?q={query} | Search conversations |
 | Mark as Read | PUT | /api/v1/messages/{id}/read | Mark as read |
 
+### 11.1 Get Conversations
+
+```yaml
+get:
+  tags:
+    - WS-Messages
+  summary: "Get Conversations API"
+  description: |
+    # Business Logic
+      ## 1. Get Groups
+        ### Select Columns
+          - conversation_groups.id, conversation_groups.name
+          - conversation_groups.type (all_stores, unable_to_complete)
+          - MAX(messages.created_at) as last_message_at
+          - COUNT(unread) as unread_count
+
+        ### Search Conditions
+          - conversation_groups.user_id = authenticated_user
+
+      ## 2. Get Store Conversations
+        ### Select Columns
+          - stores.id, stores.name
+          - last_message preview
+          - unread_count
+
+        ### Order By
+          - last_message_at DESC
+
+      ## 3. Response
+        - Return groups and store conversations
+
+  operationId: getConversations
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            data:
+              groups:
+                - id: 1
+                  name: "ALL STORE"
+                  type: "all_stores"
+                  icon: "All"
+                  lastMessage: "Reminder: Complete weekly report"
+                  lastMessageAt: "2025-12-12"
+                  unreadCount: 0
+                - id: 2
+                  name: "Unable to complete"
+                  type: "unable_to_complete"
+                  icon: "U"
+                  lastMessage: "Store XYZ cannot complete task"
+                  lastMessageAt: "2025-12-11"
+                  unreadCount: 3
+              stores:
+                - id: 1
+                  name: "OCEAN PARK"
+                  lastMessage: "Task completed"
+                  lastMessageAt: "2025-12-10"
+                  unreadCount: 0
+                - id: 2
+                  name: "ECO PARK"
+                  lastMessage: "Need assistance"
+                  lastMessageAt: "2025-12-09"
+                  unreadCount: 2
+```
+
+### 11.2 Get Messages
+
+```yaml
+get:
+  tags:
+    - WS-Messages
+  summary: "Get Messages API"
+  description: |
+    # Business Logic
+      ## 1. Get Messages
+        ### Select Columns
+          - messages.id, messages.content, messages.type
+          - messages.created_at, messages.is_read
+          - sender.id, sender.full_name, sender.avatar_url
+
+        ### Search Conditions
+          - messages.conversation_id = {conversationId}
+
+        ### Order By
+          - messages.created_at ASC
+
+      ## 2. Mark as Read
+        - Auto mark messages as read when fetched
+
+      ## 3. Response
+        - Return messages with sender info
+
+  operationId: getMessages
+  parameters:
+    - name: conversationId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Conversation ID (group or store)
+
+    - name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 1
+
+    - name: per_page
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 50
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            data:
+              conversation:
+                id: "all_stores"
+                name: "ALL STORES"
+                type: "group"
+              messages:
+                - id: 1
+                  content: "Hello everyone"
+                  type: "received"
+                  sender:
+                    id: 10
+                    name: "Store Manager"
+                    avatar: "/avatars/10.jpg"
+                  createdAt: "2025-12-12T10:00:00Z"
+                  isRead: true
+                - id: 2
+                  content: "Reminder for weekly task"
+                  type: "sent"
+                  createdAt: "2025-12-12T18:16:00Z"
+                  isRead: true
+                  readReceipt: "read"
+            meta:
+              currentPage: 1
+              totalPages: 3
+```
+
+### 11.3 Send Message
+
+```yaml
+post:
+  tags:
+    - WS-Messages
+  summary: "Send Message API"
+  description: |
+    # Correlation Check
+      - conversation_id: Must exist
+      - content: Required, non-empty
+
+    # Business Logic
+      ## 1. Validate Input
+        - Check conversation exists
+        - Check user has access
+
+      ## 2. Create Message
+        - Insert into messages table
+        - Set sender_id = authenticated_user
+
+      ## 3. Notify Recipients
+        - Send push notification to recipients
+        - Update conversation last_message_at
+
+      ## 4. Response
+        - Return created message
+
+  operationId: sendMessage
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "#/components/schemas/SendMessageRequest"
+        example:
+          conversation_id: "all_stores"
+          content: "Please complete the weekly report by Friday"
+
+  responses:
+    201:
+      description: Created
+      content:
+        application/json:
+          example:
+            success: true
+            data:
+              id: 100
+              content: "Please complete the weekly report by Friday"
+              createdAt: "2025-12-12T18:20:00Z"
+            message: "Message sent successfully"
+
+    400:
+      description: Bad Request
+      content:
+        application/json:
+          example:
+            success: false
+            message: "Message content is required"
+```
+
+### 11.4 Search Conversations
+
+```yaml
+get:
+  tags:
+    - WS-Messages
+  summary: "Search Conversations API"
+  description: |
+    # Business Logic
+      ## 1. Search Groups
+        - Search by group name
+
+      ## 2. Search Stores
+        - Search by store name
+
+      ## 3. Response
+        - Return matching conversations
+
+  operationId: searchConversations
+  parameters:
+    - name: q
+      in: query
+      required: true
+      schema:
+        type: string
+        minLength: 2
+      description: Search query
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            data:
+              groups: []
+              stores:
+                - id: 1
+                  name: "OCEAN PARK"
+                  lastMessage: "Task completed"
+```
+
+### 11.5 Mark as Read
+
+```yaml
+put:
+  tags:
+    - WS-Messages
+  summary: "Mark Message as Read API"
+  description: |
+    # Business Logic
+      ## 1. Update Message
+        - Set is_read = true
+        - Set read_at = now
+
+      ## 2. Response
+        - Return success
+
+  operationId: markAsRead
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+      description: Message ID
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            success: true
+            message: "Message marked as read"
+```
+
+### 11.6 Schema Definitions
+
+```yaml
+components:
+  schemas:
+    SendMessageRequest:
+      type: object
+      required:
+        - conversation_id
+        - content
+      properties:
+        conversation_id:
+          type: string
+        content:
+          type: string
+          maxLength: 2000
+
+    MessageResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        content:
+          type: string
+        type:
+          type: string
+          enum: [sent, received]
+        sender:
+          type: object
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+            avatar:
+              type: string
+        createdAt:
+          type: string
+          format: date-time
+        isRead:
+          type: boolean
+        readReceipt:
+          type: string
+          enum: [sent, delivered, read]
+
+    ConversationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum: [group, store]
+        icon:
+          type: string
+        lastMessage:
+          type: string
+        lastMessageAt:
+          type: string
+          format: date
+        unreadCount:
+          type: integer
+```
+
 ---
 
 ## 12. Files Reference
