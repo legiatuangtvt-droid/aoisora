@@ -45,9 +45,7 @@ function DWSLayoutContent({ children }: DWSLayoutProps) {
       <main
         className={`pt-16 transition-all duration-300 ${getMainPadding()} ${getBottomPadding()}`}
       >
-        <div className="p-4 md:p-6">
-          <PageTransition>{children}</PageTransition>
-        </div>
+        <PageTransition>{children}</PageTransition>
       </main>
       <BottomNavigation />
     </div>
