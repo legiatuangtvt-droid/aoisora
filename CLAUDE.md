@@ -70,19 +70,43 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 
 ### 4. Spec Files Location
 
-| Feature | Spec File |
-|---------|-----------|
-| Login Screen | `docs/specs/login.md` |
-| Task List Screen | `docs/specs/task-list.md` |
-| Task Detail Screen | `docs/specs/task-detail.md` |
-| Task Library Screen | `docs/specs/task-library.md` |
-| Add Task Screen | `docs/specs/add-task.md` |
-| Todo Task Screen | `docs/specs/todo-task.md` |
-| Manual Screen | `docs/specs/manual.md` |
-| User Information | `docs/specs/user-information.md` |
-| Store Information | `docs/specs/store-information.md` |
-| Message Screen | `docs/specs/message.md` |
-| App General | `docs/specs/app-general.md` |
+Specs được tổ chức theo module:
+
+```
+docs/specs/
+├── _shared/                    # Shared across all modules
+│   ├── authentication.md       # Login, Sign Up, Forgot Password
+│   └── app-general.md          # App-wide settings, themes
+│
+├── ws/                         # WS Module (Task from HQ)
+│   ├── task-list.md
+│   ├── task-detail.md
+│   ├── task-library.md
+│   ├── add-task.md
+│   ├── todo-task.md
+│   ├── user-information.md
+│   ├── store-information.md
+│   ├── message.md
+│   └── report.md
+│
+├── dws/                        # DWS Module
+├── faq/                        # FAQ Module
+├── manual/                     # Manual Module
+├── check-quality/              # Check Quality Module
+└── training/                   # Training Module
+```
+
+**Quick Reference:**
+
+| Module | Spec Path | Description |
+|--------|-----------|-------------|
+| Shared | `docs/specs/_shared/` | Authentication, App General |
+| WS | `docs/specs/ws/` | Task from HQ |
+| DWS | `docs/specs/dws/` | Dispatch Work Schedule |
+| FAQ | `docs/specs/faq/` | Frequently Asked Questions |
+| Manual | `docs/specs/manual/` | Knowledge Base |
+| Check Quality | `docs/specs/check-quality/` | Quality Check |
+| Training | `docs/specs/training/` | Training |
 
 ### 5. Laragon Paths (Windows)
 
@@ -104,13 +128,27 @@ PG_DATA="D:\devtool\laragon\data\postgresql"
 
 ### 7. Module Scope
 
-Hệ thống có 3 module chính. **Chỉ sửa code trong scope module được yêu cầu**.
+Hệ thống có **6 module chính** (hiển thị sau khi login success). **Chỉ sửa code trong scope module được yêu cầu**.
 
-| Module | Mô tả | Frontend Path | Backend Controllers |
-|--------|-------|---------------|---------------------|
-| **WS** | Work Schedule - Task management | `/tasks/*` | `TaskController`, `CheckListController` |
-| **DWS** | Dispatch Work Schedule - Shift scheduling | `/dws/*` | `ShiftController`, `ScheduleTaskController` |
-| **Manual** | Knowledge Base - Documents | `/manual/*` | `ManualController` |
+| Module | Tên đầy đủ | Frontend Path | Spec Path |
+|--------|------------|---------------|-----------|
+| **WS** | Task from HQ (Work Schedule) | `/tasks/*` | `docs/specs/ws/` |
+| **DWS** | Dispatch Work Schedule | `/dws/*` | `docs/specs/dws/` |
+| **FAQ** | Frequently Asked Questions | `/faq/*` | `docs/specs/faq/` |
+| **Manual** | Knowledge Base | `/manual/*` | `docs/specs/manual/` |
+| **Check Quality** | Quality Check | `/check-quality/*` | `docs/specs/check-quality/` |
+| **Training** | Training | `/training/*` | `docs/specs/training/` |
+
+**Backend Controllers theo Module:**
+
+| Module | Controllers |
+|--------|-------------|
+| WS | `TaskController`, `CheckListController`, `StaffController`, `StoreController`, `UserInfoController`, `StoreInfoController`, `NotificationController` |
+| DWS | `ShiftCodeController`, `ShiftAssignmentController`, `TaskGroupController`, `DailyScheduleTaskController` |
+| Manual | `ManualFolderController`, `ManualDocumentController`, `ManualStepController`, `ManualMediaController` |
+| FAQ | TBD |
+| Check Quality | TBD |
+| Training | TBD |
 
 ⚠️ **Quan trọng**: Khi được yêu cầu làm việc trên 1 module, KHÔNG sửa code của module khác trừ khi được yêu cầu rõ ràng.
 
