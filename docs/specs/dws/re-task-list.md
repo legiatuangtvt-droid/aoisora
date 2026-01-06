@@ -83,9 +83,14 @@
 | RE Task List Page | ⏳ Pending | ✅ Done | Mock data |
 | Search/Filter | - | ✅ Done | Frontend only |
 | Data Table | - | ✅ Done | With pagination |
-| Action Buttons | ⏳ Pending | ✅ Done | UI only |
-| Import/Export | ⏳ Pending | ⏳ Pending | - |
-| CRUD Operations | ⏳ Pending | ⏳ Pending | - |
+| Action Buttons | ⏳ Pending | ✅ Done | Functional |
+| Import Modal | ⏳ Pending | ✅ Done | CSV/JSON support |
+| Export Modal | ⏳ Pending | ✅ Done | Excel/CSV/JSON |
+| Add Task Modal | ⏳ Pending | ✅ Done | Full form with validation |
+| Edit Task Modal | ⏳ Pending | ✅ Done | Pre-filled form |
+| Delete Confirmation | ⏳ Pending | ✅ Done | With task info preview |
+| Empty State | - | ✅ Done | No data / No results |
+| Manual Link Clickable | - | ✅ Done | Opens in new tab |
 
 ---
 
@@ -106,7 +111,7 @@
 
 | Property | Value |
 |----------|-------|
-| Placeholder | "Tim theo group hoac task name..." |
+| Placeholder | "Search by group or task name..." |
 | Width | 256px (w-64) |
 | Position | Left side |
 | Icon | Search icon (magnifying glass) |
@@ -116,8 +121,8 @@
 | Button | Color | Icon | Action |
 |--------|-------|------|--------|
 | Import | Green (#22C55E) | Upload icon | Open import modal |
-| Export | Orange (#F97316) | Download icon | Download Excel file |
-| Them Moi | Pink (#C5055B) | Plus icon | Open add task modal |
+| Export | Orange (#F97316) | Download icon | Open export modal |
+| Add New | Pink (#C5055B) | Plus icon | Open add task modal |
 
 ---
 
@@ -137,7 +142,7 @@
 | Manual Number | 100px | Left | No |
 | Manual Link | 100px | Left | No |
 | Note | 200px | Left | No |
-| Hanh Dong | 80px | Center | No |
+| Actions | 80px | Center | No |
 
 ### 10.2 Header Styling
 
@@ -206,7 +211,7 @@ interface RETaskFilters {
 | Property | Value |
 |----------|-------|
 | Items per page | 25 |
-| Display format | "Hien thi tu X den Y trong tong so Z muc" |
+| Display format | "Showing X to Y of Z items" |
 | Navigation | Previous/Next buttons |
 | Button style | Border with rounded corners |
 
@@ -316,16 +321,21 @@ frontend/src/
 ├── app/
 │   └── dws/
 │       └── re-task-list/
-│           └── page.tsx           # Main page component
+│           └── page.tsx               # Main page component
 ├── types/
-│   └── reTask.ts                  # Type definitions
+│   └── reTask.ts                      # Type definitions
 ├── data/
-│   └── mockRETaskData.ts          # Mock data for development
+│   └── mockRETaskData.ts              # Mock data for development
+├── utils/
+│   └── reTaskExport.ts                # Export/Import utilities
 └── components/
     └── dws/
-        ├── RETaskTable.tsx        # Table component (TBD)
-        ├── RETaskModal.tsx        # Add/Edit modal (TBD)
-        └── RETaskFilters.tsx      # Filter component (TBD)
+        ├── AddRETaskModal.tsx         # Add new task modal
+        ├── EditRETaskModal.tsx        # Edit task modal
+        ├── DeleteConfirmDialog.tsx    # Delete confirmation dialog
+        ├── ImportRETaskModal.tsx      # Import tasks modal
+        ├── ExportRETaskModal.tsx      # Export tasks modal
+        └── EmptyState.tsx             # Empty state component
 ```
 
 ---
@@ -352,3 +362,10 @@ frontend/src/
 | 2026-01-06 | Initial specification created |
 | 2026-01-06 | Implemented RE Task List page with mock data |
 | 2026-01-06 | Added DWS menu items to sidebar |
+| 2026-01-06 | Changed UI text from Vietnamese to English |
+| 2026-01-06 | Added Import/Export modals with CSV, JSON, Excel support |
+| 2026-01-06 | Added Add New Task modal with enhanced UI/UX (gradient header, icons, validation) |
+| 2026-01-06 | Added Edit Task modal with pre-filled data |
+| 2026-01-06 | Added Delete Confirmation dialog with task info preview |
+| 2026-01-06 | Added Empty State component (no-data, no-results, error states) |
+| 2026-01-06 | Made Manual Link column clickable (opens in new tab) |
