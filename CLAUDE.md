@@ -2,13 +2,40 @@
 
 > File này được Claude Code tự động đọc khi bắt đầu phiên làm việc.
 
+---
+
+## ⚠️ CRITICAL CHECKLIST - PHẢI ĐỌC TRƯỚC MỖI COMMIT
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  TRƯỚC KHI COMMIT, HÃY TỰ HỎI:                                  │
+│                                                                 │
+│  ☐ 1. Đã UPDATE SPEC file trong docs/specs/ chưa?               │
+│       → API endpoints, UI changes, validation rules, etc.       │
+│                                                                 │
+│  ☐ 2. Spec file có KHỚP với code vừa viết không?                │
+│       → Request/Response format, Error codes, States            │
+│                                                                 │
+│  ☐ 3. Đã test API/UI hoạt động đúng chưa?                       │
+│                                                                 │
+│  CHỈ COMMIT SAU KHI CẢ 3 ĐIỀU TRÊN ĐỀU HOÀN THÀNH!              │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## Quy tắc bắt buộc
 
 ### 1. Workflow sau mỗi thay đổi code
 
 Sau khi hoàn thành bất kỳ thay đổi code nào, **BẮT BUỘC** thực hiện theo thứ tự:
 
-1. **Update Spec**: Cập nhật file `.md` spec tương ứng trong `docs/specs/`
+1. **Update Spec TRƯỚC**: Cập nhật file `.md` spec tương ứng trong `docs/specs/`
+   - ⚠️ **KHÔNG ĐƯỢC BỎ QUA BƯỚC NÀY**
+   - Spec phải được update TRƯỚC khi commit
+   - Nếu code thay đổi API → update API section trong spec
+   - Nếu code thay đổi UI → update UI section trong spec
+
 2. **Commit & Push**:
    ```bash
    git add .
