@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { UserProvider } from "@/contexts/UserContext";
+import { AuthProvider } from "@/contexts/AuthContext";
+import AuthGuard from "@/components/auth/AuthGuard";
 import UserSwitcherBubble from "@/components/UserSwitcherBubble";
 
 export const metadata: Metadata = {
@@ -17,12 +19,16 @@ export default function RootLayout({
   return (
     <html lang="vi" suppressHydrationWarning>
       <body>
-        <LanguageProvider>
-          <UserProvider>
-            {children}
-            <UserSwitcherBubble />
-          </UserProvider>
-        </LanguageProvider>
+        <AuthProvider>
+          <LanguageProvider>
+            <UserProvider>
+              <AuthGuard>
+                {children}
+              </AuthGuard>
+              <UserSwitcherBubble />
+            </UserProvider>
+          </LanguageProvider>
+        </AuthProvider>
       </body>
     </html>
   );
