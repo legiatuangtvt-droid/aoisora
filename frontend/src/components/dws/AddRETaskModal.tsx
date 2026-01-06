@@ -12,15 +12,17 @@ interface AddRETaskModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAdd: (task: Omit<RETask, 'id'>) => void;
+  defaultGroup?: string;
 }
 
 export default function AddRETaskModal({
   isOpen,
   onClose,
   onAdd,
+  defaultGroup,
 }: AddRETaskModalProps) {
   const [formData, setFormData] = useState({
-    group: '',
+    group: defaultGroup || '',
     taskName: '',
     typeTask: 'Product',
     frequencyType: 'Daily',
@@ -30,6 +32,13 @@ export default function AddRETaskModal({
     manualNumber: '',
     note: '',
   });
+
+  // Update group when defaultGroup changes
+  useEffect(() => {
+    if (defaultGroup) {
+      setFormData((prev) => ({ ...prev, group: defaultGroup }));
+    }
+  }, [defaultGroup]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
