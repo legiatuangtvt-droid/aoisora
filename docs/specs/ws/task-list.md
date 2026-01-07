@@ -862,6 +862,7 @@ frontend/src/
 | Controller | `app/Http/Controllers/Api/V1/TaskController.php` |
 | Model | `app/Models/Task.php` |
 | Resource | `app/Http/Resources/TaskResource.php` |
+| Event | `app/Events/TaskUpdated.php` |
 
 ---
 
@@ -871,8 +872,79 @@ frontend/src/
 |---------|----------|--------|
 | Backend API integration | High | ✅ Done (2026-01-07) |
 | Date filter (server-side) | Medium | ✅ Done (2026-01-07) |
-| Real-time updates (WebSocket) | Low | ⏳ Pending |
+| Real-time updates (WebSocket) | Low | ✅ Done (2026-01-07) |
 | Export functionality (Excel/PDF) | Low | ⏳ Pending |
+
+---
+
+## 15.1 Real-time Updates (WebSocket)
+
+### Architecture
+- **Server**: Laravel Reverb (PHP-based WebSocket server)
+- **Client**: Laravel Echo + Pusher.js
+- **Channel**: Public channel `tasks`
+- **Event**: `task.updated`
+
+### How it works
+1. User creates/updates/deletes a task via API
+2. TaskController broadcasts `TaskUpdated` event
+3. Reverb server forwards event to all connected clients
+4. Frontend receives event and refreshes task list
+
+### Configuration
+
+**Backend (.env)**:
+```
+BROADCAST_DRIVER=reverb
+REVERB_APP_ID=260147
+REVERB_APP_KEY=suhaw3wjz4bsbm2gmt5k
+REVERB_APP_SECRET=myrh562nv1igehs3ysgb
+REVERB_HOST=localhost
+REVERB_PORT=8080
+REVERB_SCHEME=http
+```
+
+**Frontend (.env.local)**:
+```
+NEXT_PUBLIC_REVERB_APP_KEY=suhaw3wjz4bsbm2gmt5k
+NEXT_PUBLIC_REVERB_HOST=localhost
+NEXT_PUBLIC_REVERB_PORT=8080
+NEXT_PUBLIC_REVERB_SCHEME=http
+```
+
+### Running Reverb Server
+```bash
+php artisan reverb:start --port=8080
+```
+
+### Event Payload
+```typescript
+interface TaskUpdateEvent {
+  action: 'created' | 'updated' | 'deleted' | 'status_changed';
+  task: {
+    task_id: number;
+    task_name: string;
+    status_id: number;
+    dept_id: number | null;
+    assigned_store_id: number | null;
+    start_date: string | null;
+    end_date: string | null;
+    priority: string | null;
+    updated_at: string;
+  };
+  timestamp: string;
+}
+```
+
+### Frontend Files
+| File | Description |
+|------|-------------|
+| `src/lib/echo.ts` | Echo configuration and subscription helpers |
+| `src/hooks/useTaskUpdates.ts` | React hook for subscribing to task updates |
+
+### UI Indicator
+- Green dot with "Live" text when WebSocket connected
+- Gray dot with "Offline" text when disconnected
 
 ---
 
@@ -902,3 +974,7 @@ frontend/src/
 | 2026-01-07 | Updated pagination UI to show "Page N of M" with smart page buttons |
 | 2026-01-07 | Added server-side date range filter (end_date_from, start_date_to) |
 | 2026-01-07 | DatePicker now triggers API call when date selection changes |
+| 2026-01-07 | Implemented real-time updates using Laravel Reverb WebSocket |
+| 2026-01-07 | Added TaskUpdated event for broadcasting task changes |
+| 2026-01-07 | Created useTaskUpdates React hook for WebSocket subscription |
+| 2026-01-07 | Added Live/Offline connection status indicator in Task List header |

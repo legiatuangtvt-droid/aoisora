@@ -10,6 +10,7 @@ import StatusPill from '@/components/ui/StatusPill';
 import FilterModal from '@/components/tasks/FilterModal';
 import DatePicker from '@/components/ui/DatePicker';
 import ColumnFilterDropdown from '@/components/ui/ColumnFilterDropdown';
+import { useTaskUpdates } from '@/hooks/useTaskUpdates';
 
 // Map API status_id to UI status
 const STATUS_MAP: Record<number, TaskStatus> = {
@@ -211,6 +212,17 @@ export default function TaskListPage() {
     }
   }, [departments, currentPage, debouncedSearch, dateRange, filters.departments, filters.status, fetchTasks]);
 
+  // Real-time updates via WebSocket
+  const { isConnected: wsConnected } = useTaskUpdates({
+    onAnyUpdate: (event) => {
+      console.log('[TaskList] Real-time update received:', event.action, event.task.task_id);
+      // Refresh the task list when any task is updated
+      if (departments.length > 0) {
+        fetchTasks(departments);
+      }
+    },
+  });
+
   // Get unique values for column filters
   const uniqueDepts = [...new Set(tasks.map((t) => t.dept))];
   const statusOptions = ['NOT_YET', 'DRAFT', 'DONE'];
@@ -269,7 +281,19 @@ export default function TaskListPage() {
       <div className="p-8">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">List tasks</h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">List tasks</h1>
+          {/* WebSocket connection indicator */}
+          <div className="flex items-center gap-2 text-sm">
+            <span
+              className={`w-2 h-2 rounded-full ${wsConnected ? 'bg-green-500' : 'bg-gray-300'}`}
+              title={wsConnected ? 'Real-time updates active' : 'Real-time updates offline'}
+            />
+            <span className={wsConnected ? 'text-green-600' : 'text-gray-400'}>
+              {wsConnected ? 'Live' : 'Offline'}
+            </span>
+          </div>
+        </div>
 
         {/* Date Display & Actions */}
         <div className="flex items-center justify-between gap-4 mb-6">

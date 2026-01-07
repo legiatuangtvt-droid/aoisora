@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Task;
 use App\Models\CodeMaster;
+use App\Events\TaskUpdated;
 use Illuminate\Http\Request;
 use Spatie\QueryBuilder\QueryBuilder;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -74,6 +75,9 @@ class TaskController extends Controller
             ['created_staff_id' => $request->user()->staff_id]
         ));
 
+        // Broadcast task created event
+        broadcast(new TaskUpdated($task, 'created'))->toOthers();
+
         return response()->json($task, 201);
     }
 
@@ -98,6 +102,9 @@ class TaskController extends Controller
 
         $task->update($request->all());
 
+        // Broadcast task updated event
+        broadcast(new TaskUpdated($task, 'updated'))->toOthers();
+
         return response()->json($task);
     }
 
@@ -114,6 +121,9 @@ class TaskController extends Controller
 
         $task->update(['status_id' => $request->status_id]);
 
+        // Broadcast status changed event
+        broadcast(new TaskUpdated($task, 'status_changed'))->toOthers();
+
         return response()->json($task);
     }
 
@@ -123,6 +133,10 @@ class TaskController extends Controller
     public function destroy($id)
     {
         $task = Task::findOrFail($id);
+
+        // Broadcast before delete
+        broadcast(new TaskUpdated($task, 'deleted'))->toOthers();
+
         $task->delete();
 
         return response()->json(null, 204);
