@@ -29,6 +29,7 @@
 | Top Bar | Logo, notification, user info, company logo |
 | Sidebar Menu | Navigation menu with expandable items |
 | User Menu Dropdown | Profile, settings, theme, language, logout |
+| Welcome Card | User info card with welcome message and logout (Home page only) |
 | Main Content Area | Screen-specific content |
 
 ## 4. Screen Layout
@@ -259,7 +260,49 @@ frontend/src/
 
 ---
 
-## 14. Responsive Behavior
+## 14. Welcome Card (Home Page) - Detail
+
+The Welcome Card is displayed on the Home page (`/`) when the user is authenticated. It provides a personalized greeting and quick access to logout.
+
+### 14.1 Layout
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  [Avatar]  Welcome back,                          [Log Out]     │
+│            {User Full Name}                                     │
+│            {Role}                                               │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 14.2 Components
+
+| Element | Description |
+|---------|-------------|
+| Avatar | Circular div with first letter of user's name, sky-500 background |
+| Welcome Text | "Welcome back," in gray-500, user name in gray-800 bold |
+| Role | User role displayed in sky-600 (optional) |
+| Log Out Button | Gray button with logout icon, shows loading spinner when clicked |
+
+### 14.3 Styling
+
+| Property | Value |
+|----------|-------|
+| Background | white/90 with backdrop blur |
+| Border Radius | 2xl (1rem) |
+| Shadow | lg |
+| Padding | 5 (1.25rem) |
+| Max Width | 4xl (56rem) |
+| Layout | Flexbox, space-between |
+
+### 14.4 Behavior
+
+- Only visible when `isAuthenticated` is true
+- Logout button shows loading spinner during logout process
+- After logout, redirects to `/auth/signin`
+
+---
+
+## 15. Responsive Behavior
 
 | Breakpoint | Sidebar | Top Bar |
 |------------|---------|---------|
@@ -269,7 +312,7 @@ frontend/src/
 
 ---
 
-## 15. Changelog
+## 16. Changelog
 
 | Date | Changes |
 |------|---------|
@@ -280,3 +323,4 @@ frontend/src/
 | 2026-01-02 | Added User management submenu (User info, Store info) |
 | 2026-01-02 | Added custom scrollbar styles to globals.css |
 | 2026-01-06 | Restructured spec with Basic/Detail sections |
+| 2026-01-07 | Added Welcome Card component on Home page (avatar, welcome message, logout button) |

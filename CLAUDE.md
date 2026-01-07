@@ -209,9 +209,19 @@ Trong quá trình phát triển, ghi lại các cải tiến DB cần thiết v�
 - Proposed Schema: `docs/database/enterprise-schema-design.md`
 - SQL Implementation: `database/schema_v2.sql`
 
-### 10. Session Start (Optional)
+### 10. Session Start (Khởi động phiên làm việc mới)
 
-Nếu user yêu cầu khởi động servers, thực hiện theo thứ tự:
+**⚠️ BẮT BUỘC**: Trước khi bắt đầu code, **PHẢI** đồng bộ nhánh với remote:
+
+```bash
+# 1. Fetch và pull latest changes
+git fetch origin
+git pull origin <current-branch>
+
+# 2. Nếu có conflict, resolve trước khi tiếp tục
+```
+
+Sau khi đồng bộ xong, khởi động servers theo thứ tự:
 
 ```bash
 # 1. Start PostgreSQL

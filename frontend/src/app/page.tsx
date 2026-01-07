@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Simple API functions
 async function checkHealth() {
@@ -23,8 +24,10 @@ interface MenuTile {
 }
 
 export default function Home() {
+  const { user, isAuthenticated, logout } = useAuth();
   const [backendStatus, setBackendStatus] = useState<{ version?: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -40,6 +43,12 @@ export default function Home() {
     }
     loadData();
   }, []);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    await logout();
+    setIsLoggingOut(false);
+  };
 
   // Menu tiles configuration
   const menuTiles: MenuTile[] = [
@@ -125,6 +134,43 @@ export default function Home() {
           AOI SORA
         </h1>
       </header>
+
+      {/* Welcome Card - Show when authenticated */}
+      {isAuthenticated && user && (
+        <div className="max-w-4xl mx-auto px-4 mb-6">
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-5 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              {/* Avatar */}
+              <div className="w-12 h-12 rounded-full bg-sky-500 flex items-center justify-center text-white font-bold text-lg">
+                {user.fullName?.charAt(0).toUpperCase() || 'U'}
+              </div>
+              {/* Welcome Text */}
+              <div>
+                <p className="text-gray-500 text-sm">Welcome back,</p>
+                <p className="text-gray-800 font-semibold text-lg">{user.fullName}</p>
+                {user.role && (
+                  <p className="text-sky-600 text-xs">{user.role}</p>
+                )}
+              </div>
+            </div>
+            {/* Logout Button */}
+            <button
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors disabled:opacity-50"
+            >
+              {isLoggingOut ? (
+                <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              )}
+              <span>{isLoggingOut ? 'Logging out...' : 'Log Out'}</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Menu Grid */}
       <div className="max-w-4xl mx-auto px-4 pb-12">
