@@ -23,11 +23,39 @@ interface MenuTile {
   notificationCount?: number;
 }
 
+// Get greeting based on time of day
+function getGreeting(hour: number): string {
+  if (hour >= 5 && hour < 12) return 'Good morning';
+  if (hour >= 12 && hour < 17) return 'Good afternoon';
+  if (hour >= 17 && hour < 21) return 'Good evening';
+  return 'Good night';
+}
+
+// Format date for display
+function formatDate(date: Date): string {
+  const options: Intl.DateTimeFormatOptions = {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  };
+  return date.toLocaleDateString('en-US', options);
+}
+
 export default function Home() {
   const { user, isAuthenticated, logout } = useAuth();
   const [backendStatus, setBackendStatus] = useState<{ version?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Update time every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     async function loadData() {
@@ -138,36 +166,58 @@ export default function Home() {
       {/* Welcome Card - Show when authenticated */}
       {isAuthenticated && user && (
         <div className="max-w-4xl mx-auto px-4 mb-6">
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-5 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              {/* Avatar */}
-              <div className="w-12 h-12 rounded-full bg-sky-500 flex items-center justify-center text-white font-bold text-lg">
-                {user.fullName?.charAt(0).toUpperCase() || 'U'}
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-5">
+            {/* Top row: User info and Logout */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-4">
+                {/* Avatar */}
+                <div className="w-12 h-12 rounded-full bg-sky-500 flex items-center justify-center text-white font-bold text-lg">
+                  {user.fullName?.charAt(0).toUpperCase() || 'U'}
+                </div>
+                {/* Welcome Text */}
+                <div>
+                  <p className="text-gray-800 font-semibold text-lg">
+                    {getGreeting(currentTime.getHours())}, {user.fullName}!
+                  </p>
+                  {user.role && (
+                    <p className="text-sky-600 text-sm">{user.role}</p>
+                  )}
+                </div>
               </div>
-              {/* Welcome Text */}
-              <div>
-                <p className="text-gray-500 text-sm">Welcome back,</p>
-                <p className="text-gray-800 font-semibold text-lg">{user.fullName}</p>
-                {user.role && (
-                  <p className="text-sky-600 text-xs">{user.role}</p>
+              {/* Logout Button */}
+              <button
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors disabled:opacity-50"
+              >
+                {isLoggingOut ? (
+                  <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
                 )}
+                <span>{isLoggingOut ? 'Logging out...' : 'Log Out'}</span>
+              </button>
+            </div>
+
+            {/* Bottom row: Date and Time */}
+            <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+              <div className="flex items-center gap-2 text-gray-500">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="text-sm">{formatDate(currentTime)}</span>
+              </div>
+              <div className="flex items-center gap-2 text-gray-500">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-sm font-mono">
+                  {currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                </span>
               </div>
             </div>
-            {/* Logout Button */}
-            <button
-              onClick={handleLogout}
-              disabled={isLoggingOut}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors disabled:opacity-50"
-            >
-              {isLoggingOut ? (
-                <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              )}
-              <span>{isLoggingOut ? 'Logging out...' : 'Log Out'}</span>
-            </button>
           </div>
         </div>
       )}

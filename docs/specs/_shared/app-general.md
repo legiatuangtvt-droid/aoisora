@@ -268,9 +268,10 @@ The Welcome Card is displayed on the Home page (`/`) when the user is authentica
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  [Avatar]  Welcome back,                          [Log Out]     │
-│            {User Full Name}                                     │
+│  [Avatar]  Good morning, {User Full Name}!        [Log Out]     │
 │            {Role}                                               │
+├─────────────────────────────────────────────────────────────────┤
+│  [📅] Tuesday, January 7, 2026              [🕐] 10:30:45 AM    │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -279,9 +280,21 @@ The Welcome Card is displayed on the Home page (`/`) when the user is authentica
 | Element | Description |
 |---------|-------------|
 | Avatar | Circular div with first letter of user's name, sky-500 background |
-| Welcome Text | "Welcome back," in gray-500, user name in gray-800 bold |
+| Greeting | Dynamic greeting based on time (Good morning/afternoon/evening/night) |
+| User Name | User's full name in gray-800 bold |
 | Role | User role displayed in sky-600 (optional) |
+| Date | Current date with calendar icon (weekday, month day, year) |
+| Time | Live clock with clock icon, updates every second (HH:MM:SS AM/PM) |
 | Log Out Button | Gray button with logout icon, shows loading spinner when clicked |
+
+### 14.2.1 Dynamic Greeting Rules
+
+| Time Range | Greeting |
+|------------|----------|
+| 05:00 - 11:59 | Good morning |
+| 12:00 - 16:59 | Good afternoon |
+| 17:00 - 20:59 | Good evening |
+| 21:00 - 04:59 | Good night |
 
 ### 14.3 Styling
 
@@ -299,6 +312,9 @@ The Welcome Card is displayed on the Home page (`/`) when the user is authentica
 - Only visible when `isAuthenticated` is true
 - Logout button shows loading spinner during logout process
 - After logout, redirects to `/auth/signin`
+- Clock updates every second using `setInterval`
+- Date format: "weekday, month day, year" (e.g., "Tuesday, January 7, 2026")
+- Time format: 12-hour with AM/PM (e.g., "10:30:45 AM")
 
 ---
 
@@ -324,3 +340,4 @@ The Welcome Card is displayed on the Home page (`/`) when the user is authentica
 | 2026-01-02 | Added custom scrollbar styles to globals.css |
 | 2026-01-06 | Restructured spec with Basic/Detail sections |
 | 2026-01-07 | Added Welcome Card component on Home page (avatar, welcome message, logout button) |
+| 2026-01-07 | Enhanced Welcome Card with dynamic greeting, live date/time display |
