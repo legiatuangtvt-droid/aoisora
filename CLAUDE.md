@@ -232,7 +232,12 @@ cd backend && "D:\devtool\laragon\bin\php\php-8.3.28-Win32-vs16-x64\php.exe" art
 
 # 3. Start Frontend (Next.js)
 cd frontend && npm run dev
+
+# 4. Start Reverb WebSocket Server (Optional - for real-time updates)
+cd backend && "D:\devtool\laragon\bin\php\php-8.3.28-Win32-vs16-x64\php.exe" artisan reverb:start --port=8080
 ```
+
+> **Note**: Reverb là optional. Nếu không chạy, app vẫn hoạt động bình thường nhưng không có real-time updates (Task List sẽ hiển thị "Offline").
 
 Chi tiết: `docs/SESSION_START_CHECKLIST.md`
 
