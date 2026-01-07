@@ -15,6 +15,9 @@ const config: Config = {
           dark: '#E91E8C',
         },
       },
+      fontFamily: {
+        digital: ['var(--font-digital)', 'monospace'],
+      },
     },
   },
   plugins: [],

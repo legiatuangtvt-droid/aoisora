@@ -1,10 +1,18 @@
 import type { Metadata } from "next";
+import { Orbitron } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { UserProvider } from "@/contexts/UserContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import AuthGuard from "@/components/auth/AuthGuard";
 import UserSwitcherBubble from "@/components/UserSwitcherBubble";
+
+// Digital/Calculator style font
+const orbitron = Orbitron({
+  subsets: ["latin"],
+  variable: "--font-digital",
+  weight: ["400", "500", "600", "700", "800", "900"],
+});
 
 export const metadata: Metadata = {
   title: "OptiChain WS & DWS",
@@ -17,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="vi" suppressHydrationWarning>
+    <html lang="vi" suppressHydrationWarning className={orbitron.variable}>
       <body>
         <AuthProvider>
           <LanguageProvider>

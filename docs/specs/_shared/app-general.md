@@ -325,7 +325,8 @@ The clock uses a flip-card animation style, similar to classic airport departure
 | Card Size | w-10 h-14 (40x56px) |
 | Background | Gradient from gray-700 to gray-900 |
 | Text Color | emerald-400 (LED green) |
-| Font | monospace, text-2xl, bold |
+| Font | Orbitron (Google Font) - calculator/LCD style |
+| Font Class | `font-digital` (via CSS variable `--font-digital`) |
 | Separator | Dual dots, emerald-400, animate-pulse |
 | Animation | 3D flip effect (0.6s total) |
 | Perspective | 500px |
@@ -387,3 +388,4 @@ FlipClock/
 | 2026-01-07 | Enhanced Welcome Card with dynamic greeting, live date/time display |
 | 2026-01-07 | Redesigned clock to digital LED style with emerald-400 color and blinking colons |
 | 2026-01-07 | Upgraded to Flip Clock with 3D card-flip animation effect |
+| 2026-01-07 | Added Orbitron font for calculator/LCD style digits |

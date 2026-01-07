@@ -23,15 +23,15 @@ function FlipCard({ value, prevValue }: FlipCardProps) {
       {/* Static bottom half (shows new value) */}
       <div className="absolute inset-0 rounded-lg overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-gray-800 to-gray-900 flex items-center justify-center">
-          <span className="font-mono text-2xl font-bold text-emerald-400">{value}</span>
+          <span className="font-digital text-2xl font-bold text-emerald-400">{value}</span>
         </div>
         {/* Top half mask */}
         <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-gray-700 to-gray-800 flex items-end justify-center overflow-hidden rounded-t-lg">
-          <span className="font-mono text-2xl font-bold text-emerald-400 translate-y-1/2">{value}</span>
+          <span className="font-digital text-2xl font-bold text-emerald-400 translate-y-1/2">{value}</span>
         </div>
         {/* Bottom half mask */}
         <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-b from-gray-800 to-gray-900 flex items-start justify-center overflow-hidden rounded-b-lg">
-          <span className="font-mono text-2xl font-bold text-emerald-400 -translate-y-1/2">{value}</span>
+          <span className="font-digital text-2xl font-bold text-emerald-400 -translate-y-1/2">{value}</span>
         </div>
         {/* Center line */}
         <div className="absolute top-1/2 left-0 right-0 h-[1px] bg-gray-950/50" />
@@ -44,7 +44,7 @@ function FlipCard({ value, prevValue }: FlipCardProps) {
           style={{ backfaceVisibility: 'hidden' }}
         >
           <div className="absolute inset-0 bg-gradient-to-b from-gray-700 to-gray-800 flex items-end justify-center">
-            <span className="font-mono text-2xl font-bold text-emerald-400 translate-y-1/2">{prevValue}</span>
+            <span className="font-digital text-2xl font-bold text-emerald-400 translate-y-1/2">{prevValue}</span>
           </div>
         </div>
       )}
@@ -56,7 +56,7 @@ function FlipCard({ value, prevValue }: FlipCardProps) {
           style={{ backfaceVisibility: 'hidden' }}
         >
           <div className="absolute inset-0 bg-gradient-to-b from-gray-800 to-gray-900 flex items-start justify-center">
-            <span className="font-mono text-2xl font-bold text-emerald-400 -translate-y-1/2">{value}</span>
+            <span className="font-digital text-2xl font-bold text-emerald-400 -translate-y-1/2">{value}</span>
           </div>
         </div>
       )}
