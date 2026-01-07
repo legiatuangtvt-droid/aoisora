@@ -340,12 +340,110 @@ ALLOWED_ORIGINS=https://your-exact-frontend-url.com
 
 ---
 
+## 🔌 Laravel Backend với Reverb WebSocket
+
+> **Note**: Project hiện tại sử dụng Laravel + PHP thay vì FastAPI + Python
+
+### Backend Variables (Laravel):
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `APP_NAME` | No | Laravel | Application name |
+| `APP_ENV` | Yes | local | Environment (local/production) |
+| `APP_KEY` | **Yes** | - | Laravel encryption key |
+| `APP_DEBUG` | No | true | Debug mode |
+| `APP_URL` | **Yes** | - | Backend URL |
+| `DB_CONNECTION` | No | pgsql | Database driver |
+| `DB_HOST` | **Yes** | - | Database host |
+| `DB_PORT` | No | 5432 | Database port |
+| `DB_DATABASE` | **Yes** | - | Database name |
+| `DB_USERNAME` | **Yes** | - | Database user |
+| `DB_PASSWORD` | **Yes** | - | Database password |
+| `BROADCAST_DRIVER` | No | reverb | Broadcasting driver |
+
+### Reverb WebSocket Variables:
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `REVERB_APP_ID` | **Yes** | - | Reverb application ID |
+| `REVERB_APP_KEY` | **Yes** | - | Reverb public key (shared with frontend) |
+| `REVERB_APP_SECRET` | **Yes** | - | Reverb secret key |
+| `REVERB_HOST` | **Yes** | localhost | WebSocket host |
+| `REVERB_PORT` | No | 8080 | WebSocket port |
+| `REVERB_SCHEME` | No | http | ws/wss scheme |
+| `REVERB_SERVER_HOST` | No | 0.0.0.0 | Internal server host |
+| `REVERB_SERVER_PORT` | No | 8080 | Internal server port |
+
+### Frontend Variables (Next.js + Reverb):
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `NEXT_PUBLIC_API_URL` | **Yes** | Backend API endpoint |
+| `NEXT_PUBLIC_REVERB_APP_KEY` | **Yes** | Reverb public key |
+| `NEXT_PUBLIC_REVERB_HOST` | **Yes** | WebSocket host |
+| `NEXT_PUBLIC_REVERB_PORT` | No | WebSocket port |
+| `NEXT_PUBLIC_REVERB_SCHEME` | No | http or https |
+
+### Example Backend .env (Production):
+
+```env
+APP_NAME=Aoisora
+APP_ENV=production
+APP_KEY=base64:your_generated_key
+APP_DEBUG=false
+APP_URL=https://api.yourdomain.com
+
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=aoisora
+DB_USERNAME=aoisora_user
+DB_PASSWORD=your_secure_password
+
+BROADCAST_DRIVER=reverb
+CACHE_DRIVER=file
+QUEUE_CONNECTION=database
+SESSION_DRIVER=file
+
+REVERB_APP_ID=your_app_id
+REVERB_APP_KEY=your_app_key
+REVERB_APP_SECRET=your_app_secret
+REVERB_HOST=api.yourdomain.com
+REVERB_PORT=443
+REVERB_SCHEME=https
+```
+
+### Example Frontend .env.local (Production):
+
+```env
+NEXT_PUBLIC_API_URL=https://api.yourdomain.com/api/v1
+NEXT_PUBLIC_REVERB_APP_KEY=your_app_key
+NEXT_PUBLIC_REVERB_HOST=api.yourdomain.com
+NEXT_PUBLIC_REVERB_PORT=443
+NEXT_PUBLIC_REVERB_SCHEME=https
+```
+
+### Generate Keys:
+
+```bash
+# Generate Laravel APP_KEY
+php artisan key:generate --show
+
+# Generate Reverb keys (random strings)
+# These are already in .env after running reverb:install
+# Or generate manually:
+php -r "echo bin2hex(random_bytes(16));"
+```
+
+---
+
 ## 📚 Related Docs
 
 - [Deploy Option 1: Railway](DEPLOY-FREE-ALTERNATIVES.md)
 - [Deploy Option 2: Render](DEPLOY-RENDER-NETLIFY-NEON.md)
 - [Deploy Production: Cloud Run](DEPLOY-BACKEND-CLOUDRUN.md)
+- [Deploy Laravel + Reverb](DEPLOY-LARAVEL-REVERB.md) **(NEW)**
 
 ---
 
-**Last updated**: 2025-12-26
+**Last updated**: 2026-01-07
