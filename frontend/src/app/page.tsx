@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import FlipClock from '@/components/ui/FlipClock';
 
 // Simple API functions
 async function checkHealth() {
@@ -201,7 +202,7 @@ export default function Home() {
               </button>
             </div>
 
-            {/* Bottom row: Date and Digital Clock */}
+            {/* Bottom row: Date and Flip Clock */}
             <div className="flex items-center justify-between pt-3 border-t border-gray-100">
               <div className="flex items-center gap-2 text-gray-500">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -209,29 +210,8 @@ export default function Home() {
                 </svg>
                 <span className="text-sm">{formatDate(currentTime)}</span>
               </div>
-              {/* Digital Clock */}
-              <div className="flex items-center gap-1">
-                {/* Hour */}
-                <div className="bg-gray-900 rounded px-2 py-1">
-                  <span className="font-mono text-lg font-bold text-emerald-400 tracking-wider">
-                    {currentTime.getHours().toString().padStart(2, '0')}
-                  </span>
-                </div>
-                <span className="text-gray-900 font-bold text-lg animate-pulse">:</span>
-                {/* Minute */}
-                <div className="bg-gray-900 rounded px-2 py-1">
-                  <span className="font-mono text-lg font-bold text-emerald-400 tracking-wider">
-                    {currentTime.getMinutes().toString().padStart(2, '0')}
-                  </span>
-                </div>
-                <span className="text-gray-900 font-bold text-lg animate-pulse">:</span>
-                {/* Second */}
-                <div className="bg-gray-900 rounded px-2 py-1">
-                  <span className="font-mono text-lg font-bold text-emerald-400 tracking-wider">
-                    {currentTime.getSeconds().toString().padStart(2, '0')}
-                  </span>
-                </div>
-              </div>
+              {/* Flip Clock */}
+              <FlipClock />
             </div>
           </div>
         </div>

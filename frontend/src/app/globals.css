@@ -350,6 +350,45 @@
   animation: slide-down 0.3s ease-in;
 }
 
+/* ========================================
+   FLIP CLOCK ANIMATIONS
+   ======================================== */
+/* Perspective for 3D flip effect */
+.perspective-500 {
+  perspective: 500px;
+}
+
+/* Flip animation for top card (flips down) */
+@keyframes flip-top {
+  0% {
+    transform: rotateX(0deg);
+  }
+  100% {
+    transform: rotateX(-90deg);
+  }
+}
+
+.animate-flip-top {
+  animation: flip-top 0.3s ease-in forwards;
+  transform-origin: bottom center;
+}
+
+/* Flip animation for bottom card (flips up from hidden) */
+@keyframes flip-bottom {
+  0% {
+    transform: rotateX(90deg);
+  }
+  100% {
+    transform: rotateX(0deg);
+  }
+}
+
+.animate-flip-bottom {
+  animation: flip-bottom 0.3s ease-out 0.3s forwards;
+  transform-origin: top center;
+  transform: rotateX(90deg);
+}
+
 /* Responsive grid utilities */
 @layer utilities {
   .grid-responsive {

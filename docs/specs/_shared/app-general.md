@@ -307,24 +307,49 @@ The Welcome Card is displayed on the Home page (`/`) when the user is authentica
 | Max Width | 4xl (56rem) |
 | Layout | Flexbox, space-between |
 
-### 14.4 Digital Clock Styling
+### 14.4 Flip Clock Styling
+
+The clock uses a flip-card animation style, similar to classic airport departure boards.
 
 ```
-┌─────────────────────────────────────────────┐
-│  [10] : [30] : [45]                         │
-│   ▲       ▲       ▲                         │
-│  hour   minute  second                      │
-└─────────────────────────────────────────────┘
+┌────┐ ┌────┐   ┌────┐ ┌────┐   ┌────┐ ┌────┐
+│ 1  │ │ 0  │ : │ 3  │ │ 0  │ : │ 4  │ │ 5  │
+│ ── │ │ ── │   │ ── │ │ ── │   │ ── │ │ ── │  ← flip line
+│    │ │    │   │    │ │    │   │    │ │    │
+└────┘ └────┘   └────┘ └────┘   └────┘ └────┘
+  H1     H2       M1     M2       S1     S2
 ```
 
 | Property | Value |
 |----------|-------|
-| Segment Background | gray-900 (dark) |
+| Card Size | w-10 h-14 (40x56px) |
+| Background | Gradient from gray-700 to gray-900 |
 | Text Color | emerald-400 (LED green) |
-| Font | monospace, bold, text-lg |
-| Colon Separator | Blinking animation (animate-pulse) |
-| Border Radius | rounded (4px) |
-| Padding | px-2 py-1 |
+| Font | monospace, text-2xl, bold |
+| Separator | Dual dots, emerald-400, animate-pulse |
+| Animation | 3D flip effect (0.6s total) |
+| Perspective | 500px |
+
+### 14.4.1 Flip Animation
+
+| Phase | Duration | Effect |
+|-------|----------|--------|
+| Top card flip | 0.3s | Rotates from 0deg to -90deg (flips down) |
+| Bottom card flip | 0.3s | Rotates from 90deg to 0deg (flips up) |
+| Total | 0.6s | Seamless card transition |
+
+### 14.4.2 Component Structure
+
+```
+FlipClock/
+├── FlipCard (x6)          # Individual digit cards
+│   ├── Static base        # Shows new value
+│   ├── Top half mask      # Upper portion of digit
+│   ├── Bottom half mask   # Lower portion of digit
+│   ├── Flip top (animated)# Old value flipping down
+│   └── Flip bottom (anim) # New value flipping up
+└── Separators (x2)        # Blinking colon dots
+```
 
 ### 14.5 Behavior
 
@@ -361,3 +386,4 @@ The Welcome Card is displayed on the Home page (`/`) when the user is authentica
 | 2026-01-07 | Added Welcome Card component on Home page (avatar, welcome message, logout button) |
 | 2026-01-07 | Enhanced Welcome Card with dynamic greeting, live date/time display |
 | 2026-01-07 | Redesigned clock to digital LED style with emerald-400 color and blinking colons |
+| 2026-01-07 | Upgraded to Flip Clock with 3D card-flip animation effect |
