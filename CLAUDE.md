@@ -241,8 +241,73 @@ cd backend && "D:\devtool\laragon\bin\php\php-8.3.28-Win32-vs16-x64\php.exe" art
 
 Chi tiết: `docs/SESSION_START_CHECKLIST.md`
 
+### 11. Production Deployment (PA Vietnam Hosting)
+
+#### URLs Production
+
+| Component | URL |
+|-----------|-----|
+| Frontend | `https://aoisora.auraorientalis.vn` |
+| Backend API | `https://auraorientalis.vn/api/api/v1` |
+| phpMyAdmin | DirectAdmin → MySQL → phpMyAdmin |
+
+#### Khi nào cần Upload Backend (FileZilla)
+
+| Thay đổi | Files cần upload | Destination |
+|----------|------------------|-------------|
+| **Controller/Service/Model** | `backend/app/` | `public_html/laravel/app/` |
+| **Routes** | `backend/routes/` | `public_html/laravel/routes/` |
+| **Config** (cors, auth...) | `backend/config/` | `public_html/laravel/config/` |
+| **Resources/Views** | `backend/resources/` | `public_html/laravel/resources/` |
+| **Environment** | `deploy/laravel/.env` | `public_html/laravel/.env` |
+| **Thêm package mới** | `backend/vendor/` | `public_html/laravel/vendor/` |
+
+**KHÔNG cần upload lại:**
+- `vendor/` - Chỉ khi thêm package mới (composer require)
+- `storage/` - Chứa logs, cache, sessions
+- `.env` - Chỉ khi thay đổi config
+
+#### Khi nào cần Import Database (phpMyAdmin)
+
+| Tình huống | File import | Ghi chú |
+|------------|-------------|---------|
+| **Thêm/sửa table/column** | Tạo file migration SQL mới | Chỉ chạy migration, không reset data |
+| **Reset toàn bộ DB** | `deploy/schema_mysql.sql` | ⚠️ XÓA TOÀN BỘ DATA |
+| **Reset + seed data** | `schema_mysql.sql` → `seed_data_mysql.sql` | ⚠️ XÓA TOÀN BỘ DATA |
+| **Fix password user** | `deploy/update_password.sql` | Password sẽ là `password` |
+| **Thêm data mẫu** | `deploy/seed_data_mysql.sql` | Chỉ khi DB trống |
+
+#### Quy trình Deploy sau khi code
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  CHECKLIST DEPLOY SAU KHI CODE:                                 │
+│                                                                 │
+│  ☐ 1. Test local hoạt động đúng                                 │
+│                                                                 │
+│  ☐ 2. Commit & Push (Frontend auto-deploy qua Vercel)           │
+│                                                                 │
+│  ☐ 3. Backend thay đổi? → Upload qua FileZilla                  │
+│       - app/, routes/, config/ → public_html/laravel/           │
+│                                                                 │
+│  ☐ 4. Database schema thay đổi? → Import qua phpMyAdmin         │
+│       - Tạo file migration SQL riêng (không dùng schema_mysql)  │
+│                                                                 │
+│  ☐ 5. Test trên production: https://aoisora.auraorientalis.vn   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### Test Account Production
+
+- **Username**: `admin`
+- **Password**: `password`
+- **Role**: ADMIN
+
+Chi tiết: `docs/06-deployment/DEPLOY-PA-VIETNAM-HOSTING.md`
+
 ---
 
 ## Tham khảo chi tiết
 
-Xem thêm tại: `docs/SESSION_START_CHECKLIST.md`
+- Session Start: `docs/SESSION_START_CHECKLIST.md`
+- Deployment: `docs/06-deployment/DEPLOY-PA-VIETNAM-HOSTING.md`
