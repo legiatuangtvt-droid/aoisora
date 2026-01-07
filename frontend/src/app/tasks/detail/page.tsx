@@ -44,7 +44,8 @@ export default function TaskDetailPage() {
 
     const findAndRedirect = async () => {
       try {
-        const tasks = await getTasks();
+        const response = await getTasks();
+        const tasks = response.data || [];
 
         if (tasks.length === 0) {
           router.replace('/tasks/list');
