@@ -284,7 +284,7 @@ The Welcome Card is displayed on the Home page (`/`) when the user is authentica
 | User Name | User's full name in gray-800 bold |
 | Role | User role displayed in sky-600 (optional) |
 | Date | Current date with calendar icon (weekday, month day, year) |
-| Time | Live clock with clock icon, updates every second (HH:MM:SS AM/PM) |
+| Digital Clock | LED-style clock with separate segments for HH:MM:SS, dark background with emerald-400 text |
 | Log Out Button | Gray button with logout icon, shows loading spinner when clicked |
 
 ### 14.2.1 Dynamic Greeting Rules
@@ -307,14 +307,33 @@ The Welcome Card is displayed on the Home page (`/`) when the user is authentica
 | Max Width | 4xl (56rem) |
 | Layout | Flexbox, space-between |
 
-### 14.4 Behavior
+### 14.4 Digital Clock Styling
+
+```
+┌─────────────────────────────────────────────┐
+│  [10] : [30] : [45]                         │
+│   ▲       ▲       ▲                         │
+│  hour   minute  second                      │
+└─────────────────────────────────────────────┘
+```
+
+| Property | Value |
+|----------|-------|
+| Segment Background | gray-900 (dark) |
+| Text Color | emerald-400 (LED green) |
+| Font | monospace, bold, text-lg |
+| Colon Separator | Blinking animation (animate-pulse) |
+| Border Radius | rounded (4px) |
+| Padding | px-2 py-1 |
+
+### 14.5 Behavior
 
 - Only visible when `isAuthenticated` is true
 - Logout button shows loading spinner during logout process
 - After logout, redirects to `/auth/signin`
 - Clock updates every second using `setInterval`
 - Date format: "weekday, month day, year" (e.g., "Tuesday, January 7, 2026")
-- Time format: 12-hour with AM/PM (e.g., "10:30:45 AM")
+- Time format: 24-hour digital display (e.g., "10:30:45")
 
 ---
 
@@ -341,3 +360,4 @@ The Welcome Card is displayed on the Home page (`/`) when the user is authentica
 | 2026-01-06 | Restructured spec with Basic/Detail sections |
 | 2026-01-07 | Added Welcome Card component on Home page (avatar, welcome message, logout button) |
 | 2026-01-07 | Enhanced Welcome Card with dynamic greeting, live date/time display |
+| 2026-01-07 | Redesigned clock to digital LED style with emerald-400 color and blinking colons |
