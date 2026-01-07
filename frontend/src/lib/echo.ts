@@ -3,13 +3,30 @@
  *
  * This module provides real-time event broadcasting using Laravel Reverb.
  * It connects to the WebSocket server and listens for task-related events.
+ *
+ * WebSocket can be disabled by:
+ * - Setting NEXT_PUBLIC_WEBSOCKET_ENABLED=false
+ * - Not providing NEXT_PUBLIC_REVERB_APP_KEY
  */
 
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 
+// Check if WebSocket is enabled
+const isWebSocketEnabled = (): boolean => {
+  // Explicitly disabled
+  if (process.env.NEXT_PUBLIC_WEBSOCKET_ENABLED === 'false') {
+    return false;
+  }
+  // No Reverb key configured
+  if (!process.env.NEXT_PUBLIC_REVERB_APP_KEY) {
+    return false;
+  }
+  return true;
+};
+
 // Make Pusher available globally (required by Laravel Echo)
-if (typeof window !== 'undefined') {
+if (typeof window !== 'undefined' && isWebSocketEnabled()) {
   (window as unknown as { Pusher: typeof Pusher }).Pusher = Pusher;
 }
 
@@ -18,8 +35,14 @@ let echoInstance: Echo<'reverb'> | null = null;
 
 /**
  * Get or create the Echo instance
+ * Returns null if WebSocket is disabled
  */
 export function getEcho(): Echo<'reverb'> | null {
+  // Check if WebSocket is enabled
+  if (!isWebSocketEnabled()) {
+    return null;
+  }
+
   // Only initialize on client side
   if (typeof window === 'undefined') {
     return null;
@@ -28,19 +51,29 @@ export function getEcho(): Echo<'reverb'> | null {
   if (!echoInstance) {
     const reverbHost = process.env.NEXT_PUBLIC_REVERB_HOST || 'localhost';
     const reverbPort = process.env.NEXT_PUBLIC_REVERB_PORT || '8080';
-    const reverbKey = process.env.NEXT_PUBLIC_REVERB_APP_KEY || 'suhaw3wjz4bsbm2gmt5k';
+    const reverbKey = process.env.NEXT_PUBLIC_REVERB_APP_KEY;
     const reverbScheme = process.env.NEXT_PUBLIC_REVERB_SCHEME || 'http';
 
-    echoInstance = new Echo({
-      broadcaster: 'reverb',
-      key: reverbKey,
-      wsHost: reverbHost,
-      wsPort: parseInt(reverbPort),
-      wssPort: parseInt(reverbPort),
-      forceTLS: reverbScheme === 'https',
-      enabledTransports: ['ws', 'wss'],
-      disableStats: true,
-    });
+    if (!reverbKey) {
+      console.warn('[WebSocket] Reverb key not configured, WebSocket disabled');
+      return null;
+    }
+
+    try {
+      echoInstance = new Echo({
+        broadcaster: 'reverb',
+        key: reverbKey,
+        wsHost: reverbHost,
+        wsPort: parseInt(reverbPort),
+        wssPort: parseInt(reverbPort),
+        forceTLS: reverbScheme === 'https',
+        enabledTransports: ['ws', 'wss'],
+        disableStats: true,
+      });
+    } catch (error) {
+      console.warn('[WebSocket] Failed to initialize Echo:', error);
+      return null;
+    }
   }
 
   return echoInstance;
