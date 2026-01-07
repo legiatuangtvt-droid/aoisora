@@ -123,6 +123,11 @@ export default function TaskListPage() {
     }
   }, []);
 
+  // Helper to format date as YYYY-MM-DD
+  const formatDateForApi = (date: Date): string => {
+    return date.toISOString().split('T')[0];
+  };
+
   // Build query params for API
   const buildQueryParams = useCallback((): TaskQueryParamsExtended => {
     const params: TaskQueryParamsExtended = {
@@ -133,6 +138,16 @@ export default function TaskListPage() {
     // Search filter (task_name is partial match in backend)
     if (debouncedSearch) {
       params['filter[task_name]'] = debouncedSearch;
+    }
+
+    // Date range filter from DatePicker
+    // Filter tasks where task's date range overlaps with selected date range
+    // This means: task.start_date <= dateRange.to AND task.end_date >= dateRange.from
+    if (dateRange.from) {
+      params['filter[end_date_from]'] = formatDateForApi(dateRange.from);
+    }
+    if (dateRange.to) {
+      params['filter[start_date_to]'] = formatDateForApi(dateRange.to);
     }
 
     // Department filter from modal
@@ -151,7 +166,7 @@ export default function TaskListPage() {
     }
 
     return params;
-  }, [currentPage, debouncedSearch, filters.departments, filters.status]);
+  }, [currentPage, debouncedSearch, dateRange, filters.departments, filters.status]);
 
   // Fetch tasks from API with server-side filtering
   const fetchTasks = useCallback(async (depts: Department[]) => {
@@ -194,7 +209,7 @@ export default function TaskListPage() {
     if (departments.length > 0) {
       fetchTasks(departments);
     }
-  }, [departments, currentPage, debouncedSearch, filters.departments, filters.status, fetchTasks]);
+  }, [departments, currentPage, debouncedSearch, dateRange, filters.departments, filters.status, fetchTasks]);
 
   // Get unique values for column filters
   const uniqueDepts = [...new Set(tasks.map((t) => t.dept))];
@@ -247,7 +262,7 @@ export default function TaskListPage() {
   // Reset to page 1 when server-side filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearch, filters]);
+  }, [debouncedSearch, dateRange, filters]);
 
   return (
     <div className="min-h-screen bg-white">

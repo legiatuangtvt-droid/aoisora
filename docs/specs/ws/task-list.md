@@ -72,7 +72,7 @@
 | Feature | Backend | Frontend | Notes |
 |---------|---------|----------|-------|
 | Task List Table | ✅ Done | ✅ Done | API integrated |
-| DatePicker | - | ✅ Done | Frontend only |
+| DatePicker | ✅ Done | ✅ Done | Server-side date range filter |
 | Search | ✅ Done | ✅ Done | Server-side partial match |
 | Filter Modal | ✅ Done | ✅ Done | Server-side (dept, status) |
 | Sorting | ✅ Done | ✅ Done | Server-side via Spatie QueryBuilder |
@@ -869,9 +869,10 @@ frontend/src/
 
 | Feature | Priority | Status |
 |---------|----------|--------|
-| Backend API integration | High | ⏳ Pending |
-| Real-time updates | Medium | ⏳ Pending |
-| Export functionality | Low | ⏳ Pending |
+| Backend API integration | High | ✅ Done (2026-01-07) |
+| Date filter (server-side) | Medium | ✅ Done (2026-01-07) |
+| Real-time updates (WebSocket) | Low | ⏳ Pending |
+| Export functionality (Excel/PDF) | Low | ⏳ Pending |
 
 ---
 
@@ -899,3 +900,5 @@ frontend/src/
 | 2026-01-07 | Improved getTasks() to use Spatie QueryBuilder filter syntax |
 | 2026-01-07 | Added debounced search (300ms) for better UX |
 | 2026-01-07 | Updated pagination UI to show "Page N of M" with smart page buttons |
+| 2026-01-07 | Added server-side date range filter (end_date_from, start_date_to) |
+| 2026-01-07 | DatePicker now triggers API call when date selection changes |

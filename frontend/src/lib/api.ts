@@ -304,6 +304,11 @@ export interface TaskQueryParamsExtended extends TaskQueryParams {
   'filter[status_id]'?: number;
   'filter[priority]'?: string;
   'filter[task_name]'?: string;
+  // Date range filters (YYYY-MM-DD format)
+  'filter[start_date_from]'?: string;
+  'filter[start_date_to]'?: string;
+  'filter[end_date_from]'?: string;
+  'filter[end_date_to]'?: string;
   // Sorting (sort=field or sort=-field for desc)
   sort?: string;
   // Pagination

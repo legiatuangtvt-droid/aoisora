@@ -24,6 +24,11 @@ class TaskController extends Controller
                 AllowedFilter::exact('status_id'),
                 AllowedFilter::exact('priority'),
                 AllowedFilter::partial('task_name'),
+                // Date range filters
+                AllowedFilter::callback('start_date_from', fn ($query, $value) => $query->where('start_date', '>=', $value)),
+                AllowedFilter::callback('start_date_to', fn ($query, $value) => $query->where('start_date', '<=', $value)),
+                AllowedFilter::callback('end_date_from', fn ($query, $value) => $query->where('end_date', '>=', $value)),
+                AllowedFilter::callback('end_date_to', fn ($query, $value) => $query->where('end_date', '<=', $value)),
             ])
             ->allowedSorts(['task_id', 'task_name', 'end_date', 'start_date', 'created_at'])
             ->allowedIncludes(['assignedStaff', 'createdBy', 'assignedStore', 'department', 'taskType', 'responseType', 'status'])
