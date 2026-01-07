@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { TaskGroup, DateMode, TaskFilters, TaskStatus, HQCheckStatus } from '@/types/tasks';
 import { Task as ApiTask, Department } from '@/types/api';
-import { getTasks, getDepartments } from '@/lib/api';
+import { getTasks, getDepartments, PaginatedTaskResponse, TaskQueryParamsExtended } from '@/lib/api';
 import StatusPill from '@/components/ui/StatusPill';
 import FilterModal from '@/components/tasks/FilterModal';
 import DatePicker from '@/components/ui/DatePicker';
@@ -78,6 +78,7 @@ export default function TaskListPage() {
     return { from: dayStart, to: dayEnd };
   });
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [tasks, setTasks] = useState<TaskGroup[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -96,9 +97,19 @@ export default function TaskListPage() {
   const [statusColumnFilter, setStatusColumnFilter] = useState<string[]>([]);
   const [hqCheckColumnFilter, setHqCheckColumnFilter] = useState<string[]>([]);
 
-  // Pagination state
+  // Server-side pagination state
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const itemsPerPage = 10;
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Fetch departments
   const fetchDepartments = useCallback(async () => {
@@ -112,20 +123,53 @@ export default function TaskListPage() {
     }
   }, []);
 
-  // Fetch tasks from API
+  // Build query params for API
+  const buildQueryParams = useCallback((): TaskQueryParamsExtended => {
+    const params: TaskQueryParamsExtended = {
+      page: currentPage,
+      per_page: itemsPerPage,
+    };
+
+    // Search filter (task_name is partial match in backend)
+    if (debouncedSearch) {
+      params['filter[task_name]'] = debouncedSearch;
+    }
+
+    // Department filter from modal
+    if (filters.departments.length === 1) {
+      params['filter[dept_id]'] = parseInt(filters.departments[0]);
+    }
+
+    // Status filter from modal (convert UI status to status_id)
+    if (filters.status.length === 1) {
+      const statusMap: Record<string, number> = {
+        'NOT_YET': 7,
+        'DRAFT': 8,
+        'DONE': 9,
+      };
+      params['filter[status_id]'] = statusMap[filters.status[0]];
+    }
+
+    return params;
+  }, [currentPage, debouncedSearch, filters.departments, filters.status]);
+
+  // Fetch tasks from API with server-side filtering
   const fetchTasks = useCallback(async (depts: Department[]) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const apiTasks = await getTasks();
+      const queryParams = buildQueryParams();
+      const response = await getTasks(queryParams);
 
-      // Handle paginated response
-      const taskData = Array.isArray(apiTasks) ? apiTasks : (apiTasks as any).data || [];
+      // Handle paginated response from Laravel
+      const taskData = response.data || [];
+      setTotalPages(response.last_page || 1);
+      setTotalItems(response.total || 0);
 
       // Transform API tasks to UI format
       const transformedTasks = taskData.map((task: ApiTask, index: number) =>
-        transformApiTaskToTaskGroup(task, index, depts)
+        transformApiTaskToTaskGroup(task, (response.from || 1) - 1 + index, depts)
       );
 
       setTasks(transformedTasks);
@@ -133,19 +177,24 @@ export default function TaskListPage() {
       console.error('Failed to fetch tasks:', err);
       setError(err instanceof Error ? err.message : 'Failed to load tasks');
       setTasks([]);
+      setTotalPages(1);
+      setTotalItems(0);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [buildQueryParams]);
 
-  // Initial load
+  // Initial load - fetch departments once
   useEffect(() => {
-    const loadData = async () => {
-      const depts = await fetchDepartments();
-      await fetchTasks(depts);
-    };
-    loadData();
-  }, [fetchDepartments, fetchTasks]);
+    fetchDepartments();
+  }, [fetchDepartments]);
+
+  // Fetch tasks when filters change (server-side filtering)
+  useEffect(() => {
+    if (departments.length > 0) {
+      fetchTasks(departments);
+    }
+  }, [departments, currentPage, debouncedSearch, filters.departments, filters.status, fetchTasks]);
 
   // Get unique values for column filters
   const uniqueDepts = [...new Set(tasks.map((t) => t.dept))];
@@ -173,99 +222,32 @@ export default function TaskListPage() {
     setDateRange(newDateRange);
   };
 
-  // Helper function to parse date string (DD/MM format) to Date object
-  const parseTaskDate = (dateStr: string): Date => {
-    if (dateStr === '--/--') return new Date(0);
-    const [day, month] = dateStr.split('/').map(Number);
-    const year = new Date().getFullYear();
-    return new Date(year, month - 1, day);
-  };
-
-  // Get current week range for default display logic
-  const getCurrentWeekRange = (): DateRange => {
-    const today = new Date();
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay());
-    startOfWeek.setHours(0, 0, 0, 0);
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
-    endOfWeek.setHours(23, 59, 59, 999);
-    return { from: startOfWeek, to: endOfWeek };
-  };
-
-  const currentWeekRange = getCurrentWeekRange();
-
-  // Filter tasks
+  // Client-side column filters (applied to already fetched data)
+  // Server handles: search, department modal filter, status modal filter, pagination
+  // Client handles: column quick filters (dept, status, hqCheck columns)
   const filteredTasks = tasks.filter((task) => {
-    const taskStartDate = parseTaskDate(task.startDate);
-    const taskEndDate = parseTaskDate(task.endDate);
-
-    // Default display logic: current week tasks + old tasks with NOT_YET status
-    const isInCurrentWeek =
-      taskEndDate >= currentWeekRange.from && taskStartDate <= currentWeekRange.to;
-    const isOldTaskNotYet =
-      taskEndDate < currentWeekRange.from && task.status === 'NOT_YET';
-
-    // Apply date range filter from DatePicker (when user selects specific date/week)
-    const matchesSelectedDateRange =
-      taskEndDate >= dateRange.from && taskStartDate <= dateRange.to;
-
-    // Combined date logic:
-    // - If user is on default view (DAY mode with today), show current week + old NOT_YET
-    // - If user selected specific date/week/custom, respect that selection
-    const isDefaultView = dateMode === 'DAY' &&
-      dateRange.from.toDateString() === new Date().toDateString();
-
-    const matchesDateRange = isDefaultView
-      ? (isInCurrentWeek || isOldTaskNotYet)
-      : matchesSelectedDateRange;
-
-    // Search filter
-    const matchesSearch =
-      task.taskGroupName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      task.dept.toLowerCase().includes(searchQuery.toLowerCase());
-
-    // Department filter (modal) - compare with department_id
-    const matchesDeptModal =
-      filters.departments.length === 0 ||
-      filters.departments.some((selectedDeptId) => {
-        // selectedDeptId is a string of department_id (e.g., "11", "12")
-        return task.deptId !== null && String(task.deptId) === selectedDeptId;
-      });
-
     // Department column filter
     const matchesDeptColumn =
       deptColumnFilter.length === 0 || deptColumnFilter.includes(task.dept);
-
-    // Status filter (modal)
-    const matchesStatusModal =
-      filters.status.length === 0 || filters.status.includes(task.status);
 
     // Status column filter
     const matchesStatusColumn =
       statusColumnFilter.length === 0 || statusColumnFilter.includes(task.status);
 
-    // HQ Check filter (modal)
-    const matchesHQCheckModal =
-      filters.hqCheck.length === 0 || filters.hqCheck.includes(task.hqCheck);
-
     // HQ Check column filter
     const matchesHQCheckColumn =
       hqCheckColumnFilter.length === 0 || hqCheckColumnFilter.includes(task.hqCheck);
 
-    return matchesDateRange && matchesSearch && matchesDeptModal && matchesDeptColumn && matchesStatusModal && matchesStatusColumn && matchesHQCheckModal && matchesHQCheckColumn;
+    return matchesDeptColumn && matchesStatusColumn && matchesHQCheckColumn;
   });
 
-  // Calculate pagination
-  const totalPages = Math.ceil(filteredTasks.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedTasks = filteredTasks.slice(startIndex, endIndex);
+  // Display tasks (client-side column filters applied)
+  const paginatedTasks = filteredTasks;
 
-  // Reset to page 1 when filters change
+  // Reset to page 1 when server-side filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, filters, deptColumnFilter, statusColumnFilter, hqCheckColumnFilter, dateRange]);
+  }, [debouncedSearch, filters]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -432,7 +414,7 @@ export default function TaskListPage() {
                         onClick={() => handleRowClick(task.id)}
                       >
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-center border-r border-gray-200">
-                          {startIndex + index + 1}
+                          {task.no}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm border-r border-gray-200">
                           <div className="flex items-center justify-start gap-2">
@@ -536,10 +518,10 @@ export default function TaskListPage() {
           <div className="bg-white px-4 py-3 border-t border-gray-200">
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-600">
-                Total: <span className="font-semibold text-gray-900">{filteredTasks.length}</span> tasks group
-                {filteredTasks.length > 0 && (
+                Total: <span className="font-semibold text-gray-900">{totalItems}</span> tasks group
+                {totalItems > 0 && (
                   <span className="ml-2 text-gray-500">
-                    (Showing {startIndex + 1}-{Math.min(endIndex, filteredTasks.length)})
+                    (Page {currentPage} of {totalPages})
                   </span>
                 )}
               </div>
@@ -553,20 +535,32 @@ export default function TaskListPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
-                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`w-8 h-8 flex items-center justify-center rounded font-medium text-sm ${
-                      currentPage === page
-                        ? 'bg-black text-white'
-                        : 'border border-gray-300 hover:bg-gray-50'
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
-                {totalPages > 5 && <span className="px-2">...</span>}
+                {(() => {
+                  // Smart pagination: show pages around current page
+                  const pages: number[] = [];
+                  const maxVisible = 5;
+                  let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+                  const end = Math.min(totalPages, start + maxVisible - 1);
+                  start = Math.max(1, end - maxVisible + 1);
+
+                  for (let i = start; i <= end; i++) {
+                    pages.push(i);
+                  }
+                  return pages.map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-8 h-8 flex items-center justify-center rounded font-medium text-sm ${
+                        currentPage === page
+                          ? 'bg-black text-white'
+                          : 'border border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ));
+                })()}
+                {totalPages > 5 && currentPage < totalPages - 2 && <span className="px-2">...</span>}
                 <button
                   onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages || totalPages === 0}

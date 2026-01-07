@@ -285,17 +285,49 @@ export async function getRegions(): Promise<Region[]> {
 // Task API (WS)
 // ============================================
 
-export async function getTasks(params?: TaskQueryParams): Promise<Task[]> {
+// Paginated response from Laravel
+export interface PaginatedTaskResponse {
+  data: Task[];
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+  from: number | null;
+  to: number | null;
+}
+
+export interface TaskQueryParamsExtended extends TaskQueryParams {
+  // Spatie QueryBuilder filters (filter[field]=value)
+  'filter[assigned_store_id]'?: number;
+  'filter[dept_id]'?: number;
+  'filter[assigned_staff_id]'?: number;
+  'filter[status_id]'?: number;
+  'filter[priority]'?: string;
+  'filter[task_name]'?: string;
+  // Sorting (sort=field or sort=-field for desc)
+  sort?: string;
+  // Pagination
+  page?: number;
+  per_page?: number;
+  // Includes (relationships)
+  include?: string;
+}
+
+export async function getTasks(params?: TaskQueryParamsExtended): Promise<PaginatedTaskResponse> {
   const searchParams = new URLSearchParams();
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined) {
+      if (value !== undefined && value !== null && value !== '') {
         searchParams.append(key, String(value));
       }
     });
   }
+  // Always include relationships for Task List display
+  if (!searchParams.has('include')) {
+    searchParams.append('include', 'department,status,assignedStaff,assignedStore');
+  }
   const query = searchParams.toString();
-  return fetchApi<Task[]>(`/tasks${query ? `?${query}` : ''}`);
+  return fetchApi<PaginatedTaskResponse>(`/tasks${query ? `?${query}` : ''}`);
 }
 
 export async function getTaskById(id: number): Promise<Task> {

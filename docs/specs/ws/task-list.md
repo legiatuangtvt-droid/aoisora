@@ -71,13 +71,14 @@
 
 | Feature | Backend | Frontend | Notes |
 |---------|---------|----------|-------|
-| Task List Table | ✅ Done | ✅ Done | Mock data |
+| Task List Table | ✅ Done | ✅ Done | API integrated |
 | DatePicker | - | ✅ Done | Frontend only |
-| Search | - | ✅ Done | Client-side |
-| Filter Modal | - | ✅ Done | Client-side |
-| Sorting | - | ✅ Done | Client-side |
-| Pagination | - | ✅ Done | Client-side |
-| API Integration | ⏳ Pending | ⏳ Pending | - |
+| Search | ✅ Done | ✅ Done | Server-side partial match |
+| Filter Modal | ✅ Done | ✅ Done | Server-side (dept, status) |
+| Sorting | ✅ Done | ✅ Done | Server-side via Spatie QueryBuilder |
+| Pagination | ✅ Done | ✅ Done | Server-side |
+| Column Quick Filters | - | ✅ Done | Client-side (dept, status, hqCheck) |
+| API Integration | ✅ Done | ✅ Done | 2026-01-07 |
 
 ---
 
@@ -188,10 +189,17 @@
 
 | Feature | Value | Status |
 |---------|-------|--------|
-| Items per page | 10 (fixed) | ✅ Implemented |
-| Page numbers | Displayed as buttons | ✅ Implemented |
+| Items per page | 10 (configurable via API) | ✅ Server-side |
+| Page numbers | Smart pagination showing pages around current | ✅ Implemented |
 | Previous/Next | Arrow buttons | ✅ Implemented |
-| Total count | "Total: X tasks group" | ✅ Implemented |
+| Total count | "Total: X tasks group (Page N of M)" | ✅ Server-side |
+
+### 11.1 Server-side Pagination
+
+- Pagination is now handled server-side via Laravel's built-in paginator
+- Frontend receives paginated response with `current_page`, `last_page`, `total`, `per_page`
+- Page change triggers new API call with `page` parameter
+- Reduces memory usage on frontend, improves performance for large datasets
 
 ---
 
@@ -886,3 +894,8 @@ frontend/src/
 | 2026-01-03 | Added parent-child checkbox logic in Filter Modal Department section |
 | 2026-01-06 | Restructured spec with Basic/Detail sections |
 | 2026-01-06 | Updated API section with OpenAPI format (correlation checks, business logic, schemas) |
+| 2026-01-07 | Integrated server-side API: pagination, search filter, department filter, status filter |
+| 2026-01-07 | Added PaginatedTaskResponse type with Laravel pagination fields |
+| 2026-01-07 | Improved getTasks() to use Spatie QueryBuilder filter syntax |
+| 2026-01-07 | Added debounced search (300ms) for better UX |
+| 2026-01-07 | Updated pagination UI to show "Page N of M" with smart page buttons |
