@@ -489,7 +489,7 @@ export default function RETaskListPage() {
           setShowEditModal(false);
           setSelectedTask(null);
         }}
-        onUpdate={handleUpdateTask}
+        onSave={handleUpdateTask}
       />
 
       {/* Delete Confirmation Dialog */}
