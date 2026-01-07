@@ -19,10 +19,15 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [],
+    'allowed_origins' => explode(',', env('CORS_ALLOWED_ORIGINS', 'http://localhost:3000')),
 
-    // Match localhost:3000-3009 for development flexibility
-    'allowed_origins_patterns' => ['/^http:\/\/localhost:300[0-9]$/', '/^http:\/\/127\.0\.0\.1:300[0-9]$/'],
+    // Match localhost:3000-3009 for development, Vercel preview URLs, and production domains
+    'allowed_origins_patterns' => [
+        '/^http:\/\/localhost:300[0-9]$/',
+        '/^http:\/\/127\.0\.0\.1:300[0-9]$/',
+        '/^https:\/\/.*\.vercel\.app$/',
+        '/^https:\/\/.*\.auraorientalis\.vn$/',
+    ],
 
     'allowed_headers' => ['*'],
 
