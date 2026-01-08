@@ -35,7 +35,6 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 | `department_id[]` | integer[] | No | - | Filter by departments (multi-select) |
 | `status[]` | string[] | No | - | Filter by status (NOT_YET, DONE, DRAFT) |
 | `hq_check[]` | string[] | No | - | Filter by HQ check status (NOT_YET, DONE, DRAFT) |
-| `sort` | string | No | -created_at | Sort field (e.g., "start_date", "-created_at", "status") |
 | `limit` | integer | No | 10 | Items per page (max: 100) |
 | `offset` | integer | No | 1 | Page number |
 

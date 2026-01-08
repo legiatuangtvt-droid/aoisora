@@ -115,7 +115,7 @@ Grid displays data with hierarchical structure (Parent-Child) support.
 
 | No | Action | Method | Endpoint | Description | Trigger |
 |----|--------|--------|----------|-------------|---------|
-| 1 | Get Task List | GET | /api/v1/tasks | Get task list with filters, sorting, pagination | Screen load, filter change, sort, pagination, search |
+| 1 | Get Task List | GET | /api/v1/tasks | Get task list with filters and pagination | Screen load, filter change, pagination, search |
 | 2 | Get Departments | GET | /api/v1/departments | Get department list for filter dropdown | Click Filter button (first time) |
 
 ---
