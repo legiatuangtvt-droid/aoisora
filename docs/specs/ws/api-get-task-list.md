@@ -414,17 +414,7 @@ const shouldShowTask = (task, currentUser) => {
 
 ---
 
-## 6. Related Documents
-
-| Document | Path |
-|----------|------|
-| Task List Basic Spec | `docs/specs/ws/task-list-basic.md` |
-| Task List Detail Spec | `docs/specs/ws/task-list-detail.md` |
-| Job Grades Reference | `docs/specs/_shared/app-general-detail.md#10-job-grades--permissions-system` |
-
----
-
-## 7. Notes
+## 6. Notes
 
 - API requires authentication via Bearer token
 - User permissions are extracted from JWT token (staff_id, grade_code, grade_type)
