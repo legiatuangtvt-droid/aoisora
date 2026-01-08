@@ -361,6 +361,45 @@ Campaign Q1 2026 (Level 1, ID: 1)
 - Backend should limit depth to 5 levels maximum
 - Return error if attempting to create task deeper than level 5
 
+### Task Visibility & Permissions
+
+**Visibility Rules by User Role:**
+
+| Role Level | Job Grades | Visibility Scope | Assignee Display |
+|------------|------------|------------------|------------------|
+| **Staff** | G2, G3, S1 | Only assigned tasks + parent (context) | Only own tasks |
+| **Team Lead** | G4, S2, S3 | All tasks in team | Team members only |
+| **Manager** | G5, G6, S4, S5 | All tasks in department/area | Department members |
+| **Director+** | G7, G8, G9, S6 | All tasks in scope | All users |
+
+**Parent Task Context:**
+- If user is assigned to sub-task only → Still show parent task for context
+- Parent task displayed as read-only reference (not editable)
+- Parent task helps user understand overall campaign/project
+
+**Assignee Field Display:**
+- `assignee` field exists in API response for all sub-tasks
+- Frontend should conditionally display based on user permissions
+- Hide assignee names if user doesn't have permission to view
+
+**Frontend Implementation Note:**
+```typescript
+// Current UI: Assignee name NOT displayed in sub-tasks
+// Reason: No design requirement for assignee display
+// Future: Can be enabled based on user role/permissions
+```
+
+**Permission Logic:**
+```
+IF user.grade >= G4 (Manager+):
+  → Show all tasks in scope with assignee names
+ELSE IF user is assigned to task:
+  → Show assigned tasks + parent context
+  → Show assignee only for own tasks
+ELSE:
+  → No access to task
+```
+
 ---
 
 ## 6. Related Documents
