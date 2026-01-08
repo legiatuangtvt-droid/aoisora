@@ -292,7 +292,104 @@ interface SidebarState {
 
 ---
 
-## 10. Changelog
+## 10. Job Grades & Permissions System
+
+### 10.1 Overview
+
+The application has **two parallel permission systems**:
+- **HQ Job Grades** (G2-G9): For Headquarter staff
+- **Store Job Grades** (S1-S6): For Store staff
+
+### 10.2 HQ Job Grades (Headquarter)
+
+| Code | Title | Vietnamese | Level | Color | Management Scope |
+|------|-------|------------|-------|-------|------------------|
+| **G2** | Officer | Nhân viên | 1 | Gray (#9CA3AF) | NONE |
+| **G3** | Executive | Chuyên viên | 2 | Teal (#22A6A1) | NONE |
+| **G4** | Deputy Manager | Phó Trưởng phòng | 3 | Blue (#1F7BF2) | TEAM |
+| **G5** | Manager | Trưởng phòng | 4 | Purple (#8B5CF6) | DEPARTMENT |
+| **G6** | General Manager | Tổng Giám đốc phòng | 5 | Orange (#FF9900) | DEPARTMENT |
+| **G7** | Senior General Manager | Giám đốc khối | 6 | Red (#DC2626) | DIVISION |
+| **G8** | CCO | Giám đốc điều hành | 7 | Dark Red (#991B1B) | COMPANY |
+| **G9** | General Director | Tổng Giám đốc | 8 | Purple (#7C3AED) | COMPANY |
+
+### 10.3 Store Job Grades (Store)
+
+| Code | Title | Vietnamese | Level | Color | Management Scope |
+|------|-------|------------|-------|-------|------------------|
+| **S1** | Staff | Nhân viên cửa hàng | 1 | Gray (#9CA3AF) | NONE |
+| **S2** | Store Leader G2 | Phó Trưởng cửa hàng | 2 | Light Blue (#81AADB) | STORE |
+| **S3** | Store Leader G3 | Trưởng cửa hàng | 3 | Teal (#22A6A1) | STORE |
+| **S4** | Store In-charge (SI) | Trưởng cụm cửa hàng | 4 | Blue (#1F7BF2) | MULTI_STORE |
+| **S5** | Area Manager | Quản lý khu vực | 5 | Purple (#8B5CF6) | AREA |
+| **S6** | Region Manager | Quản lý miền | 6 | Orange (#FF9900) | REGION |
+
+### 10.4 Hierarchy Structure
+
+```
+HQ Staff Hierarchy:
+  G9 (GD) → G8 (CCO) → G7 (SGM) → G6 (GM) → G5 (Manager) → G4 (Deputy) → G3 (Executive) → G2 (Officer)
+
+Store Staff Hierarchy:
+  S6 (Region Manager) → S5 (Area Manager) → S4 (SI) → S3 (Store Leader G3) → S2 (Store Leader G2) → S1 (Staff)
+
+Organization Hierarchy:
+  Company
+    ├── Divisions (Khối)
+    │     └── Departments (Phòng ban)
+    │           └── Teams (Nhóm)
+    └── Regions (Miền)
+          └── Areas (Khu vực)
+                └── Stores (Cửa hàng)
+                      └── Store Departments (Bộ phận)
+```
+
+### 10.5 Permission Logic
+
+**Data Access Rules by Grade:**
+
+| Grade | Access Scope | Example |
+|-------|--------------|---------|
+| G9, G8 | All company data | View all tasks, all stores, all reports |
+| G7 | Division-level data | View tasks/staff in managed division |
+| G6, G5 | Department-level data | View tasks/staff in managed department |
+| G4 | Team-level data | View tasks/staff in managed team |
+| G3, G2 | Own data only | View only assigned tasks |
+| S6 | Region-level data | View all stores in region |
+| S5 | Area-level data | View all stores in area |
+| S4 | Store cluster data | View stores in cluster |
+| S3, S2 | Store-level data | View staff/tasks in own store |
+| S1 | Own data only | View only assigned tasks |
+
+### 10.6 Implementation Notes
+
+**JWT Token contains:**
+```json
+{
+  "staff_id": 123,
+  "grade_code": "G5",
+  "grade_type": "HQ",
+  "department_id": 10,
+  "division_id": 2,
+  "store_id": null,
+  "region_id": null,
+  "area_id": null
+}
+```
+
+**Backend automatically filters data based on:**
+1. `grade_code` + `grade_type` → Determine access scope
+2. Organizational unit IDs (department_id, store_id, etc.) → Apply filters
+3. No need for frontend to send staff_id or scope parameters
+
+**Frontend usage:**
+- Display grade badge with corresponding color
+- Show/hide features based on grade level
+- Navigate to appropriate screens based on management scope
+
+---
+
+## 11. Changelog
 
 | Date | Change |
 |------|--------|
@@ -309,10 +406,11 @@ interface SidebarState {
 | 2026-01-07 | Upgraded to Flip Clock with 3D card-flip animation effect |
 | 2026-01-07 | Added Orbitron font for calculator/LCD style digits |
 | 2026-01-08 | Split spec into basic and detail files |
+| 2026-01-08 | Added Job Grades & Permissions System section (HQ G2-G9, Store S1-S6) |
 
 ---
 
-## 11. Related Documents
+## 12. Related Documents
 
 | Document | Path |
 |----------|------|
