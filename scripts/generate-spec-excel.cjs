@@ -1,24 +1,25 @@
 const XLSX = require('xlsx');
 const path = require('path');
 
-// Define data for each screen
+// Define data for each screen - ALL IN ENGLISH
 const screens = {
   'Login': {
     overview: [
       ['Field', 'Value'],
-      ['Screen ID', '-'],
+      ['Screen ID', 'AUTH-LOGIN'],
       ['Routes', '/auth/signin, /auth/signup, /auth/forgot-password, /auth/verify-code, /auth/reset-password'],
-      ['Purpose', 'Xác thực người dùng trước khi truy cập hệ thống'],
-      ['Target Users', 'Tất cả nhân viên (Staff, Manager, Admin)'],
+      ['Purpose', 'Authenticate users before accessing the system'],
+      ['Target Users', 'All employees (Staff, Manager, Admin)'],
       ['Entry Points', 'App launch, Logout, Session expired'],
+      ['Platforms', 'Web App (Desktop/PC), iPad App (iOS)'],
     ],
     screens: [
       ['Screen', 'Route', 'Purpose'],
-      ['Sign In', '/auth/signin', 'Đăng nhập vào hệ thống'],
-      ['Sign Up', '/auth/signup', 'Đăng ký tài khoản mới'],
-      ['Forgot Password', '/auth/forgot-password', 'Yêu cầu reset mật khẩu'],
-      ['Code Verification', '/auth/verify-code', 'Xác thực OTP'],
-      ['Reset Password', '/auth/reset-password', 'Đặt mật khẩu mới'],
+      ['Sign In', '/auth/signin', 'Login to the system'],
+      ['Sign Up', '/auth/signup', 'Register new account'],
+      ['Forgot Password', '/auth/forgot-password', 'Request password reset'],
+      ['Code Verification', '/auth/verify-code', 'Verify OTP code'],
+      ['Reset Password', '/auth/reset-password', 'Set new password'],
     ],
     userStories: [
       ['ID', 'As a...', 'I want to...', 'So that...'],
@@ -37,34 +38,35 @@ const screens = {
     ],
     api: [
       ['Method', 'Endpoint', 'Description'],
-      ['POST', '/api/v1/auth/login', 'Đăng nhập'],
-      ['POST', '/api/v1/auth/logout', 'Đăng xuất'],
-      ['GET', '/api/v1/auth/me', 'Lấy thông tin user hiện tại'],
-      ['POST', '/api/v1/auth/forgot-password', 'Gửi OTP qua email'],
-      ['POST', '/api/v1/auth/verify-code', 'Xác thực OTP'],
-      ['POST', '/api/v1/auth/reset-password', 'Đặt mật khẩu mới'],
-      ['POST', '/api/v1/auth/resend-code', 'Gửi lại OTP'],
-      ['POST', '/api/v1/auth/check-password-strength', 'Kiểm tra độ mạnh password'],
+      ['POST', '/api/v1/auth/login', 'User login'],
+      ['POST', '/api/v1/auth/logout', 'User logout'],
+      ['GET', '/api/v1/auth/me', 'Get current user info'],
+      ['POST', '/api/v1/auth/forgot-password', 'Send OTP via email'],
+      ['POST', '/api/v1/auth/verify-code', 'Verify OTP code'],
+      ['POST', '/api/v1/auth/reset-password', 'Set new password'],
+      ['POST', '/api/v1/auth/resend-code', 'Resend OTP code'],
+      ['POST', '/api/v1/auth/check-password-strength', 'Check password strength'],
     ],
     status: [
       ['Feature', 'Backend', 'Frontend', 'Deploy', 'Notes'],
-      ['Sign In', '✅ Done', '✅ Done', '[DEMO]', 'Full flow'],
-      ['Sign Up', '⏳ Pending', '⏳ Pending', '[DEMO]', '-'],
-      ['Forgot Password', '✅ Done', '⏳ Pending', '[PROD-ONLY]', 'Cần SMTP server'],
-      ['Code Verification', '✅ Done', '⏳ Pending', '[PROD-ONLY]', 'Cần SMTP server'],
-      ['Reset Password', '✅ Done', '⏳ Pending', '[PROD-ONLY]', 'Cần SMTP server'],
-      ['Google OAuth', '⏳ Pending', '⏳ Pending', '[PROD-ONLY]', 'Cần Google API setup'],
+      ['Sign In', 'Done', 'Done', '[DEMO]', 'Full flow'],
+      ['Sign Up', 'Pending', 'Pending', '[DEMO]', '-'],
+      ['Forgot Password', 'Done', 'Pending', '[PROD-ONLY]', 'Requires SMTP server'],
+      ['Code Verification', 'Done', 'Pending', '[PROD-ONLY]', 'Requires SMTP server'],
+      ['Reset Password', 'Done', 'Pending', '[PROD-ONLY]', 'Requires SMTP server'],
+      ['Google OAuth', 'Pending', 'Pending', '[PROD-ONLY]', 'Requires Google API setup'],
     ],
   },
 
   'List Task': {
     overview: [
       ['Field', 'Value'],
-      ['Screen ID', 'SCR_TASK_LIST'],
+      ['Screen ID', 'WS-LIST-TASK'],
       ['Route', '/tasks/list'],
-      ['Purpose', 'Hiển thị danh sách task groups với khả năng lọc, sắp xếp và điều hướng'],
+      ['Purpose', 'Display task groups list with filtering, sorting and navigation capabilities'],
       ['Target Users', 'Manager, Staff'],
       ['Entry Points', 'Sidebar menu, Dashboard quick link'],
+      ['Platforms', 'Web App (Desktop/PC), iPad App (iOS)'],
     ],
     userStories: [
       ['ID', 'As a...', 'I want to...', 'So that...'],
@@ -90,7 +92,7 @@ const screens = {
       ['Click row', '/tasks/{id}', 'Navigate to Task Detail'],
       ['Click ADD NEW', '/tasks/new', 'Navigate to Create Task'],
       ['Click Filter', 'Modal', 'Open Filter Modal'],
-      ['Click expand (▶)', '-', 'Expand row to show sub-tasks'],
+      ['Click expand', '-', 'Expand row to show sub-tasks'],
     ],
     api: [
       ['Method', 'Endpoint', 'Description'],
@@ -100,27 +102,28 @@ const screens = {
     ],
     status: [
       ['Feature', 'Backend', 'Frontend', 'Deploy', 'Notes'],
-      ['Task List Table', '✅ Done', '✅ Done', '[DEMO]', 'API integrated'],
-      ['DatePicker (DAY/WEEK/CUSTOM)', '✅ Done', '✅ Done', '[DEMO]', 'Server-side date range filter'],
-      ['Search', '✅ Done', '✅ Done', '[DEMO]', 'Server-side partial match, debounced 300ms'],
-      ['Filter Modal', '✅ Done', '✅ Done', '[DEMO]', 'Server-side (dept, status, hqCheck)'],
-      ['Sorting', '✅ Done', '✅ Done', '[DEMO]', 'Server-side via Spatie QueryBuilder'],
-      ['Pagination', '✅ Done', '✅ Done', '[DEMO]', 'Server-side, 10 items/page'],
-      ['Column Quick Filters', '-', '✅ Done', '[DEMO]', 'Client-side (dept, status, hqCheck)'],
-      ['Row Expansion', '-', '✅ Done', '[DEMO]', 'Show sub-tasks'],
-      ['Real-time Updates', '✅ Done', '✅ Done', '[PROD-ONLY]', 'Cần WebSocket server (Reverb)'],
-      ['Export Excel/PDF', '⏳ Pending', '⏳ Pending', '[DEMO]', '-'],
+      ['Task List Table', 'Done', 'Done', '[DEMO]', 'API integrated'],
+      ['DatePicker (DAY/WEEK/CUSTOM)', 'Done', 'Done', '[DEMO]', 'Server-side date range filter'],
+      ['Search', 'Done', 'Done', '[DEMO]', 'Server-side partial match, debounced 300ms'],
+      ['Filter Modal', 'Done', 'Done', '[DEMO]', 'Server-side (dept, status, hqCheck)'],
+      ['Sorting', 'Done', 'Done', '[DEMO]', 'Server-side via Spatie QueryBuilder'],
+      ['Pagination', 'Done', 'Done', '[DEMO]', 'Server-side, 10 items/page'],
+      ['Column Quick Filters', '-', 'Done', '[DEMO]', 'Client-side (dept, status, hqCheck)'],
+      ['Row Expansion', '-', 'Done', '[DEMO]', 'Show sub-tasks'],
+      ['Real-time Updates', 'Done', 'Done', '[PROD-ONLY]', 'Requires WebSocket server (Reverb)'],
+      ['Export Excel/PDF', 'Pending', 'Pending', '[DEMO]', '-'],
     ],
   },
 
   'Assign Task': {
     overview: [
       ['Field', 'Value'],
-      ['Screen ID', 'SCR_TASK_ADD'],
+      ['Screen ID', 'WS-ASSIGN-TASK'],
       ['Route', '/tasks/new'],
       ['Purpose', 'Create new task groups with multi-level hierarchical structure (up to 5 levels)'],
       ['Target Users', 'HQ (Headquarter) Staff'],
       ['Entry Points', '"+ ADD NEW" button on Task List'],
+      ['Platforms', 'Web App (Desktop/PC)'],
     ],
     userStories: [
       ['ID', 'As a...', 'I want to...', 'So that...'],
@@ -164,24 +167,25 @@ const screens = {
     ],
     status: [
       ['Feature', 'Backend', 'Frontend', 'Deploy', 'Notes'],
-      ['Add Task Page', '⏳ Pending', '✅ Done', '[DEMO]', 'Mock data'],
-      ['Task Level Cards', '-', '✅ Done', '[DEMO]', 'UI only'],
-      ['Section Accordion', '-', '✅ Done', '[DEMO]', 'Frontend only'],
-      ['Detail Tab', '-', '✅ Done', '[DEMO]', 'Form inputs'],
-      ['Maps Tab', '-', '✅ Done', '[DEMO]', 'Flowchart view'],
-      ['Image Upload', '⏳ Pending', '✅ Done', '[LOCAL-DEV]', 'Storage needed'],
-      ['API Integration', '⏳ Pending', '⏳ Pending', '[DEMO]', '-'],
+      ['Add Task Page', 'Pending', 'Done', '[DEMO]', 'Mock data'],
+      ['Task Level Cards', '-', 'Done', '[DEMO]', 'UI only'],
+      ['Section Accordion', '-', 'Done', '[DEMO]', 'Frontend only'],
+      ['Detail Tab', '-', 'Done', '[DEMO]', 'Form inputs'],
+      ['Maps Tab', '-', 'Done', '[DEMO]', 'Flowchart view'],
+      ['Image Upload', 'Pending', 'Done', '[LOCAL-DEV]', 'Storage needed'],
+      ['API Integration', 'Pending', 'Pending', '[DEMO]', '-'],
     ],
   },
 
   'Detail Task': {
     overview: [
       ['Field', 'Value'],
-      ['Screen ID', 'SCR_TASK_DETAIL'],
+      ['Screen ID', 'WS-DETAIL-TASK'],
       ['Routes', '/tasks/[id], /tasks/detail (auto-redirect)'],
       ['Purpose', 'Display detailed task information from HQ to stores with multiple view modes'],
       ['Target Users', 'Manager, Staff'],
       ['Entry Points', 'Task List row click, Sidebar "Detail" menu'],
+      ['Platforms', 'Web App (Desktop/PC), iPad App (iOS)'],
     ],
     userStories: [
       ['ID', 'As a...', 'I want to...', 'So that...'],
@@ -225,27 +229,28 @@ const screens = {
     ],
     status: [
       ['Feature', 'Backend', 'Frontend', 'Deploy', 'Notes'],
-      ['Task Header', '⏳ Pending', '✅ Done', '[DEMO]', 'Mock data'],
-      ['Filter Bar', '⏳ Pending', '✅ Done', '[DEMO]', 'Client-side filtering'],
-      ['Store Results View', '⏳ Pending', '✅ Done', '[DEMO]', 'Mock data'],
-      ['Staff View', '⏳ Pending', '✅ Done', '[DEMO]', 'Mock data'],
-      ['Comments Section', '⏳ Pending', '✅ Done', '[DEMO]', 'Mock data'],
-      ['Image Lightbox', '-', '✅ Done', '[DEMO]', 'Frontend only'],
-      ['Workflow Steps Panel', '⏳ Pending', '✅ Done', '[DEMO]', 'Mock data'],
-      ['Like/Unlike', '⏳ Pending', '✅ Done', '[DEMO]', 'Mock data'],
-      ['Send Reminder', '⏳ Pending', '✅ Done', '[PROD-ONLY]', 'Cần notification system'],
-      ['API Integration', '⏳ Pending', '⏳ Pending', '[DEMO]', '-'],
+      ['Task Header', 'Pending', 'Done', '[DEMO]', 'Mock data'],
+      ['Filter Bar', 'Pending', 'Done', '[DEMO]', 'Client-side filtering'],
+      ['Store Results View', 'Pending', 'Done', '[DEMO]', 'Mock data'],
+      ['Staff View', 'Pending', 'Done', '[DEMO]', 'Mock data'],
+      ['Comments Section', 'Pending', 'Done', '[DEMO]', 'Mock data'],
+      ['Image Lightbox', '-', 'Done', '[DEMO]', 'Frontend only'],
+      ['Workflow Steps Panel', 'Pending', 'Done', '[DEMO]', 'Mock data'],
+      ['Like/Unlike', 'Pending', 'Done', '[DEMO]', 'Mock data'],
+      ['Send Reminder', 'Pending', 'Done', '[PROD-ONLY]', 'Requires notification system'],
+      ['API Integration', 'Pending', 'Pending', '[DEMO]', '-'],
     ],
   },
 
   'Task Library': {
     overview: [
       ['Field', 'Value'],
-      ['Screen ID', 'SCR_TASK_LIBRARY'],
+      ['Screen ID', 'WS-TASK-LIBRARY'],
       ['Route', '/tasks/library'],
       ['Purpose', 'Manage and organize common task templates for recurring office and store operations'],
       ['Target Users', 'HQ (Headquarter) Staff'],
       ['Entry Points', 'Sidebar "Task Library" menu'],
+      ['Platforms', 'Web App (Desktop/PC)'],
     ],
     userStories: [
       ['ID', 'As a...', 'I want to...', 'So that...'],
@@ -289,23 +294,24 @@ const screens = {
     ],
     status: [
       ['Feature', 'Backend', 'Frontend', 'Deploy', 'Notes'],
-      ['Task Library Page', '⏳ Pending', '✅ Done', '[DEMO]', 'Mock data'],
-      ['Tab Navigation', '-', '✅ Done', '[DEMO]', 'Frontend only'],
-      ['Department Filter Chips', '-', '✅ Done', '[DEMO]', 'Frontend only'],
-      ['Search', '⏳ Pending', '✅ Done', '[DEMO]', 'Client-side'],
-      ['Task Group Table', '⏳ Pending', '✅ Done', '[DEMO]', 'Mock data'],
-      ['CRUD Operations', '⏳ Pending', '⏳ Pending', '[DEMO]', '-'],
+      ['Task Library Page', 'Pending', 'Done', '[DEMO]', 'Mock data'],
+      ['Tab Navigation', '-', 'Done', '[DEMO]', 'Frontend only'],
+      ['Department Filter Chips', '-', 'Done', '[DEMO]', 'Frontend only'],
+      ['Search', 'Pending', 'Done', '[DEMO]', 'Client-side'],
+      ['Task Group Table', 'Pending', 'Done', '[DEMO]', 'Mock data'],
+      ['CRUD Operations', 'Pending', 'Pending', '[DEMO]', '-'],
     ],
   },
 
   'Report': {
     overview: [
       ['Field', 'Value'],
-      ['Screen ID', 'SCR_REPORT'],
+      ['Screen ID', 'WS-REPORT'],
       ['Route', '/tasks/report'],
       ['Purpose', 'Display task completion statistics across stores and departments with weekly tracking'],
       ['Target Users', 'HQ (Headquarter) Staff, Manager'],
       ['Entry Points', 'Sidebar "Report"'],
+      ['Platforms', 'Web App (Desktop/PC)'],
     ],
     userStories: [
       ['ID', 'As a...', 'I want to...', 'So that...'],
@@ -346,23 +352,24 @@ const screens = {
     ],
     status: [
       ['Feature', 'Backend', 'Frontend', 'Deploy', 'Notes'],
-      ['Report Page', '⏳ Pending', '✅ Done', '[DEMO]', 'Mock data'],
-      ['Weekly Completion Grid', '⏳ Pending', '✅ Done', '[DEMO]', 'Mock data'],
-      ['Stacked Bar Chart', '-', '✅ Done', '[DEMO]', 'Custom chart'],
-      ['Store Report Table', '⏳ Pending', '✅ Done', '[DEMO]', 'Mock data'],
-      ['Export Excel/PDF', '⏳ Pending', '⏳ Pending', '[LOCAL-DEV]', '-'],
-      ['API Integration', '⏳ Pending', '⏳ Pending', '[DEMO]', '-'],
+      ['Report Page', 'Pending', 'Done', '[DEMO]', 'Mock data'],
+      ['Weekly Completion Grid', 'Pending', 'Done', '[DEMO]', 'Mock data'],
+      ['Stacked Bar Chart', '-', 'Done', '[DEMO]', 'Custom chart'],
+      ['Store Report Table', 'Pending', 'Done', '[DEMO]', 'Mock data'],
+      ['Export Excel/PDF', 'Pending', 'Pending', '[LOCAL-DEV]', '-'],
+      ['API Integration', 'Pending', 'Pending', '[DEMO]', '-'],
     ],
   },
 
   'User Management': {
     overview: [
       ['Field', 'Value'],
-      ['Screen ID', 'SCR_USER_INFO'],
+      ['Screen ID', 'WS-USER-MANAGEMENT'],
       ['Route', '/tasks/info'],
       ['Purpose', 'Manage and track user lists (Hierarchy), Team members and organization structure'],
       ['Target Users', 'HQ staff with management permissions'],
       ['Entry Points', 'Sidebar "User Management" > "User information"'],
+      ['Platforms', 'Web App (Desktop/PC)'],
     ],
     userStories: [
       ['ID', 'As a...', 'I want to...', 'So that...'],
@@ -414,13 +421,13 @@ const screens = {
     ],
     status: [
       ['Feature', 'Backend', 'Frontend', 'Deploy', 'Notes'],
-      ['User Info Page', '✅ Done', '✅ Done', '[DEMO]', 'API integrated'],
-      ['Tab Navigation', '✅ Done', '✅ Done', '[DEMO]', '-'],
-      ['Hierarchy Tree', '✅ Done', '✅ Done', '[DEMO]', '-'],
-      ['Employee Detail Modal', '✅ Done', '✅ Done', '[DEMO]', '-'],
-      ['Add Team/Member Modal', '✅ Done', '✅ Done', '[DEMO]', '-'],
-      ['Permissions Modal', '✅ Done', '✅ Done', '[DEMO]', '-'],
-      ['Import Excel Modal', '✅ Done', '✅ Done', '[LOCAL-DEV]', 'File processing'],
+      ['User Info Page', 'Done', 'Done', '[DEMO]', 'API integrated'],
+      ['Tab Navigation', 'Done', 'Done', '[DEMO]', '-'],
+      ['Hierarchy Tree', 'Done', 'Done', '[DEMO]', '-'],
+      ['Employee Detail Modal', 'Done', 'Done', '[DEMO]', '-'],
+      ['Add Team/Member Modal', 'Done', 'Done', '[DEMO]', '-'],
+      ['Permissions Modal', 'Done', 'Done', '[DEMO]', '-'],
+      ['Import Excel Modal', 'Done', 'Done', '[LOCAL-DEV]', 'File processing'],
     ],
   },
 };
@@ -452,11 +459,11 @@ function createSheet(screenName, data) {
 
   // Set column widths
   ws['!cols'] = [
-    { wch: 25 }, // Column A
-    { wch: 40 }, // Column B
-    { wch: 50 }, // Column C
-    { wch: 40 }, // Column D
-    { wch: 30 }, // Column E
+    { wch: 30 }, // Column A
+    { wch: 45 }, // Column B
+    { wch: 55 }, // Column C
+    { wch: 45 }, // Column D
+    { wch: 35 }, // Column E
   ];
 
   return ws;
@@ -469,7 +476,7 @@ Object.entries(screens).forEach(([screenName, data]) => {
 });
 
 // Write file
-const outputPath = path.join(__dirname, '..', 'docs', 'spec-report.xlsx');
+const outputPath = path.join(__dirname, '..', 'docs', 'basic-spec-ws.xlsx');
 XLSX.writeFile(wb, outputPath);
 
 console.log(`Excel file created: ${outputPath}`);
