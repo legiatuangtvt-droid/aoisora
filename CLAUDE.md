@@ -4,6 +4,30 @@
 
 ---
 
+## ⚠️ WORKFLOW LÀM VIỆC - CLAUDE PHẢI NHỚ
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  FLOW LÀM VIỆC HIỆN TẠI:                                        │
+│                                                                 │
+│  1. BUILD & TEST TRÊN LOCAL                                     │
+│     → Phát triển và test tất cả trên local trước                │
+│                                                                 │
+│  2. KHI HOÀN THÀNH SCREEN/FEATURE → NHẮC USER DEPLOY            │
+│     → Frontend: Tự động deploy khi commit & push (Vercel)       │
+│     → Backend: Upload thủ công qua FileZilla                    │
+│     → Database: Import file MySQL qua phpMyAdmin (DirectAdmin)  │
+│                                                                 │
+│  ⚠️ CLAUDE PHẢI NHẮC USER KHI:                                  │
+│     - Hoàn thành 1 screen/feature                               │
+│     - Định kỳ sau nhiều thay đổi                                │
+│     - Có thay đổi backend code → nhắc deploy BE                 │
+│     - Có thay đổi DB schema → nhắc import SQL                   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## ⚠️ CRITICAL CHECKLIST - PHẢI ĐỌC TRƯỚC MỖI COMMIT
 
 ```
