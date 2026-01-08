@@ -342,10 +342,6 @@ Brief description of this area.
 | 1 | [Action 1] | GET/POST | /api/v1/[endpoint] | [Description] | [When this API is called] |
 | 2 | [Action 2] | GET/POST | /api/v1/[endpoint] | [Description] | [When this API is called] |
 
-### 3.1 API Parameters & Business Logic (Optional)
-
-Detail about API parameters, authentication, business logic if needed.
-
 ---
 
 ## 4. TEST SCENARIOS
@@ -377,7 +373,8 @@ Detail about API parameters, authentication, business logic if needed.
 **Lưu ý quan trọng:**
 - **4 mục chính**: General Description, Functional Specification, API Integration, Test Scenarios
 - Mỗi mục có thể có nhiều sub-sections tùy theo độ phức tạp của screen
-- API Integration: Thêm column "Trigger" để ghi rõ khi nào API được gọi
+- **API Integration**: Chỉ liệt kê table với columns: No, Action, Method, Endpoint, Description, Trigger
+- **CHI TIẾT** (parameters, business logic, request/response) → Thuộc về **Detail Spec**
 - KHÔNG bao gồm Implementation Status (đó là tracking cá nhân, không phải spec cho dev team)
 
 ---

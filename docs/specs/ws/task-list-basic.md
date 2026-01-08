@@ -118,49 +118,6 @@ Grid displays data with hierarchical structure (Parent-Child) support.
 | 1 | Get Task List | GET | /api/v1/tasks | Get task list with filters, sorting, pagination | Screen load, filter change, sort, pagination, search |
 | 2 | Get Departments | GET | /api/v1/departments | Get department list for filter dropdown | Click Filter button (first time) |
 
-### 3.1 API Parameters & Business Logic
-
-#### API 1: Get Task List
-
-**Implicit Parameters** (extracted from JWT token):
-- `staff_id`: Current user's staff ID
-- `grade_code`: Job grade (G2-G9 for HQ, S1-S6 for Store)
-- `grade_type`: Staff type (HQ or STORE)
-- `department_id`: For HQ staff
-- `store_id`, `region_id`, `area_id`: For Store staff
-
-**Explicit Parameters** (user controls):
-- `date_from`: Start date (YYYY-MM-DD)
-- `date_to`: End date (YYYY-MM-DD)
-- `search`: Search by task name or department name
-- `department_id[]`: Filter by departments (multi-select)
-- `status[]`: Filter by status (NOT_YET, DONE, DRAFT)
-- `hq_check[]`: Filter by HQ check status
-- `page`: Page number (default: 1)
-- `per_page`: Items per page (default: 10)
-- `sort`: Sort field (e.g., "start_date", "-created_at")
-
-**Business Logic by Job Grade**:
-
-| Grade Type | Grade Code | Access Scope |
-|------------|------------|--------------|
-| HQ | G8, G9 (CCO, GD) | All tasks in company |
-| HQ | G7 (Senior GM) | Tasks in managed division |
-| HQ | G6, G5 (GM, Manager) | Tasks in managed department |
-| HQ | G4 (Deputy Manager) | Tasks in managed team |
-| HQ | G3, G2 (Executive, Officer) | Only assigned tasks |
-| STORE | S6 (Region Manager) | Tasks in managed region |
-| STORE | S5 (Area Manager) | Tasks in managed area |
-| STORE | S4 (Store In-charge) | Tasks in store cluster |
-| STORE | S3, S2 (Store Leader) | Tasks in managed store |
-| STORE | S1 (Staff) | Only assigned tasks |
-
-#### API 2: Get Departments
-
-**Purpose**: Populate department dropdown in Filter Modal
-
-**Returns**: List of departments with hierarchy (Division → Department)
-
 ---
 
 ## 4. TEST SCENARIOS
