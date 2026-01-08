@@ -149,7 +149,6 @@ Response structure:
             "id": 101,
             "task_name": "Đại hàng hoa",
             "task_level": 2,
-            "parent_task_id": 1,
             "start": "2026-01-10",
             "end": "2026-03-31",
             "status": {
@@ -163,7 +162,6 @@ Response structure:
                 "id": 1001,
                 "task_name": "Chuẩn bị vật liệu",
                 "task_level": 3,
-                "parent_task_id": 101,
                 "start": "2026-01-10",
                 "end": "2026-01-15",
                 "status": {
@@ -180,7 +178,6 @@ Response structure:
             "id": 102,
             "task_name": "Chụp hình",
             "task_level": 2,
-            "parent_task_id": 1,
             "start": "2026-01-10",
             "end": "2026-03-31",
             "status": {
@@ -234,7 +231,6 @@ Response structure:
 | `sub_tasks[].id` | integer | - | Sub-task ID |
 | `sub_tasks[].task_name` | text | 300 ký tự | Sub-task name |
 | `sub_tasks[].task_level` | int | - | Task level (1=parent, 2-5=sub-tasks) |
-| `sub_tasks[].parent_task_id` | integer | - | Parent task ID (null for level 1) |
 | `sub_tasks[].start` | date | - | Sub-task start date |
 | `sub_tasks[].end` | date | - | Sub-task end date |
 | `sub_tasks[].status` | object | - | Sub-task status |
@@ -340,21 +336,27 @@ Level 1: Task Group (Parent Task)
 
 **Rules:**
 - Maximum depth: **5 levels**
-- Each task has `task_level` field (1-5)
-- Each task has `parent_task_id` (null for level 1)
+- Each task has `task_level` field (1-5) to identify hierarchy depth
 - Sub-tasks are nested recursively in `sub_tasks` array
+- Parent-child relationship is implicit through nesting (no `parent_task_id` needed)
 - Each level can have unlimited children
 - Frontend should render with progressive indent (e.g., 20px per level)
 
 **Example hierarchy:**
 ```
 Campaign Q1 2026 (Level 1, ID: 1)
-├─ Đại hàng hoa (Level 2, ID: 101, parent_task_id: 1)
-│  └─ Chuẩn bị vật liệu (Level 3, ID: 1001, parent_task_id: 101)
-│     └─ Đặt hàng hoa (Level 4, ID: 10001, parent_task_id: 1001)
-│        └─ Xác nhận đơn (Level 5, ID: 100001, parent_task_id: 10001)
-└─ Chụp hình (Level 2, ID: 102, parent_task_id: 1)
+├─ Đại hàng hoa (Level 2, ID: 101)
+│  └─ Chuẩn bị vật liệu (Level 3, ID: 1001)
+│     └─ Đặt hàng hoa (Level 4, ID: 10001)
+│        └─ Xác nhận đơn (Level 5, ID: 100001)
+└─ Chụp hình (Level 2, ID: 102)
 ```
+
+**Why nested structure without parent_task_id:**
+- ✅ **Simpler**: Parent-child relationship is clear from nesting
+- ✅ **No redundancy**: Don't need both `parent_task_id` AND `sub_tasks[]`
+- ✅ **Frontend-friendly**: Ready-to-render tree structure
+- ✅ **Cleaner JSON**: Less fields, easier to understand
 
 **Backend Implementation:**
 - Use recursive CTE (Common Table Expression) to fetch nested tasks
