@@ -12,7 +12,12 @@
 
 ### HeaderParam
 
-**Note for Dev Team**: API yêu cầu authentication qua **Bearer token** trong header `Authorization`. Token này đã chứa tất cả thông tin user (staff_id, grade_code, grade_type, department_id, store_id, etc.). Backend sẽ tự động decode token để lấy thông tin user và apply permission filter. Frontend **KHÔNG CẦN** gửi thêm userId hay token riêng.
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `userId` | integer | Yes | User ID from token |
+| `token` | string | Yes | JWT token |
+
+**Note for Dev Team**: API yêu cầu authentication qua **Bearer token** trong header `Authorization`. Token này đã chứa tất cả thông tin user (staff_id, grade_code, grade_type, department_id, store_id, etc.). Backend sẽ tự động decode token để lấy thông tin user và apply permission filter.
 
 **Example**:
 ```
