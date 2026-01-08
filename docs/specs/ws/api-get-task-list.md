@@ -17,7 +17,7 @@
 | `userId` | integer | Yes | User ID from token |
 | `token` | string | Yes | JWT token |
 
-**Note for Dev Team**: API yêu cầu authentication qua **Bearer token** trong header `Authorization`. Token này đã chứa tất cả thông tin user (staff_id, grade_code, grade_type, department_id, store_id, etc.). Backend sẽ tự động decode token để lấy thông tin user và apply permission filter.
+**Note for Dev Team**: This API requires authentication via **Bearer token** in `Authorization` header. The token contains all user information (staff_id, grade_code, grade_type, department_id, store_id, etc.). Backend will automatically decode the token to extract user info and apply permission-based filters.
 
 **Example**:
 ```
@@ -41,20 +41,18 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ## 2. description
 
-Mô tả chức năng của API:
-
-API này dùng để lấy danh sách task groups với khả năng:
-- Lọc theo ngày (start/end date)
-- Tìm kiếm theo tên task hoặc department
-- Lọc theo department, status, hq_check
-- Phân trang với limit/offset
-- Tự động filter theo quyền của user (grade_code + grade_type từ JWT token)
+This API retrieves the list of task groups with the following capabilities:
+- Filter by date range (start/end date)
+- Search by task name or department name
+- Filter by department, status, and HQ check status
+- Pagination with limit/offset
+- Automatic permission-based filtering (based on user's grade_code + grade_type from JWT token)
 
 ---
 
 ## 3. SQL
 
-File SQL mã số máy:
+SQL query implementation:
 
 ```sql
 -- Get tasks with filters and pagination
