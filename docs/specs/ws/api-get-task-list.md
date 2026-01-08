@@ -109,9 +109,9 @@ LIMIT :limit OFFSET :offset;
 
 ## 4. Return
 
-### HTTPstatus: 200, 201
+### HTTPstatus: 200 OK
 
-#### object
+#### Success Response
 
 Response structure:
 
@@ -187,25 +187,9 @@ Response structure:
 
 ### Error Responses
 
-#### 500 - Internal Server Error
-
-```json
-{
-  "success": false,
-  "message": "Internal server error"
-}
-```
-
-#### 404 - Not Found
-
-```json
-{
-  "success": false,
-  "message": "Resource not found"
-}
-```
-
 #### 400 - Bad Request
+
+Invalid parameters or validation errors.
 
 ```json
 {
@@ -218,36 +202,36 @@ Response structure:
 }
 ```
 
-#### 304 - Not Modified
+**Common validation errors:**
 
-```json
-{
-  "success": true,
-  "message": "Data not modified"
-}
-```
+- Start date must be in YYYY-MM-DD format
+- End date must be in YYYY-MM-DD format
+- Start date must be before or equal to end date
+- Limit must be between 1 and 100
+- Offset must be greater than 0
 
-#### 301 - Moved Permanently
+#### 401 - Unauthorized
 
-```json
-{
-  "success": false,
-  "message": "Resource moved permanently",
-  "redirect_url": "/api/v2/tasks"
-}
-```
-
-### start>end
-
-Validation message when start date is after end date:
+Missing or invalid authentication token.
 
 ```json
 {
   "success": false,
-  "message": "Validation failed",
+  "message": "Unauthorized",
   "errors": {
-    "start": ["Start date must be before or equal to end date"]
+    "token": ["Token is invalid or expired"]
   }
+}
+```
+
+#### 500 - Internal Server Error
+
+Server encountered an unexpected error.
+
+```json
+{
+  "success": false,
+  "message": "Internal server error"
 }
 ```
 
