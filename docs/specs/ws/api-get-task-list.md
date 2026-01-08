@@ -31,10 +31,12 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 | `start` | date | No | today | Start date (YYYY-MM-DD) |
 | `end` | date | No | today | End date (YYYY-MM-DD) |
 | `search` | string | No | - | Search by task name or department name |
+| `view_scope` | string | No | all_team | View scope filter: "all_team", "my_team", "my_department" |
 | `department_id[]` | integer[] | No | - | Filter by departments (multi-select) |
 | `status[]` | string[] | No | - | Filter by status (NOT_YET, DONE, DRAFT) |
-| `hq_check[]` | string[] | No | - | Filter by HQ check status |
-| `limit` | integer | No | 10 | Items per page |
+| `hq_check[]` | string[] | No | - | Filter by HQ check status (NOT_YET, DONE, DRAFT) |
+| `sort` | string | No | -created_at | Sort field (e.g., "start_date", "-created_at", "status") |
+| `limit` | integer | No | 10 | Items per page (max: 100) |
 | `offset` | integer | No | 1 | Page number |
 
 ---
