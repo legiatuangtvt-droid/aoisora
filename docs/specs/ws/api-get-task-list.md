@@ -8,7 +8,7 @@
 
 ---
 
-## 1. Param
+## 1. Parameters
 
 ### HeaderParam
 
@@ -40,7 +40,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ---
 
-## 2. description
+## 2. Description
 
 This API retrieves the list of task groups with the following capabilities:
 - Filter by date range (start/end date)
@@ -107,7 +107,7 @@ LIMIT :limit OFFSET :offset;
 
 ---
 
-## 4. return
+## 4. Return
 
 ### HTTPstatus: 200, 201
 
