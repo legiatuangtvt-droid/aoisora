@@ -1,4 +1,4 @@
-# Task List - Basic Specification
+# TASK LIST SCREEN SPECIFICATION (SCR_TASK_LIST)
 
 > **Module**: WS (Task from HQ)
 > **Screen ID**: SCR_TASK_LIST
@@ -7,50 +7,32 @@
 
 ---
 
-## 1. Overview
+## 1. GENERAL DESCRIPTION
 
-| Field | Value |
-|-------|-------|
-| **Purpose** | Hiển thị danh sách task groups với khả năng lọc, sắp xếp và điều hướng |
-| **Target Users** | Manager, Staff |
-| **Entry Points** | Sidebar menu, Dashboard quick link |
+### 1.1 Screen Information
 
----
+| No | Attribute | Value |
+|----|-----------|-------|
+| 1 | Screen Name | Task List Management Screen |
+| 2 | Screen Code | SCR_TASK_LIST |
+| 3 | Target Users | HQ (Headquarter) Staff, Manager, Staff |
 
-## 2. User Stories
+**Purpose**: Central dashboard for users to track task group progress across stores/departments.
 
-| ID | As a... | I want to... | So that... |
-|----|---------|--------------|------------|
-| US-01 | Manager | View all task groups | I can monitor team progress |
-| US-02 | Manager | Filter tasks by date/dept/status | I can focus on specific tasks |
-| US-03 | Manager | Sort tasks by column | I can organize the list |
-| US-04 | Staff | View my assigned tasks | I know what to work on |
-| US-05 | Manager | Create new task | I can assign work to team |
+### 1.2 Access Flow
 
----
+| No | Step | Description |
+|----|------|-------------|
+| 1 | Step 1 | From Sidebar Menu, select "Task list HQ-Store" |
+| 2 | Step 2 | Select "List task" to open task list management screen |
 
-## 3. Screen Components Summary
-
-| Component | Description |
-|-----------|-------------|
-| Header | Title "List tasks" |
-| DatePicker | DAY/WEEK/CUSTOM date selection |
-| Search | Text search for task name/dept |
-| Filter Button | Opens filter modal |
-| ADD NEW Button | Navigate to create task |
-| Data Table | Task groups with sortable columns |
-| Pagination | 10 items per page |
-| Live Indicator | WebSocket connection status |
-
----
-
-## 4. Screen Layout
+### 1.3 Screen Layout (ASCII Diagram)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │ List tasks                                        [Live ●] / [Offline ○]
 ├─────────────────────────────────────────────────────────────────────┤
-│ [DatePicker]              [Search...]  [Filter]  [+ ADD NEW]        │
+│ [TODAY|WEEK|CUSTOM]       [Search...]  [Filter]  [+ ADD NEW]        │
 ├─────────────────────────────────────────────────────────────────────┤
 │ No │ Dept ▼│ Task Group │ Start→End │ Progress │ Unable │Status▼│HQ▼│
 ├────┼───────┼────────────┼───────────┼──────────┼────────┼───────┼───┤
@@ -65,28 +47,79 @@
 
 ---
 
-## 5. Navigation
+## 2. FUNCTIONAL SPECIFICATION
 
-| Action | Destination | Description |
-|--------|-------------|-------------|
-| Click row | `/tasks/{id}` | Navigate to Task Detail |
-| Click ADD NEW | `/tasks/new` | Navigate to Create Task |
-| Click Filter | Modal | Open Filter Modal |
-| Click expand (▶) | - | Expand row to show sub-tasks |
+Interface divided into 3 areas: Header (Filter & Actions), Body (Data Grid), Footer (Pagination)
+
+### A. Header Area (Filter & Action)
+
+#### A.1. Date Display
+
+| No | Mode | Description | Interaction |
+|----|------|-------------|-------------|
+| 1 | TODAY | Default shows current date | Auto-filter tasks valid for today |
+| 2 | WEEK | Select by week (W 01 - W 53) | Hover shows date range tooltip |
+| 3 | CUSTOM | Select custom date range From - To | 2 parallel calendars, selection highlighted in light pink |
+
+#### A.2. Search Bar
+
+| No | Attribute | Value |
+|----|-----------|-------|
+| 1 | Type | Text input |
+| 2 | Logic | Search by "Task Group" or "Dept" |
+| 3 | Mechanism | Real-time or press Enter |
+
+#### A.3. Filter Button (Advanced Filter)
+
+| No | Component | Type | Description |
+|----|-----------|------|-------------|
+| 1 | Header | Text + Close (X) | Title "Filter", X button to close |
+| 2 | View Scope | Dropdown | Select team scope, default "All team" |
+| 3 | Department | Checkbox (Multi-select) | Hierarchical: Level 1 (Division), Level 2 (Department) |
+| 4 | Status | Chips/Tags | Not Yet, Done, Draft - multi-select support |
+| 5 | HQ Check | Chips/Tags | Not Yet, Done, Draft - multi-select support |
+| 6 | RESET Button | Button | Reset all filter conditions to default |
+
+#### A.4. "+ ADD NEW" Button
+
+| No | Attribute | Value |
+|----|-----------|-------|
+| 1 | Type | Primary Button (Pink/Red color) |
+| 2 | Action | Open Add Task screen (SCR_TASK_ADD) |
+
+### B. Body Area (Data Grid)
+
+Grid displays data with hierarchical structure (Parent-Child) support.
+
+| No | Column | Description | Features |
+|----|--------|-------------|----------|
+| 1 | No | Row number | Incremental numbering |
+| 2 | Dept | Department | Display name + icon, funnel icon for quick filter |
+| 3 | Task Group | Task group | Accordion: Click to expand/collapse sub-tasks |
+| 4 | Start → End | Validity period | Format: DD/MM |
+| 5 | Progress | Progress | Display fraction: [Done]/[Total] (e.g., 23/27) |
+| 6 | Unable | Unable to complete | Number of tasks reported unable to complete |
+| 7 | Status | Status | Color pills: Not Yet (red), Done (blue), Draft (green) |
+| 8 | HQ Check | HQ verification | Similar color pills to Status, has funnel icon |
+
+### C. Footer Area (Pagination)
+
+| No | Component | Description |
+|----|-----------|-------------|
+| 1 | Total Count | Display "Total: [X] tasks group" |
+| 2 | Navigation | Pagination buttons (<, 1, 2, >) for page navigation |
 
 ---
 
-## 6. API Endpoints Summary
+## 3. API INTEGRATION
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/v1/tasks` | Get task list with filters, sorting, pagination |
-| GET | `/api/v1/tasks/{id}` | Get task detail |
-| GET | `/api/v1/departments` | Get department list for filter |
+| No | Action | Method | Endpoint | Description |
+|----|--------|--------|----------|-------------|
+| 1 | Get Task List | GET | /api/v1/tasks | Get task list with filters, sorting, pagination |
+| 2 | Get Task Detail | GET | /api/v1/tasks/{id} | Get task detail information |
+| 3 | Get Departments | GET | /api/v1/departments | Get department list for filter dropdown |
 
----
-
-## 7. Implementation Status
+### Implementation Status
 
 | Feature | Backend | Frontend | Deploy | Notes |
 |---------|---------|----------|--------|-------|
@@ -97,16 +130,39 @@
 | Sorting | ✅ Done | ✅ Done | [DEMO] | Server-side via Spatie QueryBuilder |
 | Pagination | ✅ Done | ✅ Done | [DEMO] | Server-side, 10 items/page |
 | Column Quick Filters | - | ✅ Done | [DEMO] | Client-side (dept, status, hqCheck) |
-| Row Expansion | - | ✅ Done | [DEMO] | Show sub-tasks |
-| Real-time Updates | ✅ Done | ✅ Done | [PROD-ONLY] | Cần WebSocket server (Reverb) |
-| Export Excel/PDF | ⏳ Pending | ⏳ Pending | [DEMO] | - |
+| Row Expansion (Accordion) | - | ✅ Done | [DEMO] | Show sub-tasks (client-side) |
+| Real-time Updates | ✅ Done | ✅ Done | [PROD-ONLY] | Requires WebSocket server (Reverb) |
+| Export Excel/PDF | ⏳ Pending | ⏳ Pending | - | - |
 
 ---
 
-## 8. Related Documents
+## 4. TEST SCENARIOS
+
+### A. UI/UX Testing
+
+| No | Test Case | Scenario | Expected Result |
+|----|-----------|----------|-----------------|
+| 1 | Display check | Open Task List screen | Columns aligned, Status pill colors match design |
+| 2 | Responsive | Resize window to various resolutions | Table layout doesn't break |
+| 3 | Accordion indent | Expand Task Group | Sub-tasks indented from parent task |
+
+### B. Functional Testing
+
+| No | Test Case | Scenario | Expected Result |
+|----|-----------|----------|-----------------|
+| 1 | Search - with results | Enter correct Task name | Returns correct results |
+| 2 | Search - no results | Enter non-existent keyword | Display "No data" |
+| 3 | Filter by Status | Click Status column funnel, select "Done" | Only show rows with Done status |
+| 4 | Combined filter | Dept = PERI and Status = Not Yet | Show rows matching both conditions |
+| 5 | Pagination | Click page 2 | Data changes, row numbers continue from page 1 |
+| 6 | Expand/Collapse | Click parent task | Show child tasks, click again to collapse |
+
+---
+
+## Related Documents
 
 | Document | Path |
 |----------|------|
-| Detail Spec | `docs/specs/ws/task-list-detail.md` |
-| Task Detail Basic | `docs/specs/ws/task-detail-basic.md` |
-| Add Task Basic | `docs/specs/ws/add-task-basic.md` |
+| Detail Spec | [task-list-detail.md](task-list-detail.md) |
+| Task Detail Basic | [task-detail-basic.md](task-detail-basic.md) |
+| Add Task Basic | [add-task-basic.md](add-task-basic.md) |

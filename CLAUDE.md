@@ -242,31 +242,146 @@ docs/specs/ws/
 
 **File 1: `{screen}-basic.md` - Basic Specification**
 
+Basic Spec chia thành **4 mục chính** theo format sau:
+
 ```markdown
-# [Screen Name] - Basic Specification
+# [SCREEN NAME] SPECIFICATION ([SCREEN_CODE])
 
-## 1. Overview
-- Module, Screen ID, Route, Purpose, Target Users
+> **Module**: [Module Name]
+> **Screen ID**: [SCREEN_CODE]
+> **Route**: `/path/to/screen`
+> **Last Updated**: YYYY-MM-DD
 
-## 2. User Stories
-- US-01, US-02, ... (As a... I want to... So that...)
+---
 
-## 3. Screen Components Summary
-- Table liệt kê các component chính
+## 1. GENERAL DESCRIPTION
 
-## 4. Screen Layout
-- ASCII diagram của màn hình
+### 1.1 Screen Information
 
-## 5. Navigation
-- Điều hướng từ/đến screen này
+| No | Attribute | Value |
+|----|-----------|-------|
+| 1 | Screen Name | [Screen Name] |
+| 2 | Screen Code | [SCREEN_CODE] |
+| 3 | Target Users | [User roles] |
 
-## 6. API Endpoints Summary
-- Table liệt kê endpoints (Method, Path, Description)
+**Purpose**: [Brief description of screen purpose]
 
-## 7. Implementation Status
-- Table với columns: Feature | Backend | Frontend | Deploy | Notes
-- Sử dụng badge: [DEMO], [PROD-ONLY], [LOCAL-DEV]
+### 1.2 Access Flow
+
+| No | Step | Description |
+|----|------|-------------|
+| 1 | Step 1 | [Navigation step 1] |
+| 2 | Step 2 | [Navigation step 2] |
+
+### 1.3 Screen Layout (ASCII Diagram)
+
 ```
+┌─────────────────────────────────────────────────────────────────┐
+│ [Screen Title]                                    [Status]       │
+├─────────────────────────────────────────────────────────────────┤
+│ [Controls and Filters]                                          │
+├─────────────────────────────────────────────────────────────────┤
+│ [Data Grid/Content Area]                                        │
+├─────────────────────────────────────────────────────────────────┤
+│ [Footer/Pagination]                                             │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 2. FUNCTIONAL SPECIFICATION
+
+Interface divided into [X] areas: [Area 1], [Area 2], [Area 3]
+
+### A. [Area 1 Name] (e.g., Header - Filter & Action)
+
+#### A.1. [Component 1 Name]
+
+| No | Attribute/Mode | Description | Interaction/Value |
+|----|----------------|-------------|-------------------|
+| 1 | [Mode 1] | [Description] | [Interaction] |
+| 2 | [Mode 2] | [Description] | [Interaction] |
+
+#### A.2. [Component 2 Name]
+
+| No | Attribute | Value |
+|----|-----------|-------|
+| 1 | Type | [Type] |
+| 2 | Logic | [Logic] |
+| 3 | Mechanism | [Mechanism] |
+
+#### A.3. [Component 3 Name]
+
+| No | Component | Type | Description |
+|----|-----------|------|-------------|
+| 1 | [Sub-component 1] | [Type] | [Description] |
+| 2 | [Sub-component 2] | [Type] | [Description] |
+
+### B. [Area 2 Name] (e.g., Body - Data Grid)
+
+Brief description of this area.
+
+| No | Column/Component | Description | Features |
+|----|------------------|-------------|----------|
+| 1 | [Column 1] | [Description] | [Features] |
+| 2 | [Column 2] | [Description] | [Features] |
+
+### C. [Area 3 Name] (e.g., Footer - Pagination)
+
+| No | Component | Description |
+|----|-----------|-------------|
+| 1 | [Component 1] | [Description] |
+| 2 | [Component 2] | [Description] |
+
+---
+
+## 3. API INTEGRATION
+
+| No | Action | Method | Endpoint | Description |
+|----|--------|--------|----------|-------------|
+| 1 | [Action 1] | GET/POST | /api/v1/[endpoint] | [Description] |
+| 2 | [Action 2] | GET/POST | /api/v1/[endpoint] | [Description] |
+
+### Implementation Status
+
+| Feature | Backend | Frontend | Deploy | Notes |
+|---------|---------|----------|--------|-------|
+| [Feature 1] | ✅ Done | ✅ Done | [DEMO] | [Notes] |
+| [Feature 2] | ⏳ Pending | ⏳ Pending | [PROD-ONLY] | [Notes] |
+
+---
+
+## 4. TEST SCENARIOS
+
+### A. UI/UX Testing
+
+| No | Test Case | Scenario | Expected Result |
+|----|-----------|----------|-----------------|
+| 1 | [Test name] | [Scenario] | [Expected result] |
+| 2 | [Test name] | [Scenario] | [Expected result] |
+
+### B. Functional Testing
+
+| No | Test Case | Scenario | Expected Result |
+|----|-----------|----------|-----------------|
+| 1 | [Test name] | [Scenario] | [Expected result] |
+| 2 | [Test name] | [Scenario] | [Expected result] |
+
+---
+
+## Related Documents
+
+| Document | Path |
+|----------|------|
+| Detail Spec | [link-to-detail.md] |
+| Related Screen 1 | [link-to-related-1.md] |
+```
+
+**Lưu ý quan trọng:**
+- **4 mục chính**: General Description, Functional Specification, API Integration, Test Scenarios
+- Mỗi mục có thể có nhiều sub-sections tùy theo độ phức tạp của screen
+- Implementation Status được đặt trong mục 3 (API Integration)
+- Sử dụng badge: [DEMO], [PROD-ONLY], [LOCAL-DEV]
 
 ---
 
