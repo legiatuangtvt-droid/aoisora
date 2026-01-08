@@ -148,6 +148,8 @@ Response structure:
           {
             "id": 101,
             "task_name": "Đại hàng hoa",
+            "task_level": 2,
+            "parent_task_id": 1,
             "start": "2026-01-10",
             "end": "2026-03-31",
             "status": {
@@ -155,11 +157,30 @@ Response structure:
               "name": "DONE",
               "code": "DONE"
             },
-            "assignee": "Nguyen Van A"
+            "assignee": "Nguyen Van A",
+            "sub_tasks": [
+              {
+                "id": 1001,
+                "task_name": "Chuẩn bị vật liệu",
+                "task_level": 3,
+                "parent_task_id": 101,
+                "start": "2026-01-10",
+                "end": "2026-01-15",
+                "status": {
+                  "id": 2,
+                  "name": "DONE",
+                  "code": "DONE"
+                },
+                "assignee": "Le Van C",
+                "sub_tasks": []
+              }
+            ]
           },
           {
             "id": 102,
             "task_name": "Chụp hình",
+            "task_level": 2,
+            "parent_task_id": 1,
             "start": "2026-01-10",
             "end": "2026-03-31",
             "status": {
@@ -167,7 +188,8 @@ Response structure:
               "name": "DRAFT",
               "code": "DRAFT"
             },
-            "assignee": "Tran Thi B"
+            "assignee": "Tran Thi B",
+            "sub_tasks": []
           }
         ]
       }
@@ -208,9 +230,11 @@ Response structure:
 | `hq_check.id` | int | - | HQ check status ID |
 | `hq_check.name` | text | 300 ký tự | HQ check status name |
 | `hq_check.code` | text | 50 ký tự | HQ check status code |
-| `sub_tasks` | array | - | Child tasks array (if any) |
+| `sub_tasks` | array | - | Child tasks array (recursive structure, max 5 levels) |
 | `sub_tasks[].id` | integer | - | Sub-task ID |
 | `sub_tasks[].task_name` | text | 300 ký tự | Sub-task name |
+| `sub_tasks[].task_level` | int | - | Task level (1=parent, 2-5=sub-tasks) |
+| `sub_tasks[].parent_task_id` | integer | - | Parent task ID (null for level 1) |
 | `sub_tasks[].start` | date | - | Sub-task start date |
 | `sub_tasks[].end` | date | - | Sub-task end date |
 | `sub_tasks[].status` | object | - | Sub-task status |
@@ -218,6 +242,7 @@ Response structure:
 | `sub_tasks[].status.name` | text | 300 ký tự | Status name |
 | `sub_tasks[].status.code` | text | 50 ký tự | Status code (NOT_YET, DRAFT, DONE) |
 | `sub_tasks[].assignee` | text | 300 ký tự | Person assigned to this sub-task (optional) |
+| `sub_tasks[].sub_tasks` | array | - | Nested sub-tasks (recursive, max depth 5) |
 
 ### Error Responses
 
@@ -301,6 +326,40 @@ API automatically filters data based on user's job grade (extracted from JWT tok
 - Default `limit` = 10
 - Maximum `limit` = 100
 - `offset` starts from 1 (not 0)
+
+### Task Hierarchy
+
+**Structure:**
+```
+Level 1: Task Group (Parent Task)
+  └─ Level 2: Sub-task
+      └─ Level 3: Sub-sub-task
+          └─ Level 4: Sub-sub-sub-task
+              └─ Level 5: Sub-sub-sub-sub-task (Maximum depth)
+```
+
+**Rules:**
+- Maximum depth: **5 levels**
+- Each task has `task_level` field (1-5)
+- Each task has `parent_task_id` (null for level 1)
+- Sub-tasks are nested recursively in `sub_tasks` array
+- Each level can have unlimited children
+- Frontend should render with progressive indent (e.g., 20px per level)
+
+**Example hierarchy:**
+```
+Campaign Q1 2026 (Level 1, ID: 1)
+├─ Đại hàng hoa (Level 2, ID: 101, parent_task_id: 1)
+│  └─ Chuẩn bị vật liệu (Level 3, ID: 1001, parent_task_id: 101)
+│     └─ Đặt hàng hoa (Level 4, ID: 10001, parent_task_id: 1001)
+│        └─ Xác nhận đơn (Level 5, ID: 100001, parent_task_id: 10001)
+└─ Chụp hình (Level 2, ID: 102, parent_task_id: 1)
+```
+
+**Backend Implementation:**
+- Use recursive CTE (Common Table Expression) to fetch nested tasks
+- Backend should limit depth to 5 levels maximum
+- Return error if attempting to create task deeper than level 5
 
 ---
 
