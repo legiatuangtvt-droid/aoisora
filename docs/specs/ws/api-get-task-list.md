@@ -144,7 +144,32 @@ Response structure:
           "name": "NOT_YET",
           "code": "NOT_YET"
         },
-        "sub_tasks": []
+        "sub_tasks": [
+          {
+            "id": 101,
+            "task_name": "Đại hàng hoa",
+            "start": "2026-01-10",
+            "end": "2026-03-31",
+            "status": {
+              "id": 2,
+              "name": "DONE",
+              "code": "DONE"
+            },
+            "assignee": "Nguyen Van A"
+          },
+          {
+            "id": 102,
+            "task_name": "Chụp hình",
+            "start": "2026-01-10",
+            "end": "2026-03-31",
+            "status": {
+              "id": 1,
+              "name": "DRAFT",
+              "code": "DRAFT"
+            },
+            "assignee": "Tran Thi B"
+          }
+        ]
       }
     ],
     "pagination": {
@@ -183,7 +208,16 @@ Response structure:
 | `hq_check.id` | int | - | HQ check status ID |
 | `hq_check.name` | text | 300 ký tự | HQ check status name |
 | `hq_check.code` | text | 50 ký tự | HQ check status code |
-| `sub_tasks` | array | - | Child tasks (if any) |
+| `sub_tasks` | array | - | Child tasks array (if any) |
+| `sub_tasks[].id` | integer | - | Sub-task ID |
+| `sub_tasks[].task_name` | text | 300 ký tự | Sub-task name |
+| `sub_tasks[].start` | date | - | Sub-task start date |
+| `sub_tasks[].end` | date | - | Sub-task end date |
+| `sub_tasks[].status` | object | - | Sub-task status |
+| `sub_tasks[].status.id` | int | - | Status ID |
+| `sub_tasks[].status.name` | text | 300 ký tự | Status name |
+| `sub_tasks[].status.code` | text | 50 ký tự | Status code (NOT_YET, DRAFT, DONE) |
+| `sub_tasks[].assignee` | text | 300 ký tự | Person assigned to this sub-task (optional) |
 
 ### Error Responses
 
