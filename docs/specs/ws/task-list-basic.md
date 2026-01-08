@@ -163,23 +163,6 @@ Grid displays data with hierarchical structure (Parent-Child) support.
 
 ---
 
-### Implementation Status
-
-| Feature | Backend | Frontend | Deploy | Notes |
-|---------|---------|----------|--------|-------|
-| Task List Table | ✅ Done | ✅ Done | [DEMO] | API integrated |
-| DatePicker (DAY/WEEK/CUSTOM) | ✅ Done | ✅ Done | [DEMO] | Server-side date range filter |
-| Search | ✅ Done | ✅ Done | [DEMO] | Server-side partial match, debounced 300ms |
-| Filter Modal | ✅ Done | ✅ Done | [DEMO] | Server-side (dept, status, hqCheck) |
-| Sorting | ✅ Done | ✅ Done | [DEMO] | Server-side via Spatie QueryBuilder |
-| Pagination | ✅ Done | ✅ Done | [DEMO] | Server-side, 10 items/page |
-| Column Quick Filters | - | ✅ Done | [DEMO] | Client-side (dept, status, hqCheck) |
-| Row Expansion (Accordion) | - | ✅ Done | [DEMO] | Show sub-tasks (client-side) |
-| Real-time Updates | ✅ Done | ✅ Done | [PROD-ONLY] | Requires WebSocket server (Reverb) |
-| Export Excel/PDF | ⏳ Pending | ⏳ Pending | - | - |
-
----
-
 ## 4. TEST SCENARIOS
 
 ### A. UI/UX Testing

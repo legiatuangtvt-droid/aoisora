@@ -337,17 +337,14 @@ Brief description of this area.
 
 ## 3. API INTEGRATION
 
-| No | Action | Method | Endpoint | Description |
-|----|--------|--------|----------|-------------|
-| 1 | [Action 1] | GET/POST | /api/v1/[endpoint] | [Description] |
-| 2 | [Action 2] | GET/POST | /api/v1/[endpoint] | [Description] |
+| No | Action | Method | Endpoint | Description | Trigger |
+|----|--------|--------|----------|-------------|---------|
+| 1 | [Action 1] | GET/POST | /api/v1/[endpoint] | [Description] | [When this API is called] |
+| 2 | [Action 2] | GET/POST | /api/v1/[endpoint] | [Description] | [When this API is called] |
 
-### Implementation Status
+### 3.1 API Parameters & Business Logic (Optional)
 
-| Feature | Backend | Frontend | Deploy | Notes |
-|---------|---------|----------|--------|-------|
-| [Feature 1] | ✅ Done | ✅ Done | [DEMO] | [Notes] |
-| [Feature 2] | ⏳ Pending | ⏳ Pending | [PROD-ONLY] | [Notes] |
+Detail about API parameters, authentication, business logic if needed.
 
 ---
 
@@ -380,8 +377,8 @@ Brief description of this area.
 **Lưu ý quan trọng:**
 - **4 mục chính**: General Description, Functional Specification, API Integration, Test Scenarios
 - Mỗi mục có thể có nhiều sub-sections tùy theo độ phức tạp của screen
-- Implementation Status được đặt trong mục 3 (API Integration)
-- Sử dụng badge: [DEMO], [PROD-ONLY], [LOCAL-DEV]
+- API Integration: Thêm column "Trigger" để ghi rõ khi nào API được gọi
+- KHÔNG bao gồm Implementation Status (đó là tracking cá nhân, không phải spec cho dev team)
 
 ---
 
