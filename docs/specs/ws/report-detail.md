@@ -1,86 +1,15 @@
-# Report Screen Specification
+# Report - Detail Specification
+
+> **Module**: WS (Task from HQ)
+> **Screen ID**: SCR_REPORT
+> **Route**: `/tasks/report`
+> **Last Updated**: 2026-01-08
 
 ---
 
-# BASIC SPEC
+## 1. Week Selector Grid - Detail
 
-## 1. Overview
-
-- **Module**: WS (Task from HQ)
-- **Screen ID**: SCR_REPORT
-- **Route**: `/tasks/report`
-- **Purpose**: Display task completion statistics across stores and departments with weekly tracking
-- **Target Users**: HQ (Headquarter) Staff, Manager
-
-## 2. User Stories
-
-| ID | As a... | I want to... | So that... |
-|----|---------|--------------|------------|
-| US-01 | Manager | View weekly completion by store | I can track store performance |
-| US-02 | Manager | See completion % with color coding | I can quickly identify issues |
-| US-03 | Manager | View stacked bar chart | I can see completion trends |
-| US-04 | Manager | Filter by department | I can focus on specific areas |
-| US-05 | Manager | View detailed store breakdown | I can see department-level data |
-| US-06 | Manager | Export report | I can share with stakeholders |
-
-## 3. Screen Components Summary
-
-| Component | Description |
-|-----------|-------------|
-| Week Selector Grid | Store x Week matrix with completion % |
-| Stacked Bar Chart | Visual completion trends by week |
-| Filter Dropdown | Department filter |
-| Store Report Table | Detailed breakdown by department |
-
-## 4. Screen Layout
-
-```
-+------------------------------------------------------------------+
-|  [Week Selector Grid]              [Stacked Bar Chart]           |
-|  W40  W41  W42  W43  W44  W45      Filter: All dept              |
-|  Store completion % by week                                       |
-+------------------------------------------------------------------+
-|                                                                   |
-|  [Detailed Store Report Table]                                    |
-|  Columns: Store | Total Task | Per Department breakdown           |
-|                                                                   |
-+------------------------------------------------------------------+
-```
-
-## 5. Navigation
-
-| Action | Destination |
-|--------|-------------|
-| Click Sidebar "Report" | `/tasks/report` |
-| Click week header | Filter data by week |
-| Click store row | Drill down to store detail |
-| Click Export | Download report |
-
-## 6. API Endpoints Summary
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/v1/reports/weekly-completion` | GET | Get weekly completion data |
-| `/api/v1/reports/store-weekly` | GET | Get store weekly grid |
-| `/api/v1/reports/store-detail` | GET | Get detailed store report |
-
-## 7. Implementation Status
-
-| Feature | Backend | Frontend | Notes |
-|---------|---------|----------|-------|
-| Report Page | ⏳ Pending | ✅ Done | Mock data |
-| Weekly Completion Grid | ⏳ Pending | ✅ Done | Mock data |
-| Stacked Bar Chart | - | ✅ Done | Custom chart |
-| Store Report Table | ⏳ Pending | ✅ Done | Mock data |
-| API Integration | ⏳ Pending | ⏳ Pending | - |
-
----
-
-# DETAIL SPEC
-
-## 8. Week Selector Grid - Detail
-
-### 8.1 Structure
+### 1.1 Structure
 
 | Element | Description |
 |---------|-------------|
@@ -88,19 +17,19 @@
 | Store Rows | Store name + completion % per week |
 | Cell Colors | Color-coded based on completion % |
 
-### 8.2 Cell Color Coding
+### 1.2 Cell Color Coding
 
-| Completion % | Background Color |
-|--------------|------------------|
-| 100% | Green (#22C55E) |
-| 90-99% | Light Green (#86EFAC) |
-| 80-89% | Yellow (#FDE047) |
-| 70-79% | Orange (#FB923C) |
-| < 70% | Red (#EF4444) |
+| Completion % | Background Color | Hex Code |
+|--------------|------------------|----------|
+| 100% | Green | #22C55E |
+| 90-99% | Light Green | #86EFAC |
+| 80-89% | Yellow | #FDE047 |
+| 70-79% | Orange | #FB923C |
+| < 70% | Red | #EF4444 |
 
 ---
 
-## 9. Stacked Bar Chart - Detail
+## 2. Stacked Bar Chart - Detail
 
 | Element | Description |
 |---------|-------------|
@@ -110,18 +39,18 @@
 | Y-Axis | Task count |
 | Bar Segments | Stacked showing completed vs incomplete |
 
-### 9.1 Bar Colors
+### 2.1 Bar Colors
 
-| Status | Color |
-|--------|-------|
-| Completed | Blue (#3B82F6) |
-| Incomplete/Failed | Red (#EF4444) |
+| Status | Color | Hex Code |
+|--------|-------|----------|
+| Completed | Blue | #3B82F6 |
+| Incomplete/Failed | Red | #EF4444 |
 
 ---
 
-## 10. Store Report Table - Detail
+## 3. Store Report Table - Detail
 
-### 10.1 Table Structure
+### 3.1 Table Structure
 
 | Column Group | Columns |
 |--------------|---------|
@@ -134,19 +63,19 @@
 | DRY FOOD | Total Task, Completed (task actual), Complete % |
 | Aeon CF | Total Task, Completed (task actual), Complete % |
 
-### 10.2 Column Header Styling
+### 3.2 Column Header Styling
 
-| Department | Background Color |
-|------------|------------------|
-| Total Task | Light Gray |
-| ADMIN | Light Yellow (#FEF9C3) |
-| PLANNING | Light Blue (#DBEAFE) |
-| SPA&MKT | Light Pink (#FCE7F3) |
-| IMPROVEMENT | Light Green (#DCFCE7) |
-| DRY FOOD | Light Orange (#FED7AA) |
-| Aeon CF | Light Purple (#E9D5FF) |
+| Department | Background Color | Hex Code |
+|------------|------------------|----------|
+| Total Task | Light Gray | #F3F4F6 |
+| ADMIN | Light Yellow | #FEF9C3 |
+| PLANNING | Light Blue | #DBEAFE |
+| SPA&MKT | Light Pink | #FCE7F3 |
+| IMPROVEMENT | Light Green | #DCFCE7 |
+| DRY FOOD | Light Orange | #FED7AA |
+| Aeon CF | Light Purple | #E9D5FF |
 
-### 10.3 Cell Highlighting
+### 3.3 Cell Highlighting
 
 | Condition | Style |
 |-----------|-------|
@@ -156,7 +85,7 @@
 
 ---
 
-## 11. Data Types
+## 4. Data Types
 
 ```typescript
 // Week completion data for chart
@@ -209,9 +138,9 @@ interface ReportFilter {
 
 ---
 
-## 12. API Endpoints - Detail
+## 5. API Endpoints - Detail
 
-### 12.1 Get Weekly Completion Data
+### 5.1 Get Weekly Completion Data
 
 ```yaml
 get:
@@ -284,7 +213,7 @@ get:
                 total: 100
 ```
 
-### 12.2 Get Store Weekly Grid
+### 5.2 Get Store Weekly Grid
 
 ```yaml
 get:
@@ -347,7 +276,7 @@ get:
                       completionPercent: 100
 ```
 
-### 12.3 Get Detailed Store Report
+### 5.3 Get Detailed Store Report
 
 ```yaml
 get:
@@ -431,7 +360,57 @@ get:
                   percent: 100
 ```
 
-### 12.4 Schema Definitions
+### 5.4 Export Report
+
+```yaml
+get:
+  tags:
+    - WS-Reports
+  summary: "Export Report API"
+  description: |
+    # Business Logic
+      ## 1. Get Report Data
+        - Same as getStoreDetailReport
+
+      ## 2. Generate File
+        - Excel: Use PHPSpreadsheet
+        - PDF: Use DomPDF
+
+      ## 3. Response
+        - Return file download
+
+  operationId: exportReport
+  parameters:
+    - name: week
+      in: query
+      required: true
+      schema:
+        type: string
+
+    - name: format
+      in: query
+      required: true
+      schema:
+        type: string
+        enum: [excel, pdf]
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+          schema:
+            type: string
+            format: binary
+        application/pdf:
+          schema:
+            type: string
+            format: binary
+```
+
+---
+
+## 6. Schema Definitions
 
 ```yaml
 components:
@@ -498,7 +477,7 @@ components:
 
 ---
 
-## 13. Interactions - Detail
+## 7. Interactions - Detail
 
 | Interaction | Description |
 |-------------|-------------|
@@ -506,11 +485,20 @@ components:
 | Department Filter | Dropdown filters chart data |
 | Store Row Click | Drill down to store detail |
 | Table Sorting | Click column header to sort |
-| Export | Download report as Excel/CSV |
+| Export | Download report as Excel/PDF |
 
 ---
 
-## 14. Responsive Behavior
+## 8. Export Features (LOCAL-DEV)
+
+| Feature | Description | Deploy |
+|---------|-------------|--------|
+| Export Excel | Download report as .xlsx file | [LOCAL-DEV] |
+| Export PDF | Download report as .pdf file | [LOCAL-DEV] |
+
+---
+
+## 9. Responsive Behavior
 
 | Breakpoint | Behavior |
 |------------|----------|
@@ -520,7 +508,7 @@ components:
 
 ---
 
-## 15. Files Reference
+## 10. Files Reference
 
 ```
 frontend/src/
@@ -541,7 +529,22 @@ frontend/src/
 
 ---
 
-## 16. Changelog
+## 11. Test Scenarios
+
+| Test Case | Scenario | Expected |
+|-----------|----------|----------|
+| Load report | Open report page | Grid and chart display with data |
+| Filter by week | Select specific week | Data filters correctly |
+| Filter by department | Select department from dropdown | Chart updates to show department data |
+| Color coding | View cells with different % | Colors match completion percentage |
+| Export Excel | Click Export → Excel | File downloads with correct data |
+| Export PDF | Click Export → PDF | File downloads with correct format |
+| Sort table | Click column header | Table sorts by that column |
+| Responsive | Resize browser | Layout adapts to screen size |
+
+---
+
+## 12. Changelog
 
 | Date | Change |
 |------|--------|
@@ -549,3 +552,14 @@ frontend/src/
 | 2026-01-03 | Implemented Report screen with all components |
 | 2026-01-03 | Moved to `/tasks/report` route, fixed menu highlight |
 | 2026-01-06 | Restructured spec with Basic/Detail sections |
+| 2026-01-08 | Split spec into basic and detail files |
+
+---
+
+## 13. Related Documents
+
+| Document | Path |
+|----------|------|
+| Basic Spec | `docs/specs/ws/report-basic.md` |
+| Task List Basic | `docs/specs/ws/task-list-basic.md` |
+

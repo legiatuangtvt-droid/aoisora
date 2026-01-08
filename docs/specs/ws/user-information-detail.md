@@ -1,101 +1,13 @@
-# User Information Screen Specification
+# User Information - Detail Specification
+
+> **Module**: WS (Task from HQ)
+> **Screen ID**: SCR_USER_INFO
+> **Route**: `/tasks/info`
+> **Last Updated**: 2026-01-08
 
 ---
 
-# BASIC SPEC
-
-## 1. Overview
-
-- **Module**: WS (Task from HQ)
-- **Screen ID**: SCR_USER_INFO
-- **Route**: `/tasks/info`
-- **Purpose**: Manage and track user lists (Hierarchy), Team members and organization structure
-- **Target Users**: HQ staff with management permissions
-
-## 2. User Stories
-
-| ID | As a... | I want to... | So that... |
-|----|---------|--------------|------------|
-| US-01 | HQ Manager | View organization hierarchy | I can see team structure |
-| US-02 | HQ Manager | Switch between department tabs | I can view different departments |
-| US-03 | HQ Manager | Expand/collapse departments | I can navigate the hierarchy |
-| US-04 | HQ Manager | View employee details | I can see staff information |
-| US-05 | HQ Manager | Add new teams/members | I can grow the organization |
-| US-06 | HQ Manager | Import users from Excel | I can bulk add users |
-| US-07 | HQ Manager | Manage permissions | I can control access rights |
-
-## 3. Screen Components Summary
-
-| Component | Description |
-|-----------|-------------|
-| Header | Title "USER INFORMATION" with Permissions and Import buttons |
-| Tab Navigation | Department tabs: SMBU, Admin, OP, GP, etc. |
-| Hierarchy Tree | Expandable tree showing departments, teams, members |
-| Employee Detail Modal | Popup showing full employee information |
-| Permissions Modal | Configure user/role permissions |
-| Import Excel Modal | Upload and preview Excel data |
-
-## 4. Screen Layout
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│ USER INFORMATION                     [Permissions] [Import Excel]    │
-│ Team members and organization management                             │
-├─────────────────────────────────────────────────────────────────────┤
-│ [SMBU] [Admin] [OP] [GP] [CONTROL] [IMPROVEMENT] [HR] [MG]          │
-├─────────────────────────────────────────────────────────────────────┤
-│ ┌────────────────────────────────────┐                              │
-│ │ 👤 VP/Director Name (G5)     [⋮]   │ ← Root User Card             │
-│ └────────────────────────────────────┘                              │
-│   │                                                                  │
-│   ├─▼ ADMIN (3 Members, G3-G5)                                      │
-│   │   ├─ Department Head                                            │
-│   │   ├─▼ Account Team (2 Members)                                  │
-│   │   │   ├─ Member 1                                               │
-│   │   │   └─ Member 2                                               │
-│   │   └─ [+ Add new member]                                         │
-│   └─▶ HR (2 Members, G3-G4)                                         │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-## 5. Navigation
-
-| Action | Destination |
-|--------|-------------|
-| Click Sidebar "User Management" > "User information" | `/tasks/info` |
-| Click department tab | Show department hierarchy |
-| Click member card | Open Employee Detail Modal |
-| Click "+ Add new member" | Open Add Team/Member Modal |
-| Click "Permissions" button | Open Permissions Modal |
-| Click "Import Excel" button | Open Import Modal |
-
-## 6. API Endpoints Summary
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/v1/user-info/smbu-hierarchy` | GET | Get SMBU hierarchy |
-| `/api/v1/user-info/departments/{id}/hierarchy` | GET | Get department hierarchy |
-| `/api/v1/user-info/staff/{id}` | GET | Get staff detail |
-| `/api/v1/user-info/teams` | POST | Create new team |
-| `/api/v1/user-info/members` | POST | Create new member |
-
-## 7. Implementation Status
-
-| Feature | Backend | Frontend | Notes |
-|---------|---------|----------|-------|
-| User Info Page | ✅ Done | ✅ Done | API integrated |
-| Tab Navigation | ✅ Done | ✅ Done | - |
-| Hierarchy Tree | ✅ Done | ✅ Done | - |
-| Employee Detail Modal | ✅ Done | ✅ Done | - |
-| Add Team/Member Modal | ✅ Done | ✅ Done | - |
-| Permissions Modal | ✅ Done | ✅ Done | - |
-| Import Excel Modal | ✅ Done | ✅ Done | - |
-
----
-
-# DETAIL SPEC
-
-## 8. Job Grades - Detail
+## 1. Job Grades - Detail
 
 | Code | Title | Description |
 |------|-------|-------------|
@@ -107,7 +19,7 @@
 | G7 | Senior General Manager | Senior general manager level |
 | G8 | CCO | Chief Commercial Officer |
 
-### 8.1 Job Grade Colors
+### 1.1 Job Grade Colors
 
 | Grade | Color | Hex Code |
 |-------|-------|----------|
@@ -122,7 +34,7 @@
 
 ---
 
-## 9. Header Section - Detail
+## 2. Header Section - Detail
 
 | Component | Description | Notes |
 |-----------|-------------|-------|
@@ -133,7 +45,7 @@
 
 ---
 
-## 10. Tab Navigation - Detail
+## 3. Tab Navigation - Detail
 
 | Tab | Description | Icon |
 |-----|-------------|------|
@@ -146,16 +58,16 @@
 | HR | Human Resources department | Gray icon |
 | MG | Management department | No specific icon |
 
-### 10.1 Tab Styling
+### 3.1 Tab Styling
 
 - Active tab: Pink underline and pink text
 - Inactive tab: Gray text
 
 ---
 
-## 11. Hierarchy Tree Components - Detail
+## 4. Hierarchy Tree Components - Detail
 
-### 11.1 Root User Card
+### 4.1 Root User Card
 
 | Component | Description | Notes |
 |-----------|-------------|-------|
@@ -166,7 +78,7 @@
 | Position | Title + Grade (e.g., G4 - General Manager) | - |
 | Menu (three dots) | Edit division, Delete division | Pink icons |
 
-### 11.2 Department Card
+### 4.2 Department Card
 
 | Component | Description | Notes |
 |-----------|-------------|-------|
@@ -176,7 +88,7 @@
 | Title Range | Grade range | Gray text, after bullet |
 | Expand/Collapse Icon | Arrow icon to open/close | Right corner of card |
 
-### 11.3 Team Card
+### 4.3 Team Card
 
 | Component | Description | Notes |
 |-----------|-------------|-------|
@@ -188,7 +100,7 @@
 | Expand/Collapse | Arrow to open/close | Right corner, rotates when expanded |
 | Indent Line | Line showing tree structure | Gray, left of card |
 
-### 11.4 Member Card
+### 4.4 Member Card
 
 | Component | Description | Notes |
 |-----------|-------------|-------|
@@ -202,9 +114,9 @@
 
 ---
 
-## 12. Employee Detail Modal - Detail
+## 5. Employee Detail Modal - Detail
 
-### 12.1 Modal Header
+### 5.1 Modal Header
 
 | Component | Description | Notes |
 |-----------|-------------|-------|
@@ -216,7 +128,7 @@
 | Status Badge | Status (e.g., "Active") | Green badge |
 | Phone | Employee phone | Icon + phone number |
 
-### 12.2 Employee Information
+### 5.2 Employee Information
 
 | Field | Description | Notes |
 |-------|-------------|-------|
@@ -225,7 +137,7 @@
 | JOB GRADE | Job grade | e.g., "G5 - Senior", pink text |
 | JOINING DATE | Company join date | e.g., "17 Aug, 2017", format DD MMM, YYYY |
 
-### 12.3 Organization Detail
+### 5.3 Organization Detail
 
 | Field | Description | Notes |
 |-------|-------------|-------|
@@ -236,7 +148,7 @@
 
 ---
 
-## 13. Department Icons - Detail
+## 6. Department Icons - Detail
 
 | Department | Icon Name | Color | ViewBox |
 |------------|-----------|-------|---------|
@@ -249,7 +161,7 @@
 
 ---
 
-## 14. Connector Lines - Detail
+## 7. Connector Lines - Detail
 
 | Component | Connector Position | Calculation |
 |-----------|-------------------|-------------|
@@ -261,7 +173,7 @@
 
 ---
 
-## 15. API Endpoints - Detail
+## 8. API Endpoints - Detail
 
 | Action | Method | Endpoint | Description |
 |--------|--------|----------|-------------|
@@ -278,7 +190,7 @@
 | Save Permissions | POST | /api/v1/user-info/permissions | Save permissions |
 | Import Users | POST | /api/v1/user-info/import | Import from Excel/CSV |
 
-### 15.1 Get SMBU Hierarchy
+### 8.1 Get SMBU Hierarchy
 
 ```yaml
 get:
@@ -338,7 +250,7 @@ get:
                   gradeRange: "G1-G4"
 ```
 
-### 15.2 Get Department Hierarchy
+### 8.2 Get Department Hierarchy
 
 ```yaml
 get:
@@ -409,7 +321,7 @@ get:
       description: Department Not Found
 ```
 
-### 15.3 Get Staff Detail
+### 8.3 Get Staff Detail
 
 ```yaml
 get:
@@ -469,7 +381,7 @@ get:
       description: Staff Not Found
 ```
 
-### 15.4 Create Team
+### 8.4 Create Team
 
 ```yaml
 post:
@@ -520,7 +432,7 @@ post:
       description: Bad Request
 ```
 
-### 15.5 Create Member
+### 8.5 Create Member
 
 ```yaml
 post:
@@ -571,7 +483,7 @@ post:
       description: Bad Request
 ```
 
-### 15.6 Save Permissions
+### 8.6 Save Permissions
 
 ```yaml
 post:
@@ -632,7 +544,7 @@ post:
             message: "Permissions saved successfully"
 ```
 
-### 15.7 Import Users
+### 8.7 Import Users
 
 ```yaml
 post:
@@ -688,7 +600,9 @@ post:
                   error: "Invalid department"
 ```
 
-### 15.8 Schema Definitions
+---
+
+## 9. Schema Definitions
 
 ```yaml
 components:
@@ -763,7 +677,7 @@ components:
 
 ---
 
-## 16. Files Reference
+## 10. Files Reference
 
 ```
 frontend/src/
@@ -796,7 +710,7 @@ frontend/src/
 
 ---
 
-## 17. Test Scenarios
+## 11. Test Scenarios
 
 | Scenario | Description | Expected |
 |----------|-------------|----------|
@@ -811,7 +725,7 @@ frontend/src/
 
 ---
 
-## 18. Changelog
+## 12. Changelog
 
 | Date | Change |
 |------|--------|
@@ -829,3 +743,14 @@ frontend/src/
 | 2026-01-04 | Implemented PermissionsModal |
 | 2026-01-04 | Implemented ImportExcelModal |
 | 2026-01-06 | Restructured spec with Basic/Detail sections |
+| 2026-01-08 | Split spec into basic and detail files |
+
+---
+
+## 13. Related Documents
+
+| Document | Path |
+|----------|------|
+| Basic Spec | `docs/specs/ws/user-information-basic.md` |
+| Store Information Basic | `docs/specs/ws/store-information-basic.md` |
+

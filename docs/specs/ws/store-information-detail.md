@@ -1,105 +1,13 @@
-# Store Information Screen Specification
+# Store Information - Detail Specification
+
+> **Module**: WS (Task from HQ)
+> **Screen ID**: SCR_STORE_INFO
+> **Route**: `/tasks/store-info`
+> **Last Updated**: 2026-01-08
 
 ---
 
-# BASIC SPEC
-
-## 1. Overview
-
-- **Module**: WS (Task from HQ)
-- **Screen ID**: SCR_STORE_INFO
-- **Route**: `/tasks/store-info`
-- **Purpose**: Manage store information by geographic regions/areas, store lists and staff at each store
-- **Target Users**: HQ staff with management permissions
-
-## 2. User Stories
-
-| ID | As a... | I want to... | So that... |
-|----|---------|--------------|------------|
-| US-01 | HQ Manager | View stores by region | I can see regional store distribution |
-| US-02 | HQ Manager | Switch between region tabs | I can navigate to different regions |
-| US-03 | HQ Manager | Expand areas to see stores | I can view stores in each area |
-| US-04 | HQ Manager | View store staff list | I can see who works at each store |
-| US-05 | HQ Manager | Add new stores | I can expand store network |
-| US-06 | HQ Manager | Import stores from Excel | I can bulk add stores |
-| US-07 | HQ Manager | Manage store permissions | I can control access rights |
-
-## 3. Screen Components Summary
-
-| Component | Description |
-|-----------|-------------|
-| Header | Title "STORE INFORMATION" with Permissions and Import buttons |
-| Tab Navigation | Region tabs: SMBU, OCEAN, HA NOI CENTER, etc. |
-| Area Section | Expandable area cards with store count |
-| Store Cards | Store info with manager, staff count |
-| Staff List | Expanded view showing store staff |
-| Permissions Modal | Configure store permissions |
-| Import Excel Modal | Upload and preview Excel data |
-
-## 4. Screen Layout
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│ STORE INFORMATION                    [Permissions] [Import Excel]    │
-│ Manage hierarchy, team members, and configure data access permissions│
-├─────────────────────────────────────────────────────────────────────┤
-│ [SMBU] [OCEAN] [HA NOI CENTER] [ECO PARK] [HA DONG] [NGO]           │
-├─────────────────────────────────────────────────────────────────────┤
-│ ▼ AREA HA NAM                                      [23 Stores]       │
-│   │                                                                  │
-│   ├─▼ 🏪 Store Code 1234                                            │
-│   │     Ocean Park 1                                                 │
-│   │     👤 Hoang Huong Giang │ Staff: 15                            │
-│   │     ├─ Staff Member 1 (G3)                                      │
-│   │     ├─ Staff Member 2 (G4)                                      │
-│   │     └─ [+ Add Staff]                                            │
-│   │                                                                  │
-│   └─▶ 🏪 Store Code 5678                                            │
-│         Ocean Park 2                                                 │
-│         👤 Manager Name │ Staff: 10                                  │
-│                                                                      │
-│ ▶ AREA THANH HOA                                   [15 Stores]       │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-## 5. Navigation
-
-| Action | Destination |
-|--------|-------------|
-| Click Sidebar "User Management" > "Store information" | `/tasks/store-info` |
-| Click region tab | Show region's areas and stores |
-| Click area header | Expand/collapse to show stores |
-| Click store card | Expand/collapse to show staff |
-| Click "Permissions" button | Open Permissions Modal |
-| Click "Import Excel" button | Open Import Modal |
-
-## 6. API Endpoints Summary
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/v1/store-info/region-tabs` | GET | Get region tabs |
-| `/api/v1/store-info/regions/{region}/hierarchy` | GET | Get region hierarchy |
-| `/api/v1/store-info/stores/{id}` | GET | Get store detail with staff |
-| `/api/v1/stores` | POST | Add new store |
-| `/api/v1/stores/import` | POST | Import stores from Excel |
-
-## 7. Implementation Status
-
-| Feature | Backend | Frontend | Notes |
-|---------|---------|----------|-------|
-| Store Info Page | ✅ Done | ✅ Done | API integrated |
-| Tab Navigation | ✅ Done | ✅ Done | - |
-| Area Section | ✅ Done | ✅ Done | - |
-| Store Cards | ✅ Done | ✅ Done | - |
-| Staff List | ✅ Done | ✅ Done | - |
-| Permissions Modal | ✅ Done | ✅ Done | - |
-| Import Excel Modal | ✅ Done | ✅ Done | - |
-
----
-
-# DETAIL SPEC
-
-## 8. Header Section - Detail
+## 1. Header Section - Detail
 
 | Component | Description | Notes |
 |-----------|-------------|-------|
@@ -110,7 +18,7 @@
 
 ---
 
-## 9. Tab Navigation - Detail
+## 2. Tab Navigation - Detail
 
 | Tab | Description | Notes |
 |-----|-------------|-------|
@@ -121,27 +29,27 @@
 | HA DONG | Ha Dong region | |
 | NGO | NGO region | |
 
-### 9.1 Tab Styling
+### 2.1 Tab Styling
 
 - Active tab: Pink underline
 - Inactive tab: No underline
 
 ---
 
-## 10. Area Section - Detail
+## 3. Area Section - Detail
 
-### 10.1 Area Header Card
+### 3.1 Area Header Card
 
 | Component | Description | Notes |
 |-----------|-------------|-------|
 | Area Name | Area name (e.g., "Area Ha Nam") | Bold font, uppercase, blue background |
 | Store Count | Number of stores in area | Store icon + number (e.g., "23 Stores") |
-| Expand/Collapse Icon | Arrow icon (∨/∧) | Right corner, click to expand/collapse |
+| Expand/Collapse Icon | Arrow icon (down/up) | Right corner, click to expand/collapse |
 | Background Color | Blue background | Distinguishes from store cards |
 
 ---
 
-## 11. Store Card - Detail
+## 4. Store Card - Detail
 
 | Component | Description | Notes |
 |-----------|-------------|-------|
@@ -150,12 +58,12 @@
 | Store Name | Store name (e.g., "Ocean Park 1") | Bold font |
 | Store Manager | Store manager name | Person icon + name |
 | Staff Count | Number of staff | Person icon + number (e.g., "Staff: 15") |
-| Expand/Collapse Icon | Arrow icon (∨/∧) | Right corner of card |
+| Expand/Collapse Icon | Arrow icon (down/up) | Right corner of card |
 | Indent Line | Vertical line showing Area hierarchy | Light gray, left side |
 
 ---
 
-## 12. Department Cards in Area - Detail
+## 5. Department Cards in Area - Detail
 
 | Department | Icon | Color |
 |------------|------|-------|
@@ -166,7 +74,7 @@
 
 ---
 
-## 13. Store Detail (When Expanded) - Detail
+## 6. Store Detail (When Expanded) - Detail
 
 | Component | Description | Notes |
 |-----------|-------------|-------|
@@ -179,7 +87,7 @@
 
 ---
 
-## 14. Validation Rules
+## 7. Validation Rules
 
 | Rule | Description |
 |------|-------------|
@@ -192,7 +100,7 @@
 
 ---
 
-## 15. API Endpoints - Detail
+## 8. API Endpoints - Detail
 
 ### Store Information API
 
@@ -214,7 +122,7 @@
 | Delete Store | DELETE | /api/v1/stores/{id} | Delete store |
 | Import Stores | POST | /api/v1/stores/import | Import stores from Excel |
 
-### 15.1 Get Region Tabs
+### 8.1 Get Region Tabs
 
 ```yaml
 get:
@@ -252,7 +160,7 @@ get:
                 code: "HNC"
 ```
 
-### 15.2 Get Region Hierarchy
+### 8.2 Get Region Hierarchy
 
 ```yaml
 get:
@@ -324,7 +232,7 @@ get:
       description: Region Not Found
 ```
 
-### 15.3 Get Store Detail
+### 8.3 Get Store Detail
 
 ```yaml
 get:
@@ -397,7 +305,7 @@ get:
       description: Store Not Found
 ```
 
-### 15.4 Add Store
+### 8.4 Add Store
 
 ```yaml
 post:
@@ -456,7 +364,7 @@ post:
             message: "Store code already exists"
 ```
 
-### 15.5 Update Store
+### 8.5 Update Store
 
 ```yaml
 put:
@@ -513,7 +421,7 @@ put:
       description: Store Not Found
 ```
 
-### 15.6 Import Stores
+### 8.6 Import Stores
 
 ```yaml
 post:
@@ -570,7 +478,9 @@ post:
                   error: "Invalid area"
 ```
 
-### 15.7 Schema Definitions
+---
+
+## 9. Schema Definitions
 
 ```yaml
 components:
@@ -635,7 +545,7 @@ components:
 
 ---
 
-## 16. UI States - Detail
+## 10. UI States - Detail
 
 | State Type | State | Display |
 |------------|-------|---------|
@@ -649,11 +559,11 @@ components:
 | Success | Store added | Toast "Store added successfully" |
 | Success | Import complete | Toast "Import completed: X stores added" |
 | Active | Tab selected | Tab has pink underline |
-| Expanded | Area/Store open | Arrow icon rotates up (∧) |
+| Expanded | Area/Store open | Arrow icon rotates up |
 
 ---
 
-## 17. Color Scheme - Detail
+## 11. Color Scheme - Detail
 
 | Element | Color | Hex Code |
 |---------|-------|----------|
@@ -670,7 +580,7 @@ components:
 
 ---
 
-## 18. Connector Lines - Detail
+## 12. Connector Lines - Detail
 
 | Component | Position | Description |
 |-----------|----------|-------------|
@@ -679,7 +589,7 @@ components:
 
 ---
 
-## 19. Files Reference
+## 13. Files Reference
 
 ```
 frontend/src/
@@ -706,7 +616,7 @@ frontend/src/
 
 ---
 
-## 20. Test Scenarios
+## 14. Test Scenarios
 
 ### A. UI/UX Testing
 
@@ -732,7 +642,7 @@ frontend/src/
 
 ---
 
-## 21. Changelog
+## 15. Changelog
 
 | Date | Change |
 |------|--------|
@@ -750,3 +660,14 @@ frontend/src/
 | 2026-01-04 | Implemented store expand functionality |
 | 2026-01-04 | Created StaffCard component |
 | 2026-01-06 | Restructured spec with Basic/Detail sections |
+| 2026-01-08 | Split spec into basic and detail files |
+
+---
+
+## 16. Related Documents
+
+| Document | Path |
+|----------|------|
+| Basic Spec | `docs/specs/ws/store-information-basic.md` |
+| User Information Basic | `docs/specs/ws/user-information-basic.md` |
+

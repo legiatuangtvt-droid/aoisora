@@ -4,6 +4,67 @@
 
 ---
 
+## 👤 VAI TRÒ VÀ TRÁCH NHIỆM
+
+### User Role: Spec Writer & QA Tester
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  NHIỆM VỤ CHÍNH:                                                │
+│                                                                 │
+│  📝 ĐẦU VÀO (Specification)                                     │
+│     → Viết Basic Spec: Tổng quan screen/feature                 │
+│     → Viết Detail Spec: Chi tiết UI, API, Logic                 │
+│                                                                 │
+│  🧪 ĐẦU RA (Testing)                                            │
+│     → Test từng screen sau khi build xong                       │
+│     → Verify spec khớp với implementation                       │
+│     → Report bugs và issues                                     │
+│                                                                 │
+│  🚀 SAU KHI PRODUCTION                                          │
+│     → Vận hành và bảo trì app                                   │
+│     → Monitor và xử lý issues                                   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Quy trình làm việc hiện tại
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  WORKFLOW:                                                      │
+│                                                                 │
+│  1. BUILD DEMO                                                  │
+│     → Claude build từng screen trên local                       │
+│     → Deploy lên demo server để review                          │
+│                                                                 │
+│  2. VIẾT SPEC (căn cứ vào demo hoàn thiện)                      │
+│     → Basic Spec: docs/specs/{module}/{screen}-basic.md         │
+│     → Detail Spec: docs/specs/{module}/{screen}-detail.md       │
+│                                                                 │
+│  3. TEST                                                        │
+│     → Test trên demo/local                                      │
+│     → Verify spec vs implementation                             │
+│     → Log issues nếu có                                         │
+│                                                                 │
+│  4. BÁO CÁO                                                     │
+│     → Submit spec files để review                               │
+│     → Basic và Detail tách riêng để dễ báo cáo                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Module đang phát triển
+
+| Priority | Module | Status | Notes |
+|----------|--------|--------|-------|
+| 1 | **WS** (Task from HQ) | 🔄 In Progress | Đang phát triển đầu tiên |
+| 2 | DWS | ⏳ Pending | - |
+| 3 | Manual | ⏳ Pending | - |
+| 4 | FAQ | ⏳ Pending | - |
+| 5 | Check Quality | ⏳ Pending | - |
+| 6 | Training | ⏳ Pending | - |
+
+---
+
 ## ⚠️ WORKFLOW LÀM VIỆC - CLAUDE PHẢI NHỚ
 
 ```
@@ -99,19 +160,30 @@ Specs được tổ chức theo module:
 ```
 docs/specs/
 ├── _shared/                    # Shared across all modules
-│   ├── authentication.md       # Login, Sign Up, Forgot Password
-│   └── app-general.md          # App-wide settings, themes
+│   ├── authentication-basic.md
+│   ├── authentication-detail.md
+│   ├── app-general-basic.md
+│   └── app-general-detail.md
 │
 ├── ws/                         # WS Module (Task from HQ)
-│   ├── task-list.md
-│   ├── task-detail.md
-│   ├── task-library.md
-│   ├── add-task.md
-│   ├── todo-task.md
-│   ├── user-information.md
-│   ├── store-information.md
-│   ├── message.md
-│   └── report.md
+│   ├── task-list-basic.md
+│   ├── task-list-detail.md
+│   ├── task-detail-basic.md
+│   ├── task-detail-detail.md
+│   ├── task-library-basic.md
+│   ├── task-library-detail.md
+│   ├── add-task-basic.md
+│   ├── add-task-detail.md
+│   ├── todo-task-basic.md
+│   ├── todo-task-detail.md
+│   ├── user-information-basic.md
+│   ├── user-information-detail.md
+│   ├── store-information-basic.md
+│   ├── store-information-detail.md
+│   ├── message-basic.md
+│   ├── message-detail.md
+│   ├── report-basic.md
+│   └── report-detail.md
 │
 ├── dws/                        # DWS Module
 ├── faq/                        # FAQ Module
@@ -119,6 +191,8 @@ docs/specs/
 ├── check-quality/              # Check Quality Module
 └── training/                   # Training Module
 ```
+
+> **Note**: Mỗi screen có 2 files: `-basic.md` (tổng quan) và `-detail.md` (chi tiết)
 
 **Quick Reference:**
 
@@ -131,6 +205,192 @@ docs/specs/
 | Manual | `docs/specs/manual/` | Knowledge Base |
 | Check Quality | `docs/specs/check-quality/` | Quality Check |
 | Training | `docs/specs/training/` | Training |
+
+### 4.1 Quy tắc viết Spec File
+
+#### Nguyên tắc cơ bản
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  SPEC VIẾT CHO PRODUCTION, KHÔNG PHẢI CHO DEMO                  │
+│                                                                 │
+│  → Spec mô tả feature đầy đủ như sẽ triển khai trên production  │
+│  → Build trên local đầy đủ tính năng                            │
+│  → Deploy demo có thể thiếu một số feature do hạn chế server    │
+│  → Sử dụng badge [DEMO] hoặc [PROD-ONLY] để phân biệt           │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### Cấu trúc Spec Files (Tách 2 file riêng)
+
+Mỗi screen có **2 file spec riêng biệt** để dễ báo cáo:
+
+```
+docs/specs/{module}/
+├── {screen}-basic.md      # Basic Spec - Tổng quan
+└── {screen}-detail.md     # Detail Spec - Chi tiết
+```
+
+**Ví dụ cho Task List:**
+```
+docs/specs/ws/
+├── task-list-basic.md     # Basic Spec
+└── task-list-detail.md    # Detail Spec
+```
+
+---
+
+**File 1: `{screen}-basic.md` - Basic Specification**
+
+```markdown
+# [Screen Name] - Basic Specification
+
+## 1. Overview
+- Module, Screen ID, Route, Purpose, Target Users
+
+## 2. User Stories
+- US-01, US-02, ... (As a... I want to... So that...)
+
+## 3. Screen Components Summary
+- Table liệt kê các component chính
+
+## 4. Screen Layout
+- ASCII diagram của màn hình
+
+## 5. Navigation
+- Điều hướng từ/đến screen này
+
+## 6. API Endpoints Summary
+- Table liệt kê endpoints (Method, Path, Description)
+
+## 7. Implementation Status
+- Table với columns: Feature | Backend | Frontend | Deploy | Notes
+- Sử dụng badge: [DEMO], [PROD-ONLY], [LOCAL-DEV]
+```
+
+---
+
+**File 2: `{screen}-detail.md` - Detail Specification**
+
+```markdown
+# [Screen Name] - Detail Specification
+
+## 1. Component Details
+### 1.1 [Component 1]
+### 1.2 [Component 2]
+- Chi tiết từng component: states, styles, behaviors
+
+## 2. API Endpoints - Detail
+- OpenAPI format với correlation check, business logic
+- Request/Response examples
+- Error codes
+
+## 3. Data Types
+- TypeScript interfaces
+- Enums, constants
+
+## 4. Validation Rules
+- Field validation, business rules
+
+## 5. Files Reference
+### 5.1 Frontend Files
+### 5.2 Backend Files
+
+## 6. Pending Features
+- Table: Feature | Priority | Status
+
+## 7. Changelog
+- Table: Date | Changes
+```
+
+#### Badge phân biệt Demo vs Production
+
+| Badge | Ý nghĩa | Sử dụng khi |
+|-------|---------|-------------|
+| `[DEMO]` | Feature hoạt động trên bản demo | Feature đơn giản, không cần server đặc biệt |
+| `[PROD-ONLY]` | Feature chỉ triển khai trên production | Cần email server, file storage, WebSocket, background jobs |
+| `[LOCAL-DEV]` | Feature có thể test trên local | Build đầy đủ trên local nhưng không deploy lên demo |
+
+**Ví dụ sử dụng trong Implementation Status:**
+
+```markdown
+## 7. Implementation Status
+
+| Feature | Backend | Frontend | Deploy | Notes |
+|---------|---------|----------|--------|-------|
+| Task List Table | ✅ Done | ✅ Done | [DEMO] | Hoạt động đầy đủ |
+| Real-time Updates | ✅ Done | ✅ Done | [PROD-ONLY] | Cần WebSocket server |
+| Email Notifications | ✅ Done | ✅ Done | [PROD-ONLY] | Cần SMTP server |
+| File Upload | ✅ Done | ✅ Done | [LOCAL-DEV] | Demo server không có storage |
+| Export Excel | ⏳ Pending | ⏳ Pending | [DEMO] | - |
+```
+
+#### Các feature thường là [PROD-ONLY]
+
+| Feature Type | Lý do không deploy demo |
+|--------------|-------------------------|
+| **Email** | Forgot password, notifications - demo không có SMTP |
+| **WebSocket** | Real-time updates - demo không chạy Reverb server |
+| **File Upload** | Storage hạn chế trên demo server |
+| **Background Jobs** | Demo không chạy queue worker |
+| **PDF/Excel Export** | Có thể nặng, demo server hạn chế resources |
+| **Push Notifications** | Cần Firebase/APNS setup |
+
+#### API Spec Format (OpenAPI style)
+
+```yaml
+get/post:
+  tags:
+    - [Module]-[Feature]
+  summary: "API Name"
+  description: |
+    # Correlation Check
+      - [Validation rules]
+
+    # Business Logic
+      ## 1. [Step 1]
+        ### [Sub-step details]
+      ## 2. [Step 2]
+
+  operationId: functionName
+  parameters:
+    - name: param_name
+      in: query/path/header
+      required: true/false
+      schema:
+        type: string/integer/boolean
+
+  requestBody: (for POST/PUT)
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "#/components/schemas/RequestSchema"
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example: {...}
+    400/401/404/500:
+      description: Error description
+```
+
+#### Changelog Format
+
+```markdown
+## 14. Changelog
+
+| Date | Changes |
+|------|---------|
+| YYYY-MM-DD | Brief description of changes |
+```
+
+**Lưu ý quan trọng:**
+- Mỗi khi thay đổi code → **BẮT BUỘC** update Changelog
+- Ghi rõ ngày (YYYY-MM-DD format)
+- Mô tả ngắn gọn những gì thay đổi
 
 ### 5. Laragon Paths (Windows)
 

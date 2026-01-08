@@ -1,92 +1,15 @@
-# Task List Screen Specification
+# Task List - Detail Specification
+
+> **Module**: WS (Task from HQ)
+> **Screen ID**: SCR_TASK_LIST
+> **Route**: `/tasks/list`
+> **Last Updated**: 2026-01-08
 
 ---
 
-# BASIC SPEC
+## 1. Component Details
 
-## 1. Overview
-
-- **Module**: WS (Task from HQ)
-- **Screen ID**: SCR_TASK_LIST
-- **Route**: `/tasks/list`
-- **Purpose**: Hiển thị danh sách task groups với khả năng lọc, sắp xếp và điều hướng
-- **Target Users**: Manager, Staff
-
-## 2. User Stories
-
-| ID | As a... | I want to... | So that... |
-|----|---------|--------------|------------|
-| US-01 | Manager | View all task groups | I can monitor team progress |
-| US-02 | Manager | Filter tasks by date/dept/status | I can focus on specific tasks |
-| US-03 | Manager | Sort tasks by column | I can organize the list |
-| US-04 | Staff | View my assigned tasks | I know what to work on |
-| US-05 | Manager | Create new task | I can assign work to team |
-
-## 3. Screen Components Summary
-
-| Component | Description |
-|-----------|-------------|
-| Header | Title "List tasks" |
-| DatePicker | DAY/WEEK/CUSTOM date selection |
-| Search | Text search for task name/dept |
-| Filter Button | Opens filter modal |
-| ADD NEW Button | Navigate to create task |
-| Data Table | Task groups with sortable columns |
-| Pagination | 10 items per page |
-
-## 4. Screen Layout
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│ List tasks                                                          │
-├─────────────────────────────────────────────────────────────────────┤
-│ [DatePicker]              [Search]  [Filter]  [+ ADD NEW]           │
-├─────────────────────────────────────────────────────────────────────┤
-│ No │ Dept │ Task Group │ Start→End │ Progress │ Unable │ Status │ HQ│
-├────┼──────┼────────────┼───────────┼──────────┼────────┼────────┼───┤
-│ 1  │ MKT  │ Task A     │ 12/01→... │ 5/10     │ 2      │ DONE   │...│
-│    │      │  ▼ SubTask │           │          │        │ DRAFT  │   │
-├────┼──────┼────────────┼───────────┼──────────┼────────┼────────┼───┤
-│ Total: X tasks group (Showing 1-10)              [1] [2] [3] [>]    │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-## 5. Navigation
-
-| Action | Destination |
-|--------|-------------|
-| Click row | Task Detail `/tasks/{id}` |
-| Click ADD NEW | Create Task `/tasks/new` |
-| Click Filter | Open Filter Modal |
-
-## 6. API Endpoints Summary
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/v1/tasks` | GET | Get task list with filters |
-| `/api/v1/tasks/{id}` | GET | Get task detail |
-| `/api/v1/departments` | GET | Get department list |
-
-## 7. Implementation Status
-
-| Feature | Backend | Frontend | Notes |
-|---------|---------|----------|-------|
-| Task List Table | ✅ Done | ✅ Done | API integrated |
-| DatePicker | ✅ Done | ✅ Done | Server-side date range filter |
-| Search | ✅ Done | ✅ Done | Server-side partial match |
-| Filter Modal | ✅ Done | ✅ Done | Server-side (dept, status) |
-| Sorting | ✅ Done | ✅ Done | Server-side via Spatie QueryBuilder |
-| Pagination | ✅ Done | ✅ Done | Server-side |
-| Column Quick Filters | - | ✅ Done | Client-side (dept, status, hqCheck) |
-| API Integration | ✅ Done | ✅ Done | 2026-01-07 |
-
----
-
-# DETAIL SPEC
-
-## 8. Header Section - Detail
-
-### 8.1 Components
+### 1.1 Header Section
 
 | Component | Description | Status |
 |-----------|-------------|--------|
@@ -95,8 +18,9 @@
 | Search | Text search for task name/dept | ✅ Implemented |
 | Filter Button | Opens filter modal | ✅ Implemented |
 | ADD NEW Button | Navigate to `/tasks/new` | ✅ Implemented |
+| Live Indicator | WebSocket connection status | ✅ Implemented |
 
-### 8.2 DatePicker Component
+### 1.2 DatePicker Component
 
 | Feature | Description | Status |
 |---------|-------------|--------|
@@ -114,11 +38,20 @@
 | Validation | Start date must be ≤ End date |
 | Auto-adjust | If selected date violates validation, both dates set to selected date |
 
+### 1.3 Search Component
+
+| Feature | Description |
+|---------|-------------|
+| Placeholder | "Search task name..." |
+| Debounce | 300ms delay before API call |
+| Clear button | X icon to clear search text |
+| Server-side | Partial match on task_name field |
+
 ---
 
-## 9. Data Table - Detail
+## 2. Data Table - Detail
 
-### 9.1 Columns
+### 2.1 Columns
 
 | Column | Sortable | Filterable | Status |
 |--------|----------|------------|--------|
@@ -131,7 +64,7 @@
 | Status | ✅ Yes | ✅ Yes (dropdown) | ✅ Implemented |
 | HQ Check | ✅ Yes | ✅ Yes (dropdown) | ✅ Implemented |
 
-### 9.2 Sorting Behavior
+### 2.2 Sorting Behavior
 
 - **3-state cycle**: None → Ascending → Descending → None
 - **Visual indicators**:
@@ -139,7 +72,7 @@
   - Ascending: Pink up arrow
   - Descending: Pink down arrow
 
-### 9.3 Column Filter Dropdowns
+### 2.3 Column Filter Dropdowns
 
 - Available on: Dept, Status, HQ Check columns
 - Features:
@@ -148,22 +81,22 @@
   - "Clear" button to deselect all
   - Badge showing number of active filters
 
-### 9.4 Row Expansion (Accordion)
+### 2.4 Row Expansion (Accordion)
 
 - Click expand icon to show sub-tasks
 - Only one row can be expanded at a time
 - Sub-tasks display: name, assignee, status
 
-### 9.5 Row Click Navigation
+### 2.5 Row Click Navigation
 
 - Click on row navigates to `/tasks/{id}` detail page
 - Expand button click does NOT trigger navigation (stopPropagation)
 
 ---
 
-## 10. Filter Modal - Detail
+## 3. Filter Modal - Detail
 
-### 10.1 Filter Options
+### 3.1 Filter Options
 
 | Filter | Options | Status |
 |--------|---------|--------|
@@ -172,7 +105,7 @@
 | Status | NOT_YET, DRAFT, DONE (chip buttons) | ✅ Implemented |
 | HQ Check | NOT_YET, DRAFT, DONE (chip buttons) | ✅ Implemented |
 
-### 10.2 Department Checkbox Logic
+### 3.2 Department Checkbox Logic
 
 | Action | Behavior |
 |--------|----------|
@@ -185,7 +118,7 @@
 
 ---
 
-## 11. Pagination - Detail
+## 4. Pagination - Detail
 
 | Feature | Value | Status |
 |---------|-------|--------|
@@ -194,7 +127,7 @@
 | Previous/Next | Arrow buttons | ✅ Implemented |
 | Total count | "Total: X tasks group (Page N of M)" | ✅ Server-side |
 
-### 11.1 Server-side Pagination
+### 4.1 Server-side Pagination
 
 - Pagination is now handled server-side via Laravel's built-in paginator
 - Frontend receives paginated response with `current_page`, `last_page`, `total`, `per_page`
@@ -203,40 +136,55 @@
 
 ---
 
-## 12. Data Types
+## 5. Real-time Updates (WebSocket) [PROD-ONLY]
 
-```typescript
-type TaskStatus = 'NOT_YET' | 'DRAFT' | 'DONE';
-type HQCheckStatus = 'NOT_YET' | 'DRAFT' | 'DONE';
-type DateMode = 'DAY' | 'WEEK' | 'CUSTOM';
+### 5.1 Architecture
+- **Server**: Laravel Reverb (PHP-based WebSocket server)
+- **Client**: Laravel Echo + Pusher.js
+- **Channel**: Public channel `tasks`
+- **Event**: `task.updated`
 
-interface TaskGroup {
-  id: string;
-  no: number;
-  dept: string;
-  taskGroupName: string;
-  startDate: string;
-  endDate: string;
-  progress: { completed: number; total: number };
-  unable: number;
-  status: TaskStatus;
-  hqCheck: HQCheckStatus;
-  subTasks?: SubTask[];
-}
+### 5.2 How it works
+1. User creates/updates/deletes a task via API
+2. TaskController broadcasts `TaskUpdated` event
+3. Reverb server forwards event to all connected clients
+4. Frontend receives event and refreshes task list
 
-interface SubTask {
-  id: string;
-  name: string;
-  assignee?: string;
-  status: TaskStatus;
-}
+### 5.3 Configuration
+
+**Backend (.env)**:
 ```
+BROADCAST_DRIVER=reverb
+REVERB_APP_ID=260147
+REVERB_APP_KEY=suhaw3wjz4bsbm2gmt5k
+REVERB_APP_SECRET=myrh562nv1igehs3ysgb
+REVERB_HOST=localhost
+REVERB_PORT=8080
+REVERB_SCHEME=http
+```
+
+**Frontend (.env.local)**:
+```
+NEXT_PUBLIC_REVERB_APP_KEY=suhaw3wjz4bsbm2gmt5k
+NEXT_PUBLIC_REVERB_HOST=localhost
+NEXT_PUBLIC_REVERB_PORT=8080
+NEXT_PUBLIC_REVERB_SCHEME=http
+```
+
+### 5.4 Running Reverb Server
+```bash
+php artisan reverb:start --port=8080
+```
+
+### 5.5 UI Indicator
+- Green dot with "Live" text when WebSocket connected
+- Gray dot with "Offline" text when disconnected
 
 ---
 
-## 13. API Endpoints - Detail
+## 6. API Endpoints - Detail
 
-### 13.1 Get Task List
+### 6.1 Get Task List
 
 ```yaml
 get:
@@ -491,107 +439,7 @@ get:
             message: "Internal server error"
 ```
 
-### 13.2 Get Task Detail
-
-```yaml
-get:
-  tags:
-    - WS-Tasks
-  summary: "Task Detail API"
-  description: |
-    # Correlation Check
-      - Task ID existence check against tasks table
-      - If not found → Return 404 Not Found
-
-    # Business Logic
-      ## 1. Get Task Data
-        ### Select Columns
-          - All columns from tasks table
-          - Related: department, status, taskType, responseType
-          - Related: assignedStaff, createdBy, doStaff
-          - Related: assignedStore, manual
-          - Related: checklists (with pivot data: is_completed, completed_at, completed_by)
-
-        ### Tables
-          - tasks (main)
-          - departments, code_master, staff, stores, manual_documents
-          - task_check_list (pivot), check_lists
-
-        ### Join Conditions
-          - Eager load all relationships via Eloquent
-
-      ## 2. Response
-        - Return single task with all related data
-
-  operationId: getTaskDetail
-  parameters:
-    - name: id
-      in: path
-      required: true
-      schema:
-        type: integer
-      description: Task ID
-
-  responses:
-    200:
-      description: OK
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/TaskDetail"
-          example:
-            data:
-              task_id: 1
-              task_name: "Marketing Campaign Q1"
-              task_description: "Quarterly marketing campaign for product launch"
-              start_date: "2026-01-01"
-              end_date: "2026-01-31"
-              start_time: "09:00:00"
-              priority: "high"
-              is_repeat: false
-              repeat_config: null
-              department:
-                department_id: 1
-                department_name: "Marketing"
-              status:
-                code_master_id: 10
-                code_name: "DRAFT"
-              task_type:
-                code_master_id: 5
-                code_name: "PROJECT"
-              assigned_staff:
-                staff_id: 5
-                staff_name: "John Doe"
-              created_by:
-                staff_id: 1
-                staff_name: "Admin"
-              checklists:
-                - check_list_id: 1
-                  check_list_name: "Review materials"
-                  pivot:
-                    is_completed: true
-                    completed_at: "2026-01-05T10:30:00Z"
-                    completed_by: 5
-                - check_list_id: 2
-                  check_list_name: "Submit report"
-                  pivot:
-                    is_completed: false
-                    completed_at: null
-                    completed_by: null
-
-    404:
-      description: Not Found
-      content:
-        application/json:
-          example:
-            success: false
-            message: "Task not found"
-
-    500:
-      description: Internal Server Error
-```
-
-### 13.3 Get Department List
+### 6.2 Get Department List
 
 ```yaml
 get:
@@ -656,7 +504,74 @@ get:
                     level: 1
 ```
 
-### 13.4 Schema Definitions
+---
+
+## 7. Data Types
+
+```typescript
+type TaskStatus = 'NOT_YET' | 'DRAFT' | 'DONE';
+type HQCheckStatus = 'NOT_YET' | 'DRAFT' | 'DONE';
+type DateMode = 'DAY' | 'WEEK' | 'CUSTOM';
+
+interface TaskGroup {
+  id: string;
+  no: number;
+  dept: string;
+  taskGroupName: string;
+  startDate: string;
+  endDate: string;
+  progress: { completed: number; total: number };
+  unable: number;
+  status: TaskStatus;
+  hqCheck: HQCheckStatus;
+  subTasks?: SubTask[];
+}
+
+interface SubTask {
+  id: string;
+  name: string;
+  assignee?: string;
+  status: TaskStatus;
+}
+
+interface PaginatedTaskResponse {
+  data: TaskGroup[];
+  links: {
+    first: string;
+    last: string;
+    prev: string | null;
+    next: string | null;
+  };
+  meta: {
+    current_page: number;
+    from: number;
+    last_page: number;
+    per_page: number;
+    to: number;
+    total: number;
+  };
+}
+
+interface TaskUpdateEvent {
+  action: 'created' | 'updated' | 'deleted' | 'status_changed';
+  task: {
+    task_id: number;
+    task_name: string;
+    status_id: number;
+    dept_id: number | null;
+    assigned_store_id: number | null;
+    start_date: string | null;
+    end_date: string | null;
+    priority: string | null;
+    updated_at: string;
+  };
+  timestamp: string;
+}
+```
+
+---
+
+## 8. Schema Definitions
 
 ```yaml
 components:
@@ -693,40 +608,6 @@ components:
           $ref: "#/components/schemas/Department"
         assigned_staff:
           $ref: "#/components/schemas/Staff"
-
-    TaskDetail:
-      allOf:
-        - $ref: "#/components/schemas/Task"
-        - type: object
-          properties:
-            start_time:
-              type: string
-              format: time
-              nullable: true
-            due_datetime:
-              type: string
-              format: date-time
-              nullable: true
-            is_repeat:
-              type: boolean
-              default: false
-            repeat_config:
-              type: object
-              nullable: true
-            task_type:
-              $ref: "#/components/schemas/CodeMaster"
-            response_type:
-              $ref: "#/components/schemas/CodeMaster"
-            created_by:
-              $ref: "#/components/schemas/Staff"
-            do_staff:
-              $ref: "#/components/schemas/Staff"
-            assigned_store:
-              $ref: "#/components/schemas/Store"
-            checklists:
-              type: array
-              items:
-                $ref: "#/components/schemas/CheckListWithPivot"
 
     CodeMaster:
       type: object
@@ -765,39 +646,6 @@ components:
         email:
           type: string
 
-    Store:
-      type: object
-      properties:
-        store_id:
-          type: integer
-        store_name:
-          type: string
-        store_code:
-          type: string
-
-    CheckListWithPivot:
-      type: object
-      properties:
-        check_list_id:
-          type: integer
-        check_list_name:
-          type: string
-        description:
-          type: string
-          nullable: true
-        pivot:
-          type: object
-          properties:
-            is_completed:
-              type: boolean
-            completed_at:
-              type: string
-              format: date-time
-              nullable: true
-            completed_by:
-              type: integer
-              nullable: true
-
     PaginationLinks:
       type: object
       properties:
@@ -831,31 +679,47 @@ components:
 
 ---
 
-## 14. Files Reference
+## 9. Validation Rules
 
-### 14.1 Frontend Files
+| Field | Rules |
+|-------|-------|
+| date_from | Optional, date format YYYY-MM-DD |
+| date_to | Optional, date format YYYY-MM-DD, must be >= date_from |
+| task_name | Optional, string, max 500 chars |
+| dept_id | Optional, integer, must exist in departments table |
+| status_id | Optional, integer, must exist in code_master table |
+| page | Optional, integer, min 1 |
+| per_page | Optional, integer, min 1, max 100 |
+
+---
+
+## 10. Files Reference
+
+### 10.1 Frontend Files
 
 ```
 frontend/src/
 ├── app/tasks/
-│   ├── list/page.tsx          # Main list page
-│   ├── new/page.tsx           # Create new task
-│   └── [id]/page.tsx          # Task detail
+│   └── list/page.tsx              # Main list page
 ├── components/
 │   ├── ui/
-│   │   ├── DatePicker.tsx     # Date selection component
-│   │   ├── StatusPill.tsx     # Status badge component
-│   │   ├── SearchBar.tsx      # Search input
+│   │   ├── DatePicker.tsx         # Date selection component
+│   │   ├── StatusPill.tsx         # Status badge component
+│   │   ├── SearchBar.tsx          # Search input
 │   │   └── ColumnFilterDropdown.tsx  # Column filter
 │   └── tasks/
-│       └── FilterModal.tsx    # Filter modal dialog
+│       └── FilterModal.tsx        # Filter modal dialog
 ├── types/
-│   └── tasks.ts               # Type definitions
-└── data/
-    └── mockTasks.ts           # Mock data (temporary)
+│   └── tasks.ts                   # Type definitions
+├── lib/
+│   └── echo.ts                    # Echo configuration
+├── hooks/
+│   └── useTaskUpdates.ts          # WebSocket hook
+└── services/
+    └── taskService.ts             # API calls
 ```
 
-### 14.2 Backend Files
+### 10.2 Backend Files
 
 | Feature | File |
 |---------|------|
@@ -866,89 +730,17 @@ frontend/src/
 
 ---
 
-## 15. Pending Features
+## 11. Pending Features
 
 | Feature | Priority | Status |
 |---------|----------|--------|
-| Backend API integration | High | ✅ Done (2026-01-07) |
-| Date filter (server-side) | Medium | ✅ Done (2026-01-07) |
-| Real-time updates (WebSocket) | Low | ✅ Done (2026-01-07) |
-| Export functionality (Excel/PDF) | Low | ⏳ Pending |
+| Export Excel | Medium | ⏳ Pending |
+| Export PDF | Low | ⏳ Pending |
+| Bulk actions | Low | ⏳ Pending |
 
 ---
 
-## 15.1 Real-time Updates (WebSocket)
-
-### Architecture
-- **Server**: Laravel Reverb (PHP-based WebSocket server)
-- **Client**: Laravel Echo + Pusher.js
-- **Channel**: Public channel `tasks`
-- **Event**: `task.updated`
-
-### How it works
-1. User creates/updates/deletes a task via API
-2. TaskController broadcasts `TaskUpdated` event
-3. Reverb server forwards event to all connected clients
-4. Frontend receives event and refreshes task list
-
-### Configuration
-
-**Backend (.env)**:
-```
-BROADCAST_DRIVER=reverb
-REVERB_APP_ID=260147
-REVERB_APP_KEY=suhaw3wjz4bsbm2gmt5k
-REVERB_APP_SECRET=myrh562nv1igehs3ysgb
-REVERB_HOST=localhost
-REVERB_PORT=8080
-REVERB_SCHEME=http
-```
-
-**Frontend (.env.local)**:
-```
-NEXT_PUBLIC_REVERB_APP_KEY=suhaw3wjz4bsbm2gmt5k
-NEXT_PUBLIC_REVERB_HOST=localhost
-NEXT_PUBLIC_REVERB_PORT=8080
-NEXT_PUBLIC_REVERB_SCHEME=http
-```
-
-### Running Reverb Server
-```bash
-php artisan reverb:start --port=8080
-```
-
-### Event Payload
-```typescript
-interface TaskUpdateEvent {
-  action: 'created' | 'updated' | 'deleted' | 'status_changed';
-  task: {
-    task_id: number;
-    task_name: string;
-    status_id: number;
-    dept_id: number | null;
-    assigned_store_id: number | null;
-    start_date: string | null;
-    end_date: string | null;
-    priority: string | null;
-    updated_at: string;
-  };
-  timestamp: string;
-}
-```
-
-### Frontend Files
-| File | Description |
-|------|-------------|
-| `src/lib/echo.ts` | Echo configuration and subscription helpers |
-| `src/hooks/useTaskUpdates.ts` | React hook for subscribing to task updates |
-
-### UI Indicator
-- Green dot with "Live" text when WebSocket connected
-- Gray dot with "Offline" text when disconnected
-
----
-
-## 16. Changelog
+## 12. Changelog
 
 | Date | Changes |
 |------|---------|
@@ -978,3 +770,4 @@ interface TaskUpdateEvent {
 | 2026-01-07 | Added TaskUpdated event for broadcasting task changes |
 | 2026-01-07 | Created useTaskUpdates React hook for WebSocket subscription |
 | 2026-01-07 | Added Live/Offline connection status indicator in Task List header |
+| 2026-01-08 | Split spec into basic and detail files |

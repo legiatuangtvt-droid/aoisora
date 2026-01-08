@@ -1,96 +1,15 @@
-# Message Screen Specification
+# Message - Detail Specification
+
+> **Module**: WS (Task from HQ)
+> **Screen ID**: SCR_MESSAGE
+> **Route**: `/tasks/messages`
+> **Last Updated**: 2026-01-08
 
 ---
 
-# BASIC SPEC
+## 1. Conversation List - Detail
 
-## 1. Overview
-
-- **Module**: WS (Task from HQ)
-- **Screen ID**: SCR_MESSAGE
-- **Route**: `/tasks/messages`
-- **Purpose**: Send messages to all stores or specific stores for task-related notifications and reminders
-- **Target Users**: HQ (Headquarter) Staff
-
-## 2. User Stories
-
-| ID | As a... | I want to... | So that... |
-|----|---------|--------------|------------|
-| US-01 | HQ Staff | View all conversations | I can see ongoing chats |
-| US-02 | HQ Staff | Search for conversations | I can find specific stores |
-| US-03 | HQ Staff | Send messages to all stores | I can broadcast announcements |
-| US-04 | HQ Staff | Send messages to specific stores | I can communicate directly |
-| US-05 | HQ Staff | View message history | I can see past communications |
-| US-06 | HQ Staff | See read receipts | I know if messages were read |
-
-## 3. Screen Components Summary
-
-| Component | Description |
-|-----------|-------------|
-| Conversation List | Left sidebar with Groups and individual store chats |
-| Search Bar | Search conversations |
-| Chat Area | Message history and input |
-| Chat Header | Current conversation info |
-| Message Input | Text input with emoji and send |
-
-## 4. Screen Layout
-
-```
-┌───────────────────────────────────────────────────────────────────────────┐
-│ ┌─────────────────────┬────────────────────────────────────────────────┐  │
-│ │ Search...           │  ALL STORES              [🔍] [⋮]             │  │
-│ ├─────────────────────┼────────────────────────────────────────────────┤  │
-│ │ Groups              │                                                │  │
-│ │ ├─ ALL STORE        │                   Today                       │  │
-│ │ └─ Unable to...     │  ┌──────────────────────────────────────┐      │  │
-│ │                     │  │    Received message                  │      │  │
-│ │ Stores              │  └──────────────────────────────────────┘      │  │
-│ │ ├─ OCEAN PARK       │                                                │  │
-│ │ ├─ ECO PARK         │  ┌──────────────────────────────────────┐      │  │
-│ │ └─ HA NOI CENTER    │  │    Sent message              18:16 ✓✓│      │  │
-│ │                     │  └──────────────────────────────────────┘      │  │
-│ ├─────────────────────┼────────────────────────────────────────────────┤  │
-│ │                     │  [😀] Message...                        [➤]   │  │
-│ └─────────────────────┴────────────────────────────────────────────────┘  │
-└───────────────────────────────────────────────────────────────────────────┘
-```
-
-## 5. Navigation
-
-| Action | Destination |
-|--------|-------------|
-| Click Sidebar "Task list HQ-Store" > "Message" | `/tasks/messages` |
-| Click conversation in list | Load chat history |
-| Click send button | Send message |
-| Enter search text | Filter conversations |
-
-## 6. API Endpoints Summary
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/v1/messages/conversations` | GET | Get conversation list |
-| `/api/v1/messages/{conversationId}` | GET | Get messages |
-| `/api/v1/messages` | POST | Send message |
-| `/api/v1/messages/{id}/read` | PUT | Mark as read |
-
-## 7. Implementation Status
-
-| Feature | Backend | Frontend | Notes |
-|---------|---------|----------|-------|
-| Message Page | ⏳ Pending | ✅ Done | Mock data |
-| Conversation List | ⏳ Pending | ✅ Done | Mock data |
-| Chat Area | ⏳ Pending | ✅ Done | Mock data |
-| Message Bubbles | - | ✅ Done | UI only |
-| Message Input | ⏳ Pending | ✅ Done | Mock data |
-| API Integration | ⏳ Pending | ⏳ Pending | - |
-
----
-
-# DETAIL SPEC
-
-## 8. Conversation List - Detail
-
-### 8.1 Search Bar
+### 1.1 Search Bar
 
 | Attribute | Value |
 |-----------|-------|
@@ -98,7 +17,7 @@
 | Placeholder | "Search or start new chat" |
 | Function | Search in Groups and Stores list |
 
-### 8.2 Groups Section
+### 1.2 Groups Section
 
 | Component | Description | Notes |
 |-----------|-------------|-------|
@@ -112,9 +31,9 @@
 
 ---
 
-## 9. Chat Area - Detail
+## 2. Chat Area - Detail
 
-### 9.1 Chat Header
+### 2.1 Chat Header
 
 | Component | Description | Notes |
 |-----------|-------------|-------|
@@ -123,7 +42,7 @@
 | Search Icon | Search within chat icon | Right corner |
 | Menu Icon (...) | Chat options menu | Far right corner |
 
-### 9.2 Message Area
+### 2.2 Message Area
 
 | Component | Description | Notes |
 |-----------|-------------|-------|
@@ -133,7 +52,7 @@
 | Timestamp | Send time (e.g., "18:16") | Small text, bottom right corner |
 | Read Receipt | Check icon or double check | Next to timestamp |
 
-### 9.3 Message Input
+### 2.3 Message Input
 
 | Component | Description | Notes |
 |-----------|-------------|-------|
@@ -143,9 +62,9 @@
 
 ---
 
-## 10. UI Components - Detail
+## 3. UI Components - Detail
 
-### 10.1. ConversationList
+### 3.1. ConversationList
 
 - Search bar at top
 - Groups section with collapsible header
@@ -153,21 +72,21 @@
 - Unread badge indicator
 - Last message preview with timestamp
 
-### 10.2. ChatHeader
+### 3.2. ChatHeader
 
 - Back button (mobile)
 - Group/Store avatar
 - Chat name
 - Search and menu icons
 
-### 10.3. MessageBubble
+### 3.3. MessageBubble
 
 - Sent messages (pink, right-aligned)
 - Received messages (gray/white, left-aligned)
 - Timestamp
 - Read receipt icons
 
-### 10.4. MessageInput
+### 3.4. MessageInput
 
 - Emoji picker button
 - Text input field
@@ -175,7 +94,39 @@
 
 ---
 
-## 11. API Endpoints - Detail
+## 4. Message Styling - Detail
+
+### 4.1 Sent Message Bubble
+
+| Property | Value |
+|----------|-------|
+| Background | Pink (#C5055B) |
+| Text Color | White |
+| Border Radius | 16px 16px 0 16px |
+| Alignment | Right |
+| Max Width | 70% |
+
+### 4.2 Received Message Bubble
+
+| Property | Value |
+|----------|-------|
+| Background | White/Light Gray (#F5F5F5) |
+| Text Color | Black |
+| Border Radius | 16px 16px 16px 0 |
+| Alignment | Left |
+| Max Width | 70% |
+
+### 4.3 Read Receipts
+
+| Status | Icon | Color |
+|--------|------|-------|
+| Sent | Single check | Gray |
+| Delivered | Double check | Gray |
+| Read | Double check | Blue (#2196F3) |
+
+---
+
+## 5. API Endpoints - Detail
 
 | Action | Method | Endpoint | Description |
 |--------|--------|----------|-------------|
@@ -185,7 +136,7 @@
 | Search Conversations | GET | /api/v1/messages/search?q={query} | Search conversations |
 | Mark as Read | PUT | /api/v1/messages/{id}/read | Mark as read |
 
-### 11.1 Get Conversations
+### 5.1 Get Conversations
 
 ```yaml
 get:
@@ -252,7 +203,7 @@ get:
                   unreadCount: 2
 ```
 
-### 11.2 Get Messages
+### 5.2 Get Messages
 
 ```yaml
 get:
@@ -334,7 +285,7 @@ get:
               totalPages: 3
 ```
 
-### 11.3 Send Message
+### 5.3 Send Message
 
 ```yaml
 post:
@@ -395,7 +346,7 @@ post:
             message: "Message content is required"
 ```
 
-### 11.4 Search Conversations
+### 5.4 Search Conversations
 
 ```yaml
 get:
@@ -437,7 +388,7 @@ get:
                   lastMessage: "Task completed"
 ```
 
-### 11.5 Mark as Read
+### 5.5 Mark as Read
 
 ```yaml
 put:
@@ -472,7 +423,9 @@ put:
             message: "Message marked as read"
 ```
 
-### 11.6 Schema Definitions
+---
+
+## 6. Schema Definitions
 
 ```yaml
 components:
@@ -540,7 +493,18 @@ components:
 
 ---
 
-## 12. Files Reference
+## 7. Real-time Features (PROD-ONLY)
+
+| Feature | Description | Deploy |
+|---------|-------------|--------|
+| WebSocket Connection | Real-time message delivery | [PROD-ONLY] |
+| Push Notifications | Notify when new message arrives | [PROD-ONLY] |
+| Typing Indicator | Show when user is typing | [PROD-ONLY] |
+| Online Status | Show user online/offline status | [PROD-ONLY] |
+
+---
+
+## 8. Files Reference
 
 ```
 frontend/src/
@@ -565,7 +529,7 @@ frontend/src/
 
 ---
 
-## 13. Test Scenarios
+## 9. Test Scenarios
 
 | Test Case | Scenario | Expected Result |
 |-----------|----------|-----------------|
@@ -574,13 +538,36 @@ frontend/src/
 | Search conversation | Enter store name in search | Filter list correctly |
 | Switch conversation | Click from ALL STORE to OCEAN PARK | Chat area loads correct conversation |
 | Read receipt | Open conversation with unread messages | Badge disappears, messages marked as read |
+| Long message | Send message > 500 characters | Message wraps correctly |
+| Emoji | Send message with emoji | Emoji displays correctly |
 
 ---
 
-## 14. Changelog
+## 10. Responsive Behavior
+
+| Breakpoint | Behavior |
+|------------|----------|
+| Desktop (>1024px) | Side-by-side layout: conversation list + chat area |
+| Tablet (768-1024px) | Conversation list overlay or slide panel |
+| Mobile (<768px) | Full-screen views: list → chat transition |
+
+---
+
+## 11. Changelog
 
 | Date | Change |
 |------|--------|
 | 2025-12-31 | Initial specification created |
 | 2025-12-31 | Implemented all UI components with mock data |
 | 2026-01-06 | Restructured spec with Basic/Detail sections |
+| 2026-01-08 | Split spec into basic and detail files |
+
+---
+
+## 12. Related Documents
+
+| Document | Path |
+|----------|------|
+| Basic Spec | `docs/specs/ws/message-basic.md` |
+| Task List Basic | `docs/specs/ws/task-list-basic.md` |
+
