@@ -363,42 +363,52 @@ Campaign Q1 2026 (Level 1, ID: 1)
 
 ### Task Visibility & Permissions
 
-**Visibility Rules by User Role:**
+**Approach: Task-Assignment Based (Simplified)**
 
-| Role Level | Job Grades | Visibility Scope | Assignee Display |
-|------------|------------|------------------|------------------|
-| **Staff** | G2, G3, S1 | Only assigned tasks + parent (context) | Only own tasks |
-| **Team Lead** | G4, S2, S3 | All tasks in team | Team members only |
-| **Manager** | G5, G6, S4, S5 | All tasks in department/area | Department members |
-| **Director+** | G7, G8, G9, S6 | All tasks in scope | All users |
+**API Response:**
+- API returns ALL tasks (parent + all sub-tasks) without filtering
+- API includes `assignee` field in all sub-tasks for backend tracking
+- Frontend applies display logic based on user context
 
-**Parent Task Context:**
-- If user is assigned to sub-task only → Still show parent task for context
-- Parent task displayed as read-only reference (not editable)
-- Parent task helps user understand overall campaign/project
+**Frontend Display Rules:**
+
+| User Scenario | Display Behavior |
+|---------------|------------------|
+| **Assigned to parent task** | Show full task hierarchy (parent + all sub-tasks) |
+| **Assigned to sub-task only** | Show parent task (context) + assigned sub-task(s) |
+| **Not assigned** | Apply grade-based filter (see Permission-based Data Access) |
+
+**Parent Task Context Rule:**
+- ✅ **Always show parent task** when user is assigned to any sub-task
+- Parent task provides context (campaign/project understanding)
+- Parent task displayed as read-only if user not assigned to it
+- Helps user understand overall workflow and dependencies
 
 **Assignee Field Display:**
-- `assignee` field exists in API response for all sub-tasks
-- Frontend should conditionally display based on user permissions
-- Hide assignee names if user doesn't have permission to view
+- `assignee` field exists in API response
+- **Frontend does NOT display assignee names** (no UI design requirement)
+- Field reserved for future use or internal tracking only
 
-**Frontend Implementation Note:**
+**Implementation Summary:**
 ```typescript
-// Current UI: Assignee name NOT displayed in sub-tasks
-// Reason: No design requirement for assignee display
-// Future: Can be enabled based on user role/permissions
+// API: Returns all tasks with assignee field
+// Frontend:
+// - Does NOT display assignee names in UI
+// - Filters display based on task assignments
+// - Always shows parent task for context
+
+const shouldShowTask = (task, currentUser) => {
+  // Show if assigned to parent or any sub-task
+  return isAssignedToTask(task, currentUser) ||
+         hasAssignedSubTask(task, currentUser);
+};
 ```
 
-**Permission Logic:**
-```
-IF user.grade >= G4 (Manager+):
-  → Show all tasks in scope with assignee names
-ELSE IF user is assigned to task:
-  → Show assigned tasks + parent context
-  → Show assignee only for own tasks
-ELSE:
-  → No access to task
-```
+**Key Principles:**
+1. **Simplicity**: No complex role-based visibility rules
+2. **Context**: Parent task always visible for assigned users
+3. **Privacy**: Assignee names not displayed in UI
+4. **Flexibility**: API structure supports future enhancements
 
 ---
 
