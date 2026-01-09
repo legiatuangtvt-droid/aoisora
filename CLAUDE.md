@@ -150,8 +150,31 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 | Layer | Location | Responsibility |
 |-------|----------|----------------|
 | **Frontend** | `/frontend` | UI, User interactions, State management |
-| **Backend** | `/backend` | API endpoints, Business logic, Validation |
+| **Backend** | `/backend/laravel` | API endpoints, Business logic, Validation |
+| **API Entry** | `/backend/api` | Public endpoint (index.php) |
 | **Database** | `/database` | Data storage, Schema, Indexes |
+
+**Backend Structure (match server):**
+```
+backend/
+├── api/                    # Upload to: public_html/api/
+│   ├── .htaccess
+│   └── index.php          # Entry point, trỏ đến ../laravel/
+│
+└── laravel/               # Upload to: public_html/laravel/
+    ├── app/
+    ├── bootstrap/
+    ├── config/
+    ├── database/
+    ├── resources/
+    ├── routes/
+    ├── storage/
+    ├── tests/
+    ├── vendor/
+    ├── .env
+    ├── artisan
+    └── composer.json
+```
 
 ### 4. Spec Files Location
 
@@ -621,13 +644,13 @@ Sau khi đồng bộ xong, khởi động servers theo thứ tự:
 "D:\devtool\laragon\bin\postgresql\pgsql-18\bin\pg_ctl.exe" -D "D:\devtool\laragon\data\postgresql" start
 
 # 2. Start Backend (Laravel)
-cd backend && "D:\devtool\laragon\bin\php\php-8.3.28-Win32-vs16-x64\php.exe" artisan serve
+cd backend/laravel && "D:\devtool\laragon\bin\php\php-8.3.28-Win32-vs16-x64\php.exe" artisan serve
 
 # 3. Start Frontend (Next.js)
 cd frontend && npm run dev
 
 # 4. Start Reverb WebSocket Server (Optional - for real-time updates)
-cd backend && "D:\devtool\laragon\bin\php\php-8.3.28-Win32-vs16-x64\php.exe" artisan reverb:start --port=8080
+cd backend/laravel && "D:\devtool\laragon\bin\php\php-8.3.28-Win32-vs16-x64\php.exe" artisan reverb:start --port=8080
 ```
 
 > **Note**: Reverb là optional. Nếu không chạy, app vẫn hoạt động bình thường nhưng không có real-time updates (Task List sẽ hiển thị "Offline").
@@ -646,14 +669,21 @@ Chi tiết: `docs/SESSION_START_CHECKLIST.md`
 
 #### Khi nào cần Upload Backend (FileZilla)
 
-| Thay đổi | Files cần upload | Destination |
-|----------|------------------|-------------|
-| **Controller/Service/Model** | `backend/app/` | `public_html/laravel/app/` |
-| **Routes** | `backend/routes/` | `public_html/laravel/routes/` |
-| **Config** (cors, auth...) | `backend/config/` | `public_html/laravel/config/` |
-| **Resources/Views** | `backend/resources/` | `public_html/laravel/resources/` |
-| **Environment** | `deploy/laravel/.env` | `public_html/laravel/.env` |
-| **Thêm package mới** | `backend/vendor/` | `public_html/laravel/vendor/` |
+**Cấu trúc local → server mapping:**
+```
+backend/api/      →  public_html/api/
+backend/laravel/  →  public_html/laravel/
+```
+
+| Thay đổi | Local Path | Server Path |
+|----------|------------|-------------|
+| **Controller/Service/Model** | `backend/laravel/app/` | `public_html/laravel/app/` |
+| **Routes** | `backend/laravel/routes/` | `public_html/laravel/routes/` |
+| **Config** (cors, auth...) | `backend/laravel/config/` | `public_html/laravel/config/` |
+| **Resources/Views** | `backend/laravel/resources/` | `public_html/laravel/resources/` |
+| **Environment** | `backend/laravel/.env` | `public_html/laravel/.env` |
+| **API Entry** | `backend/api/` | `public_html/api/` |
+| **Thêm package mới** | `backend/laravel/vendor/` | `public_html/laravel/vendor/` |
 
 **KHÔNG cần upload lại:**
 - `vendor/` - Chỉ khi thêm package mới (composer require)
@@ -681,7 +711,8 @@ Chi tiết: `docs/SESSION_START_CHECKLIST.md`
 │  ☐ 2. Commit & Push (Frontend auto-deploy qua Vercel)           │
 │                                                                 │
 │  ☐ 3. Backend thay đổi? → Upload qua FileZilla                  │
-│       - app/, routes/, config/ → public_html/laravel/           │
+│       - backend/laravel/ → public_html/laravel/                 │
+│       - backend/api/ → public_html/api/ (nếu có thay đổi)       │
 │                                                                 │
 │  ☐ 4. Database schema thay đổi? → Import qua phpMyAdmin         │
 │       - Tạo file migration SQL riêng (không dùng schema_mysql)  │
