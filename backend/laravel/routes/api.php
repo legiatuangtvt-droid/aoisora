@@ -81,6 +81,10 @@ Route::prefix('v1')->group(function () {
     Route::get('teams', [TeamController::class, 'index']);
     Route::get('teams/{team}', [TeamController::class, 'show']);
 
+    // Departments (public read-only)
+    Route::get('departments', [DepartmentController::class, 'index']);
+    Route::get('departments/{department}', [DepartmentController::class, 'show']);
+
     // Protected routes
     Route::middleware('auth:sanctum')->group(function () {
         // Auth
@@ -96,9 +100,7 @@ Route::prefix('v1')->group(function () {
         Route::put('stores/{store}', [StoreController::class, 'update']);
         Route::delete('stores/{store}', [StoreController::class, 'destroy']);
 
-        // Departments (all operations require auth)
-        Route::get('departments', [DepartmentController::class, 'index']);
-        Route::get('departments/{department}', [DepartmentController::class, 'show']);
+        // Departments (write operations require auth, read is public)
         Route::post('departments', [DepartmentController::class, 'store']);
         Route::put('departments/{department}', [DepartmentController::class, 'update']);
         Route::delete('departments/{department}', [DepartmentController::class, 'destroy']);

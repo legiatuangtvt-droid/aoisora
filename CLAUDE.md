@@ -530,17 +530,35 @@ get/post:
 # PHP
 PHP="D:\devtool\laragon\bin\php\php-8.3.28-Win32-vs16-x64\php.exe"
 
-# PostgreSQL
-PSQL="D:\devtool\laragon\bin\postgresql\pgsql-18\bin\psql.exe"
-PG_CTL="D:\devtool\laragon\bin\postgresql\pgsql-18\bin\pg_ctl.exe"
-PG_DATA="D:\devtool\laragon\data\postgresql"
+# MySQL
+MYSQL="D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysql.exe"
+MYSQLD="D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysqld.exe"
 ```
 
 ### 6. Database
 
-- Database name: `aoisora`
-- Schema file: `database/schema.sql`
-- Seed file: `database/seed_data.sql`
+**⚠️ QUAN TRỌNG**: Local và Production đều dùng **MySQL** để đảm bảo tương thích.
+
+- **Database engine**: MySQL 8.4
+- **Database name**: `aoisora`
+- **Schema file**: `database/schema_mysql.sql`
+- **Seed file**: `deploy/seed_data_mysql.sql`
+- **Username**: `root` (local) / `auraorie_app` (production)
+- **Password**: `` (empty, local) / `***` (production)
+
+**Khởi động MySQL:**
+```bash
+# Qua Laragon UI: Click "Start All"
+# Hoặc command line (nếu đã config):
+mysqld --defaults-file="D:\devtool\laragon\data\mysql\my.ini"
+```
+
+**Import Schema:**
+```bash
+cd "D:\Project\Aura Web"
+"D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysql.exe" -uroot aoisora < database/schema_mysql.sql
+"D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysql.exe" -uroot aoisora < deploy/seed_data_mysql.sql
+```
 
 ### 7. Module Scope
 
@@ -640,11 +658,11 @@ git pull origin <current-branch>
 Sau khi đồng bộ xong, khởi động servers theo thứ tự:
 
 ```bash
-# 1. Start PostgreSQL
-"D:\devtool\laragon\bin\postgresql\pgsql-18\bin\pg_ctl.exe" -D "D:\devtool\laragon\data\postgresql" start
+# 1. Start MySQL (qua Laragon UI hoặc command)
+# Laragon UI: Click "Start All" hoặc right-click MySQL → Start
 
-# 2. Start Backend (Laravel)
-cd backend/laravel && "D:\devtool\laragon\bin\php\php-8.3.28-Win32-vs16-x64\php.exe" artisan serve
+# 2. Start Backend (PHP built-in server)
+cd backend/api && "D:\devtool\laragon\bin\php\php-8.3.28-Win32-vs16-x64\php.exe" -S localhost:8000
 
 # 3. Start Frontend (Next.js)
 cd frontend && npm run dev
@@ -653,7 +671,9 @@ cd frontend && npm run dev
 cd backend/laravel && "D:\devtool\laragon\bin\php\php-8.3.28-Win32-vs16-x64\php.exe" artisan reverb:start --port=8080
 ```
 
-> **Note**: Reverb là optional. Nếu không chạy, app vẫn hoạt động bình thường nhưng không có real-time updates (Task List sẽ hiển thị "Offline").
+> **Notes**:
+> - Backend chạy từ `backend/api/` (entry point) chứ không phải `backend/laravel/`
+> - Reverb là optional. Nếu không chạy, app vẫn hoạt động bình thường nhưng không có real-time updates (Task List sẽ hiển thị "Offline").
 
 Chi tiết: `docs/SESSION_START_CHECKLIST.md`
 

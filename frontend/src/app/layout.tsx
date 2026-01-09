@@ -17,6 +17,11 @@ const orbitron = Orbitron({
 export const metadata: Metadata = {
   title: "OptiChain WS & DWS",
   description: "Work Schedule and Dispatch Work Schedule Management System",
+  icons: {
+    icon: "/images/logos/aoisora.png",
+    shortcut: "/images/logos/aoisora.png",
+    apple: "/images/logos/aoisora.png",
+  },
 };
 
 export default function RootLayout({
