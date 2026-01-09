@@ -28,14 +28,18 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| `is_active` | boolean | No | true | Filter by active status |
-| `parent_id` | integer | No | - | Filter by parent department ID (null = root departments only) |
+| `is_active` | boolean | No | true | Filter by active status. Set to `false` to include inactive, or `all` to get all |
+
+**Parameter Values:**
+- `is_active=true` (default): Only active departments
+- `is_active=false`: Only inactive departments
+- `is_active=all`: All departments regardless of status
 
 ---
 
 ## 2. description
 
-This API retrieves the list of departments for use in filters and dropdowns across the application. The API returns all active departments by default, ordered by `sort_order` and `department_id`.
+This API retrieves the list of departments for use in filters and dropdowns across the application. By default, returns only **active departments** ordered by `sort_order` and `department_id`.
 
 **Use Cases**:
 - Populate department filter dropdown in Task List screen
@@ -49,7 +53,7 @@ This API retrieves the list of departments for use in filters and dropdowns acro
 SQL query implementation:
 
 ```sql
--- Get departments list
+-- Get departments list with is_active filter
 SELECT
     d.department_id,
     d.department_name,
@@ -63,12 +67,15 @@ SELECT
     d.is_active
 FROM departments d
 WHERE 1=1
-    -- Active filter (default: only active)
-    AND (d.is_active = :is_active OR :is_active IS NULL)
-
-    -- Parent filter (optional)
-    AND (d.parent_id = :parent_id OR :parent_id IS NULL)
-
+    -- is_active filter (default: true)
+    AND (
+        CASE
+            WHEN :is_active = 'all' THEN TRUE
+            WHEN :is_active = 'true' THEN d.is_active = TRUE
+            WHEN :is_active = 'false' THEN d.is_active = FALSE
+            ELSE d.is_active = TRUE  -- default behavior
+        END
+    )
 ORDER BY d.sort_order ASC, d.department_id ASC;
 ```
 
@@ -176,9 +183,18 @@ Response structure:
 
 ### Default Behavior
 
-- Returns **all active departments** if no parameters provided
+- Returns only **active departments** (`is_active = true`) by default
 - Ordered by `sort_order` ASC, then `department_id` ASC
 - No pagination (departments list is typically small)
+
+### is_active Filter Logic
+
+| Parameter Value | SQL Filter | Use Case |
+|-----------------|------------|----------|
+| (not provided) | `is_active = true` | Default - dropdown for users |
+| `true` | `is_active = true` | Same as default |
+| `false` | `is_active = false` | View inactive only |
+| `all` | No filter | Admin management screen |
 
 ### Hierarchical Structure
 
