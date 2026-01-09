@@ -41,8 +41,6 @@ Route::prefix('v1')->group(function () {
     });
 
     // Public read-only routes (for listing/browsing)
-    Route::get('departments', [DepartmentController::class, 'index']);
-    Route::get('departments/{department}', [DepartmentController::class, 'show']);
     Route::get('tasks', [TaskController::class, 'index']);
     Route::get('tasks/{task}', [TaskController::class, 'show']);
     Route::get('stores', [StoreController::class, 'index']);
@@ -98,7 +96,9 @@ Route::prefix('v1')->group(function () {
         Route::put('stores/{store}', [StoreController::class, 'update']);
         Route::delete('stores/{store}', [StoreController::class, 'destroy']);
 
-        // Departments (only write operations - read operations are public)
+        // Departments (all operations require auth)
+        Route::get('departments', [DepartmentController::class, 'index']);
+        Route::get('departments/{department}', [DepartmentController::class, 'show']);
         Route::post('departments', [DepartmentController::class, 'store']);
         Route::put('departments/{department}', [DepartmentController::class, 'update']);
         Route::delete('departments/{department}', [DepartmentController::class, 'destroy']);
