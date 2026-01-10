@@ -146,13 +146,3 @@ Sign Up ─── (Already have account?) ───> Sign In
 | Idle timeout warning | ⏳ Pending | Show modal 5 minutes before auto-logout |
 | "Stay Logged In" button | ⏳ Pending | Extend session without re-entering password |
 | Activity tracking | ⏳ Pending | Track mouse/keyboard events to reset idle timer |
-
----
-
-## 8. Related Documents
-
-| Document | Path |
-|----------|------|
-| Detail Spec | `docs/specs/_shared/authentication-detail.md` |
-| App General Basic | `docs/specs/_shared/app-general-basic.md` |
-
