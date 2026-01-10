@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Orbitron } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "@/contexts/ThemeContext";
+import { ToastProvider } from "@/components/ui/Toast";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { UserProvider } from "@/contexts/UserContext";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -33,17 +35,21 @@ export default function RootLayout({
   return (
     <html lang="vi" suppressHydrationWarning className={orbitron.variable}>
       <body>
-        <AuthProvider>
-          <LanguageProvider>
-            <UserProvider>
-              <AuthGuard>
-                {children}
-              </AuthGuard>
-              <UserSwitcherBubble />
-              <DevLogger />
-            </UserProvider>
-          </LanguageProvider>
-        </AuthProvider>
+        <ThemeProvider>
+          <ToastProvider>
+            <AuthProvider>
+              <LanguageProvider>
+                <UserProvider>
+                  <AuthGuard>
+                    {children}
+                  </AuthGuard>
+                  <UserSwitcherBubble />
+                  <DevLogger />
+                </UserProvider>
+              </LanguageProvider>
+            </AuthProvider>
+          </ToastProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

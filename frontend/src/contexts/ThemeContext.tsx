@@ -16,35 +16,39 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
-    // Load theme from localStorage
-    const savedTheme = localStorage.getItem('theme') as Theme | null;
-    if (savedTheme) {
-      setTheme(savedTheme);
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      setTheme('system');
+    // Load theme from localStorage (only runs on client)
+    if (typeof window !== 'undefined') {
+      const savedTheme = localStorage.getItem('theme') as Theme | null;
+      if (savedTheme) {
+        setTheme(savedTheme);
+      } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        setTheme('system');
+      }
     }
   }, []);
 
   useEffect(() => {
-    // Apply theme to document
-    const root = document.documentElement;
+    // Apply theme to document (only runs on client)
+    if (typeof window !== 'undefined') {
+      const root = document.documentElement;
 
-    if (theme === 'system') {
-      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      setIsDark(systemDark);
-      root.classList.toggle('dark', systemDark);
-    } else {
-      const dark = theme === 'dark';
-      setIsDark(dark);
-      root.classList.toggle('dark', dark);
+      if (theme === 'system') {
+        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        setIsDark(systemDark);
+        root.classList.toggle('dark', systemDark);
+      } else {
+        const dark = theme === 'dark';
+        setIsDark(dark);
+        root.classList.toggle('dark', dark);
+      }
+
+      localStorage.setItem('theme', theme);
     }
-
-    localStorage.setItem('theme', theme);
   }, [theme]);
 
   // Listen for system theme changes
   useEffect(() => {
-    if (theme !== 'system') return;
+    if (typeof window === 'undefined' || theme !== 'system') return;
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handler = (e: MediaQueryListEvent) => {
