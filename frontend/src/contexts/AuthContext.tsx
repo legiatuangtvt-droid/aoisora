@@ -56,7 +56,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             // Verify token with backend
             const response = await fetch(`${API_URL}/auth/me`, {
-              headers: { Authorization: `Bearer ${savedToken}` }
+              headers: {
+                'Authorization': `Bearer ${savedToken}`,
+                'Accept': 'application/json',
+              }
             });
 
             if (!response.ok) {
