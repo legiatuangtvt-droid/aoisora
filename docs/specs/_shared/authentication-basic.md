@@ -110,7 +110,46 @@ Sign Up ─── (Already have account?) ───> Sign In
 
 ---
 
-## 7. Implementation Status
+## 7. Session Management
+
+### 7.1 Session Lifetime
+
+| Attribute | Value |
+|-----------|-------|
+| **Session Duration** | 120 minutes (2 hours) of inactivity |
+| **Token Storage** | Browser localStorage |
+| **Token Type** | Laravel Sanctum Bearer Token |
+| **Auto-logout** | Yes, when session expires |
+
+### 7.2 Session Expiration Behavior
+
+| No | Trigger | System Behavior | User Experience |
+|----|---------|-----------------|-----------------|
+| 1 | 120 minutes of inactivity | Backend invalidates session | User receives 401 Unauthorized on next API call |
+| 2 | User closes browser | Token remains in localStorage | User stays logged in on next visit |
+| 3 | Manual logout | Token deleted, backend session destroyed | Redirected to Sign In screen |
+| 4 | 401 error from API | Frontend auto-logout, clear storage | Show message: "Session expired. Please sign in again." |
+
+### 7.3 Session Validation
+
+| No | Event | Action |
+|----|-------|--------|
+| 1 | App launch | Verify stored token with `/api/v1/auth/me` endpoint |
+| 2 | Token invalid | Clear localStorage, redirect to Sign In |
+| 3 | Token valid | Load user data, continue to app |
+| 4 | API returns 401 | Auto-logout and show expiration message |
+
+### 7.4 Session Warning (Future Enhancement)
+
+| Feature | Status | Description |
+|---------|--------|-------------|
+| Idle timeout warning | ⏳ Pending | Show modal 5 minutes before auto-logout |
+| "Stay Logged In" button | ⏳ Pending | Extend session without re-entering password |
+| Activity tracking | ⏳ Pending | Track mouse/keyboard events to reset idle timer |
+
+---
+
+## 8. Implementation Status
 
 | Feature | Backend | Frontend | Deploy | Notes |
 |---------|---------|----------|--------|-------|
@@ -120,10 +159,11 @@ Sign Up ─── (Already have account?) ───> Sign In
 | Code Verification | ✅ Done | ⏳ Pending | [PROD-ONLY] | Requires SMTP server |
 | Reset Password | ✅ Done | ⏳ Pending | [PROD-ONLY] | Requires SMTP server |
 | Google OAuth | ⏳ Pending | ⏳ Pending | [PROD-ONLY] | Requires Google API setup |
+| Session Expiration Handling | ✅ Done | 🔄 In Progress | [DEMO] | Backend ready, frontend implementing |
 
 ---
 
-## 8. Related Documents
+## 9. Related Documents
 
 | Document | Path |
 |----------|------|

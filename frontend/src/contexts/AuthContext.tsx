@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
+import { registerLogoutCallback } from '@/lib/api/fetchWithAuth';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
@@ -52,17 +53,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (savedToken && savedAuth) {
           try {
             const authData = JSON.parse(savedAuth);
-            setUser(authData.user);
-            setToken(savedToken);
 
-            // Optionally verify token with backend
-            // const response = await fetch(`${API_URL}/auth/me`, {
-            //   headers: { Authorization: `Bearer ${savedToken}` }
-            // });
-            // if (!response.ok) throw new Error('Token expired');
-          } catch {
+            // Verify token with backend
+            const response = await fetch(`${API_URL}/auth/me`, {
+              headers: { Authorization: `Bearer ${savedToken}` }
+            });
+
+            if (!response.ok) {
+              throw new Error('Token expired or invalid');
+            }
+
+            const data = await response.json();
+
+            if (data.success && data.user) {
+              // Update user data from backend
+              const authUser: AuthUser = {
+                id: data.user.id,
+                staffCode: data.user.staff_code,
+                email: data.user.email,
+                phone: data.user.phone,
+                fullName: data.user.full_name,
+                role: data.user.role,
+                position: data.user.position,
+                storeId: data.user.store_id,
+                storeName: data.user.store_name,
+                departmentId: data.user.department_id,
+                departmentName: data.user.department_name,
+                avatarUrl: data.user.avatar_url,
+              };
+
+              setUser(authUser);
+              setToken(savedToken);
+
+              // Update localStorage with fresh data
+              localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ user: authUser }));
+            } else {
+              throw new Error('Invalid user data');
+            }
+          } catch (error) {
+            console.warn('[Auth] Token verification failed:', error);
+            // Clear invalid session
             localStorage.removeItem(AUTH_STORAGE_KEY);
             localStorage.removeItem(TOKEN_STORAGE_KEY);
+            setUser(null);
+            setToken(null);
           }
         }
       }
@@ -162,6 +196,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       router.push('/auth/signin');
     }
   };
+
+  // Register logout callback for 401 error handling
+  useEffect(() => {
+    registerLogoutCallback(() => {
+      setUser(null);
+      setToken(null);
+    });
+  }, []);
 
   const checkPasswordStrength = async (password: string): Promise<{ strength: string; score: number; feedback: string[] }> => {
     try {

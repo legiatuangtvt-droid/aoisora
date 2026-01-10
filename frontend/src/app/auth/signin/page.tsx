@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function SignInPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login, loginWithGoogle, isAuthenticated, isLoading: authLoading } = useAuth();
 
   const [emailOrPhone, setEmailOrPhone] = useState('');
@@ -15,6 +16,17 @@ export default function SignInPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [sessionExpiredMessage, setSessionExpiredMessage] = useState('');
+
+  // Check for session expired message
+  useEffect(() => {
+    const expired = searchParams.get('expired');
+    const message = searchParams.get('message');
+
+    if (expired === 'true' && message) {
+      setSessionExpiredMessage(decodeURIComponent(message));
+    }
+  }, [searchParams]);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -155,6 +167,18 @@ export default function SignInPage() {
                 )}
               </button>
             </div>
+
+            {/* Session Expired Warning */}
+            {sessionExpiredMessage && !error && (
+              <div className="bg-orange-50 border border-orange-300 rounded-lg p-3 flex items-start gap-2">
+                <svg className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div className="flex-1">
+                  <p className="text-orange-800 text-sm font-medium">{sessionExpiredMessage}</p>
+                </div>
+              </div>
+            )}
 
             {/* Error Message */}
             {error && (
