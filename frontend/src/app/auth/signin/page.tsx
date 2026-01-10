@@ -35,6 +35,24 @@ export default function SignInPage() {
     }
   }, [isAuthenticated, authLoading, router]);
 
+  // Detect autofill values after mount
+  useEffect(() => {
+    // Small delay to allow browser autofill to complete
+    const timer = setTimeout(() => {
+      const emailInput = document.querySelector('input[name="username"]') as HTMLInputElement;
+      const passwordInput = document.querySelector('input[name="password"]') as HTMLInputElement;
+
+      if (emailInput?.value && emailInput.value !== emailOrPhone) {
+        setEmailOrPhone(emailInput.value);
+      }
+      if (passwordInput?.value && passwordInput.value !== password) {
+        setPassword(passwordInput.value);
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   const isFormValid = emailOrPhone.trim() !== '' && password.trim() !== '';
 
   const handleSubmit = async (e: React.FormEvent) => {
