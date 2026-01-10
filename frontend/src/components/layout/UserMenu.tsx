@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useToast } from '@/components/ui/Toast';
+import { useAuth } from '@/contexts/AuthContext';
 import { Language } from '@/types/layout';
 
 interface UserMenuProps {
@@ -18,6 +19,7 @@ const languages: { code: Language; label: string; flag: string }[] = [
 export default function UserMenu({ onClose }: UserMenuProps) {
   const { setTheme, isDark } = useTheme();
   const { showDevelopingToast } = useToast();
+  const { logout } = useAuth();
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState<Language>('vi-VN');
 
@@ -160,9 +162,9 @@ export default function UserMenu({ onClose }: UserMenuProps) {
 
       {/* Logout */}
       <button
-        onClick={() => {
-          showDevelopingToast();
+        onClick={async () => {
           onClose();
+          await logout();
         }}
         className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-red-600 dark:text-red-400"
       >
