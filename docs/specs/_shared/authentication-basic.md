@@ -2,7 +2,7 @@
 
 > **Module**: Common (All modules)
 > **Screens**: Sign In, Sign Up, Forgot Password, Code Verification, Reset Password
-> **Last Updated**: 2026-01-08
+> **Last Updated**: 2026-01-10
 
 ---
 
@@ -149,21 +149,7 @@ Sign Up ─── (Already have account?) ───> Sign In
 
 ---
 
-## 8. Implementation Status
-
-| Feature | Backend | Frontend | Deploy | Notes |
-|---------|---------|----------|--------|-------|
-| Sign In | ✅ Done | ✅ Done | [DEMO] | Full flow |
-| Sign Up | ⏳ Pending | ⏳ Pending | [DEMO] | - |
-| Forgot Password | ✅ Done | ⏳ Pending | [PROD-ONLY] | Requires SMTP server |
-| Code Verification | ✅ Done | ⏳ Pending | [PROD-ONLY] | Requires SMTP server |
-| Reset Password | ✅ Done | ⏳ Pending | [PROD-ONLY] | Requires SMTP server |
-| Google OAuth | ⏳ Pending | ⏳ Pending | [PROD-ONLY] | Requires Google API setup |
-| Session Expiration Handling | ✅ Done | ✅ Done | [DEMO] | Token verification, 401 auto-logout, warning UI |
-
----
-
-## 9. Related Documents
+## 8. Related Documents
 
 | Document | Path |
 |----------|------|
