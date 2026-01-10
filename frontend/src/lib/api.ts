@@ -2,6 +2,8 @@
 // API Client for OptiChain WS & DWS
 // ============================================
 
+import { fetchWithAuth } from './api/fetchWithAuth';
+
 import type {
   LoginRequest,
   TokenResponse,
@@ -67,29 +69,35 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/a
 // ============================================
 // Token Management
 // ============================================
+// NOTE: Token management is now handled by AuthContext and fetchWithAuth
+// These functions are kept for backward compatibility but are deprecated
 
 let accessToken: string | null = null;
 
+/** @deprecated Use AuthContext instead */
 export function setAccessToken(token: string | null) {
   accessToken = token;
   if (token) {
-    localStorage.setItem('access_token', token);
+    localStorage.setItem('optichain_token', token);
   } else {
-    localStorage.removeItem('access_token');
+    localStorage.removeItem('optichain_token');
   }
 }
 
+/** @deprecated Token is automatically retrieved by fetchWithAuth */
 export function getAccessToken(): string | null {
   if (!accessToken && typeof window !== 'undefined') {
-    accessToken = localStorage.getItem('access_token');
+    accessToken = localStorage.getItem('optichain_token');
   }
   return accessToken;
 }
 
+/** @deprecated Use AuthContext logout instead */
 export function clearAccessToken() {
   accessToken = null;
   if (typeof window !== 'undefined') {
-    localStorage.removeItem('access_token');
+    localStorage.removeItem('optichain_token');
+    localStorage.removeItem('optichain_auth');
   }
 }
 
@@ -112,24 +120,20 @@ async function fetchApi<T>(
   endpoint: string,
   options?: RequestInit & { skipAuth?: boolean }
 ): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint}`;
+  const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
     ...((options?.headers as Record<string, string>) || {}),
   };
 
-  // Add auth header if token exists and not skipping auth
-  if (!options?.skipAuth) {
-    const token = getAccessToken();
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-  }
-
   try {
-    const response = await fetch(url, {
+    // Use fetchWithAuth for automatic 401 handling
+    const response = await fetchWithAuth(url, {
       ...options,
       headers,
+      skipAuthCheck: options?.skipAuth,
     });
 
     if (!response.ok) {

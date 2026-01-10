@@ -159,7 +159,7 @@ Sign Up ─── (Already have account?) ───> Sign In
 | Code Verification | ✅ Done | ⏳ Pending | [PROD-ONLY] | Requires SMTP server |
 | Reset Password | ✅ Done | ⏳ Pending | [PROD-ONLY] | Requires SMTP server |
 | Google OAuth | ⏳ Pending | ⏳ Pending | [PROD-ONLY] | Requires Google API setup |
-| Session Expiration Handling | ✅ Done | 🔄 In Progress | [DEMO] | Backend ready, frontend implementing |
+| Session Expiration Handling | ✅ Done | ✅ Done | [DEMO] | Token verification, 401 auto-logout, warning UI |
 
 ---
 
