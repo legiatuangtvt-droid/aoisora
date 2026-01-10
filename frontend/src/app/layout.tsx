@@ -6,6 +6,7 @@ import { UserProvider } from "@/contexts/UserContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import AuthGuard from "@/components/auth/AuthGuard";
 import UserSwitcherBubble from "@/components/UserSwitcherBubble";
+import DevLogger from "@/components/DevLogger";
 
 // Digital/Calculator style font
 const orbitron = Orbitron({
@@ -39,6 +40,7 @@ export default function RootLayout({
                 {children}
               </AuthGuard>
               <UserSwitcherBubble />
+              <DevLogger />
             </UserProvider>
           </LanguageProvider>
         </AuthProvider>
