@@ -11,7 +11,7 @@
 | Field | Value |
 |-------|-------|
 | **Purpose** | Authenticate users before accessing the system |
-| **Target Users** | All employees (Staff, Manager, Admin) |
+| **Target Users** | HQ users (Admin, Manager) and Store users (Staff, Store Manager) |
 | **Entry Points** | App launch, Logout, Session expired |
 
 ---
