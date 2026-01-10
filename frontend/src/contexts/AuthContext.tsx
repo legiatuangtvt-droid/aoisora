@@ -100,13 +100,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             localStorage.removeItem(TOKEN_STORAGE_KEY);
             setUser(null);
             setToken(null);
+
+            // Redirect to signin with session expired message
+            const message = encodeURIComponent('Your session has expired. Please sign in again.');
+            router.push(`/auth/signin?expired=true&message=${message}`);
           }
         }
       }
       setIsLoading(false);
     };
     checkAuth();
-  }, []);
+  }, [router]);
 
   const login = async (
     identifier: string,
