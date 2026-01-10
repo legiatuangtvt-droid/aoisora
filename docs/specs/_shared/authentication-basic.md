@@ -1,6 +1,6 @@
 # Authentication - Basic Specification
 
-> **Module**: Shared (All modules)
+> **Module**: Common (All modules)
 > **Screens**: Sign In, Sign Up, Forgot Password, Code Verification, Reset Password
 > **Last Updated**: 2026-01-08
 
@@ -10,8 +10,8 @@
 
 | Field | Value |
 |-------|-------|
-| **Purpose** | Xác thực người dùng trước khi truy cập hệ thống |
-| **Target Users** | Tất cả nhân viên (Staff, Manager, Admin) |
+| **Purpose** | Authenticate users before accessing the system |
+| **Target Users** | All employees (Staff, Manager, Admin) |
 | **Entry Points** | App launch, Logout, Session expired |
 
 ---
@@ -20,11 +20,11 @@
 
 | Screen | Route | Purpose |
 |--------|-------|---------|
-| Sign In | `/auth/signin` | Đăng nhập vào hệ thống |
-| Sign Up | `/auth/signup` | Đăng ký tài khoản mới |
-| Forgot Password | `/auth/forgot-password` | Yêu cầu reset mật khẩu |
-| Code Verification | `/auth/verify-code` | Xác thực OTP |
-| Reset Password | `/auth/reset-password` | Đặt mật khẩu mới |
+| Sign In | `/auth/signin` | Sign in to the system |
+| Sign Up | `/auth/signup` | Register new account |
+| Forgot Password | `/auth/forgot-password` | Request password reset |
+| Code Verification | `/auth/verify-code` | Verify OTP code |
+| Reset Password | `/auth/reset-password` | Set new password |
 
 ---
 
@@ -99,14 +99,14 @@ Sign Up ─── (Already have account?) ───> Sign In
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/v1/auth/login` | Đăng nhập |
-| POST | `/api/v1/auth/logout` | Đăng xuất |
-| GET | `/api/v1/auth/me` | Lấy thông tin user hiện tại |
-| POST | `/api/v1/auth/forgot-password` | Gửi OTP qua email |
-| POST | `/api/v1/auth/verify-code` | Xác thực OTP |
-| POST | `/api/v1/auth/reset-password` | Đặt mật khẩu mới |
-| POST | `/api/v1/auth/resend-code` | Gửi lại OTP |
-| POST | `/api/v1/auth/check-password-strength` | Kiểm tra độ mạnh password |
+| POST | `/api/v1/auth/login` | Sign in |
+| POST | `/api/v1/auth/logout` | Sign out |
+| GET | `/api/v1/auth/me` | Get current user information |
+| POST | `/api/v1/auth/forgot-password` | Send OTP via email |
+| POST | `/api/v1/auth/verify-code` | Verify OTP code |
+| POST | `/api/v1/auth/reset-password` | Set new password |
+| POST | `/api/v1/auth/resend-code` | Resend OTP code |
+| POST | `/api/v1/auth/check-password-strength` | Check password strength |
 
 ---
 
@@ -116,10 +116,10 @@ Sign Up ─── (Already have account?) ───> Sign In
 |---------|---------|----------|--------|-------|
 | Sign In | ✅ Done | ✅ Done | [DEMO] | Full flow |
 | Sign Up | ⏳ Pending | ⏳ Pending | [DEMO] | - |
-| Forgot Password | ✅ Done | ⏳ Pending | [PROD-ONLY] | Cần SMTP server |
-| Code Verification | ✅ Done | ⏳ Pending | [PROD-ONLY] | Cần SMTP server |
-| Reset Password | ✅ Done | ⏳ Pending | [PROD-ONLY] | Cần SMTP server |
-| Google OAuth | ⏳ Pending | ⏳ Pending | [PROD-ONLY] | Cần Google API setup |
+| Forgot Password | ✅ Done | ⏳ Pending | [PROD-ONLY] | Requires SMTP server |
+| Code Verification | ✅ Done | ⏳ Pending | [PROD-ONLY] | Requires SMTP server |
+| Reset Password | ✅ Done | ⏳ Pending | [PROD-ONLY] | Requires SMTP server |
+| Google OAuth | ⏳ Pending | ⏳ Pending | [PROD-ONLY] | Requires Google API setup |
 
 ---
 
