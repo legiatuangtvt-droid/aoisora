@@ -2,7 +2,7 @@
 
 > **Module**: Common (All modules)
 > **Screens**: Sign In, Sign Up, Forgot Password, Code Verification, Reset Password
-> **Last Updated**: 2026-01-10
+> **Last Updated**: 2026-01-11
 
 ---
 
@@ -13,6 +13,7 @@
 | **Purpose** | Authenticate users before accessing the system |
 | **Target Users** | HQ users (Admin, Manager) and Store users (Staff, Store Manager) |
 | **Entry Points** | App launch, Logout, Session expired |
+| **Login Methods** | 1. Identifier + Password<br>2. Google OAuth2 |
 
 ---
 
@@ -99,7 +100,8 @@ Sign Up ─── (Already have account?) ───> Sign In
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/v1/auth/login` | Sign in (returns Access + Refresh tokens) |
+| POST | `/api/v1/auth/login` | Sign in with identifier + password (returns Access + Refresh tokens) |
+| POST | `/api/v1/auth/login/google` | Sign in with Google OAuth2 (returns Access + Refresh tokens) |
 | POST | `/api/v1/auth/logout` | Sign out |
 | POST | `/api/v1/auth/refresh` | Refresh access token using refresh token |
 | GET | `/api/v1/auth/me` | Get current user information |
