@@ -139,10 +139,10 @@ Sign Up ─── (Already have account?) ───> Sign In
 | 3 | Token valid | Load user data, continue to app |
 | 4 | API returns 401 | Auto-logout and show expiration message |
 
-### 7.4 Session Warning (Future Enhancement)
+### 7.4 Session Warning
 
-| Feature | Status | Description |
-|---------|--------|-------------|
-| Idle timeout warning | ⏳ Pending | Show modal 5 minutes before auto-logout |
-| "Stay Logged In" button | ⏳ Pending | Extend session without re-entering password |
-| Activity tracking | ⏳ Pending | Track mouse/keyboard events to reset idle timer |
+| Feature | Status | Description | Detail Spec |
+|---------|--------|-------------|-------------|
+| Idle timeout warning | ✅ Done | Show modal 5 minutes before auto-logout | [Spec](idle-timeout-warning-detail.md) |
+| "Stay Logged In" button | ✅ Done | Extend session without re-entering password | [Spec](idle-timeout-warning-detail.md) |
+| Activity tracking | ✅ Done | Track mouse/keyboard/touch events to reset idle timer | [Spec](idle-timeout-warning-detail.md) |

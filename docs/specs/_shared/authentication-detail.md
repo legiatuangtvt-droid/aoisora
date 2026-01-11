@@ -239,6 +239,53 @@ post:
             message: "Logged out successfully"
 ```
 
+### 4.2a Refresh Session API
+
+```yaml
+post:
+  tags:
+    - Auth
+  summary: "Refresh/Extend Session API"
+  description: |
+    # Correlation Check
+      - Token: Must be valid (not expired)
+
+    # Business Logic
+      ## 1. Validate Token
+        - Check if current token is still valid
+        - If expired → Return TOKEN_EXPIRED error
+
+      ## 2. Extend Token Expiration
+        - Update expires_at = now + SESSION_TIMEOUT (120 minutes)
+        - Update last_used_at = now
+
+      ## 3. Response
+        - Return new expires_at timestamp
+
+  operationId: refreshSession
+  security:
+    - bearerAuth: []
+
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          example:
+            success: true
+            message: "Session extended successfully"
+            expires_at: "2026-01-11T15:30:00Z"
+
+    401:
+      description: Token expired or invalid
+      content:
+        application/json:
+          example:
+            success: false
+            error: "TOKEN_EXPIRED"
+            message: "Your session has expired. Please sign in again."
+```
+
 ### 4.3 Forgot Password API
 
 ```yaml
@@ -590,6 +637,11 @@ components:
 | Sign In Screen | `frontend/src/app/auth/signin/page.tsx` |
 | Auth Context | `frontend/src/contexts/AuthContext.tsx` |
 | Auth Guard | `frontend/src/components/auth/AuthGuard.tsx` |
+| Idle Timer Context | `frontend/src/contexts/IdleTimerContext.tsx` |
+| Session Warning Modal | `frontend/src/components/SessionWarningModal.tsx` |
+| Session Warning Wrapper | `frontend/src/components/SessionWarningWrapper.tsx` |
+| Activity Tracker Service | `frontend/src/services/ActivityTracker.ts` |
+| Session Config | `frontend/src/config/session.ts` |
 
 ---
 
@@ -600,6 +652,7 @@ components:
 | 2025-12-28 | Initial specification created |
 | 2026-01-06 | Restructured spec with Basic/Detail sections |
 | 2026-01-08 | Split spec into basic and detail files |
+| 2026-01-11 | Added Refresh Session API, Idle Timeout Warning feature implementation |
 
 ---
 
@@ -608,5 +661,6 @@ components:
 | Document | Path |
 |----------|------|
 | Basic Spec | `docs/specs/_shared/authentication-basic.md` |
+| Idle Timeout Warning Detail | `docs/specs/_shared/idle-timeout-warning-detail.md` |
 | App General Basic | `docs/specs/_shared/app-general-basic.md` |
 

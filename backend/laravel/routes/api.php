@@ -90,6 +90,7 @@ Route::prefix('v1')->group(function () {
         // Auth
         Route::get('auth/me', [AuthController::class, 'me']);
         Route::post('auth/logout', [AuthController::class, 'logout']);
+        Route::post('auth/refresh', [AuthController::class, 'refresh']);
         Route::post('auth/change-password', [AuthController::class, 'changePassword']);
 
         // Staff

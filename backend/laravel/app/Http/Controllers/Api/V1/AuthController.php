@@ -132,6 +132,37 @@ class AuthController extends Controller
     }
 
     /**
+     * Refresh/Extend session
+     * Extends the current token expiration time
+     */
+    public function refresh(Request $request)
+    {
+        $user = $request->user();
+        $token = $user->currentAccessToken();
+
+        // Check if token is still valid
+        if ($token->expires_at && Carbon::parse($token->expires_at)->isPast()) {
+            return response()->json([
+                'success' => false,
+                'error' => 'TOKEN_EXPIRED',
+                'message' => 'Your session has expired. Please sign in again.',
+            ], 401);
+        }
+
+        // Extend token expiration (120 minutes from now)
+        $expirationMinutes = config('sanctum.expiration', 120);
+        $token->expires_at = Carbon::now()->addMinutes($expirationMinutes);
+        $token->last_used_at = Carbon::now();
+        $token->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Session extended successfully',
+            'expires_at' => Carbon::parse($token->expires_at)->toISOString(),
+        ]);
+    }
+
+    /**
      * Request password reset - Step 1 of Forgot Password flow
      * Sends verification code to email
      */
