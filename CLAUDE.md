@@ -97,7 +97,7 @@
 | **Query Methods** | ✅ **Query Builder + Eloquent ORM** | Use both: Query Builder for performance, Eloquent for relationships |
 | **Database Migrations** | ✅ **Laravel Migrations** | Version control for database schema |
 | **Validation** | ✅ **Form Request Classes** | Separate validation logic from Controllers |
-| **Background Jobs** | ⚠️ Laravel Queue / Horizon (TBD) | Need to clarify requirements first |
+| **Background Jobs** | ✅ **Laravel Horizon** | Recommended for peak 150-200 jobs/hour, real-time monitoring needed |
 | **Caching** | ✅ **Redis + Response Caching** | Redis for data, Spatie Response Caching for static pages |
 | **Testing** | ✅ **Pest PHP** | Clean syntax, fast execution |
 | **Code Quality** | ✅ **Laravel Pint** | Built-in Laravel 10+, zero-config |
@@ -114,7 +114,7 @@
 3. **Form Requests**: Tách validation khỏi Controller để code gọn, tái sử dụng
 4. **No Auto API Docs**: Scramble/Swagger đi ngược workflow (code → docs), chúng ta cần (spec → code)
 5. **Dual Caching**: Redis cho data caching, Response Caching cho static pages
-6. **Background Jobs**: Cần rõ requirement trước khi chọn Queue hay Horizon
+6. **Horizon over Queue**: Peak 150-200 jobs/hour, cần real-time monitoring dashboard, scalable cho growth (+300% in 2yr)
 
 **Lưu ý quan trọng**:
 - Demo build theo recommendations của dev team
