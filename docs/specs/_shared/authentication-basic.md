@@ -141,10 +141,10 @@ Sign Up ─── (Already have account?) ───> Sign In
 
 ### 7.4 Session Warning
 
-| Feature | Status | Description |
-|---------|--------|-------------|
-| Idle timeout warning | ✅ Done | Show modal 5 minutes before auto-logout |
-| "Stay Logged In" button | ✅ Done | Extend session without re-entering password |
-| Activity tracking | ✅ Done | Track mouse/keyboard/touch events to reset idle timer |
+| Feature | Description |
+|---------|-------------|
+| Idle timeout warning | Show modal 5 minutes before auto-logout |
+| "Stay Logged In" button | Extend session without re-entering password |
+| Activity tracking | Track mouse/keyboard/touch events to reset idle timer |
 
 > **Detail**: See [Authentication Detail Spec](authentication-detail.md#10-idle-timeout-warning) section 10
