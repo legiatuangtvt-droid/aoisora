@@ -12,31 +12,60 @@
 
 | Metric | Value | Notes |
 |--------|-------|-------|
-| **Jobs per hour** (trung bình) | _________ | Số lượng jobs trung bình mỗi giờ |
-| **Jobs per hour** (peak time) | _________ | Số lượng jobs cao nhất trong 1 giờ |
-| **Jobs per day** | _________ | Tổng số jobs mỗi ngày |
-| **Concurrent jobs** | _________ | Số jobs chạy đồng thời tối đa |
+| **Jobs per hour** (trung bình) | ~30-50 | Trung bình: Task notifications, comment notifications, status updates |
+| **Jobs per hour** (peak time) | ~150-200 | Peak 8-10am (task assignment) và 4-6pm (task completion rush) |
+| **Jobs per day** | ~600-800 | Bao gồm: notifications, reports, email, scheduled tasks |
+| **Concurrent jobs** | ~10-15 | Tối đa 15 jobs chạy đồng thời (peak time notifications burst) |
+
+**Breakdown by activity:**
+- Task creation notifications: ~50-100/day (HQ tạo task cho stores)
+- Task confirm notifications: ~200-300/day (Store staff confirm tasks)
+- Comment notifications: ~100-150/day (Trao đổi về tasks)
+- Status update notifications: ~150-200/day (Real-time task status changes)
+- Daily reports: ~1-2/day (Tổng hợp hàng ngày)
+- Email notifications: ~100-200/day
 
 ### 1.2 Growth Projection
 
 | Timeframe | Expected Volume | Notes |
 |-----------|----------------|-------|
-| **6 months** | _________ jobs/hour | |
-| **1 year** | _________ jobs/hour | |
-| **2 years** | _________ jobs/hour | |
+| **6 months** | ~80 jobs/hour | +60% growth: More stores onboarding, more tasks |
+| **1 year** | ~120 jobs/hour | +140% growth: 50 stores, 500 staff |
+| **2 years** | ~200 jobs/hour | +300% growth: 80 stores, 800 staff, more modules active |
 
 ### 1.3 Job Pattern
 
 Chọn pattern phù hợp nhất:
 
-- [ ] **Continuous**: Jobs chạy liên tục suốt ngày
-- [ ] **Peak Hours**: Jobs tập trung vào giờ nhất định (ví dụ: 8-10am, 5-7pm)
+- [x] **Continuous**: Jobs chạy liên tục suốt ngày
+- [x] **Peak Hours**: Jobs tập trung vào giờ nhất định (ví dụ: 8-10am, 5-7pm)
 - [ ] **Scheduled**: Jobs chạy theo lịch định kỳ (hourly, daily, weekly)
-- [ ] **Event-driven**: Jobs trigger khi có event (user action, webhook, etc.)
+- [x] **Event-driven**: Jobs trigger khi có event (user action, webhook, etc.)
 
 **Mô tả chi tiết pattern**:
 ```
-[Mô tả khi nào jobs được trigger, tần suất như thế nào]
+Pattern: HYBRID (Continuous + Peak Hours + Event-driven)
+
+1. EVENT-DRIVEN (Chủ yếu - 70% jobs):
+   - Task created → Notification job (assign to store staff)
+   - Task confirmed → Notification job (notify HQ/manager)
+   - Comment added → Notification job (notify relevant users)
+   - Status changed → Real-time notification (via WebSocket + background job)
+
+2. PEAK HOURS (20% jobs):
+   - 8:00-10:00 AM: HQ tạo tasks mới cho stores → Burst notifications
+   - 12:00-1:00 PM: Lunch break, staff check và confirm tasks
+   - 4:00-6:00 PM: End of day, staff complete tasks → Report generation
+
+3. CONTINUOUS (10% jobs):
+   - Background: Task reminder jobs (overdue tasks)
+   - Scheduled: Daily reports (6:00 PM mỗi ngày)
+   - Cleanup: Cache cleanup, log rotation
+
+Đặc điểm:
+- Jobs trigger REAL-TIME khi có user action (comment, status change)
+- Peak time có thể lên đến 200 jobs/hour
+- Off-peak vẫn có ~10-20 jobs/hour (reminders, background sync)
 ```
 
 ---
@@ -49,12 +78,20 @@ Chọn pattern phù hợp nhất:
 
 | Job Type | Frequency | Priority | Notes |
 |----------|-----------|----------|-------|
-| **Welcome Email** | ⬜ High ⬜ Medium ⬜ Low | ⬜ Urgent ⬜ Normal ⬜ Low | Gửi khi user đăng ký |
-| **Password Reset Email** | ⬜ High ⬜ Medium ⬜ Low | ⬜ Urgent ⬜ Normal ⬜ Low | Gửi OTP reset password |
-| **Task Assignment Notification** | ⬜ High ⬜ Medium ⬜ Low | ⬜ Urgent ⬜ Normal ⬜ Low | Thông báo task mới |
-| **Daily Report Email** | ⬜ High ⬜ Medium ⬜ Low | ⬜ Urgent ⬜ Normal ⬜ Low | Gửi báo cáo hàng ngày |
+| **Welcome Email** | ⬜ High [x] Medium ⬜ Low | ⬜ Urgent [x] Normal ⬜ Low | ~1-2 emails/day (new staff onboarding) |
+| **Password Reset Email** | [x] High ⬜ Medium ⬜ Low | [x] Urgent ⬜ Normal ⬜ Low | ~5-10 emails/day (urgent, user đang đợi) |
+| **Task Assignment Notification** | [x] High ⬜ Medium ⬜ Low | [x] Urgent ⬜ Normal ⬜ Low | ~50-100 notifications/day (HIGH PRIORITY - task mới) |
+| **Task Status Change Notification** | [x] High ⬜ Medium ⬜ Low | [x] Urgent ⬜ Normal ⬜ Low | ~150-200 notifications/day (confirm, complete, etc.) |
+| **Comment/Message Notification** | [x] High ⬜ Medium ⬜ Low | [x] Urgent ⬜ Normal ⬜ Low | ~100-150 notifications/day (real-time chat) |
+| **Daily Report Email** | ⬜ High [x] Medium ⬜ Low | ⬜ Urgent [x] Normal ⬜ Low | ~2 emails/day (HQ managers) |
+| **Overdue Task Reminder** | ⬜ High [x] Medium ⬜ Low | ⬜ Urgent [x] Normal ⬜ Low | ~20-30 reminders/day |
 
-**Estimated email volume**: _________ emails/day
+**Estimated email/notification volume**: ~450-600 notifications/day
+
+**Breakdown:**
+- In-app notifications (real-time): ~400-500/day (WebSocket + background job)
+- Email notifications: ~100-200/day (critical updates only)
+- Push notifications (future): TBD
 
 ### 2.2 Report Generation
 
