@@ -774,11 +774,353 @@ export const SESSION_CONFIG = {
 
 ---
 
-## 11. Related Documents
+## 11. Dual Token System with Rotation (Planned Upgrade)
+
+### 11.1 Overview
+
+Current system uses a single token. The planned upgrade implements **Dual Token System with Rotation** for enhanced security and better user experience.
+
+| Aspect | Current (Single Token) | Planned (Dual Token) |
+|--------|----------------------|---------------------|
+| **Tokens** | 1 token (2h lifetime) | Access (15 min) + Refresh (30 days) |
+| **Storage** | localStorage | Access: sessionStorage, Refresh: localStorage/sessionStorage |
+| **Remember Me** | Limited usefulness (2h max) | Full 30-day auto-login capability |
+| **Security** | Medium (2h window if stolen) | High (15 min window, token rotation) |
+| **UX** | Must login daily | Auto-login for 30 days |
+
+### 11.2 Token Types
+
+#### A. Access Token
+
+```typescript
+interface AccessToken {
+  token_string: string;           // "1|eyJhbGc..."
+  expires_at: string;             // ISO 8601, 15 minutes from creation
+  ability: 'api:access';          // Can call regular APIs
+  storage: 'sessionStorage';      // Deleted when browser closes
+  refresh_frequency: '~14 minutes'; // Auto-refreshed before expiration
+}
+```
+
+**Purpose**: Authenticate every API call
+**Lifetime**: 15 minutes
+**Auto-refresh**: Frontend automatically refreshes at ~14 minutes
+
+#### B. Refresh Token
+
+```typescript
+interface RefreshToken {
+  token_string: string;           // "2|dGhpcyBpc..."
+  expires_at: string;             // ISO 8601, 30 days from creation
+  ability: 'api:refresh';         // Can ONLY call /auth/refresh
+  storage: 'localStorage' | 'sessionStorage'; // Depends on remember_me
+  rotation: true;                 // Replaced on each use
+}
+```
+
+**Purpose**: Obtain new access tokens
+**Lifetime**: 30 days (if Remember Me enabled)
+**One-time use**: Revoked immediately after creating new tokens
+
+### 11.3 Token Rotation Mechanism
+
+Every time `/auth/refresh` is called:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ BEFORE REFRESH                                                  │
+├─────────────────────────────────────────────────────────────────┤
+│ Database:                                                       │
+│   - Access Token #1 (expires 10:15)                            │
+│   - Refresh Token #1 (expires Feb 10)                          │
+│                                                                 │
+│ Client Storage:                                                 │
+│   - sessionStorage: Access #1                                  │
+│   - localStorage: Refresh #1                                   │
+└─────────────────────────────────────────────────────────────────┘
+
+           ↓ POST /auth/refresh (Bearer Refresh #1)
+
+┌─────────────────────────────────────────────────────────────────┐
+│ AFTER REFRESH                                                   │
+├─────────────────────────────────────────────────────────────────┤
+│ Database:                                                       │
+│   - Access Token #1 (DELETED)                                  │
+│   - Refresh Token #1 (DELETED - revoked)                       │
+│   - Access Token #2 (expires 10:29) ← NEW                      │
+│   - Refresh Token #2 (expires Feb 10) ← NEW                    │
+│                                                                 │
+│ Client Storage:                                                 │
+│   - sessionStorage: Access #2 ← UPDATED                        │
+│   - localStorage: Refresh #2 ← UPDATED                         │
+│                                                                 │
+│ ⚠️  If Refresh #1 used again → 401 + Security Alert           │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 11.4 Login Flow (Dual Token)
+
+```typescript
+// POST /api/v1/auth/login
+// Request
+{
+  "identifier": "admin",
+  "password": "password",
+  "remember_me": true
+}
+
+// Response
+{
+  "success": true,
+  "data": {
+    "access_token": "1|eyJhbGc...",
+    "access_token_expires_at": "2026-01-11T10:15:00Z",
+    "refresh_token": "2|dGhpcyBpc...",
+    "refresh_token_expires_at": "2026-02-10T10:00:00Z",
+    "token_type": "bearer",
+    "user": { /* user data */ }
+  }
+}
+
+// Frontend Storage
+if (remember_me) {
+  sessionStorage.setItem('access_token', access_token);
+  localStorage.setItem('refresh_token', refresh_token); // Persists 30 days
+} else {
+  sessionStorage.setItem('access_token', access_token);
+  sessionStorage.setItem('refresh_token', refresh_token); // Deleted on close
+}
+```
+
+### 11.5 Auto-Refresh Flow
+
+#### Axios Interceptor (Recommended)
+
+```typescript
+// frontend/src/utils/api.ts
+
+// Response interceptor
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    // If 401 and not a retry attempt
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        // Get new access token using refresh token
+        const newAccessToken = await refreshAccessToken();
+
+        // Retry original request with new token
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        return api(originalRequest);
+
+      } catch (refreshError) {
+        // Refresh failed → Logout
+        handleLogout();
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+// Refresh function
+async function refreshAccessToken(): Promise<string> {
+  const refreshToken =
+    localStorage.getItem('refresh_token') ||
+    sessionStorage.getItem('refresh_token');
+
+  if (!refreshToken) {
+    throw new Error('No refresh token available');
+  }
+
+  const response = await api.post('/api/v1/auth/refresh', null, {
+    headers: {
+      Authorization: `Bearer ${refreshToken}`,
+    },
+  });
+
+  const { access_token, refresh_token: new_refresh_token } = response.data;
+
+  // Update both tokens (rotation)
+  sessionStorage.setItem('access_token', access_token);
+
+  if (localStorage.getItem('refresh_token')) {
+    localStorage.setItem('refresh_token', new_refresh_token);
+  } else {
+    sessionStorage.setItem('refresh_token', new_refresh_token);
+  }
+
+  return access_token;
+}
+```
+
+### 11.6 Security Features
+
+#### A. Token Reuse Detection
+
+```php
+// Backend: AuthController.php - refresh()
+
+public function refresh(Request $request)
+{
+    $user = $request->user();
+    $oldRefreshToken = $user->currentAccessToken();
+
+    // Check if token was already revoked (deleted)
+    if (!$oldRefreshToken) {
+        // Token reuse detected! This is an attack.
+
+        // Revoke ALL tokens for this user
+        $user->tokens()->delete();
+
+        // Log security event
+        Log::warning('Token reuse detected', [
+            'user_id' => $user->id,
+            'ip' => $request->ip(),
+        ]);
+
+        // Send email alert
+        Mail::to($user->email)->send(new SecurityAlertMail());
+
+        return response()->json([
+            'error' => 'TOKEN_REUSE_DETECTED',
+            'message' => 'Security breach detected. All sessions terminated.',
+        ], 401);
+    }
+
+    // ... normal rotation flow ...
+}
+```
+
+#### B. Token Abilities Enforcement
+
+```php
+// Middleware: CheckTokenAbility.php
+
+public function handle($request, Closure $next, $ability)
+{
+    $token = $request->user()->currentAccessToken();
+
+    if (!$token->can($ability)) {
+        return response()->json([
+            'error' => 'INVALID_TOKEN_TYPE',
+            'message' => "This endpoint requires '{$ability}' ability",
+        ], 403);
+    }
+
+    return $next($request);
+}
+
+// Routes
+Route::middleware(['auth:sanctum', 'ability:api:access'])->group(function () {
+    Route::get('tasks', [TaskController::class, 'index']); // Requires access token
+});
+
+Route::middleware(['auth:sanctum', 'ability:api:refresh'])->group(function () {
+    Route::post('auth/refresh', [AuthController::class, 'refresh']); // Requires refresh token
+});
+```
+
+### 11.7 App Launch Flow
+
+```
+User opens app
+    ↓
+Check for refresh token in storage
+    ↓
+    ├─ No refresh token → Redirect to Sign In
+    │
+    └─ Has refresh token
+          ↓
+      POST /auth/refresh
+          ↓
+          ├─ 200 OK → Get new access token → Load app
+          │
+          └─ 401 Error → Refresh token expired
+                          ↓
+                     Clear storage → Redirect to Sign In
+```
+
+### 11.8 User Experience Timeline
+
+```
+Day 1:
+  08:00 - Login (Remember Me = true)
+  08:14 - Access token auto-refreshed (user doesn't notice)
+  08:28 - Access token auto-refreshed
+  12:00 - Lunch break (1 hour idle)
+  13:00 - Return → Access token expired → Auto-refresh → Continue working
+  17:00 - Close browser
+
+Day 2:
+  08:00 - Open browser
+        → Refresh token in localStorage
+        → Auto-refresh to get new access token
+        → Auto-login successful ✅
+        → User doesn't need to enter password
+
+Day 30:
+  → Refresh token still valid → Auto-login ✅
+
+Day 31:
+  → Refresh token expired → Must login again
+```
+
+### 11.9 Migration from Single Token
+
+#### Phase 1: Backend Implementation
+1. Update `login()` to create 2 tokens
+2. Implement `refresh()` with rotation
+3. Add token abilities to routes
+4. Deploy to production
+
+#### Phase 2: Frontend Implementation
+1. Update login response handling
+2. Implement axios interceptor for auto-refresh
+3. Update storage logic (sessionStorage + localStorage)
+4. Test auto-login flow
+
+#### Phase 3: Backward Compatibility
+- Both systems work in parallel during migration
+- Old clients continue using single token
+- New clients use dual token
+- Gradual rollout to users
+
+### 11.10 Database Schema (No Changes Required)
+
+```sql
+-- personal_access_tokens table (existing, no changes needed)
+CREATE TABLE personal_access_tokens (
+  id BIGINT PRIMARY KEY,
+  tokenable_type VARCHAR(255),
+  tokenable_id BIGINT,
+  name VARCHAR(255),              -- 'access_token' or 'refresh_token'
+  token VARCHAR(64) UNIQUE,
+  abilities TEXT,                 -- '["api:access"]' or '["api:refresh"]'
+  last_used_at TIMESTAMP NULL,
+  expires_at TIMESTAMP NULL,
+  created_at TIMESTAMP,
+  updated_at TIMESTAMP,
+  INDEX idx_tokenable (tokenable_type, tokenable_id),
+  INDEX idx_token (token)
+);
+```
+
+**No migration needed** - Existing table supports dual token system.
+
+---
+
+## 12. Related Documents
 
 | Document | Path |
 |----------|------|
 | Basic Spec | `docs/specs/_shared/authentication-basic.md` |
+| API Login Spec | `docs/specs/_shared/api-auth-login.md` |
 | Test Guide | `QUICK_TEST_GUIDE.md` |
 | Test Scenarios | `TEST_SCENARIO_IDLE_TIMEOUT.md` |
 | App General Basic | `docs/specs/_shared/app-general-basic.md` |

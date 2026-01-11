@@ -46,13 +46,15 @@ This API authenticates users and returns an access token for subsequent API requ
 - SAP code
 - Username
 
-**Token Lifetime:**
-- `remember_me = false`: 24 hours (default)
-- `remember_me = true`: 30 days
+**Token System:**
+- **Dual Token System**: Returns both Access Token and Refresh Token
+- **Access Token**: 15 minutes lifetime, used for API authentication
+- **Refresh Token**: 30 days lifetime (if `remember_me = true`), used to obtain new access tokens
 
 **Authentication Method:**
 - Laravel Sanctum Bearer Token
-- Token must be included in `Authorization: Bearer {token}` header for protected endpoints
+- Access Token must be included in `Authorization: Bearer {token}` header for protected endpoints
+- Refresh Token only used with `/auth/refresh` endpoint
 
 ---
 
@@ -75,11 +77,13 @@ This API authenticates users and returns an access token for subsequent API requ
    ↓
 7. If account inactive → Return 401 "Account not active"
    ↓
-8. Generate access token with appropriate expiration
+8. Generate Access Token (15 minutes, ability: 'api:access')
    ↓
-9. Load user relationships (store, department)
+9. Generate Refresh Token (30 days if remember_me, ability: 'api:refresh')
    ↓
-10. Return success response with token and user data
+10. Load user relationships (store, department)
+   ↓
+11. Return success response with both tokens and user data
 ```
 
 ### 3.2 Account Status Check
@@ -97,7 +101,9 @@ This API authenticates users and returns an access token for subsequent API requ
 |---------|----------------|
 | **Password Hashing** | BCrypt via Laravel's `Hash::make()` |
 | **Rate Limiting** | Laravel throttle middleware (60 requests/minute) |
-| **Token Expiration** | 24 hours (default) or 30 days (remember_me) |
+| **Dual Token System** | Access Token (15 min) + Refresh Token (30 days) |
+| **Token Abilities** | Access: `api:access`, Refresh: `api:refresh` |
+| **Token Rotation** | Both tokens replaced on each refresh |
 | **Password Validation** | Backend validates against stored hash |
 | **Account Lockout** | ⏳ Future enhancement (after N failed attempts) |
 
@@ -112,22 +118,26 @@ This API authenticates users and returns an access token for subsequent API requ
 ```json
 {
   "success": true,
-  "access_token": "1|ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
-  "token_type": "bearer",
-  "expires_at": "2026-02-09T10:30:00.000000Z",
-  "user": {
-    "id": 1,
-    "staff_code": "HQ001",
-    "full_name": "Nguyen Van Admin",
-    "email": "admin@example.com",
-    "phone": "+84912345678",
-    "role": "ADMIN",
-    "position": "System Administrator",
-    "store_id": null,
-    "store_name": null,
-    "department_id": 1,
-    "department_name": "IT Department",
-    "avatar_url": "https://example.com/avatars/admin.jpg"
+  "data": {
+    "access_token": "1|ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
+    "access_token_expires_at": "2026-01-11T10:15:00.000000Z",
+    "refresh_token": "2|XYZ789abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRS",
+    "refresh_token_expires_at": "2026-02-10T10:00:00.000000Z",
+    "token_type": "bearer",
+    "user": {
+      "id": 1,
+      "staff_code": "HQ001",
+      "full_name": "Nguyen Van Admin",
+      "email": "admin@example.com",
+      "phone": "+84912345678",
+      "role": "ADMIN",
+      "position": "System Administrator",
+      "store_id": null,
+      "store_name": null,
+      "department_id": 1,
+      "department_name": "IT Department",
+      "avatar_url": "https://example.com/avatars/admin.jpg"
+    }
   }
 }
 ```
@@ -137,22 +147,25 @@ This API authenticates users and returns an access token for subsequent API requ
 | Field | Type | Description |
 |-------|------|-------------|
 | `success` | boolean | Always `true` for successful response |
-| `access_token` | string | Laravel Sanctum bearer token |
-| `token_type` | string | Always "bearer" |
-| `expires_at` | string (ISO 8601) | Token expiration timestamp |
-| `user` | object | Authenticated user information |
-| `user.id` | integer | Staff ID (primary key) |
-| `user.staff_code` | string | Employee code (e.g., "HQ001", "ST001") |
-| `user.full_name` | string | User's full name |
-| `user.email` | string | User's email address |
-| `user.phone` | string | User's phone number |
-| `user.role` | string | User role: ADMIN, MANAGER, STAFF, etc. |
-| `user.position` | string | Job position/title |
-| `user.store_id` | integer\|null | Store ID (null for HQ users) |
-| `user.store_name` | string\|null | Store name (null for HQ users) |
-| `user.department_id` | integer\|null | Department ID |
-| `user.department_name` | string\|null | Department name |
-| `user.avatar_url` | string\|null | Profile picture URL |
+| `data` | object | Response data container |
+| `data.access_token` | string | Access token for API authentication (15 min) |
+| `data.access_token_expires_at` | string (ISO 8601) | Access token expiration timestamp |
+| `data.refresh_token` | string | Refresh token to obtain new access tokens (30 days) |
+| `data.refresh_token_expires_at` | string (ISO 8601) | Refresh token expiration timestamp |
+| `data.token_type` | string | Always "bearer" |
+| `data.user` | object | Authenticated user information |
+| `data.user.id` | integer | Staff ID (primary key) |
+| `data.user.staff_code` | string | Employee code (e.g., "HQ001", "ST001") |
+| `data.user.full_name` | string | User's full name |
+| `data.user.email` | string | User's email address |
+| `data.user.phone` | string | User's phone number |
+| `data.user.role` | string | User role: ADMIN, MANAGER, STAFF, etc. |
+| `data.user.position` | string | Job position/title |
+| `data.user.store_id` | integer\|null | Store ID (null for HQ users) |
+| `data.user.store_name` | string\|null | Store name (null for HQ users) |
+| `data.user.department_id` | integer\|null | Department ID |
+| `data.user.department_name` | string\|null | Department name |
+| `data.user.avatar_url` | string\|null | Profile picture URL |
 
 ---
 
@@ -260,10 +273,10 @@ FROM departments d
 WHERE d.department_id = :user_department_id;
 ```
 
-### 5.3 Create Access Token
+### 5.3 Create Tokens (Dual Token System)
 
 ```sql
--- Insert new personal access token
+-- Insert Access Token (15 minutes)
 INSERT INTO personal_access_tokens (
     tokenable_type,
     tokenable_id,
@@ -277,10 +290,32 @@ INSERT INTO personal_access_tokens (
 VALUES (
     'App\\Models\\Staff',
     :staff_id,
-    'auth-token',
-    :hashed_token,
-    '["*"]',
-    :expires_at,
+    'access_token',
+    :hashed_access_token,
+    '["api:access"]',
+    DATE_ADD(NOW(), INTERVAL 15 MINUTE),
+    NOW(),
+    NOW()
+);
+
+-- Insert Refresh Token (30 days if remember_me)
+INSERT INTO personal_access_tokens (
+    tokenable_type,
+    tokenable_id,
+    name,
+    token,
+    abilities,
+    expires_at,
+    created_at,
+    updated_at
+)
+VALUES (
+    'App\\Models\\Staff',
+    :staff_id,
+    'refresh_token',
+    :hashed_refresh_token,
+    '["api:refresh"]',
+    DATE_ADD(NOW(), INTERVAL 30 DAY),
     NOW(),
     NOW()
 );
@@ -322,9 +357,26 @@ const login = async (
       };
     }
 
-    // Store token and user data
-    localStorage.setItem('optichain_token', data.access_token);
-    localStorage.setItem('optichain_auth', JSON.stringify({ user: data.user }));
+    // Store tokens and user data (Dual Token System)
+    const { access_token, refresh_token, user } = data.data;
+
+    // Access token in sessionStorage (deleted when browser closes)
+    sessionStorage.setItem('access_token', access_token);
+    sessionStorage.setItem('access_token_expires_at', data.data.access_token_expires_at);
+
+    // Refresh token storage depends on remember_me
+    if (rememberMe) {
+      // Remember Me = true → localStorage (persists 30 days)
+      localStorage.setItem('refresh_token', refresh_token);
+      localStorage.setItem('refresh_token_expires_at', data.data.refresh_token_expires_at);
+    } else {
+      // Remember Me = false → sessionStorage (deleted when browser closes)
+      sessionStorage.setItem('refresh_token', refresh_token);
+      sessionStorage.setItem('refresh_token_expires_at', data.data.refresh_token_expires_at);
+    }
+
+    // User data
+    localStorage.setItem('optichain_auth', JSON.stringify({ user }));
 
     return { success: true };
   } catch (error) {
@@ -338,21 +390,33 @@ const login = async (
 
 ### 6.2 Token Storage
 
-| Storage Key | Value | Description |
-|-------------|-------|-------------|
-| `optichain_token` | string | Access token for API requests |
-| `optichain_auth` | JSON string | User information object |
+| Storage Location | Key | Value | Description |
+|------------------|-----|-------|-------------|
+| sessionStorage | `access_token` | string | Access token (15 min, deleted on browser close) |
+| sessionStorage | `access_token_expires_at` | ISO 8601 string | Access token expiration timestamp |
+| localStorage/sessionStorage | `refresh_token` | string | Refresh token (30 days if Remember Me) |
+| localStorage/sessionStorage | `refresh_token_expires_at` | ISO 8601 string | Refresh token expiration timestamp |
+| localStorage | `optichain_auth` | JSON string | User information object |
+
+**Note:** Refresh token location depends on `remember_me`:
+- `remember_me = true` → `localStorage` (persists after browser close)
+- `remember_me = false` → `sessionStorage` (deleted on browser close)
 
 ### 6.3 Subsequent API Requests
 
 ```typescript
-// Use token in protected API calls
+// Use ACCESS TOKEN in protected API calls
+const accessToken = sessionStorage.getItem('access_token');
+
 const response = await fetch(`${API_URL}/tasks`, {
   headers: {
-    'Authorization': `Bearer ${token}`,
+    'Authorization': `Bearer ${accessToken}`,  // Use access token
     'Accept': 'application/json',
   }
 });
+
+// If 401 error → Auto-refresh using refresh token
+// See /auth/refresh API documentation
 ```
 
 ---
@@ -389,11 +453,15 @@ For user account creation/password reset, enforce these rules:
 
 | Feature | Implementation |
 |---------|----------------|
-| **Storage** | Browser localStorage (client-side) |
+| **Dual Token System** | Access (15 min) + Refresh (30 days) |
+| **Token Abilities** | Access: `api:access`, Refresh: `api:refresh` |
+| **Storage** | Access: sessionStorage, Refresh: localStorage/sessionStorage |
 | **Transmission** | HTTPS only in production |
-| **Expiration** | Automatic after 24h/30d |
-| **Revocation** | Manual logout deletes token |
-| **Validation** | Every API request checks token validity |
+| **Auto-Refresh** | Access token auto-refreshes every ~14 minutes |
+| **Token Rotation** | Both tokens replaced on each refresh |
+| **Revocation** | Manual logout revokes all tokens |
+| **Reuse Detection** | Backend detects revoked token reuse |
+| **Validation** | Every API request checks token validity & abilities |
 
 ---
 
@@ -455,9 +523,11 @@ if (!result.success) {
 | 7 | Login with inactive account | 401 ACCOUNT_INACTIVE |
 | 8 | Login without identifier field | 422 Validation Error |
 | 9 | Login without password field | 422 Validation Error |
-| 10 | Login with remember_me = true | Token expires in 30 days |
-| 11 | Login with remember_me = false | Token expires in 24 hours |
+| 10 | Login with remember_me = true | Refresh token in localStorage, 30 days |
+| 11 | Login with remember_me = false | Refresh token in sessionStorage |
 | 12 | Multiple failed login attempts | 429 Rate Limited |
+| 13 | Verify access token has ability `api:access` | Can call regular APIs |
+| 14 | Verify refresh token has ability `api:refresh` | Cannot call regular APIs |
 
 ---
 
@@ -465,8 +535,9 @@ if (!result.success) {
 
 | API | Endpoint | Description |
 |-----|----------|-------------|
+| **Refresh Tokens** | `POST /api/v1/auth/refresh` | **Get new access token using refresh token** |
 | Get Current User | `GET /api/v1/auth/me` | Verify token and get user info |
-| Logout | `POST /api/v1/auth/logout` | Revoke current token |
+| Logout | `POST /api/v1/auth/logout` | Revoke all tokens (access + refresh) |
 | Forgot Password | `POST /api/v1/auth/forgot-password` | Request password reset |
 | Verify Reset Code | `POST /api/v1/auth/verify-code` | Verify OTP code |
 | Reset Password | `POST /api/v1/auth/reset-password` | Set new password |
@@ -476,7 +547,14 @@ if (!result.success) {
 
 ## 11. Notes
 
-- ✅ This API is already implemented in backend and frontend
+### Implementation Status
+
+- ✅ Single token system implemented (current)
+- ⏳ **Dual Token System with Rotation (planned upgrade)**
+  - Access Token (15 min) + Refresh Token (30 days)
+  - Token Rotation on each refresh
+  - Automatic token reuse detection
+  - Enhanced security with token abilities
 - ✅ Authentication flow is fully functional
 - ✅ Session expiration handling implemented
 - ✅ Token verification on app load works correctly
@@ -485,10 +563,19 @@ if (!result.success) {
 - ⏳ Password strength meter on Sign In (future enhancement)
 - ⏳ Two-factor authentication (future enhancement)
 
+### Migration Plan
+
+When upgrading to Dual Token System:
+1. Backend creates 2 tokens on login
+2. Frontend stores tokens in appropriate storage
+3. Auto-refresh mechanism with token rotation
+4. Backward compatibility maintained during transition
+
 ---
 
 ## 12. Changelog
 
 | Date | Changes |
 |------|---------|
+| 2026-01-11 | Updated spec for Dual Token System with Rotation |
 | 2026-01-10 | Initial API specification created based on existing implementation |

@@ -99,8 +99,9 @@ Sign Up ─── (Already have account?) ───> Sign In
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/v1/auth/login` | Sign in |
+| POST | `/api/v1/auth/login` | Sign in (returns Access + Refresh tokens) |
 | POST | `/api/v1/auth/logout` | Sign out |
+| POST | `/api/v1/auth/refresh` | Refresh access token using refresh token |
 | GET | `/api/v1/auth/me` | Get current user information |
 | POST | `/api/v1/auth/forgot-password` | Send OTP via email |
 | POST | `/api/v1/auth/verify-code` | Verify OTP code |
@@ -112,37 +113,66 @@ Sign Up ─── (Already have account?) ───> Sign In
 
 ## 7. Session Management
 
-### 7.1 Session Lifetime
+### 7.1 Dual Token System
 
-| Attribute | Value |
-|-----------|-------|
-| **Session Duration** | 120 minutes (2 hours) of inactivity |
-| **Token Storage** | Browser localStorage |
-| **Token Type** | Laravel Sanctum Bearer Token |
-| **Auto-logout** | Yes, when session expires |
+The system uses **two types of tokens** for enhanced security and user experience:
 
-### 7.2 Session Expiration Behavior
+| Token Type | Lifetime | Storage | Purpose |
+|------------|----------|---------|---------|
+| **Access Token** | 15 minutes | sessionStorage | Authenticate API calls |
+| **Refresh Token** | 30 days | localStorage (if Remember Me) or sessionStorage | Obtain new access tokens |
+
+**Token Rotation**: Both tokens are rotated (replaced) each time the refresh endpoint is called for maximum security.
+
+### 7.2 Token Lifecycle
+
+| No | Event | Access Token | Refresh Token | User Experience |
+|----|-------|--------------|---------------|-----------------|
+| 1 | User login | Created (15 min) | Created (30 days if Remember Me) | Login successful |
+| 2 | API call | Used for authentication | Not used | API request successful |
+| 3 | Access token expires (15 min) | Auto-refresh via `/auth/refresh` | Used to get new access token | Seamless, no interruption |
+| 4 | Refresh token rotation | New token created | New token created, old revoked | Automatic, transparent to user |
+| 5 | User closes browser | Deleted (sessionStorage) | Kept (if localStorage) | Session persists if Remember Me |
+| 6 | User reopens browser | Retrieved via refresh token | Used to get new access token | Auto-login (if Remember Me) |
+| 7 | Refresh token expires (30 days) | N/A | Deleted | User must login again |
+| 8 | Manual logout | Deleted | Deleted, revoked on server | Redirected to Sign In |
+
+### 7.3 Session Expiration Behavior
 
 | No | Trigger | System Behavior | User Experience |
 |----|---------|-----------------|-----------------|
-| 1 | 120 minutes of inactivity | Backend invalidates session | User receives 401 Unauthorized on next API call |
-| 2 | User closes browser | Token remains in localStorage | User stays logged in on next visit |
-| 3 | Manual logout | Token deleted, backend session destroyed | Redirected to Sign In screen |
-| 4 | 401 error from API | Frontend auto-logout, clear storage | Show message: "Session expired. Please sign in again." |
+| 1 | 15 minutes (access token) | Frontend auto-refreshes using refresh token | Seamless, user doesn't notice |
+| 2 | 30 days (refresh token) | Backend rejects refresh request | User must login again |
+| 3 | User closes browser (Remember Me = false) | Refresh token deleted from sessionStorage | Must login on next visit |
+| 4 | User closes browser (Remember Me = true) | Refresh token persists in localStorage | Auto-login on next visit (if < 30 days) |
+| 5 | Manual logout | Both tokens deleted, refresh token revoked | Redirected to Sign In screen |
+| 6 | 401 error from API | Frontend auto-logout, clear all tokens | Show message: "Session expired. Please sign in again." |
 
-### 7.3 Session Validation
+### 7.4 Token Security Features
+
+| Feature | Description | Benefit |
+|---------|-------------|---------|
+| **Short-lived Access Token** | Expires every 15 minutes | Stolen token only valid for 15 min |
+| **Refresh Token Rotation** | New tokens issued on each refresh, old tokens revoked | Stolen refresh token only works once |
+| **Automatic Token Reuse Detection** | Backend detects if revoked token is reused | Automatic breach detection & response |
+| **Token Abilities** | Access token has `api:access`, Refresh token has `api:refresh` | Refresh token cannot call regular APIs |
+| **Immediate Revocation** | All tokens revoked on logout or breach detection | Prevents unauthorized access |
+
+### 7.5 Session Validation
 
 | No | Event | Action |
 |----|-------|--------|
-| 1 | App launch | Verify stored token with `/api/v1/auth/me` endpoint |
-| 2 | Token invalid | Clear localStorage, redirect to Sign In |
-| 3 | Token valid | Load user data, continue to app |
-| 4 | API returns 401 | Auto-logout and show expiration message |
+| 1 | App launch | Check for refresh token in storage |
+| 2 | Refresh token found | Call `/api/v1/auth/refresh` to get new access token |
+| 3 | Refresh token valid | Load user data, continue to app |
+| 4 | Refresh token invalid/expired | Clear storage, redirect to Sign In |
+| 5 | API returns 401 | Attempt auto-refresh, if fails → auto-logout |
 
-### 7.4 Session Warning
+### 7.6 Idle Timeout Warning
 
 | Feature | Description |
 |---------|-------------|
 | Idle timeout warning | Show modal 5 minutes before auto-logout |
-| "Stay Logged In" button | Extend session without re-entering password |
+| "Stay Logged In" button | Manually trigger token refresh without re-entering password |
 | Activity tracking | Track mouse/keyboard/touch events to reset idle timer |
+| Auto-refresh | Access token automatically refreshes every ~14 minutes during active use |
