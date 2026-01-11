@@ -762,6 +762,138 @@ Trong quá trình phát triển, ghi lại các cải tiến DB cần thiết v�
 - Proposed Schema: `docs/database/enterprise-schema-design.md`
 - SQL Implementation: `database/schema_v2.sql`
 
+### 9.1 Database Design & Migration Plan (From Dev Team)
+
+**⚠️ QUAN TRỌNG**: Database design từ dev team (file ODS exported to 32 CSV files) khác với schema hiện tại. Migration sẽ thực hiện **dần dần** trong quá trình build demo.
+
+#### Tổng quan Design mới
+
+**Source**: `docs/database/DB_DESIGN_TEAM_REVIEW.md` (tổng hợp từ 32 CSV files)
+
+- **Total tables**: 30 tables (all status "Done")
+- **Diagram**: https://dbdiagram.io/d/AEON-DATABASE-69608938d6e030a02488bec2
+
+**Module breakdown:**
+
+| Module | Tables | Ghi chú |
+|--------|--------|---------|
+| **Shared (Common)** | 15 | regions, zones, areas, stores, staffs, users, departments, divisions, sectors, office_titles, roles, permissions, staff_groups |
+| **WS (Task Management)** | 10 | task_library, tasks, task_informations, task_instructions, task_scopes, task_approvals, task_results, task_result_history, task_comments, likes |
+| **DWS** | 1 | staff_store_assignment |
+| **Message** | 4 | conversations, participants, messages, message_status |
+
+#### Cải tiến chính so với Current Schema
+
+1. **Geographic Hierarchy**: 2 levels → 4 levels (regions → zones → areas → stores)
+2. **RBAC System**: roles, permissions, role_user, permission_role
+3. **User-Staff Separation**: users (auth) vs staffs (nhân sự data)
+4. **Task Normalization**: 1 table lớn → 7 tables liên kết
+5. **Messaging System**: conversations, participants, messages, message_status
+
+#### Migration Plan (Thực hiện dần trong Build Demo)
+
+**Phase 1 - Critical (WS Module đang build):**
+```
+✅ Priority HIGH - Implement ngay khi build WS module:
+
+Geographic Hierarchy:
+- [x] regions (existing - keep)
+- [ ] zones (NEW - add khi cần filter by zone)
+- [ ] areas (NEW - add khi cần filter by area)
+- [x] stores (existing - modify to link areas)
+
+User & Auth:
+- [x] staff (existing - rename to staffs, restructure)
+- [ ] users (NEW - tách auth ra khỏi staffs)
+- [ ] roles (NEW - RBAC system)
+- [ ] permissions (NEW - RBAC system)
+- [ ] role_user (NEW - pivot table)
+- [ ] permission_role (NEW - pivot table)
+
+Task System:
+- [x] tasks (existing - simplify)
+- [ ] task_informations (NEW - task details)
+- [ ] task_instructions (NEW - task steps)
+- [ ] task_scopes (NEW - task scope)
+- [ ] task_approvals (NEW - approval workflow)
+- [ ] task_results (NEW - task results)
+- [ ] task_result_history (NEW - result history)
+- [x] task_comments (existing - keep)
+- [ ] likes (NEW - rename from task_likes)
+```
+
+**Phase 2 - Enhanced (Sau khi WS hoàn thiện):**
+```
+⏳ Priority MEDIUM - Add when needed:
+
+Organizational:
+- [ ] office_titles (NEW - job titles)
+- [ ] divisions (NEW - replace teams)
+- [ ] sectors (NEW - business units)
+- [ ] staff_groups (NEW - staff grouping)
+
+DWS Module:
+- [ ] staff_store_assignment (NEW - DWS module)
+```
+
+**Phase 3 - New Features (Future modules):**
+```
+🔮 Priority LOW - Add cho modules khác:
+
+Messaging (khi cần chat):
+- [ ] conversations
+- [ ] participants
+- [ ] messages
+- [ ] message_status
+
+Manual Module (future):
+- [ ] manual_* tables (TBD)
+```
+
+**Phase 4 - Cleanup (Sau khi migrate xong):**
+```
+❌ Deprecated tables (remove sau khi migrate):
+- teams (→ divisions/sectors)
+- check_lists (→ task_instructions)
+- shift_codes, shift_templates (→ redesign for DWS)
+- daily_templates, daily_schedule_tasks (→ redesign)
+- task_workflow_steps (→ task_approvals)
+- task_store_results, task_staff_results (→ task_results)
+- task_images (→ task_instructions/results)
+- notifications (→ redesign)
+```
+
+#### Quy tắc Migration trong Build Demo
+
+| Khi | Action | Lưu ý |
+|-----|--------|-------|
+| **Build screen mới** | Check design xem cần tables nào | Implement theo design, không tự ý sửa |
+| **Table đã có** | Modify nếu cần (add columns, FK) | Tạo migration file riêng |
+| **Table chưa có** | Create mới theo design | Follow design structure từ CSV |
+| **Conflict design vs current** | Ưu tiên design mới | Migrate dần, không breaking current code |
+| **Sau mỗi migration** | Update section này | Mark [x] cho tables đã implement |
+
+#### Files tham khảo
+
+| File | Mục đích |
+|------|----------|
+| `docs/database/DB_DESIGN_TEAM_REVIEW.md` | Full design review (30 tables) |
+| `docs/database/design-db-*.csv` | 32 CSV files from dev team |
+| `database/schema_mysql.sql` | Current schema (28 tables) |
+| `database/migrations/` | Migration files (tạo khi cần) |
+
+#### Data Type Notes
+
+Khi implement tables mới:
+
+- **NVARCHAR → VARCHAR**: Design dùng NVARCHAR (SQL Server), MySQL dùng VARCHAR with utf8mb4
+- **BIGINT vs INT**: Design dùng BIGINT cho all IDs, recommend INT cho master data, BIGINT cho high-volume
+- **DateTime vs TIMESTAMP**: TIMESTAMP cho audit columns, DATETIME cho business dates
+
+---
+
+**Next review**: Sau khi WS module hoàn thiện, review lại Phase 1 checklist
+
 ### 10. Session Start (Khởi động phiên làm việc mới)
 
 **⚠️ BẮT BUỘC**: Trước khi bắt đầu code, **PHẢI** đồng bộ nhánh với remote:
