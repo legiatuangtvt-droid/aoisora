@@ -63,6 +63,45 @@
 | 5 | Check Quality | ⏳ Pending | - |
 | 6 | Training | ⏳ Pending | - |
 
+### Tech Stack Reference (Chỉ dùng cho Demo Building)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ⚠️ QUAN TRỌNG: PHÂN BIỆT DEMO vs SPEC                          │
+│                                                                 │
+│  🔧 TECH STACK (Chỉ cho Demo/Prototype)                         │
+│     → Dùng để build demo trên local                            │
+│     → Giúp hiểu rõ app trước khi viết spec production           │
+│     → Demo KHÔNG phải là 100% spec                              │
+│                                                                 │
+│  📝 SPEC (Tech-Agnostic cho Production)                         │
+│     → KHÔNG đề cập demo implementation                          │
+│     → KHÔNG đề cập tech stack cụ thể                            │
+│     → KHÔNG đề cập tình trạng phát triển của demo               │
+│     → KHÔNG đề cập framework/library names                      │
+│                                                                 │
+│  ✅ Spec mô tả: WHAT (business requirements)                    │
+│  ❌ Spec KHÔNG mô tả: HOW (technical implementation)            │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Production Tech Stack (Reference Only - for Demo Building)**:
+
+| Component | Technology | Purpose |
+|-----------|------------|---------|
+| **Backend** | Laravel 10.x + PHP 8.3 | API, Business Logic |
+| **Frontend** | Next.js 14 + React 18 | UI, Client-side |
+| **Database** | MySQL 8.4 | Data Storage |
+| **Authentication** | Sanctum (Bearer tokens) | Auth System |
+| **Real-time** | Laravel Reverb (WebSocket) | Live Updates |
+| **Hosting** | PA Vietnam (cPanel/DirectAdmin) | Production Server |
+
+**Lưu ý quan trọng**:
+- Demo build với tech stack trên để học và hiểu app
+- Spec viết **tech-agnostic** cho production
+- Dev team production có thể dùng bất kỳ tech nào implement spec
+- Spec chỉ mô tả **business requirements**, không lock vào framework
+
 ---
 
 ## ⚠️ WORKFLOW LÀM VIỆC - CLAUDE PHẢI NHỚ
