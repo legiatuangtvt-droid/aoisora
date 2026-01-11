@@ -235,6 +235,28 @@ docs/specs/
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
+│  NGUYÊN TẮC VÀNG CỦA SPEC WRITING:                              │
+│                                                                 │
+│  "SPEC MÔ TẢ CÁI GÌ CẦN CÓ, KHÔNG PHẢI LÀM THẾ NÀO"            │
+│                                                                 │
+│  ✅ SPEC LÀ YÊU CẦU SẢN PHẨM (Product Requirements)             │
+│     → Mô tả WHAT: chức năng cần có, kết quả mong đợi            │
+│     → Mô tả WHY: business logic, lý do cần feature này          │
+│     → Tech-agnostic: không phụ thuộc framework/ngôn ngữ         │
+│                                                                 │
+│  ❌ SPEC KHÔNG PHẢI TÀI LIỆU KỸ THUẬT (Technical Docs)          │
+│     → Không mô tả HOW: không viết code implementation           │
+│     → Không đề cập framework: Laravel, Node.js, Django...       │
+│     → Không có SQL queries, không có package/library names      │
+│                                                                 │
+│  📌 PHÂN ĐỊNH TRÁCH NHIỆM:                                      │
+│     → Product Owner (bạn): Viết WHAT & WHY trong spec           │
+│     → Dev Team: Quyết định HOW & implement                      │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+```
+┌─────────────────────────────────────────────────────────────────┐
 │  SPEC VIẾT CHO PRODUCTION, KHÔNG PHẢI CHO DEMO                  │
 │                                                                 │
 │  → Spec mô tả feature đầy đủ như sẽ triển khai trên production  │
@@ -243,6 +265,27 @@ docs/specs/
 │  → Sử dụng badge [DEMO] hoặc [PROD-ONLY] để phân biệt           │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+#### Checklist khi viết Spec (Tech-Agnostic)
+
+| ❌ Loại bỏ | ✅ Thay bằng |
+|------------|-------------|
+| Framework names (Laravel, Django) | "Backend must..." / "System must..." |
+| SQL queries (SELECT, INSERT) | "Data Persistence Requirements" |
+| Code examples (PHP, Python, JS) | Business logic descriptions |
+| Package names (composer, npm) | "Integration Requirements" |
+| Config files (.env, config.php) | "Configuration Requirements" |
+| Implementation details | Functional requirements |
+
+**Ví dụ:**
+
+| ❌ Tech-specific (SAI) | ✅ Tech-agnostic (ĐÚNG) |
+|-----------------------|-------------------------|
+| "Use Laravel Sanctum for authentication" | "System must authenticate users with Bearer tokens" |
+| "Hash password with BCrypt via Hash::make()" | "Password must be hashed (one-way) before storage" |
+| "Install google/apiclient package" | "Backend must integrate with Google token verification API" |
+| `INSERT INTO personal_access_tokens...` | "System must store token with expiration timestamp" |
+| "Use Laravel throttle middleware" | "System must limit login attempts to 60/minute" |
 
 #### Cấu trúc Spec Files (Tách 2 file riêng)
 
