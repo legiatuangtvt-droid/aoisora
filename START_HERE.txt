@@ -1,0 +1,99 @@
+╔═══════════════════════════════════════════════════════════════╗
+║                                                               ║
+║   🚀 SERVERS ĐÃ KHỞI ĐỘNG - SẴN SÀNG TEST!                   ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+
+📍 TRƯỚC KHI TEST - QUAN TRỌNG!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Bạn CẦN sửa config để test nhanh (nếu chưa làm):
+
+1. Mở file:
+   frontend\src\config\session.ts
+
+2. Tìm dòng 10 và 14, sửa thành:
+
+   Dòng 10: '7200000' → '120000'
+   Dòng 14: '300000' → '30000'
+
+   Hoặc copy/paste đoạn này:
+
+   SESSION_TIMEOUT: 120000,  // 2 minutes (test)
+   WARNING_TIME: 30000,      // 30 seconds (test)
+
+3. SAVE FILE và restart frontend server!
+
+
+📌 URL SERVERS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Backend:  http://localhost:8000/api/v1
+✅ Frontend: http://localhost:3000
+
+
+🧪 BẮT ĐẦU TEST
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Option 1: QUICK TEST (Khuyến nghị - 20 phút)
+   → Mở file: QUICK_TEST_GUIDE.md
+
+Option 2: FULL TEST (Chi tiết - 45 phút)
+   → Mở file: TEST_SCENARIO_IDLE_TIMEOUT.md
+
+
+⚡ TEST NHANH NHẤT (15 phút):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Vào http://localhost:3000
+2. Login: admin / password
+3. ĐỪNG DI CHUỘT - đợi 1 phút 30 giây
+4. ✅ Modal xuất hiện với countdown
+5. Test các buttons và behaviors
+
+
+📋 LOGIN CREDENTIALS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Username: admin
+Password: password
+
+
+🎯 5 TEST CASES CƠ BẢN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Test 1: Modal xuất hiện sau 1.5 phút idle
+✅ Test 2: Button "Stay Logged In" extend session
+✅ Test 3: Activity (di chuột) đóng modal và reset timer
+✅ Test 4: Button "Log Out" logout ngay
+✅ Test 5: Auto-logout khi countdown hết
+
+
+⚠️ SAU KHI TEST XONG
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+QUAN TRỌNG: Đổi config về production!
+
+File: frontend\src\config\session.ts
+Dòng 10: '120000' → '7200000'
+Dòng 14: '30000' → '300000'
+
+Sau đó commit:
+  git add frontend/src/config/session.ts
+  git commit -m "chore(config): restore session timeout to production"
+  git push
+
+
+📞 HỖ TRỢ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Gặp vấn đề? Xem:
+  → QUICK_TEST_GUIDE.md (section "GẶP VẤN ĐỀ?")
+  → READY_TO_TEST.md (section "NẾU GẶP VẤN ĐỀ")
+
+
+╔═══════════════════════════════════════════════════════════════╗
+║                                                               ║
+║   ✨ CHÚC BẠN TEST THÀNH CÔNG! ✨                            ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝

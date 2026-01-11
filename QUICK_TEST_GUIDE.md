@@ -169,4 +169,4 @@ ________________________________________
 Nếu cần help:
 1. Check file chi tiết: `TEST_SCENARIO_IDLE_TIMEOUT.md`
 2. Check implementation: `IDLE_TIMEOUT_TEST.md`
-3. Check spec: `docs/specs/_shared/idle-timeout-warning-detail.md`
+3. Check spec: `docs/specs/_shared/authentication-detail.md` (Section 10)

@@ -31,9 +31,8 @@
 
 | File | Mô tả |
 |------|-------|
-| [idle-timeout-warning-detail.md](docs/specs/_shared/idle-timeout-warning-detail.md) | Spec đầy đủ |
+| [authentication-detail.md](docs/specs/_shared/authentication-detail.md) | Spec đầy đủ (Section 10: Idle Timeout Warning) |
 | [authentication-basic.md](docs/specs/_shared/authentication-basic.md) | Updated status |
-| [authentication-detail.md](docs/specs/_shared/authentication-detail.md) | Added refresh API spec |
 | [IDLE_TIMEOUT_TEST.md](IDLE_TIMEOUT_TEST.md) | Test documentation |
 
 ### ✅ Test Guides (MỚI)
@@ -278,7 +277,7 @@ git push
 | Muốn test nhanh | [QUICK_TEST_GUIDE.md](QUICK_TEST_GUIDE.md) |
 | Muốn test đầy đủ | [TEST_SCENARIO_IDLE_TIMEOUT.md](TEST_SCENARIO_IDLE_TIMEOUT.md) |
 | Hiểu feature hoạt động thế nào | [IDLE_TIMEOUT_TEST.md](IDLE_TIMEOUT_TEST.md) |
-| Đọc spec kỹ thuật | [idle-timeout-warning-detail.md](docs/specs/_shared/idle-timeout-warning-detail.md) |
+| Đọc spec kỹ thuật | [authentication-detail.md](docs/specs/_shared/authentication-detail.md) (Section 10) |
 
 ---
 

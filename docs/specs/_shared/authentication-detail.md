@@ -656,11 +656,130 @@ components:
 
 ---
 
-## 10. Related Documents
+## 10. Idle Timeout Warning
+
+### 10.1 Overview
+
+| Attribute | Value |
+|-----------|-------|
+| **Feature Name** | Idle Timeout Warning |
+| **Purpose** | Warn users before auto-logout due to inactivity |
+| **Priority** | High |
+| **Status** | ✅ Implemented |
+
+### 10.2 Business Requirements
+
+| Requirement | Value |
+|-------------|-------|
+| **Session Lifetime** | 120 minutes (2 hours) of inactivity |
+| **Warning Time** | 5 minutes before auto-logout (at 115 minutes) |
+| **User Activities** | Mouse move, click, keypress, scroll, touch events |
+| **Multi-tab Sync** | Yes, using localStorage |
+
+### 10.3 Warning Modal UI
+
+```
+┌─────────────────────────────────────────────────────┐
+│                    ⚠️ Session Warning                │
+├─────────────────────────────────────────────────────┤
+│                                                     │
+│  Your session is about to expire due to inactivity  │
+│                                                     │
+│  You will be automatically logged out in:           │
+│                                                     │
+│                   ⏱️  4:53                           │
+│                                                     │
+│  ┌──────────────────────┐  ┌──────────────────────┐ │
+│  │   Stay Logged In     │  │      Log Out         │ │
+│  └──────────────────────┘  └──────────────────────┘ │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+```
+
+### 10.4 Modal Specifications
+
+| Element | Specification |
+|---------|---------------|
+| **Modal backdrop** | Semi-transparent black `rgba(0, 0, 0, 0.6)` |
+| **Modal container** | Max-width: 400px, centered, white/dark background |
+| **Warning icon** | ⚠️ SVG icon, size: 48px, color: orange (#F59E0B) |
+| **Timer display** | Font-size: 48px, monospace, dynamic color |
+| **Timer colors** | Green (>180s) → Yellow (60-180s) → Red (<60s) |
+| **Stay button** | Blue (#1E3A5F), primary action |
+| **Logout button** | Gray, secondary action |
+
+### 10.5 Activity Tracking
+
+**Tracked Events**:
+- `mousemove` - Mouse cursor movement
+- `click` - Mouse click
+- `keydown` - Keyboard key press
+- `scroll` - Page scrolling
+- `touchstart` - Touch screen tap
+- `touchmove` - Touch screen swipe
+
+**Throttling**: Max 1 callback per second to optimize performance
+
+**Storage**: `last_activity_time` in localStorage for cross-tab sync
+
+### 10.6 State Machine
+
+```
+ACTIVE (0-115 min) ──(idle 115 min)──> WARNING (115-120 min)
+                                            │
+                  ┌─────────────────────────┼───────────────┐
+                  │                         │               │
+        (user clicks "Stay")        (user activity)  (countdown = 0)
+                  │                         │               │
+                  ▼                         ▼               ▼
+            ACTIVE (reset)            ACTIVE (reset)    LOGGED_OUT
+```
+
+### 10.7 Technical Implementation
+
+**Frontend Files**:
+- `frontend/src/services/ActivityTracker.ts` - Activity tracking service
+- `frontend/src/contexts/IdleTimerContext.tsx` - Idle timer state management
+- `frontend/src/components/SessionWarningModal.tsx` - Modal UI component
+- `frontend/src/components/SessionWarningWrapper.tsx` - Integration wrapper
+- `frontend/src/config/session.ts` - Session configuration
+
+**Backend Files**:
+- `backend/laravel/app/Http/Controllers/Api/V1/AuthController.php` - `refresh()` method
+- `backend/laravel/routes/api.php` - `/auth/refresh` endpoint
+
+**Configuration** (`frontend/src/config/session.ts`):
+```typescript
+export const SESSION_CONFIG = {
+  SESSION_TIMEOUT: 7200000,  // 120 minutes
+  WARNING_TIME: 300000,      // 5 minutes
+  CHECK_INTERVAL: 1000,      // 1 second
+  ACTIVITY_THROTTLE: 1000,
+  TRACKED_EVENTS: ['mousemove', 'click', 'keydown', 'scroll', 'touchstart', 'touchmove'],
+};
+```
+
+### 10.8 Test Scenarios
+
+| Test ID | Scenario | Expected Result |
+|---------|----------|-----------------|
+| TC-01 | Idle 115 minutes | Modal appears with 5:00 countdown |
+| TC-02 | Click "Stay Logged In" | Session extended, modal closes, timer reset |
+| TC-03 | Click "Log Out" | Logout immediately, redirect to Sign In |
+| TC-04 | Countdown reaches 0 | Auto-logout, redirect to Sign In |
+| TC-05 | User activity during warning | Modal closes, timer reset |
+| TC-06 | Multi-tab sync | Activity in one tab affects all tabs |
+
+**Test Guide**: See `TEST_SCENARIO_IDLE_TIMEOUT.md` for detailed test procedures.
+
+---
+
+## 11. Related Documents
 
 | Document | Path |
 |----------|------|
 | Basic Spec | `docs/specs/_shared/authentication-basic.md` |
-| Idle Timeout Warning Detail | `docs/specs/_shared/idle-timeout-warning-detail.md` |
+| Test Guide | `QUICK_TEST_GUIDE.md` |
+| Test Scenarios | `TEST_SCENARIO_IDLE_TIMEOUT.md` |
 | App General Basic | `docs/specs/_shared/app-general-basic.md` |
 
