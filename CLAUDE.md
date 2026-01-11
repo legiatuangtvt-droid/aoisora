@@ -363,6 +363,29 @@ docs/specs/
 | `INSERT INTO personal_access_tokens...` | "System must store token with expiration timestamp" |
 | "Use Laravel throttle middleware" | "System must limit login attempts to 60/minute" |
 
+#### Rule of Thumb (Nguyên tắc vàng)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  KHI VIẾT SPEC:                                                 │
+│                                                                 │
+│  1. ĐỌC Tech Stack (CLAUDE.md) → Biết sẽ dùng công nghệ gì     │
+│  2. GHI RÕ trong Spec: "Implementation Note: Using Laravel..."  │
+│  3. VẪN PHẢI MÔ TẢ CHI TIẾT:                                    │
+│     - Business logic (what to do)                               │
+│     - API contract (request/response format)                    │
+│     - Validation rules (field requirements)                     │
+│     - Error handling (error codes, messages)                    │
+│     - UI/UX behavior (screen interactions)                      │
+│                                                                 │
+│  ⚠️ KHÔNG BAO GIỜ nghĩ rằng:                                    │
+│     "Đã chọn OAuth2/Laravel rồi, dev team tự hiểu"             │
+│                                                                 │
+│  ✅ LUÔN LUÔN nghĩ rằng:                                        │
+│     "Tech stack là reference, Spec là source of truth"          │
+└─────────────────────────────────────────────────────────────────┘
+```
+
 #### Cấu trúc Spec Files (Tách 2 file riêng)
 
 Mỗi screen có **2 file spec riêng biệt** để dễ báo cáo:
