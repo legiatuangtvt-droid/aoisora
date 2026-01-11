@@ -53,7 +53,7 @@ This API authenticates users using Google OAuth2 and returns access and refresh 
 - **Refresh Token**: 30 days lifetime (if `remember_me = true`), used to obtain new access tokens
 
 **Authentication Method:**
-- Laravel Sanctum Bearer Token
+- Bearer Token authentication
 - Access Token must be included in `Authorization: Bearer {token}` header for protected endpoints
 - Refresh Token only used with `/auth/refresh` endpoint
 
@@ -95,30 +95,27 @@ This API authenticates users using Google OAuth2 and returns access and refresh 
 13. Return success response with both tokens and user data
 ```
 
-### 3.2 Google Token Verification
+### 3.2 Google Token Verification Requirements
 
-Backend uses Google's API client library to verify the ID token:
+Backend must verify the Google ID token with Google's verification service:
 
-```php
-// Verify token with Google
-$client = new Google_Client(['client_id' => config('services.google.client_id')]);
-$payload = $client->verifyIdToken($googleToken);
+**Verification Process:**
+1. Send token to Google's token verification endpoint
+2. Google validates token signature and expiration
+3. Extract user information from verified token payload:
+   - Google ID (`sub`)
+   - Email address (`email`)
+   - Full name (`name`)
+   - Profile picture URL (`picture`)
+   - Email verification status (`email_verified`)
 
-if (!$payload) {
-    return response()->json([
-        'success' => false,
-        'error' => 'Invalid Google token',
-        'error_code' => 'INVALID_GOOGLE_TOKEN'
-    ], 401);
-}
+**If verification fails:**
+- Return 401 error with code `INVALID_GOOGLE_TOKEN`
 
-// Extract user info
-$googleId = $payload['sub'];
-$email = $payload['email'];
-$name = $payload['name'];
-$picture = $payload['picture'] ?? null;
-$emailVerified = $payload['email_verified'] ?? false;
-```
+**Security Requirements:**
+- Token must be verified with Google's official API
+- Never trust client-provided user data without verification
+- Reject tokens with unverified emails
 
 ### 3.3 User Auto-Creation Logic
 
@@ -139,17 +136,17 @@ $emailVerified = $payload['email_verified'] ?? false;
 | `suspended` | Block login with error message |
 | `deleted` | Block login (treated as not found) |
 
-### 3.5 Security Features
+### 3.5 Security Requirements
 
-| Feature | Implementation |
-|---------|----------------|
-| **Token Verification** | Verify Google ID token with Google API |
-| **Email Verification** | Require verified email from Google |
-| **Dual Token System** | Access Token (15 min) + Refresh Token (30 days) |
-| **Token Abilities** | Access: `api:access`, Refresh: `api:refresh` |
-| **Token Rotation** | Both tokens replaced on each refresh |
-| **Auto-Registration** | Create user account on first Google login |
-| **Rate Limiting** | Laravel throttle middleware (60 requests/minute) |
+| Requirement | Specification |
+|-------------|---------------|
+| **Token Verification** | Must verify Google ID token with Google's official verification service |
+| **Email Verification** | Must require verified email status from Google |
+| **Dual Token System** | Must issue Access Token (15 min) + Refresh Token (30 days) |
+| **Token Abilities** | Access tokens for API calls, Refresh tokens only for token refresh |
+| **Token Rotation** | Both tokens must be replaced on each refresh operation |
+| **Auto-Registration** | System must create user account on first successful Google login |
+| **Rate Limiting** | Maximum 60 login attempts per minute per IP |
 
 ---
 
@@ -330,122 +327,80 @@ $emailVerified = $payload['email_verified'] ?? false;
 
 ---
 
-## 5. Database Queries
+## 5. Data Persistence Requirements
 
-### 5.1 Find User by Google Email
+### 5.1 User Lookup by Google Email
 
-```sql
--- Find staff by Google email
-SELECT *
-FROM staff
-WHERE email = :google_email
-LIMIT 1;
-```
+System must be able to find existing user by Google email address.
 
-### 5.2 Create New User (Auto-Registration)
+**Requirement**: Query user records where email matches Google email.
 
-```sql
--- Generate next staff code
-SELECT CONCAT('GOOG', LPAD(COALESCE(MAX(CAST(SUBSTRING(staff_code, 5) AS UNSIGNED)), 0) + 1, 3, '0'))
-FROM staff
-WHERE staff_code LIKE 'GOOG%';
+### 5.2 Auto-Registration Requirements
 
--- Insert new staff
-INSERT INTO staff (
-    staff_code,
-    full_name,
-    email,
-    role,
-    position,
-    status,
-    avatar_url,
-    created_at,
-    updated_at
-)
-VALUES (
-    :staff_code,        -- e.g., 'GOOG001'
-    :full_name,         -- From Google
-    :email,             -- From Google
-    'STAFF',            -- Default role
-    'Employee',         -- Default position
-    'active',           -- Active by default
-    :picture_url,       -- From Google
-    NOW(),
-    NOW()
-);
-```
+When Google user doesn't exist in system:
 
-### 5.3 Update Last Login
+**Staff Code Generation:**
+- System must auto-generate unique staff codes
+- Format: `GOOG` + sequential 3-digit number
+- Examples: `GOOG001`, `GOOG002`, `GOOG003`
+- Must check existing codes to avoid duplicates
 
-```sql
--- Update last_login timestamp
-UPDATE staff
-SET last_login_at = NOW(),
-    updated_at = NOW()
-WHERE staff_id = :staff_id;
-```
+**New User Data:**
+System must create user record with:
+- Auto-generated staff code
+- Full name from Google
+- Email from Google
+- Default role: `STAFF`
+- Default position: `Employee`
+- Status: `active`
+- Avatar URL from Google profile picture
+- Current timestamp for creation time
 
-### 5.4 Load User Relationships
+### 5.3 Login Activity Tracking
 
-```sql
--- Load store information (if assigned)
-SELECT s.store_id, s.store_name, s.store_code
-FROM stores s
-WHERE s.store_id = :user_store_id;
+System must update last login timestamp for user on successful authentication.
 
--- Load department information (if assigned)
-SELECT d.department_id, d.department_name, d.department_code
-FROM departments d
-WHERE d.department_id = :user_department_id;
-```
+**Requirement**: Record current timestamp as last login time for authenticated user.
 
-### 5.5 Create Tokens (Dual Token System)
+### 5.4 User Data Loading
 
-```sql
--- Insert Access Token (15 minutes)
-INSERT INTO personal_access_tokens (
-    tokenable_type,
-    tokenable_id,
-    name,
-    token,
-    abilities,
-    expires_at,
-    created_at,
-    updated_at
-)
-VALUES (
-    'App\\Models\\Staff',
-    :staff_id,
-    'access_token',
-    :hashed_access_token,
-    '["api:access"]',
-    DATE_ADD(NOW(), INTERVAL 15 MINUTE),
-    NOW(),
-    NOW()
-);
+After authentication, system must load complete user profile:
 
--- Insert Refresh Token (30 days if remember_me)
-INSERT INTO personal_access_tokens (
-    tokenable_type,
-    tokenable_id,
-    name,
-    token,
-    abilities,
-    expires_at,
-    created_at,
-    updated_at
-)
-VALUES (
-    'App\\Models\\Staff',
-    :staff_id,
-    'refresh_token',
-    :hashed_refresh_token,
-    '["api:refresh"]',
-    DATE_ADD(NOW(), INTERVAL 30 DAY),
-    NOW(),
-    NOW()
-);
-```
+**Basic Information:**
+- User ID, staff code, full name, email, phone
+- Role, position, status
+- Avatar URL
+
+**Store Information (if assigned):**
+- Store ID, Store name, Store code
+
+**Department Information (if assigned):**
+- Department ID, Department name, Department code
+
+### 5.5 Token Storage Requirements
+
+System must persist both tokens with following properties:
+
+**Access Token:**
+- Token string (must be hashed before storage)
+- User association (link to authenticated user)
+- Token type identifier: "access_token"
+- Token abilities: "api:access"
+- Expiration timestamp: 15 minutes from creation
+- Creation timestamp
+
+**Refresh Token:**
+- Token string (must be hashed before storage)
+- User association (link to authenticated user)
+- Token type identifier: "refresh_token"
+- Token abilities: "api:refresh"
+- Expiration timestamp: 30 days from creation (if remember_me)
+- Creation timestamp
+
+**Token Revocation:**
+- System must support immediate token revocation
+- Old tokens must be deleted/marked invalid on refresh
+- All tokens must be revoked on logout
 
 ---
 
@@ -590,36 +545,36 @@ if (result.isNewUser) {
 | **Issuer Check** | Verify token from `accounts.google.com` |
 | **Email Verification** | Require `email_verified = true` from Google |
 
-### 7.2 Rate Limiting
+### 7.2 Rate Limiting Requirements
 
 | Endpoint | Limit | Window | Block Duration |
 |----------|-------|--------|----------------|
 | `/auth/login/google` | 10 attempts | 1 minute | 1 minute |
 | `/auth/login/google` | 20 attempts | 15 minutes | 15 minutes |
 
-**Implementation:** Laravel's `throttle` middleware
+**Behavior:** System must track Google login attempts and temporarily block further attempts when limits are exceeded.
 
-### 7.3 Token Security
+### 7.3 Token Security Requirements
 
-| Feature | Implementation |
-|---------|----------------|
-| **Dual Token System** | Access (15 min) + Refresh (30 days) |
-| **Token Abilities** | Access: `api:access`, Refresh: `api:refresh` |
-| **Storage** | Access: sessionStorage, Refresh: localStorage/sessionStorage |
-| **Transmission** | HTTPS only in production |
-| **Auto-Refresh** | Access token auto-refreshes every ~14 minutes |
-| **Token Rotation** | Both tokens replaced on each refresh |
-| **Revocation** | Manual logout revokes all tokens |
-| **Reuse Detection** | Backend detects revoked token reuse |
+| Requirement | Specification |
+|-------------|---------------|
+| **Dual Token System** | System must issue two tokens: Access (15 min) + Refresh (30 days) |
+| **Token Abilities** | Access tokens can call APIs, Refresh tokens can only refresh |
+| **Frontend Storage** | Access in sessionStorage, Refresh in localStorage/sessionStorage |
+| **Transmission** | All tokens must be transmitted over HTTPS in production |
+| **Auto-Refresh** | Frontend should auto-refresh access token before expiration (~14 min) |
+| **Token Rotation** | System must replace both tokens on each refresh operation |
+| **Revocation** | System must revoke all user tokens on manual logout |
+| **Reuse Detection** | System must detect and block attempts to reuse revoked tokens |
 
-### 7.4 Auto-Registration Security
+### 7.4 Auto-Registration Security Requirements
 
-| Feature | Implementation |
-|---------|----------------|
-| **Email Verification** | Only accept verified emails from Google |
-| **Default Role** | New users get limited `STAFF` role |
-| **Account Approval** | Admin can review and approve new accounts |
-| **Domain Restriction** | Optional: Limit to company email domains |
+| Requirement | Specification |
+|-------------|---------------|
+| **Email Verification** | System must only accept verified emails from Google |
+| **Default Role** | New users must be assigned limited `STAFF` role by default |
+| **Account Approval** | System should support admin review/approval workflow (optional) |
+| **Domain Restriction** | System should support email domain whitelist (optional) |
 
 ---
 
@@ -707,158 +662,53 @@ if (!result.success) {
 
 ---
 
-## 11. Backend Implementation
+## 11. Integration Requirements
 
-### 11.1 Required Dependencies
+### 11.1 Google OAuth2 Configuration
 
-```bash
-# Install Google API Client
-composer require google/apiclient
-```
+Backend must be configured with Google OAuth2 credentials:
 
-### 11.2 Environment Configuration
+**Required Configuration:**
+- Google Client ID (from Google Cloud Console)
+- Google Client Secret (from Google Cloud Console)
 
-```env
-# .env file
-GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=your-google-client-secret
-```
+**Google Cloud Console Setup:**
+1. Create OAuth 2.0 Client ID
+2. Configure authorized redirect URIs
+3. Enable Google+ API (for user profile access)
 
-### 11.3 Controller Method
+### 11.2 Google API Integration
 
-```php
-// AuthController.php
-public function loginWithGoogle(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'google_token' => 'required|string',
-        'remember_me' => 'boolean',
-    ]);
+Backend must integrate with Google's token verification service:
 
-    if ($validator->fails()) {
-        return response()->json([
-            'success' => false,
-            'message' => 'The given data was invalid.',
-            'errors' => $validator->errors()
-        ], 422);
-    }
+**Requirements:**
+- Use Google's official token verification endpoint
+- Verify token signature with Google's public keys
+- Extract user profile data from verified token payload
+- Handle Google API errors gracefully
 
-    // Verify Google token
-    $client = new Google_Client(['client_id' => config('services.google.client_id')]);
-    $payload = $client->verifyIdToken($request->google_token);
+### 11.3 Frontend OAuth2 Flow
 
-    if (!$payload) {
-        return response()->json([
-            'success' => false,
-            'error' => 'Invalid Google token',
-            'error_code' => 'INVALID_GOOGLE_TOKEN'
-        ], 401);
-    }
+Frontend must implement Google OAuth2 authentication flow:
 
-    // Extract user info
-    $email = $payload['email'];
-    $emailVerified = $payload['email_verified'] ?? false;
-
-    if (!$emailVerified) {
-        return response()->json([
-            'success' => false,
-            'error' => 'Email not verified by Google',
-            'error_code' => 'EMAIL_NOT_VERIFIED'
-        ], 403);
-    }
-
-    // Find or create user
-    $user = Staff::where('email', $email)->first();
-    $isNewUser = false;
-
-    if (!$user) {
-        // Auto-create user
-        $user = Staff::create([
-            'staff_code' => $this->generateGoogleStaffCode(),
-            'full_name' => $payload['name'],
-            'email' => $email,
-            'role' => 'STAFF',
-            'position' => 'Employee',
-            'status' => 'active',
-            'avatar_url' => $payload['picture'] ?? null,
-        ]);
-        $isNewUser = true;
-    }
-
-    // Check account status
-    if ($user->status !== 'active') {
-        return response()->json([
-            'success' => false,
-            'error' => 'This account is not active',
-            'error_code' => 'ACCOUNT_INACTIVE'
-        ], 401);
-    }
-
-    // Generate tokens (same as normal login)
-    $rememberMe = $request->remember_me ?? false;
-
-    $accessToken = $user->createToken('access_token', ['api:access'], now()->addMinutes(15));
-    $refreshToken = $user->createToken('refresh_token', ['api:refresh'], now()->addDays(30));
-
-    // Load relationships
-    $user->load(['store', 'department']);
-
-    return response()->json([
-        'success' => true,
-        'is_new_user' => $isNewUser,
-        'data' => [
-            'access_token' => $accessToken->plainTextToken,
-            'access_token_expires_at' => $accessToken->accessToken->expires_at,
-            'refresh_token' => $refreshToken->plainTextToken,
-            'refresh_token_expires_at' => $refreshToken->accessToken->expires_at,
-            'token_type' => 'bearer',
-            'user' => new StaffResource($user),
-        ]
-    ]);
-}
-
-private function generateGoogleStaffCode(): string
-{
-    $lastCode = Staff::where('staff_code', 'LIKE', 'GOOG%')
-        ->orderBy('staff_code', 'desc')
-        ->first();
-
-    if (!$lastCode) {
-        return 'GOOG001';
-    }
-
-    $number = intval(substr($lastCode->staff_code, 4)) + 1;
-    return 'GOOG' . str_pad($number, 3, '0', STR_PAD_LEFT);
-}
-```
+**Requirements:**
+- Display "Sign in with Google" button
+- Initiate Google OAuth2 popup/redirect flow
+- Receive Google ID token from OAuth2 response
+- Send Google token to backend `/auth/login/google` endpoint
+- Handle OAuth2 errors and user cancellation
 
 ---
 
-## 12. Notes
+## 12. Future Enhancements
 
-### Implementation Status
-
-- ⏳ **Google OAuth2 Integration (planned)**
-  - Backend: Verify Google token with Google API
-  - Frontend: Google Sign In button with OAuth2 flow
-  - Auto-create user accounts on first Google login
-  - Dual Token System (Access + Refresh)
-  - Token Rotation on each refresh
-- ⏳ Domain restriction for company emails (optional)
-- ⏳ Admin approval for new Google accounts (optional)
-- ⏳ Link Google account to existing accounts (future)
-
-### Deployment Checklist
-
-- [ ] Configure Google OAuth2 credentials in Google Cloud Console
-- [ ] Add `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` to `.env`
-- [ ] Install `google/apiclient` package
-- [ ] Create `/auth/login/google` route
-- [ ] Implement `loginWithGoogle()` controller method
-- [ ] Add Google Sign In button to frontend
-- [ ] Test with multiple Google accounts
-- [ ] Test auto-registration flow
-- [ ] Test rate limiting
+| Feature | Priority | Description |
+|---------|----------|-------------|
+| **Domain Restriction** | Medium | Limit Google sign-in to company email domains |
+| **Admin Approval** | Medium | Require admin approval for new Google accounts |
+| **Account Linking** | High | Link Google account to existing username/password accounts |
+| **Multi-Provider** | Low | Support additional OAuth providers (Microsoft, Apple) |
+| **Profile Sync** | Low | Auto-update user profile from Google on each login |
 
 ---
 
@@ -866,4 +716,5 @@ private function generateGoogleStaffCode(): string
 
 | Date | Changes |
 |------|---------|
+| 2026-01-11 | Refactored spec to be tech-agnostic (removed PHP/Laravel/SQL specifics) |
 | 2026-01-11 | Initial API specification for Google Sign In with Dual Token System |

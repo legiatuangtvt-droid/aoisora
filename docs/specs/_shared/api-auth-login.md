@@ -4,7 +4,7 @@
 > **Method**: POST
 > **Endpoint**: `/api/v1/auth/login`
 > **Module**: Common (All modules)
-> **Last Updated**: 2026-01-10
+> **Last Updated**: 2026-01-11
 
 ---
 
@@ -52,7 +52,7 @@ This API authenticates users and returns an access token for subsequent API requ
 - **Refresh Token**: 30 days lifetime (if `remember_me = true`), used to obtain new access tokens
 
 **Authentication Method:**
-- Laravel Sanctum Bearer Token
+- Bearer Token authentication
 - Access Token must be included in `Authorization: Bearer {token}` header for protected endpoints
 - Refresh Token only used with `/auth/refresh` endpoint
 
@@ -95,15 +95,15 @@ This API authenticates users and returns an access token for subsequent API requ
 | `suspended` | Block login with error message |
 | `deleted` | Block login (treated as not found) |
 
-### 3.3 Security Features
+### 3.3 Security Requirements
 
-| Feature | Implementation |
-|---------|----------------|
-| **Password Hashing** | BCrypt via Laravel's `Hash::make()` |
-| **Rate Limiting** | Laravel throttle middleware (60 requests/minute) |
+| Requirement | Specification |
+|-------------|---------------|
+| **Password Storage** | Must be hashed (one-way), never stored as plain text |
+| **Rate Limiting** | Maximum 60 login attempts per minute per IP |
 | **Dual Token System** | Access Token (15 min) + Refresh Token (30 days) |
-| **Token Abilities** | Access: `api:access`, Refresh: `api:refresh` |
-| **Token Rotation** | Both tokens replaced on each refresh |
+| **Token Abilities** | Access tokens for API calls, Refresh tokens only for token refresh |
+| **Token Rotation** | Both tokens replaced on each refresh for security |
 | **Password Validation** | Backend validates against stored hash |
 | **Account Lockout** | ⏳ Future enhancement (after N failed attempts) |
 
@@ -244,82 +244,52 @@ This API authenticates users and returns an access token for subsequent API requ
 
 ---
 
-## 5. Database Queries
+## 5. Data Persistence Requirements
 
-### 5.1 Find User by Identifier
+### 5.1 User Lookup
 
-```sql
--- Find staff by email, phone, sap_code, or username
-SELECT *
-FROM staff
-WHERE email = :identifier
-   OR phone = :identifier
-   OR sap_code = :identifier
-   OR username = :identifier
-LIMIT 1;
-```
+System must be able to find user by any of these identifiers:
+- Email address
+- Phone number
+- SAP code
+- Username
 
-### 5.2 Load User Relationships
+**Requirement**: Single query to check all identifier fields, return first match.
 
-```sql
--- Load store information
-SELECT s.store_id, s.store_name, s.store_code
-FROM stores s
-WHERE s.store_id = :user_store_id;
+### 5.2 User Data Loading
 
--- Load department information
-SELECT d.department_id, d.department_name, d.department_code
-FROM departments d
-WHERE d.department_id = :user_department_id;
-```
+When user is authenticated, system must load:
+- Basic user information (id, name, email, phone, role, position)
+- Store information (if user assigned to store)
+  - Store ID, Store name, Store code
+- Department information (if user assigned to department)
+  - Department ID, Department name, Department code
+- Avatar/profile picture URL
 
-### 5.3 Create Tokens (Dual Token System)
+### 5.3 Token Storage Requirements
 
-```sql
--- Insert Access Token (15 minutes)
-INSERT INTO personal_access_tokens (
-    tokenable_type,
-    tokenable_id,
-    name,
-    token,
-    abilities,
-    expires_at,
-    created_at,
-    updated_at
-)
-VALUES (
-    'App\\Models\\Staff',
-    :staff_id,
-    'access_token',
-    :hashed_access_token,
-    '["api:access"]',
-    DATE_ADD(NOW(), INTERVAL 15 MINUTE),
-    NOW(),
-    NOW()
-);
+System must persist both tokens with following properties:
 
--- Insert Refresh Token (30 days if remember_me)
-INSERT INTO personal_access_tokens (
-    tokenable_type,
-    tokenable_id,
-    name,
-    token,
-    abilities,
-    expires_at,
-    created_at,
-    updated_at
-)
-VALUES (
-    'App\\Models\\Staff',
-    :staff_id,
-    'refresh_token',
-    :hashed_refresh_token,
-    '["api:refresh"]',
-    DATE_ADD(NOW(), INTERVAL 30 DAY),
-    NOW(),
-    NOW()
-);
-```
+**Access Token:**
+- Token string (must be hashed before storage)
+- User association (link to authenticated user)
+- Token type identifier: "access_token"
+- Token abilities: "api:access"
+- Expiration timestamp: 15 minutes from creation
+- Creation timestamp
+
+**Refresh Token:**
+- Token string (must be hashed before storage)
+- User association (link to authenticated user)
+- Token type identifier: "refresh_token"
+- Token abilities: "api:refresh"
+- Expiration timestamp: 30 days from creation (if remember_me)
+- Creation timestamp
+
+**Token Revocation:**
+- System must support immediate token revocation
+- Old tokens must be deleted/marked invalid on refresh
+- All tokens must be revoked on logout
 
 ---
 
@@ -440,28 +410,28 @@ For user account creation/password reset, enforce these rules:
 ^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$
 ```
 
-### 7.2 Rate Limiting
+### 7.2 Rate Limiting Requirements
 
 | Endpoint | Limit | Window | Block Duration |
 |----------|-------|--------|----------------|
 | `/auth/login` | 5 attempts | 1 minute | 1 minute |
 | `/auth/login` | 10 attempts | 15 minutes | 15 minutes |
 
-**Implementation:** Laravel's `throttle` middleware
+**Behavior:** System must track failed login attempts and temporarily block further attempts when limits are exceeded.
 
-### 7.3 Token Security
+### 7.3 Token Security Requirements
 
-| Feature | Implementation |
-|---------|----------------|
-| **Dual Token System** | Access (15 min) + Refresh (30 days) |
-| **Token Abilities** | Access: `api:access`, Refresh: `api:refresh` |
-| **Storage** | Access: sessionStorage, Refresh: localStorage/sessionStorage |
-| **Transmission** | HTTPS only in production |
-| **Auto-Refresh** | Access token auto-refreshes every ~14 minutes |
-| **Token Rotation** | Both tokens replaced on each refresh |
-| **Revocation** | Manual logout revokes all tokens |
-| **Reuse Detection** | Backend detects revoked token reuse |
-| **Validation** | Every API request checks token validity & abilities |
+| Requirement | Specification |
+|-------------|---------------|
+| **Dual Token System** | System must issue two tokens: Access (15 min) + Refresh (30 days) |
+| **Token Abilities** | Access tokens can call APIs, Refresh tokens can only refresh |
+| **Frontend Storage** | Access in sessionStorage, Refresh in localStorage/sessionStorage |
+| **Transmission** | All tokens must be transmitted over HTTPS in production |
+| **Auto-Refresh** | Frontend should auto-refresh access token before expiration (~14 min) |
+| **Token Rotation** | System must replace both tokens on each refresh operation |
+| **Revocation** | System must revoke all user tokens on manual logout |
+| **Reuse Detection** | System must detect and block attempts to reuse revoked tokens |
+| **Validation** | System must verify token validity and abilities on every API request |
 
 ---
 
@@ -545,31 +515,15 @@ if (!result.success) {
 
 ---
 
-## 11. Notes
+## 11. Future Enhancements
 
-### Implementation Status
-
-- ✅ Single token system implemented (current)
-- ⏳ **Dual Token System with Rotation (planned upgrade)**
-  - Access Token (15 min) + Refresh Token (30 days)
-  - Token Rotation on each refresh
-  - Automatic token reuse detection
-  - Enhanced security with token abilities
-- ✅ Authentication flow is fully functional
-- ✅ Session expiration handling implemented
-- ✅ Token verification on app load works correctly
-- ✅ 401 auto-logout implemented
-- ⏳ Account lockout after multiple failed attempts (future enhancement)
-- ⏳ Password strength meter on Sign In (future enhancement)
-- ⏳ Two-factor authentication (future enhancement)
-
-### Migration Plan
-
-When upgrading to Dual Token System:
-1. Backend creates 2 tokens on login
-2. Frontend stores tokens in appropriate storage
-3. Auto-refresh mechanism with token rotation
-4. Backward compatibility maintained during transition
+| Feature | Priority | Description |
+|---------|----------|-------------|
+| **Account Lockout** | Medium | Block account after N failed login attempts |
+| **Password Strength Meter** | Low | Real-time password strength indicator on Sign In |
+| **Two-Factor Authentication** | High | Additional security layer with OTP/SMS/App |
+| **Biometric Login** | Low | Fingerprint/Face ID support for mobile apps |
+| **Login History** | Medium | Track and display recent login activities |
 
 ---
 
@@ -577,5 +531,6 @@ When upgrading to Dual Token System:
 
 | Date | Changes |
 |------|---------|
+| 2026-01-11 | Refactored spec to be tech-agnostic (removed Laravel/SQL specifics) |
 | 2026-01-11 | Updated spec for Dual Token System with Rotation |
 | 2026-01-10 | Initial API specification created based on existing implementation |
