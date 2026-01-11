@@ -31,24 +31,40 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  WORKFLOW:                                                      │
+│  WORKFLOW (SPEC-FIRST APPROACH):                                │
 │                                                                 │
-│  1. BUILD DEMO                                                  │
-│     → Claude build từng screen trên local                       │
-│     → Deploy lên demo server để review                          │
+│  1. ĐỌC & HOÀN THIỆN SPEC                                       │
+│     → Đọc spec file trong docs/specs/{module}/                 │
+│     → ⚠️ PHẢI HỎI USER trước khi edit spec                     │
+│     → Hoàn thiện spec để sẵn sàng build                        │
+│     → Basic Spec: {screen}-basic.md (tổng quan)                │
+│     → Detail Spec: {screen}-detail.md (chi tiết)               │
 │                                                                 │
-│  2. VIẾT SPEC (căn cứ vào demo hoàn thiện)                      │
-│     → Basic Spec: docs/specs/{module}/{screen}-basic.md         │
-│     → Detail Spec: docs/specs/{module}/{screen}-detail.md       │
+│  2. BUILD DEMO (theo SPEC)                                      │
+│     → Code theo spec đã hoàn thiện                             │
+│     → ⚠️ Liên tục SO SÁNH code với spec khi coding             │
+│     → Lưu ý: đã code theo spec chưa? Vì sao chưa?             │
+│     → Phát hiện vấn đề spec → BÁO CÁO & ĐỀ XUẤT sửa spec      │
+│     → Code có thể edit AUTOMATICALLY (không cần hỏi)           │
+│     → Build trên local, test đầy đủ tính năng                  │
 │                                                                 │
-│  3. TEST                                                        │
-│     → Test trên demo/local                                      │
-│     → Verify spec vs implementation                             │
-│     → Log issues nếu có                                         │
+│  3. REVIEW & ĐIỀU CHỈNH SPEC                                    │
+│     → Quay lại xem xét spec dựa trên findings từ coding       │
+│     → ⚠️ HỎI USER trước khi điều chỉnh spec                    │
+│     → Hoàn thiện spec nếu cần                                  │
+│     → Đảm bảo spec khớp với implementation                     │
 │                                                                 │
-│  4. BÁO CÁO                                                     │
-│     → Submit spec files để review                               │
-│     → Basic và Detail tách riêng để dễ báo cáo                  │
+│  4. COMMIT & PUSH                                               │
+│     → Sau MỖI thay đổi (spec hoặc code)                       │
+│     → Commit với message rõ ràng                               │
+│     → Push lên remote repository                               │
+│                                                                 │
+│  ⚠️ QUY TẮC QUAN TRỌNG:                                         │
+│     → SPEC là source of truth để build demo                    │
+│     → Code edits: AUTOMATIC (không cần hỏi user)               │
+│     → Spec edits: PHẢI HỎI USER trước khi edit                 │
+│     → So sánh code vs spec LIÊN TỤC trong quá trình coding    │
+│     → Report spec issues ngay khi phát hiện                    │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
