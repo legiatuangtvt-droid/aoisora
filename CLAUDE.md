@@ -73,6 +73,7 @@
 │     → Dùng để build demo trên local                            │
 │     → Giúp hiểu rõ app trước khi viết spec production           │
 │     → Demo KHÔNG phải là 100% spec                              │
+│     → Recommendations từ Dev Team được apply cho demo           │
 │                                                                 │
 │  📝 SPEC (Tech-Agnostic cho Production)                         │
 │     → KHÔNG đề cập demo implementation                          │
@@ -85,22 +86,42 @@
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-**Production Tech Stack (Reference Only - for Demo Building)**:
+**Production Tech Stack (Reference Only - Reviewed by Dev Team)**:
 
-| Component | Technology | Purpose |
-|-----------|------------|---------|
-| **Backend** | Laravel 10.x + PHP 8.3 | API, Business Logic |
-| **Frontend** | Next.js 14 + React 18 | UI, Client-side |
-| **Database** | MySQL 8.4 | Data Storage |
-| **Authentication** | Sanctum (Bearer tokens) | Auth System |
-| **Real-time** | Laravel Reverb (WebSocket) | Live Updates |
-| **Hosting** | PA Vietnam (cPanel/DirectAdmin) | Production Server |
+| Layer | Technology | Reason (Dev Team Review) |
+|-------|------------|--------------------------|
+| **Backend Framework** | Laravel 10.x + PHP 8.3 | Core framework, modern PHP |
+| **Frontend Framework** | Next.js 14 + React 18 | SSR/SSG, App Router |
+| **Database** | MySQL 8.4 | Relational data, ACID compliance |
+| **Authentication** | ✅ **Laravel Passport** (OAuth2) | Recommended by dev team - better scalability than Sanctum |
+| **Query Methods** | ✅ **Query Builder + Eloquent ORM** | Use both: Query Builder for performance, Eloquent for relationships |
+| **Database Migrations** | ✅ **Laravel Migrations** | Version control for database schema |
+| **Validation** | ✅ **Form Request Classes** | Separate validation logic from Controllers |
+| **Background Jobs** | ⚠️ Laravel Queue / Horizon (TBD) | Need to clarify requirements first |
+| **Caching** | ✅ **Redis + Response Caching** | Redis for data, Spatie Response Caching for static pages |
+| **Testing** | ✅ **Pest PHP** | Clean syntax, fast execution |
+| **Code Quality** | ✅ **Laravel Pint** | Built-in Laravel 10+, zero-config |
+| **Monitoring** | ✅ **Laravel Pulse** | Lightweight APM, production-safe |
+| **API Documentation** | ❌ **Manual (NO auto-generate)** | Spec → Code workflow, not Code → Docs |
+| **File Storage** | ✅ **Laravel Filesystem** | Local/S3/GCS abstraction |
+| **Real-time** | Laravel Reverb (WebSocket) | Live updates, chat, notifications |
+| **Hosting** | PA Vietnam (cPanel/DirectAdmin) | Production server |
+
+**Key Decisions from Dev Team Review**:
+
+1. **Passport over Sanctum**: Mở rộng tốt hơn, hỗ trợ OAuth2 đầy đủ
+2. **Hybrid Query Approach**: Query Builder cho complex queries, Eloquent cho CRUD
+3. **Form Requests**: Tách validation khỏi Controller để code gọn, tái sử dụng
+4. **No Auto API Docs**: Scramble/Swagger đi ngược workflow (code → docs), chúng ta cần (spec → code)
+5. **Dual Caching**: Redis cho data caching, Response Caching cho static pages
+6. **Background Jobs**: Cần rõ requirement trước khi chọn Queue hay Horizon
 
 **Lưu ý quan trọng**:
-- Demo build với tech stack trên để học và hiểu app
-- Spec viết **tech-agnostic** cho production
+- Demo build theo recommendations của dev team
+- Spec vẫn viết **tech-agnostic** cho production
 - Dev team production có thể dùng bất kỳ tech nào implement spec
 - Spec chỉ mô tả **business requirements**, không lock vào framework
+- **KHÔNG bao giờ** generate API docs tự động từ code (đi ngược workflow)
 
 ---
 
