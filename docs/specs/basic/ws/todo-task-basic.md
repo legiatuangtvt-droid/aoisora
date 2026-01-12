@@ -135,6 +135,6 @@
 
 | Document | Path |
 |----------|------|
-| Detail Spec | `docs/specs/ws/todo-task-detail.md` |
-| Task List Basic | `docs/specs/ws/task-list-basic.md` |
-| Add Task Basic | `docs/specs/ws/add-task-basic.md` |
+| Detail Spec | `docs/specs/detail/ws/todo-task-detail.md` |
+| Task List Basic | `docs/specs/basic/ws/task-list-basic.md` |
+| Add Task Basic | `docs/specs/basic/ws/add-task-basic.md` |

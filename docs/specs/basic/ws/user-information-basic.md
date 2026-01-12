@@ -128,5 +128,5 @@
 
 | Document | Path |
 |----------|------|
-| Detail Spec | `docs/specs/ws/user-information-detail.md` |
-| Store Information Basic | `docs/specs/ws/store-information-basic.md` |
+| Detail Spec | `docs/specs/detail/ws/user-information-detail.md` |
+| Store Information Basic | `docs/specs/basic/ws/store-information-basic.md` |

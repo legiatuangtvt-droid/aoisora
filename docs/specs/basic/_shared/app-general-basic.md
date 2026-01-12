@@ -97,6 +97,6 @@
 
 | Document | Path |
 |----------|------|
-| Detail Spec | `docs/specs/_shared/app-general-detail.md` |
-| Authentication Basic | `docs/specs/_shared/authentication-basic.md` |
+| Detail Spec | `docs/specs/detail/_shared/app-general-detail.md` |
+| Authentication Basic | `docs/specs/basic/_shared/authentication-basic.md` |
 

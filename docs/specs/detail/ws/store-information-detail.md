@@ -668,6 +668,6 @@ frontend/src/
 
 | Document | Path |
 |----------|------|
-| Basic Spec | `docs/specs/ws/store-information-basic.md` |
-| User Information Basic | `docs/specs/ws/user-information-basic.md` |
+| Basic Spec | `docs/specs/basic/ws/store-information-basic.md` |
+| User Information Basic | `docs/specs/basic/ws/user-information-basic.md` |
 

@@ -117,6 +117,6 @@
 
 | Document | Path |
 |----------|------|
-| Detail Spec | `docs/specs/ws/task-library-detail.md` |
-| Add Task Basic | `docs/specs/ws/add-task-basic.md` |
-| Task List Basic | `docs/specs/ws/task-list-basic.md` |
+| Detail Spec | `docs/specs/detail/ws/task-library-detail.md` |
+| Add Task Basic | `docs/specs/basic/ws/add-task-basic.md` |
+| Task List Basic | `docs/specs/basic/ws/task-list-basic.md` |

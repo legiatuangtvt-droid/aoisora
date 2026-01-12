@@ -230,8 +230,8 @@ For Task List filter dropdown, frontend should:
 
 | Document | Path |
 |----------|------|
-| Task List Basic Spec | `docs/specs/ws/task-list-basic.md` |
-| Task List Detail Spec | `docs/specs/ws/task-list-detail.md` |
+| Task List Basic Spec | `docs/specs/basic/ws/task-list-basic.md` |
+| Task List Detail Spec | `docs/specs/detail/ws/task-list-detail.md` |
 | Get Task List API | `docs/specs/ws/api-get-task-list.md` |
 
 ---

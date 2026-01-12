@@ -117,5 +117,5 @@
 
 | Document | Path |
 |----------|------|
-| Detail Spec | `docs/specs/ws/message-detail.md` |
-| Task List Basic | `docs/specs/ws/task-list-basic.md` |
+| Detail Spec | `docs/specs/detail/ws/message-detail.md` |
+| Task List Basic | `docs/specs/basic/ws/task-list-basic.md` |

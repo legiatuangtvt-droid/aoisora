@@ -108,5 +108,5 @@
 
 | Document | Path |
 |----------|------|
-| Detail Spec | `docs/specs/ws/report-detail.md` |
-| Task List Basic | `docs/specs/ws/task-list-basic.md` |
+| Detail Spec | `docs/specs/detail/ws/report-detail.md` |
+| Task List Basic | `docs/specs/basic/ws/task-list-basic.md` |

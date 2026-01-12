@@ -261,67 +261,64 @@ Specs được tổ chức theo module:
 
 ```
 docs/specs/
-├── _shared/                    # Shared Screen Specs (Basic & Detail)
-│   ├── authentication-basic.md
-│   ├── authentication-detail.md
-│   ├── app-general-basic.md
-│   └── app-general-detail.md
+├── basic/                      # 📋 Basic Specs (Tổng quan screens)
+│   ├── _shared/
+│   │   ├── authentication-basic.md
+│   │   └── app-general-basic.md
+│   └── ws/
+│       ├── task-list-basic.md
+│       ├── task-detail-basic.md
+│       ├── task-library-basic.md
+│       ├── add-task-basic.md
+│       ├── todo-task-basic.md
+│       ├── user-information-basic.md
+│       ├── store-information-basic.md
+│       ├── message-basic.md
+│       └── report-basic.md
 │
-├── api/                        # 🆕 API Specifications (Tech-agnostic)
-│   ├── auth/                   # Authentication APIs
-│   │   ├── api-auth-login.md
-│   │   └── api-auth-login-google.md
-│   │
-│   └── ws/                     # WS Module APIs
-│       ├── api-get-departments.md
-│       └── api-get-task-list.md
+├── detail/                     # 📝 Detail Specs (Chi tiết screens)
+│   ├── _shared/
+│   │   ├── authentication-detail.md
+│   │   └── app-general-detail.md
+│   └── ws/
+│       ├── task-list-detail.md
+│       ├── task-detail-detail.md
+│       ├── task-library-detail.md
+│       ├── add-task-detail.md
+│       ├── todo-task-detail.md
+│       ├── user-information-detail.md
+│       ├── store-information-detail.md
+│       ├── message-detail.md
+│       └── report-detail.md
 │
-├── ws/                         # WS Module (Screen Specs)
-│   ├── task-list-basic.md
-│   ├── task-list-detail.md
-│   ├── task-detail-basic.md
-│   ├── task-detail-detail.md
-│   ├── task-library-basic.md
-│   ├── task-library-detail.md
-│   ├── add-task-basic.md
-│   ├── add-task-detail.md
-│   ├── todo-task-basic.md
-│   ├── todo-task-detail.md
-│   ├── user-information-basic.md
-│   ├── user-information-detail.md
-│   ├── store-information-basic.md
-│   ├── store-information-detail.md
-│   ├── message-basic.md
-│   ├── message-detail.md
-│   ├── report-basic.md
-│   └── report-detail.md
-│
-├── dws/                        # DWS Module (Screen Specs)
-├── faq/                        # FAQ Module (Screen Specs)
-├── manual/                     # Manual Module (Screen Specs)
-├── check-quality/              # Check Quality Module (Screen Specs)
-└── training/                   # Training Module (Screen Specs)
+└── api/                        # 🔌 API Specs (Tech-agnostic contracts)
+    ├── auth/
+    │   ├── api-auth-login.md
+    │   └── api-auth-login-google.md
+    └── ws/
+        ├── api-get-departments.md
+        └── api-get-task-list.md
 ```
 
 > **Note**:
-> - Screen specs: 2 files per screen: `-basic.md` (tổng quan) và `-detail.md` (chi tiết)
-> - API specs: 1 file per endpoint: `api-{action}.md` (tech-agnostic contract)
+> - **3 loại specs riêng biệt**: Basic (tổng quan) / Detail (chi tiết) / API (backend contracts)
+> - Mỗi screen có 2 files: `{screen}-basic.md` + `{screen}-detail.md`
+> - Mỗi API endpoint có 1 file: `api-{action}.md`
 
 **Quick Reference:**
 
-| Type | Spec Path | Description |
-|------|-----------|-------------|
+| Type | Path | Description |
+|------|------|-------------|
+| **Basic Specs** | `docs/specs/basic/` | Tổng quan screens (4 sections) |
+| └─ Shared | `docs/specs/basic/_shared/` | Authentication, App General |
+| └─ WS Module | `docs/specs/basic/ws/` | WS screens overview |
+| **Detail Specs** | `docs/specs/detail/` | Chi tiết screens (components, data types) |
+| └─ Shared | `docs/specs/detail/_shared/` | Authentication, App General |
+| └─ WS Module | `docs/specs/detail/ws/` | WS screens details |
 | **API Specs** | `docs/specs/api/` | Tech-agnostic API contracts |
 | └─ Auth APIs | `docs/specs/api/auth/` | Authentication endpoints |
 | └─ WS APIs | `docs/specs/api/ws/` | WS Module endpoints |
-| **Screen Specs** | | Screen-level specifications |
-| └─ Shared | `docs/specs/_shared/` | Authentication, App General |
-| └─ WS | `docs/specs/ws/` | Task from HQ |
-| └─ DWS | `docs/specs/dws/` | Dispatch Work Schedule |
-| └─ FAQ | `docs/specs/faq/` | Frequently Asked Questions |
-| └─ Manual | `docs/specs/manual/` | Knowledge Base |
-| └─ Check Quality | `docs/specs/check-quality/` | Quality Check |
-| └─ Training | `docs/specs/training/` | Training |
+| **Other Modules** | `docs/specs/{module}/` | DWS, FAQ, Manual, Check Quality, Training |
 
 ### 4.1 Quy tắc viết Spec File
 
