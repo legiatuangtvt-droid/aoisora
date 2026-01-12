@@ -197,7 +197,7 @@ Frontend must handle API errors gracefully and display user-friendly messages.
 
 ### 8.2 Error Codes Reference
 
-See [API Specification: Sign In (Login)](./api-auth-login.md#7-error-codes) for complete error codes list.
+See [API Specification: Sign In (Login)](../api/auth/api-auth-login.md#7-error-codes) for complete error codes list.
 
 **Common error codes:**
 
@@ -274,6 +274,7 @@ if (!result.success) {
 
 | Date | Changes |
 |------|---------|
+| 2026-01-12 | Updated API spec reference path (api-auth-login.md moved to api/auth/ directory) |
 | 2026-01-12 | Added Section 8 (Error Handling) - moved from api-auth-login.md for better separation of concerns |
 | 2026-01-12 | Clarified refresh token lifetime strategy: 30 days (Remember Me) vs session-based (No Remember Me) |
 | 2026-01-11 | Initial authentication basic spec created |

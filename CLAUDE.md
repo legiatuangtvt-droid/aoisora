@@ -261,13 +261,22 @@ Specs được tổ chức theo module:
 
 ```
 docs/specs/
-├── _shared/                    # Shared across all modules
+├── _shared/                    # Shared Screen Specs (Basic & Detail)
 │   ├── authentication-basic.md
 │   ├── authentication-detail.md
 │   ├── app-general-basic.md
 │   └── app-general-detail.md
 │
-├── ws/                         # WS Module (Task from HQ)
+├── api/                        # 🆕 API Specifications (Tech-agnostic)
+│   ├── auth/                   # Authentication APIs
+│   │   ├── api-auth-login.md
+│   │   └── api-auth-login-google.md
+│   │
+│   └── ws/                     # WS Module APIs
+│       ├── api-get-departments.md
+│       └── api-get-task-list.md
+│
+├── ws/                         # WS Module (Screen Specs)
 │   ├── task-list-basic.md
 │   ├── task-list-detail.md
 │   ├── task-detail-basic.md
@@ -287,26 +296,32 @@ docs/specs/
 │   ├── report-basic.md
 │   └── report-detail.md
 │
-├── dws/                        # DWS Module
-├── faq/                        # FAQ Module
-├── manual/                     # Manual Module
-├── check-quality/              # Check Quality Module
-└── training/                   # Training Module
+├── dws/                        # DWS Module (Screen Specs)
+├── faq/                        # FAQ Module (Screen Specs)
+├── manual/                     # Manual Module (Screen Specs)
+├── check-quality/              # Check Quality Module (Screen Specs)
+└── training/                   # Training Module (Screen Specs)
 ```
 
-> **Note**: Mỗi screen có 2 files: `-basic.md` (tổng quan) và `-detail.md` (chi tiết)
+> **Note**:
+> - Screen specs: 2 files per screen: `-basic.md` (tổng quan) và `-detail.md` (chi tiết)
+> - API specs: 1 file per endpoint: `api-{action}.md` (tech-agnostic contract)
 
 **Quick Reference:**
 
-| Module | Spec Path | Description |
-|--------|-----------|-------------|
-| Shared | `docs/specs/_shared/` | Authentication, App General |
-| WS | `docs/specs/ws/` | Task from HQ |
-| DWS | `docs/specs/dws/` | Dispatch Work Schedule |
-| FAQ | `docs/specs/faq/` | Frequently Asked Questions |
-| Manual | `docs/specs/manual/` | Knowledge Base |
-| Check Quality | `docs/specs/check-quality/` | Quality Check |
-| Training | `docs/specs/training/` | Training |
+| Type | Spec Path | Description |
+|------|-----------|-------------|
+| **API Specs** | `docs/specs/api/` | Tech-agnostic API contracts |
+| └─ Auth APIs | `docs/specs/api/auth/` | Authentication endpoints |
+| └─ WS APIs | `docs/specs/api/ws/` | WS Module endpoints |
+| **Screen Specs** | | Screen-level specifications |
+| └─ Shared | `docs/specs/_shared/` | Authentication, App General |
+| └─ WS | `docs/specs/ws/` | Task from HQ |
+| └─ DWS | `docs/specs/dws/` | Dispatch Work Schedule |
+| └─ FAQ | `docs/specs/faq/` | Frequently Asked Questions |
+| └─ Manual | `docs/specs/manual/` | Knowledge Base |
+| └─ Check Quality | `docs/specs/check-quality/` | Quality Check |
+| └─ Training | `docs/specs/training/` | Training |
 
 ### 4.1 Quy tắc viết Spec File
 
