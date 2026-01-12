@@ -120,6 +120,6 @@
 
 | Document | Path |
 |----------|------|
-| Detail Spec | `docs/specs/detail/ws/add-task-detail.md` |
-| Task List Basic | `docs/specs/basic/ws/task-list-basic.md` |
-| Task Detail Basic | `docs/specs/basic/ws/task-detail-basic.md` |
+| Detail Spec | `docs/specs/detail/ws-add-task-detail.md` |
+| Task List Basic | `docs/specs/basic/ws-task-list-basic.md` |
+| Task Detail Basic | `docs/specs/basic/ws-task-detail-basic.md` |

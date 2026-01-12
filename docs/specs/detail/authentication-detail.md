@@ -1119,9 +1119,9 @@ CREATE TABLE personal_access_tokens (
 
 | Document | Path |
 |----------|------|
-| Basic Spec | `docs/specs/basic/_shared/authentication-basic.md` |
-| API Login Spec | `docs/specs/api/auth/api-auth-login.md` |
+| Basic Spec | `docs/specs/basic/authentication-basic.md` |
+| API Login Spec | `docs/specs/api/auth-login.md` |
 | Test Guide | `QUICK_TEST_GUIDE.md` |
 | Test Scenarios | `TEST_SCENARIO_IDLE_TIMEOUT.md` |
-| App General Basic | `docs/specs/basic/_shared/app-general-basic.md` |
+| App General Basic | `docs/specs/basic/app-general-basic.md` |
 

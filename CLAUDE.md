@@ -262,63 +262,61 @@ Specs được tổ chức theo module:
 ```
 docs/specs/
 ├── basic/                      # 📋 Basic Specs (Tổng quan screens)
-│   ├── _shared/
-│   │   ├── authentication-basic.md
-│   │   └── app-general-basic.md
-│   └── ws/
-│       ├── task-list-basic.md
-│       ├── task-detail-basic.md
-│       ├── task-library-basic.md
-│       ├── add-task-basic.md
-│       ├── todo-task-basic.md
-│       ├── user-information-basic.md
-│       ├── store-information-basic.md
-│       ├── message-basic.md
-│       └── report-basic.md
+│   ├── authentication-basic.md         (shared - no prefix)
+│   ├── app-general-basic.md            (shared - no prefix)
+│   ├── ws-task-list-basic.md
+│   ├── ws-task-detail-basic.md
+│   ├── ws-task-library-basic.md
+│   ├── ws-add-task-basic.md
+│   ├── ws-todo-task-basic.md
+│   ├── ws-user-information-basic.md
+│   ├── ws-store-information-basic.md
+│   ├── ws-message-basic.md
+│   └── ws-report-basic.md
 │
 ├── detail/                     # 📝 Detail Specs (Chi tiết screens)
-│   ├── _shared/
-│   │   ├── authentication-detail.md
-│   │   └── app-general-detail.md
-│   └── ws/
-│       ├── task-list-detail.md
-│       ├── task-detail-detail.md
-│       ├── task-library-detail.md
-│       ├── add-task-detail.md
-│       ├── todo-task-detail.md
-│       ├── user-information-detail.md
-│       ├── store-information-detail.md
-│       ├── message-detail.md
-│       └── report-detail.md
+│   ├── authentication-detail.md
+│   ├── app-general-detail.md
+│   ├── ws-task-list-detail.md
+│   ├── ws-task-detail-detail.md
+│   ├── ws-task-library-detail.md
+│   ├── ws-add-task-detail.md
+│   ├── ws-todo-task-detail.md
+│   ├── ws-user-information-detail.md
+│   ├── ws-store-information-detail.md
+│   ├── ws-message-detail.md
+│   └── ws-report-detail.md
 │
 └── api/                        # 🔌 API Specs (Tech-agnostic contracts)
-    ├── auth/
-    │   ├── api-auth-login.md
-    │   └── api-auth-login-google.md
-    └── ws/
-        ├── api-get-departments.md
-        └── api-get-task-list.md
+    ├── auth-login.md
+    ├── auth-login-google.md
+    ├── ws-get-departments.md
+    └── ws-get-task-list.md
 ```
 
 > **Note**:
-> - **3 loại specs riêng biệt**: Basic (tổng quan) / Detail (chi tiết) / API (backend contracts)
-> - Mỗi screen có 2 files: `{screen}-basic.md` + `{screen}-detail.md`
-> - Mỗi API endpoint có 1 file: `api-{action}.md`
+> - **3 thư mục FLAT** (không có thư mục con)
+> - **Module prefix**: `{module}-` cho module-specific files (ws-, dws-, faq-...)
+> - **No prefix**: Shared files (authentication, app-general)
+> - Mỗi screen: `{module}-{screen}-basic.md` + `{module}-{screen}-detail.md`
+> - Mỗi API: `{module}-{action}.md`
 
 **Quick Reference:**
 
-| Type | Path | Description |
-|------|------|-------------|
-| **Basic Specs** | `docs/specs/basic/` | Tổng quan screens (4 sections) |
-| └─ Shared | `docs/specs/basic/_shared/` | Authentication, App General |
-| └─ WS Module | `docs/specs/basic/ws/` | WS screens overview |
-| **Detail Specs** | `docs/specs/detail/` | Chi tiết screens (components, data types) |
-| └─ Shared | `docs/specs/detail/_shared/` | Authentication, App General |
-| └─ WS Module | `docs/specs/detail/ws/` | WS screens details |
-| **API Specs** | `docs/specs/api/` | Tech-agnostic API contracts |
-| └─ Auth APIs | `docs/specs/api/auth/` | Authentication endpoints |
-| └─ WS APIs | `docs/specs/api/ws/` | WS Module endpoints |
-| **Other Modules** | `docs/specs/{module}/` | DWS, FAQ, Manual, Check Quality, Training |
+| Type | Path | Naming Convention | Example |
+|------|------|-------------------|---------|
+| **Basic Specs** | `docs/specs/basic/` | `{module}-{screen}-basic.md` | `ws-task-list-basic.md` |
+| **Detail Specs** | `docs/specs/detail/` | `{module}-{screen}-detail.md` | `ws-task-list-detail.md` |
+| **API Specs** | `docs/specs/api/` | `{module}-{action}.md` | `ws-get-departments.md` |
+| **Shared Specs** | Same directories | No prefix | `authentication-basic.md` |
+
+**Module Prefixes:**
+- `ws-` = WS Module (Task from HQ)
+- `dws-` = DWS Module (Dispatch Work Schedule)
+- `faq-` = FAQ Module
+- `manual-` = Manual Module
+- `auth-` = Authentication APIs
+- (no prefix) = Shared across all modules
 
 ### 4.1 Quy tắc viết Spec File
 

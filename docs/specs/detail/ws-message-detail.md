@@ -568,6 +568,6 @@ frontend/src/
 
 | Document | Path |
 |----------|------|
-| Basic Spec | `docs/specs/basic/ws/message-basic.md` |
-| Task List Basic | `docs/specs/basic/ws/task-list-basic.md` |
+| Basic Spec | `docs/specs/basic/ws-message-basic.md` |
+| Task List Basic | `docs/specs/basic/ws-task-list-basic.md` |
 

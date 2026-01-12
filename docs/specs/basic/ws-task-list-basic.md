@@ -147,6 +147,6 @@ Grid displays data with hierarchical structure (Parent-Child) support.
 
 | Document | Path |
 |----------|------|
-| Detail Spec | [task-list-detail.md](task-list-detail.md) |
-| Task Detail Basic | [task-detail-basic.md](task-detail-basic.md) |
-| Add Task Basic | [add-task-basic.md](add-task-basic.md) |
+| Detail Spec | [task-list-detail.md](../detail/ws-task-list-detail.md) |
+| Task Detail Basic | [ws-task-detail-basic.md](ws-task-detail-basic.md) |
+| Add Task Basic | [ws-add-task-basic.md](ws-add-task-basic.md) |

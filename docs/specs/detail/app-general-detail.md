@@ -414,6 +414,6 @@ Organization Hierarchy:
 
 | Document | Path |
 |----------|------|
-| Basic Spec | `docs/specs/basic/_shared/app-general-basic.md` |
-| Authentication Basic | `docs/specs/basic/_shared/authentication-basic.md` |
+| Basic Spec | `docs/specs/basic/app-general-basic.md` |
+| Authentication Basic | `docs/specs/basic/authentication-basic.md` |
 
