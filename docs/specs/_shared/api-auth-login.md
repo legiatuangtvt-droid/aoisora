@@ -372,34 +372,24 @@ For user account creation/password reset, enforce these rules:
 
 ---
 
-## 8. Testing
+## 8. Test Scenarios
 
-### 8.1 Test Accounts
+**Key test scenarios to validate API behavior:**
 
-| Username | Password | Role | Purpose |
-|----------|----------|------|---------|
-| `admin` | `password` | ADMIN | Full system access |
-| `manager` | `password` | MANAGER | Department manager |
-| `staff` | `password` | STAFF | Regular staff member |
+| Category | Scenario | Expected Result |
+|----------|----------|-----------------|
+| **Valid Login** | Login with email/phone/SAP/username + correct password | 200 OK, return access & refresh tokens |
+| **Invalid Credentials** | Login with non-existent identifier | 401 ACCOUNT_NOT_FOUND |
+| **Invalid Credentials** | Login with wrong password | 401 INCORRECT_PASSWORD |
+| **Account Status** | Login with inactive account | 401 ACCOUNT_INACTIVE |
+| **Validation** | Login without required fields | 422 VALIDATION_ERROR |
+| **Rate Limiting** | Multiple failed login attempts (>5/min or >10/15min) | 429 RATE_LIMITED with retry_after |
+| **Remember Me** | Login with remember_me=true | Refresh token expires in 30 days |
+| **Remember Me** | Login with remember_me=false | Refresh token session-based (no DB expiration) |
+| **Token Abilities** | Use access token for API calls | Token has ability `api:access` |
+| **Token Abilities** | Use refresh token for regular APIs | Rejected (token has ability `api:refresh` only) |
 
-### 8.2 Test Cases
-
-| No | Test Case | Expected Result |
-|----|-----------|-----------------|
-| 1 | Login with valid email + correct password | 200 OK, return token |
-| 2 | Login with valid phone + correct password | 200 OK, return token |
-| 3 | Login with SAP code + correct password | 200 OK, return token |
-| 4 | Login with username + correct password | 200 OK, return token |
-| 5 | Login with non-existent email | 401 ACCOUNT_NOT_FOUND |
-| 6 | Login with correct email + wrong password | 401 INCORRECT_PASSWORD |
-| 7 | Login with inactive account | 401 ACCOUNT_INACTIVE |
-| 8 | Login without identifier field | 422 Validation Error |
-| 9 | Login without password field | 422 Validation Error |
-| 10 | Login with remember_me = true | Refresh token in localStorage, 30 days expiration in DB |
-| 11 | Login with remember_me = false | Refresh token in sessionStorage, no DB expiration (session-based) |
-| 12 | Multiple failed login attempts | 429 Rate Limited |
-| 13 | Verify access token has ability `api:access` | Can call regular APIs |
-| 14 | Verify refresh token has ability `api:refresh` | Cannot call regular APIs |
+**Note:** Detailed test cases and test data are maintained separately in the test plan documentation.
 
 ---
 
@@ -433,6 +423,7 @@ For user account creation/password reset, enforce these rules:
 
 | Date | Changes |
 |------|---------|
+| 2026-01-12 | Simplified Section 8: Removed Test Accounts (seed data), kept only Test Scenarios as API behavior examples |
 | 2026-01-12 | Simplified Section 7: "Error Handling" → "Error Codes" (removed unnecessary subsection) |
 | 2026-01-12 | Removed Section 7.2 (Frontend Error Display) - moved to authentication-basic.md for better separation of concerns |
 | 2026-01-12 | Enhanced RATE_LIMITED error: added `retry_after` field (60s or 900s) for dynamic retry timing |
