@@ -299,107 +299,9 @@ System must persist both tokens with following properties:
 
 ---
 
-## 6. Frontend Integration
+## 6. Security Considerations
 
-### 6.1 Usage Example
-
-```typescript
-// Login function in AuthContext
-const login = async (
-  identifier: string,
-  password: string,
-  rememberMe: boolean = false
-): Promise<{ success: boolean; error?: string }> => {
-  try {
-    const response = await fetch(`${API_URL}/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify({
-        identifier,
-        password,
-        remember_me: rememberMe,
-      }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok || !data.success) {
-      return {
-        success: false,
-        error: data.error || 'Login failed'
-      };
-    }
-
-    // Store tokens and user data (Dual Token System)
-    const { access_token, refresh_token, user } = data.data;
-
-    // Access token in sessionStorage (deleted when browser closes)
-    sessionStorage.setItem('access_token', access_token);
-    sessionStorage.setItem('access_token_expires_at', data.data.access_token_expires_at);
-
-    // Refresh token storage depends on remember_me
-    if (rememberMe) {
-      // Remember Me = true → localStorage (persists 30 days)
-      localStorage.setItem('refresh_token', refresh_token);
-      localStorage.setItem('refresh_token_expires_at', data.data.refresh_token_expires_at);
-    } else {
-      // Remember Me = false → sessionStorage (deleted when browser closes)
-      sessionStorage.setItem('refresh_token', refresh_token);
-      sessionStorage.setItem('refresh_token_expires_at', data.data.refresh_token_expires_at);
-    }
-
-    // User data
-    localStorage.setItem('optichain_auth', JSON.stringify({ user }));
-
-    return { success: true };
-  } catch (error) {
-    return {
-      success: false,
-      error: 'Network error. Please check your connection.'
-    };
-  }
-};
-```
-
-### 6.2 Token Storage
-
-| Storage Location | Key | Value | Description |
-|------------------|-----|-------|-------------|
-| sessionStorage | `access_token` | string | Access token (15 min, deleted on browser close) |
-| sessionStorage | `access_token_expires_at` | ISO 8601 string | Access token expiration timestamp |
-| localStorage/sessionStorage | `refresh_token` | string | Refresh token (30 days if Remember Me) |
-| localStorage/sessionStorage | `refresh_token_expires_at` | ISO 8601 string | Refresh token expiration timestamp |
-| localStorage | `optichain_auth` | JSON string | User information object |
-
-**Note:** Refresh token location depends on `remember_me`:
-- `remember_me = true` → `localStorage` (persists after browser close, expires after 30 days)
-- `remember_me = false` → `sessionStorage` (deleted on browser close, no database expiration)
-
-### 6.3 Subsequent API Requests
-
-```typescript
-// Use ACCESS TOKEN in protected API calls
-const accessToken = sessionStorage.getItem('access_token');
-
-const response = await fetch(`${API_URL}/tasks`, {
-  headers: {
-    'Authorization': `Bearer ${accessToken}`,  // Use access token
-    'Accept': 'application/json',
-  }
-});
-
-// If 401 error → Auto-refresh using refresh token
-// See /auth/refresh API documentation
-```
-
----
-
-## 7. Security Considerations
-
-### 7.1 Password Requirements
+### 6.1 Password Requirements
 
 For user account creation/password reset, enforce these rules:
 
@@ -416,7 +318,7 @@ For user account creation/password reset, enforce these rules:
 ^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$
 ```
 
-### 7.2 Rate Limiting Requirements
+### 6.2 Rate Limiting Requirements
 
 | Endpoint | Limit | Window | Block Duration |
 |----------|-------|--------|----------------|
@@ -425,7 +327,7 @@ For user account creation/password reset, enforce these rules:
 
 **Behavior:** System must track failed login attempts and temporarily block further attempts when limits are exceeded.
 
-### 7.3 Token Security Requirements
+### 6.3 Token Security Requirements
 
 | Requirement | Specification |
 |-------------|---------------|
@@ -441,9 +343,9 @@ For user account creation/password reset, enforce these rules:
 
 ---
 
-## 8. Error Handling
+## 7. Error Handling
 
-### 8.1 Error Codes Reference
+### 7.1 Error Codes Reference
 
 | Error Code | HTTP Status | Meaning | User Action |
 |------------|-------------|---------|-------------|
@@ -453,7 +355,7 @@ For user account creation/password reset, enforce these rules:
 | `VALIDATION_ERROR` | 422 | Invalid input format | Check required fields |
 | `RATE_LIMITED` | 429 | Too many attempts | Wait before retrying |
 
-### 8.2 Frontend Error Display
+### 7.2 Frontend Error Display
 
 ```typescript
 // Error handling in Sign In component
@@ -476,9 +378,9 @@ if (!result.success) {
 
 ---
 
-## 9. Testing
+## 8. Testing
 
-### 9.1 Test Accounts
+### 8.1 Test Accounts
 
 | Username | Password | Role | Purpose |
 |----------|----------|------|---------|
@@ -486,7 +388,7 @@ if (!result.success) {
 | `manager` | `password` | MANAGER | Department manager |
 | `staff` | `password` | STAFF | Regular staff member |
 
-### 9.2 Test Cases
+### 8.2 Test Cases
 
 | No | Test Case | Expected Result |
 |----|-----------|-----------------|
@@ -507,7 +409,7 @@ if (!result.success) {
 
 ---
 
-## 10. Related APIs
+## 9. Related APIs
 
 | API | Endpoint | Description |
 |-----|----------|-------------|
@@ -521,7 +423,7 @@ if (!result.success) {
 
 ---
 
-## 11. Future Enhancements
+## 10. Future Enhancements
 
 | Feature | Priority | Description |
 |---------|----------|-------------|
@@ -533,10 +435,11 @@ if (!result.success) {
 
 ---
 
-## 12. Changelog
+## 11. Changelog
 
 | Date | Changes |
 |------|---------|
+| 2026-01-12 | Removed Section 6 (Frontend Integration) - moved to authentication-basic.md for better separation of concerns |
 | 2026-01-12 | Fixed inconsistency: Rate Limiting 60/min → 5/min + 10/15min (progressive throttling) |
 | 2026-01-12 | Clarified Password Validation: FE for UX, BE for security (dual validation) |
 | 2026-01-12 | Updated Account Lockout: From "Future enhancement" → Business requirement |
