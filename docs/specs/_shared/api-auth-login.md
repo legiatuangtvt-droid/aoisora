@@ -372,33 +372,6 @@ For user account creation/password reset, enforce these rules:
 }
 ```
 
-### 7.2 Frontend Error Display
-
-```typescript
-// Error handling in Sign In component
-if (!result.success) {
-  switch (result.error_code) {
-    case 'ACCOUNT_NOT_FOUND':
-      setError('Account not found. Please check your credentials.');
-      break;
-    case 'INCORRECT_PASSWORD':
-      setError('Incorrect password. Please try again.');
-      break;
-    case 'ACCOUNT_INACTIVE':
-      setError('Your account is not active. Please contact support.');
-      break;
-    case 'RATE_LIMITED':
-      const retryAfter = result.retry_after || 60; // seconds
-      setError(`Too many attempts. Please wait ${retryAfter} seconds before retrying.`);
-      // Optional: Implement countdown timer
-      // startCountdown(retryAfter);
-      break;
-    default:
-      setError(result.error || 'Sign in failed');
-  }
-}
-```
-
 ---
 
 ## 8. Testing
@@ -462,6 +435,7 @@ if (!result.success) {
 
 | Date | Changes |
 |------|---------|
+| 2026-01-12 | Removed Section 7.2 (Frontend Error Display) - moved to authentication-basic.md for better separation of concerns |
 | 2026-01-12 | Enhanced RATE_LIMITED error: added `retry_after` field (60s or 900s) for dynamic retry timing |
 | 2026-01-12 | Clarified ACCOUNT_NOT_FOUND error: added SAP code to identifier types (email, phone, SAP code, username) |
 | 2026-01-12 | Removed Section 6 (Frontend Integration) - moved to authentication-basic.md for better separation of concerns |

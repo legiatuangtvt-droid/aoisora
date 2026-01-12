@@ -189,9 +189,91 @@ The system uses **two types of tokens** for enhanced security and user experienc
 
 ---
 
-## 8. Changelog
+## 8. Error Handling
+
+### 8.1 Error Display Strategy
+
+Frontend must handle API errors gracefully and display user-friendly messages.
+
+### 8.2 Error Codes Reference
+
+See [API Specification: Sign In (Login)](./api-auth-login.md#71-error-codes-reference) for complete error codes list.
+
+**Common error codes:**
+
+| Error Code | User Message | UI Behavior |
+|------------|-------------|-------------|
+| `ACCOUNT_NOT_FOUND` | "Account not found. Please check your credentials." | Show error below form |
+| `INCORRECT_PASSWORD` | "Incorrect password. Please try again." | Show error below form, clear password field |
+| `ACCOUNT_INACTIVE` | "Your account is not active. Please contact support." | Show error below form |
+| `VALIDATION_ERROR` | "Please check required fields." | Highlight invalid fields |
+| `RATE_LIMITED` | "Too many attempts. Please wait [retry_after] seconds before retrying." | Disable form, show countdown timer |
+
+### 8.3 Implementation Example
+
+```typescript
+// Error handling in Sign In component
+if (!result.success) {
+  switch (result.error_code) {
+    case 'ACCOUNT_NOT_FOUND':
+      setError('Account not found. Please check your credentials.');
+      break;
+
+    case 'INCORRECT_PASSWORD':
+      setError('Incorrect password. Please try again.');
+      setPassword(''); // Clear password field
+      break;
+
+    case 'ACCOUNT_INACTIVE':
+      setError('Your account is not active. Please contact support.');
+      break;
+
+    case 'RATE_LIMITED':
+      const retryAfter = result.retry_after || 60; // seconds
+      setError(`Too many attempts. Please wait ${retryAfter} seconds before retrying.`);
+      setIsFormDisabled(true);
+
+      // Optional: Implement countdown timer
+      let remaining = retryAfter;
+      const interval = setInterval(() => {
+        if (remaining <= 0) {
+          clearInterval(interval);
+          setIsFormDisabled(false);
+          setError('');
+        } else {
+          setError(`Too many attempts. Please wait ${remaining} seconds before retrying.`);
+          remaining--;
+        }
+      }, 1000);
+      break;
+
+    case 'VALIDATION_ERROR':
+      setError('Please check required fields.');
+      break;
+
+    default:
+      setError(result.message || 'Sign in failed. Please try again.');
+  }
+}
+```
+
+### 8.4 Error Display UI
+
+| Element | Specification |
+|---------|---------------|
+| **Position** | Below the Sign In button, above footer links |
+| **Color** | Red text (#DC2626 or theme error color) |
+| **Icon** | Error icon (⚠️ or ⓧ) |
+| **Animation** | Fade in from top, shake on critical errors |
+| **Auto-dismiss** | No auto-dismiss (user must fix error) |
+| **Clear condition** | Clear on new input or successful submit |
+
+---
+
+## 9. Changelog
 
 | Date | Changes |
 |------|---------|
+| 2026-01-12 | Added Section 8 (Error Handling) - moved from api-auth-login.md for better separation of concerns |
 | 2026-01-12 | Clarified refresh token lifetime strategy: 30 days (Remember Me) vs session-based (No Remember Me) |
 | 2026-01-11 | Initial authentication basic spec created |
