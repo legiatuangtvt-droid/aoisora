@@ -232,10 +232,15 @@ This API authenticates users and returns an access token for subsequent API requ
 ```json
 {
   "success": false,
-  "message": "Too many login attempts. Please try again later.",
+  "error_code": "RATE_LIMITED",
+  "message": "Too many login attempts. Please try again after 1 minute.",
   "retry_after": 60
 }
 ```
+
+**Note:** `retry_after` indicates seconds until next login attempt is allowed. Value depends on which rate limit was triggered:
+- 60 seconds (if exceeded 5 attempts per minute)
+- Up to 900 seconds / 15 minutes (if exceeded 10 attempts per 15 minutes)
 
 #### 500 - Internal Server Error
 
@@ -353,7 +358,19 @@ For user account creation/password reset, enforce these rules:
 | `INCORRECT_PASSWORD` | 401 | Password doesn't match | Re-enter password or reset |
 | `ACCOUNT_INACTIVE` | 401 | Account disabled/suspended | Contact administrator |
 | `VALIDATION_ERROR` | 422 | Invalid input format | Check required fields |
-| `RATE_LIMITED` | 429 | Too many attempts | Wait before retrying |
+| `RATE_LIMITED` | 429 | Too many login attempts (5/min or 10/15min) | Wait `retry_after` seconds before retrying |
+
+**Note:** `RATE_LIMITED` response includes a `retry_after` field indicating seconds until next attempt is allowed.
+
+**Example Response:**
+```json
+{
+  "success": false,
+  "error_code": "RATE_LIMITED",
+  "message": "Too many login attempts. Please try again after 1 minute.",
+  "retry_after": 60
+}
+```
 
 ### 7.2 Frontend Error Display
 
@@ -369,6 +386,12 @@ if (!result.success) {
       break;
     case 'ACCOUNT_INACTIVE':
       setError('Your account is not active. Please contact support.');
+      break;
+    case 'RATE_LIMITED':
+      const retryAfter = result.retry_after || 60; // seconds
+      setError(`Too many attempts. Please wait ${retryAfter} seconds before retrying.`);
+      // Optional: Implement countdown timer
+      // startCountdown(retryAfter);
       break;
     default:
       setError(result.error || 'Sign in failed');
@@ -439,6 +462,7 @@ if (!result.success) {
 
 | Date | Changes |
 |------|---------|
+| 2026-01-12 | Enhanced RATE_LIMITED error: added `retry_after` field (60s or 900s) for dynamic retry timing |
 | 2026-01-12 | Clarified ACCOUNT_NOT_FOUND error: added SAP code to identifier types (email, phone, SAP code, username) |
 | 2026-01-12 | Removed Section 6 (Frontend Integration) - moved to authentication-basic.md for better separation of concerns |
 | 2026-01-12 | Fixed inconsistency: Rate Limiting 60/min → 5/min + 10/15min (progressive throttling) |
