@@ -288,10 +288,10 @@ docs/specs/
 │   └── ws-report-detail.md
 │
 └── api/                        # 🔌 API Specs (Tech-agnostic contracts)
-    ├── auth-login.md
-    ├── auth-login-google.md
-    ├── ws-get-departments.md
-    └── ws-get-task-list.md
+    ├── auth-login-api.md
+    ├── auth-login-google-api.md
+    ├── ws-get-departments-api.md
+    └── ws-get-task-list-api.md
 ```
 
 > **Note**:
@@ -299,7 +299,7 @@ docs/specs/
 > - **Module prefix**: `{module}-` cho module-specific files (ws-, dws-, faq-...)
 > - **No prefix**: Shared files (authentication, app-general)
 > - Mỗi screen: `{module}-{screen}-basic.md` + `{module}-{screen}-detail.md`
-> - Mỗi API: `{module}-{action}.md`
+> - Mỗi API: `{module}-{action}-api.md`
 
 **Quick Reference:**
 
@@ -307,7 +307,7 @@ docs/specs/
 |------|------|-------------------|---------|
 | **Basic Specs** | `docs/specs/basic/` | `{module}-{screen}-basic.md` | `ws-task-list-basic.md` |
 | **Detail Specs** | `docs/specs/detail/` | `{module}-{screen}-detail.md` | `ws-task-list-detail.md` |
-| **API Specs** | `docs/specs/api/` | `{module}-{action}.md` | `ws-get-departments.md` |
+| **API Specs** | `docs/specs/api/` | `{module}-{action}-api.md` | `ws-get-departments-api.md` |
 | **Shared Specs** | Same directories | No prefix | `authentication-basic.md` |
 
 **Module Prefixes:**
