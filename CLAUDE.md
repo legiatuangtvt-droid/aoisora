@@ -290,6 +290,13 @@ docs/specs/
 └── api/                        # 🔌 API Specs (Tech-agnostic contracts)
     ├── auth-login-api.md
     ├── auth-login-google-api.md
+    ├── auth-logout-api.md
+    ├── auth-refresh-api.md
+    ├── auth-me-api.md
+    ├── auth-forgot-password-api.md
+    ├── auth-verify-code-api.md
+    ├── auth-reset-password-api.md
+    ├── auth-resend-code-api.md
     ├── ws-get-departments-api.md
     └── ws-get-task-list-api.md
 ```
