@@ -414,6 +414,45 @@ _Backend may aggregate data from multiple tables (e.g., users, staffs, roles, of
 
 Khi viết API spec, **chỉ cần mô tả Response Fields** (business requirements). KHÔNG cần quan tâm backend sẽ query từ bao nhiêu tables. Dev Team production sẽ tự quyết định database structure và query logic, miễn sao response match với spec.
 
+#### Spec Focus - Current Requirements Only
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ⚠️ NGUYÊN TẮC QUAN TRỌNG:                                      │
+│                                                                 │
+│  ✅ Spec chỉ mô tả CURRENT REQUIREMENTS                         │
+│     → Những gì CẦN CÓ NGAY BÂY GIỜ                              │
+│     → Những gì đang được implement/build                        │
+│                                                                 │
+│  ❌ Spec KHÔNG BAO GIỜ có "Future Enhancements" section         │
+│     → Không liệt kê tính năng "có thể có trong tương lai"      │
+│     → Không mô tả features "sẽ làm sau"                         │
+│     → Không có "Coming Soon" hay "To Be Implemented"            │
+│                                                                 │
+│  📌 LÝ DO:                                                       │
+│     → Spec là source of truth cho implementation                │
+│     → Future plans thay đổi liên tục → gây confusion            │
+│     → Dev team cần biết rõ: build GÌ, KHÔNG build gì           │
+│                                                                 │
+│  💡 NẾU CẦN TRACK FUTURE IDEAS:                                 │
+│     → Tạo file riêng: docs/future-plans.md                      │
+│     → Hoặc dùng GitHub Issues/Project Board                     │
+│     → KHÔNG ghi vào spec files                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Ví dụ SAI:**
+```markdown
+## 10. Future Enhancements
+| Feature | Priority | Description |
+| Two-Factor Auth | High | Will add OTP later |
+| Biometric Login | Low | Future mobile feature |
+```
+
+**Ví dụ ĐÚNG:**
+- Nếu 2FA đã được plan → Viết full spec ngay (API endpoints, flow, requirements)
+- Nếu 2FA chưa được plan → KHÔNG đề cập trong spec
+
 #### Cấu trúc Spec Files (Tách 2 file riêng)
 
 Mỗi screen có **2 file spec riêng biệt** để dễ báo cáo:

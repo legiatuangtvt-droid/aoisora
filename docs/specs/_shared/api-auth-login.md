@@ -407,22 +407,11 @@ For user account creation/password reset, enforce these rules:
 
 ---
 
-## 10. Future Enhancements
-
-| Feature | Priority | Description |
-|---------|----------|-------------|
-| **Account Lockout** | Medium | Block account after N failed login attempts |
-| **Password Strength Meter** | Low | Real-time password strength indicator on Sign In |
-| **Two-Factor Authentication** | High | Additional security layer with OTP/SMS/App |
-| **Biometric Login** | Low | Fingerprint/Face ID support for mobile apps |
-| **Login History** | Medium | Track and display recent login activities |
-
----
-
-## 11. Changelog
+## 10. Changelog
 
 | Date | Changes |
 |------|---------|
+| 2026-01-12 | Removed Section 10 (Future Enhancements) - Spec only describes current requirements, not future plans |
 | 2026-01-12 | Simplified Section 8: Removed Test Accounts (seed data), kept only Test Scenarios as API behavior examples |
 | 2026-01-12 | Simplified Section 7: "Error Handling" → "Error Codes" (removed unnecessary subsection) |
 | 2026-01-12 | Removed Section 7.2 (Frontend Error Display) - moved to authentication-basic.md for better separation of concerns |
