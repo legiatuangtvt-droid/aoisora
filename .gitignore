@@ -55,3 +55,9 @@ coverage/
 install-composer.php
 setup-database.php
 unzip.php
+
+# Python cache (from old backend)
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
