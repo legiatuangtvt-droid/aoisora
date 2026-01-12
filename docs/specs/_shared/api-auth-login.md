@@ -49,7 +49,9 @@ This API authenticates users and returns an access token for subsequent API requ
 **Token System:**
 - **Dual Token System**: Returns both Access Token and Refresh Token
 - **Access Token**: 15 minutes lifetime, used for API authentication
-- **Refresh Token**: 30 days lifetime (if `remember_me = true`), used to obtain new access tokens
+- **Refresh Token**:
+  - If `remember_me = true`: 30 days lifetime (stored in database), persists in localStorage
+  - If `remember_me = false`: No database expiration, stored in sessionStorage (deleted when browser closes)
 
 **Authentication Method:**
 - Bearer Token authentication
@@ -79,7 +81,9 @@ This API authenticates users and returns an access token for subsequent API requ
    ↓
 8. Generate Access Token (15 minutes, ability: 'api:access')
    ↓
-9. Generate Refresh Token (30 days if remember_me, ability: 'api:refresh')
+9. Generate Refresh Token (ability: 'api:refresh')
+   - If remember_me = true: 30 days expiration
+   - If remember_me = false: No expiration (session-based, relies on frontend storage)
    ↓
 10. Load user relationships (store, department)
    ↓
@@ -101,7 +105,7 @@ This API authenticates users and returns an access token for subsequent API requ
 |-------------|---------------|
 | **Password Storage** | Must be hashed (one-way), never stored as plain text |
 | **Rate Limiting** | Maximum 60 login attempts per minute per IP |
-| **Dual Token System** | Access Token (15 min) + Refresh Token (30 days) |
+| **Dual Token System** | Access Token (15 min) + Refresh Token (30 days if Remember Me, or session-based) |
 | **Token Abilities** | Access tokens for API calls, Refresh tokens only for token refresh |
 | **Token Rotation** | Both tokens replaced on each refresh for security |
 | **Password Validation** | Backend validates against stored hash |
@@ -283,7 +287,9 @@ System must persist both tokens with following properties:
 - User association (link to authenticated user)
 - Token type identifier: "refresh_token"
 - Token abilities: "api:refresh"
-- Expiration timestamp: 30 days from creation (if remember_me)
+- Expiration timestamp:
+  - If `remember_me = true`: 30 days from creation
+  - If `remember_me = false`: NULL (no expiration in database, relies on sessionStorage)
 - Creation timestamp
 
 **Token Revocation:**
@@ -369,8 +375,8 @@ const login = async (
 | localStorage | `optichain_auth` | JSON string | User information object |
 
 **Note:** Refresh token location depends on `remember_me`:
-- `remember_me = true` → `localStorage` (persists after browser close)
-- `remember_me = false` → `sessionStorage` (deleted on browser close)
+- `remember_me = true` → `localStorage` (persists after browser close, expires after 30 days)
+- `remember_me = false` → `sessionStorage` (deleted on browser close, no database expiration)
 
 ### 6.3 Subsequent API Requests
 
@@ -423,7 +429,7 @@ For user account creation/password reset, enforce these rules:
 
 | Requirement | Specification |
 |-------------|---------------|
-| **Dual Token System** | System must issue two tokens: Access (15 min) + Refresh (30 days) |
+| **Dual Token System** | System must issue two tokens: Access (15 min) + Refresh (30 days if Remember Me, session-based otherwise) |
 | **Token Abilities** | Access tokens can call APIs, Refresh tokens can only refresh |
 | **Frontend Storage** | Access in sessionStorage, Refresh in localStorage/sessionStorage |
 | **Transmission** | All tokens must be transmitted over HTTPS in production |
@@ -493,8 +499,8 @@ if (!result.success) {
 | 7 | Login with inactive account | 401 ACCOUNT_INACTIVE |
 | 8 | Login without identifier field | 422 Validation Error |
 | 9 | Login without password field | 422 Validation Error |
-| 10 | Login with remember_me = true | Refresh token in localStorage, 30 days |
-| 11 | Login with remember_me = false | Refresh token in sessionStorage |
+| 10 | Login with remember_me = true | Refresh token in localStorage, 30 days expiration in DB |
+| 11 | Login with remember_me = false | Refresh token in sessionStorage, no DB expiration (session-based) |
 | 12 | Multiple failed login attempts | 429 Rate Limited |
 | 13 | Verify access token has ability `api:access` | Can call regular APIs |
 | 14 | Verify refresh token has ability `api:refresh` | Cannot call regular APIs |
@@ -531,6 +537,7 @@ if (!result.success) {
 
 | Date | Changes |
 |------|---------|
+| 2026-01-12 | Clarified refresh token expiration: 30 days (remember_me=true) vs NULL/session-based (remember_me=false) |
 | 2026-01-11 | Refactored spec to be tech-agnostic (removed Laravel/SQL specifics) |
 | 2026-01-11 | Updated spec for Dual Token System with Rotation |
 | 2026-01-10 | Initial API specification created based on existing implementation |
