@@ -40,6 +40,7 @@ DROP TABLE IF EXISTS `stores`;
 DROP TABLE IF EXISTS `departments`;
 DROP TABLE IF EXISTS `regions`;
 DROP TABLE IF EXISTS `personal_access_tokens`;
+DROP TABLE IF EXISTS `password_reset_tokens`;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -112,6 +113,7 @@ CREATE TABLE `staff` (
     `staff_code` VARCHAR(50) UNIQUE,
     `username` VARCHAR(100) UNIQUE NOT NULL,
     `email` VARCHAR(100) UNIQUE,
+    `google_id` VARCHAR(255) UNIQUE NULL,
     `phone` VARCHAR(20),
     `store_id` INT NULL,
     `department_id` INT NULL,
@@ -154,6 +156,19 @@ CREATE TABLE `personal_access_tokens` (
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX `idx_personal_access_tokens_tokenable` (`tokenable_type`, `tokenable_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Password Reset Tokens
+CREATE TABLE `password_reset_tokens` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `email` VARCHAR(100) NOT NULL,
+    `token` VARCHAR(10) NOT NULL,
+    `used` TINYINT(1) DEFAULT 0,
+    `is_valid` TINYINT(1) DEFAULT 1,
+    `expires_at` TIMESTAMP NOT NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX `idx_password_reset_tokens_email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Code Master Table

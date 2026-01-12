@@ -24,6 +24,7 @@ class Staff extends Authenticatable
         'username',
         'password_hash',
         'email',
+        'google_id',
         'phone',
         'store_id',
         'department_id',

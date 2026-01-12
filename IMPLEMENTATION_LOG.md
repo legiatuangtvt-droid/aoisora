@@ -33,9 +33,9 @@ of Passport, but all behavioral requirements from specs are met.
 
 ### Phase 1: Database & Model Updates
 - [x] Analyze current Sanctum setup
-- [ ] Add `google_id` column to staff table
-- [ ] Update `password_reset_tokens` table (add `used`, `is_valid` columns)
-- [ ] Update Staff model configuration
+- [x] Add `google_id` column to staff table
+- [x] Update `password_reset_tokens` table (add `used`, `is_valid` columns)
+- [x] Update Staff model configuration
 
 ### Phase 2: Backend - Service Layer
 - [ ] Create `AuthService` with methods:
@@ -87,6 +87,49 @@ of Passport, but all behavioral requirements from specs are met.
 2. **Token Abilities**: Assign `api:access` or `api:refresh` ability
 3. **Token Rotation**: On refresh, revoke old tokens and create new ones
 4. **Google OAuth2**: Add Google login with auto-registration
+
+---
+
+## Session: 2026-01-13 - Phase 1 Implementation
+
+### Phase 1: Database & Model Updates ✅ COMPLETED
+
+#### Changes Made:
+
+**1. Migration Files Created:**
+- `2026_01_12_220202_add_google_id_to_staff_table.php`
+  - Added `google_id` VARCHAR(255) UNIQUE NULL column after `email`
+  - For Google OAuth2 authentication
+
+- `2026_01_12_220216_create_password_reset_tokens_table.php`
+  - Created new table with columns:
+    - `id` (BIGINT UNSIGNED, Primary Key)
+    - `email` (VARCHAR 100, indexed)
+    - `token` (VARCHAR 10, for 5-digit OTP)
+    - `used` (BOOLEAN, default false)
+    - `is_valid` (BOOLEAN, default true)
+    - `expires_at` (TIMESTAMP)
+    - `created_at`, `updated_at` (TIMESTAMP)
+
+**2. Models Updated:**
+- `Staff.php`: Added `google_id` to `$fillable` array
+- `PasswordResetToken.php`: Refactored to match new schema:
+  - Changed primary key from `email` to `id`
+  - Enabled timestamps (`$timestamps = true`)
+  - Updated fillable fields and casts
+
+**3. Schema File Updated:**
+- `database/schema_mysql.sql`:
+  - Added `google_id` column to `staff` table
+  - Added `password_reset_tokens` table definition
+  - Added DROP statement for `password_reset_tokens`
+
+#### Next Steps:
+To apply migrations to database:
+1. Start MySQL via Laragon UI ("Start All")
+2. Run: `php artisan migrate`
+
+**Note**: Migration files are ready but NOT yet applied to database (MySQL was not running).
 
 ---
 
