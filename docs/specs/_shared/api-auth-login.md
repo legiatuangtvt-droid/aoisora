@@ -104,12 +104,12 @@ This API authenticates users and returns an access token for subsequent API requ
 | Requirement | Specification |
 |-------------|---------------|
 | **Password Storage** | Must be hashed (one-way), never stored as plain text |
-| **Rate Limiting** | Maximum 60 login attempts per minute per IP |
+| **Rate Limiting** | Maximum 5 login attempts per minute per IP, 10 attempts per 15 minutes |
 | **Dual Token System** | Access Token (15 min) + Refresh Token (30 days if Remember Me, or session-based) |
 | **Token Abilities** | Access tokens for API calls, Refresh tokens only for token refresh |
 | **Token Rotation** | Both tokens replaced on each refresh for security |
-| **Password Validation** | Backend validates against stored hash |
-| **Account Lockout** | ⏳ Future enhancement (after N failed attempts) |
+| **Password Validation** | Frontend validation for UX, Backend validation for security |
+| **Account Lockout** | System must lock account after N consecutive failed login attempts |
 
 ---
 
@@ -537,6 +537,9 @@ if (!result.success) {
 
 | Date | Changes |
 |------|---------|
+| 2026-01-12 | Fixed inconsistency: Rate Limiting 60/min → 5/min + 10/15min (progressive throttling) |
+| 2026-01-12 | Clarified Password Validation: FE for UX, BE for security (dual validation) |
+| 2026-01-12 | Updated Account Lockout: From "Future enhancement" → Business requirement |
 | 2026-01-12 | Clarified refresh token expiration: 30 days (remember_me=true) vs NULL/session-based (remember_me=false) |
 | 2026-01-11 | Refactored spec to be tech-agnostic (removed Laravel/SQL specifics) |
 | 2026-01-11 | Updated spec for Dual Token System with Rotation |

@@ -62,7 +62,10 @@
 │  ⚠️ QUY TẮC QUAN TRỌNG:                                         │
 │     → SPEC là source of truth để build demo                    │
 │     → Code edits: AUTOMATIC (không cần hỏi user)               │
-│     → Spec edits: PHẢI HỎI USER trước khi edit                 │
+│     → Spec edits:                                               │
+│       • Fix inconsistency/errors: AUTOMATIC (không cần hỏi)    │
+│       • Clarify ambiguity: AUTOMATIC (không cần hỏi)           │
+│       • Change requirements: PHẢI HỎI USER                      │
 │     → So sánh code vs spec LIÊN TỤC trong quá trình coding    │
 │     → Report spec issues ngay khi phát hiện                    │
 └─────────────────────────────────────────────────────────────────┘
