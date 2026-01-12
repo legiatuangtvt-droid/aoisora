@@ -1,38 +1,26 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
-ENV/
-.venv
-*.egg-info/
-dist/
-build/
-
-# Node
+# Dependencies
 node_modules/
-.next/
-out/
+frontend/node_modules/
+backend/laravel/vendor/
+
+# Build outputs
+frontend/.next/
+frontend/out/
+backend/laravel/bootstrap/cache/
+backend/laravel/storage/framework/cache/
+backend/laravel/storage/framework/sessions/
+backend/laravel/storage/framework/views/
+
+# Logs
+backend/laravel/storage/logs/
+*.log
+npm-debug.log*
+
+# Environment
+.env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# TypeScript
-*.tsbuildinfo
-
-# Flutter
-.dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
-.packages
-.pub-cache/
-.pub/
-build/
-*.lock
+.env.*.local
+backend/laravel/.env
 
 # IDE
 .vscode/
@@ -45,30 +33,25 @@ build/
 .DS_Store
 Thumbs.db
 
-# Database
-*.db
-*.sqlite
-
-# Environment
-.env
-*.env
-
-# Logs
-*.log
-logs/
-
-# Claude Code
-.claude/settings.local.json
-
-# Firebase
-.firebase/
-
-# Misc
+# Temporary files
+*.tmp
+*.bak
 nul
 
-# Temp deploy files
-backend.zip
-backend.rar
-unzip.php
+# Composer
+composer.phar
+composer.lock
+
+# NPM
+package-lock.json
+
+# Test coverage
+coverage/
+
+# Claude
+.claude/settings.local.json
+
+# PHP files from setup
 install-composer.php
 setup-database.php
+unzip.php
