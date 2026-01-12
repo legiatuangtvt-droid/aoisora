@@ -389,6 +389,31 @@ docs/specs/
 └─────────────────────────────────────────────────────────────────┘
 ```
 
+#### Response Fields - Universal Principle
+
+**Implementation Note (Áp dụng cho TẤT CẢ API specs):**
+
+Backend có thể tổng hợp dữ liệu từ nhiều bảng (ví dụ: `users`, `staffs`, `roles`, `office_titles`) để xây dựng response object. API contract (cấu trúc Response Fields) vẫn giữ ổn định bất kể cấu trúc database bên dưới thay đổi như thế nào.
+
+_Backend may aggregate data from multiple tables (e.g., users, staffs, roles, office_titles) to construct response objects. The API contract remains stable regardless of underlying database structure._
+
+**Nguyên tắc:**
+- Spec mô tả **Response Fields** (WHAT) → Tech-agnostic
+- Backend quyết định **Database Query** (HOW) → Implementation detail
+- Database structure thay đổi → Backend sửa query logic
+- API contract KHÔNG đổi → Frontend KHÔNG cần sửa code
+
+**Ví dụ:**
+
+| Current Schema | Dev Team Design | Response (Unchanged) |
+|----------------|-----------------|----------------------|
+| 1 table: `staff` | 4 tables: `users` + `staffs` + `roles` + `office_titles` | Same JSON structure |
+| `SELECT * FROM staff` | `SELECT * FROM users u JOIN staffs s ...` | `{"id": 123, "role": "ADMIN"}` |
+
+**Kết luận:**
+
+Khi viết API spec, **chỉ cần mô tả Response Fields** (business requirements). KHÔNG cần quan tâm backend sẽ query từ bao nhiêu tables. Dev Team production sẽ tự quyết định database structure và query logic, miễn sao response match với spec.
+
 #### Cấu trúc Spec Files (Tách 2 file riêng)
 
 Mỗi screen có **2 file spec riêng biệt** để dễ báo cáo:
