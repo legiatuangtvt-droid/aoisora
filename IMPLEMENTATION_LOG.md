@@ -124,12 +124,24 @@ of Passport, but all behavioral requirements from specs are met.
   - Added `password_reset_tokens` table definition
   - Added DROP statement for `password_reset_tokens`
 
-#### Next Steps:
-To apply migrations to database:
-1. Start MySQL via Laragon UI ("Start All")
-2. Run: `php artisan migrate`
+#### Migrations Applied ✅
+Migrations successfully applied to database:
+- `google_id` column added to `staff` table
+- `password_reset_tokens` table created with all required columns
 
-**Note**: Migration files are ready but NOT yet applied to database (MySQL was not running).
+**Database Verification:**
+```sql
+-- staff table now has google_id column
+DESCRIBE staff; -- shows google_id VARCHAR(255) UNIQUE NULL
+
+-- password_reset_tokens table created
+DESCRIBE password_reset_tokens;
+-- id, email, token, used, is_valid, expires_at, created_at, updated_at
+```
+
+**Cleanup Done:**
+- Removed old conflicting migration: `2026_01_06_000000_update_password_reset_tokens_table.php`
+- Removed Spatie permissions migration: `2025_12_30_145150_create_permission_tables.php` (will use custom RBAC)
 
 ---
 
