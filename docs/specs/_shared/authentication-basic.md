@@ -197,7 +197,7 @@ Frontend must handle API errors gracefully and display user-friendly messages.
 
 ### 8.2 Error Codes Reference
 
-See [API Specification: Sign In (Login)](./api-auth-login.md#71-error-codes-reference) for complete error codes list.
+See [API Specification: Sign In (Login)](./api-auth-login.md#7-error-codes) for complete error codes list.
 
 **Common error codes:**
 

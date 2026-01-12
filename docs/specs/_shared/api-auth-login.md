@@ -348,9 +348,7 @@ For user account creation/password reset, enforce these rules:
 
 ---
 
-## 7. Error Handling
-
-### 7.1 Error Codes Reference
+## 7. Error Codes
 
 | Error Code | HTTP Status | Meaning | User Action |
 |------------|-------------|---------|-------------|
@@ -435,6 +433,7 @@ For user account creation/password reset, enforce these rules:
 
 | Date | Changes |
 |------|---------|
+| 2026-01-12 | Simplified Section 7: "Error Handling" → "Error Codes" (removed unnecessary subsection) |
 | 2026-01-12 | Removed Section 7.2 (Frontend Error Display) - moved to authentication-basic.md for better separation of concerns |
 | 2026-01-12 | Enhanced RATE_LIMITED error: added `retry_after` field (60s or 900s) for dynamic retry timing |
 | 2026-01-12 | Clarified ACCOUNT_NOT_FOUND error: added SAP code to identifier types (email, phone, SAP code, username) |
