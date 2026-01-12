@@ -349,7 +349,7 @@ For user account creation/password reset, enforce these rules:
 
 | Error Code | HTTP Status | Meaning | User Action |
 |------------|-------------|---------|-------------|
-| `ACCOUNT_NOT_FOUND` | 401 | No user with this identifier | Check email/phone/username |
+| `ACCOUNT_NOT_FOUND` | 401 | No user with this identifier (email, phone, SAP code, or username) | Check email/phone/SAP code/username |
 | `INCORRECT_PASSWORD` | 401 | Password doesn't match | Re-enter password or reset |
 | `ACCOUNT_INACTIVE` | 401 | Account disabled/suspended | Contact administrator |
 | `VALIDATION_ERROR` | 422 | Invalid input format | Check required fields |
@@ -439,6 +439,7 @@ if (!result.success) {
 
 | Date | Changes |
 |------|---------|
+| 2026-01-12 | Clarified ACCOUNT_NOT_FOUND error: added SAP code to identifier types (email, phone, SAP code, username) |
 | 2026-01-12 | Removed Section 6 (Frontend Integration) - moved to authentication-basic.md for better separation of concerns |
 | 2026-01-12 | Fixed inconsistency: Rate Limiting 60/min → 5/min + 10/15min (progressive throttling) |
 | 2026-01-12 | Clarified Password Validation: FE for UX, BE for security (dual validation) |
