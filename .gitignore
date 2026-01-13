@@ -50,6 +50,7 @@ coverage/
 
 # Claude
 .claude/settings.local.json
+tmpclaude-*-cwd
 
 # PHP files from setup
 install-composer.php
