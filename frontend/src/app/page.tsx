@@ -8,7 +8,7 @@ import FlipClock from '@/components/ui/FlipClock';
 // Simple API functions
 async function checkHealth() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
-  const response = await fetch(API_URL.replace('/api/v1', '/health'));
+  const response = await fetch(`${API_URL}/health`);
   return await response.json();
 }
 

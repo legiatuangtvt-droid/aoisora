@@ -30,6 +30,15 @@ use App\Http\Controllers\Api\V1\StoreInfoController;
 */
 
 Route::prefix('v1')->group(function () {
+    // Health check endpoint
+    Route::get('health', function () {
+        return response()->json([
+            'status' => 'ok',
+            'timestamp' => now()->toIso8601String(),
+            'service' => 'aoisora-api'
+        ]);
+    });
+
     // Public auth routes
     Route::prefix('auth')->group(function () {
         Route::post('login', [AuthController::class, 'login']);
