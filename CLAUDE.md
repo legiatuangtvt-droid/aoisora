@@ -1113,13 +1113,72 @@ Chi tiết: `docs/06-deployment/DEPLOY-PA-VIETNAM-HOSTING.md`
 
 > **Scope**: Section này chỉ mô tả luồng hoạt động của **WS Module (Task from HQ)**. Các module khác sẽ bổ sung sau.
 
-### 12.1 Task Creation Flow
+### 12.0 Task Types Overview (Phân loại Task)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  TASK CREATION FLOW                                             │
+│  HAI LOẠI TASK TRONG HỆ THỐNG                                   │
 │                                                                 │
-│  📝 SCREEN: Add Task (/tasks/new)                               │
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │  1. ONE-TIME TASK (Task dùng 1 lần)                         ││
+│  │     ─────────────────────────────────────────────────────── ││
+│  │     📍 Entry Point: Button "Add New" tại TASK LIST          ││
+│  │     📍 Route: /tasks/new                                    ││
+│  │                                                             ││
+│  │     Đặc điểm:                                               ││
+│  │     → Tạo task gửi ngay đến stores (dùng 1 lần)             ││
+│  │     → C. Scope: REQUIRED (phải chọn stores)                 ││
+│  │     → Sau khi Approve → Gửi ngay đến Store Leaders          ││
+│  │     → Hiển thị trong: Task List                             ││
+│  │                                                             ││
+│  │     Flow: Draft → Approve → Approved → Gửi đến Stores       ││
+│  │                                                             ││
+│  ├─────────────────────────────────────────────────────────────┤│
+│  │  2. LIBRARY TASK (Task dùng nhiều lần)                      ││
+│  │     ─────────────────────────────────────────────────────── ││
+│  │     📍 Entry Point: Button "Add New" tại LIBRARY TASK       ││
+│  │     📍 Route: /tasks/library/new                            ││
+│  │                                                             ││
+│  │     Đặc điểm:                                               ││
+│  │     → Tạo task mẫu trong thư viện (dùng nhiều lần)          ││
+│  │     → C. Scope: HIDDEN (không điền, chọn khi dispatch)      ││
+│  │     → Sau khi Approve → Chuyển sang Available (chưa gửi)    ││
+│  │     → Hiển thị trong: Library Task                          ││
+│  │                                                             ││
+│  │     Flow: Draft → Approve → Available → Dispatch → Stores   ││
+│  │                                                             ││
+│  └─────────────────────────────────────────────────────────────┘│
+│                                                                 │
+│  📊 SO SÁNH CHI TIẾT:                                            │
+│                                                                 │
+│  ┌────────────────┬─────────────────────┬─────────────────────┐ │
+│  │ Attribute      │ ONE-TIME TASK       │ LIBRARY TASK        │ │
+│  ├────────────────┼─────────────────────┼─────────────────────┤ │
+│  │ Entry Point    │ Task List > Add New │ Library > Add New   │ │
+│  │ Route          │ /tasks/new          │ /tasks/library/new  │ │
+│  │ C. Scope       │ Required            │ Hidden              │ │
+│  │ After Approve  │ Gửi ngay            │ Available (chờ gửi) │ │
+│  │ Reusable       │ Không               │ Có (nhiều lần)      │ │
+│  │ Display In     │ Task List           │ Library Task        │ │
+│  │ Draft Limit    │ 5 per user          │ 5 per user (riêng)  │ │
+│  │ Cooldown       │ N/A                 │ Có                  │ │
+│  └────────────────┴─────────────────────┴─────────────────────┘ │
+│                                                                 │
+│  💾 DATABASE FLAG:                                               │
+│     → is_library_task = FALSE → One-time Task                   │
+│     → is_library_task = TRUE  → Library Task                    │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 12.1 One-Time Task Creation Flow
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ONE-TIME TASK CREATION FLOW                                    │
+│                                                                 │
+│  📝 ENTRY POINT: Button "Add New" tại Task List (/tasks/list)   │
+│  📝 SCREEN: Add Task (/tasks/new?type=one-time)                 │
 │                                                                 │
 │  👤 QUYỀN TẠO TASK:                                             │
 │     → Tất cả HQ users với Job Grade G2-G9                       │
@@ -1307,7 +1366,9 @@ last_modified_at TIMESTAMP -- cập nhật mỗi khi edit draft
 │                                                                 │
 │     1. APPROVE (Phê duyệt):                                    │
 │        → Task status: 'approve' → 'approved'                   │
-│        → Task được publish và hiển thị cho Store users         │
+│        → Task được gửi tới Store Leaders của các stores        │
+│          được xác định tại C. Scope                            │
+│        → Mỗi Store Leader nhận notification về task mới        │
 │        → Không còn tính là draft của user tạo                  │
 │                                                                 │
 │     2. REJECT (Từ chối):                                       │
@@ -1346,6 +1407,8 @@ last_modified_at TIMESTAMP -- cập nhật mỗi khi edit draft
 │                                                                 │
 │     Khi Approve:                                               │
 │     → Notify Creator: "Your task [task_name] has been approved"│
+│     → Notify Store Leaders (trong Scope):                      │
+│       "New task assigned: [task_name]"                         │
 │                                                                 │
 │     Khi Reject:                                                │
 │     → Notify Creator: "Your task [task_name] was rejected.     │
@@ -1405,6 +1468,483 @@ ON REJECT:
 → SET last_rejection_reason = [reason from approver]
 → SET last_rejected_at = NOW()
 ```
+
+### 12.3 Task Distribution Flow (After Approval)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  TASK DISTRIBUTION FLOW                                         │
+│                                                                 │
+│  📋 TRIGGER: Khi HQ Approver click "Approve"                    │
+│                                                                 │
+│  🏪 XÁC ĐỊNH DANH SÁCH STORES:                                  │
+│     → Lấy từ C. Scope của task                                  │
+│     → Scope chứa: Region, Zone, Area, Store(s)                  │
+│     → Nếu chọn Region → tất cả Stores trong Region              │
+│     → Nếu chọn Zone → tất cả Stores trong Zone                  │
+│     → Nếu chọn Area → tất cả Stores trong Area                  │
+│     → Nếu chọn Store(s) → chỉ các Stores được chọn              │
+│                                                                 │
+│  👤 XÁC ĐỊNH STORE LEADERS:                                     │
+│     → Mỗi Store có 1 Store Leader (thường là S6 hoặc cao nhất)  │
+│     → Store Leader = staff có job_grade cao nhất trong Store    │
+│     → Ví dụ: Store A có S6, S5, S4 → Store Leader = S6          │
+│                                                                 │
+│  📤 DISTRIBUTION ACTIONS:                                        │
+│                                                                 │
+│     1. Task được "gán" cho từng Store trong Scope               │
+│        → Tạo task_store_assignments records                     │
+│        → Mỗi Store có 1 assignment với status = 'not_yet'       │
+│        → Task tổng thể chuyển status = 'not_yet'                │
+│                                                                 │
+│     2. Notify từng Store Leader:                                │
+│        → "New task assigned: [task_name]"                       │
+│        → Task xuất hiện trong Task List của Store Leader        │
+│                                                                 │
+│     3. Store Leader có thể:                                     │
+│        → Xem chi tiết task                                      │
+│        → Phân công cho Staff trong Store                        │
+│        → Theo dõi tiến độ thực hiện                             │
+│                                                                 │
+│  📊 HAI LOẠI STATUS (Phân biệt rõ):                              │
+│                                                                 │
+│     ┌─────────────────────────────────────────────────────────┐ │
+│     │  1. TASK STATUS (Status của toàn bộ task - HQ view)     │ │
+│     │     ─────────────────────────────────────────────────── │ │
+│     │     • not_yet     = Chưa bắt đầu (mới gửi về stores)    │ │
+│     │     • on_progress = Đang thực hiện (≥1 store đang làm)  │ │
+│     │     • overdue     = Quá hạn (end_date < today)          │ │
+│     │     • done        = Hoàn thành (tất cả stores xong)     │ │
+│     │                                                         │ │
+│     │     Hiển thị tại: Task List (HQ view)                   │ │
+│     │     Logic tính:                                         │ │
+│     │     - not_yet: tất cả stores đều not_yet                │ │
+│     │     - on_progress: ≥1 store đang on_progress            │ │
+│     │     - overdue: end_date < today VÀ chưa done            │ │
+│     │     - done: tất cả stores đều completed/unable          │ │
+│     │                                                         │ │
+│     ├─────────────────────────────────────────────────────────┤ │
+│     │  2. STORE STATUS (Status của từng store thực hiện task) │ │
+│     │     ─────────────────────────────────────────────────── │ │
+│     │     • not_yet     = Chưa bắt đầu (default khi assign)   │ │
+│     │     • on_progress = Đang thực hiện                      │ │
+│     │     • done        = Hoàn thành                          │ │
+│     │     • unable      = Không thể hoàn thành                │ │
+│     │                                                         │ │
+│     │     Hiển thị tại: Task Detail > Statistics Cards        │ │
+│     │     Mỗi store tự cập nhật status của mình               │ │
+│     └─────────────────────────────────────────────────────────┘ │
+│                                                                 │
+│  📈 STATISTICS CARDS (Task Detail - HQ view):                    │
+│     ┌──────────────┬──────────────┬──────────────┬────────────┐ │
+│     │ Not Started  │  Completed   │    Unable    │  Avg Time  │ │
+│     │    (10)      │    (25)      │     (2)      │   2.5h     │ │
+│     └──────────────┴──────────────┴──────────────┴────────────┘ │
+│     → Not Started: số stores có status = 'not_yet'              │
+│     → Completed: số stores có status = 'done'                   │
+│     → Unable: số stores có status = 'unable'                    │
+│     → Avg Time: thời gian TB từ assign → done                   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Database Tables cho Distribution:**
+
+```sql
+-- tasks table (thêm field cho overall status)
+overall_status ENUM('not_yet', 'on_progress', 'overdue', 'done') DEFAULT 'not_yet'
+
+-- task_store_assignments: Gán task cho từng store
+task_id INT
+store_id INT
+assigned_at TIMESTAMP
+status ENUM('not_yet', 'on_progress', 'done', 'unable') DEFAULT 'not_yet'
+started_at TIMESTAMP NULL          -- Khi chuyển sang on_progress
+completed_at TIMESTAMP NULL        -- Khi chuyển sang done/unable
+completed_by INT NULL (staff_id)
+unable_reason TEXT NULL            -- Lý do unable (required nếu unable)
+notes TEXT NULL
+
+-- Unique constraint: (task_id, store_id)
+```
+
+**Status Transition Rules:**
+
+```
+TASK STATUS (Overall):
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│  [approved] ──dispatch──► [not_yet]                             │
+│                              │                                  │
+│                              ▼                                  │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │ AUTO-CALCULATE từ store statuses:                         │  │
+│  │                                                           │  │
+│  │ IF all stores = 'not_yet' → task = 'not_yet'              │  │
+│  │ IF any store = 'on_progress' → task = 'on_progress'       │  │
+│  │ IF end_date < today AND task != 'done' → task = 'overdue' │  │
+│  │ IF all stores = 'done' OR 'unable' → task = 'done'        │  │
+│  └───────────────────────────────────────────────────────────┘  │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+STORE STATUS:
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│  [not_yet] ──start──► [on_progress] ──complete──► [done]        │
+│      │                      │                                   │
+│      │                      └──unable──► [unable]               │
+│      │                                                          │
+│      └──────────unable──────────────────► [unable]              │
+│                                                                 │
+│  Transitions allowed:                                           │
+│  • not_yet → on_progress (Store bắt đầu làm)                    │
+│  • not_yet → unable (Không thể thực hiện ngay từ đầu)           │
+│  • on_progress → done (Hoàn thành)                              │
+│  • on_progress → unable (Không thể hoàn thành)                  │
+│                                                                 │
+│  ⚠️ KHÔNG cho phép:                                             │
+│  • done → bất kỳ status nào (đã hoàn thành rồi)                 │
+│  • unable → bất kỳ status nào (đã kết thúc rồi)                 │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**API Endpoints liên quan:**
+
+| Action | Endpoint | Description |
+|--------|----------|-------------|
+| Get Store Tasks | GET /api/v1/stores/{id}/tasks | Lấy danh sách tasks được gán cho store |
+| Start Task | POST /api/v1/tasks/{id}/stores/{store_id}/start | Chuyển status → on_progress |
+| Complete Task | POST /api/v1/tasks/{id}/stores/{store_id}/complete | Chuyển status → done |
+| Mark Unable | POST /api/v1/tasks/{id}/stores/{store_id}/unable | Chuyển status → unable (body: reason) |
+| Get Task Store Progress | GET /api/v1/tasks/{id}/progress | Lấy tiến độ task theo từng store |
+
+### 12.4 Library Task Creation Flow (Task từ Library)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  LIBRARY TASK CREATION FLOW                                     │
+│                                                                 │
+│  📚 KHÁI NIỆM:                                                   │
+│     → Library Task = Task mẫu được tạo sẵn trong thư viện       │
+│     → Dùng đi dùng lại nhiều lần                                │
+│     → Không có Scope cố định (sẽ chọn khi dispatch)             │
+│                                                                 │
+│  🚀 ENTRY POINT:                                                 │
+│     → Button "Add New" tại màn hình LIBRARY TASK (/tasks/library)│
+│     → Route: /tasks/library/new (hoặc /tasks/new?type=library)  │
+│     → ⚠️ KHÁC với Add New tại Task List                         │
+│                                                                 │
+│  📝 FORM DIFFERENCES:                                            │
+│     ┌─────────────────────────────────────────────────────────┐ │
+│     │  ONE-TIME TASK            │  LIBRARY TASK               │ │
+│     │  (from Task List)         │  (from Library)             │ │
+│     ├───────────────────────────┼─────────────────────────────┤ │
+│     │  Entry: Task List         │  Entry: Library Task        │ │
+│     │  Route: /tasks/new        │  Route: /tasks/library/new  │ │
+│     │  C. Scope: VISIBLE        │  C. Scope: HIDDEN           │ │
+│     │  Submit → approve         │  Submit → approve           │ │
+│     │  Approve → approved       │  Approve → available        │ │
+│     │  → Gửi ngay đến stores    │  → Chưa gửi, chờ dispatch   │ │
+│     │  is_library_task: FALSE   │  is_library_task: TRUE      │ │
+│     └───────────────────────────┴─────────────────────────────┘ │
+│                                                                 │
+│  📋 LIBRARY TASK STATUS:                                         │
+│     • draft     = Bản nháp, chưa submit                         │
+│     • approve   = Đang chờ phê duyệt                            │
+│     • available = Đã duyệt, sẵn sàng dispatch (NEW STATUS)      │
+│     • cooldown  = Đang làm lạnh, tạm khóa                       │
+│                                                                 │
+│  ✅ VALIDATION RULES (Library Task):                             │
+│     → Giống One-Time Task NGOẠI TRỪ:                            │
+│     → C. Scope: KHÔNG hiển thị, KHÔNG cần validate              │
+│                                                                 │
+│  📤 APPROVAL FLOW:                                               │
+│     1. User click "Add New" tại Library Task screen             │
+│     2. Form Add Task hiển thị (KHÔNG có section C. Scope)       │
+│     3. Fill in A. Information, B. Instructions, D. Approval     │
+│     4. Submit → Gửi đến Approver                                │
+│     5. Approve → Status chuyển thành 'available'                │
+│     6. Task xuất hiện trong Library với badge "Available"       │
+│                                                                 │
+│  📋 DRAFT RULES (Library Task):                                  │
+│     → Giới hạn draft RIÊNG BIỆT với One-Time Task               │
+│     → 5 drafts cho One-Time + 5 drafts cho Library = 10 total   │
+│     → Auto-delete 30 ngày vẫn áp dụng                           │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 12.5 Dispatch Library Task (Gửi Task từ Library)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  DISPATCH LIBRARY TASK FLOW                                     │
+│                                                                 │
+│  📋 TRIGGER: Khi cần gửi Library Task đến các stores            │
+│                                                                 │
+│  👤 AI CÓ QUYỀN DISPATCH (Gửi task từ Library):                 │
+│                                                                 │
+│     Nguyên tắc: Tất cả users cùng Department/Team với Creator   │
+│                                                                 │
+│     ┌─────────────────────────────────────────────────────────┐ │
+│     │  CẤU TRÚC TỔ CHỨC:                                      │ │
+│     │                                                         │ │
+│     │  Company                                                │ │
+│     │  └── Division                                           │ │
+│     │      └── Department ← Nếu có Dept → cùng Dept           │ │
+│     │          └── Team    ← Nếu ko có Dept → cùng Team       │ │
+│     │                                                         │ │
+│     │  Ví dụ 1: Creator thuộc HR Department                   │ │
+│     │  → Tất cả users trong HR Dept có quyền dispatch         │ │
+│     │                                                         │ │
+│     │  Ví dụ 2: Creator thuộc Team A (không có Dept)          │ │
+│     │  → Tất cả users trong Team A có quyền dispatch          │ │
+│     │                                                         │ │
+│     │  Ví dụ 3: Creator là Director (báo cáo trực tiếp CEO)   │ │
+│     │  → Chỉ Creator và CEO có quyền dispatch                 │ │
+│     └─────────────────────────────────────────────────────────┘ │
+│                                                                 │
+│  🔄 DISPATCH PROCESS:                                            │
+│                                                                 │
+│     1. User vào Library, chọn task có status 'available'       │
+│     2. Click "Send to Stores" (hoặc "Dispatch")                │
+│     3. Modal hiện lên để chọn Scope:                           │
+│        ┌─────────────────────────────────────────────────────┐ │
+│        │  SELECT SCOPE                                       │ │
+│        │  ┌─────────────────────────────────────────────────┐│ │
+│        │  │ Region:  [Dropdown]                             ││ │
+│        │  │ Zone:    [Dropdown]                             ││ │
+│        │  │ Area:    [Dropdown]                             ││ │
+│        │  │ Store:   [Multi-select]                         ││ │
+│        │  └─────────────────────────────────────────────────┘│ │
+│        │  [Cancel]                        [Send to Stores]   │ │
+│        └─────────────────────────────────────────────────────┘ │
+│     4. Sau khi chọn Scope, click "Send to Stores"              │
+│     5. System tạo bản copy của Library Task với Scope đã chọn  │
+│     6. Task mới có status 'sent' (hoặc 'approved')             │
+│     7. Gửi đến Store Leaders (giống Section 12.3)              │
+│                                                                 │
+│  📌 LƯU Ý QUAN TRỌNG:                                           │
+│     → Library Task gốc vẫn giữ status 'available'              │
+│     → Mỗi lần dispatch tạo 1 bản copy MỚI                      │
+│     → Có thể dispatch cùng 1 Library Task nhiều lần            │
+│     → Mỗi lần dispatch có thể chọn Scope khác nhau             │
+│                                                                 │
+│  📊 TRACKING:                                                    │
+│     → Library Task có field: dispatch_count (số lần đã gửi)    │
+│     → Mỗi dispatched task link về library_task_id gốc          │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Database Fields cho Library Task:**
+
+```sql
+-- tasks table (thêm fields)
+is_library_task BOOLEAN DEFAULT FALSE    -- Đánh dấu là Library Task
+library_task_id INT NULL                 -- Link đến Library Task gốc (nếu là bản copy)
+dispatch_count INT DEFAULT 0             -- Số lần đã dispatch (cho Library Task)
+
+-- Khi dispatch:
+-- 1. Copy task gốc → task mới với library_task_id = task gốc
+-- 2. Task mới có is_library_task = FALSE, status = 'sent'
+-- 3. Cập nhật dispatch_count++ cho task gốc
+```
+
+**API Endpoints liên quan:**
+
+| Action | Endpoint | Description |
+|--------|----------|-------------|
+| Get Library Tasks | GET /api/v1/tasks/library | Lấy danh sách Library Tasks |
+| Create Library Task | POST /api/v1/tasks/library | Tạo Library Task mới |
+| Dispatch Library Task | POST /api/v1/tasks/{id}/dispatch | Gửi Library Task đến stores |
+| Get Dispatch History | GET /api/v1/tasks/{id}/dispatch-history | Lịch sử dispatch của Library Task |
+
+### 12.6 Task List Display Logic
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  TASK LIST DISPLAY LOGIC                                        │
+│                                                                 │
+│  📋 HAI DANH SÁCH ĐỘC LẬP:                                       │
+│                                                                 │
+│     1. TASK LIST (/tasks/list)                                  │
+│        → Chứa các tasks đã gửi đi hoặc đang xử lý               │
+│        → Hiển thị cho cả HQ và Store users                      │
+│        → KHÔNG chứa Library Tasks                               │
+│                                                                 │
+│     2. LIBRARY TASK (/tasks/library)                            │
+│        → Chứa các task mẫu trong thư viện                       │
+│        → Dùng đi dùng lại nhiều lần                             │
+│        → Chỉ hiển thị cho HQ users                              │
+│        → KHÔNG chứa tasks đã dispatch                           │
+│                                                                 │
+│  📊 TASK LIST - THỨ TỰ HIỂN THỊ (Ưu tiên cao → thấp):           │
+│                                                                 │
+│     ┌─────────────────────────────────────────────────────────┐ │
+│     │  1. Approve    → Tasks đang chờ phê duyệt (vàng)        │ │
+│     │  2. Draft      → Bản nháp chưa submit (xám)             │ │
+│     │  3. Overdue    → Quá hạn chưa hoàn thành (đỏ)           │ │
+│     │  4. Not Yet    → Chưa bắt đầu (xám nhạt)                │ │
+│     │  5. On Progress→ Đang thực hiện (xanh dương)            │ │
+│     │  6. Done       → Đã hoàn thành (xanh lá)                │ │
+│     └─────────────────────────────────────────────────────────┘ │
+│                                                                 │
+│  📚 LIBRARY TASK - THỨ TỰ HIỂN THỊ (Ưu tiên cao → thấp):        │
+│                                                                 │
+│     ┌─────────────────────────────────────────────────────────┐ │
+│     │  1. Approve    → Đang chờ phê duyệt (vàng)              │ │
+│     │  2. Draft      → Bản nháp chưa submit (xám)             │ │
+│     │  3. Available  → Sẵn sàng gửi (xanh lá)                 │ │
+│     │  4. Cooldown   → Đang làm lạnh, tạm khóa (xanh băng)    │ │
+│     └─────────────────────────────────────────────────────────┘ │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 12.7 Cooldown Mechanism (Cơ chế Làm Lạnh)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  COOLDOWN MECHANISM - TRÁNH GỬI TRÙNG                           │
+│                                                                 │
+│  🎯 MỤC ĐÍCH:                                                    │
+│     → Ngăn chặn việc gửi trùng task đến cùng stores             │
+│     → Tránh confusion khi nhiều người cùng dispatch             │
+│     → Bảo vệ stores khỏi nhận task duplicate                    │
+│                                                                 │
+│  🔄 COOLDOWN TRIGGER:                                            │
+│                                                                 │
+│     Khi user click "Send to Stores", system kiểm tra:           │
+│     ┌─────────────────────────────────────────────────────────┐ │
+│     │  CHECK DUPLICATE:                                       │ │
+│     │                                                         │ │
+│     │  1. Cùng Library Task gốc (library_task_id)             │ │
+│     │  2. Cùng Scope (stores được chọn)                       │ │
+│     │  3. Thời gian trùng nhau (start_date - end_date)        │ │
+│     │                                                         │ │
+│     │  Nếu TẤT CẢ 3 điều kiện trùng → DUPLICATE DETECTED      │ │
+│     └─────────────────────────────────────────────────────────┘ │
+│                                                                 │
+│  ❄️ KHI DUPLICATE DETECTED:                                      │
+│                                                                 │
+│     1. Library Task chuyển status: 'available' → 'cooldown'    │
+│     2. Disable button "Send to Stores"                         │
+│     3. Hiển thị thông báo:                                     │
+│        "This task has already been sent to the selected        │
+│         stores for this period by [sender_name].               │
+│         Task is in cooldown until [end_date]."                 │
+│     4. Cooldown period = start_date → end_date của task đã gửi │
+│                                                                 │
+│  ⏰ COOLDOWN PERIOD:                                             │
+│                                                                 │
+│     ┌─────────────────────────────────────────────────────────┐ │
+│     │  Timeline:                                              │ │
+│     │                                                         │ │
+│     │  [start_date]──────────────────────────[end_date]       │ │
+│     │       │                                      │          │ │
+│     │       └── COOLDOWN ACTIVE ──────────────────┘           │ │
+│     │                                              │          │ │
+│     │                              Auto-release ───┘          │ │
+│     │                              status → 'available'       │ │
+│     └─────────────────────────────────────────────────────────┘ │
+│                                                                 │
+│  🔓 OVERRIDE COOLDOWN (Phá khóa):                                │
+│                                                                 │
+│     Chỉ người có quyền CAO NHẤT trong Team/Dept có thể phá khóa │
+│                                                                 │
+│     ┌─────────────────────────────────────────────────────────┐ │
+│     │  XÁC ĐỊNH NGƯỜI CÓ QUYỀN PHÁ KHÓA:                      │ │
+│     │                                                         │ │
+│     │  1. Nếu có Department:                                  │ │
+│     │     → Department Head (job_grade cao nhất trong Dept)   │ │
+│     │                                                         │ │
+│     │  2. Nếu chỉ có Team (không có Dept):                    │ │
+│     │     → Team Leader (job_grade cao nhất trong Team)       │ │
+│     │                                                         │ │
+│     │  3. Nếu báo cáo trực tiếp lên Director/CEO:             │ │
+│     │     → Director/CEO                                      │ │
+│     └─────────────────────────────────────────────────────────┘ │
+│                                                                 │
+│     UI cho người có quyền phá khóa:                             │
+│     ┌─────────────────────────────────────────────────────────┐ │
+│     │  ⚠️ This task is in COOLDOWN                            │ │
+│     │                                                         │ │
+│     │  Already sent by: [sender_name]                         │ │
+│     │  Sent at: [datetime]                                    │ │
+│     │  Period: [start_date] - [end_date]                      │ │
+│     │  Stores: [list of stores]                               │ │
+│     │                                                         │ │
+│     │  [Cancel]              [Override & Send Anyway]         │ │
+│     └─────────────────────────────────────────────────────────┘ │
+│                                                                 │
+│  📝 OVERRIDE LOGGING:                                            │
+│     → Ghi log khi phá khóa: who, when, reason (optional)       │
+│     → Dùng cho audit và troubleshooting                        │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Database Fields cho Cooldown:**
+
+```sql
+-- tasks table (thêm fields cho Library Task)
+cooldown_until TIMESTAMP NULL           -- Thời điểm hết cooldown
+cooldown_triggered_by INT NULL          -- User đã trigger cooldown (đã gửi trước)
+cooldown_triggered_at TIMESTAMP NULL    -- Thời điểm trigger cooldown
+
+-- cooldown_overrides: Log các lần phá khóa
+id INT PRIMARY KEY
+library_task_id INT
+overridden_by INT                       -- User phá khóa
+overridden_at TIMESTAMP
+reason TEXT NULL
+dispatched_task_id INT                  -- Task được tạo sau khi phá khóa
+```
+
+**Cooldown Check Logic:**
+
+```
+ON DISPATCH ATTEMPT:
+1. GET library_task_id, selected_stores[], start_date, end_date
+2. FIND existing dispatched tasks WHERE:
+   - library_task_id = same
+   - stores overlap với selected_stores
+   - (start_date, end_date) overlaps
+3. IF found:
+   a. IF current_user = highest_grade_in_dept_or_team:
+      → Show override confirmation modal
+      → IF confirmed: allow dispatch, log override
+   b. ELSE:
+      → SET library_task.status = 'cooldown'
+      → SET library_task.cooldown_until = existing_task.end_date
+      → BLOCK dispatch with message
+4. IF not found:
+   → Allow dispatch normally
+
+ON DAILY CRON (hoặc on-demand):
+1. FIND library tasks WHERE status = 'cooldown' AND cooldown_until < NOW()
+2. UPDATE status = 'available', clear cooldown fields
+```
+
+**UI States cho Library Task (Updated):**
+
+| Status | Badge Color | Actions Available |
+|--------|-------------|-------------------|
+| draft | Gray | Edit, Delete, Submit |
+| approve | Yellow | View only (Creator), Approve/Request Change (Approver) |
+| available | Green | View, Dispatch (cùng Dept/Team users) |
+| cooldown | Ice Blue | View only, Override (highest grade only) |
+
+**API Endpoints liên quan:**
+
+| Action | Endpoint | Description |
+|--------|----------|-------------|
+| Check Cooldown | GET /api/v1/tasks/{id}/cooldown-status | Kiểm tra trạng thái cooldown |
+| Override Cooldown | POST /api/v1/tasks/{id}/override-cooldown | Phá khóa cooldown (cần quyền) |
+| Get Override History | GET /api/v1/tasks/{id}/override-history | Lịch sử phá khóa |
 
 ---
 
