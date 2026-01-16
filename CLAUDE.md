@@ -1109,6 +1109,80 @@ Chi tiết: `docs/06-deployment/DEPLOY-PA-VIETNAM-HOSTING.md`
 
 ---
 
+## 12. WS Module - Business Flow
+
+> **Scope**: Section này chỉ mô tả luồng hoạt động của **WS Module (Task from HQ)**. Các module khác sẽ bổ sung sau.
+
+### 12.1 Task Creation Flow
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  TASK CREATION FLOW                                             │
+│                                                                 │
+│  📝 SCREEN: Add Task (/tasks/new)                               │
+│                                                                 │
+│  👤 QUYỀN TẠO TASK:                                             │
+│     → Tất cả HQ users với Job Grade G2-G9                       │
+│     → Store users (S1-S6) KHÔNG có quyền tạo task               │
+│                                                                 │
+│  📋 DRAFT RULES:                                                │
+│     1. Giới hạn Draft:                                          │
+│        → Mỗi user tối đa 5 bản draft cùng lúc                   │
+│        → Nếu đã có 5 draft → không cho tạo thêm                 │
+│        → Phải submit hoặc xóa draft cũ trước                    │
+│                                                                 │
+│     2. Auto-Delete Draft (30 ngày không hoạt động):             │
+│        → Nếu draft không được edit trong 30 ngày                │
+│        → System tự động xóa draft đó                            │
+│        → Tính từ last_modified_at của draft                     │
+│                                                                 │
+│     3. Draft Expiration Warning:                                │
+│        → 5 ngày trước khi draft bị xóa (ngày 25-30)             │
+│        → Hiển thị notification cho user                         │
+│        → Trigger: Mỗi lần đăng nhập HOẶC mỗi ngày               │
+│        → Nội dung: "Draft [tên] sẽ bị xóa sau X ngày"           │
+│                                                                 │
+│  ⏰ TIMELINE:                                                    │
+│     Day 0  → User tạo/edit draft                                │
+│     Day 25 → Bắt đầu hiển thị warning (còn 5 ngày)              │
+│     Day 26 → Warning: còn 4 ngày                                │
+│     Day 27 → Warning: còn 3 ngày                                │
+│     Day 28 → Warning: còn 2 ngày                                │
+│     Day 29 → Warning: còn 1 ngày                                │
+│     Day 30 → Auto-delete draft                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Implementation Notes:**
+
+| Component | Requirement |
+|-----------|-------------|
+| **Permission Check** | Backend validate user job_grade trong G2-G9 |
+| **Draft Count Check** | Query count drafts WHERE user_id = current AND status = 'draft' |
+| **Auto-Delete Job** | Laravel Scheduler chạy daily, xóa drafts có last_modified_at < 30 days |
+| **Warning Notification** | Check on login + daily cron, tạo notification cho drafts 25-30 days old |
+
+**Database Fields cần thiết:**
+
+```sql
+-- tasks table
+status ENUM('draft', 'pending', 'approved', 'rejected', ...)
+created_by INT (user_id)
+last_modified_at TIMESTAMP -- cập nhật mỗi khi edit draft
+```
+
+**API Endpoints liên quan:**
+
+| Action | Endpoint | Description |
+|--------|----------|-------------|
+| Create Draft | POST /api/v1/tasks | Tạo task với status='draft' |
+| Update Draft | PUT /api/v1/tasks/{id} | Update draft, refresh last_modified_at |
+| Get My Drafts | GET /api/v1/tasks?status=draft | Lấy danh sách draft của user |
+| Delete Draft | DELETE /api/v1/tasks/{id} | Xóa draft thủ công |
+| Get Expiring Drafts | GET /api/v1/tasks/expiring | Lấy drafts sắp hết hạn (25-30 days) |
+
+---
+
 ## Tham khảo chi tiết
 
 - Session Start: `docs/SESSION_START_CHECKLIST.md`
