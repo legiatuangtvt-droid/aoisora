@@ -274,9 +274,9 @@ export default function TaskDetailClient({ taskId }: TaskDetailClientProps) {
             </div>
 
             {/* Right - Statistics Cards */}
-            <div className="flex-1 grid grid-cols-4 gap-4">
+            <div className="flex-1 flex gap-4 justify-end">
               {/* Not Started */}
-              <div className="border border-gray-200 rounded-xl p-4 text-center">
+              <div className="w-[202px] h-[124px] border border-gray-200 rounded-xl p-4 text-center flex flex-col justify-center">
                 <div className="flex items-center justify-center mb-3">
                   <div className="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center">
                     <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
@@ -289,7 +289,7 @@ export default function TaskDetailClient({ taskId }: TaskDetailClientProps) {
               </div>
 
               {/* Completed */}
-              <div className="border-2 border-green-400 rounded-xl p-4 text-center bg-green-50/30">
+              <div className="w-[202px] h-[124px] border-2 border-green-400 rounded-xl p-4 text-center bg-green-50/30 flex flex-col justify-center">
                 <div className="flex items-center justify-center mb-3">
                   <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
                     <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -302,7 +302,7 @@ export default function TaskDetailClient({ taskId }: TaskDetailClientProps) {
               </div>
 
               {/* Unable to Complete */}
-              <div className="border-2 border-red-400 rounded-xl p-4 text-center bg-red-50/30">
+              <div className="w-[202px] h-[124px] border-2 border-red-400 rounded-xl p-4 text-center bg-red-50/30 flex flex-col justify-center">
                 <div className="flex items-center justify-center mb-3">
                   <div className="w-8 h-8 rounded-full border-2 border-red-500 flex items-center justify-center">
                     <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -315,7 +315,7 @@ export default function TaskDetailClient({ taskId }: TaskDetailClientProps) {
               </div>
 
               {/* Average Completion Time */}
-              <div className="border-2 border-yellow-400 rounded-xl p-4 text-center bg-yellow-50/30">
+              <div className="w-[202px] h-[124px] border-2 border-yellow-400 rounded-xl p-4 text-center bg-yellow-50/30 flex flex-col justify-center">
                 <div className="flex items-center justify-center mb-3">
                   <div className="w-8 h-8 rounded-full bg-yellow-400 flex items-center justify-center">
                     <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
