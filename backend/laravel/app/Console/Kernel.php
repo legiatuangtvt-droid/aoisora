@@ -24,7 +24,13 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        // Clean up stale drafts (not modified for 1 month) - runs daily at 2:00 AM
+        $schedule->command('tasks:cleanup-stale-drafts')
+            ->daily()
+            ->at('02:00')
+            ->onOneServer()
+            ->withoutOverlapping()
+            ->appendOutputTo(storage_path('logs/cleanup-stale-drafts.log'));
     }
 
     /**

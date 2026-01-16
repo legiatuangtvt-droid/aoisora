@@ -614,12 +614,16 @@ CREATE INDEX `idx_task_likes_store_result` ON `task_likes` (`store_result_id`);
 -- INITIAL DATA - Code Master Values
 -- ============================================
 
+-- Status codes: Thứ tự hiển thị cho HQ: APPROVE → DRAFT → OVERDUE → NOT_YET → ON_PROGRESS → DONE
+-- Store users chỉ thấy: OVERDUE → NOT_YET → ON_PROGRESS → DONE
 INSERT INTO `code_master` (`code_master_id`, `code_type`, `code`, `name`, `sort_order`) VALUES
-(7, 'status', 'NOT_YET', 'Not Yet', 1),
-(8, 'status', 'ON_PROGRESS', 'On Progress', 2),
-(9, 'status', 'DONE', 'Done', 3),
-(10, 'status', 'OVERDUE', 'Overdue', 4),
-(11, 'status', 'REJECT', 'Reject', 5);
+(7, 'status', 'NOT_YET', 'Not Yet', 4),
+(8, 'status', 'ON_PROGRESS', 'On Progress', 5),
+(9, 'status', 'DONE', 'Done', 6),
+(10, 'status', 'OVERDUE', 'Overdue', 3),
+(11, 'status', 'REJECT', 'Reject', 7),
+(12, 'status', 'DRAFT', 'Draft', 2),
+(13, 'status', 'APPROVE', 'Approve', 1);
 
 INSERT INTO `code_master` (`code_master_id`, `code_type`, `code`, `name`, `sort_order`) VALUES
 (1, 'task_type', 'STATISTICS', 'Statistics', 1),

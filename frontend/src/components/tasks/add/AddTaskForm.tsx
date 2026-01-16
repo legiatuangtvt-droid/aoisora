@@ -17,6 +17,7 @@ interface AddTaskFormProps {
   onSubmit: (taskLevels: TaskLevel[]) => void;
   isSubmitting?: boolean;
   isSavingDraft?: boolean;
+  canCreateDraft?: boolean;
 }
 
 // Section IDs for accordion
@@ -29,6 +30,7 @@ export default function AddTaskForm({
   onSubmit,
   isSubmitting = false,
   isSavingDraft = false,
+  canCreateDraft = true,
 }: AddTaskFormProps) {
   // Use setter function that calls parent callback
   const setTaskLevels = (updater: TaskLevel[] | ((prev: TaskLevel[]) => TaskLevel[])) => {
@@ -309,10 +311,11 @@ export default function AddTaskForm({
       <div className="flex items-center justify-end gap-4">
         <button
           onClick={() => onSaveDraft(taskLevels)}
-          disabled={isSavingDraft || isSubmitting}
+          disabled={isSavingDraft || isSubmitting || !canCreateDraft}
+          title={!canCreateDraft ? 'Draft limit reached. Delete existing drafts to create new ones.' : undefined}
           className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isSavingDraft ? 'Saving...' : 'Save as draft'}
+          {isSavingDraft ? 'Saving...' : !canCreateDraft ? 'Draft limit reached' : 'Save as draft'}
         </button>
         <button
           onClick={() => onSubmit(taskLevels)}

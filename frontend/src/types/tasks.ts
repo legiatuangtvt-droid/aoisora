@@ -1,18 +1,20 @@
-// Task Status Types - 5 trạng thái chính
-// 1. DRAFT: Đang tạo task dở, lưu nháp, chưa gửi về store
-// 2. ON_PROGRESS (Approve): Đang gửi đến tài khoản cao hơn để xin approve
-// 3. NOT_YET: Đã gửi về store nhưng store chưa hoàn thành
-// 4. OVERDUE: Đã quá deadline nhưng store chưa hoàn thành
-// 5. DONE: Store đã hoàn thành
-export type TaskStatus = 'DRAFT' | 'ON_PROGRESS' | 'NOT_YET' | 'OVERDUE' | 'DONE' | 'REJECT';
-export type HQCheckStatus = 'DRAFT' | 'ON_PROGRESS' | 'NOT_YET' | 'OVERDUE' | 'DONE' | 'REJECT';
+// Task Status Types - 6 trạng thái chính
+// 1. APPROVE: Đang chờ HQ phê duyệt (chờ cấp cao hơn approve)
+// 2. DRAFT: Đang tạo task dở, lưu nháp, chưa gửi (hoặc bị reject)
+// 3. OVERDUE: Đã quá deadline nhưng store chưa hoàn thành
+// 4. NOT_YET: Đã gửi về store nhưng store chưa hoàn thành
+// 5. ON_PROGRESS: Store đang thực hiện
+// 6. DONE: Store đã hoàn thành
+export type TaskStatus = 'APPROVE' | 'DRAFT' | 'OVERDUE' | 'NOT_YET' | 'ON_PROGRESS' | 'DONE' | 'REJECT';
+export type HQCheckStatus = 'APPROVE' | 'DRAFT' | 'OVERDUE' | 'NOT_YET' | 'ON_PROGRESS' | 'DONE' | 'REJECT';
 
-// Status Display Config
+// Status Display Config - Thứ tự hiển thị cho HQ: APPROVE → DRAFT → OVERDUE → NOT_YET → ON_PROGRESS → DONE
 export const STATUS_CONFIG: Record<TaskStatus, { label: string; color: string; textColor?: string }> = {
+  APPROVE: { label: 'Approve', color: 'bg-purple-100 text-purple-700' }, // Tím - chờ phê duyệt
   DRAFT: { label: 'Draft', color: 'bg-gray-100 text-gray-600' },
-  ON_PROGRESS: { label: 'Approve', color: 'bg-green-100 text-green-700' }, // Xanh lá cho người gửi
-  NOT_YET: { label: 'Not Yet', color: 'bg-yellow-100 text-yellow-700' },
   OVERDUE: { label: 'Overdue', color: 'bg-red-100 text-red-700' },
+  NOT_YET: { label: 'Not Yet', color: 'bg-yellow-100 text-yellow-700' },
+  ON_PROGRESS: { label: 'On Progress', color: 'bg-green-100 text-green-700' },
   DONE: { label: 'Done', color: 'bg-blue-100 text-blue-700' },
   REJECT: { label: 'Reject', color: 'bg-red-100 text-red-700' },
 };
@@ -45,6 +47,7 @@ export interface TaskGroup {
   hqCheck: HQCheckStatus;
   subTasks?: SubTask[];
   isExpanded?: boolean;
+  createdStaffId?: number | null;  // Staff ID who created the task (for DRAFT filtering)
 }
 
 // Filter Interface

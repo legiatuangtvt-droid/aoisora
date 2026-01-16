@@ -16,6 +16,16 @@ class TaskController extends Controller
     use HasJobGradePermissions;
 
     /**
+     * Status ID for DRAFT in code_master table
+     */
+    const DRAFT_STATUS_ID = 12;
+
+    /**
+     * Maximum number of drafts allowed per HQ user
+     */
+    const MAX_DRAFTS_PER_USER = 5;
+
+    /**
      * Get all tasks
      */
     public function index(Request $request)
@@ -86,9 +96,25 @@ class TaskController extends Controller
             'priority' => 'nullable|string|in:low,normal,high,urgent',
         ]);
 
+        $user = $request->user();
+        $statusId = $request->input('status_id', self::DRAFT_STATUS_ID);
+
+        // Check draft limit if creating as DRAFT
+        if ($statusId == self::DRAFT_STATUS_ID) {
+            $draftLimitCheck = $this->checkDraftLimit($user->staff_id);
+            if (!$draftLimitCheck['allowed']) {
+                return response()->json([
+                    'message' => 'Draft limit exceeded',
+                    'error' => $draftLimitCheck['message'],
+                    'current_drafts' => $draftLimitCheck['current_count'],
+                    'max_drafts' => self::MAX_DRAFTS_PER_USER,
+                ], 422);
+            }
+        }
+
         $task = Task::create(array_merge(
             $request->all(),
-            ['created_staff_id' => $request->user()->staff_id]
+            ['created_staff_id' => $user->staff_id]
         ));
 
         // Broadcast task created event
@@ -116,6 +142,22 @@ class TaskController extends Controller
             'priority' => 'nullable|string|in:low,normal,high,urgent',
         ]);
 
+        $user = $request->user();
+        $newStatusId = $request->input('status_id');
+
+        // Check draft limit if changing status TO DRAFT (and it wasn't already DRAFT)
+        if ($newStatusId == self::DRAFT_STATUS_ID && $task->status_id != self::DRAFT_STATUS_ID) {
+            $draftLimitCheck = $this->checkDraftLimit($user->staff_id);
+            if (!$draftLimitCheck['allowed']) {
+                return response()->json([
+                    'message' => 'Draft limit exceeded',
+                    'error' => $draftLimitCheck['message'],
+                    'current_drafts' => $draftLimitCheck['current_count'],
+                    'max_drafts' => self::MAX_DRAFTS_PER_USER,
+                ], 422);
+            }
+        }
+
         $task->update($request->all());
 
         // Broadcast task updated event
@@ -135,7 +177,23 @@ class TaskController extends Controller
             'status_id' => 'required|exists:code_master,code_master_id',
         ]);
 
-        $task->update(['status_id' => $request->status_id]);
+        $user = $request->user();
+        $newStatusId = $request->status_id;
+
+        // Check draft limit if changing status TO DRAFT (and it wasn't already DRAFT)
+        if ($newStatusId == self::DRAFT_STATUS_ID && $task->status_id != self::DRAFT_STATUS_ID) {
+            $draftLimitCheck = $this->checkDraftLimit($user->staff_id);
+            if (!$draftLimitCheck['allowed']) {
+                return response()->json([
+                    'message' => 'Draft limit exceeded',
+                    'error' => $draftLimitCheck['message'],
+                    'current_drafts' => $draftLimitCheck['current_count'],
+                    'max_drafts' => self::MAX_DRAFTS_PER_USER,
+                ], 422);
+            }
+        }
+
+        $task->update(['status_id' => $newStatusId]);
 
         // Broadcast status changed event
         broadcast(new TaskUpdated($task, 'status_changed'))->toOthers();
@@ -195,5 +253,52 @@ class TaskController extends Controller
         }
 
         return response()->json($query->get());
+    }
+
+    /**
+     * Get current user's draft count and limit info
+     */
+    public function getDraftInfo(Request $request)
+    {
+        $user = $request->user();
+        $staffId = $user->staff_id;
+
+        $currentDrafts = Task::where('status_id', self::DRAFT_STATUS_ID)
+            ->where('created_staff_id', $staffId)
+            ->count();
+
+        return response()->json([
+            'current_drafts' => $currentDrafts,
+            'max_drafts' => self::MAX_DRAFTS_PER_USER,
+            'remaining_drafts' => max(0, self::MAX_DRAFTS_PER_USER - $currentDrafts),
+            'can_create_draft' => $currentDrafts < self::MAX_DRAFTS_PER_USER,
+        ]);
+    }
+
+    /**
+     * Check if user can create more drafts
+     *
+     * @param int $staffId
+     * @return array
+     */
+    private function checkDraftLimit(int $staffId): array
+    {
+        $currentDraftCount = Task::where('status_id', self::DRAFT_STATUS_ID)
+            ->where('created_staff_id', $staffId)
+            ->count();
+
+        if ($currentDraftCount >= self::MAX_DRAFTS_PER_USER) {
+            return [
+                'allowed' => false,
+                'current_count' => $currentDraftCount,
+                'message' => "You have reached the maximum limit of " . self::MAX_DRAFTS_PER_USER . " drafts. Please complete or delete existing drafts before creating new ones.",
+            ];
+        }
+
+        return [
+            'allowed' => true,
+            'current_count' => $currentDraftCount,
+            'message' => null,
+        ];
     }
 }

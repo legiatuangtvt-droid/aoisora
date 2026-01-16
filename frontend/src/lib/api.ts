@@ -370,6 +370,18 @@ export async function deleteTask(id: number): Promise<{ message: string }> {
   });
 }
 
+// Draft Info
+export interface DraftInfo {
+  current_drafts: number;
+  max_drafts: number;
+  remaining_drafts: number;
+  can_create_draft: boolean;
+}
+
+export async function getDraftInfo(): Promise<DraftInfo> {
+  return fetchApi<DraftInfo>('/tasks-draft-info');
+}
+
 // Task Checklists
 export async function getTaskChecklists(taskId: number): Promise<CheckList[]> {
   return fetchApi<CheckList[]>(`/tasks/${taskId}/checklists`);

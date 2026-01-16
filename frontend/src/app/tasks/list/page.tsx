@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { TaskGroup, DateMode, TaskFilters, TaskStatus, HQCheckStatus } from '@/types/tasks';
 import { Task as ApiTask, Department } from '@/types/api';
@@ -11,16 +11,18 @@ import FilterModal from '@/components/tasks/FilterModal';
 import DatePicker from '@/components/ui/DatePicker';
 import ColumnFilterDropdown from '@/components/ui/ColumnFilterDropdown';
 import { useTaskUpdates } from '@/hooks/useTaskUpdates';
+import { useUser } from '@/contexts/UserContext';
 
 // Map API status_id to UI status
-// code_master: 7=NOT_YET, 8=ON_PROGRESS, 9=DONE, 10=OVERDUE, 11=REJECT, 12=DRAFT
+// code_master: 7=NOT_YET, 8=ON_PROGRESS, 9=DONE, 10=OVERDUE, 11=REJECT, 12=DRAFT, 13=APPROVE
 const STATUS_MAP: Record<number, TaskStatus> = {
   7: 'NOT_YET',      // Not Yet - đã gửi về store nhưng chưa hoàn thành
-  8: 'ON_PROGRESS',  // On Progress (Approve pending)
+  8: 'ON_PROGRESS',  // On Progress - store đang thực hiện
   9: 'DONE',         // Done - Store đã hoàn thành
   10: 'OVERDUE',     // Overdue - quá deadline chưa hoàn thành
   11: 'REJECT',      // Reject
   12: 'DRAFT',       // Draft - đang tạo task dở, chưa gửi
+  13: 'APPROVE',     // Approve - đang chờ HQ phê duyệt
 };
 
 // Map API status_id to HQ Check status
@@ -31,6 +33,24 @@ const HQ_CHECK_MAP: Record<number, HQCheckStatus> = {
   10: 'OVERDUE',
   11: 'REJECT',
   12: 'DRAFT',
+  13: 'APPROVE',
+};
+
+// Status options theo loại user
+// HQ users (G2-G9): Xem tất cả 6 status - thứ tự: APPROVE → DRAFT → OVERDUE → NOT_YET → ON_PROGRESS → DONE
+// Store users (S1-S6): Chỉ xem 4 status - thứ tự: OVERDUE → NOT_YET → ON_PROGRESS → DONE
+const HQ_STATUS_OPTIONS: TaskStatus[] = ['APPROVE', 'DRAFT', 'OVERDUE', 'NOT_YET', 'ON_PROGRESS', 'DONE'];
+const STORE_STATUS_OPTIONS: TaskStatus[] = ['OVERDUE', 'NOT_YET', 'ON_PROGRESS', 'DONE'];
+
+// Status ID map for API filtering
+const STATUS_ID_MAP: Record<TaskStatus, number> = {
+  'NOT_YET': 7,
+  'ON_PROGRESS': 8,
+  'DONE': 9,
+  'OVERDUE': 10,
+  'REJECT': 11,
+  'DRAFT': 12,
+  'APPROVE': 13,
 };
 
 // Transform API Task to UI TaskGroup format
@@ -62,11 +82,16 @@ function transformApiTaskToTaskGroup(task: ApiTask, index: number, departments: 
     status: STATUS_MAP[task.status_id || 7] || 'NOT_YET',
     hqCheck: HQ_CHECK_MAP[task.status_id || 7] || 'NOT_YET',
     subTasks: [],
+    createdStaffId: task.created_staff_id,
   };
 }
 
 export default function TaskListPage() {
   const router = useRouter();
+  const { currentUser } = useUser();
+
+  // Determine if user is HQ (G grades) or Store (S grades)
+  const isHQUser = currentUser.job_grade.startsWith('G');
 
   // Date range state for filtering
   interface DateRange {
@@ -164,17 +189,8 @@ export default function TaskListPage() {
     }
 
     // Status filter from modal (convert UI status to status_id)
-    // code_master: 7=NOT_YET, 8=ON_PROGRESS, 9=DONE, 10=OVERDUE, 11=REJECT, 12=DRAFT
     if (filters.status.length === 1) {
-      const statusMap: Record<string, number> = {
-        'NOT_YET': 7,
-        'ON_PROGRESS': 8,
-        'DONE': 9,
-        'OVERDUE': 10,
-        'REJECT': 11,
-        'DRAFT': 12,
-      };
-      params['filter[status_id]'] = statusMap[filters.status[0]];
+      params['filter[status_id]'] = STATUS_ID_MAP[filters.status[0] as TaskStatus];
     }
 
     return params;
@@ -236,8 +252,12 @@ export default function TaskListPage() {
 
   // Get unique values for column filters
   const uniqueDepts = [...new Set(tasks.map((t) => t.dept))];
-  const statusOptions = ['DRAFT', 'ON_PROGRESS', 'NOT_YET', 'OVERDUE', 'DONE'];
-  const hqCheckOptions = ['DRAFT', 'ON_PROGRESS', 'NOT_YET', 'OVERDUE', 'DONE'];
+
+  // Status options theo loại user
+  // HQ users: APPROVE → DRAFT → OVERDUE → NOT_YET → ON_PROGRESS → DONE
+  // Store users: OVERDUE → NOT_YET → ON_PROGRESS → DONE
+  const statusOptions = isHQUser ? HQ_STATUS_OPTIONS : STORE_STATUS_OPTIONS;
+  const hqCheckOptions = isHQUser ? HQ_STATUS_OPTIONS : STORE_STATUS_OPTIONS;
 
   // Toggle accordion
   const toggleRow = (taskId: string) => {
@@ -263,7 +283,27 @@ export default function TaskListPage() {
   // Client-side column filters (applied to already fetched data)
   // Server handles: search, department modal filter, status modal filter, pagination
   // Client handles: column quick filters (dept, status, hqCheck columns)
+  // Also filter by user type and ownership rules:
+  // - Store users (S1-S6): Only see OVERDUE, NOT_YET, ON_PROGRESS, DONE
+  // - DRAFT tasks: Only visible to the user who created them
   const filteredTasks = tasks.filter((task) => {
+    // User type filter: Store users only see specific statuses
+    if (!isHQUser) {
+      // Store users only see: OVERDUE, NOT_YET, ON_PROGRESS, DONE
+      const allowedForStore = STORE_STATUS_OPTIONS;
+      if (!allowedForStore.includes(task.status)) {
+        return false;
+      }
+    }
+
+    // DRAFT filter: DRAFT tasks only visible to the user who created them
+    if (task.status === 'DRAFT') {
+      // Only show DRAFT if current user is the creator
+      if (task.createdStaffId !== currentUser.staff_id) {
+        return false;
+      }
+    }
+
     // Department column filter
     const matchesDeptColumn =
       deptColumnFilter.length === 0 || deptColumnFilter.includes(task.dept);

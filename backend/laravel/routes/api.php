@@ -126,6 +126,7 @@ Route::prefix('v1')->group(function () {
         Route::delete('tasks/{task}', [TaskController::class, 'destroy']);
         Route::put('tasks/{task}/status', [TaskController::class, 'updateStatus']);
         Route::get('tasks/{task}/checklists', [TaskController::class, 'getChecklists']);
+        Route::get('tasks-draft-info', [TaskController::class, 'getDraftInfo']);
 
         // Checklists
         Route::apiResource('checklists', CheckListController::class);
