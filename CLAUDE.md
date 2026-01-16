@@ -1125,18 +1125,72 @@ Chi tiết: `docs/06-deployment/DEPLOY-PA-VIETNAM-HOSTING.md`
 │     → Tất cả HQ users với Job Grade G2-G9                       │
 │     → Store users (S1-S6) KHÔNG có quyền tạo task               │
 │                                                                 │
-│  📋 DRAFT RULES:                                                │
-│     1. Giới hạn Draft:                                          │
-│        → Mỗi user tối đa 5 bản draft cùng lúc                   │
-│        → Nếu đã có 5 draft → không cho tạo thêm                 │
-│        → Phải submit hoặc xóa draft cũ trước                    │
+│  📋 VALIDATION RULES:                                           │
 │                                                                 │
-│     2. Auto-Delete Draft (30 ngày không hoạt động):             │
+│     1. Save as Draft - Chỉ validate:                            │
+│        → Task Name (required, not empty)                        │
+│                                                                 │
+│     2. Submit - Validate toàn bộ:                               │
+│        ┌─────────────────────────────────────────────────────┐  │
+│        │ TASK NAME (required)                                │  │
+│        ├─────────────────────────────────────────────────────┤  │
+│        │ A. INFORMATION:                                     │  │
+│        │    • Task Type (required)                           │  │
+│        │    • Applicable Period (required):                  │  │
+│        │      - Start Date ≤ End Date                        │  │
+│        │      - Start Date ≥ Today                           │  │
+│        │    • RE Time (required) - formerly "Execution Time" │  │
+│        ├─────────────────────────────────────────────────────┤  │
+│        │ B. INSTRUCTIONS:                                    │  │
+│        │    • Task Type (required)                           │  │
+│        │    • Manual Link (required)                         │  │
+│        │    • Document:                                      │  │
+│        │      - IF Task Type = "Document" → required         │  │
+│        │      - ELSE → optional                              │  │
+│        │    • Photo Guidelines:                              │  │
+│        │      - IF Task Type = "Image" → min 1 photo         │  │
+│        │      - ELSE → optional                              │  │
+│        ├─────────────────────────────────────────────────────┤  │
+│        │ C. SCOPE:                                           │  │
+│        │    • All fields required EXCEPT Staff               │  │
+│        │    • Staff field is optional                        │  │
+│        ├─────────────────────────────────────────────────────┤  │
+│        │ D. APPROVAL PROCESS:                                │  │
+│        │    • Auto-populated (no validation needed)          │  │
+│        │    • System tự động tìm và hiển thị thông tin       │  │
+│        └─────────────────────────────────────────────────────┘  │
+│                                                                 │
+│  📤 SUBMIT ACTION:                                              │
+│     → Khi click Submit, task được gửi tới Leader               │
+│     → Leader = người được hiển thị tại D. Approval Process     │
+│     → Task status chuyển từ 'draft' → 'approve'                │
+│                                                                 │
+│  📋 TASK STATUS:                                                │
+│     • draft    = Bản nháp, chưa submit                         │
+│     • approve  = Đang chờ phê duyệt (sau khi submit)           │
+│     • approved = Đã được phê duyệt                             │
+│     • rejected = Bị từ chối → quay về 'draft'                  │
+│                                                                 │
+│  📋 DRAFT RULES:                                                │
+│                                                                 │
+│     1. Draft bao gồm cả task đang chờ duyệt:                   │
+│        → status = 'draft' hoặc 'approve' đều tính là draft     │
+│        → Nếu bị reject → quay về status 'draft'                │
+│        → Vẫn tính vào giới hạn 5 draft/user                    │
+│        → Vẫn áp dụng rule auto-delete 30 ngày                  │
+│                                                                 │
+│     2. Giới hạn Draft:                                          │
+│        → Mỗi user tối đa 5 bản draft cùng lúc                   │
+│        → Bao gồm cả status 'draft' và 'approve'                │
+│        → Nếu đã có 5 → không cho tạo thêm                      │
+│        → Phải được approved hoặc xóa draft cũ trước            │
+│                                                                 │
+│     3. Auto-Delete Draft (30 ngày không hoạt động):             │
 │        → Nếu draft không được edit trong 30 ngày                │
 │        → System tự động xóa draft đó                            │
 │        → Tính từ last_modified_at của draft                     │
 │                                                                 │
-│     3. Draft Expiration Warning:                                │
+│     4. Draft Expiration Warning:                                │
 │        → 5 ngày trước khi draft bị xóa (ngày 25-30)             │
 │        → Hiển thị notification cho user                         │
 │        → Trigger: Mỗi lần đăng nhập HOẶC mỗi ngày               │
