@@ -13,17 +13,24 @@ import ColumnFilterDropdown from '@/components/ui/ColumnFilterDropdown';
 import { useTaskUpdates } from '@/hooks/useTaskUpdates';
 
 // Map API status_id to UI status
+// code_master: 7=NOT_YET, 8=ON_PROGRESS, 9=DONE, 10=OVERDUE, 11=REJECT, 12=DRAFT
 const STATUS_MAP: Record<number, TaskStatus> = {
-  7: 'NOT_YET',  // pending
-  8: 'DRAFT',   // in_progress
-  9: 'DONE',    // completed
+  7: 'NOT_YET',      // Not Yet - đã gửi về store nhưng chưa hoàn thành
+  8: 'ON_PROGRESS',  // On Progress (Approve pending)
+  9: 'DONE',         // Done - Store đã hoàn thành
+  10: 'OVERDUE',     // Overdue - quá deadline chưa hoàn thành
+  11: 'REJECT',      // Reject
+  12: 'DRAFT',       // Draft - đang tạo task dở, chưa gửi
 };
 
 // Map API status_id to HQ Check status
 const HQ_CHECK_MAP: Record<number, HQCheckStatus> = {
   7: 'NOT_YET',
-  8: 'DRAFT',
+  8: 'ON_PROGRESS',
   9: 'DONE',
+  10: 'OVERDUE',
+  11: 'REJECT',
+  12: 'DRAFT',
 };
 
 // Transform API Task to UI TaskGroup format
@@ -157,11 +164,15 @@ export default function TaskListPage() {
     }
 
     // Status filter from modal (convert UI status to status_id)
+    // code_master: 7=NOT_YET, 8=ON_PROGRESS, 9=DONE, 10=OVERDUE, 11=REJECT, 12=DRAFT
     if (filters.status.length === 1) {
       const statusMap: Record<string, number> = {
         'NOT_YET': 7,
-        'DRAFT': 8,
+        'ON_PROGRESS': 8,
         'DONE': 9,
+        'OVERDUE': 10,
+        'REJECT': 11,
+        'DRAFT': 12,
       };
       params['filter[status_id]'] = statusMap[filters.status[0]];
     }
@@ -225,8 +236,8 @@ export default function TaskListPage() {
 
   // Get unique values for column filters
   const uniqueDepts = [...new Set(tasks.map((t) => t.dept))];
-  const statusOptions = ['NOT_YET', 'DRAFT', 'DONE'];
-  const hqCheckOptions = ['NOT_YET', 'DRAFT', 'DONE'];
+  const statusOptions = ['DRAFT', 'ON_PROGRESS', 'NOT_YET', 'OVERDUE', 'DONE'];
+  const hqCheckOptions = ['DRAFT', 'ON_PROGRESS', 'NOT_YET', 'OVERDUE', 'DONE'];
 
   // Toggle accordion
   const toggleRow = (taskId: string) => {

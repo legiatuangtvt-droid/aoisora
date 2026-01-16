@@ -6,18 +6,26 @@ use App\Http\Controllers\Controller;
 use App\Models\Task;
 use App\Models\CodeMaster;
 use App\Events\TaskUpdated;
+use App\Traits\HasJobGradePermissions;
 use Illuminate\Http\Request;
 use Spatie\QueryBuilder\QueryBuilder;
 use Spatie\QueryBuilder\AllowedFilter;
 
 class TaskController extends Controller
 {
+    use HasJobGradePermissions;
+
     /**
      * Get all tasks
      */
     public function index(Request $request)
     {
-        $tasks = QueryBuilder::for(Task::class)
+        $query = Task::query();
+
+        // Apply job grade permission filter
+        $query = $this->applyJobGradeFilter($query, $request);
+
+        $tasks = QueryBuilder::for($query)
             ->allowedFilters([
                 AllowedFilter::exact('assigned_store_id'),
                 AllowedFilter::exact('dept_id'),
@@ -25,11 +33,19 @@ class TaskController extends Controller
                 AllowedFilter::exact('status_id'),
                 AllowedFilter::exact('priority'),
                 AllowedFilter::partial('task_name'),
-                // Date range filters
-                AllowedFilter::callback('start_date_from', fn ($query, $value) => $query->where('start_date', '>=', $value)),
-                AllowedFilter::callback('start_date_to', fn ($query, $value) => $query->where('start_date', '<=', $value)),
-                AllowedFilter::callback('end_date_from', fn ($query, $value) => $query->where('end_date', '>=', $value)),
-                AllowedFilter::callback('end_date_to', fn ($query, $value) => $query->where('end_date', '<=', $value)),
+                // Date range filters - also include tasks with NULL dates (drafts)
+                AllowedFilter::callback('start_date_from', fn ($query, $value) => $query->where(function ($q) use ($value) {
+                    $q->where('start_date', '>=', $value)->orWhereNull('start_date');
+                })),
+                AllowedFilter::callback('start_date_to', fn ($query, $value) => $query->where(function ($q) use ($value) {
+                    $q->where('start_date', '<=', $value)->orWhereNull('start_date');
+                })),
+                AllowedFilter::callback('end_date_from', fn ($query, $value) => $query->where(function ($q) use ($value) {
+                    $q->where('end_date', '>=', $value)->orWhereNull('end_date');
+                })),
+                AllowedFilter::callback('end_date_to', fn ($query, $value) => $query->where(function ($q) use ($value) {
+                    $q->where('end_date', '<=', $value)->orWhereNull('end_date');
+                })),
             ])
             ->allowedSorts(['task_id', 'task_name', 'end_date', 'start_date', 'created_at'])
             ->allowedIncludes(['assignedStaff', 'createdBy', 'assignedStore', 'department', 'taskType', 'responseType', 'status'])

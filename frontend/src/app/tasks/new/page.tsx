@@ -8,6 +8,10 @@ import { createEmptyTaskLevel } from '@/data/mockAddTask';
 import AddTaskForm from '@/components/tasks/add/AddTaskForm';
 import TaskMapsTab from '@/components/tasks/add/TaskMapsTab';
 import { useToast } from '@/components/ui/Toast';
+import { createTask } from '@/lib/api';
+
+// Status ID for DRAFT (will be added to code_master)
+const STATUS_DRAFT_ID = 12;
 
 type TabType = 'detail' | 'maps';
 
@@ -30,18 +34,64 @@ export default function NewTaskPage() {
     setTaskLevels((prev) => [...prev, newTaskLevel]);
   }, [taskLevels]);
 
+  // Validate task_name for all task levels (required for draft)
+  const validateForDraft = (taskLevels: TaskLevel[]): { isValid: boolean; errors: string[] } => {
+    const errors: string[] = [];
+
+    taskLevels.forEach((tl, index) => {
+      if (!tl.name || tl.name.trim() === '') {
+        errors.push(`Task Level ${tl.level}: Task name is required`);
+      }
+    });
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+    };
+  };
+
   const handleSaveDraft = async (taskLevels: TaskLevel[]) => {
+    // Validate task_name for all levels
+    const validation = validateForDraft(taskLevels);
+    if (!validation.isValid) {
+      validation.errors.forEach((error) => {
+        showToast(error, 'error');
+      });
+      return;
+    }
+
     setIsSavingDraft(true);
 
-    // TODO: Replace with actual API call
-    console.log('Saving draft:', taskLevels);
+    try {
+      // Get the root task level (level 1)
+      const rootTask = taskLevels.find((tl) => tl.level === 1);
+      if (!rootTask) {
+        showToast('No task level found', 'error');
+        setIsSavingDraft(false);
+        return;
+      }
 
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Prepare task data for API
+      const taskData = {
+        task_name: rootTask.name,
+        task_description: rootTask.instructions.note || undefined,
+        status_id: STATUS_DRAFT_ID, // DRAFT status
+        start_date: rootTask.taskInformation.applicablePeriod.startDate || undefined,
+        end_date: rootTask.taskInformation.applicablePeriod.endDate || undefined,
+        priority: 'normal',
+      };
 
-    setIsSavingDraft(false);
-    showToast('Task saved as draft successfully', 'success');
-    router.push('/tasks/list');
+      // Call API to create task
+      await createTask(taskData);
+
+      showToast('Task saved as draft successfully', 'success');
+      router.push('/tasks/list');
+    } catch (error) {
+      console.error('Error saving draft:', error);
+      showToast(error instanceof Error ? error.message : 'Failed to save draft', 'error');
+    } finally {
+      setIsSavingDraft(false);
+    }
   };
 
   const handleSubmit = async (taskLevels: TaskLevel[]) => {
@@ -59,65 +109,63 @@ export default function NewTaskPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="p-6">
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-sm mb-6">
-          <Link
-            href="/tasks/list"
-            className="text-gray-500 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-400 transition-colors"
+    <div>
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-2 text-sm mb-6">
+        <Link
+          href="/tasks/list"
+          className="text-gray-500 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-400 transition-colors"
+        >
+          List task
+        </Link>
+        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+        <span className="text-gray-900 dark:text-white font-medium">Add task</span>
+      </nav>
+
+      {/* Tabs - aligned to right */}
+      <div className="flex justify-end mb-6">
+        <div className="flex items-center gap-1 border-b border-gray-200 dark:border-gray-700">
+          <button
+            onClick={() => setActiveTab('detail')}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'detail'
+                ? 'border-pink-600 text-pink-600 dark:text-pink-400'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+            }`}
           >
-            List task
-          </Link>
-          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-          <span className="text-gray-900 dark:text-white font-medium">Add task</span>
-        </nav>
-
-        {/* Tabs - aligned to right */}
-        <div className="flex justify-end mb-6">
-          <div className="flex items-center gap-1 border-b border-gray-200 dark:border-gray-700">
-            <button
-              onClick={() => setActiveTab('detail')}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === 'detail'
-                  ? 'border-pink-600 text-pink-600 dark:text-pink-400'
-                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
-            >
-              Detail
-            </button>
-            <button
-              onClick={() => setActiveTab('maps')}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === 'maps'
-                  ? 'border-pink-600 text-pink-600 dark:text-pink-400'
-                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
-            >
-              Maps
-            </button>
-          </div>
+            Detail
+          </button>
+          <button
+            onClick={() => setActiveTab('maps')}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'maps'
+                ? 'border-pink-600 text-pink-600 dark:text-pink-400'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+            }`}
+          >
+            Maps
+          </button>
         </div>
-
-        {/* Tab Content */}
-        {activeTab === 'detail' ? (
-          <AddTaskForm
-            taskLevels={taskLevels}
-            onTaskLevelsChange={setTaskLevels}
-            onSaveDraft={handleSaveDraft}
-            onSubmit={handleSubmit}
-            isSubmitting={isSubmitting}
-            isSavingDraft={isSavingDraft}
-          />
-        ) : (
-          <TaskMapsTab
-            taskLevels={taskLevels}
-            onAddSubLevel={handleAddSubLevel}
-          />
-        )}
       </div>
+
+      {/* Tab Content */}
+      {activeTab === 'detail' ? (
+        <AddTaskForm
+          taskLevels={taskLevels}
+          onTaskLevelsChange={setTaskLevels}
+          onSaveDraft={handleSaveDraft}
+          onSubmit={handleSubmit}
+          isSubmitting={isSubmitting}
+          isSavingDraft={isSavingDraft}
+        />
+      ) : (
+        <TaskMapsTab
+          taskLevels={taskLevels}
+          onAddSubLevel={handleAddSubLevel}
+        />
+      )}
     </div>
   );
 }

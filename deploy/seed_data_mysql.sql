@@ -58,19 +58,23 @@ INSERT INTO `stores` (`store_id`, `store_name`, `store_code`, `region_id`, `addr
 -- STAFF (password_hash = bcrypt của "password123")
 -- ============================================
 
+-- Job Grades:
+-- HQ: G2=Officer, G3=Executive, G4=Deputy Manager, G5=Manager, G6=GM, G7=SGM, G8=CCO, G9=GD
+-- Store: S1=Staff, S2=Store Leader G2, S3=Store Leader G3, S4=Store In-charge, S5=Area Manager, S6=Region Manager
+
 INSERT INTO `staff` (`staff_id`, `staff_name`, `staff_code`, `username`, `email`, `phone`, `store_id`, `department_id`, `team_id`, `role`, `position`, `job_grade`, `password_hash`, `status`) VALUES
--- Admin & HQ Staff
-(1, 'Admin System', 'ADM001', 'admin', 'admin@aoisora.com', '0901234567', NULL, 5, 'DEV', 'ADMIN', 'System Administrator', 'M1', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(2, 'Nguyễn Văn Minh', 'HQ001', 'nguyenvanminh', 'minh.nguyen@aoisora.com', '0902345678', NULL, 1, 'ACCOUNT', 'HQ', 'Operation Manager', 'M2', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(3, 'Trần Thị Hương', 'HQ002', 'tranthihuong', 'huong.tran@aoisora.com', '0903456789', NULL, 2, 'QC_FRESH', 'HQ', 'QC Manager', 'M2', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(4, 'Lê Hoàng Nam', 'HQ003', 'lehoangnam', 'nam.le@aoisora.com', '0904567890', NULL, 3, 'TRAINING', 'HQ', 'HR Manager', 'M2', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+-- Admin & HQ Staff (G2-G9)
+(1, 'Admin System', 'ADM001', 'admin', 'admin@aoisora.com', '0901234567', NULL, 5, 'DEV', 'ADMIN', 'System Administrator', 'G9', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(2, 'Nguyễn Văn Minh', 'HQ001', 'nguyenvanminh', 'minh.nguyen@aoisora.com', '0902345678', NULL, 1, 'ACCOUNT', 'HQ', 'Operation Manager', 'G5', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(3, 'Trần Thị Hương', 'HQ002', 'tranthihuong', 'huong.tran@aoisora.com', '0903456789', NULL, 2, 'QC_FRESH', 'HQ', 'QC Manager', 'G5', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(4, 'Lê Hoàng Nam', 'HQ003', 'lehoangnam', 'nam.le@aoisora.com', '0904567890', NULL, 3, 'TRAINING', 'HQ', 'HR Manager', 'G5', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
 
--- Store Managers
-(5, 'Phạm Văn Đức', 'SM001', 'phamvanduc', 'duc.pham@aoisora.com', '0905678901', 1, 6, NULL, 'SM', 'Store Manager', 'M3', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(6, 'Võ Thị Mai', 'SM002', 'vothimai', 'mai.vo@aoisora.com', '0906789012', 2, 6, NULL, 'SM', 'Store Manager', 'M3', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
-(7, 'Hoàng Minh Tuấn', 'SM003', 'hoangminhtuan', 'tuan.hoang@aoisora.com', '0907890123', 3, 6, NULL, 'SM', 'Store Manager', 'M3', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+-- Store Managers (S3 = Store Leader G3 / Trưởng cửa hàng)
+(5, 'Phạm Văn Đức', 'SM001', 'phamvanduc', 'duc.pham@aoisora.com', '0905678901', 1, 6, NULL, 'SM', 'Store Manager', 'S3', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(6, 'Võ Thị Mai', 'SM002', 'vothimai', 'mai.vo@aoisora.com', '0906789012', 2, 6, NULL, 'SM', 'Store Manager', 'S3', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+(7, 'Hoàng Minh Tuấn', 'SM003', 'hoangminhtuan', 'tuan.hoang@aoisora.com', '0907890123', 3, 6, NULL, 'SM', 'Store Manager', 'S3', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
 
--- Staff members
+-- Store Staff (S1=Staff, S2=Store Leader G2/Phó Trưởng cửa hàng)
 (8, 'Nguyễn Thị Lan', 'ST001', 'nguyenthilan', 'lan.nguyen@aoisora.com', '0908901234', 1, 6, NULL, 'STAFF', 'Cashier Leader', 'S2', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
 (9, 'Trần Văn Hùng', 'ST002', 'tranvanhung', 'hung.tran@aoisora.com', '0909012345', 1, 6, NULL, 'STAFF', 'Fresh Food Staff', 'S1', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
 (10, 'Lê Thị Hồng', 'ST003', 'lethihong', 'hong.le@aoisora.com', '0910123456', 1, 6, NULL, 'STAFF', 'Dry Goods Staff', 'S1', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
@@ -128,7 +132,77 @@ INSERT INTO `tasks` (`task_id`, `task_name`, `task_description`, `manual_id`, `t
 (5, 'Vệ sinh khu vực bán hàng', 'Tổng vệ sinh cuối tuần', NULL, 3, 1, 1, 1, 8, 9, 'low', '2026-01-04', '2026-01-04', 2),
 (6, 'Đào tạo nhân viên mới', 'Đào tạo quy trình cho 3 nhân viên mới', NULL, 3, 2, 3, 3, 13, 8, 'normal', '2026-01-06', '2026-01-20', 4),
 (7, 'Kiểm tra camera an ninh', 'Rà soát hoạt động tất cả camera', NULL, 1, 2, 1, 1, 14, 7, 'normal', '2026-01-07', '2026-01-07', 2),
-(8, 'Chuẩn bị khuyến mãi cuối tuần', 'Setup banner và giá khuyến mãi', NULL, 2, 1, 1, 2, 11, 7, 'high', '2026-01-08', '2026-01-10', 2);
+(8, 'Chuẩn bị khuyến mãi cuối tuần', 'Setup banner và giá khuyến mãi', NULL, 2, 1, 1, 2, 11, 7, 'high', '2026-01-08', '2026-01-10', 2),
+
+-- ============================================
+-- 50 ADDITIONAL SAMPLE TASKS
+-- Status IDs: 7=NOT_YET, 8=ON_PROGRESS, 9=DONE, 10=OVERDUE, 11=REJECT, 12=DRAFT
+-- Current date context: 2026-01-16
+-- ============================================
+
+-- DRAFT tasks (status_id = 12) - No dates or future dates
+(9, 'Chuẩn bị khai trương chi nhánh mới', 'Lên kế hoạch khai trương MaxValu Thủ Đức', NULL, 1, 1, 1, NULL, NULL, 12, 'high', NULL, NULL, 2),
+(10, 'Kế hoạch đào tạo Q1/2026', 'Xây dựng kế hoạch đào tạo nhân viên mới quý 1', NULL, 3, 2, 3, NULL, NULL, 12, 'normal', NULL, NULL, 4),
+(11, 'Chiến dịch marketing Tết 2026', 'Lên ý tưởng chiến dịch marketing dịp Tết', NULL, 2, 1, 1, NULL, NULL, 12, 'high', NULL, NULL, 2),
+(12, 'Báo cáo phân tích bán hàng', 'Draft báo cáo phân tích xu hướng bán hàng', NULL, 1, 2, 4, NULL, NULL, 12, 'normal', NULL, NULL, 2),
+(13, 'Kế hoạch inventory system upgrade', 'Đề xuất nâng cấp hệ thống quản lý kho', NULL, 1, 2, 5, NULL, NULL, 12, 'low', NULL, NULL, 1),
+
+-- ON_PROGRESS/Approve tasks (status_id = 8) - Currently active, waiting for approval
+(14, 'Đề xuất tăng ca dịp Tết', 'Đề xuất lịch tăng ca cho nhân viên dịp Tết Nguyên Đán', NULL, 1, 2, 3, NULL, 4, 8, 'high', '2026-01-10', '2026-01-20', 4),
+(15, 'Phê duyệt ngân sách Q1', 'Xem xét và phê duyệt ngân sách hoạt động Q1/2026', NULL, 1, 2, 4, NULL, 2, 8, 'high', '2026-01-05', '2026-01-25', 2),
+(16, 'Kế hoạch khuyến mãi Valentine', 'Đề xuất chương trình khuyến mãi Valentine 14/2', NULL, 2, 1, 1, 1, 5, 8, 'normal', '2026-01-10', '2026-02-10', 2),
+(17, 'Hợp đồng nhà cung cấp mới', 'Review và approve hợp đồng với NCC rau củ mới', NULL, 1, 2, 1, NULL, 2, 8, 'high', '2026-01-12', '2026-01-22', 2),
+(18, 'Đề xuất mua thiết bị mới', 'Phê duyệt mua 5 tủ lạnh cho khu Fresh Food', NULL, 1, 2, 1, 2, 6, 8, 'normal', '2026-01-08', '2026-01-30', 2),
+(19, 'Kế hoạch tuyển dụng tháng 2', 'Đề xuất tuyển 10 nhân viên part-time', NULL, 1, 2, 3, NULL, 4, 8, 'normal', '2026-01-15', '2026-01-31', 4),
+(20, 'Đề xuất cải tiến quy trình QC', 'Review đề xuất cải tiến quy trình kiểm tra chất lượng', NULL, 1, 2, 2, NULL, 3, 8, 'low', '2026-01-10', '2026-02-15', 3),
+
+-- NOT_YET tasks (status_id = 7) - Future tasks, not started yet
+(21, 'Kiểm kê hàng tồn cuối tháng', 'Kiểm kê toàn bộ hàng hóa tồn kho cuối tháng 1', NULL, 1, 2, 1, 1, 8, 7, 'high', '2026-01-25', '2026-01-31', 2),
+(22, 'Đào tạo HACCP cho nhân viên mới', 'Tổ chức buổi đào tạo HACCP cho 15 nhân viên mới', NULL, 3, 2, 2, NULL, 3, 7, 'high', '2026-01-20', '2026-01-25', 3),
+(23, 'Bảo trì hệ thống điều hòa', 'Lịch bảo trì định kỳ hệ thống HVAC', NULL, 1, 1, 5, 3, 7, 7, 'normal', '2026-01-22', '2026-01-24', 2),
+(24, 'Setup booth khuyến mãi Tết', 'Lắp đặt booth giới thiệu sản phẩm Tết', NULL, 2, 1, 1, 1, 10, 7, 'high', '2026-01-18', '2026-01-20', 2),
+(25, 'Kiểm tra thiết bị PCCC', 'Kiểm tra định kỳ các thiết bị phòng cháy chữa cháy', NULL, 1, 1, 1, 1, 14, 7, 'high', '2026-01-19', '2026-01-19', 2),
+(26, 'Cập nhật bảng giá mới', 'Thay đổi bảng giá theo chính sách mới từ 1/2', NULL, 1, 1, 1, 2, 11, 7, 'normal', '2026-01-28', '2026-02-01', 2),
+(27, 'Họp review KPI tháng 1', 'Tổ chức họp đánh giá KPI tháng 1', NULL, 1, 2, 1, NULL, 2, 7, 'normal', '2026-02-01', '2026-02-03', 2),
+(28, 'Báo cáo an toàn thực phẩm Q1', 'Chuẩn bị báo cáo ATTP gửi cơ quan quản lý', NULL, 1, 2, 2, NULL, 3, 7, 'high', '2026-02-15', '2026-02-28', 3),
+(29, 'Đào tạo sử dụng POS mới', 'Training nhân viên thu ngân sử dụng hệ thống POS mới', NULL, 3, 2, 5, 1, 8, 7, 'normal', '2026-01-25', '2026-01-27', 1),
+(30, 'Kiểm tra định kỳ thang máy', 'Bảo trì và kiểm tra an toàn thang máy', NULL, 1, 1, 1, 3, 14, 7, 'normal', '2026-01-23', '2026-01-23', 2),
+
+-- DONE tasks (status_id = 9) - Completed in the past
+(31, 'Kiểm kê hàng tồn cuối năm 2025', 'Kiểm kê toàn bộ hàng hóa tồn kho cuối năm', NULL, 1, 2, 1, 1, 8, 9, 'high', '2025-12-28', '2025-12-31', 2),
+(32, 'Trang trí Giáng sinh', 'Trang trí cửa hàng dịp Giáng sinh', NULL, 2, 1, 1, 1, 10, 9, 'normal', '2025-12-15', '2025-12-20', 2),
+(33, 'Đào tạo nhân viên cuối năm', 'Buổi đào tạo tổng kết năm 2025', NULL, 3, 2, 3, NULL, 4, 9, 'normal', '2025-12-20', '2025-12-22', 4),
+(34, 'Báo cáo doanh thu năm 2025', 'Tổng hợp báo cáo doanh thu cả năm', NULL, 1, 2, 4, NULL, 2, 9, 'high', '2025-12-26', '2025-12-31', 2),
+(35, 'Bảo trì máy lạnh', 'Bảo trì định kỳ hệ thống máy lạnh', NULL, 1, 1, 5, 2, 12, 9, 'low', '2025-12-10', '2025-12-12', 2),
+(36, 'Vệ sinh tổng kho', 'Tổng vệ sinh kho hàng cuối năm', NULL, 1, 1, 7, 1, 9, 9, 'normal', '2025-12-23', '2025-12-24', 2),
+(37, 'Kiểm tra camera an ninh', 'Rà soát và test tất cả camera', NULL, 1, 1, 1, 3, 14, 9, 'normal', '2026-01-02', '2026-01-03', 2),
+(38, 'Họp định hướng năm mới', 'Họp triển khai kế hoạch năm 2026', NULL, 1, 2, 1, NULL, 2, 9, 'high', '2026-01-02', '2026-01-02', 2),
+(39, 'Cập nhật danh mục sản phẩm', 'Cập nhật danh mục SP trên hệ thống', NULL, 1, 1, 5, NULL, 1, 9, 'normal', '2026-01-03', '2026-01-05', 1),
+(40, 'Kiểm tra nhiệt độ kho lạnh', 'Kiểm tra định kỳ nhiệt độ kho lạnh', NULL, 1, 1, 2, 1, 9, 9, 'high', '2026-01-05', '2026-01-05', 3),
+(41, 'Trưng bày sản phẩm mới', 'Setup khu trưng bày sản phẩm mới tháng 1', NULL, 2, 1, 1, 2, 11, 9, 'normal', '2026-01-08', '2026-01-10', 2),
+(42, 'Đào tạo an toàn lao động', 'Buổi training ATLĐ cho toàn bộ nhân viên', NULL, 3, 2, 3, 1, 4, 9, 'high', '2026-01-06', '2026-01-06', 4),
+(43, 'Backup dữ liệu hệ thống', 'Sao lưu dữ liệu định kỳ đầu tháng', NULL, 1, 1, 5, NULL, 1, 9, 'normal', '2026-01-01', '2026-01-01', 1),
+(44, 'Review hợp đồng lao động', 'Rà soát hợp đồng LĐ hết hạn Q1', NULL, 1, 2, 3, NULL, 4, 9, 'normal', '2026-01-08', '2026-01-12', 4),
+
+-- OVERDUE tasks (status_id = 10) - Past deadline but not completed
+(45, 'Nộp báo cáo thuế tháng 12', 'Hoàn thành và nộp báo cáo thuế GTGT', NULL, 1, 2, 4, NULL, 2, 10, 'urgent', '2026-01-10', '2026-01-15', 2),
+(46, 'Kiểm tra hạn sử dụng hàng Tết', 'Rà soát HSD các mặt hàng Tết nhập sớm', NULL, 1, 1, 2, 1, 9, 10, 'high', '2026-01-05', '2026-01-10', 3),
+(47, 'Cập nhật thông tin NCC', 'Cập nhật thông tin liên hệ nhà cung cấp', NULL, 1, 1, 1, NULL, 2, 10, 'normal', '2026-01-01', '2026-01-07', 2),
+(48, 'Hoàn thành đánh giá nhân viên', 'Đánh giá performance cuối năm', NULL, 1, 2, 3, 2, 6, 10, 'high', '2025-12-28', '2026-01-05', 4),
+(49, 'Sửa chữa kệ hàng hư hỏng', 'Thay thế 3 kệ hàng bị gãy tại khu Dry', NULL, 1, 1, 1, 3, 14, 10, 'normal', '2026-01-03', '2026-01-08', 2),
+(50, 'Gửi feedback khách hàng', 'Tổng hợp và gửi báo cáo feedback KH tháng 12', NULL, 1, 2, 1, 1, 5, 10, 'normal', '2026-01-05', '2026-01-10', 2),
+(51, 'Bổ sung hàng dự trữ Tết', 'Order thêm hàng bánh kẹo cho dịp Tết', NULL, 1, 1, 7, 1, 10, 10, 'high', '2026-01-08', '2026-01-14', 2),
+(52, 'Hoàn thiện tài liệu ISO', 'Cập nhật tài liệu theo chuẩn ISO mới', NULL, 1, 2, 2, NULL, 3, 10, 'high', '2026-01-01', '2026-01-12', 3),
+
+-- REJECT tasks (status_id = 11) - Rejected by approver
+(53, 'Đề xuất tăng lương nhân viên', 'Đề xuất tăng lương 10% cho toàn bộ NV', NULL, 1, 2, 3, NULL, 4, 11, 'high', '2025-12-15', '2025-12-20', 4),
+(54, 'Mua thêm xe đẩy hàng', 'Đề xuất mua 20 xe đẩy mới', NULL, 1, 2, 1, 1, 5, 11, 'normal', '2025-12-20', '2025-12-28', 2),
+(55, 'Thay đổi nhà cung cấp bánh', 'Đề xuất đổi NCC bánh ngọt', NULL, 1, 2, 1, NULL, 2, 11, 'low', '2025-12-18', '2025-12-25', 2),
+(56, 'Tổ chức team building', 'Đề xuất team building cuối năm', NULL, 3, 2, 3, 2, 6, 11, 'low', '2025-12-10', '2025-12-15', 4),
+
+-- More NOT_YET tasks for variety
+(57, 'Chuẩn bị hàng Tết Nguyên Đán', 'Nhập và trưng bày hàng Tết', NULL, 2, 1, 1, 1, 10, 7, 'urgent', '2026-01-20', '2026-01-28', 2),
+(58, 'Đào tạo kỹ năng giao tiếp', 'Training soft skills cho nhân viên', NULL, 3, 2, 3, 3, 13, 7, 'normal', '2026-01-22', '2026-01-24', 4);
 
 -- ============================================
 -- TASK CHECK LIST (Junction)

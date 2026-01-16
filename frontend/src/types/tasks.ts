@@ -1,12 +1,20 @@
-// Task Status Types
-export type TaskStatus = 'NOT_YET' | 'DONE' | 'DRAFT';
-export type HQCheckStatus = 'NOT_YET' | 'DONE' | 'DRAFT';
+// Task Status Types - 5 trạng thái chính
+// 1. DRAFT: Đang tạo task dở, lưu nháp, chưa gửi về store
+// 2. ON_PROGRESS (Approve): Đang gửi đến tài khoản cao hơn để xin approve
+// 3. NOT_YET: Đã gửi về store nhưng store chưa hoàn thành
+// 4. OVERDUE: Đã quá deadline nhưng store chưa hoàn thành
+// 5. DONE: Store đã hoàn thành
+export type TaskStatus = 'DRAFT' | 'ON_PROGRESS' | 'NOT_YET' | 'OVERDUE' | 'DONE' | 'REJECT';
+export type HQCheckStatus = 'DRAFT' | 'ON_PROGRESS' | 'NOT_YET' | 'OVERDUE' | 'DONE' | 'REJECT';
 
 // Status Display Config
-export const STATUS_CONFIG: Record<TaskStatus, { label: string; color: string }> = {
-  NOT_YET: { label: 'Not Yet', color: 'bg-red-100 text-red-700' },
+export const STATUS_CONFIG: Record<TaskStatus, { label: string; color: string; textColor?: string }> = {
+  DRAFT: { label: 'Draft', color: 'bg-gray-100 text-gray-600' },
+  ON_PROGRESS: { label: 'Approve', color: 'bg-green-100 text-green-700' }, // Xanh lá cho người gửi
+  NOT_YET: { label: 'Not Yet', color: 'bg-yellow-100 text-yellow-700' },
+  OVERDUE: { label: 'Overdue', color: 'bg-red-100 text-red-700' },
   DONE: { label: 'Done', color: 'bg-blue-100 text-blue-700' },
-  DRAFT: { label: 'Draft', color: 'bg-green-100 text-green-700' }
+  REJECT: { label: 'Reject', color: 'bg-red-100 text-red-700' },
 };
 
 // Sub Task Interface
