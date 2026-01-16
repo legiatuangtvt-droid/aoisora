@@ -1237,6 +1237,124 @@ last_modified_at TIMESTAMP -- cập nhật mỗi khi edit draft
 | Delete Draft | DELETE /api/v1/tasks/{id} | Xóa draft thủ công |
 | Get Expiring Drafts | GET /api/v1/tasks/expiring | Lấy drafts sắp hết hạn (25-30 days) |
 
+### 12.2 Task Approval Flow
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  TASK APPROVAL FLOW                                             │
+│                                                                 │
+│  📋 STATUS: approve (Đang chờ phê duyệt)                        │
+│     → Task chuyển sang status này sau khi user click Submit     │
+│     → Task được gửi tới người có thẩm quyền phê duyệt          │
+│                                                                 │
+│  👤 XÁC ĐỊNH NGƯỜI PHÊ DUYỆT (Approver):                        │
+│                                                                 │
+│     Nguyên tắc: Cấp trên TRỰC TIẾP trong cơ cấu tổ chức        │
+│                                                                 │
+│     ┌─────────────────────────────────────────────────────────┐ │
+│     │  CƠ CẤU TỔ CHỨC (Job Grade Hierarchy):                  │ │
+│     │                                                         │ │
+│     │  G9 ──► G8 ──► G7 ──► G6 ──► G5 ──► G4 ──► G3 ──► G2   │ │
+│     │  (cao)                                          (thấp)  │ │
+│     │                                                         │ │
+│     │  Team/Department Structure:                             │ │
+│     │  • Mỗi Team/Dept có người đứng đầu (highest grade)      │ │
+│     │  • Approver = cấp trên trực tiếp cùng Team/Dept         │ │
+│     │  • Nếu không có → tìm lên cấp cao hơn trong hierarchy   │ │
+│     └─────────────────────────────────────────────────────────┘ │
+│                                                                 │
+│  🔍 LOGIC TÌM APPROVER:                                         │
+│                                                                 │
+│     1. Xác định Team/Department của user tạo task              │
+│     2. Tìm người có Job Grade cao hơn trong cùng Team/Dept     │
+│     3. Nếu KHÔNG TÌM THẤY (user là cao nhất trong Team/Dept):  │
+│        → Tìm lên cấp cao hơn theo hierarchy tổ chức            │
+│        → Ví dụ: Team không có G4, G5 → tìm G6 quản lý          │
+│                                                                 │
+│     Ví dụ cụ thể:                                               │
+│     ┌─────────────────────────────────────────────────────────┐ │
+│     │  Case 1: G2 tạo task, Team có G3                        │ │
+│     │          → Approver = G3 (cấp trên trực tiếp)           │ │
+│     │                                                         │ │
+│     │  Case 2: G3 tạo task, Team có G4                        │ │
+│     │          → Approver = G4 (cấp trên trực tiếp)           │ │
+│     │                                                         │ │
+│     │  Case 3: G3 tạo task, Team KHÔNG có G4, G5              │ │
+│     │          → Approver = G6 (skip G4, G5 vì không tồn tại) │ │
+│     │                                                         │ │
+│     │  Case 4: G3 là cao nhất trong Team, báo cáo cho Dept    │ │
+│     │          → Approver = Dept Head (G5/G6/...)             │ │
+│     └─────────────────────────────────────────────────────────┘ │
+│                                                                 │
+│  🖥️ UI STATES (Add Task Screen):                                │
+│                                                                 │
+│     A. CREATOR VIEW (người tạo task đang chờ duyệt):           │
+│        ┌─────────────────────────────────────────────────────┐ │
+│        │  • Button "Save as Draft" → DISABLED (gray out)     │ │
+│        │  • Button "Submit" → đổi thành "Approving" (disabled)│ │
+│        │  • Không thể edit nội dung task                      │ │
+│        │  • Hiển thị trạng thái "Waiting for approval"        │ │
+│        └─────────────────────────────────────────────────────┘ │
+│                                                                 │
+│     B. APPROVER VIEW (người phê duyệt):                        │
+│        ┌─────────────────────────────────────────────────────┐ │
+│        │  • Button "Approve" → Phê duyệt task                │ │
+│        │  • Button "Reject" → Từ chối, mở modal nhập lý do   │ │
+│        │  • Có thể xem toàn bộ nội dung task (read-only)     │ │
+│        └─────────────────────────────────────────────────────┘ │
+│                                                                 │
+│  📤 APPROVER ACTIONS:                                           │
+│                                                                 │
+│     1. APPROVE (Phê duyệt):                                    │
+│        → Task status: 'approve' → 'approved'                   │
+│        → Task được publish và hiển thị cho Store users         │
+│        → Không còn tính là draft của user tạo                  │
+│                                                                 │
+│     2. REJECT (Từ chối):                                       │
+│        → Task status: 'approve' → 'draft'                      │
+│        → Task quay về cho user tạo để chỉnh sửa               │
+│        → Vẫn tính vào giới hạn 5 draft/user                   │
+│        → Approver phải ghi lý do từ chối (required)           │
+│                                                                 │
+│  📧 NOTIFICATIONS:                                              │
+│                                                                 │
+│     Khi Submit:                                                │
+│     → Notify Approver: "New task pending approval: [task_name]"│
+│                                                                 │
+│     Khi Approve:                                               │
+│     → Notify Creator: "Your task [task_name] has been approved"│
+│                                                                 │
+│     Khi Reject:                                                │
+│     → Notify Creator: "Your task [task_name] was rejected.     │
+│                        Reason: [rejection_reason]"             │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Approver Lookup Algorithm:**
+
+```
+1. GET user's team_id, department_id, job_grade
+2. FIND users in same team WHERE job_grade > user.job_grade
+3. IF found → SELECT user with MIN(job_grade) as Approver
+4. IF NOT found:
+   a. FIND users in same department WHERE job_grade > user.job_grade
+   b. IF found → SELECT user with MIN(job_grade) as Approver
+5. IF still NOT found:
+   a. FIND in parent organizational unit (Division/Sector)
+   b. Continue up hierarchy until Approver found
+6. FALLBACK: System Admin or designated approval account
+```
+
+**API Endpoints liên quan:**
+
+| Action | Endpoint | Description |
+|--------|----------|-------------|
+| Get Pending Approvals | GET /api/v1/tasks/pending-approval | Lấy tasks cần user phê duyệt |
+| Approve Task | POST /api/v1/tasks/{id}/approve | Phê duyệt task |
+| Reject Task | POST /api/v1/tasks/{id}/reject | Từ chối task (body: reason) |
+| Get Approver | GET /api/v1/users/{id}/approver | Lấy thông tin approver của user |
+
 ---
 
 ## Tham khảo chi tiết

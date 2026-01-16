@@ -15,9 +15,17 @@ interface AddTaskFormProps {
   onTaskLevelsChange: (taskLevels: TaskLevel[]) => void;
   onSaveDraft: (taskLevels: TaskLevel[]) => void;
   onSubmit: (taskLevels: TaskLevel[]) => void;
+  onApprove?: (taskLevels: TaskLevel[]) => void;
+  onReject?: (taskLevels: TaskLevel[], reason: string) => void;
   isSubmitting?: boolean;
   isSavingDraft?: boolean;
   canCreateDraft?: boolean;
+  // Task status for different view modes
+  taskStatus?: 'draft' | 'approve' | 'approved' | 'rejected';
+  // Whether current user is the approver
+  isApprover?: boolean;
+  // Whether current user is the creator viewing their pending approval
+  isCreatorViewingApproval?: boolean;
 }
 
 // Section IDs for accordion
@@ -28,10 +36,47 @@ export default function AddTaskForm({
   onTaskLevelsChange,
   onSaveDraft,
   onSubmit,
+  onApprove,
+  onReject,
   isSubmitting = false,
   isSavingDraft = false,
   canCreateDraft = true,
+  taskStatus = 'draft',
+  isApprover = false,
+  isCreatorViewingApproval = false,
 }: AddTaskFormProps) {
+  // State for reject modal
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
+
+  // Handle reject with reason
+  const handleReject = async () => {
+    if (!rejectReason.trim()) return;
+    setIsRejecting(true);
+    try {
+      await onReject?.(taskLevels, rejectReason);
+      setShowRejectModal(false);
+      setRejectReason('');
+    } finally {
+      setIsRejecting(false);
+    }
+  };
+
+  // Handle approve
+  const handleApprove = async () => {
+    setIsApproving(true);
+    try {
+      await onApprove?.(taskLevels);
+    } finally {
+      setIsApproving(false);
+    }
+  };
+
+  // Determine if form is read-only
+  const isReadOnly = taskStatus === 'approve' || taskStatus === 'approved';
+
   // Use setter function that calls parent callback
   const setTaskLevels = (updater: TaskLevel[] | ((prev: TaskLevel[]) => TaskLevel[])) => {
     if (typeof updater === 'function') {
@@ -307,24 +352,119 @@ export default function AddTaskForm({
         {getTaskLevelsTree()}
       </div>
 
+      {/* Status Banner for Creator viewing approval */}
+      {isCreatorViewingApproval && taskStatus === 'approve' && (
+        <div className="flex items-center gap-3 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+          <svg className="w-5 h-5 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span className="text-sm text-yellow-700 dark:text-yellow-300">
+            Waiting for approval from your leader
+          </span>
+        </div>
+      )}
+
       {/* Footer Actions */}
       <div className="flex items-center justify-end gap-4">
-        <button
-          onClick={() => onSaveDraft(taskLevels)}
-          disabled={isSavingDraft || isSubmitting || !canCreateDraft}
-          title={!canCreateDraft ? 'Draft limit reached. Delete existing drafts to create new ones.' : undefined}
-          className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isSavingDraft ? 'Saving...' : !canCreateDraft ? 'Draft limit reached' : 'Save as draft'}
-        </button>
-        <button
-          onClick={() => onSubmit(taskLevels)}
-          disabled={isSavingDraft || isSubmitting}
-          className="px-6 py-2 bg-pink-600 text-white rounded-lg text-sm font-medium hover:bg-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isSubmitting ? 'Submitting...' : 'Submit'}
-        </button>
+        {/* APPROVER VIEW: Show Reject and Approve buttons */}
+        {isApprover && taskStatus === 'approve' && (
+          <>
+            <button
+              onClick={() => setShowRejectModal(true)}
+              disabled={isRejecting || isApproving}
+              className="px-6 py-2 border border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 rounded-lg text-sm font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Reject
+            </button>
+            <button
+              onClick={handleApprove}
+              disabled={isRejecting || isApproving}
+              className="px-6 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isApproving ? 'Approving...' : 'Approve'}
+            </button>
+          </>
+        )}
+
+        {/* CREATOR VIEW when task is pending approval: Disabled buttons */}
+        {isCreatorViewingApproval && taskStatus === 'approve' && (
+          <>
+            <button
+              disabled
+              className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-500 rounded-lg text-sm font-medium cursor-not-allowed opacity-50"
+            >
+              Save as draft
+            </button>
+            <button
+              disabled
+              className="px-6 py-2 bg-yellow-500 text-white rounded-lg text-sm font-medium cursor-not-allowed opacity-70"
+            >
+              Approving...
+            </button>
+          </>
+        )}
+
+        {/* NORMAL VIEW: Show Save Draft and Submit buttons */}
+        {!isApprover && !isCreatorViewingApproval && taskStatus === 'draft' && (
+          <>
+            <button
+              onClick={() => onSaveDraft(taskLevels)}
+              disabled={isSavingDraft || isSubmitting || !canCreateDraft}
+              title={!canCreateDraft ? 'Draft limit reached. Delete existing drafts to create new ones.' : undefined}
+              className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSavingDraft ? 'Saving...' : !canCreateDraft ? 'Draft limit reached' : 'Save as draft'}
+            </button>
+            <button
+              onClick={() => onSubmit(taskLevels)}
+              disabled={isSavingDraft || isSubmitting}
+              className="px-6 py-2 bg-pink-600 text-white rounded-lg text-sm font-medium hover:bg-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit'}
+            </button>
+          </>
+        )}
       </div>
+
+      {/* Reject Modal */}
+      {showRejectModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              Reject Task
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+              Please provide a reason for rejecting this task. The creator will receive this feedback.
+            </p>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Enter rejection reason..."
+              rows={4}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none"
+            />
+            <div className="flex justify-end gap-3 mt-4">
+              <button
+                onClick={() => {
+                  setShowRejectModal(false);
+                  setRejectReason('');
+                }}
+                disabled={isRejecting}
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReject}
+                disabled={!rejectReason.trim() || isRejecting}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isRejecting ? 'Rejecting...' : 'Confirm Reject'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
