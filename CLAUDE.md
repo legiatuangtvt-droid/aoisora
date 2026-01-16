@@ -1316,6 +1316,29 @@ last_modified_at TIMESTAMP -- cập nhật mỗi khi edit draft
 │        → Vẫn tính vào giới hạn 5 draft/user                   │
 │        → Approver phải ghi lý do từ chối (required)           │
 │                                                                 │
+│  🔄 RESUBMISSION RULES (Gửi lại sau khi bị từ chối):           │
+│                                                                 │
+│     1. MUST EDIT BEFORE RESUBMIT:                              │
+│        → Sau khi bị reject, user PHẢI edit ít nhất 1 field    │
+│        → Không cho phép Submit lại nếu chưa có thay đổi        │
+│        → System track: has_changes_since_rejection flag        │
+│                                                                 │
+│     2. MAXIMUM 3 REJECTION ATTEMPTS:                           │
+│        → Mỗi task chỉ được reject tối đa 3 lần                │
+│        → Sau lần reject thứ 3:                                 │
+│          • Không cho phép Submit nữa                           │
+│          • User chỉ có thể DELETE task                         │
+│          • Button "Submit" → DISABLED                          │
+│          • Hiển thị: "Maximum rejection limit reached.         │
+│            This task can only be deleted."                     │
+│        → rejection_count được track trong database             │
+│                                                                 │
+│     3. REJECTION COUNTER LOGIC:                                │
+│        → rejection_count++ mỗi khi Approver reject             │
+│        → Counter KHÔNG reset khi edit                          │
+│        → Counter KHÔNG reset khi chuyển Approver               │
+│        → Counter chỉ thuộc về task, không phải user            │
+│                                                                 │
 │  📧 NOTIFICATIONS:                                              │
 │                                                                 │
 │     Khi Submit:                                                │
@@ -1354,6 +1377,34 @@ last_modified_at TIMESTAMP -- cập nhật mỗi khi edit draft
 | Approve Task | POST /api/v1/tasks/{id}/approve | Phê duyệt task |
 | Reject Task | POST /api/v1/tasks/{id}/reject | Từ chối task (body: reason) |
 | Get Approver | GET /api/v1/users/{id}/approver | Lấy thông tin approver của user |
+
+**Database Fields cho Resubmission:**
+
+```sql
+-- tasks table
+rejection_count INT DEFAULT 0        -- Đếm số lần bị reject (max 3)
+has_changes_since_rejection BOOLEAN  -- Flag track đã edit sau reject chưa
+last_rejection_reason TEXT           -- Lý do reject gần nhất
+last_rejected_at TIMESTAMP           -- Thời điểm reject gần nhất
+```
+
+**Resubmission Validation Logic:**
+
+```
+ON SUBMIT (sau khi đã bị reject):
+1. CHECK rejection_count >= 3 → BLOCK with error "Maximum rejection limit reached"
+2. CHECK has_changes_since_rejection = false → BLOCK with error "Please edit at least one field before resubmitting"
+3. IF all checks pass → Allow submit, set has_changes_since_rejection = false
+
+ON EDIT (khi task đang ở status 'draft' sau reject):
+→ SET has_changes_since_rejection = true
+
+ON REJECT:
+→ SET rejection_count = rejection_count + 1
+→ SET has_changes_since_rejection = false
+→ SET last_rejection_reason = [reason from approver]
+→ SET last_rejected_at = NOW()
+```
 
 ---
 
