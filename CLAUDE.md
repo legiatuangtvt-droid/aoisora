@@ -1140,16 +1140,18 @@ Chi tiết: `docs/06-deployment/DEPLOY-PA-VIETNAM-HOSTING.md`
 │        → 5 ngày trước khi draft bị xóa (ngày 25-30)             │
 │        → Hiển thị notification cho user                         │
 │        → Trigger: Mỗi lần đăng nhập HOẶC mỗi ngày               │
-│        → Nội dung: "Draft [tên] sẽ bị xóa sau X ngày"           │
+│        → Format: 'Task "{task_name}" will be deleted in X days' │
 │                                                                 │
 │  ⏰ TIMELINE:                                                    │
 │     Day 0  → User tạo/edit draft                                │
-│     Day 25 → Bắt đầu hiển thị warning (còn 5 ngày)              │
-│     Day 26 → Warning: còn 4 ngày                                │
-│     Day 27 → Warning: còn 3 ngày                                │
-│     Day 28 → Warning: còn 2 ngày                                │
-│     Day 29 → Warning: còn 1 ngày                                │
-│     Day 30 → Auto-delete draft                                  │
+│     Day 25 → "Task [name] will be deleted in 5 days"            │
+│     Day 26 → "Task [name] will be deleted in 4 days"            │
+│     Day 27 → "Task [name] will be deleted in 3 days"            │
+│     Day 28 → "Task [name] will be deleted in 2 days"            │
+│     Day 29 → "Task [name] will be deleted in 1 day"             │
+│     Day 30 → Auto-delete + notify:                              │
+│              "Task [name] was automatically deleted due to      │
+│               no edits in the last 30 days"                     │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
