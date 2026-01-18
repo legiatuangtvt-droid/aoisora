@@ -1149,21 +1149,23 @@ Chi tiết: `docs/06-deployment/DEPLOY-PA-VIETNAM-HOSTING.md`
 │              └───────────┘            │                                                    │
 │                    ▲                  ▼                                                    │
 │                    │            ┌───────────┐                                              │
-│                    └── Reject ──┤  APPROVE  │  ◄── Chờ Approver duyệt                      │
-│                                 └─────┬─────┘                                              │
-│                                   Approved                                                 │
-│             ┌─────────────────────────┼─────────────────────────┐                          │
-│             ▼                         ▼                         ▼                          │
-│          FLOW 1                    FLOW 2                    FLOW 3                        │
-│      (Task HQ→Store)           (Template Task)            (Task HQ→HQ)                     │
-│             │                         │                         │                          │
-│             │                         ▼                         │                          │
-│             │                   ┌───────────┐                   │                          │
-│             ├─── Lưu Library ──►│ AVAILABLE │◄── Lưu Library ───┤                          │
-│             │                   └─────┬─────┘                   │                          │
-│             │                     (dispatch)                    │                          │
-│             │                         │                         │                          │
-│             └──────── Gửi Stores ────►┼◄───── Gửi Dep/Team ─────┘                          │
+│                    └── Reject ──┤  APPROVE  │◄─────────────────────────────┐               │
+│                                 └─────┬─────┘                              │               │
+│                                   Approved                                 │               │
+│             ┌─────────────────────────┼─────────────────────────┐          │               │
+│             ▼                         ▼                         ▼          │               │
+│          FLOW 1                    FLOW 2                    FLOW 3        │               │
+│      (Task HQ→Store)           (Template Task)            (Task HQ→HQ)     │               │
+│             │                         │                         │          │               │
+│             │                         ▼                         │          │               │
+│             │                   ┌───────────┐                   │          │               │
+│             ├─── Lưu Library ──►│ AVAILABLE │◄── Lưu Library ───┤          │               │
+│             │                   └─────┬─────┘                   │          │               │
+│             │                     (dispatch)                    │          │               │
+│             │                         │                         │          │               │
+│             └──────── Gửi Stores ────►┼◄───── Gửi Dep/Team ─────┘          │               │
+│                                       │                                    │               │
+│                                       ├───► [Pause] ───────────────────────┘               │
 │                                       │                                                    │
 │  ═════════════════════════════════════╪════════════════════════════════════════════════════│
 │  GIAI ĐOẠN 2: THỰC HIỆN TASK          │(Store/HQ thực hiện - HQ verify)                    │
@@ -1241,6 +1243,16 @@ Chi tiết: `docs/06-deployment/DEPLOY-PA-VIETNAM-HOSTING.md`
 │    → not_yet + today > end_date → overdue                                                  │
 │    → on_progress + today > end_date → overdue                                              │
 │    → done_pending + today > end_date → done (AUTO CONFIRM - lỗi HQ không check kịp)        │
+│                                                                                            │
+│  • PAUSE (Tạm dừng task):                                                                  │
+│    → Chỉ APPROVER có quyền pause (không phải Creator)                                      │
+│    → Áp dụng khi: Task đã gửi về stores (NOT YET, ON PROGRESS)                             │
+│    → Lý do: Phát hiện task có vấn đề, nguy cơ unable cao                                   │
+│    → Kết quả: Task quay về status APPROVE, xóa tất cả store assignments                    │
+│    → Library mark: Đánh dấu task tương ứng trong Library là "had_issues" (đã từng có vấn đề)│
+│    → Tại APPROVE: Approver có thể SỬA thông tin task (vì Approver chịu trách nhiệm         │
+│      về tính khả thi của task, không phải Creator)                                         │
+│    → Sau khi sửa: Approver có thể Approve lại để gửi về stores                             │
 │                                                                                            │
 │  • Receiver = Store (Flow 1) hoặc HQ User (Flow 3)                                         │
 │  • Flow 2: Template lưu AVAILABLE → dispatch sau → theo Flow 1 hoặc 3                      │
@@ -1358,6 +1370,42 @@ Chi tiết: `docs/06-deployment/DEPLOY-PA-VIETNAM-HOSTING.md`
 │      → System tự động chuyển done_pending → done (lỗi HQ không check kịp)                  │
 │    • Khi TẤT CẢ receivers = done hoặc unable → TASK = DONE                                 │
 │    • Nếu có BẤT KỲ receiver = overdue → TASK = OVERDUE                                     │
+│                                                                                            │
+│  ══════════════════════════════════════════════════════════════════════════════════════════│
+│  📌 PAUSE FLOW (Tạm dừng task):                                                            │
+│  ══════════════════════════════════════════════════════════════════════════════════════════│
+│                                                                                            │
+│    Task đang thực hiện          Approver PAUSE            Task quay về APPROVE             │
+│    (NOT YET/ON PROGRESS) ─────► (tạm dừng task) ────────► (Approver có thể sửa)           │
+│                                                                                            │
+│    📋 ĐIỀU KIỆN PAUSE:                                                                     │
+│    • Task status = NOT YET hoặc ON PROGRESS                                                │
+│    • Chưa có store nào = done hoặc done_pending                                            │
+│    • Chỉ APPROVER có quyền (không phải Creator)                                            │
+│                                                                                            │
+│    🔄 KHI PAUSE:                                                                           │
+│    • Task status: NOT YET/ON PROGRESS → APPROVE                                            │
+│    • Xóa tất cả store assignments (reset về trạng thái chưa giao)                          │
+│    • Mark Library: Đánh dấu task tương ứng trong Library là "had_issues"                   │
+│      (để cảnh báo khi dispatch lại trong tương lai)                                        │
+│    • Notify stores đang thực hiện: "Task [name] đã bị tạm dừng"                            │
+│    • Notify Creator: "Task [name] đã bị Approver tạm dừng để điều chỉnh"                   │
+│                                                                                            │
+│    ✏️ TẠI APPROVE (sau khi Pause):                                                         │
+│    • Approver có thể SỬA thông tin task (A. Information, B. Instructions, C. Scope)        │
+│    • Lý do: Approver chịu trách nhiệm về tính khả thi, không phải Creator                  │
+│    • Sau khi sửa xong: Approver click "Approve" để gửi lại về stores                       │
+│                                                                                            │
+│    ⚠️ KHÔNG THỂ PAUSE KHI:                                                                 │
+│    • Có ít nhất 1 store = done_pending (đang chờ HQ check)                                 │
+│    • Có ít nhất 1 store = done (đã hoàn thành)                                             │
+│    • Task status = DONE hoặc OVERDUE                                                       │
+│                                                                                            │
+│    📚 LIBRARY "HAD_ISSUES" FLAG:                                                           │
+│    • Khi task bị Pause, task tương ứng trong Library được đánh dấu had_issues = true       │
+│    • Hiển thị warning icon ⚠️ trong Library list                                           │
+│    • Khi dispatch task có had_issues, hiển thị cảnh báo:                                   │
+│      "This task template was paused before due to issues. Review carefully before sending."│
 │                                                                                            │
 └────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
