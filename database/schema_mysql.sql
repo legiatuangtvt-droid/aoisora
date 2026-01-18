@@ -201,6 +201,10 @@ CREATE TABLE `manuals` (
 -- Tasks Table
 CREATE TABLE `tasks` (
     `task_id` INT AUTO_INCREMENT PRIMARY KEY,
+    -- Source tracking (3 creation flows)
+    `source` ENUM('task_list', 'library', 'todo_task') DEFAULT 'task_list',
+    `receiver_type` ENUM('store', 'hq_user') DEFAULT 'store',
+    -- Basic task info
     `task_name` VARCHAR(500) NOT NULL,
     `task_description` TEXT,
     `manual_id` INT NULL,
@@ -222,9 +226,24 @@ CREATE TABLE `tasks` (
     `completed_time` TIMESTAMP NULL,
     `comment` TEXT,
     `attachments` JSON,
+    -- Creator and Approver
     `created_staff_id` INT NULL,
+    `approver_id` INT NULL,
+    -- Rejection tracking (max 3 rejections allowed)
+    `rejection_count` INT DEFAULT 0,
+    `has_changes_since_rejection` TINYINT(1) DEFAULT 0,
+    `last_rejection_reason` TEXT NULL,
+    `last_rejected_at` TIMESTAMP NULL,
+    `last_rejected_by` INT NULL,
+    -- Library task link (for dispatched tasks)
+    `library_task_id` INT NULL,
+    -- Workflow timestamps
+    `submitted_at` TIMESTAMP NULL,
+    `approved_at` TIMESTAMP NULL,
+    -- Audit timestamps
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    -- Foreign Keys
     CONSTRAINT `fk_tasks_manual` FOREIGN KEY (`manual_id`) REFERENCES `manuals`(`manual_id`) ON DELETE SET NULL,
     CONSTRAINT `fk_tasks_task_type` FOREIGN KEY (`task_type_id`) REFERENCES `code_master`(`code_master_id`),
     CONSTRAINT `fk_tasks_response_type` FOREIGN KEY (`response_type_id`) REFERENCES `code_master`(`code_master_id`),
@@ -233,7 +252,12 @@ CREATE TABLE `tasks` (
     CONSTRAINT `fk_tasks_assigned_staff` FOREIGN KEY (`assigned_staff_id`) REFERENCES `staff`(`staff_id`) ON DELETE SET NULL,
     CONSTRAINT `fk_tasks_do_staff` FOREIGN KEY (`do_staff_id`) REFERENCES `staff`(`staff_id`) ON DELETE SET NULL,
     CONSTRAINT `fk_tasks_status` FOREIGN KEY (`status_id`) REFERENCES `code_master`(`code_master_id`),
-    CONSTRAINT `fk_tasks_created_staff` FOREIGN KEY (`created_staff_id`) REFERENCES `staff`(`staff_id`)
+    CONSTRAINT `fk_tasks_created_staff` FOREIGN KEY (`created_staff_id`) REFERENCES `staff`(`staff_id`),
+    CONSTRAINT `fk_tasks_approver` FOREIGN KEY (`approver_id`) REFERENCES `staff`(`staff_id`) ON DELETE SET NULL,
+    CONSTRAINT `fk_tasks_last_rejected_by` FOREIGN KEY (`last_rejected_by`) REFERENCES `staff`(`staff_id`) ON DELETE SET NULL,
+    -- Indexes
+    INDEX `idx_tasks_source_status_created` (`source`, `status_id`, `created_staff_id`),
+    INDEX `idx_tasks_approver_status` (`approver_id`, `status_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Check Lists Table

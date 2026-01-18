@@ -14,6 +14,10 @@ class Task extends Model
     const UPDATED_AT = 'updated_at';
 
     protected $fillable = [
+        // Source tracking (3 creation flows)
+        'source',
+        'receiver_type',
+        // Basic task info
         'task_name',
         'task_description',
         'manual_id',
@@ -35,8 +39,39 @@ class Task extends Model
         'completed_time',
         'comment',
         'attachments',
+        // Creator and Approver
         'created_staff_id',
+        'approver_id',
+        // Rejection tracking
+        'rejection_count',
+        'has_changes_since_rejection',
+        'last_rejection_reason',
+        'last_rejected_at',
+        'last_rejected_by',
+        // Library task link
+        'library_task_id',
+        // Workflow timestamps
+        'submitted_at',
+        'approved_at',
     ];
+
+    /**
+     * Valid source values for task creation flows
+     */
+    const SOURCE_TASK_LIST = 'task_list';
+    const SOURCE_LIBRARY = 'library';
+    const SOURCE_TODO_TASK = 'todo_task';
+
+    /**
+     * Valid receiver type values
+     */
+    const RECEIVER_TYPE_STORE = 'store';
+    const RECEIVER_TYPE_HQ_USER = 'hq_user';
+
+    /**
+     * Maximum number of rejections allowed
+     */
+    const MAX_REJECTIONS = 3;
 
     protected $casts = [
         'start_date' => 'date',
@@ -47,6 +82,14 @@ class Task extends Model
         'is_repeat' => 'boolean',
         'repeat_config' => 'array',
         'attachments' => 'array',
+        // Rejection tracking
+        'rejection_count' => 'integer',
+        'has_changes_since_rejection' => 'boolean',
+        'last_rejected_at' => 'datetime',
+        // Workflow timestamps
+        'submitted_at' => 'datetime',
+        'approved_at' => 'datetime',
+        // Audit timestamps
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -91,6 +134,21 @@ class Task extends Model
         return $this->belongsTo(Staff::class, 'created_staff_id', 'staff_id');
     }
 
+    public function approver()
+    {
+        return $this->belongsTo(Staff::class, 'approver_id', 'staff_id');
+    }
+
+    public function lastRejectedBy()
+    {
+        return $this->belongsTo(Staff::class, 'last_rejected_by', 'staff_id');
+    }
+
+    public function libraryTask()
+    {
+        return $this->belongsTo(TaskLibrary::class, 'library_task_id', 'task_library_id');
+    }
+
     public function manual()
     {
         return $this->belongsTo(ManualDocument::class, 'manual_id', 'document_id');
@@ -100,5 +158,107 @@ class Task extends Model
     {
         return $this->belongsToMany(CheckList::class, 'task_check_list', 'task_id', 'check_list_id')
             ->withPivot('check_status', 'completed_at', 'completed_by', 'notes');
+    }
+
+    // ============================================
+    // Helper Methods for Draft & Approval Flow
+    // ============================================
+
+    /**
+     * Check if task can be submitted (validation passed)
+     */
+    public function canSubmit(): bool
+    {
+        // Cannot submit if already submitted or approved
+        if ($this->submitted_at !== null) {
+            return false;
+        }
+
+        // Cannot submit if max rejections reached
+        if ($this->rejection_count >= self::MAX_REJECTIONS) {
+            return false;
+        }
+
+        // If was rejected, must have changes before resubmit
+        if ($this->rejection_count > 0 && !$this->has_changes_since_rejection) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if max rejection limit reached
+     */
+    public function isMaxRejectionsReached(): bool
+    {
+        return $this->rejection_count >= self::MAX_REJECTIONS;
+    }
+
+    /**
+     * Check if task is from Task List flow
+     */
+    public function isFromTaskList(): bool
+    {
+        return $this->source === self::SOURCE_TASK_LIST;
+    }
+
+    /**
+     * Check if task is from Library flow
+     */
+    public function isFromLibrary(): bool
+    {
+        return $this->source === self::SOURCE_LIBRARY;
+    }
+
+    /**
+     * Check if task is from To Do Task flow
+     */
+    public function isFromTodoTask(): bool
+    {
+        return $this->source === self::SOURCE_TODO_TASK;
+    }
+
+    /**
+     * Check if task receiver is Store
+     */
+    public function isForStore(): bool
+    {
+        return $this->receiver_type === self::RECEIVER_TYPE_STORE;
+    }
+
+    /**
+     * Check if task receiver is HQ User
+     */
+    public function isForHQUser(): bool
+    {
+        return $this->receiver_type === self::RECEIVER_TYPE_HQ_USER;
+    }
+
+    /**
+     * Scope: Filter by source (creation flow)
+     */
+    public function scopeBySource($query, string $source)
+    {
+        return $query->where('source', $source);
+    }
+
+    /**
+     * Scope: Get drafts for a specific user and source
+     */
+    public function scopeDraftsFor($query, int $staffId, string $source, int $draftStatusId)
+    {
+        return $query->where('created_staff_id', $staffId)
+            ->where('source', $source)
+            ->where('status_id', $draftStatusId);
+    }
+
+    /**
+     * Scope: Get tasks pending approval for an approver
+     */
+    public function scopePendingApprovalFor($query, int $approverId, int $approveStatusId)
+    {
+        return $query->where('approver_id', $approverId)
+            ->where('status_id', $approveStatusId);
     }
 }
