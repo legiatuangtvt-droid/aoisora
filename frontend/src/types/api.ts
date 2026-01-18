@@ -170,6 +170,14 @@ export interface Task {
   created_staff_id: number | null;
   created_at: string;
   updated_at: string;
+  // Approval workflow fields
+  source?: string | null;
+  approved_by?: number | null;
+  approved_at?: string | null;
+  rejection_count?: number;
+  has_changes_since_rejection?: boolean;
+  last_rejection_reason?: string | null;
+  last_rejected_at?: string | null;
   // Relationships
   manual?: Manual;
   task_type?: CodeMaster;
@@ -180,6 +188,7 @@ export interface Task {
   assigned_staff?: Staff;
   do_staff?: Staff;
   created_staff?: Staff;
+  approver?: Staff;
   checklists?: TaskCheckList[];
 }
 

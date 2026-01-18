@@ -264,9 +264,14 @@ export default function TaskListPage() {
     setExpandedRows(expandedRows === taskId ? null : taskId);
   };
 
-  // Navigate to task detail page
-  const handleRowClick = (taskId: string) => {
-    router.push(`/tasks/detail?id=${taskId}`);
+  // Navigate to task detail page or edit page (for drafts)
+  const handleRowClick = (task: TaskGroup) => {
+    // If task is DRAFT and current user is the creator, navigate to edit page
+    if (task.status === 'DRAFT' && task.createdStaffId === currentUser.staff_id) {
+      router.push(`/tasks/${task.id}/edit`);
+    } else {
+      router.push(`/tasks/detail?id=${task.id}`);
+    }
   };
 
   // Apply filters handler
@@ -501,7 +506,7 @@ export default function TaskListPage() {
                       {/* Parent Row */}
                       <tr
                         className="hover:bg-gray-50 cursor-pointer"
-                        onClick={() => handleRowClick(task.id)}
+                        onClick={() => handleRowClick(task)}
                       >
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-center border-r border-gray-200">
                           {task.no}
@@ -558,7 +563,7 @@ export default function TaskListPage() {
                             <StatusPill status={task.status} />
                           </div>
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm border-r border-gray-200">
                           <div className="flex items-center justify-center">
                             <StatusPill status={task.hqCheck} />
                           </div>
