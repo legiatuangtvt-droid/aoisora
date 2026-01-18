@@ -51,7 +51,7 @@ Route::prefix('v1')->group(function () {
 
     // Public read-only routes (for listing/browsing)
     Route::get('tasks', [TaskController::class, 'index']);
-    Route::get('tasks/{task}', [TaskController::class, 'show']);
+    Route::get('tasks/{task}', [TaskController::class, 'show'])->where('task', '[0-9]+');
     Route::get('stores', [StoreController::class, 'index']);
     Route::get('stores/{store}', [StoreController::class, 'show']);
     Route::get('regions', [RegionController::class, 'index']);
@@ -122,11 +122,17 @@ Route::prefix('v1')->group(function () {
 
         // Tasks (only write operations - read operations are public)
         Route::post('tasks', [TaskController::class, 'store']);
+        Route::get('tasks-draft-info', [TaskController::class, 'getDraftInfo']);
+        Route::get('tasks/pending-approval', [TaskController::class, 'pendingApproval']);  // Must be before {task} routes
         Route::put('tasks/{task}', [TaskController::class, 'update']);
         Route::delete('tasks/{task}', [TaskController::class, 'destroy']);
         Route::put('tasks/{task}/status', [TaskController::class, 'updateStatus']);
         Route::get('tasks/{task}/checklists', [TaskController::class, 'getChecklists']);
-        Route::get('tasks-draft-info', [TaskController::class, 'getDraftInfo']);
+
+        // Task Approval Flow
+        Route::post('tasks/{task}/submit', [TaskController::class, 'submit']);
+        Route::post('tasks/{task}/approve', [TaskController::class, 'approve']);
+        Route::post('tasks/{task}/reject', [TaskController::class, 'reject']);
 
         // Checklists
         Route::apiResource('checklists', CheckListController::class);

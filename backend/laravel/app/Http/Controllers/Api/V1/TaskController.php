@@ -4,21 +4,26 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Task;
+use App\Models\Staff;
 use App\Models\CodeMaster;
 use App\Events\TaskUpdated;
 use App\Traits\HasJobGradePermissions;
 use Illuminate\Http\Request;
 use Spatie\QueryBuilder\QueryBuilder;
 use Spatie\QueryBuilder\AllowedFilter;
+use Carbon\Carbon;
 
 class TaskController extends Controller
 {
     use HasJobGradePermissions;
 
     /**
-     * Status ID for DRAFT in code_master table
+     * Status IDs from code_master table
      */
     const DRAFT_STATUS_ID = 12;
+    const APPROVE_STATUS_ID = 13;      // Pending approval
+    const APPROVED_STATUS_ID = 14;     // Approved
+    const REJECTED_STATUS_ID = 15;     // Rejected (transitions back to draft)
 
     /**
      * Maximum number of drafts allowed per HQ user
@@ -94,27 +99,34 @@ class TaskController extends Controller
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date',
             'priority' => 'nullable|string|in:low,normal,high,urgent',
+            'source' => 'nullable|string|in:task_list,library,todo_task',
+            'receiver_type' => 'nullable|string|in:store,hq_user',
         ]);
 
         $user = $request->user();
         $statusId = $request->input('status_id', self::DRAFT_STATUS_ID);
+        $source = $request->input('source', Task::SOURCE_TASK_LIST);
 
-        // Check draft limit if creating as DRAFT
+        // Check draft limit if creating as DRAFT (limit is per source)
         if ($statusId == self::DRAFT_STATUS_ID) {
-            $draftLimitCheck = $this->checkDraftLimit($user->staff_id);
+            $draftLimitCheck = $this->checkDraftLimit($user->staff_id, $source);
             if (!$draftLimitCheck['allowed']) {
                 return response()->json([
                     'message' => 'Draft limit exceeded',
                     'error' => $draftLimitCheck['message'],
                     'current_drafts' => $draftLimitCheck['current_count'],
                     'max_drafts' => self::MAX_DRAFTS_PER_USER,
+                    'source' => $source,
                 ], 422);
             }
         }
 
         $task = Task::create(array_merge(
             $request->all(),
-            ['created_staff_id' => $user->staff_id]
+            [
+                'created_staff_id' => $user->staff_id,
+                'source' => $source,
+            ]
         ));
 
         // Broadcast task created event
@@ -144,21 +156,30 @@ class TaskController extends Controller
 
         $user = $request->user();
         $newStatusId = $request->input('status_id');
+        $source = $task->source ?? Task::SOURCE_TASK_LIST;
 
         // Check draft limit if changing status TO DRAFT (and it wasn't already DRAFT)
         if ($newStatusId == self::DRAFT_STATUS_ID && $task->status_id != self::DRAFT_STATUS_ID) {
-            $draftLimitCheck = $this->checkDraftLimit($user->staff_id);
+            $draftLimitCheck = $this->checkDraftLimit($user->staff_id, $source);
             if (!$draftLimitCheck['allowed']) {
                 return response()->json([
                     'message' => 'Draft limit exceeded',
                     'error' => $draftLimitCheck['message'],
                     'current_drafts' => $draftLimitCheck['current_count'],
                     'max_drafts' => self::MAX_DRAFTS_PER_USER,
+                    'source' => $source,
                 ], 422);
             }
         }
 
-        $task->update($request->all());
+        $updateData = $request->all();
+
+        // If task was rejected and user is editing, set has_changes_since_rejection flag
+        if ($task->rejection_count > 0 && $task->status_id == self::DRAFT_STATUS_ID) {
+            $updateData['has_changes_since_rejection'] = true;
+        }
+
+        $task->update($updateData);
 
         // Broadcast task updated event
         broadcast(new TaskUpdated($task, 'updated'))->toOthers();
@@ -256,42 +277,63 @@ class TaskController extends Controller
     }
 
     /**
-     * Get current user's draft count and limit info
+     * Get current user's draft count and limit info per source
      */
     public function getDraftInfo(Request $request)
     {
         $user = $request->user();
         $staffId = $user->staff_id;
 
-        $currentDrafts = Task::where('status_id', self::DRAFT_STATUS_ID)
-            ->where('created_staff_id', $staffId)
-            ->count();
+        // Get counts per source (including pending approval tasks)
+        $sources = [Task::SOURCE_TASK_LIST, Task::SOURCE_LIBRARY, Task::SOURCE_TODO_TASK];
+        $bySource = [];
+
+        foreach ($sources as $source) {
+            $count = Task::whereIn('status_id', [self::DRAFT_STATUS_ID, self::APPROVE_STATUS_ID])
+                ->where('created_staff_id', $staffId)
+                ->where('source', $source)
+                ->count();
+
+            $bySource[$source] = [
+                'current_drafts' => $count,
+                'max_drafts' => self::MAX_DRAFTS_PER_USER,
+                'remaining_drafts' => max(0, self::MAX_DRAFTS_PER_USER - $count),
+                'can_create_draft' => $count < self::MAX_DRAFTS_PER_USER,
+            ];
+        }
+
+        // Total across all sources
+        $totalDrafts = array_sum(array_column($bySource, 'current_drafts'));
 
         return response()->json([
-            'current_drafts' => $currentDrafts,
-            'max_drafts' => self::MAX_DRAFTS_PER_USER,
-            'remaining_drafts' => max(0, self::MAX_DRAFTS_PER_USER - $currentDrafts),
-            'can_create_draft' => $currentDrafts < self::MAX_DRAFTS_PER_USER,
+            'total_drafts' => $totalDrafts,
+            'max_drafts_per_source' => self::MAX_DRAFTS_PER_USER,
+            'by_source' => $bySource,
         ]);
     }
 
     /**
-     * Check if user can create more drafts
+     * Check if user can create more drafts for a specific source
      *
      * @param int $staffId
+     * @param string $source - task_list, library, or todo_task
      * @return array
      */
-    private function checkDraftLimit(int $staffId): array
+    private function checkDraftLimit(int $staffId, string $source = Task::SOURCE_TASK_LIST): array
     {
-        $currentDraftCount = Task::where('status_id', self::DRAFT_STATUS_ID)
+        // Count drafts AND pending approval tasks (both count toward limit)
+        $currentDraftCount = Task::whereIn('status_id', [self::DRAFT_STATUS_ID, self::APPROVE_STATUS_ID])
             ->where('created_staff_id', $staffId)
+            ->where('source', $source)
             ->count();
+
+        $sourceLabel = $this->getSourceLabel($source);
 
         if ($currentDraftCount >= self::MAX_DRAFTS_PER_USER) {
             return [
                 'allowed' => false,
                 'current_count' => $currentDraftCount,
-                'message' => "You have reached the maximum limit of " . self::MAX_DRAFTS_PER_USER . " drafts. Please complete or delete existing drafts before creating new ones.",
+                'message' => "You have reached the maximum limit of " . self::MAX_DRAFTS_PER_USER . " drafts for {$sourceLabel}. Please complete or delete existing drafts before creating new ones.",
             ];
         }
 
@@ -300,5 +342,260 @@ class TaskController extends Controller
             'current_count' => $currentDraftCount,
             'message' => null,
         ];
+    }
+
+    /**
+     * Get human-readable label for source
+     */
+    private function getSourceLabel(string $source): string
+    {
+        return match ($source) {
+            Task::SOURCE_TASK_LIST => 'Task List',
+            Task::SOURCE_LIBRARY => 'Library Tasks',
+            Task::SOURCE_TODO_TASK => 'To Do Tasks',
+            default => 'Tasks',
+        };
+    }
+
+    /**
+     * Find the appropriate approver for a task based on creator's hierarchy
+     *
+     * @param Staff $creator
+     * @return Staff|null
+     */
+    private function findApprover(Staff $creator): ?Staff
+    {
+        // First, try to find direct line manager
+        if ($creator->line_manager_id) {
+            return Staff::find($creator->line_manager_id);
+        }
+
+        // If no line manager, find someone with higher job grade in same team/department
+        $jobGrade = $creator->job_grade;
+
+        // Try same team first
+        if ($creator->team_id) {
+            $approver = Staff::where('team_id', $creator->team_id)
+                ->where('job_grade', '>', $jobGrade)
+                ->orderBy('job_grade', 'asc')
+                ->first();
+
+            if ($approver) {
+                return $approver;
+            }
+        }
+
+        // Try same department
+        if ($creator->department_id) {
+            $approver = Staff::where('department_id', $creator->department_id)
+                ->where('job_grade', '>', $jobGrade)
+                ->orderBy('job_grade', 'asc')
+                ->first();
+
+            if ($approver) {
+                return $approver;
+            }
+        }
+
+        // Fallback: find any staff with higher grade (system admin level)
+        return Staff::where('job_grade', '>', $jobGrade)
+            ->orderBy('job_grade', 'asc')
+            ->first();
+    }
+
+    /**
+     * Submit task for approval
+     *
+     * POST /api/v1/tasks/{id}/submit
+     */
+    public function submit(Request $request, $id)
+    {
+        $task = Task::findOrFail($id);
+        $user = $request->user();
+
+        // Only creator can submit
+        if ($task->created_staff_id !== $user->staff_id) {
+            return response()->json([
+                'message' => 'Unauthorized',
+                'error' => 'Only the task creator can submit for approval.',
+            ], 403);
+        }
+
+        // Must be in DRAFT status
+        if ($task->status_id !== self::DRAFT_STATUS_ID) {
+            return response()->json([
+                'message' => 'Invalid status',
+                'error' => 'Only draft tasks can be submitted for approval.',
+            ], 422);
+        }
+
+        // Check if max rejections reached
+        if ($task->isMaxRejectionsReached()) {
+            return response()->json([
+                'message' => 'Maximum rejections reached',
+                'error' => 'This task has been rejected ' . Task::MAX_REJECTIONS . ' times and cannot be resubmitted. Please delete and create a new task.',
+            ], 422);
+        }
+
+        // If task was previously rejected, must have changes
+        if ($task->rejection_count > 0 && !$task->has_changes_since_rejection) {
+            return response()->json([
+                'message' => 'Changes required',
+                'error' => 'Please make changes to the task before resubmitting.',
+            ], 422);
+        }
+
+        // Find approver
+        $creator = Staff::find($user->staff_id);
+        $approver = $this->findApprover($creator);
+
+        if (!$approver) {
+            return response()->json([
+                'message' => 'No approver found',
+                'error' => 'Could not find an appropriate approver for this task.',
+            ], 422);
+        }
+
+        // Update task
+        $task->update([
+            'status_id' => self::APPROVE_STATUS_ID,
+            'approver_id' => $approver->staff_id,
+            'submitted_at' => Carbon::now(),
+            'has_changes_since_rejection' => false,
+        ]);
+
+        // Broadcast event
+        broadcast(new TaskUpdated($task, 'submitted'))->toOthers();
+
+        return response()->json([
+            'message' => 'Task submitted for approval',
+            'task' => $task->fresh(['approver']),
+            'approver' => [
+                'id' => $approver->staff_id,
+                'name' => $approver->first_name . ' ' . $approver->last_name,
+            ],
+        ]);
+    }
+
+    /**
+     * Approve a task
+     *
+     * POST /api/v1/tasks/{id}/approve
+     */
+    public function approve(Request $request, $id)
+    {
+        $task = Task::findOrFail($id);
+        $user = $request->user();
+
+        // Only assigned approver can approve
+        if ($task->approver_id !== $user->staff_id) {
+            return response()->json([
+                'message' => 'Unauthorized',
+                'error' => 'Only the assigned approver can approve this task.',
+            ], 403);
+        }
+
+        // Must be in APPROVE status (pending approval)
+        if ($task->status_id !== self::APPROVE_STATUS_ID) {
+            return response()->json([
+                'message' => 'Invalid status',
+                'error' => 'Only tasks pending approval can be approved.',
+            ], 422);
+        }
+
+        $request->validate([
+            'comment' => 'nullable|string|max:1000',
+        ]);
+
+        // Update task
+        $task->update([
+            'status_id' => self::APPROVED_STATUS_ID,
+            'approved_at' => Carbon::now(),
+            'comment' => $request->input('comment'),
+        ]);
+
+        // Broadcast event
+        broadcast(new TaskUpdated($task, 'approved'))->toOthers();
+
+        return response()->json([
+            'message' => 'Task approved successfully',
+            'task' => $task->fresh(),
+        ]);
+    }
+
+    /**
+     * Reject a task
+     *
+     * POST /api/v1/tasks/{id}/reject
+     */
+    public function reject(Request $request, $id)
+    {
+        $task = Task::findOrFail($id);
+        $user = $request->user();
+
+        // Only assigned approver can reject
+        if ($task->approver_id !== $user->staff_id) {
+            return response()->json([
+                'message' => 'Unauthorized',
+                'error' => 'Only the assigned approver can reject this task.',
+            ], 403);
+        }
+
+        // Must be in APPROVE status (pending approval)
+        if ($task->status_id !== self::APPROVE_STATUS_ID) {
+            return response()->json([
+                'message' => 'Invalid status',
+                'error' => 'Only tasks pending approval can be rejected.',
+            ], 422);
+        }
+
+        $request->validate([
+            'reason' => 'required|string|max:1000',
+        ]);
+
+        $newRejectionCount = $task->rejection_count + 1;
+
+        // Update task - back to DRAFT status
+        $task->update([
+            'status_id' => self::DRAFT_STATUS_ID,
+            'rejection_count' => $newRejectionCount,
+            'has_changes_since_rejection' => false,
+            'last_rejection_reason' => $request->input('reason'),
+            'last_rejected_at' => Carbon::now(),
+            'last_rejected_by' => $user->staff_id,
+        ]);
+
+        // Broadcast event
+        broadcast(new TaskUpdated($task, 'rejected'))->toOthers();
+
+        $canResubmit = $newRejectionCount < Task::MAX_REJECTIONS;
+
+        return response()->json([
+            'message' => 'Task rejected',
+            'task' => $task->fresh(['lastRejectedBy']),
+            'rejection_count' => $newRejectionCount,
+            'can_resubmit' => $canResubmit,
+            'message_for_creator' => $canResubmit
+                ? 'Please review the feedback and make changes before resubmitting.'
+                : 'Maximum rejection limit reached. This task can only be deleted.',
+        ]);
+    }
+
+    /**
+     * Get tasks pending approval for current user
+     *
+     * GET /api/v1/tasks/pending-approval
+     */
+    public function pendingApproval(Request $request)
+    {
+        $user = $request->user();
+
+        $tasks = Task::where('approver_id', $user->staff_id)
+            ->where('status_id', self::APPROVE_STATUS_ID)
+            ->with(['createdBy', 'department', 'taskType', 'status'])
+            ->orderBy('submitted_at', 'asc')
+            ->paginate($request->get('per_page', 20));
+
+        return response()->json($tasks);
     }
 }
