@@ -370,16 +370,85 @@ export async function deleteTask(id: number): Promise<{ message: string }> {
   });
 }
 
-// Draft Info
-export interface DraftInfo {
+// Draft Info (per source)
+export interface DraftInfoBySource {
   current_drafts: number;
   max_drafts: number;
   remaining_drafts: number;
   can_create_draft: boolean;
 }
 
+export interface DraftInfo {
+  total_drafts: number;
+  max_drafts_per_source: number;
+  by_source: {
+    task_list: DraftInfoBySource;
+    library: DraftInfoBySource;
+    todo_task: DraftInfoBySource;
+  };
+}
+
 export async function getDraftInfo(): Promise<DraftInfo> {
   return fetchApi<DraftInfo>('/tasks-draft-info');
+}
+
+// Task Approval Workflow APIs
+export interface SubmitTaskResponse {
+  message: string;
+  task: Task;
+  approver: {
+    id: number;
+    name: string;
+  };
+}
+
+export interface ApproveTaskResponse {
+  message: string;
+  task: Task;
+}
+
+export interface RejectTaskResponse {
+  message: string;
+  task: Task;
+  rejection_count: number;
+  can_resubmit: boolean;
+  message_for_creator: string;
+}
+
+export async function submitTask(taskId: number): Promise<SubmitTaskResponse> {
+  return fetchApi<SubmitTaskResponse>(`/tasks/${taskId}/submit`, {
+    method: 'POST',
+  });
+}
+
+export async function approveTask(taskId: number, comment?: string): Promise<ApproveTaskResponse> {
+  return fetchApi<ApproveTaskResponse>(`/tasks/${taskId}/approve`, {
+    method: 'POST',
+    body: JSON.stringify({ comment }),
+  });
+}
+
+export async function rejectTask(taskId: number, reason: string): Promise<RejectTaskResponse> {
+  return fetchApi<RejectTaskResponse>(`/tasks/${taskId}/reject`, {
+    method: 'POST',
+    body: JSON.stringify({ reason }),
+  });
+}
+
+export async function getPendingApprovals(params?: {
+  page?: number;
+  per_page?: number;
+}): Promise<PaginatedTaskResponse> {
+  const searchParams = new URLSearchParams();
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        searchParams.append(key, String(value));
+      }
+    });
+  }
+  const query = searchParams.toString();
+  return fetchApi<PaginatedTaskResponse>(`/tasks/pending-approval${query ? `?${query}` : ''}`);
 }
 
 // Task Checklists

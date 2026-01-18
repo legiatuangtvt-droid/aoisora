@@ -12,6 +12,7 @@ interface ScopeSectionProps {
   storeLeaderOptions: DropdownOption[];
   staffOptions: DropdownOption[];
   errors?: Record<string, string>;
+  disabled?: boolean;
 }
 
 export default function ScopeSection({
@@ -24,8 +25,10 @@ export default function ScopeSection({
   storeLeaderOptions,
   staffOptions,
   errors = {},
+  disabled = false,
 }: ScopeSectionProps) {
   const handleChange = (field: keyof TaskScope, value: string) => {
+    if (disabled) return;
     const newData = { ...data, [field]: value };
 
     // Cascade logic: reset child dropdowns when parent changes
@@ -58,7 +61,8 @@ export default function ScopeSection({
         <select
           value={data.regionId}
           onChange={(e) => handleChange('regionId', e.target.value)}
-          className={`flex-1 px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 ${
+          disabled={disabled}
+          className={`flex-1 px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
             errors.regionId
               ? 'border-red-500 focus:ring-red-500'
               : 'border-gray-300 dark:border-gray-600'
@@ -81,7 +85,7 @@ export default function ScopeSection({
         <select
           value={data.zoneId}
           onChange={(e) => handleChange('zoneId', e.target.value)}
-          disabled={!data.regionId}
+          disabled={disabled || !data.regionId}
           className={`flex-1 px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
             errors.zoneId
               ? 'border-red-500 focus:ring-red-500'
@@ -105,7 +109,7 @@ export default function ScopeSection({
         <select
           value={data.areaId}
           onChange={(e) => handleChange('areaId', e.target.value)}
-          disabled={!data.zoneId}
+          disabled={disabled || !data.zoneId}
           className={`flex-1 px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
             errors.areaId
               ? 'border-red-500 focus:ring-red-500'
@@ -129,7 +133,7 @@ export default function ScopeSection({
         <select
           value={data.storeId}
           onChange={(e) => handleChange('storeId', e.target.value)}
-          disabled={!data.areaId}
+          disabled={disabled || !data.areaId}
           className={`flex-1 px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
             errors.storeId
               ? 'border-red-500 focus:ring-red-500'
@@ -153,7 +157,8 @@ export default function ScopeSection({
         <select
           value={data.storeLeaderId}
           onChange={(e) => handleChange('storeLeaderId', e.target.value)}
-          className="flex-1 px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
+          disabled={disabled}
+          className="flex-1 px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <option value=""></option>
           {storeLeaderOptions.map((option) => (
@@ -172,7 +177,8 @@ export default function ScopeSection({
         <select
           value={data.specificStaffId}
           onChange={(e) => handleChange('specificStaffId', e.target.value)}
-          className="flex-1 px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
+          disabled={disabled}
+          className="flex-1 px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <option value=""></option>
           {staffOptions.map((option) => (

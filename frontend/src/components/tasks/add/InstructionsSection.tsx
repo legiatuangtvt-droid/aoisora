@@ -8,6 +8,7 @@ interface InstructionsSectionProps {
   onChange: (data: TaskInstructions) => void;
   taskTypeOptions: DropdownOption[];
   errors?: Record<string, string>;
+  disabled?: boolean;
 }
 
 export default function InstructionsSection({
@@ -15,10 +16,12 @@ export default function InstructionsSection({
   onChange,
   taskTypeOptions,
   errors = {},
+  disabled = false,
 }: InstructionsSectionProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (field: keyof TaskInstructions, value: string) => {
+    if (disabled) return;
     onChange({
       ...data,
       [field]: value,
@@ -26,6 +29,7 @@ export default function InstructionsSection({
   };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (disabled) return;
     const files = e.target.files;
     if (!files) return;
 
@@ -66,6 +70,7 @@ export default function InstructionsSection({
   };
 
   const handleRemovePhoto = (photoId: string) => {
+    if (disabled) return;
     onChange({
       ...data,
       photoGuidelines: data.photoGuidelines.filter((p) => p.id !== photoId),
@@ -82,7 +87,8 @@ export default function InstructionsSection({
         <select
           value={data.taskType}
           onChange={(e) => handleChange('taskType', e.target.value)}
-          className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 ${
+          disabled={disabled}
+          className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
             errors.taskType
               ? 'border-red-500 focus:ring-red-500'
               : 'border-gray-300 dark:border-gray-600'
@@ -111,7 +117,8 @@ export default function InstructionsSection({
             value={data.manualLink}
             onChange={(e) => handleChange('manualLink', e.target.value)}
             placeholder="Paste link"
-            className="w-full px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
+            disabled={disabled}
+            className="w-full px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed"
           />
           <button
             type="button"
@@ -134,7 +141,8 @@ export default function InstructionsSection({
           onChange={(e) => handleChange('note', e.target.value)}
           placeholder="Please attach the report file in the comment section after completing the task."
           rows={3}
-          className="w-full px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 resize-none"
+          disabled={disabled}
+          className="w-full px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 resize-none disabled:opacity-50 disabled:cursor-not-allowed"
         />
       </div>
 
@@ -174,10 +182,12 @@ export default function InstructionsSection({
                   <input
                     type="text"
                     placeholder="Enter image name"
-                    className="w-full mt-2 px-2 py-1 text-xs border border-gray-200 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                    disabled={disabled}
+                    className="w-full mt-2 px-2 py-1 text-xs border border-gray-200 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
 
                   {/* Remove button */}
+                  {!disabled && (
                   <button
                     onClick={() => handleRemovePhoto(photo.id)}
                     className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
@@ -186,6 +196,7 @@ export default function InstructionsSection({
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
+                  )}
                 </div>
               );
             }
@@ -193,8 +204,13 @@ export default function InstructionsSection({
             return (
               <button
                 key={index}
-                onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-pink-300 dark:border-pink-600 rounded-lg p-4 bg-pink-50/50 dark:bg-pink-900/10 hover:bg-pink-100/50 dark:hover:bg-pink-900/20 transition-colors"
+                onClick={() => !disabled && fileInputRef.current?.click()}
+                disabled={disabled}
+                className={`border-2 border-dashed border-pink-300 dark:border-pink-600 rounded-lg p-4 bg-pink-50/50 dark:bg-pink-900/10 transition-colors ${
+                  disabled
+                    ? 'opacity-50 cursor-not-allowed'
+                    : 'hover:bg-pink-100/50 dark:hover:bg-pink-900/20'
+                }`}
               >
                 <div className="flex flex-col items-center">
                   <div className="w-8 h-8 mb-2 text-pink-400">

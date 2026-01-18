@@ -8,7 +8,7 @@ import { createEmptyTaskLevel } from '@/data/mockAddTask';
 import AddTaskForm from '@/components/tasks/add/AddTaskForm';
 import TaskMapsTab from '@/components/tasks/add/TaskMapsTab';
 import { useToast } from '@/components/ui/Toast';
-import { createTask, getDraftInfo, DraftInfo } from '@/lib/api';
+import { createTask, getDraftInfo, DraftInfo, submitTask } from '@/lib/api';
 import { useUser } from '@/contexts/UserContext';
 
 // Status ID for DRAFT (will be added to code_master)
@@ -30,6 +30,9 @@ export default function NewTaskPage() {
 
   // Fetch draft info on mount (only for HQ users)
   const isHQUser = currentUser?.job_grade?.startsWith('G') || false;
+
+  // Get draft info for task_list source
+  const taskListDraftInfo = draftInfo?.by_source?.task_list;
 
   useEffect(() => {
     if (isHQUser) {
@@ -68,9 +71,9 @@ export default function NewTaskPage() {
 
   const handleSaveDraft = async (taskLevels: TaskLevel[]) => {
     // Check draft limit before saving (frontend check)
-    if (isHQUser && draftInfo && !draftInfo.can_create_draft) {
+    if (isHQUser && taskListDraftInfo && !taskListDraftInfo.can_create_draft) {
       showToast(
-        `You have reached the maximum limit of ${draftInfo.max_drafts} drafts. Please complete or delete existing drafts before creating new ones.`,
+        `You have reached the maximum limit of ${taskListDraftInfo.max_drafts} drafts for Task List. Please complete or delete existing drafts before creating new ones.`,
         'error'
       );
       return;
@@ -104,6 +107,7 @@ export default function NewTaskPage() {
         start_date: rootTask.taskInformation.applicablePeriod.startDate || undefined,
         end_date: rootTask.taskInformation.applicablePeriod.endDate || undefined,
         priority: 'normal',
+        source: 'task_list', // Source for one-time tasks from Task List
       };
 
       // Call API to create task
@@ -136,15 +140,46 @@ export default function NewTaskPage() {
   const handleSubmit = async (taskLevels: TaskLevel[]) => {
     setIsSubmitting(true);
 
-    // TODO: Replace with actual API call and validation
-    console.log('Submitting task:', taskLevels);
+    try {
+      // Get the root task level (level 1)
+      const rootTask = taskLevels.find((tl) => tl.level === 1);
+      if (!rootTask) {
+        showToast('No task level found', 'error');
+        setIsSubmitting(false);
+        return;
+      }
 
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Step 1: Create the task as draft first (if not already created)
+      const taskData = {
+        task_name: rootTask.name,
+        task_description: rootTask.instructions.note || undefined,
+        status_id: STATUS_DRAFT_ID,
+        start_date: rootTask.taskInformation.applicablePeriod.startDate || undefined,
+        end_date: rootTask.taskInformation.applicablePeriod.endDate || undefined,
+        priority: 'normal',
+        source: 'task_list',
+      };
 
-    setIsSubmitting(false);
-    showToast('Task submitted successfully', 'success');
-    router.push('/tasks/list');
+      const createdTask = await createTask(taskData);
+
+      // Step 2: Submit the task for approval
+      const result = await submitTask(createdTask.task_id);
+
+      showToast(`Task submitted for approval. Approver: ${result.approver.name}`, 'success');
+      router.push('/tasks/list');
+    } catch (error: unknown) {
+      console.error('Error submitting task:', error);
+
+      if (error && typeof error === 'object' && 'status' in error) {
+        const apiError = error as { status: number; response?: { data?: { error?: string; message?: string } } };
+        const errorMessage = apiError.response?.data?.error || apiError.response?.data?.message || 'Failed to submit task';
+        showToast(errorMessage, 'error');
+      } else {
+        showToast(error instanceof Error ? error.message : 'Failed to submit task', 'error');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -165,18 +200,18 @@ export default function NewTaskPage() {
         </div>
 
         {/* Draft limit indicator for HQ users */}
-        {isHQUser && draftInfo && (
+        {isHQUser && taskListDraftInfo && (
           <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${
-            draftInfo.remaining_drafts === 0
+            taskListDraftInfo.remaining_drafts === 0
               ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-              : draftInfo.remaining_drafts <= 2
+              : taskListDraftInfo.remaining_drafts <= 2
               ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
               : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
           }`}>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <span>Drafts: {draftInfo.current_drafts}/{draftInfo.max_drafts}</span>
+            <span>Drafts: {taskListDraftInfo.current_drafts}/{taskListDraftInfo.max_drafts}</span>
           </div>
         )}
       </nav>
@@ -216,7 +251,7 @@ export default function NewTaskPage() {
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}
           isSavingDraft={isSavingDraft}
-          canCreateDraft={!isHQUser || !draftInfo || draftInfo.can_create_draft}
+          canCreateDraft={!isHQUser || !taskListDraftInfo || taskListDraftInfo.can_create_draft}
         />
       ) : (
         <TaskMapsTab

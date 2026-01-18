@@ -8,6 +8,7 @@ interface TaskInfoSectionProps {
   taskTypeOptions: DropdownOption[];
   executionTimeOptions: DropdownOption[];
   errors?: Record<string, string>;
+  disabled?: boolean;
 }
 
 export default function TaskInfoSection({
@@ -16,8 +17,10 @@ export default function TaskInfoSection({
   taskTypeOptions,
   executionTimeOptions,
   errors = {},
+  disabled = false,
 }: TaskInfoSectionProps) {
   const handleChange = (field: keyof TaskInformation, value: string) => {
+    if (disabled) return;
     if (field === 'applicablePeriod') return;
     onChange({
       ...data,
@@ -26,6 +29,7 @@ export default function TaskInfoSection({
   };
 
   const handleDateChange = (dateField: 'startDate' | 'endDate', value: string) => {
+    if (disabled) return;
     onChange({
       ...data,
       applicablePeriod: {
@@ -45,7 +49,8 @@ export default function TaskInfoSection({
         <select
           value={data.taskType}
           onChange={(e) => handleChange('taskType', e.target.value)}
-          className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 ${
+          disabled={disabled}
+          className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
             errors.taskType
               ? 'border-red-500 focus:ring-red-500'
               : 'border-gray-300 dark:border-gray-600'
@@ -75,7 +80,8 @@ export default function TaskInfoSection({
               value={data.applicablePeriod.startDate}
               onChange={(e) => handleDateChange('startDate', e.target.value)}
               placeholder="mm/dd/yyyy"
-              className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 ${
+              disabled={disabled}
+              className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
                 errors.startDate
                   ? 'border-red-500 focus:ring-red-500'
                   : 'border-gray-300 dark:border-gray-600'
@@ -88,7 +94,8 @@ export default function TaskInfoSection({
               value={data.applicablePeriod.endDate}
               onChange={(e) => handleDateChange('endDate', e.target.value)}
               placeholder="mm/dd/yyyy"
-              className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 ${
+              disabled={disabled}
+              className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
                 errors.endDate
                   ? 'border-red-500 focus:ring-red-500'
                   : 'border-gray-300 dark:border-gray-600'
@@ -111,7 +118,8 @@ export default function TaskInfoSection({
         <select
           value={data.executionTime}
           onChange={(e) => handleChange('executionTime', e.target.value)}
-          className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 ${
+          disabled={disabled}
+          className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
             errors.executionTime
               ? 'border-red-500 focus:ring-red-500'
               : 'border-gray-300 dark:border-gray-600'
