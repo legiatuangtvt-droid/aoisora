@@ -1438,7 +1438,7 @@ Chi tiết: `docs/06-deployment/DEPLOY-PA-VIETNAM-HOSTING.md`
 │  │  📚 FLOW 2: TẠO TEMPLATE TỪ LIBRARY                         ││
 │  │  ─────────────────────────────────────────────────────────  ││
 │  │  📍 Entry Point: Button "Add New" tại LIBRARY               ││
-│  │  📍 Route: /tasks/library/new                               ││
+│  │  📍 Route: /tasks/new?source=library                        ││
 │  │                                                             ││
 │  │  Đặc điểm:                                                  ││
 │  │  → Điền thông tin task, KHÔNG chọn Scope (C. Scope hidden)  ││
@@ -1455,7 +1455,7 @@ Chi tiết: `docs/06-deployment/DEPLOY-PA-VIETNAM-HOSTING.md`
 │  │  📋 FLOW 3: TẠO TASK TỪ TO DO TASK (HQ → HQ)                ││
 │  │  ─────────────────────────────────────────────────────────  ││
 │  │  📍 Entry Point: Button "Add New" tại TO DO TASK            ││
-│  │  📍 Route: /tasks/todo/new                                  ││
+│  │  📍 Route: /tasks/new?source=todo_task                      ││
 │  │                                                             ││
 │  │  Đặc điểm:                                                  ││
 │  │  → Điền thông tin task + CHỌN HQ Users (C. Scope required)  ││
@@ -1483,8 +1483,9 @@ Chi tiết: `docs/06-deployment/DEPLOY-PA-VIETNAM-HOSTING.md`
 │  ├────────────────┼─────────────────┼─────────────────┼─────────────────┤
 │  │ Entry Point    │ Task List       │ Library         │ To Do Task      │
 │  │                │ > Add New       │ > Add New       │ > Add New       │
-│  │ Route          │ /tasks/new      │ /tasks/library  │ /tasks/todo/new │
-│  │                │                 │ /new            │                 │
+│  │ Route          │ /tasks/new      │ /tasks/new      │ /tasks/new      │
+│  │                │ ?source=        │ ?source=        │ ?source=        │
+│  │                │ task_list       │ library         │ todo_task       │
 │  │ Receiver       │ Stores          │ (chọn khi       │ HQ Users        │
 │  │                │                 │ dispatch)       │ (Dept/Team)     │
 │  │ C. Scope       │ Store structure │ Hidden          │ HQ structure    │
@@ -1522,7 +1523,7 @@ Chi tiết: `docs/06-deployment/DEPLOY-PA-VIETNAM-HOSTING.md`
 │  ═══════════════════════════════════════════════════════════════│
 │                                                                 │
 │  📍 Entry Point: Task List > Add New                            │
-│  📍 Route: /tasks/new                                           │
+│  📍 Route: /tasks/new?source=task_list                          │
 │  📍 C. Scope: REQUIRED - cấu trúc STORE (Region/Zone/Area/Store)│
 │  📍 Receiver: Store users (S1-S7)                               │
 │                                                                 │
@@ -1531,7 +1532,7 @@ Chi tiết: `docs/06-deployment/DEPLOY-PA-VIETNAM-HOSTING.md`
 │  ═══════════════════════════════════════════════════════════════│
 │                                                                 │
 │  📍 Entry Point: Library > Add New                              │
-│  📍 Route: /tasks/library/new                                   │
+│  📍 Route: /tasks/new?source=library                            │
 │  📍 C. Scope: HIDDEN (sẽ chọn khi dispatch sau)                 │
 │  📍 Receiver: Tùy thuộc dispatch (Store hoặc HQ)                │
 │                                                                 │
@@ -1540,7 +1541,7 @@ Chi tiết: `docs/06-deployment/DEPLOY-PA-VIETNAM-HOSTING.md`
 │  ═══════════════════════════════════════════════════════════════│
 │                                                                 │
 │  📍 Entry Point: To Do Task > Add New                           │
-│  📍 Route: /tasks/todo/new                                      │
+│  📍 Route: /tasks/new?source=todo_task                          │
 │  📍 C. Scope: REQUIRED - cấu trúc HQ (Division/Dept/Team/User)  │
 │  📍 Receiver: Chính mình HOẶC cấp dưới trong Dept/Team          │
 │                                                                 │
