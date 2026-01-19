@@ -50,7 +50,8 @@ export interface MemberFormData {
   lineManagerId?: number;
 }
 
-const JOB_GRADES: JobGrade[] = ['G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8'];
+// HQ Job Grades: G2-G9 (no G1)
+const HQ_JOB_GRADES: JobGrade[] = ['G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8', 'G9'];
 
 const AddTeamMemberModal: React.FC<AddTeamMemberModalProps> = ({
   isOpen,
@@ -75,7 +76,7 @@ const AddTeamMemberModal: React.FC<AddTeamMemberModalProps> = ({
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [position, setPosition] = useState('');
-  const [jobGrade, setJobGrade] = useState<JobGrade>('G1');
+  const [jobGrade, setJobGrade] = useState<JobGrade>('G2');
   const [memberDepartmentId, setMemberDepartmentId] = useState<number | ''>(defaultDepartmentId || '');
   const [memberTeamId, setMemberTeamId] = useState<string>(defaultTeamId || '');
   const [sapCode, setSapCode] = useState('');
@@ -98,7 +99,7 @@ const AddTeamMemberModal: React.FC<AddTeamMemberModalProps> = ({
       setEmail('');
       setPhone('');
       setPosition('');
-      setJobGrade('G1');
+      setJobGrade('G2');
       setMemberDepartmentId(defaultDepartmentId || '');
       setMemberTeamId(defaultTeamId || '');
       setSapCode('');
@@ -347,7 +348,7 @@ const AddTeamMemberModal: React.FC<AddTeamMemberModalProps> = ({
                     onChange={(e) => setJobGrade(e.target.value as JobGrade)}
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C5055B] focus:border-transparent outline-none transition-all"
                   >
-                    {JOB_GRADES.map((grade) => (
+                    {HQ_JOB_GRADES.map((grade) => (
                       <option key={grade} value={grade}>
                         {grade} - {JOB_GRADE_TITLES[grade]}
                       </option>

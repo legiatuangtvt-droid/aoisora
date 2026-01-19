@@ -11,6 +11,8 @@ interface TaskLevelCardProps {
   canAddSubLevel: boolean;
   canDelete: boolean;
   children?: React.ReactNode;
+  // Validation error for task name
+  nameError?: string;
 }
 
 // Level subtitles
@@ -30,6 +32,7 @@ export default function TaskLevelCard({
   canAddSubLevel,
   canDelete,
   children,
+  nameError,
 }: TaskLevelCardProps) {
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -158,8 +161,16 @@ export default function TaskLevelCard({
             value={taskLevel.name}
             onChange={(e) => onNameChange(e.target.value)}
             placeholder="Enter task name..."
-            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-colors"
+            className={`w-full px-4 py-3 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
+              nameError
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-gray-300 dark:border-gray-600 focus:ring-pink-500'
+            }`}
           />
+          {/* Error message */}
+          {nameError && (
+            <p className="mt-1 text-sm text-red-500">{nameError}</p>
+          )}
         </div>
 
         {/* Sections */}

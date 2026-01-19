@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { TaskLevel, TaskInformation, TaskInstructions, TaskScope, TaskApproval } from '@/types/addTask';
 import { mockMasterData, createEmptyTaskLevel } from '@/data/mockAddTask';
 import TaskLevelCard from './TaskLevelCard';
@@ -9,6 +9,13 @@ import TaskInfoSection from './TaskInfoSection';
 import InstructionsSection from './InstructionsSection';
 import ScopeSection from './ScopeSection';
 import ApprovalSection from './ApprovalSection';
+import {
+  validateForSubmit,
+  validateForDraft,
+  getErrorsForSection,
+  getFieldError,
+  ValidationError,
+} from '@/utils/taskValidation';
 
 export interface RejectionInfo {
   reason: string;
@@ -73,11 +80,64 @@ export default function AddTaskForm({
   // - library: Hide scope (will be selected when dispatching)
   // - todo_task: Show HQ scope (Division/Dept/Team/User)
   const showScopeSection = source !== 'library';
+
+  // Validation state
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
+  const [showValidationToast, setShowValidationToast] = useState(false);
+
   // State for reject modal
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [isRejecting, setIsRejecting] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
+
+  // Helper to get error count for a section
+  const getSectionErrorCount = useCallback(
+    (taskLevelId: string, section: 'A' | 'B' | 'C' | 'D') => {
+      return getErrorsForSection(validationErrors, taskLevelId, section).length;
+    },
+    [validationErrors]
+  );
+
+  // Helper to get name error for a task level
+  const getNameError = useCallback(
+    (taskLevelId: string) => {
+      return getFieldError(validationErrors, taskLevelId, 'name');
+    },
+    [validationErrors]
+  );
+
+  // Clear validation errors when form is edited
+  const clearValidationErrors = useCallback(() => {
+    if (validationErrors.length > 0) {
+      setValidationErrors([]);
+      setShowValidationToast(false);
+    }
+  }, [validationErrors.length]);
+
+  // Handle save draft with validation
+  const handleSaveDraft = useCallback(() => {
+    const result = validateForDraft(taskLevels);
+    if (!result.isValid) {
+      setValidationErrors(result.errors);
+      setShowValidationToast(true);
+      return;
+    }
+    onSaveDraft(taskLevels);
+  }, [taskLevels, onSaveDraft]);
+
+  // Handle submit with full validation
+  const handleSubmit = useCallback(() => {
+    const result = validateForSubmit(taskLevels, source);
+    if (!result.isValid) {
+      setValidationErrors(result.errors);
+      setShowValidationToast(true);
+      // Scroll to top to show error toast
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    onSubmit(taskLevels);
+  }, [taskLevels, source, onSubmit]);
 
   // Handle reject with reason
   const handleReject = async () => {
@@ -136,28 +196,33 @@ export default function AddTaskForm({
   // Handle name change
   const handleNameChange = useCallback((taskLevelId: string, name: string) => {
     updateTaskLevel(taskLevelId, { name });
-  }, [updateTaskLevel]);
+    clearValidationErrors();
+  }, [updateTaskLevel, clearValidationErrors]);
 
 
   // Handle task information change
   const handleTaskInfoChange = useCallback((taskLevelId: string, taskInformation: TaskInformation) => {
     updateTaskLevel(taskLevelId, { taskInformation });
-  }, [updateTaskLevel]);
+    clearValidationErrors();
+  }, [updateTaskLevel, clearValidationErrors]);
 
   // Handle instructions change
   const handleInstructionsChange = useCallback((taskLevelId: string, instructions: TaskInstructions) => {
     updateTaskLevel(taskLevelId, { instructions });
-  }, [updateTaskLevel]);
+    clearValidationErrors();
+  }, [updateTaskLevel, clearValidationErrors]);
 
   // Handle scope change
   const handleScopeChange = useCallback((taskLevelId: string, scope: TaskScope) => {
     updateTaskLevel(taskLevelId, { scope });
-  }, [updateTaskLevel]);
+    clearValidationErrors();
+  }, [updateTaskLevel, clearValidationErrors]);
 
   // Handle approval change
   const handleApprovalChange = useCallback((taskLevelId: string, approval: TaskApproval) => {
     updateTaskLevel(taskLevelId, { approval });
-  }, [updateTaskLevel]);
+    clearValidationErrors();
+  }, [updateTaskLevel, clearValidationErrors]);
 
   // Add sub-level
   const handleAddSubLevel = useCallback((parentId: string) => {
@@ -242,6 +307,7 @@ export default function AddTaskForm({
           onDelete={() => handleDeleteTaskLevel(taskLevel.id)}
           canAddSubLevel={canAddSubLevel}
           canDelete={canDelete}
+          nameError={getNameError(taskLevel.id)}
         >
           {/* A. Task Information */}
           <SectionCard
@@ -250,6 +316,7 @@ export default function AddTaskForm({
             icon={<TaskInfoIcon />}
             isExpanded={expandedSections[taskLevel.id] === 'A'}
             onToggle={() => handleSectionToggle(taskLevel.id, 'A')}
+            errorCount={getSectionErrorCount(taskLevel.id, 'A')}
           >
             <TaskInfoSection
               data={taskLevel.taskInformation}
@@ -266,6 +333,7 @@ export default function AddTaskForm({
             icon={<InstructionsIcon />}
             isExpanded={expandedSections[taskLevel.id] === 'B'}
             onToggle={() => handleSectionToggle(taskLevel.id, 'B')}
+            errorCount={getSectionErrorCount(taskLevel.id, 'B')}
           >
             <InstructionsSection
               data={taskLevel.instructions}
@@ -282,6 +350,7 @@ export default function AddTaskForm({
               icon={<ScopeIcon />}
               isExpanded={expandedSections[taskLevel.id] === 'C'}
               onToggle={() => handleSectionToggle(taskLevel.id, 'C')}
+              errorCount={getSectionErrorCount(taskLevel.id, 'C')}
             >
               <ScopeSection
                 data={taskLevel.scope}
@@ -304,6 +373,7 @@ export default function AddTaskForm({
             icon={<ApprovalIcon />}
             isExpanded={expandedSections[taskLevel.id] === 'D'}
             onToggle={() => handleSectionToggle(taskLevel.id, 'D')}
+            errorCount={getSectionErrorCount(taskLevel.id, 'D')}
           >
             <ApprovalSection
               data={taskLevel.approval}
@@ -435,6 +505,42 @@ export default function AddTaskForm({
         </div>
       )}
 
+      {/* Validation Error Toast */}
+      {showValidationToast && validationErrors.length > 0 && (
+        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <div className="flex items-start gap-3">
+            <svg className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-1">
+                <h4 className="text-sm font-semibold text-red-800 dark:text-red-300">
+                  Please fix the following errors
+                </h4>
+                <button
+                  onClick={() => setShowValidationToast(false)}
+                  className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <ul className="list-disc list-inside text-sm text-red-700 dark:text-red-300 space-y-1">
+                {validationErrors.slice(0, 5).map((error, idx) => (
+                  <li key={idx}>{error.message}</li>
+                ))}
+                {validationErrors.length > 5 && (
+                  <li className="text-red-600 dark:text-red-400">
+                    ...and {validationErrors.length - 5} more errors
+                  </li>
+                )}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Footer Actions */}
       <div className="flex items-center justify-end gap-4">
         {/* APPROVER VIEW: Show Reject and Approve buttons */}
@@ -479,7 +585,7 @@ export default function AddTaskForm({
         {!isApprover && !isCreatorViewingApproval && taskStatus === 'draft' && (
           <>
             <button
-              onClick={() => onSaveDraft(taskLevels)}
+              onClick={handleSaveDraft}
               disabled={isSavingDraft || isSubmitting || !canCreateDraft}
               title={!canCreateDraft ? 'Draft limit reached. Delete existing drafts to create new ones.' : undefined}
               className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -487,7 +593,7 @@ export default function AddTaskForm({
               {isSavingDraft ? 'Saving...' : !canCreateDraft ? 'Draft limit reached' : 'Save as draft'}
             </button>
             <button
-              onClick={() => onSubmit(taskLevels)}
+              onClick={handleSubmit}
               disabled={isSavingDraft || isSubmitting || (rejectionInfo && rejectionInfo.rejectionCount >= rejectionInfo.maxRejections)}
               title={rejectionInfo && rejectionInfo.rejectionCount >= rejectionInfo.maxRejections ? 'Maximum rejection limit reached. This task can only be deleted.' : undefined}
               className="px-6 py-2 bg-pink-600 text-white rounded-lg text-sm font-medium hover:bg-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"

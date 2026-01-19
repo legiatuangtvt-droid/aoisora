@@ -26,27 +26,27 @@ export default function TopBar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const getRoleBadgeColor = (role: string) => {
-    switch (role) {
-      case 'manager':
-        return 'bg-purple-100 text-purple-700';
-      case 'supervisor':
-        return 'bg-blue-100 text-blue-700';
-      case 'staff':
-        return 'bg-green-100 text-green-700';
-      default:
-        return 'bg-gray-100 text-gray-700';
+  const getRoleBadgeColor = (jobGrade: string) => {
+    // HQ grades G2-G9
+    if (jobGrade.startsWith('G')) {
+      const grade = parseInt(jobGrade.slice(1));
+      if (grade >= 7) return 'bg-purple-100 text-purple-700'; // G7-G9: Executive
+      if (grade >= 5) return 'bg-blue-100 text-blue-700';     // G5-G6: Manager
+      return 'bg-green-100 text-green-700';                    // G2-G4: Staff
     }
+    // Store grades S1-S6
+    if (jobGrade.startsWith('S')) {
+      const grade = parseInt(jobGrade.slice(1));
+      if (grade >= 5) return 'bg-purple-100 text-purple-700'; // S5-S6: Regional
+      if (grade >= 3) return 'bg-blue-100 text-blue-700';     // S3-S4: Store Leader
+      return 'bg-green-100 text-green-700';                    // S1-S2: Staff
+    }
+    return 'bg-gray-100 text-gray-700';
   };
 
-  // Role labels for display
-  const getRoleLabel = (role: string) => {
-    const labels: Record<string, string> = {
-      manager: 'Manager',
-      supervisor: 'Supervisor',
-      staff: 'Staff',
-    };
-    return labels[role] || role;
+  // Role labels for display based on job_grade
+  const getRoleLabel = (jobGrade: string) => {
+    return jobGrade; // Just display the job grade directly (G5, S3, etc.)
   };
 
   return (
@@ -113,8 +113,8 @@ export default function TopBar() {
                 <p className="text-sm font-medium text-gray-900 dark:text-white">
                   {currentUser.staff_name}
                 </p>
-                <span className={`text-xs px-2 py-0.5 rounded-full ${getRoleBadgeColor(currentUser.role)}`}>
-                  {getRoleLabel(currentUser.role)}
+                <span className={`text-xs px-2 py-0.5 rounded-full ${getRoleBadgeColor(currentUser.job_grade)}`}>
+                  {getRoleLabel(currentUser.job_grade)}
                 </span>
               </div>
 

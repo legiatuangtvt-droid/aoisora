@@ -8,6 +8,8 @@ interface SectionCardProps {
   children: React.ReactNode;
   isExpanded?: boolean;
   onToggle?: () => void;
+  // Error count to show in header badge
+  errorCount?: number;
 }
 
 export default function SectionCard({
@@ -18,7 +20,9 @@ export default function SectionCard({
   children,
   isExpanded = false,
   onToggle,
+  errorCount = 0,
 }: SectionCardProps) {
+  const hasErrors = errorCount > 0;
   return (
     <div className="bg-gray-50 dark:bg-gray-700/30 rounded-lg overflow-hidden">
       {/* Section Header */}
@@ -33,9 +37,16 @@ export default function SectionCard({
           </div>
 
           {/* Section Title */}
-          <span className="text-sm font-semibold text-gray-900 dark:text-white">
+          <span className={`text-sm font-semibold ${hasErrors ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}`}>
             {id}. {title}
           </span>
+
+          {/* Error Badge */}
+          {hasErrors && (
+            <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full">
+              {errorCount} {errorCount === 1 ? 'error' : 'errors'}
+            </span>
+          )}
         </div>
 
         {/* Expand/Collapse Icon */}

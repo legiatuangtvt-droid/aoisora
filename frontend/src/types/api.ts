@@ -172,12 +172,14 @@ export interface Task {
   updated_at: string;
   // Approval workflow fields
   source?: string | null;
+  approver_id?: number | null;
   approved_by?: number | null;
   approved_at?: string | null;
   rejection_count?: number;
   has_changes_since_rejection?: boolean;
   last_rejection_reason?: string | null;
   last_rejected_at?: string | null;
+  last_rejected_by?: number | null;
   // Relationships
   manual?: Manual;
   task_type?: CodeMaster;
@@ -209,6 +211,8 @@ export interface TaskCreate {
   end_date?: string;
   start_time?: string;
   due_datetime?: string;
+  // Task creation source
+  source?: string;
 }
 
 export interface TaskUpdate {

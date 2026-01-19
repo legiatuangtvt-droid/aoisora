@@ -513,7 +513,7 @@ export default function DailySchedulePage() {
                   </div>
                   <div className="text-xs">
                     <div className="font-medium text-gray-800">{currentUser.staff_name}</div>
-                    <div className="text-gray-500">{currentUser.role}</div>
+                    <div className="text-gray-500">{currentUser.job_grade}</div>
                   </div>
                 </div>
               )}

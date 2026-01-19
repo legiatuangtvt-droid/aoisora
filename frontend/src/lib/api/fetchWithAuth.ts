@@ -37,10 +37,10 @@ export async function fetchWithAuth(
     : null;
 
   // Add Authorization header if token exists
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
-    ...fetchOptions.headers,
+    ...(fetchOptions.headers as Record<string, string> || {}),
   };
 
   if (token && !skipAuthCheck) {
