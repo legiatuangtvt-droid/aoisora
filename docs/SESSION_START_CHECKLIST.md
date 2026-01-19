@@ -19,14 +19,19 @@ git log --oneline -5          # Xem các commit gần đây
 
 > **Phải khởi động cả 3 services trước khi bắt đầu làm việc**
 
-### Step 1: Start PostgreSQL Database
+### Step 1: Start MySQL Database
 ```bash
-"D:\devtool\laragon\bin\postgresql\pgsql-18\bin\pg_ctl.exe" -D "D:\devtool\laragon\data\postgresql" start
+"D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysqld.exe" --console
+```
+
+Hoặc test connection nếu MySQL đã chạy:
+```bash
+"D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysql.exe" -uroot -e "SELECT 1"
 ```
 
 ### Step 2: Start Backend (Laravel) - Terminal 1
 ```bash
-cd backend
+cd backend/laravel
 "D:\devtool\laragon\bin\php\php-8.3.28-Win32-vs16-x64\php.exe" artisan serve
 # API chạy tại http://localhost:8000
 ```
@@ -46,7 +51,7 @@ npm run dev
 |---------|-----|----------|
 | Frontend | http://localhost:3000 (hoặc 300x) | Next.js app |
 | Backend API | http://localhost:8000/api/v1/auth/login | JSON response |
-| Database | `psql -U postgres -d aoisora -c "\dt"` | List tables |
+| Database | `mysql -uroot aoisora -e "SHOW TABLES"` | List tables |
 
 ---
 
@@ -146,7 +151,7 @@ fetch('http://localhost:8000/api/v1/auth/login', {
 Aura Web/
 ├── frontend/          # Next.js 14 (React) - Port 3000
 ├── backend/           # Laravel 11 (PHP) - Port 8000
-├── database/          # PostgreSQL schema & seeds
+├── database/          # MySQL schema & seeds
 ├── docs/specs/        # Feature specifications
 └── mobile/            # Flutter app (future)
 ```
@@ -168,9 +173,9 @@ Aura Web/
 ## Data Flow
 
 ```
-User → Frontend (Next.js) → API Request → Backend (Laravel) → Database (PostgreSQL)
+User → Frontend (Next.js) → API Request → Backend (Laravel) → Database (MySQL)
                                 ↓
-User ← Frontend (Next.js) ← API Response ← Backend (Laravel) ← Database (PostgreSQL)
+User ← Frontend (Next.js) ← API Response ← Backend (Laravel) ← Database (MySQL)
 ```
 
 ## Code Organization Rules
@@ -246,10 +251,9 @@ PHP="D:\devtool\laragon\bin\php\php-8.3.28-Win32-vs16-x64\php.exe"
 # Composer
 COMPOSER="D:\devtool\laragon\bin\composer\composer.phar"
 
-# PostgreSQL
-PSQL="D:\devtool\laragon\bin\postgresql\pgsql-18\bin\psql.exe"
-PG_CTL="D:\devtool\laragon\bin\postgresql\pgsql-18\bin\pg_ctl.exe"
-PG_DATA="D:\devtool\laragon\data\postgresql"
+# MySQL
+MYSQL="D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysql.exe"
+MYSQLD="D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysqld.exe"
 ```
 
 ## Git Commands
@@ -310,26 +314,26 @@ cd backend
 "D:\devtool\laragon\bin\php\php-8.3.28-Win32-vs16-x64\php.exe" artisan db:show
 ```
 
-## PostgreSQL Commands (with Laragon paths)
+## MySQL Commands (with Laragon paths)
 
 ```bash
-# Start PostgreSQL
-"D:\devtool\laragon\bin\postgresql\pgsql-18\bin\pg_ctl.exe" -D "D:\devtool\laragon\data\postgresql" start
+# Start MySQL
+"D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysqld.exe" --console
 
-# Stop PostgreSQL
-"D:\devtool\laragon\bin\postgresql\pgsql-18\bin\pg_ctl.exe" -D "D:\devtool\laragon\data\postgresql" stop
+# Test connection
+"D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysql.exe" -uroot -e "SELECT 1"
 
 # Connect to database
-"D:\devtool\laragon\bin\postgresql\pgsql-18\bin\psql.exe" -U postgres -d aoisora
+"D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysql.exe" -uroot aoisora
 
-# Run schema.sql (reset database)
-"D:\devtool\laragon\bin\postgresql\pgsql-18\bin\psql.exe" -U postgres -d aoisora -f "d:\Project\Aura Web\database\schema.sql"
+# Run schema_mysql.sql (reset database)
+"D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysql.exe" -uroot aoisora < "d:\Project\Aura Web\database\schema_mysql.sql"
 
-# Run seed_data.sql
-"D:\devtool\laragon\bin\postgresql\pgsql-18\bin\psql.exe" -U postgres -d aoisora -f "d:\Project\Aura Web\database\seed_data.sql"
+# Run seed_data_mysql.sql
+"D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysql.exe" -uroot aoisora < "d:\Project\Aura Web\deploy\seed_data_mysql.sql"
 
 # List tables
-"D:\devtool\laragon\bin\postgresql\pgsql-18\bin\psql.exe" -U postgres -d aoisora -c "\dt"
+"D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysql.exe" -uroot aoisora -e "SHOW TABLES"
 ```
 
 ---
@@ -345,11 +349,11 @@ APP_KEY=base64:BuFEDRUHaCmP5M8IFmdcjhIaDPsDNlZflDpjOsFrbRs=
 APP_DEBUG=true
 APP_URL=http://localhost:8000
 
-DB_CONNECTION=pgsql
+DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
-DB_PORT=5432
+DB_PORT=3306
 DB_DATABASE=aoisora
-DB_USERNAME=postgres
+DB_USERNAME=root
 DB_PASSWORD=
 
 # CORS
@@ -373,8 +377,6 @@ Trước khi kết thúc phiên làm việc:
 - [ ] Update spec files nếu có thay đổi
 - [ ] Stop services (optional):
   ```bash
-  # Stop PostgreSQL
-  "D:\devtool\laragon\bin\postgresql\pgsql-18\bin\pg_ctl.exe" -D "D:\devtool\laragon\data\postgresql" stop
-
+  # MySQL: Tắt qua Laragon UI hoặc Task Manager
   # Frontend & Backend: Ctrl+C trong terminal
   ```
