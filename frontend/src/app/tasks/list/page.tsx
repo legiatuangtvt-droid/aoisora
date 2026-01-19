@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { TaskGroup, DateMode, TaskFilters, TaskStatus, HQCheckStatus } from '@/types/tasks';
 import { Task as ApiTask, Department } from '@/types/api';
-import { getTasks, getDepartments, PaginatedTaskResponse, TaskQueryParamsExtended } from '@/lib/api';
+import { getTasks, getDepartments, getDraftInfo, DraftInfo, PaginatedTaskResponse, TaskQueryParamsExtended } from '@/lib/api';
 import StatusPill from '@/components/ui/StatusPill';
 import FilterModal from '@/components/tasks/FilterModal';
 import DatePicker from '@/components/ui/DatePicker';
@@ -136,6 +136,10 @@ export default function TaskListPage() {
   const [totalItems, setTotalItems] = useState(0);
   const itemsPerPage = 10;
 
+  // Draft limit state (for HQ users)
+  const [draftInfo, setDraftInfo] = useState<DraftInfo | null>(null);
+  const sourceDraftInfo = draftInfo?.by_source?.['task_list'];
+
   // Debounce search query
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -143,6 +147,17 @@ export default function TaskListPage() {
     }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  // Fetch draft info (for HQ users only)
+  useEffect(() => {
+    if (isHQUser) {
+      getDraftInfo()
+        .then(setDraftInfo)
+        .catch((err) => {
+          console.error('Failed to fetch draft info:', err);
+        });
+    }
+  }, [isHQUser]);
 
   // Fetch departments
   const fetchDepartments = useCallback(async () => {
@@ -401,13 +416,44 @@ export default function TaskListPage() {
               )}
             </button>
 
-            <button
-              onClick={() => router.push('/tasks/new?source=task_list')}
-              className="flex items-center gap-2 px-5 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm font-medium"
-            >
-              <span className="text-lg">+</span>
-              ADD NEW
-            </button>
+            {/* Draft limit indicator + Add New button (HQ users only) */}
+            {isHQUser && (
+              <div className="flex items-center gap-3">
+                {/* Draft limit badge */}
+                {sourceDraftInfo && (
+                  <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${
+                    sourceDraftInfo.remaining_drafts === 0
+                      ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                      : sourceDraftInfo.remaining_drafts <= 2
+                      ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                      : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
+                  }`} title={`Drafts: ${sourceDraftInfo.current_drafts}/${sourceDraftInfo.max_drafts}`}>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span>Drafts: {sourceDraftInfo.current_drafts}/{sourceDraftInfo.max_drafts}</span>
+                  </div>
+                )}
+
+                {/* Add New button */}
+                <button
+                  onClick={() => router.push('/tasks/new?source=task_list')}
+                  disabled={Boolean(sourceDraftInfo && !sourceDraftInfo.can_create_draft)}
+                  className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    sourceDraftInfo && !sourceDraftInfo.can_create_draft
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-red-500 text-white hover:bg-red-600'
+                  }`}
+                  title={sourceDraftInfo && !sourceDraftInfo.can_create_draft
+                    ? `Draft limit reached (${sourceDraftInfo.max_drafts} max). Please complete or delete existing drafts.`
+                    : 'Create a new task draft'
+                  }
+                >
+                  <span className="text-lg">+</span>
+                  ADD NEW
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

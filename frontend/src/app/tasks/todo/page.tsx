@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { TodoFilters } from '@/types/todoTask';
 import {
@@ -11,6 +11,8 @@ import {
   mockManagerComments,
   mockOtherComments,
 } from '@/data/mockTodoTask';
+import { getDraftInfo, DraftInfo } from '@/lib/api';
+import { useUser } from '@/contexts/UserContext';
 import WeekHeader from '@/components/tasks/todo/WeekHeader';
 import OverallWeekPanel from '@/components/tasks/todo/OverallWeekPanel';
 import LastWeekReviewPanel from '@/components/tasks/todo/LastWeekReviewPanel';
@@ -20,6 +22,8 @@ import ManagerCommentPanel from '@/components/tasks/todo/ManagerCommentPanel';
 
 export default function TodoTaskPage() {
   const router = useRouter();
+  const { currentUser } = useUser();
+  const isHQUser = currentUser?.job_grade?.startsWith('G') || false;
 
   // State
   const [filters, setFilters] = useState<TodoFilters>({
@@ -29,8 +33,25 @@ export default function TodoTaskPage() {
   });
   const [isPanelsExpanded, setIsPanelsExpanded] = useState(true);
   const [showComments, setShowComments] = useState(false);
+  const [draftInfo, setDraftInfo] = useState<DraftInfo | null>(null);
+
+  // Get draft info for todo_task source
+  const sourceDraftInfo = draftInfo?.by_source?.['todo_task'];
+
+  // Fetch draft info for HQ users
+  useEffect(() => {
+    if (isHQUser) {
+      getDraftInfo()
+        .then(setDraftInfo)
+        .catch((err) => console.error('Failed to fetch draft info:', err));
+    }
+  }, [isHQUser]);
 
   const handleAddNew = () => {
+    // Check draft limit before navigating
+    if (sourceDraftInfo && !sourceDraftInfo.can_create_draft) {
+      return; // Button should already be disabled, but double-check
+    }
     // Navigate to Add Task screen with todo_task source (C. Scope shows HQ structure)
     router.push('/tasks/new?source=todo_task');
   };
@@ -91,7 +112,11 @@ export default function TodoTaskPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="p-4 sm:p-6">
         {/* Week Header */}
-        <WeekHeader weekInfo={mockWeekInfo} onAddNew={handleAddNew} />
+        <WeekHeader
+          weekInfo={mockWeekInfo}
+          onAddNew={handleAddNew}
+          draftLimitInfo={isHQUser ? sourceDraftInfo : null}
+        />
 
         {/* Row 1: Overview Panels - Stack on mobile */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
@@ -197,15 +222,25 @@ export default function TodoTaskPage() {
       </div>
 
       {/* Mobile FAB for Add New */}
-      <button
-        onClick={handleAddNew}
-        className="sm:hidden fixed bottom-20 right-4 w-14 h-14 bg-pink-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-pink-700 active:scale-95 transition-all z-40"
-        aria-label="Add new task"
-      >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-        </svg>
-      </button>
+      {isHQUser && (
+        <button
+          onClick={handleAddNew}
+          disabled={Boolean(sourceDraftInfo && !sourceDraftInfo.can_create_draft)}
+          className={`sm:hidden fixed bottom-20 right-4 w-14 h-14 rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-all z-40 ${
+            sourceDraftInfo && !sourceDraftInfo.can_create_draft
+              ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+              : 'bg-pink-600 text-white hover:bg-pink-700'
+          }`}
+          aria-label={sourceDraftInfo && !sourceDraftInfo.can_create_draft
+            ? `Draft limit reached (${sourceDraftInfo?.max_drafts} max)`
+            : 'Add new task'
+          }
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+        </button>
+      )}
     </div>
   );
 }

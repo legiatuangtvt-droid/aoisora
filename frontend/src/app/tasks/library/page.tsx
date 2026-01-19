@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { TaskCategory, DepartmentType, TaskTemplate, TaskGroup } from '@/types/taskLibrary';
 import { getFilteredTasks, officeTaskGroups, storeTaskGroups } from '@/data/mockTaskLibrary';
@@ -9,9 +9,14 @@ import TaskLibraryTabs from '@/components/library/TaskLibraryTabs';
 import DepartmentFilterChips from '@/components/library/DepartmentFilterChips';
 import TaskSearchBar from '@/components/library/TaskSearchBar';
 import TaskGroupSection from '@/components/library/TaskGroupSection';
+import { getDraftInfo, DraftInfo } from '@/lib/api';
+import { useUser } from '@/contexts/UserContext';
 
 export default function TaskLibraryPage() {
   const router = useRouter();
+  const { currentUser } = useUser();
+  const isHQUser = currentUser?.job_grade?.startsWith('G') || false;
+
   const [activeTab, setActiveTab] = useState<TaskCategory>('office');
   const [selectedDepartments, setSelectedDepartments] = useState<DepartmentType[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -20,6 +25,21 @@ export default function TaskLibraryPage() {
     HR: false,
     Legal: false,
   });
+
+  // Draft limit state
+  const [draftInfo, setDraftInfo] = useState<DraftInfo | null>(null);
+  const sourceDraftInfo = draftInfo?.by_source?.['library'];
+
+  // Fetch draft info (for HQ users only)
+  useEffect(() => {
+    if (isHQUser) {
+      getDraftInfo()
+        .then(setDraftInfo)
+        .catch((err) => {
+          console.error('Failed to fetch draft info:', err);
+        });
+    }
+  }, [isHQUser]);
 
   // Get available departments based on active tab
   const availableDepartments = useMemo(() => {
@@ -91,7 +111,10 @@ export default function TaskLibraryPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Header */}
-        <TaskLibraryHeader onCreateNew={handleCreateNew} />
+        <TaskLibraryHeader
+          onCreateNew={handleCreateNew}
+          draftLimitInfo={isHQUser ? sourceDraftInfo : null}
+        />
 
         {/* Tabs */}
         <TaskLibraryTabs activeTab={activeTab} onTabChange={handleTabChange} />
