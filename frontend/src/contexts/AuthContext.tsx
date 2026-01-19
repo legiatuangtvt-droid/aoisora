@@ -6,6 +6,17 @@ import { registerLogoutCallback } from '@/lib/api/fetchWithAuth';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
+export interface UserPermissions {
+  job_grade: string | null;
+  grade_type: 'HQ' | 'STORE' | null;
+  scope: string;
+  level: number;
+  has_company_access: boolean;
+  can_create_task: boolean;
+  department_id?: number | null;
+  store_id?: number | null;
+}
+
 export interface AuthUser {
   id: number;
   staffCode?: string;
@@ -14,11 +25,15 @@ export interface AuthUser {
   fullName: string;
   role: string;
   position?: string;
+  jobGrade?: string;
   storeId?: number;
   storeName?: string;
   departmentId?: number;
   departmentName?: string;
+  teamId?: number;
+  teamName?: string;
   avatarUrl?: string;
+  permissions?: UserPermissions;
 }
 
 interface AuthContextType {
@@ -78,11 +93,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 fullName: data.user.full_name,
                 role: data.user.role,
                 position: data.user.position,
+                jobGrade: data.user.job_grade,
                 storeId: data.user.store_id,
                 storeName: data.user.store_name,
                 departmentId: data.user.department_id,
                 departmentName: data.user.department_name,
+                teamId: data.user.team_id,
+                teamName: data.user.team_name,
                 avatarUrl: data.user.avatar_url,
+                permissions: data.user.permissions,
               };
 
               setUser(authUser);
@@ -150,11 +169,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         fullName: data.user.full_name,
         role: data.user.role,
         position: data.user.position,
+        jobGrade: data.user.job_grade,
         storeId: data.user.store_id,
         storeName: data.user.store_name,
         departmentId: data.user.department_id,
         departmentName: data.user.department_name,
         avatarUrl: data.user.avatar_url,
+        permissions: data.user.permissions,
       };
 
       setUser(authUser);

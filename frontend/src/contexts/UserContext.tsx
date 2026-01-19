@@ -51,6 +51,7 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 const USER_STORAGE_KEY = 'aoisora_test_user';
+const SWITCHED_USER_ID_KEY = 'optichain_switched_user_id';
 
 // Convert API response to AppUser
 function mapApiUserToAppUser(apiUser: UserSwitcherStaff): AppUser {
@@ -91,11 +92,15 @@ export function UserProvider({ children }: { children: ReactNode }) {
           const savedUser = users.find(u => u.staff_id === parseInt(savedUserId));
           if (savedUser) {
             setCurrentUserState(savedUser);
+            // Ensure switched user ID is set for API calls
+            localStorage.setItem(SWITCHED_USER_ID_KEY, savedUser.staff_id.toString());
           } else if (users.length > 0) {
             setCurrentUserState(users[0]);
+            localStorage.setItem(SWITCHED_USER_ID_KEY, users[0].staff_id.toString());
           }
         } else if (users.length > 0) {
           setCurrentUserState(users[0]);
+          localStorage.setItem(SWITCHED_USER_ID_KEY, users[0].staff_id.toString());
         }
       }
     } catch (err) {
@@ -116,6 +121,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setCurrentUserState(user);
     if (typeof window !== 'undefined') {
       localStorage.setItem(USER_STORAGE_KEY, user.staff_id.toString());
+      // Also save the switched user ID for API calls (used by fetchWithAuth)
+      localStorage.setItem(SWITCHED_USER_ID_KEY, user.staff_id.toString());
     }
   };
 

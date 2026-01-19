@@ -12,6 +12,7 @@ import DatePicker from '@/components/ui/DatePicker';
 import ColumnFilterDropdown from '@/components/ui/ColumnFilterDropdown';
 import { useTaskUpdates } from '@/hooks/useTaskUpdates';
 import { useUser } from '@/contexts/UserContext';
+import { usePermissions } from '@/hooks/usePermissions';
 
 // Map API status_id to UI status
 // code_master: 7=NOT_YET, 8=ON_PROGRESS, 9=DONE, 10=OVERDUE, 11=REJECT, 12=DRAFT, 13=APPROVE
@@ -89,9 +90,12 @@ function transformApiTaskToTaskGroup(task: ApiTask, index: number, departments: 
 export default function TaskListPage() {
   const router = useRouter();
   const { currentUser } = useUser();
+  const { isHQUser: checkIsHQ, canCreateTask: checkCanCreate } = usePermissions();
 
-  // Determine if user is HQ (G grades) or Store (S grades)
-  const isHQUser = currentUser.job_grade.startsWith('G');
+  // Check if user is HQ type (G2-G9) - use hook for consistent permission checking
+  // Also check if user can create tasks (only HQ users G2-G9)
+  const isHQ = checkIsHQ();
+  const canCreate = checkCanCreate();
 
   // Date range state for filtering
   interface DateRange {
@@ -150,14 +154,14 @@ export default function TaskListPage() {
 
   // Fetch draft info (for HQ users only)
   useEffect(() => {
-    if (isHQUser) {
+    if (isHQ) {
       getDraftInfo()
         .then(setDraftInfo)
         .catch((err) => {
           console.error('Failed to fetch draft info:', err);
         });
     }
-  }, [isHQUser]);
+  }, [isHQ]);
 
   // Fetch departments
   const fetchDepartments = useCallback(async () => {
@@ -226,7 +230,7 @@ export default function TaskListPage() {
       let allTasks: ApiTask[] = [];
       let totalCount = 0;
 
-      if (isHQUser) {
+      if (isHQ) {
         // 1. Fetch Draft tasks (status_id=12) - NO date filter
         const draftParams: TaskQueryParamsExtended = {
           page: 1,
@@ -325,7 +329,7 @@ export default function TaskListPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [buildQueryParams, isHQUser, debouncedSearch, filters.departments]);
+  }, [buildQueryParams, isHQ, debouncedSearch, filters.departments]);
 
   // Initial load - fetch departments once
   useEffect(() => {
@@ -356,8 +360,8 @@ export default function TaskListPage() {
   // Status options theo loại user
   // HQ users: APPROVE → DRAFT → OVERDUE → NOT_YET → ON_PROGRESS → DONE
   // Store users: OVERDUE → NOT_YET → ON_PROGRESS → DONE
-  const statusOptions = isHQUser ? HQ_STATUS_OPTIONS : STORE_STATUS_OPTIONS;
-  const hqCheckOptions = isHQUser ? HQ_STATUS_OPTIONS : STORE_STATUS_OPTIONS;
+  const statusOptions = isHQ ? HQ_STATUS_OPTIONS : STORE_STATUS_OPTIONS;
+  const hqCheckOptions = isHQ ? HQ_STATUS_OPTIONS : STORE_STATUS_OPTIONS;
 
   // Toggle accordion
   const toggleRow = (taskId: string) => {
@@ -395,7 +399,7 @@ export default function TaskListPage() {
 
   const filteredTasks = tasks.filter((task) => {
     // User type filter: Store users only see specific statuses
-    if (!isHQUser) {
+    if (!isHQ) {
       // Store users only see: OVERDUE, NOT_YET, ON_PROGRESS, DONE
       const allowedForStore = STORE_STATUS_OPTIONS;
       if (!allowedForStore.includes(task.status)) {
@@ -454,7 +458,7 @@ export default function TaskListPage() {
         </div>
 
         {/* Expiring Drafts Warning Banner (HQ users only, when drafts are about to expire) */}
-        {isHQUser && draftInfo?.expiring_drafts && draftInfo.expiring_drafts.length > 0 && (
+        {isHQ && draftInfo?.expiring_drafts && draftInfo.expiring_drafts.length > 0 && (
           <div className="mb-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
             <div className="flex items-start gap-3">
               <svg className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -543,7 +547,7 @@ export default function TaskListPage() {
             </button>
 
             {/* Draft limit indicator + Add New button (HQ users only) */}
-            {isHQUser && (
+            {isHQ && (
               <div className="flex items-center gap-3">
                 {/* Draft limit badge */}
                 {sourceDraftInfo && (

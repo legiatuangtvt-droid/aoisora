@@ -66,6 +66,10 @@ class AuthController extends Controller
         // Load relationships
         $staff->load(['store', 'department']);
 
+        // Get permissions info
+        $permissionService = app(\App\Services\JobGradePermissionService::class);
+        $permissions = $permissionService->getPermissionInfo($staff);
+
         return response()->json([
             'success' => true,
             'access_token' => $token,
@@ -79,11 +83,13 @@ class AuthController extends Controller
                 'phone' => $staff->phone,
                 'role' => $staff->role,
                 'position' => $staff->position,
+                'job_grade' => $staff->job_grade,
                 'store_id' => $staff->store_id,
                 'store_name' => $staff->store?->store_name,
                 'department_id' => $staff->department_id,
                 'department_name' => $staff->department?->department_name,
                 'avatar_url' => $staff->avatar_url,
+                'permissions' => $permissions,
             ],
         ]);
     }
@@ -96,6 +102,10 @@ class AuthController extends Controller
         $staff = $request->user();
         $staff->load(['store', 'department', 'team']);
 
+        // Get permissions info
+        $permissionService = app(\App\Services\JobGradePermissionService::class);
+        $permissions = $permissionService->getPermissionInfo($staff);
+
         return response()->json([
             'success' => true,
             'user' => [
@@ -106,6 +116,7 @@ class AuthController extends Controller
                 'phone' => $staff->phone,
                 'role' => $staff->role,
                 'position' => $staff->position,
+                'job_grade' => $staff->job_grade,
                 'store_id' => $staff->store_id,
                 'store_name' => $staff->store?->store_name,
                 'department_id' => $staff->department_id,
@@ -114,6 +125,7 @@ class AuthController extends Controller
                 'team_name' => $staff->team?->team_name,
                 'avatar_url' => $staff->avatar_url,
                 'skills' => $staff->skills,
+                'permissions' => $permissions,
             ],
         ]);
     }

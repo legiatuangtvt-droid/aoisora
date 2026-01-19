@@ -42,7 +42,8 @@ export default function UserSwitcherBubble() {
 
   const handleSelectUser = (user: AppUser) => {
     setCurrentUser(user);
-    setIsUserSwitcherOpen(false);
+    // Keep popup open so user can quickly switch between different grades for testing
+    // setIsUserSwitcherOpen(false);
   };
 
   const renderUserItem = (user: AppUser, isActive: boolean) => {

@@ -4,7 +4,7 @@
 // HQ Job Grades (G2-G9): Headquarter staff
 // Store Job Grades (S1-S6): Store staff
 export type HQJobGrade = 'G2' | 'G3' | 'G4' | 'G5' | 'G6' | 'G7' | 'G8' | 'G9';
-export type StoreJobGrade = 'S1' | 'S2' | 'S3' | 'S4' | 'S5' | 'S6';
+export type StoreJobGrade = 'S1' | 'S2' | 'S3' | 'S4' | 'S5' | 'S6' | 'S7';
 export type JobGrade = HQJobGrade | StoreJobGrade;
 
 export type DepartmentId = 'SMBU' | 'Admin' | 'OP' | 'CONTROL' | 'IMPROVEMENT' | 'HR' | 'MG' | 'MD';
@@ -76,13 +76,14 @@ export const JOB_GRADE_COLORS: Record<JobGrade, string> = {
   'G7': '#DC2626', // red - Senior General Manager
   'G8': '#991B1B', // dark red - CCO
   'G9': '#7C3AED', // purple - General Director
-  // Store Job Grades (S1-S6)
+  // Store Job Grades (S1-S7)
   'S1': '#9CA3AF', // gray - Staff
-  'S2': '#81AADB', // light blue - Store Leader G2
-  'S3': '#22A6A1', // teal - Store Leader G3
+  'S2': '#81AADB', // light blue - Deputy Store Leader
+  'S3': '#22A6A1', // teal - Store Leader
   'S4': '#1F7BF2', // blue - Store In-charge
   'S5': '#8B5CF6', // purple - Area Manager
-  'S6': '#FF9900', // orange - Region Manager
+  'S6': '#FF9900', // orange - Zone Manager
+  'S7': '#DC2626', // red - Regional Manager
 };
 
 // Job Grade titles (Vietnamese)
@@ -102,7 +103,8 @@ export const JOB_GRADE_TITLES_VI: Record<JobGrade, string> = {
   'S3': 'Trưởng cửa hàng',
   'S4': 'Trưởng cụm cửa hàng',
   'S5': 'Quản lý khu vực',
-  'S6': 'Quản lý miền',
+  'S6': 'Quản lý zone',
+  'S7': 'Quản lý miền',
 };
 
 // Job Grade titles (English)
@@ -118,11 +120,12 @@ export const JOB_GRADE_TITLES: Record<JobGrade, string> = {
   'G9': 'General Director',
   // Store Job Grades
   'S1': 'Staff',
-  'S2': 'Store Leader G2',
-  'S3': 'Store Leader G3',
+  'S2': 'Deputy Store Leader',
+  'S3': 'Store Leader',
   'S4': 'Store In-charge',
   'S5': 'Area Manager',
-  'S6': 'Region Manager',
+  'S6': 'Zone Manager',
+  'S7': 'Regional Manager',
 };
 
 // Management Scope by Job Grade
@@ -144,7 +147,8 @@ export const JOB_GRADE_SCOPE: Record<JobGrade, ManagementScope> = {
   'S3': 'STORE',
   'S4': 'MULTI_STORE',
   'S5': 'AREA',
-  'S6': 'REGION',
+  'S6': 'AREA', // Zone Manager - manages zones within area
+  'S7': 'REGION',
 };
 
 // Job Grade Level (for comparison/hierarchy)
@@ -158,13 +162,14 @@ export const JOB_GRADE_LEVEL: Record<JobGrade, number> = {
   'G7': 6,
   'G8': 7,
   'G9': 8,
-  // Store Job Grades (1-6)
+  // Store Job Grades (1-7)
   'S1': 1,
   'S2': 2,
   'S3': 3,
   'S4': 4,
   'S5': 5,
   'S6': 6,
+  'S7': 7,
 };
 
 // Department icons and colors

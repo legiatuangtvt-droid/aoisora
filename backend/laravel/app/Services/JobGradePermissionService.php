@@ -210,8 +210,35 @@ class JobGradePermissionService
             'scope' => $this->getScope($jobGrade),
             'level' => $this->getLevel($jobGrade),
             'has_company_access' => $this->hasCompanyAccess($user),
+            'can_create_task' => $this->canCreateTask($user),
             'department_id' => $user->department_id,
             'store_id' => $user->store_id,
         ];
+    }
+
+    /**
+     * Check if user can create tasks
+     *
+     * According to design spec (CLAUDE.md section 12.1):
+     * - Only HQ users with Job Grade G2-G9 can create tasks
+     * - Store users (S1-S7) CANNOT create tasks
+     *
+     * @param Staff $user
+     * @return bool
+     */
+    public function canCreateTask(Staff $user): bool
+    {
+        $jobGrade = $user->job_grade ?? '';
+        return $this->isHQGrade($jobGrade);
+    }
+
+    /**
+     * Get all valid HQ grades that can create tasks
+     *
+     * @return array
+     */
+    public function getTaskCreationGrades(): array
+    {
+        return array_keys(self::HQ_GRADES);
     }
 }

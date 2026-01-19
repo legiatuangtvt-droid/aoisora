@@ -36,6 +36,11 @@ export async function fetchWithAuth(
     ? localStorage.getItem('optichain_token')
     : null;
 
+  // Get switched user ID for testing mode (User Switcher)
+  const switchedUserId = typeof window !== 'undefined'
+    ? localStorage.getItem('optichain_switched_user_id')
+    : null;
+
   // Add Authorization header if token exists
   const headers: Record<string, string> = {
     'Accept': 'application/json',
@@ -45,6 +50,12 @@ export async function fetchWithAuth(
 
   if (token && !skipAuthCheck) {
     headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  // Add X-Switch-User-Id header for testing mode
+  // This allows testing different user permissions without re-authenticating
+  if (switchedUserId) {
+    headers['X-Switch-User-Id'] = switchedUserId;
   }
 
   // Make the request

@@ -2,6 +2,7 @@
 
 namespace App\Traits;
 
+use App\Models\Staff;
 use App\Services\JobGradePermissionService;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -16,9 +17,38 @@ use Illuminate\Database\Eloquent\Builder;
  *       $query = $this->applyJobGradeFilter($query, $request);
  *       return $query->get();
  *   }
+ *
+ * Testing Mode:
+ *   Frontend can pass X-Switch-User-Id header to simulate different users.
+ *   This is useful for testing permission filtering without re-authenticating.
  */
 trait HasJobGradePermissions
 {
+    /**
+     * Get the effective user for permission checking.
+     * If X-Switch-User-Id header is present, use that user instead of authenticated user.
+     * This allows testing different user permissions without re-authenticating.
+     *
+     * @param mixed $request
+     * @return Staff|null
+     */
+    protected function getEffectiveUser($request): ?Staff
+    {
+        // Check for X-Switch-User-Id header (testing mode)
+        $switchedUserId = $request->header('X-Switch-User-Id');
+
+        if ($switchedUserId) {
+            // Find the switched user by staff_id
+            $switchedUser = Staff::find($switchedUserId);
+            if ($switchedUser) {
+                return $switchedUser;
+            }
+        }
+
+        // Fall back to authenticated user
+        return $request->user('sanctum');
+    }
+
     /**
      * Apply job grade permission filter to query
      *
@@ -36,8 +66,8 @@ trait HasJobGradePermissions
         string $deptColumn = 'dept_id',
         string $staffColumn = 'assigned_staff_id'
     ): Builder {
-        // Try to resolve user from Bearer token (works even on public routes)
-        $user = $request->user('sanctum');
+        // Get effective user (may be switched user in testing mode)
+        $user = $this->getEffectiveUser($request);
 
         if (!$user) {
             // No authenticated user - return all data (public access)
@@ -51,11 +81,11 @@ trait HasJobGradePermissions
     }
 
     /**
-     * Get permission info for the authenticated user
+     * Get permission info for the effective user (may be switched user in testing mode)
      */
     protected function getPermissionInfo($request): array
     {
-        $user = $request->user();
+        $user = $this->getEffectiveUser($request);
 
         if (!$user) {
             return [
@@ -76,7 +106,7 @@ trait HasJobGradePermissions
      */
     protected function hasCompanyAccess($request): bool
     {
-        $user = $request->user();
+        $user = $this->getEffectiveUser($request);
 
         if (!$user) {
             return false;
@@ -91,7 +121,7 @@ trait HasJobGradePermissions
      */
     protected function canViewStore($request, int $storeId): bool
     {
-        $user = $request->user();
+        $user = $this->getEffectiveUser($request);
 
         if (!$user) {
             return false;

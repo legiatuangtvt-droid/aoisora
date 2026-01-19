@@ -84,9 +84,33 @@ class TaskController extends Controller
 
     /**
      * Create new task
+     *
+     * Permission: Only HQ users (G2-G9) can create tasks.
+     * Store users (S1-S7) are not allowed to create tasks.
      */
     public function store(Request $request)
     {
+        // Get effective user (may be switched user in testing mode via X-Switch-User-Id header)
+        $user = $this->getEffectiveUser($request);
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Unauthorized',
+                'error' => 'User not authenticated',
+            ], 401);
+        }
+
+        // Permission check: Only HQ users (G2-G9) can create tasks
+        $permissionService = app(\App\Services\JobGradePermissionService::class);
+        if (!$permissionService->canCreateTask($user)) {
+            return response()->json([
+                'message' => 'Permission denied',
+                'error' => 'Only HQ users (G2-G9) can create tasks. Store users are not allowed to create tasks.',
+                'user_job_grade' => $user->job_grade,
+                'allowed_grades' => $permissionService->getTaskCreationGrades(),
+            ], 403);
+        }
+
         $request->validate([
             'task_name' => 'required|string|max:500',
             'task_description' => 'nullable|string',
@@ -103,7 +127,6 @@ class TaskController extends Controller
             'receiver_type' => 'nullable|string|in:store,hq_user',
         ]);
 
-        $user = $request->user();
         $statusId = $request->input('status_id', self::DRAFT_STATUS_ID);
         $source = $request->input('source', Task::SOURCE_TASK_LIST);
 
@@ -154,7 +177,8 @@ class TaskController extends Controller
             'priority' => 'nullable|string|in:low,normal,high,urgent',
         ]);
 
-        $user = $request->user();
+        // Get effective user (may be switched user in testing mode)
+        $user = $this->getEffectiveUser($request);
         $newStatusId = $request->input('status_id');
         $source = $task->source ?? Task::SOURCE_TASK_LIST;
 
@@ -198,7 +222,8 @@ class TaskController extends Controller
             'status_id' => 'required|exists:code_master,code_master_id',
         ]);
 
-        $user = $request->user();
+        // Get effective user (may be switched user in testing mode)
+        $user = $this->getEffectiveUser($request);
         $newStatusId = $request->status_id;
 
         // Check draft limit if changing status TO DRAFT (and it wasn't already DRAFT)
@@ -281,7 +306,8 @@ class TaskController extends Controller
      */
     public function getDraftInfo(Request $request)
     {
-        $user = $request->user();
+        // Get effective user (may be switched user in testing mode)
+        $user = $this->getEffectiveUser($request);
         $staffId = $user->staff_id;
 
         // Get counts per source (including pending approval tasks)
@@ -449,7 +475,8 @@ class TaskController extends Controller
     public function submit(Request $request, $id)
     {
         $task = Task::findOrFail($id);
-        $user = $request->user();
+        // Get effective user (may be switched user in testing mode)
+        $user = $this->getEffectiveUser($request);
 
         // Only creator can submit
         if ($task->created_staff_id !== $user->staff_id) {
@@ -523,7 +550,8 @@ class TaskController extends Controller
     public function approve(Request $request, $id)
     {
         $task = Task::findOrFail($id);
-        $user = $request->user();
+        // Get effective user (may be switched user in testing mode)
+        $user = $this->getEffectiveUser($request);
 
         // Only assigned approver can approve
         if ($task->approver_id !== $user->staff_id) {
@@ -569,7 +597,8 @@ class TaskController extends Controller
     public function reject(Request $request, $id)
     {
         $task = Task::findOrFail($id);
-        $user = $request->user();
+        // Get effective user (may be switched user in testing mode)
+        $user = $this->getEffectiveUser($request);
 
         // Only assigned approver can reject
         if ($task->approver_id !== $user->staff_id) {
@@ -626,7 +655,8 @@ class TaskController extends Controller
      */
     public function pendingApproval(Request $request)
     {
-        $user = $request->user();
+        // Get effective user (may be switched user in testing mode)
+        $user = $this->getEffectiveUser($request);
 
         $tasks = Task::where('approver_id', $user->staff_id)
             ->where('status_id', self::APPROVE_STATUS_ID)

@@ -130,6 +130,11 @@ export function useTaskUpdates(options: UseTaskUpdatesOptions = {}): UseTaskUpda
 
   // Subscribe to task updates
   useEffect(() => {
+    // Only run on client-side
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     if (!enabled) {
       return;
     }

@@ -110,7 +110,8 @@ export function subscribeToTaskUpdates(
   const echo = getEcho();
 
   if (!echo) {
-    console.warn('Echo not available (server-side)');
+    // Silent return - Echo is disabled or not yet initialized (SSR)
+    // This is expected behavior, not an error
     return () => {};
   }
 
