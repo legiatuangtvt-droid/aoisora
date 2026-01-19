@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, memo, useRef } from 'react';
 import { TaskLevel, TaskInformation, TaskInstructions, TaskScope, TaskApproval } from '@/types/addTask';
 import { mockMasterData, createEmptyTaskLevel } from '@/data/mockAddTask';
 import TaskLevelCard from './TaskLevelCard';
@@ -62,6 +62,220 @@ interface AddTaskFormProps {
 // Section IDs for accordion
 type SectionId = 'A' | 'B' | 'C' | 'D';
 
+// Memoized TaskLevelCard wrapper to prevent re-renders
+interface TaskLevelItemProps {
+  taskLevel: TaskLevel;
+  onNameChange: (taskLevelId: string, name: string) => void;
+  onAddSubLevel: (parentId: string) => void;
+  onDeleteTaskLevel: (taskLevelId: string) => void;
+  onTaskInfoChange: (taskLevelId: string, data: TaskInformation) => void;
+  onInstructionsChange: (taskLevelId: string, data: TaskInstructions) => void;
+  onScopeChange: (taskLevelId: string, data: TaskScope) => void;
+  onApprovalChange: (taskLevelId: string, data: TaskApproval) => void;
+  onSectionToggle: (taskLevelId: string, sectionId: SectionId) => void;
+  expandedSection: SectionId | null;
+  nameError?: string;
+  sectionErrorCounts: { A: number; B: number; C: number; D: number };
+  canAddSubLevel: boolean;
+  canDelete: boolean;
+  showScopeSection: boolean;
+  scopeType: 'store' | 'hq';
+  zoneOptions: Array<{ id: string; name: string }>;
+  areaOptions: Array<{ id: string; name: string }>;
+  storeOptions: Array<{ id: string; name: string }>;
+  currentUser?: { id: number; name: string; position: string };
+  autoApprover?: { id: number; name: string; position: string; job_grade: string };
+  isApprovalReadOnly: boolean;
+}
+
+const TaskLevelItem = memo(function TaskLevelItem({
+  taskLevel,
+  onNameChange,
+  onAddSubLevel,
+  onDeleteTaskLevel,
+  onTaskInfoChange,
+  onInstructionsChange,
+  onScopeChange,
+  onApprovalChange,
+  onSectionToggle,
+  expandedSection,
+  nameError,
+  sectionErrorCounts,
+  canAddSubLevel,
+  canDelete,
+  showScopeSection,
+  scopeType,
+  zoneOptions,
+  areaOptions,
+  storeOptions,
+  currentUser,
+  autoApprover,
+  isApprovalReadOnly,
+}: TaskLevelItemProps) {
+  const taskLevelId = taskLevel.id;
+
+  // Memoized handlers to prevent re-renders
+  const handleNameChange = useCallback((name: string) => {
+    onNameChange(taskLevelId, name);
+  }, [taskLevelId, onNameChange]);
+
+  const handleAddSubLevel = useCallback(() => {
+    onAddSubLevel(taskLevelId);
+  }, [taskLevelId, onAddSubLevel]);
+
+  const handleDelete = useCallback(() => {
+    onDeleteTaskLevel(taskLevelId);
+  }, [taskLevelId, onDeleteTaskLevel]);
+
+  const handleTaskInfoChange = useCallback((data: TaskInformation) => {
+    onTaskInfoChange(taskLevelId, data);
+  }, [taskLevelId, onTaskInfoChange]);
+
+  const handleInstructionsChange = useCallback((data: TaskInstructions) => {
+    onInstructionsChange(taskLevelId, data);
+  }, [taskLevelId, onInstructionsChange]);
+
+  const handleScopeChange = useCallback((data: TaskScope) => {
+    onScopeChange(taskLevelId, data);
+  }, [taskLevelId, onScopeChange]);
+
+  const handleApprovalChange = useCallback((data: TaskApproval) => {
+    onApprovalChange(taskLevelId, data);
+  }, [taskLevelId, onApprovalChange]);
+
+  const handleSectionToggleA = useCallback(() => {
+    onSectionToggle(taskLevelId, 'A');
+  }, [taskLevelId, onSectionToggle]);
+
+  const handleSectionToggleB = useCallback(() => {
+    onSectionToggle(taskLevelId, 'B');
+  }, [taskLevelId, onSectionToggle]);
+
+  const handleSectionToggleC = useCallback(() => {
+    onSectionToggle(taskLevelId, 'C');
+  }, [taskLevelId, onSectionToggle]);
+
+  const handleSectionToggleD = useCallback(() => {
+    onSectionToggle(taskLevelId, 'D');
+  }, [taskLevelId, onSectionToggle]);
+
+  // Section icons (static, no need to memoize)
+  const TaskInfoIcon = (
+    <svg className="w-4 h-4 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  );
+
+  const InstructionsIcon = (
+    <svg className="w-4 h-4 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+    </svg>
+  );
+
+  const ScopeIcon = (
+    <svg className="w-4 h-4 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  );
+
+  const ApprovalIcon = (
+    <svg className="w-4 h-4 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  );
+
+  return (
+    <TaskLevelCard
+      taskLevel={taskLevel}
+      onNameChange={handleNameChange}
+      onAddSubLevel={handleAddSubLevel}
+      onDelete={handleDelete}
+      canAddSubLevel={canAddSubLevel}
+      canDelete={canDelete}
+      nameError={nameError}
+    >
+      {/* A. Task Information */}
+      <SectionCard
+        id="A"
+        title="Task Information"
+        icon={TaskInfoIcon}
+        isExpanded={expandedSection === 'A'}
+        onToggle={handleSectionToggleA}
+        errorCount={sectionErrorCounts.A}
+      >
+        <TaskInfoSection
+          data={taskLevel.taskInformation}
+          onChange={handleTaskInfoChange}
+          taskTypeOptions={mockMasterData.taskTypes}
+          executionTimeOptions={mockMasterData.executionTimes}
+        />
+      </SectionCard>
+
+      {/* B. Instructions */}
+      <SectionCard
+        id="B"
+        title="Instructions"
+        icon={InstructionsIcon}
+        isExpanded={expandedSection === 'B'}
+        onToggle={handleSectionToggleB}
+        errorCount={sectionErrorCounts.B}
+      >
+        <InstructionsSection
+          data={taskLevel.instructions}
+          onChange={handleInstructionsChange}
+          taskTypeOptions={mockMasterData.instructionTaskTypes}
+        />
+      </SectionCard>
+
+      {/* C. Scope - Hidden for library flow (will be selected when dispatching) */}
+      {showScopeSection && (
+        <SectionCard
+          id="C"
+          title={scopeType === 'hq' ? 'Scope (HQ Users)' : 'Scope (Stores)'}
+          icon={ScopeIcon}
+          isExpanded={expandedSection === 'C'}
+          onToggle={handleSectionToggleC}
+          errorCount={sectionErrorCounts.C}
+        >
+          <ScopeSection
+            data={taskLevel.scope}
+            onChange={handleScopeChange}
+            regionOptions={mockMasterData.regions}
+            zoneOptions={zoneOptions}
+            areaOptions={areaOptions}
+            storeOptions={storeOptions}
+            storeLeaderOptions={mockMasterData.storeLeaders}
+            staffOptions={mockMasterData.staff}
+            scopeType={scopeType}
+          />
+        </SectionCard>
+      )}
+
+      {/* D. Approval Process */}
+      <SectionCard
+        id="D"
+        title="Approval Process"
+        icon={ApprovalIcon}
+        isExpanded={expandedSection === 'D'}
+        onToggle={handleSectionToggleD}
+        errorCount={sectionErrorCounts.D}
+      >
+        <ApprovalSection
+          data={taskLevel.approval}
+          onChange={handleApprovalChange}
+          initiatorOptions={mockMasterData.initiators}
+          leaderOptions={mockMasterData.leaders}
+          hodOptions={mockMasterData.hods}
+          currentUser={currentUser}
+          autoApprover={autoApprover}
+          isReadOnly={isApprovalReadOnly}
+        />
+      </SectionCard>
+    </TaskLevelCard>
+  );
+});
+
 export default function AddTaskForm({
   taskLevels,
   onTaskLevelsChange,
@@ -80,6 +294,19 @@ export default function AddTaskForm({
 }: AddTaskFormProps) {
   // Get current user from context
   const { currentUser } = useUser();
+
+  // Use refs to keep stable references for callbacks
+  const taskLevelsRef = useRef(taskLevels);
+  const onTaskLevelsChangeRef = useRef(onTaskLevelsChange);
+
+  // Update refs when props change
+  useEffect(() => {
+    taskLevelsRef.current = taskLevels;
+  }, [taskLevels]);
+
+  useEffect(() => {
+    onTaskLevelsChangeRef.current = onTaskLevelsChange;
+  }, [onTaskLevelsChange]);
 
   // Determine if Scope section should be shown based on source
   // - task_list: Show Store scope (Region/Zone/Area/Store)
@@ -194,15 +421,6 @@ export default function AddTaskForm({
   // Determine if form is read-only
   const isReadOnly = taskStatus === 'approve' || taskStatus === 'approved';
 
-  // Use setter function that calls parent callback
-  const setTaskLevels = (updater: TaskLevel[] | ((prev: TaskLevel[]) => TaskLevel[])) => {
-    if (typeof updater === 'function') {
-      onTaskLevelsChange(updater(taskLevels));
-    } else {
-      onTaskLevelsChange(updater);
-    }
-  };
-
   // Track which section is expanded for each task level (accordion behavior)
   // Key: taskLevelId, Value: expanded sectionId or null
   const [expandedSections, setExpandedSections] = useState<Record<string, SectionId | null>>({});
@@ -215,12 +433,14 @@ export default function AddTaskForm({
     }));
   }, []);
 
-  // Update task level
+  // Update task level - use refs to keep stable callback
   const updateTaskLevel = useCallback((taskLevelId: string, updates: Partial<TaskLevel>) => {
-    setTaskLevels((prev) =>
-      prev.map((tl) => (tl.id === taskLevelId ? { ...tl, ...updates } : tl))
+    const currentLevels = taskLevelsRef.current;
+    const onChange = onTaskLevelsChangeRef.current;
+    onChange(
+      currentLevels.map((tl) => (tl.id === taskLevelId ? { ...tl, ...updates } : tl))
     );
-  }, []);
+  }, []); // Empty deps - uses refs
 
   // Handle name change
   const handleNameChange = useCallback((taskLevelId: string, name: string) => {
@@ -253,28 +473,30 @@ export default function AddTaskForm({
     clearValidationErrors();
   }, [updateTaskLevel, clearValidationErrors]);
 
-  // Add sub-level
+  // Add sub-level - use refs to keep stable callback
   const handleAddSubLevel = useCallback((parentId: string) => {
-    const parent = taskLevels.find((tl) => tl.id === parentId);
+    const currentLevels = taskLevelsRef.current;
+    const onChange = onTaskLevelsChangeRef.current;
+    const parent = currentLevels.find((tl) => tl.id === parentId);
     if (!parent || parent.level >= 5) return;
 
     const newTaskLevel = createEmptyTaskLevel(parent.level + 1, parentId);
-    setTaskLevels((prev) => [...prev, newTaskLevel]);
-  }, [taskLevels]);
+    onChange([...currentLevels, newTaskLevel]);
+  }, []); // Empty deps - uses refs
 
-  // Delete task level
+  // Delete task level - use refs to keep stable callback
   const handleDeleteTaskLevel = useCallback((taskLevelId: string) => {
-    setTaskLevels((prev) => {
-      // Find all children recursively
-      const findChildren = (parentId: string): string[] => {
-        const children = prev.filter((tl) => tl.parentId === parentId);
-        return children.flatMap((c) => [c.id, ...findChildren(c.id)]);
-      };
+    const currentLevels = taskLevelsRef.current;
+    const onChange = onTaskLevelsChangeRef.current;
+    // Find all children recursively
+    const findChildren = (parentId: string, levels: TaskLevel[]): string[] => {
+      const children = levels.filter((tl) => tl.parentId === parentId);
+      return children.flatMap((c) => [c.id, ...findChildren(c.id, levels)]);
+    };
 
-      const idsToRemove = [taskLevelId, ...findChildren(taskLevelId)];
-      return prev.filter((tl) => !idsToRemove.includes(tl.id));
-    });
-  }, []);
+    const idsToRemove = [taskLevelId, ...findChildren(taskLevelId, currentLevels)];
+    onChange(currentLevels.filter((tl) => !idsToRemove.includes(tl.id)));
+  }, []); // Empty deps - uses refs
 
   // Get zone options based on selected region
   const getZoneOptions = (regionId: string) => {
@@ -291,32 +513,6 @@ export default function AddTaskForm({
     return mockMasterData.stores[areaId] || [];
   };
 
-  // Section icons
-  const TaskInfoIcon = () => (
-    <svg className="w-4 h-4 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-  );
-
-  const InstructionsIcon = () => (
-    <svg className="w-4 h-4 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-    </svg>
-  );
-
-  const ScopeIcon = () => (
-    <svg className="w-4 h-4 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-    </svg>
-  );
-
-  const ApprovalIcon = () => (
-    <svg className="w-4 h-4 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-  );
-
   // Organize task levels into tree structure
   const getTaskLevelsTree = () => {
     const rootLevels = taskLevels.filter((tl) => tl.parentId === null);
@@ -329,102 +525,45 @@ export default function AddTaskForm({
       const canDelete = taskLevels.length > 1;
 
       return (
-        <TaskLevelCard
+        <TaskLevelItem
+          key={taskLevel.id}
           taskLevel={taskLevel}
-          onNameChange={(name) => handleNameChange(taskLevel.id, name)}
-          onAddSubLevel={() => handleAddSubLevel(taskLevel.id)}
-          onDelete={() => handleDeleteTaskLevel(taskLevel.id)}
+          onNameChange={handleNameChange}
+          onAddSubLevel={handleAddSubLevel}
+          onDeleteTaskLevel={handleDeleteTaskLevel}
+          onTaskInfoChange={handleTaskInfoChange}
+          onInstructionsChange={handleInstructionsChange}
+          onScopeChange={handleScopeChange}
+          onApprovalChange={handleApprovalChange}
+          onSectionToggle={handleSectionToggle}
+          expandedSection={expandedSections[taskLevel.id] || null}
+          nameError={getNameError(taskLevel.id)}
+          sectionErrorCounts={{
+            A: getSectionErrorCount(taskLevel.id, 'A'),
+            B: getSectionErrorCount(taskLevel.id, 'B'),
+            C: getSectionErrorCount(taskLevel.id, 'C'),
+            D: getSectionErrorCount(taskLevel.id, 'D'),
+          }}
           canAddSubLevel={canAddSubLevel}
           canDelete={canDelete}
-          nameError={getNameError(taskLevel.id)}
-        >
-          {/* A. Task Information */}
-          <SectionCard
-            id="A"
-            title="Task Information"
-            icon={<TaskInfoIcon />}
-            isExpanded={expandedSections[taskLevel.id] === 'A'}
-            onToggle={() => handleSectionToggle(taskLevel.id, 'A')}
-            errorCount={getSectionErrorCount(taskLevel.id, 'A')}
-          >
-            <TaskInfoSection
-              data={taskLevel.taskInformation}
-              onChange={(data) => handleTaskInfoChange(taskLevel.id, data)}
-              taskTypeOptions={mockMasterData.taskTypes}
-              executionTimeOptions={mockMasterData.executionTimes}
-            />
-          </SectionCard>
-
-          {/* B. Instructions */}
-          <SectionCard
-            id="B"
-            title="Instructions"
-            icon={<InstructionsIcon />}
-            isExpanded={expandedSections[taskLevel.id] === 'B'}
-            onToggle={() => handleSectionToggle(taskLevel.id, 'B')}
-            errorCount={getSectionErrorCount(taskLevel.id, 'B')}
-          >
-            <InstructionsSection
-              data={taskLevel.instructions}
-              onChange={(data) => handleInstructionsChange(taskLevel.id, data)}
-              taskTypeOptions={mockMasterData.instructionTaskTypes}
-            />
-          </SectionCard>
-
-          {/* C. Scope - Hidden for library flow (will be selected when dispatching) */}
-          {showScopeSection && (
-            <SectionCard
-              id="C"
-              title={source === 'todo_task' ? 'Scope (HQ Users)' : 'Scope (Stores)'}
-              icon={<ScopeIcon />}
-              isExpanded={expandedSections[taskLevel.id] === 'C'}
-              onToggle={() => handleSectionToggle(taskLevel.id, 'C')}
-              errorCount={getSectionErrorCount(taskLevel.id, 'C')}
-            >
-              <ScopeSection
-                data={taskLevel.scope}
-                onChange={(data) => handleScopeChange(taskLevel.id, data)}
-                regionOptions={mockMasterData.regions}
-                zoneOptions={getZoneOptions(taskLevel.scope.regionId)}
-                areaOptions={getAreaOptions(taskLevel.scope.zoneId)}
-                storeOptions={getStoreOptions(taskLevel.scope.areaId)}
-                storeLeaderOptions={mockMasterData.storeLeaders}
-                staffOptions={mockMasterData.staff}
-                scopeType={source === 'todo_task' ? 'hq' : 'store'}
-              />
-            </SectionCard>
-          )}
-
-          {/* D. Approval Process */}
-          <SectionCard
-            id="D"
-            title="Approval Process"
-            icon={<ApprovalIcon />}
-            isExpanded={expandedSections[taskLevel.id] === 'D'}
-            onToggle={() => handleSectionToggle(taskLevel.id, 'D')}
-            errorCount={getSectionErrorCount(taskLevel.id, 'D')}
-          >
-            <ApprovalSection
-              data={taskLevel.approval}
-              onChange={(data) => handleApprovalChange(taskLevel.id, data)}
-              initiatorOptions={mockMasterData.initiators}
-              leaderOptions={mockMasterData.leaders}
-              hodOptions={mockMasterData.hods}
-              currentUser={currentUser ? {
-                id: currentUser.staff_id,
-                name: currentUser.staff_name,
-                position: currentUser.job_grade,
-              } : undefined}
-              autoApprover={autoApprover ? {
-                id: autoApprover.id,
-                name: autoApprover.name,
-                position: autoApprover.position,
-                job_grade: autoApprover.job_grade,
-              } : undefined}
-              isReadOnly={isCreatorViewingApproval || taskStatus === 'approve'}
-            />
-          </SectionCard>
-        </TaskLevelCard>
+          showScopeSection={showScopeSection}
+          scopeType={source === 'todo_task' ? 'hq' : 'store'}
+          zoneOptions={getZoneOptions(taskLevel.scope.regionId)}
+          areaOptions={getAreaOptions(taskLevel.scope.zoneId)}
+          storeOptions={getStoreOptions(taskLevel.scope.areaId)}
+          currentUser={currentUser ? {
+            id: currentUser.staff_id,
+            name: currentUser.staff_name,
+            position: currentUser.job_grade,
+          } : undefined}
+          autoApprover={autoApprover ? {
+            id: autoApprover.id,
+            name: autoApprover.name,
+            position: autoApprover.position,
+            job_grade: autoApprover.job_grade,
+          } : undefined}
+          isApprovalReadOnly={isCreatorViewingApproval || taskStatus === 'approve'}
+        />
       );
     };
 
