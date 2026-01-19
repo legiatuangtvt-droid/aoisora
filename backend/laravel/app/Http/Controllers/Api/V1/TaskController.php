@@ -305,11 +305,49 @@ class TaskController extends Controller
         // Total across all sources
         $totalDrafts = array_sum(array_column($bySource, 'current_drafts'));
 
+        // Also include expiring drafts (25-30 days old)
+        $expiringDrafts = $this->getExpiringDraftsForUser($staffId);
+
         return response()->json([
             'total_drafts' => $totalDrafts,
             'max_drafts_per_source' => self::MAX_DRAFTS_PER_USER,
             'by_source' => $bySource,
+            'expiring_drafts' => $expiringDrafts,
         ]);
+    }
+
+    /**
+     * Get drafts that will expire in 1-5 days for a user
+     *
+     * @param int $staffId
+     * @return array
+     */
+    private function getExpiringDraftsForUser(int $staffId): array
+    {
+        $staleDays = 30;
+        $warningDays = 5;
+
+        // Find drafts that will expire in 1-5 days
+        $warningStartDate = now()->subDays($staleDays - $warningDays); // 25 days old
+        $warningEndDate = now()->subDays($staleDays - 1); // 29 days old
+
+        $expiringDrafts = Task::where('status_id', self::DRAFT_STATUS_ID)
+            ->where('created_staff_id', $staffId)
+            ->whereBetween('updated_at', [$warningEndDate, $warningStartDate])
+            ->get()
+            ->map(function ($task) use ($staleDays) {
+                $daysUntilDeletion = $staleDays - now()->diffInDays($task->updated_at);
+                return [
+                    'task_id' => $task->task_id,
+                    'task_name' => $task->task_name,
+                    'source' => $task->source,
+                    'last_modified' => $task->updated_at->toIso8601String(),
+                    'days_until_deletion' => $daysUntilDeletion,
+                ];
+            })
+            ->toArray();
+
+        return $expiringDrafts;
     }
 
     /**

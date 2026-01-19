@@ -57,6 +57,9 @@ function AddTaskContent() {
   const [draftInfo, setDraftInfo] = useState<DraftInfo | null>(null);
   const [task, setTask] = useState<Task | null>(null);
 
+  // Track local changes for rejected tasks - allows resubmit when user edits form
+  const [localChangesDetected, setLocalChangesDetected] = useState(false);
+
   // Lifted state for task levels - shared between Detail and Maps tabs
   const [taskLevels, setTaskLevels] = useState<TaskLevel[]>([createEmptyTaskLevel(1)]);
 
@@ -76,6 +79,7 @@ function AddTaskContent() {
   const isApprover = isEditMode && !isCreator && task?.approver_id === currentUser?.staff_id;
 
   // Get rejection info if task was rejected
+  // Use localChangesDetected OR server-side has_changes_since_rejection to determine if user can resubmit
   const rejectionInfo: RejectionInfo | undefined = task?.rejection_count && task.rejection_count > 0 ? {
     reason: task.last_rejection_reason || 'No reason provided',
     rejectedAt: task.last_rejected_at || task.updated_at,
@@ -85,6 +89,7 @@ function AddTaskContent() {
     },
     rejectionCount: task.rejection_count,
     maxRejections: 3,
+    hasChangesSinceRejection: localChangesDetected || task.has_changes_since_rejection || false,
   } : undefined;
 
   // Get back link based on source
@@ -131,14 +136,24 @@ function AddTaskContent() {
     }
   }, [isEditMode, taskId]);
 
+  // Wrapper for taskLevels change to detect edits on rejected tasks
+  // This enables the Resubmit button immediately when user makes any change
+  const handleTaskLevelsChange = useCallback((newLevels: TaskLevel[]) => {
+    setTaskLevels(newLevels);
+    // If task was rejected and user is editing, mark local changes detected
+    if (task?.rejection_count && task.rejection_count > 0 && !localChangesDetected) {
+      setLocalChangesDetected(true);
+    }
+  }, [task?.rejection_count, localChangesDetected]);
+
   // Add sub-level handler for Maps tab
   const handleAddSubLevel = useCallback((parentId: string) => {
     const parent = taskLevels.find((tl) => tl.id === parentId);
     if (!parent || parent.level >= 5) return;
 
     const newTaskLevel = createEmptyTaskLevel(parent.level + 1, parentId);
-    setTaskLevels((prev) => [...prev, newTaskLevel]);
-  }, [taskLevels]);
+    handleTaskLevelsChange([...taskLevels, newTaskLevel]);
+  }, [taskLevels, handleTaskLevelsChange]);
 
   // Validate task_name for all task levels (required for draft)
   const validateForDraft = (taskLevels: TaskLevel[]): { isValid: boolean; errors: string[] } => {
@@ -448,6 +463,35 @@ function AddTaskContent() {
         </div>
       </nav>
 
+      {/* Expiring Draft Warning Banner (edit mode, draft status, within 5 days of deletion) */}
+      {isEditMode && task && task.status_id === STATUS_DRAFT_ID && (() => {
+        const lastModified = new Date(task.updated_at);
+        const now = new Date();
+        const daysSinceModified = Math.floor((now.getTime() - lastModified.getTime()) / (1000 * 60 * 60 * 24));
+        const daysUntilDeletion = 30 - daysSinceModified;
+
+        if (daysUntilDeletion <= 5 && daysUntilDeletion > 0) {
+          return (
+            <div className="mb-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+              <div className="flex items-start gap-3">
+                <svg className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <div>
+                  <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                    This draft will be automatically deleted in {daysUntilDeletion} {daysUntilDeletion === 1 ? 'day' : 'days'}
+                  </p>
+                  <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                    Drafts that haven&apos;t been edited for 30 days are automatically removed. Edit or submit this draft to prevent deletion.
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        }
+        return null;
+      })()}
+
       {/* Tabs - aligned to right */}
       <div className="flex justify-end mb-6">
         <div className="flex items-center gap-1 border-b border-gray-200 dark:border-gray-700">
@@ -478,7 +522,7 @@ function AddTaskContent() {
       {activeTab === 'detail' ? (
         <AddTaskForm
           taskLevels={taskLevels}
-          onTaskLevelsChange={setTaskLevels}
+          onTaskLevelsChange={handleTaskLevelsChange}
           onSaveDraft={handleSaveDraft}
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}

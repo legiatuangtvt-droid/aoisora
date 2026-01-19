@@ -378,6 +378,14 @@ export interface DraftInfoBySource {
   can_create_draft: boolean;
 }
 
+export interface ExpiringDraft {
+  task_id: number;
+  task_name: string;
+  source: 'task_list' | 'library' | 'todo_task';
+  last_modified: string;
+  days_until_deletion: number;
+}
+
 export interface DraftInfo {
   total_drafts: number;
   max_drafts_per_source: number;
@@ -386,6 +394,7 @@ export interface DraftInfo {
     library: DraftInfoBySource;
     todo_task: DraftInfoBySource;
   };
+  expiring_drafts?: ExpiringDraft[];
 }
 
 export async function getDraftInfo(): Promise<DraftInfo> {
@@ -449,6 +458,29 @@ export async function getPendingApprovals(params?: {
   }
   const query = searchParams.toString();
   return fetchApi<PaginatedTaskResponse>(`/tasks/pending-approval${query ? `?${query}` : ''}`);
+}
+
+// Get Approver for Staff (preview before submission)
+export interface ApproverInfo {
+  id: number;
+  name: string;
+  staff_code: string;
+  job_grade: string;
+  position: string;
+  department_id: number | null;
+  department_name: string;
+  store_id: number | null;
+  store_name: string;
+}
+
+export interface GetApproverResponse {
+  success: boolean;
+  approver: ApproverInfo | null;
+  message?: string;
+}
+
+export async function getApproverForStaff(staffId: number): Promise<GetApproverResponse> {
+  return fetchApi<GetApproverResponse>(`/staff/${staffId}/approver`);
 }
 
 // Task Checklists
@@ -1352,4 +1384,31 @@ export async function importStoresFromFile(file: File): Promise<StoreImportResul
   }
 
   return response.json();
+}
+
+// ============================================
+// User Switcher API (Development/Testing)
+// ============================================
+
+export interface UserSwitcherStaff {
+  staff_id: number;
+  staff_name: string;
+  staff_code: string;
+  email: string;
+  job_grade: string;
+  scope: string;
+  store_id: number | null;
+  store_name: string;
+  department_id: number | null;
+  department_name: string;
+}
+
+export interface UserSwitcherResponse {
+  data: UserSwitcherStaff[];
+  total: number;
+}
+
+// Get staff list for User Switcher
+export async function getUserSwitcherStaff(): Promise<UserSwitcherResponse> {
+  return fetchApi<UserSwitcherResponse>('/staff/user-switcher', { skipAuth: true });
 }

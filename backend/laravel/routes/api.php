@@ -86,6 +86,12 @@ Route::prefix('v1')->group(function () {
         Route::post('import', [StoreInfoController::class, 'importStores']);
     });
 
+    // Staff - User Switcher (public, for development/testing)
+    Route::get('staff/user-switcher', [StaffController::class, 'userSwitcherList']);
+
+    // Staff - Get Approver (public, for previewing approver before task submission)
+    Route::get('staff/{staff}/approver', [StaffController::class, 'getApprover']);
+
     // Teams (public read-only)
     Route::get('teams', [TeamController::class, 'index']);
     Route::get('teams/{team}', [TeamController::class, 'show']);

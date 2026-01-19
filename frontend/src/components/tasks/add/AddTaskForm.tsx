@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { TaskLevel, TaskInformation, TaskInstructions, TaskScope, TaskApproval } from '@/types/addTask';
 import { mockMasterData, createEmptyTaskLevel } from '@/data/mockAddTask';
 import TaskLevelCard from './TaskLevelCard';
@@ -16,6 +16,8 @@ import {
   getFieldError,
   ValidationError,
 } from '@/utils/taskValidation';
+import { useUser } from '@/contexts/UserContext';
+import { getApproverForStaff, ApproverInfo } from '@/lib/api';
 
 export interface RejectionInfo {
   reason: string;
@@ -26,6 +28,7 @@ export interface RejectionInfo {
   };
   rejectionCount: number;
   maxRejections: number;
+  hasChangesSinceRejection: boolean;
 }
 
 // Task creation source/flow type
@@ -75,6 +78,9 @@ export default function AddTaskForm({
   rejectionInfo,
   source = 'task_list',
 }: AddTaskFormProps) {
+  // Get current user from context
+  const { currentUser } = useUser();
+
   // Determine if Scope section should be shown based on source
   // - task_list: Show Store scope (Region/Zone/Area/Store)
   // - library: Hide scope (will be selected when dispatching)
@@ -90,6 +96,29 @@ export default function AddTaskForm({
   const [rejectReason, setRejectReason] = useState('');
   const [isRejecting, setIsRejecting] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
+
+  // State for auto-determined approver
+  const [autoApprover, setAutoApprover] = useState<ApproverInfo | null>(null);
+  const [isLoadingApprover, setIsLoadingApprover] = useState(false);
+
+  // Fetch approver on mount or when current user changes
+  useEffect(() => {
+    if (currentUser?.staff_id) {
+      setIsLoadingApprover(true);
+      getApproverForStaff(currentUser.staff_id)
+        .then((response) => {
+          if (response.success && response.approver) {
+            setAutoApprover(response.approver);
+          }
+        })
+        .catch((error) => {
+          console.error('Failed to fetch approver:', error);
+        })
+        .finally(() => {
+          setIsLoadingApprover(false);
+        });
+    }
+  }, [currentUser?.staff_id]);
 
   // Helper to get error count for a section
   const getSectionErrorCount = useCallback(
@@ -381,6 +410,18 @@ export default function AddTaskForm({
               initiatorOptions={mockMasterData.initiators}
               leaderOptions={mockMasterData.leaders}
               hodOptions={mockMasterData.hods}
+              currentUser={currentUser ? {
+                id: currentUser.staff_id,
+                name: currentUser.staff_name,
+                position: currentUser.job_grade,
+              } : undefined}
+              autoApprover={autoApprover ? {
+                id: autoApprover.id,
+                name: autoApprover.name,
+                position: autoApprover.position,
+                job_grade: autoApprover.job_grade,
+              } : undefined}
+              isReadOnly={isCreatorViewingApproval || taskStatus === 'approve'}
             />
           </SectionCard>
         </TaskLevelCard>
@@ -483,9 +524,17 @@ export default function AddTaskForm({
                   minute: '2-digit'
                 })}</span>
               </div>
-              {rejectionInfo.rejectionCount >= rejectionInfo.maxRejections && (
+              {rejectionInfo.rejectionCount >= rejectionInfo.maxRejections ? (
                 <div className="mt-3 p-2 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded text-xs text-red-700 dark:text-red-300">
                   <strong>Maximum rejection limit reached.</strong> This task can only be deleted.
+                </div>
+              ) : !rejectionInfo.hasChangesSinceRejection ? (
+                <div className="mt-3 p-2 bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded text-xs text-blue-700 dark:text-blue-300">
+                  <strong>Edit required:</strong> Please make changes to the task before resubmitting.
+                </div>
+              ) : (
+                <div className="mt-3 p-2 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded text-xs text-green-700 dark:text-green-300">
+                  <strong>Changes detected.</strong> You can now resubmit the task.
                 </div>
               )}
             </div>
@@ -594,8 +643,19 @@ export default function AddTaskForm({
             </button>
             <button
               onClick={handleSubmit}
-              disabled={isSavingDraft || isSubmitting || (rejectionInfo && rejectionInfo.rejectionCount >= rejectionInfo.maxRejections)}
-              title={rejectionInfo && rejectionInfo.rejectionCount >= rejectionInfo.maxRejections ? 'Maximum rejection limit reached. This task can only be deleted.' : undefined}
+              disabled={
+                isSavingDraft ||
+                isSubmitting ||
+                (rejectionInfo && rejectionInfo.rejectionCount >= rejectionInfo.maxRejections) ||
+                (rejectionInfo && !rejectionInfo.hasChangesSinceRejection)
+              }
+              title={
+                rejectionInfo && rejectionInfo.rejectionCount >= rejectionInfo.maxRejections
+                  ? 'Maximum rejection limit reached. This task can only be deleted.'
+                  : rejectionInfo && !rejectionInfo.hasChangesSinceRejection
+                  ? 'Please make changes to the task before resubmitting.'
+                  : undefined
+              }
               className="px-6 py-2 bg-pink-600 text-white rounded-lg text-sm font-medium hover:bg-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? 'Submitting...' : rejectionInfo ? 'Resubmit' : 'Submit'}

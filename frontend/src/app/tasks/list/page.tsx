@@ -177,7 +177,8 @@ export default function TaskListPage() {
   };
 
   // Build query params for API
-  const buildQueryParams = useCallback((): TaskQueryParamsExtended => {
+  // Note: Approve/Draft tasks are NOT filtered by date picker (fetched separately)
+  const buildQueryParams = useCallback((excludeDraftApprove: boolean = true): TaskQueryParamsExtended => {
     const params: TaskQueryParamsExtended = {
       page: currentPage,
       per_page: itemsPerPage,
@@ -188,14 +189,16 @@ export default function TaskListPage() {
       params['filter[task_name]'] = debouncedSearch;
     }
 
-    // Date range filter from DatePicker
-    // Filter tasks where task's date range overlaps with selected date range
-    // This means: task.start_date <= dateRange.to AND task.end_date >= dateRange.from
-    if (dateRange.from) {
-      params['filter[end_date_from]'] = formatDateForApi(dateRange.from);
-    }
-    if (dateRange.to) {
-      params['filter[start_date_to]'] = formatDateForApi(dateRange.to);
+    // Date range filter from DatePicker (only for non-draft/approve tasks)
+    if (excludeDraftApprove) {
+      // Filter tasks where task's date range overlaps with selected date range
+      // This means: task.start_date <= dateRange.to AND task.end_date >= dateRange.from
+      if (dateRange.from) {
+        params['filter[end_date_from]'] = formatDateForApi(dateRange.from);
+      }
+      if (dateRange.to) {
+        params['filter[start_date_to]'] = formatDateForApi(dateRange.to);
+      }
     }
 
     // Department filter from modal
@@ -212,25 +215,107 @@ export default function TaskListPage() {
   }, [currentPage, debouncedSearch, dateRange, filters.departments, filters.status]);
 
   // Fetch tasks from API with server-side filtering
+  // Strategy: Fetch Draft/Approve separately (no date filter), then merge with date-filtered tasks
   const fetchTasks = useCallback(async (depts: Department[]) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const queryParams = buildQueryParams();
-      const response = await getTasks(queryParams);
+      // For HQ users: Fetch Draft and Approve tasks separately (NO date filter)
+      // Then fetch other tasks with date filter
+      let allTasks: ApiTask[] = [];
+      let totalCount = 0;
 
-      // Handle paginated response from Laravel
-      const taskData = response.data || [];
-      setTotalPages(response.last_page || 1);
-      setTotalItems(response.total || 0);
+      if (isHQUser) {
+        // 1. Fetch Draft tasks (status_id=12) - NO date filter
+        const draftParams: TaskQueryParamsExtended = {
+          page: 1,
+          per_page: 100, // Get all drafts (limited by draft limit anyway)
+          'filter[status_id]': STATUS_ID_MAP['DRAFT'],
+        };
+        if (debouncedSearch) {
+          draftParams['filter[task_name]'] = debouncedSearch;
+        }
+        if (filters.departments.length === 1) {
+          draftParams['filter[dept_id]'] = parseInt(filters.departments[0]);
+        }
+
+        // 2. Fetch Approve tasks (status_id=13) - NO date filter
+        const approveParams: TaskQueryParamsExtended = {
+          page: 1,
+          per_page: 100, // Get all pending approvals
+          'filter[status_id]': STATUS_ID_MAP['APPROVE'],
+        };
+        if (debouncedSearch) {
+          approveParams['filter[task_name]'] = debouncedSearch;
+        }
+        if (filters.departments.length === 1) {
+          approveParams['filter[dept_id]'] = parseInt(filters.departments[0]);
+        }
+
+        // 3. Fetch other tasks WITH date filter
+        const otherParams = buildQueryParams(true); // excludeDraftApprove = true
+
+        // Execute all three fetches in parallel
+        const [draftResponse, approveResponse, otherResponse] = await Promise.all([
+          getTasks(draftParams),
+          getTasks(approveParams),
+          getTasks(otherParams),
+        ]);
+
+        // Combine results
+        const draftTasks = draftResponse.data || [];
+        const approveTasks = approveResponse.data || [];
+        const otherTasks = otherResponse.data || [];
+
+        // Remove any Draft/Approve tasks from otherTasks (avoid duplicates)
+        const otherTasksFiltered = otherTasks.filter(
+          (t: ApiTask) => t.status_id !== STATUS_ID_MAP['DRAFT'] && t.status_id !== STATUS_ID_MAP['APPROVE']
+        );
+
+        allTasks = [...draftTasks, ...approveTasks, ...otherTasksFiltered];
+        totalCount = draftTasks.length + approveTasks.length + otherResponse.total;
+
+        // Note: Pagination is approximate here since we're merging results
+        setTotalPages(Math.ceil(totalCount / itemsPerPage));
+        setTotalItems(totalCount);
+      } else {
+        // Store users: Simple fetch with date filter (no Draft/Approve)
+        const queryParams = buildQueryParams(true);
+        const response = await getTasks(queryParams);
+        allTasks = response.data || [];
+        setTotalPages(response.last_page || 1);
+        setTotalItems(response.total || 0);
+      }
 
       // Transform API tasks to UI format
-      const transformedTasks = taskData.map((task: ApiTask, index: number) =>
-        transformApiTaskToTaskGroup(task, (response.from || 1) - 1 + index, depts)
+      const transformedTasks = allTasks.map((task: ApiTask, index: number) =>
+        transformApiTaskToTaskGroup(task, index + 1, depts)
       );
 
-      setTasks(transformedTasks);
+      // Sort by priority: APPROVE → DRAFT → OVERDUE → NOT_YET → ON_PROGRESS → DONE
+      const STATUS_PRIORITY: Record<TaskStatus, number> = {
+        'APPROVE': 1,
+        'DRAFT': 2,
+        'OVERDUE': 3,
+        'NOT_YET': 4,
+        'ON_PROGRESS': 5,
+        'DONE': 6,
+        'REJECT': 7,
+      };
+
+      const sortedTasks = transformedTasks.sort((a, b) => {
+        const priorityA = STATUS_PRIORITY[a.status] || 99;
+        const priorityB = STATUS_PRIORITY[b.status] || 99;
+        return priorityA - priorityB;
+      });
+
+      // Re-number after sorting
+      sortedTasks.forEach((task, index) => {
+        task.no = index + 1;
+      });
+
+      setTasks(sortedTasks);
     } catch (err) {
       console.error('Failed to fetch tasks:', err);
       setError(err instanceof Error ? err.message : 'Failed to load tasks');
@@ -240,7 +325,7 @@ export default function TaskListPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [buildQueryParams]);
+  }, [buildQueryParams, isHQUser, debouncedSearch, filters.departments]);
 
   // Initial load - fetch departments once
   useEffect(() => {
@@ -307,6 +392,7 @@ export default function TaskListPage() {
   // Also filter by user type and ownership rules:
   // - Store users (S1-S6): Only see OVERDUE, NOT_YET, ON_PROGRESS, DONE
   // - DRAFT tasks: Only visible to the user who created them
+
   const filteredTasks = tasks.filter((task) => {
     // User type filter: Store users only see specific statuses
     if (!isHQUser) {
@@ -366,6 +452,46 @@ export default function TaskListPage() {
             </span>
           </div>
         </div>
+
+        {/* Expiring Drafts Warning Banner (HQ users only, when drafts are about to expire) */}
+        {isHQUser && draftInfo?.expiring_drafts && draftInfo.expiring_drafts.length > 0 && (
+          <div className="mb-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+            <div className="flex items-start gap-3">
+              <svg className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                  {draftInfo.expiring_drafts.length === 1
+                    ? '1 draft will be automatically deleted soon'
+                    : `${draftInfo.expiring_drafts.length} drafts will be automatically deleted soon`
+                  }
+                </p>
+                <ul className="mt-2 space-y-1">
+                  {draftInfo.expiring_drafts.slice(0, 3).map((draft) => (
+                    <li key={draft.task_id} className="text-xs text-amber-700 dark:text-amber-300 flex items-center gap-2">
+                      <span className="font-medium">&quot;{draft.task_name}&quot;</span>
+                      <span className="text-amber-600 dark:text-amber-400">
+                        — {draft.days_until_deletion} {draft.days_until_deletion === 1 ? 'day' : 'days'} left
+                      </span>
+                      <button
+                        onClick={() => router.push(`/tasks/new?id=${draft.task_id}&source=${draft.source}`)}
+                        className="text-amber-800 dark:text-amber-200 underline hover:no-underline"
+                      >
+                        Edit
+                      </button>
+                    </li>
+                  ))}
+                  {draftInfo.expiring_drafts.length > 3 && (
+                    <li className="text-xs text-amber-600 dark:text-amber-400 italic">
+                      +{draftInfo.expiring_drafts.length - 3} more draft(s) expiring soon
+                    </li>
+                  )}
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Date Display & Actions */}
         <div className="flex items-center justify-between gap-4 mb-6">

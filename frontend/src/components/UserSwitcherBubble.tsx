@@ -1,13 +1,13 @@
 'use client';
 
 import React from 'react';
-import { useUser, MockUser } from '@/contexts/UserContext';
+import { useUser, AppUser } from '@/contexts/UserContext';
 import { JOB_GRADE_COLORS, JOB_GRADE_TITLES, JOB_GRADE_TITLES_VI, JobGrade } from '@/types/userInfo';
 
 // Get color style for a job grade
 const getGradeStyle = (grade: JobGrade) => {
-  const color = JOB_GRADE_COLORS[grade];
-  const isHQ = grade.startsWith('G');
+  const color = JOB_GRADE_COLORS[grade] || '#6B7280';
+  const isHQ = grade?.startsWith('G') || false;
 
   return {
     color,
@@ -25,7 +25,9 @@ const formatScope = (scope: string): string => {
     'DEPARTMENT': 'Phòng ban',
     'TEAM': 'Nhóm',
     'REGION': 'Miền',
+    'ZONE': 'Zone',
     'AREA': 'Khu vực',
+    'CLUSTER': 'Cụm cửa hàng',
     'MULTI_STORE': 'Cụm cửa hàng',
     'STORE': 'Cửa hàng',
     'NONE': 'Cá nhân',
@@ -34,16 +36,16 @@ const formatScope = (scope: string): string => {
 };
 
 export default function UserSwitcherBubble() {
-  const { currentUser, setCurrentUser, hqUsers, storeUsers, isUserSwitcherOpen, setIsUserSwitcherOpen } = useUser();
+  const { currentUser, setCurrentUser, hqUsers, storeUsers, isUserSwitcherOpen, setIsUserSwitcherOpen, isLoading, error, refreshUsers } = useUser();
 
   const currentGradeStyle = getGradeStyle(currentUser.job_grade);
 
-  const handleSelectUser = (user: MockUser) => {
+  const handleSelectUser = (user: AppUser) => {
     setCurrentUser(user);
     setIsUserSwitcherOpen(false);
   };
 
-  const renderUserItem = (user: MockUser, isActive: boolean) => {
+  const renderUserItem = (user: AppUser, isActive: boolean) => {
     const gradeStyle = getGradeStyle(user.job_grade);
 
     return (
@@ -197,34 +199,86 @@ export default function UserSwitcherBubble() {
 
             {/* User List with Sections */}
             <div className="max-h-80 overflow-y-auto">
+              {/* Loading State */}
+              {isLoading && (
+                <div className="px-4 py-8 text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-2"></div>
+                  <p className="text-sm text-gray-500">Loading users...</p>
+                </div>
+              )}
+
+              {/* Error State */}
+              {error && !isLoading && (
+                <div className="px-4 py-4 text-center">
+                  <p className="text-sm text-red-500 mb-2">{error}</p>
+                  <button
+                    onClick={() => refreshUsers()}
+                    className="text-xs text-blue-600 hover:text-blue-800 underline"
+                  >
+                    Try again
+                  </button>
+                </div>
+              )}
+
+              {/* Empty State */}
+              {!isLoading && !error && hqUsers.length === 0 && storeUsers.length === 0 && (
+                <div className="px-4 py-8 text-center">
+                  <p className="text-sm text-gray-500">No users available</p>
+                  <button
+                    onClick={() => refreshUsers()}
+                    className="text-xs text-blue-600 hover:text-blue-800 underline mt-2"
+                  >
+                    Refresh
+                  </button>
+                </div>
+              )}
+
               {/* HQ Section */}
-              <div className="bg-purple-50 px-3 py-2 border-b sticky top-0">
-                <h4 className="text-xs font-bold text-purple-800 uppercase tracking-wide flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                  HQ Grades (G9 → G2)
-                </h4>
-              </div>
-              {hqUsers.map((user) => renderUserItem(user, user.staff_id === currentUser.staff_id))}
+              {!isLoading && !error && hqUsers.length > 0 && (
+                <>
+                  <div className="bg-purple-50 px-3 py-2 border-b sticky top-0">
+                    <h4 className="text-xs font-bold text-purple-800 uppercase tracking-wide flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                      HQ Grades ({hqUsers.length})
+                    </h4>
+                  </div>
+                  {hqUsers.map((user) => renderUserItem(user, user.staff_id === currentUser.staff_id))}
+                </>
+              )}
 
               {/* Store Section */}
-              <div className="bg-teal-50 px-3 py-2 border-b sticky top-0">
-                <h4 className="text-xs font-bold text-teal-800 uppercase tracking-wide flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                  Store Grades (S6 → S1)
-                </h4>
-              </div>
-              {storeUsers.map((user) => renderUserItem(user, user.staff_id === currentUser.staff_id))}
+              {!isLoading && !error && storeUsers.length > 0 && (
+                <>
+                  <div className="bg-teal-50 px-3 py-2 border-b sticky top-0">
+                    <h4 className="text-xs font-bold text-teal-800 uppercase tracking-wide flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      Store Grades ({storeUsers.length})
+                    </h4>
+                  </div>
+                  {storeUsers.map((user) => renderUserItem(user, user.staff_id === currentUser.staff_id))}
+                </>
+              )}
             </div>
 
             {/* Footer */}
-            <div className="bg-gray-50 px-4 py-2 border-t">
-              <p className="text-xs text-gray-400 text-center">
-                Testing Mode - Không thực sự authenticate
+            <div className="bg-gray-50 px-4 py-2 border-t flex items-center justify-between">
+              <p className="text-xs text-gray-400">
+                Database Users - Testing Mode
               </p>
+              <button
+                onClick={() => refreshUsers()}
+                className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                title="Refresh user list"
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Refresh
+              </button>
             </div>
           </div>
         )}

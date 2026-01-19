@@ -117,4 +117,201 @@ class StaffController extends Controller
 
         return response()->json(null, 204);
     }
+
+    /**
+     * Get staff list for User Switcher (development/testing)
+     * Returns all active staff with relevant info for user context
+     */
+    public function userSwitcherList()
+    {
+        $staff = Staff::with(['store', 'department'])
+            ->where('is_active', true)
+            ->orderByRaw("
+                CASE
+                    WHEN job_grade LIKE 'G%' THEN 0
+                    WHEN job_grade LIKE 'S%' THEN 1
+                    ELSE 2
+                END,
+                CAST(SUBSTRING(job_grade, 2) AS UNSIGNED) DESC
+            ")
+            ->get()
+            ->map(function ($staff) {
+                // Determine scope based on job_grade
+                $scope = $this->getScopeFromJobGrade($staff->job_grade);
+
+                return [
+                    'staff_id' => $staff->staff_id,
+                    'staff_name' => $staff->staff_name,
+                    'staff_code' => $staff->staff_code,
+                    'email' => $staff->email,
+                    'job_grade' => $staff->job_grade,
+                    'scope' => $scope,
+                    'store_id' => $staff->store_id,
+                    'store_name' => $staff->store?->store_name ?? 'HQ',
+                    'department_id' => $staff->department_id,
+                    'department_name' => $staff->department?->department_name ?? '',
+                ];
+            });
+
+        return response()->json([
+            'data' => $staff,
+            'total' => $staff->count(),
+        ]);
+    }
+
+    /**
+     * Get approver for a staff member based on organizational hierarchy
+     * Used to preview who will approve tasks before submission
+     *
+     * GET /api/v1/staff/{staffId}/approver
+     */
+    public function getApprover($staffId)
+    {
+        $staff = Staff::find($staffId);
+
+        if (!$staff) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Staff not found',
+            ], 404);
+        }
+
+        $approver = $this->findApprover($staff);
+
+        if (!$approver) {
+            return response()->json([
+                'success' => true,
+                'approver' => null,
+                'message' => 'No approver found in organizational hierarchy',
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'approver' => [
+                'id' => $approver->staff_id,
+                'name' => $approver->staff_name,
+                'staff_code' => $approver->staff_code,
+                'job_grade' => $approver->job_grade,
+                'position' => $approver->position ?? $this->getPositionFromJobGrade($approver->job_grade),
+                'department_id' => $approver->department_id,
+                'department_name' => $approver->department?->department_name ?? '',
+                'store_id' => $approver->store_id,
+                'store_name' => $approver->store?->store_name ?? 'HQ',
+            ],
+        ]);
+    }
+
+    /**
+     * Find the appropriate approver for a staff based on hierarchy
+     *
+     * @param Staff $creator
+     * @return Staff|null
+     */
+    private function findApprover(Staff $creator): ?Staff
+    {
+        // First, try to find direct line manager
+        if ($creator->line_manager_id) {
+            return Staff::with(['store', 'department'])->find($creator->line_manager_id);
+        }
+
+        // If no line manager, find someone with higher job grade in same team/department
+        $jobGrade = $creator->job_grade;
+
+        // Try same team first
+        if ($creator->team_id) {
+            $approver = Staff::with(['store', 'department'])
+                ->where('team_id', $creator->team_id)
+                ->where('job_grade', '>', $jobGrade)
+                ->where('is_active', true)
+                ->orderBy('job_grade', 'asc')
+                ->first();
+
+            if ($approver) {
+                return $approver;
+            }
+        }
+
+        // Try same department
+        if ($creator->department_id) {
+            $approver = Staff::with(['store', 'department'])
+                ->where('department_id', $creator->department_id)
+                ->where('job_grade', '>', $jobGrade)
+                ->where('is_active', true)
+                ->orderBy('job_grade', 'asc')
+                ->first();
+
+            if ($approver) {
+                return $approver;
+            }
+        }
+
+        // Fallback: find any active staff with higher grade (system admin level)
+        return Staff::with(['store', 'department'])
+            ->where('job_grade', '>', $jobGrade)
+            ->where('is_active', true)
+            ->orderBy('job_grade', 'asc')
+            ->first();
+    }
+
+    /**
+     * Get a position description from job grade
+     */
+    private function getPositionFromJobGrade(?string $jobGrade): string
+    {
+        $positions = [
+            'G9' => 'CEO',
+            'G8' => 'Director',
+            'G7' => 'Senior Manager',
+            'G6' => 'Manager',
+            'G5' => 'Assistant Manager',
+            'G4' => 'Supervisor',
+            'G3' => 'Senior Staff',
+            'G2' => 'Staff',
+            'S7' => 'Regional Manager',
+            'S6' => 'Zone Manager',
+            'S5' => 'Area Manager',
+            'S4' => 'Store In-charge',
+            'S3' => 'Store Leader',
+            'S2' => 'Deputy Store Leader',
+            'S1' => 'Staff',
+        ];
+
+        return $positions[$jobGrade] ?? $jobGrade ?? 'Staff';
+    }
+
+    /**
+     * Get scope from job grade
+     */
+    private function getScopeFromJobGrade(?string $jobGrade): string
+    {
+        if (!$jobGrade) {
+            return 'NONE';
+        }
+
+        // HQ Grades
+        $hqScopes = [
+            'G9' => 'COMPANY',
+            'G8' => 'COMPANY',
+            'G7' => 'DIVISION',
+            'G6' => 'DEPARTMENT',
+            'G5' => 'DEPARTMENT',
+            'G4' => 'TEAM',
+            'G3' => 'NONE',
+            'G2' => 'NONE',
+        ];
+
+        // Store Grades
+        $storeScopes = [
+            'S7' => 'REGION',
+            'S6' => 'ZONE',
+            'S5' => 'AREA',
+            'S4' => 'CLUSTER',
+            'S3' => 'STORE',
+            'S2' => 'STORE',
+            'S1' => 'NONE',
+        ];
+
+        return $hqScopes[$jobGrade] ?? $storeScopes[$jobGrade] ?? 'NONE';
+    }
 }
