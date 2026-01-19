@@ -31,7 +31,8 @@ export default function TodoTaskPage() {
   const [showComments, setShowComments] = useState(false);
 
   const handleAddNew = () => {
-    router.push('/tasks/new');
+    // Navigate to Add Task screen with todo_task source (C. Scope shows HQ structure)
+    router.push('/tasks/new?source=todo_task');
   };
 
   const handlePrevWeek = () => {
@@ -49,9 +50,14 @@ export default function TodoTaskPage() {
     console.log('Update target:', taskId, value);
   };
 
-  const handleTaskClick = (task: { id: string; name: string }) => {
-    // TODO: Open task detail modal
-    console.log('Task clicked:', task);
+  const handleTaskClick = (task: { id: string; name: string; status?: string }) => {
+    // If task is draft or approve, navigate to edit mode
+    if (task.status === 'draft' || task.status === 'approve') {
+      router.push(`/tasks/new?id=${task.id}&source=todo_task`);
+    } else {
+      // TODO: Open task detail modal for other statuses
+      console.log('Task clicked:', task);
+    }
   };
 
   const handleStatusChange = (taskId: string) => {

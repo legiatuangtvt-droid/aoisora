@@ -266,9 +266,10 @@ export default function TaskListPage() {
 
   // Navigate to task detail page or edit page (for drafts)
   const handleRowClick = (task: TaskGroup) => {
-    // If task is DRAFT and current user is the creator, navigate to edit page
-    if (task.status === 'DRAFT' && task.createdStaffId === currentUser.staff_id) {
-      router.push(`/tasks/${task.id}/edit`);
+    // If task is DRAFT or APPROVE and current user is the creator, navigate to Add Task screen (edit mode)
+    if ((task.status === 'DRAFT' || task.status === 'APPROVE') && task.createdStaffId === currentUser.staff_id) {
+      // Use unified Add Task screen with query params for edit mode
+      router.push(`/tasks/new?id=${task.id}&source=task_list`);
     } else {
       router.push(`/tasks/detail?id=${task.id}`);
     }
@@ -401,7 +402,7 @@ export default function TaskListPage() {
             </button>
 
             <button
-              onClick={() => router.push('/tasks/new')}
+              onClick={() => router.push('/tasks/new?source=task_list')}
               className="flex items-center gap-2 px-5 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm font-medium"
             >
               <span className="text-lg">+</span>

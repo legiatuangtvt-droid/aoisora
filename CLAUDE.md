@@ -1224,7 +1224,7 @@ Chi tiết: `docs/06-deployment/DEPLOY-PA-VIETNAM-HOSTING.md`
 │  • DRAFT là OPTIONAL: Chỉ tạo khi user click [Save as Draft]                               │
 │    - Click [Submit] trực tiếp → Đi thẳng tới APPROVE (bỏ qua DRAFT)                        │
 │    - Click [Save as Draft] → Tạo DRAFT → Sau đó Submit từ Draft → APPROVE                  │
-│  • TASK STATUS (UPPERCASE): DRAFT, APPROVE, NOT YET, ON PROGRESS, DONE, OVERDUE           │
+│  • TASK STATUS (UPPERCASE): DRAFT, APPROVE, NOT YET, ON PROGRESS, DONE, OVERDUE            │
 │    → Trạng thái tổng thể của task, tính từ tổng hợp tất cả store statuses                  │
 │                                                                                            │
 │  • Store status (lowercase) - 6 trạng thái:                                                │
@@ -1232,7 +1232,7 @@ Chi tiết: `docs/06-deployment/DEPLOY-PA-VIETNAM-HOSTING.md`
 │    → on_progress: Store đang thực hiện task                                                │
 │    → done_pending: Store báo hoàn thành, chờ HQ kiểm tra                                   │
 │    → done (confirmed): HQ đã xác nhận OK                                                   │
-│    → unable: Store không thể thực hiện (chọn từ on_progress)                               │
+│    → unable: Store không thể thực hiện (chọn từ on_progress hoặc not_yet)                  │
 │    → overdue: Store quá hạn (today > end_date mà status = not_yet hoặc on_progress)        │
 │                                                                                            │
 │  • HQ CHECK có 2 actions:                                                                  │

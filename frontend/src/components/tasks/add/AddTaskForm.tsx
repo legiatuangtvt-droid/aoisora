@@ -21,6 +21,9 @@ export interface RejectionInfo {
   maxRejections: number;
 }
 
+// Task creation source/flow type
+export type TaskSource = 'task_list' | 'library' | 'todo_task';
+
 interface AddTaskFormProps {
   taskLevels: TaskLevel[];
   onTaskLevelsChange: (taskLevels: TaskLevel[]) => void;
@@ -39,6 +42,11 @@ interface AddTaskFormProps {
   isCreatorViewingApproval?: boolean;
   // Rejection info for displaying feedback after rejection
   rejectionInfo?: RejectionInfo;
+  // Task creation source/flow - determines which sections are shown
+  // - task_list: C. Scope shows Store structure (Region/Zone/Area/Store)
+  // - library: C. Scope is HIDDEN (will be selected when dispatching)
+  // - todo_task: C. Scope shows HQ structure (Division/Dept/Team/User)
+  source?: TaskSource;
 }
 
 // Section IDs for accordion
@@ -58,7 +66,13 @@ export default function AddTaskForm({
   isApprover = false,
   isCreatorViewingApproval = false,
   rejectionInfo,
+  source = 'task_list',
 }: AddTaskFormProps) {
+  // Determine if Scope section should be shown based on source
+  // - task_list: Show Store scope (Region/Zone/Area/Store)
+  // - library: Hide scope (will be selected when dispatching)
+  // - todo_task: Show HQ scope (Division/Dept/Team/User)
+  const showScopeSection = source !== 'library';
   // State for reject modal
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
@@ -260,25 +274,28 @@ export default function AddTaskForm({
             />
           </SectionCard>
 
-          {/* C. Scope */}
-          <SectionCard
-            id="C"
-            title="Scope"
-            icon={<ScopeIcon />}
-            isExpanded={expandedSections[taskLevel.id] === 'C'}
-            onToggle={() => handleSectionToggle(taskLevel.id, 'C')}
-          >
-            <ScopeSection
-              data={taskLevel.scope}
-              onChange={(data) => handleScopeChange(taskLevel.id, data)}
-              regionOptions={mockMasterData.regions}
-              zoneOptions={getZoneOptions(taskLevel.scope.regionId)}
-              areaOptions={getAreaOptions(taskLevel.scope.zoneId)}
-              storeOptions={getStoreOptions(taskLevel.scope.areaId)}
-              storeLeaderOptions={mockMasterData.storeLeaders}
-              staffOptions={mockMasterData.staff}
-            />
-          </SectionCard>
+          {/* C. Scope - Hidden for library flow (will be selected when dispatching) */}
+          {showScopeSection && (
+            <SectionCard
+              id="C"
+              title={source === 'todo_task' ? 'Scope (HQ Users)' : 'Scope (Stores)'}
+              icon={<ScopeIcon />}
+              isExpanded={expandedSections[taskLevel.id] === 'C'}
+              onToggle={() => handleSectionToggle(taskLevel.id, 'C')}
+            >
+              <ScopeSection
+                data={taskLevel.scope}
+                onChange={(data) => handleScopeChange(taskLevel.id, data)}
+                regionOptions={mockMasterData.regions}
+                zoneOptions={getZoneOptions(taskLevel.scope.regionId)}
+                areaOptions={getAreaOptions(taskLevel.scope.zoneId)}
+                storeOptions={getStoreOptions(taskLevel.scope.areaId)}
+                storeLeaderOptions={mockMasterData.storeLeaders}
+                staffOptions={mockMasterData.staff}
+                scopeType={source === 'todo_task' ? 'hq' : 'store'}
+              />
+            </SectionCard>
+          )}
 
           {/* D. Approval Process */}
           <SectionCard

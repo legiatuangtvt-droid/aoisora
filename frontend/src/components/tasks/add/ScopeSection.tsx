@@ -2,6 +2,11 @@
 
 import { TaskScope, DropdownOption } from '@/types/addTask';
 
+// Scope type determines the hierarchy structure to display
+// - 'store': Region > Zone > Area > Store (for Flow 1 - Task List)
+// - 'hq': Division > Dept > Team > User (for Flow 3 - To Do Task)
+type ScopeType = 'store' | 'hq';
+
 interface ScopeSectionProps {
   data: TaskScope;
   onChange: (data: TaskScope) => void;
@@ -13,6 +18,8 @@ interface ScopeSectionProps {
   staffOptions: DropdownOption[];
   errors?: Record<string, string>;
   disabled?: boolean;
+  // Scope type determines which hierarchy structure to show
+  scopeType?: ScopeType;
 }
 
 export default function ScopeSection({
@@ -26,7 +33,28 @@ export default function ScopeSection({
   staffOptions,
   errors = {},
   disabled = false,
+  scopeType = 'store',
 }: ScopeSectionProps) {
+  // Labels based on scope type
+  const labels = scopeType === 'hq'
+    ? {
+        header: '1. HQ Users',
+        level1: 'Division',
+        level2: 'Department',
+        level3: 'Team',
+        level4: 'User',
+        level5: 'Team Leader',
+        level6: 'Specific User',
+      }
+    : {
+        header: '1. Store',
+        level1: 'Region',
+        level2: 'Zone',
+        level3: 'Area',
+        level4: 'Store',
+        level5: 'Store Leader',
+        level6: 'Specific Staff',
+      };
   const handleChange = (field: keyof TaskScope, value: string) => {
     if (disabled) return;
     const newData = { ...data, [field]: value };
@@ -48,15 +76,15 @@ export default function ScopeSection({
 
   return (
     <div className="space-y-4">
-      {/* 1. Store Header */}
+      {/* 1. Header (Store or HQ Users) */}
       <div className="text-sm font-semibold text-gray-900 dark:text-white">
-        1. Store
+        {labels.header}
       </div>
 
-      {/* 1.1 Region */}
+      {/* 1.1 Level 1 (Region or Division) */}
       <div className="flex items-center gap-4">
         <label className="w-20 text-sm text-gray-600 dark:text-gray-400">
-          1.1<br />Region
+          1.1<br />{labels.level1}
         </label>
         <select
           value={data.regionId}
@@ -77,10 +105,10 @@ export default function ScopeSection({
         </select>
       </div>
 
-      {/* 1.2 Zone */}
+      {/* 1.2 Level 2 (Zone or Department) */}
       <div className="flex items-center gap-4">
         <label className="w-20 text-sm text-gray-600 dark:text-gray-400">
-          1.2<br />Zone
+          1.2<br />{labels.level2}
         </label>
         <select
           value={data.zoneId}
@@ -101,10 +129,10 @@ export default function ScopeSection({
         </select>
       </div>
 
-      {/* 1.3 Area */}
+      {/* 1.3 Level 3 (Area or Team) */}
       <div className="flex items-center gap-4">
         <label className="w-20 text-sm text-gray-600 dark:text-gray-400">
-          1.3<br />Area
+          1.3<br />{labels.level3}
         </label>
         <select
           value={data.areaId}
@@ -125,10 +153,10 @@ export default function ScopeSection({
         </select>
       </div>
 
-      {/* 1.4 Store */}
+      {/* 1.4 Level 4 (Store or User) */}
       <div className="flex items-center gap-4">
         <label className="w-20 text-sm text-gray-600 dark:text-gray-400">
-          1.4<br />Store
+          1.4<br />{labels.level4}
         </label>
         <select
           value={data.storeId}
@@ -149,10 +177,10 @@ export default function ScopeSection({
         </select>
       </div>
 
-      {/* 1.5 Store Leader */}
+      {/* 1.5 Level 5 (Store Leader or Team Leader) */}
       <div className="flex items-center gap-4">
         <label className="w-20 text-sm text-gray-600 dark:text-gray-400">
-          1.5<br />Store Leader
+          1.5<br />{labels.level5}
         </label>
         <select
           value={data.storeLeaderId}
@@ -169,10 +197,10 @@ export default function ScopeSection({
         </select>
       </div>
 
-      {/* 1.6 Specific Staff */}
+      {/* 1.6 Level 6 (Specific Staff or Specific User) */}
       <div className="flex items-center gap-4">
         <label className="w-20 text-sm text-gray-600 dark:text-gray-400">
-          1.6<br />Specific Staff
+          1.6<br />{labels.level6}
         </label>
         <select
           value={data.specificStaffId}

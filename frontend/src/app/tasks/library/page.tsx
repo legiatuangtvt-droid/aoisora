@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { TaskCategory, DepartmentType, TaskTemplate, TaskGroup } from '@/types/taskLibrary';
 import { getFilteredTasks, officeTaskGroups, storeTaskGroups } from '@/data/mockTaskLibrary';
 import TaskLibraryHeader from '@/components/library/TaskLibraryHeader';
@@ -10,6 +11,7 @@ import TaskSearchBar from '@/components/library/TaskSearchBar';
 import TaskGroupSection from '@/components/library/TaskGroupSection';
 
 export default function TaskLibraryPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TaskCategory>('office');
   const [selectedDepartments, setSelectedDepartments] = useState<DepartmentType[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -56,8 +58,8 @@ export default function TaskLibraryPage() {
   };
 
   const handleCreateNew = () => {
-    // TODO: Implement create new task modal
-    console.log('Create new task');
+    // Navigate to Add Task screen with library source (C. Scope will be hidden)
+    router.push('/tasks/new?source=library');
   };
 
   const handleFilterClick = () => {
@@ -66,8 +68,8 @@ export default function TaskLibraryPage() {
   };
 
   const handleEdit = (task: TaskTemplate) => {
-    // TODO: Implement edit task
-    console.log('Edit task:', task);
+    // Navigate to Add Task screen in edit mode with library source
+    router.push(`/tasks/new?id=${task.id}&source=library`);
   };
 
   const handleDuplicate = (task: TaskTemplate) => {
