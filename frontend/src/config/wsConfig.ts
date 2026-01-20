@@ -236,10 +236,11 @@ export const TASK_VALIDATION_RULES = {
   photoGuidelines: {
     requiredForImageType: true,
     minPhotos: 1,
-    maxPhotos: 4,
+    maxPhotos: 20,
+    initialSlots: 1, // Number of slots shown initially
     errorMessages: {
       required: 'At least one photo guideline is required for image tasks',
-      maxExceeded: 'Maximum 4 photo guidelines allowed',
+      maxExceeded: 'Maximum 20 photo guidelines allowed',
     },
   },
 

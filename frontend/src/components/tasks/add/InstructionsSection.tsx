@@ -1,7 +1,10 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { TaskInstructions, DropdownOption, PhotoGuideline } from '@/types/addTask';
+import { TASK_VALIDATION_RULES } from '@/config/wsConfig';
+
+const MAX_PHOTOS = TASK_VALIDATION_RULES.photoGuidelines.maxPhotos; // 20
 
 interface InstructionsSectionProps {
   data: TaskInstructions;
@@ -19,6 +22,12 @@ export default function InstructionsSection({
   disabled = false,
 }: InstructionsSectionProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingSlotIndex, setUploadingSlotIndex] = useState<number | null>(null);
+
+  // Calculate number of visible slots: photos count + 1 empty slot (if not at max)
+  const visibleSlots = Math.min(data.photoGuidelines.length + 1, MAX_PHOTOS);
+  // Show add button if we haven't reached max and there's at least one empty slot
+  const canAddMoreSlots = data.photoGuidelines.length < MAX_PHOTOS - 1;
 
   const handleChange = (field: keyof TaskInstructions, value: string) => {
     if (disabled) return;
@@ -28,45 +37,51 @@ export default function InstructionsSection({
     });
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>, slotIndex: number) => {
     if (disabled) return;
     const files = e.target.files;
-    if (!files) return;
+    if (!files || files.length === 0) return;
 
-    const newPhotos: PhotoGuideline[] = [];
-    const maxPhotos = 4 - data.photoGuidelines.length;
+    const file = files[0]; // Only take first file for single slot upload
 
-    for (let i = 0; i < Math.min(files.length, maxPhotos); i++) {
-      const file = files[i];
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert(`File ${file.name} exceeds 5MB limit`);
+      return;
+    }
 
-      // Check file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        alert(`File ${file.name} exceeds 5MB limit`);
-        continue;
-      }
+    // Check file type
+    if (!['image/jpeg', 'image/png'].includes(file.type)) {
+      alert(`File ${file.name} must be JPG or PNG`);
+      return;
+    }
 
-      // Check file type
-      if (!['image/jpeg', 'image/png'].includes(file.type)) {
-        alert(`File ${file.name} must be JPG or PNG`);
-        continue;
-      }
+    const newPhoto: PhotoGuideline = {
+      id: `photo-${Date.now()}`,
+      url: URL.createObjectURL(file),
+      file,
+    };
 
-      newPhotos.push({
-        id: `photo-${Date.now()}-${i}`,
-        url: URL.createObjectURL(file),
-        file,
-      });
+    // Insert photo at the correct position
+    const newPhotos = [...data.photoGuidelines];
+    if (slotIndex < newPhotos.length) {
+      // Replace existing slot
+      newPhotos[slotIndex] = newPhoto;
+    } else {
+      // Add new photo
+      newPhotos.push(newPhoto);
     }
 
     onChange({
       ...data,
-      photoGuidelines: [...data.photoGuidelines, ...newPhotos],
+      photoGuidelines: newPhotos,
     });
 
     // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+    setUploadingSlotIndex(null);
   };
 
   const handleRemovePhoto = (photoId: string) => {
@@ -75,6 +90,12 @@ export default function InstructionsSection({
       ...data,
       photoGuidelines: data.photoGuidelines.filter((p) => p.id !== photoId),
     });
+  };
+
+  const handleSlotClick = (index: number) => {
+    if (disabled) return;
+    setUploadingSlotIndex(index);
+    fileInputRef.current?.click();
   };
 
   return (
@@ -154,6 +175,9 @@ export default function InstructionsSection({
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             4. Photo Guidelines <span className="text-red-500">*</span>
+            <span className="ml-2 text-xs text-gray-400 font-normal">
+              ({data.photoGuidelines.length}/{MAX_PHOTOS})
+            </span>
           </label>
 
           {/* Error message */}
@@ -161,13 +185,15 @@ export default function InstructionsSection({
             <p className="mb-2 text-xs text-red-500">{errors.photoGuidelines}</p>
           )}
 
-          {/* Photo Grid 2x2 */}
+          {/* Photo Grid - Dynamic slots */}
           <div className={`grid grid-cols-2 gap-3 ${errors.photoGuidelines ? 'ring-2 ring-red-500 rounded-lg p-1' : ''}`}>
-            {/* Photo slots */}
-            {[0, 1, 2, 3].map((index) => {
+            {/* Render photo slots */}
+            {Array.from({ length: visibleSlots }).map((_, index) => {
               const photo = data.photoGuidelines[index];
+              const isLastEmptySlot = index === data.photoGuidelines.length && index < MAX_PHOTOS;
 
               if (photo) {
+                // Photo slot with image
                 return (
                   <div
                     key={photo.id}
@@ -183,7 +209,7 @@ export default function InstructionsSection({
                         />
                       </div>
                       <p className="text-xs text-pink-600 dark:text-pink-400 font-medium text-center">
-                        {index === 0 ? 'POS Area Image' : index === 1 ? 'PERI Area Image' : 'POS Area Image'}
+                        Image {index + 1}
                       </p>
                     </div>
 
@@ -197,23 +223,24 @@ export default function InstructionsSection({
 
                     {/* Remove button */}
                     {!disabled && (
-                    <button
-                      onClick={() => handleRemovePhoto(photo.id)}
-                      className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
-                    >
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
+                      <button
+                        onClick={() => handleRemovePhoto(photo.id)}
+                        className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
                     )}
                   </div>
                 );
               }
 
+              // Empty upload slot
               return (
                 <button
-                  key={index}
-                  onClick={() => !disabled && fileInputRef.current?.click()}
+                  key={`empty-${index}`}
+                  onClick={() => handleSlotClick(index)}
                   disabled={disabled}
                   className={`border-2 border-dashed border-pink-300 dark:border-pink-600 rounded-lg p-4 bg-pink-50/50 dark:bg-pink-900/10 transition-colors ${
                     disabled
@@ -228,13 +255,37 @@ export default function InstructionsSection({
                       </svg>
                     </div>
                     <p className="text-xs text-pink-600 dark:text-pink-400 font-medium">
-                      {index === 0 ? 'POS Area Image' : index === 1 ? 'PERI Area Image' : 'POS Area Image'}
+                      Image {index + 1}
                     </p>
-                    <p className="text-xs text-gray-400 mt-1">Enter image name</p>
+                    <p className="text-xs text-gray-400 mt-1">Click to upload</p>
                   </div>
                 </button>
               );
             })}
+
+            {/* Add more slot button - shows when there's room for more */}
+            {canAddMoreSlots && data.photoGuidelines.length > 0 && (
+              <button
+                onClick={() => handleSlotClick(data.photoGuidelines.length + 1)}
+                disabled={disabled}
+                className={`border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50/50 dark:bg-gray-800/50 transition-colors ${
+                  disabled
+                    ? 'opacity-50 cursor-not-allowed'
+                    : 'hover:bg-gray-100/50 dark:hover:bg-gray-700/50 hover:border-pink-300 dark:hover:border-pink-600'
+                }`}
+              >
+                <div className="flex flex-col items-center justify-center h-full">
+                  <div className="w-10 h-10 mb-2 text-gray-400 dark:text-gray-500 flex items-center justify-center">
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                    Add more
+                  </p>
+                </div>
+              </button>
+            )}
           </div>
 
           {/* Hidden File Input */}
@@ -242,8 +293,7 @@ export default function InstructionsSection({
             ref={fileInputRef}
             type="file"
             accept="image/jpeg,image/png"
-            multiple
-            onChange={handlePhotoUpload}
+            onChange={(e) => handlePhotoUpload(e, uploadingSlotIndex ?? data.photoGuidelines.length)}
             className="hidden"
           />
         </div>
