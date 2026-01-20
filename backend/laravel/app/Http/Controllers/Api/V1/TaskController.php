@@ -40,11 +40,32 @@ class TaskController extends Controller
         // Apply job grade permission filter
         $query = $this->applyJobGradeFilter($query, $request);
 
+        // Get effective user for DRAFT filtering
+        $effectiveUser = $this->getEffectiveUser($request);
+        $effectiveStaffId = $effectiveUser ? $effectiveUser->staff_id : null;
+
+        // DRAFT ownership filter: Only show DRAFT tasks to their creator
+        // This ensures pagination accuracy (server returns only tasks user can see)
+        if ($effectiveStaffId) {
+            $query->where(function ($q) use ($effectiveStaffId) {
+                // Show: non-DRAFT tasks OR DRAFT tasks created by current user
+                $q->where('status_id', '!=', self::DRAFT_STATUS_ID)
+                  ->orWhere(function ($subQ) use ($effectiveStaffId) {
+                      $subQ->where('status_id', self::DRAFT_STATUS_ID)
+                           ->where('created_staff_id', $effectiveStaffId);
+                  });
+            });
+        } else {
+            // No authenticated user: exclude all DRAFT tasks
+            $query->where('status_id', '!=', self::DRAFT_STATUS_ID);
+        }
+
         $tasks = QueryBuilder::for($query)
             ->allowedFilters([
                 AllowedFilter::exact('assigned_store_id'),
                 AllowedFilter::exact('dept_id'),
                 AllowedFilter::exact('assigned_staff_id'),
+                AllowedFilter::exact('created_staff_id'),
                 AllowedFilter::exact('status_id'),
                 AllowedFilter::exact('priority'),
                 AllowedFilter::partial('task_name'),

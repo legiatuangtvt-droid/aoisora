@@ -180,117 +180,53 @@ export default function TaskListPage() {
     return date.toISOString().split('T')[0];
   };
 
-  // Build query params for API
-  // Note: Approve/Draft tasks are NOT filtered by date picker (fetched separately)
-  const buildQueryParams = useCallback((excludeDraftApprove: boolean = true): TaskQueryParamsExtended => {
-    const params: TaskQueryParamsExtended = {
-      page: currentPage,
-      per_page: itemsPerPage,
-    };
-
-    // Search filter (task_name is partial match in backend)
-    if (debouncedSearch) {
-      params['filter[task_name]'] = debouncedSearch;
-    }
-
-    // Date range filter from DatePicker (only for non-draft/approve tasks)
-    if (excludeDraftApprove) {
-      // Filter tasks where task's date range overlaps with selected date range
-      // This means: task.start_date <= dateRange.to AND task.end_date >= dateRange.from
-      if (dateRange.from) {
-        params['filter[end_date_from]'] = formatDateForApi(dateRange.from);
-      }
-      if (dateRange.to) {
-        params['filter[start_date_to]'] = formatDateForApi(dateRange.to);
-      }
-    }
-
-    // Department filter from modal
-    if (filters.departments.length === 1) {
-      params['filter[dept_id]'] = parseInt(filters.departments[0]);
-    }
-
-    // Status filter from modal (convert UI status to status_id)
-    if (filters.status.length === 1) {
-      params['filter[status_id]'] = STATUS_ID_MAP[filters.status[0] as TaskStatus];
-    }
-
-    return params;
-  }, [currentPage, debouncedSearch, dateRange, filters.departments, filters.status]);
-
   // Fetch tasks from API with server-side filtering
-  // Strategy: Fetch Draft/Approve separately (no date filter), then merge with date-filtered tasks
+  // Strategy: Single API call with proper server-side pagination
+  // Draft/Approve tasks are included in the same query (backend handles all statuses)
   const fetchTasks = useCallback(async (depts: Department[]) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // For HQ users: Fetch Draft and Approve tasks separately (NO date filter)
-      // Then fetch other tasks with date filter
       let allTasks: ApiTask[] = [];
-      let totalCount = 0;
 
-      if (isHQ) {
-        // 1. Fetch Draft tasks (status_id=12) - NO date filter
-        const draftParams: TaskQueryParamsExtended = {
-          page: 1,
-          per_page: 100, // Get all drafts (limited by draft limit anyway)
-          'filter[status_id]': STATUS_ID_MAP['DRAFT'],
-        };
-        if (debouncedSearch) {
-          draftParams['filter[task_name]'] = debouncedSearch;
-        }
-        if (filters.departments.length === 1) {
-          draftParams['filter[dept_id]'] = parseInt(filters.departments[0]);
-        }
+      // Build query params - use server-side pagination for all users
+      const queryParams: TaskQueryParamsExtended = {
+        page: currentPage,
+        per_page: itemsPerPage,
+      };
 
-        // 2. Fetch Approve tasks (status_id=13) - NO date filter
-        const approveParams: TaskQueryParamsExtended = {
-          page: 1,
-          per_page: 100, // Get all pending approvals
-          'filter[status_id]': STATUS_ID_MAP['APPROVE'],
-        };
-        if (debouncedSearch) {
-          approveParams['filter[task_name]'] = debouncedSearch;
-        }
-        if (filters.departments.length === 1) {
-          approveParams['filter[dept_id]'] = parseInt(filters.departments[0]);
-        }
-
-        // 3. Fetch other tasks WITH date filter
-        const otherParams = buildQueryParams(true); // excludeDraftApprove = true
-
-        // Execute all three fetches in parallel
-        const [draftResponse, approveResponse, otherResponse] = await Promise.all([
-          getTasks(draftParams),
-          getTasks(approveParams),
-          getTasks(otherParams),
-        ]);
-
-        // Combine results
-        const draftTasks = draftResponse.data || [];
-        const approveTasks = approveResponse.data || [];
-        const otherTasks = otherResponse.data || [];
-
-        // Remove any Draft/Approve tasks from otherTasks (avoid duplicates)
-        const otherTasksFiltered = otherTasks.filter(
-          (t: ApiTask) => t.status_id !== STATUS_ID_MAP['DRAFT'] && t.status_id !== STATUS_ID_MAP['APPROVE']
-        );
-
-        allTasks = [...draftTasks, ...approveTasks, ...otherTasksFiltered];
-        totalCount = draftTasks.length + approveTasks.length + otherResponse.total;
-
-        // Note: Pagination is approximate here since we're merging results
-        setTotalPages(Math.ceil(totalCount / itemsPerPage));
-        setTotalItems(totalCount);
-      } else {
-        // Store users: Simple fetch with date filter (no Draft/Approve)
-        const queryParams = buildQueryParams(true);
-        const response = await getTasks(queryParams);
-        allTasks = response.data || [];
-        setTotalPages(response.last_page || 1);
-        setTotalItems(response.total || 0);
+      // Search filter
+      if (debouncedSearch) {
+        queryParams['filter[task_name]'] = debouncedSearch;
       }
+
+      // Date range filter (for tasks with applicable period)
+      // Note: Draft/Approve tasks may not have dates set, backend should handle this
+      if (dateRange.from) {
+        queryParams['filter[end_date_from]'] = formatDateForApi(dateRange.from);
+      }
+      if (dateRange.to) {
+        queryParams['filter[start_date_to]'] = formatDateForApi(dateRange.to);
+      }
+
+      // Department filter from modal
+      if (filters.departments.length === 1) {
+        queryParams['filter[dept_id]'] = parseInt(filters.departments[0]);
+      }
+
+      // Status filter from modal
+      if (filters.status.length === 1) {
+        queryParams['filter[status_id]'] = STATUS_ID_MAP[filters.status[0] as TaskStatus];
+      }
+
+      // Fetch tasks with server-side pagination
+      const response = await getTasks(queryParams);
+      allTasks = response.data || [];
+
+      // Use server's pagination info
+      setTotalPages(response.last_page || 1);
+      setTotalItems(response.total || 0);
 
       // Transform API tasks to UI format
       const transformedTasks = allTasks.map((task: ApiTask, index: number) =>
@@ -329,7 +265,7 @@ export default function TaskListPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [buildQueryParams, isHQ, debouncedSearch, filters.departments]);
+  }, [currentPage, itemsPerPage, debouncedSearch, dateRange, filters.departments, filters.status]);
 
   // Initial load - fetch departments once
   useEffect(() => {
@@ -391,11 +327,10 @@ export default function TaskListPage() {
   };
 
   // Client-side column filters (applied to already fetched data)
-  // Server handles: search, department modal filter, status modal filter, pagination
+  // Server handles: search, department modal filter, status modal filter, pagination, DRAFT ownership
   // Client handles: column quick filters (dept, status, hqCheck columns)
-  // Also filter by user type and ownership rules:
-  // - Store users (S1-S6): Only see OVERDUE, NOT_YET, ON_PROGRESS, DONE
-  // - DRAFT tasks: Only visible to the user who created them
+  // Note: DRAFT ownership filtering is now done server-side for accurate pagination
+  // Store users (S1-S6) only see: OVERDUE, NOT_YET, ON_PROGRESS, DONE
 
   const filteredTasks = tasks.filter((task) => {
     // User type filter: Store users only see specific statuses
@@ -407,13 +342,9 @@ export default function TaskListPage() {
       }
     }
 
-    // DRAFT filter: DRAFT tasks only visible to the user who created them
-    if (task.status === 'DRAFT') {
-      // Only show DRAFT if current user is the creator
-      if (task.createdStaffId !== currentUser.staff_id) {
-        return false;
-      }
-    }
+    // Note: DRAFT ownership filtering is now handled server-side
+    // Backend automatically excludes DRAFT tasks not created by the current user
+    // This ensures pagination counts are accurate
 
     // Department column filter
     const matchesDeptColumn =
@@ -432,6 +363,10 @@ export default function TaskListPage() {
 
   // Display tasks (client-side column filters applied)
   const paginatedTasks = filteredTasks;
+
+  // Calculate actual displayed count (after client-side filters)
+  // This may differ from server's totalItems due to DRAFT ownership filter
+  const displayedCount = filteredTasks.length;
 
   // Reset to page 1 when server-side filters change
   useEffect(() => {
@@ -790,11 +725,24 @@ export default function TaskListPage() {
           <div className="bg-white px-4 py-3 border-t border-gray-200">
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-600">
-                Total: <span className="font-semibold text-gray-900">{totalItems}</span> tasks group
-                {totalItems > 0 && (
-                  <span className="ml-2 text-gray-500">
-                    (Page {currentPage} of {totalPages})
-                  </span>
+                {displayedCount !== totalItems ? (
+                  // Client-side column filters are applied
+                  <>
+                    Showing: <span className="font-semibold text-gray-900">{displayedCount}</span> of {totalItems} tasks
+                    <span className="ml-2 text-gray-500">
+                      (Page {currentPage} of {totalPages})
+                    </span>
+                  </>
+                ) : (
+                  // No client-side filters - count matches
+                  <>
+                    Total: <span className="font-semibold text-gray-900">{totalItems}</span> tasks
+                    {totalPages > 1 && (
+                      <span className="ml-2 text-gray-500">
+                        (Page {currentPage} of {totalPages})
+                      </span>
+                    )}
+                  </>
                 )}
               </div>
               <div className="flex items-center gap-1">
