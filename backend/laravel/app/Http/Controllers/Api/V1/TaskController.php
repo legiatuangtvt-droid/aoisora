@@ -87,7 +87,18 @@ class TaskController extends Controller
             ->allowedIncludes(['assignedStaff', 'createdBy', 'assignedStore', 'department', 'taskType', 'responseType', 'status'])
             ->paginate($request->get('per_page', 20));
 
-        return response()->json($tasks);
+        // Convert to array and add draft_info for HQ users
+        $response = $tasks->toArray();
+
+        // Include draft_info in response (only for authenticated HQ users)
+        if ($effectiveStaffId) {
+            $permissionService = app(\App\Services\JobGradePermissionService::class);
+            if ($permissionService->canCreateTask($effectiveUser)) {
+                $response['draft_info'] = $this->buildDraftInfo($effectiveStaffId);
+            }
+        }
+
+        return response()->json($response);
     }
 
     /**
@@ -323,14 +334,13 @@ class TaskController extends Controller
     }
 
     /**
-     * Get current user's draft count and limit info per source
+     * Build draft info array for a user (reusable helper)
+     *
+     * @param int $staffId
+     * @return array
      */
-    public function getDraftInfo(Request $request)
+    private function buildDraftInfo(int $staffId): array
     {
-        // Get effective user (may be switched user in testing mode)
-        $user = $this->getEffectiveUser($request);
-        $staffId = $user->staff_id;
-
         // Get counts per source (including pending approval tasks)
         $sources = [Task::SOURCE_TASK_LIST, Task::SOURCE_LIBRARY, Task::SOURCE_TODO_TASK];
         $bySource = [];
@@ -355,12 +365,25 @@ class TaskController extends Controller
         // Also include expiring drafts (25-30 days old)
         $expiringDrafts = $this->getExpiringDraftsForUser($staffId);
 
-        return response()->json([
+        return [
             'total_drafts' => $totalDrafts,
             'max_drafts_per_source' => self::MAX_DRAFTS_PER_USER,
             'by_source' => $bySource,
             'expiring_drafts' => $expiringDrafts,
-        ]);
+        ];
+    }
+
+    /**
+     * Get current user's draft count and limit info per source
+     * @deprecated Use getTasks() which now includes draft_info in response
+     */
+    public function getDraftInfo(Request $request)
+    {
+        // Get effective user (may be switched user in testing mode)
+        $user = $this->getEffectiveUser($request);
+        $staffId = $user->staff_id;
+
+        return response()->json($this->buildDraftInfo($staffId));
     }
 
     /**

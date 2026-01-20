@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { TaskGroup, DateMode, TaskFilters, TaskStatus, HQCheckStatus } from '@/types/tasks';
 import { Task as ApiTask, Department } from '@/types/api';
-import { getTasks, getDepartments, getDraftInfo, DraftInfo, PaginatedTaskResponse, TaskQueryParamsExtended } from '@/lib/api';
+import { getTasks, getDepartments, DraftInfo, PaginatedTaskResponse, TaskQueryParamsExtended } from '@/lib/api';
 import StatusPill from '@/components/ui/StatusPill';
 import FilterModal from '@/components/tasks/FilterModal';
 import DatePicker from '@/components/ui/DatePicker';
@@ -152,16 +152,7 @@ export default function TaskListPage() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Fetch draft info (for HQ users only)
-  useEffect(() => {
-    if (isHQ) {
-      getDraftInfo()
-        .then(setDraftInfo)
-        .catch((err) => {
-          console.error('Failed to fetch draft info:', err);
-        });
-    }
-  }, [isHQ]);
+  // Note: Draft info is now included in getTasks response (no separate API call needed)
 
   // Fetch departments
   const fetchDepartments = useCallback(async () => {
@@ -221,12 +212,18 @@ export default function TaskListPage() {
       }
 
       // Fetch tasks with server-side pagination
+      // Response now includes draft_info for HQ users (no separate API call needed)
       const response = await getTasks(queryParams);
       allTasks = response.data || [];
 
       // Use server's pagination info
       setTotalPages(response.last_page || 1);
       setTotalItems(response.total || 0);
+
+      // Update draft info from response (included for HQ users)
+      if (response.draft_info) {
+        setDraftInfo(response.draft_info);
+      }
 
       // Transform API tasks to UI format
       const transformedTasks = allTasks.map((task: ApiTask, index: number) =>

@@ -298,6 +298,8 @@ export interface PaginatedTaskResponse {
   total: number;
   from: number | null;
   to: number | null;
+  // Draft info is included for HQ users (no separate API call needed)
+  draft_info?: DraftInfo;
 }
 
 export interface TaskQueryParamsExtended extends TaskQueryParams {
