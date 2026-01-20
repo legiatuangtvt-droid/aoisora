@@ -1569,14 +1569,18 @@ Chi tiết: `docs/06-deployment/DEPLOY-PA-VIETNAM-HOSTING.md`
 │        │    • RE Time (required)                             │  │
 │        ├─────────────────────────────────────────────────────┤  │
 │        │ B. INSTRUCTIONS:                                    │  │
-│        │    • Task Type (required)                           │  │
-│        │    • Manual Link (required)                         │  │
-│        │    • Document:                                      │  │
+│        │    • Task Type (required): Image / Document         │  │
+│        │    • Manual Link (required, valid URL)              │  │
+│        │    • Note:                                          │  │
 │        │      - IF Task Type = "Document" → required         │  │
 │        │      - ELSE → optional                              │  │
 │        │    • Photo Guidelines:                              │  │
-│        │      - IF Task Type = "Image" → min 1 photo         │  │
-│        │      - ELSE → optional                              │  │
+│        │      - IF Task Type = "Image" → min 1 photo required│  │
+│        │      - Max 20 photos, JPG/PNG only, max 5MB each    │  │
+│        │      - Upload methods: Click, Paste (Ctrl+V),       │  │
+│        │        Drag & Drop                                  │  │
+│        │      - Dynamic slots (auto-expand on upload)        │  │
+│        │      - ELSE (Document) → hidden                     │  │
 │        ├─────────────────────────────────────────────────────┤  │
 │        │ C. SCOPE:                                           │  │
 │        │    • FLOW 1 (Task List): Store structure required   │  │

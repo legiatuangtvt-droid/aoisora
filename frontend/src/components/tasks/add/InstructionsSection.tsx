@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { TaskInstructions, DropdownOption, PhotoGuideline } from '@/types/addTask';
 import { TASK_VALIDATION_RULES } from '@/config/wsConfig';
 
@@ -22,12 +22,12 @@ export default function InstructionsSection({
   disabled = false,
 }: InstructionsSectionProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const photoGridRef = useRef<HTMLDivElement>(null);
   const [uploadingSlotIndex, setUploadingSlotIndex] = useState<number | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   // Calculate number of visible slots: photos count + 1 empty slot (if not at max)
   const visibleSlots = Math.min(data.photoGuidelines.length + 1, MAX_PHOTOS);
-  // Show add button if we haven't reached max and there's at least one empty slot
-  const canAddMoreSlots = data.photoGuidelines.length < MAX_PHOTOS - 1;
 
   const handleChange = (field: keyof TaskInstructions, value: string) => {
     if (disabled) return;
@@ -97,6 +97,114 @@ export default function InstructionsSection({
     setUploadingSlotIndex(index);
     fileInputRef.current?.click();
   };
+
+  // Process image file (shared by upload, paste, and drag-drop)
+  const processImageFile = useCallback((file: File): PhotoGuideline | null => {
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert(`File ${file.name || 'pasted image'} exceeds 5MB limit`);
+      return null;
+    }
+
+    // Check file type
+    if (!['image/jpeg', 'image/png'].includes(file.type)) {
+      alert(`File ${file.name || 'pasted image'} must be JPG or PNG`);
+      return null;
+    }
+
+    return {
+      id: `photo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      url: URL.createObjectURL(file),
+      file,
+    };
+  }, []);
+
+  // Add photo to the list
+  const addPhoto = useCallback((newPhoto: PhotoGuideline) => {
+    if (data.photoGuidelines.length >= MAX_PHOTOS) {
+      alert(`Maximum ${MAX_PHOTOS} photos allowed`);
+      return;
+    }
+
+    onChange({
+      ...data,
+      photoGuidelines: [...data.photoGuidelines, newPhoto],
+    });
+  }, [data, onChange]);
+
+  // Handle paste event (Ctrl+V)
+  const handlePaste = useCallback((e: ClipboardEvent) => {
+    if (disabled || data.taskType !== 'image') return;
+
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (file) {
+          const newPhoto = processImageFile(file);
+          if (newPhoto) {
+            addPhoto(newPhoto);
+          }
+        }
+        break;
+      }
+    }
+  }, [disabled, data.taskType, processImageFile, addPhoto]);
+
+  // Handle drag over
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    if (disabled || data.taskType !== 'image') return;
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  }, [disabled, data.taskType]);
+
+  // Handle drag leave
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  }, []);
+
+  // Handle drop
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    if (disabled || data.taskType !== 'image') return;
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+
+    const files = e.dataTransfer.files;
+    if (!files || files.length === 0) return;
+
+    // Process all dropped image files
+    for (let i = 0; i < files.length; i++) {
+      if (data.photoGuidelines.length + i >= MAX_PHOTOS) {
+        alert(`Maximum ${MAX_PHOTOS} photos allowed. Only first ${MAX_PHOTOS - data.photoGuidelines.length} images were added.`);
+        break;
+      }
+      const file = files[i];
+      if (file.type.startsWith('image/')) {
+        const newPhoto = processImageFile(file);
+        if (newPhoto) {
+          addPhoto(newPhoto);
+        }
+      }
+    }
+  }, [disabled, data.taskType, data.photoGuidelines.length, processImageFile, addPhoto]);
+
+  // Listen for paste events when Photo Guidelines section is visible
+  useEffect(() => {
+    if (data.taskType !== 'image' || disabled) return;
+
+    document.addEventListener('paste', handlePaste);
+    return () => {
+      document.removeEventListener('paste', handlePaste);
+    };
+  }, [data.taskType, disabled, handlePaste]);
 
   return (
     <div className="space-y-4">
@@ -185,8 +293,26 @@ export default function InstructionsSection({
             <p className="mb-2 text-xs text-red-500">{errors.photoGuidelines}</p>
           )}
 
-          {/* Photo Grid - Dynamic slots */}
-          <div className={`grid grid-cols-2 gap-3 ${errors.photoGuidelines ? 'ring-2 ring-red-500 rounded-lg p-1' : ''}`}>
+          {/* Photo Grid - Dynamic slots with drag-drop support */}
+          <div
+            ref={photoGridRef}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`grid grid-cols-2 gap-3 relative ${errors.photoGuidelines ? 'ring-2 ring-red-500 rounded-lg p-1' : ''} ${isDragOver ? 'ring-2 ring-pink-500 bg-pink-50 dark:bg-pink-900/20' : ''}`}
+          >
+            {/* Drag overlay */}
+            {isDragOver && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-pink-100/80 dark:bg-pink-900/80 rounded-lg border-2 border-dashed border-pink-500">
+                <div className="text-center">
+                  <svg className="w-12 h-12 mx-auto text-pink-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  <p className="text-sm font-medium text-pink-600 dark:text-pink-400">Drop images here</p>
+                </div>
+              </div>
+            )}
+
             {/* Render photo slots */}
             {Array.from({ length: visibleSlots }).map((_, index) => {
               const photo = data.photoGuidelines[index];
@@ -257,35 +383,12 @@ export default function InstructionsSection({
                     <p className="text-xs text-pink-600 dark:text-pink-400 font-medium">
                       Image {index + 1}
                     </p>
-                    <p className="text-xs text-gray-400 mt-1">Click to upload</p>
+                    <p className="text-xs text-gray-400 mt-1">Click, paste or drag</p>
                   </div>
                 </button>
               );
             })}
 
-            {/* Add more slot button - shows when there's room for more */}
-            {canAddMoreSlots && data.photoGuidelines.length > 0 && (
-              <button
-                onClick={() => handleSlotClick(data.photoGuidelines.length + 1)}
-                disabled={disabled}
-                className={`border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50/50 dark:bg-gray-800/50 transition-colors ${
-                  disabled
-                    ? 'opacity-50 cursor-not-allowed'
-                    : 'hover:bg-gray-100/50 dark:hover:bg-gray-700/50 hover:border-pink-300 dark:hover:border-pink-600'
-                }`}
-              >
-                <div className="flex flex-col items-center justify-center h-full">
-                  <div className="w-10 h-10 mb-2 text-gray-400 dark:text-gray-500 flex items-center justify-center">
-                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                  </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                    Add more
-                  </p>
-                </div>
-              </button>
-            )}
           </div>
 
           {/* Hidden File Input */}
