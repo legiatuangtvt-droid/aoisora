@@ -242,6 +242,16 @@ export const TASK_VALIDATION_RULES = {
       maxExceeded: 'Maximum 4 photo guidelines allowed',
     },
   },
+
+  // Note
+  note: {
+    requiredForDocumentType: true,
+    maxLength: 2000,
+    errorMessages: {
+      required: 'Note is required for document tasks',
+      maxExceeded: 'Note must not exceed 2000 characters',
+    },
+  },
 };
 
 // =============================================================================

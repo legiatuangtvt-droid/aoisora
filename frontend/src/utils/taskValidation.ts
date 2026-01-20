@@ -277,7 +277,7 @@ function isValidUrl(urlString: string): boolean {
  * Validate Section B: Instructions
  * - Task Type: required
  * - Manual Link: required + URL validation
- * - Document: required if task type is 'document'
+ * - Note: required if task type is 'document'
  * - Photo Guidelines: at least 1 required if task type is 'image'
  */
 function validateInstructions(taskLevel: TaskLevel): ValidationError[] {
@@ -287,6 +287,7 @@ function validateInstructions(taskLevel: TaskLevel): ValidationError[] {
   const taskTypeRules = TASK_VALIDATION_RULES.instructionTaskType;
   const manualLinkRules = TASK_VALIDATION_RULES.manualLink;
   const photoRules = TASK_VALIDATION_RULES.photoGuidelines;
+  const noteRules = TASK_VALIDATION_RULES.note;
 
   // Task Type is required
   if (taskTypeRules.required && !instructions.taskType) {
@@ -320,10 +321,25 @@ function validateInstructions(taskLevel: TaskLevel): ValidationError[] {
 
   // Conditional validation based on task type
   if (instructions.taskType === 'document') {
-    // For document type, we would need a document field
-    // Currently the type doesn't have a document field,
-    // so we skip this validation until the field is added
-    // TODO: Add document field to TaskInstructions type
+    // Note is required for document type
+    if (noteRules.requiredForDocumentType && (!instructions.note || instructions.note.trim() === '')) {
+      errors.push({
+        field: 'note',
+        message: noteRules.errorMessages.required,
+        section: 'B',
+        taskLevelId: taskLevel.id,
+      });
+    }
+
+    // Note max length check
+    if (instructions.note && instructions.note.length > noteRules.maxLength) {
+      errors.push({
+        field: 'note',
+        message: noteRules.errorMessages.maxExceeded,
+        section: 'B',
+        taskLevelId: taskLevel.id,
+      });
+    }
   }
 
   if (instructions.taskType === 'image') {

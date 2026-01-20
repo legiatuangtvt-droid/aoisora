@@ -130,7 +130,7 @@ export default function InstructionsSection({
       {/* 3. Note */}
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          3. Note
+          3. Note {data.taskType === 'document' && <span className="text-red-500">*</span>}
         </label>
         <textarea
           value={data.note}
@@ -138,18 +138,30 @@ export default function InstructionsSection({
           placeholder="Please attach the report file in the comment section after completing the task."
           rows={3}
           disabled={disabled}
-          className="w-full px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 resize-none disabled:opacity-50 disabled:cursor-not-allowed"
+          className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 resize-none disabled:opacity-50 disabled:cursor-not-allowed ${
+            errors.note
+              ? 'border-red-500 focus:ring-red-500'
+              : 'border-gray-300 dark:border-gray-600'
+          }`}
         />
+        {errors.note && (
+          <p className="mt-1 text-xs text-red-500">{errors.note}</p>
+        )}
       </div>
 
       {/* 4. Photo Guidelines */}
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          4. Photo Guidelines
+          4. Photo Guidelines {data.taskType === 'image' && <span className="text-red-500">*</span>}
         </label>
 
+        {/* Error message */}
+        {errors.photoGuidelines && (
+          <p className="mb-2 text-xs text-red-500">{errors.photoGuidelines}</p>
+        )}
+
         {/* Photo Grid 2x2 */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className={`grid grid-cols-2 gap-3 ${errors.photoGuidelines ? 'ring-2 ring-red-500 rounded-lg p-1' : ''}`}>
           {/* Photo slots */}
           {[0, 1, 2, 3].map((index) => {
             const photo = data.photoGuidelines[index];
