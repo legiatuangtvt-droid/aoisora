@@ -278,7 +278,7 @@ function isValidUrl(urlString: string): boolean {
  * - Task Type: required
  * - Manual Link: required + URL validation
  * - Note: required if task type is 'document'
- * - Photo Guidelines: at least 1 required if task type is 'image'
+ * - Photo Guidelines: hidden when task type is 'image', max 4 photos allowed when visible
  */
 function validateInstructions(taskLevel: TaskLevel): ValidationError[] {
   const errors: ValidationError[] = [];
@@ -342,17 +342,8 @@ function validateInstructions(taskLevel: TaskLevel): ValidationError[] {
     }
   }
 
-  if (instructions.taskType === 'image') {
-    // Photo Guidelines: at least 1 required for image type
-    if (photoRules.requiredForImageType && (!instructions.photoGuidelines || instructions.photoGuidelines.length === 0)) {
-      errors.push({
-        field: 'photoGuidelines',
-        message: photoRules.errorMessages.required,
-        section: 'B',
-        taskLevelId: taskLevel.id,
-      });
-    }
-
+  // Photo Guidelines validation: only validate when task type is NOT 'image' (because Photo Guidelines is hidden for image type)
+  if (instructions.taskType !== 'image') {
     // Max photos check
     if (instructions.photoGuidelines && instructions.photoGuidelines.length > photoRules.maxPhotos) {
       errors.push({
