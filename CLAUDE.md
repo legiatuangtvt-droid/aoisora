@@ -1197,6 +1197,83 @@ backend/laravel/  →  public_html/laravel/
 └─────────────────────────────────────────────────────────────────┘
 ```
 
+#### Version Naming & Release Notes
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  QUY TẮC ĐẶT TÊN PHIÊN BẢN (Semantic Versioning):               │
+│                                                                 │
+│  Format: v{MAJOR}.{MINOR}.{PATCH}                               │
+│                                                                 │
+│  • MAJOR: Thay đổi lớn, breaking changes (v1.0.0 → v2.0.0)      │
+│  • MINOR: Thêm tính năng mới (v1.0.0 → v1.1.0)                  │
+│  • PATCH: Bug fixes, minor updates (v1.0.0 → v1.0.1)            │
+│                                                                 │
+│  Ví dụ:                                                         │
+│  • v0.1.0 - Initial release (WS Task List basic)                │
+│  • v0.1.1 - Fix login bug                                       │
+│  • v0.2.0 - Add Task Detail screen                              │
+│  • v1.0.0 - WS Module complete, production ready                │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Quy trình tạo Release:**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  TRƯỚC KHI DEPLOY PRODUCTION:                                   │
+│                                                                 │
+│  1. TẠO GIT TAG cho phiên bản:                                  │
+│     git tag -a v0.1.0 -m "Release v0.1.0: WS Task List"         │
+│     git push origin v0.1.0                                      │
+│                                                                 │
+│  2. CẬP NHẬT FILE CHANGELOG:                                    │
+│     → File: CHANGELOG.md (root folder)                          │
+│     → Ghi lại tất cả thay đổi kể từ lần deploy trước            │
+│                                                                 │
+│  3. SAU KHI DEPLOY XONG:                                        │
+│     → Cập nhật "Current Version" trong CHANGELOG.md             │
+│     → Ghi thời điểm deploy                                      │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**File CHANGELOG.md Format:**
+
+```markdown
+# Changelog
+
+## [Unreleased]
+- Changes since last release (will be included in next version)
+
+## [v0.1.0] - 2025-01-21
+### Added
+- WS Task List screen with filtering
+- Login/Logout functionality
+- Department dropdown API
+
+### Changed
+- Updated header layout
+
+### Fixed
+- Fixed date picker timezone issue
+
+### Deployment Info
+- **Deployed at**: 2025-01-21 15:30 (UTC+7)
+- **Deployed by**: [Name]
+- **Vercel Deployment ID**: 2kefFcgsz
+- **DB Migration**: full_reset.sql (v0.1.0)
+```
+
+**Claude phải làm khi deploy:**
+
+| Bước | Action |
+|------|--------|
+| 1 | Hỏi user: "Đây là MAJOR, MINOR hay PATCH release?" |
+| 2 | Tạo/cập nhật CHANGELOG.md với các thay đổi |
+| 3 | Tạo git tag với version number |
+| 4 | Nhắc user deploy theo quy trình |
+| 5 | Sau deploy: cập nhật Deployment Info trong CHANGELOG |
+
 #### Nếu LỠ upload .env local lên server
 
 ```
