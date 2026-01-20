@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { TaskInformation, DropdownOption } from '@/types/addTask';
 
 interface TaskInfoSectionProps {
@@ -11,6 +12,12 @@ interface TaskInfoSectionProps {
   disabled?: boolean;
 }
 
+// Helper to get today's date in YYYY-MM-DD format
+function getTodayString(): string {
+  const today = new Date();
+  return today.toISOString().split('T')[0];
+}
+
 export default function TaskInfoSection({
   data,
   onChange,
@@ -19,6 +26,9 @@ export default function TaskInfoSection({
   errors = {},
   disabled = false,
 }: TaskInfoSectionProps) {
+  // Memoize today's date string to avoid recalculating on each render
+  const todayString = useMemo(() => getTodayString(), []);
+
   const handleChange = (field: keyof TaskInformation, value: string) => {
     if (disabled) return;
     if (field === 'applicablePeriod') return;
@@ -78,9 +88,9 @@ export default function TaskInfoSection({
           <div className="flex-1 relative">
             <input
               type="date"
-              value={data.applicablePeriod.startDate}
+              value={data.applicablePeriod.startDate || todayString}
               onChange={(e) => handleDateChange('startDate', e.target.value)}
-              placeholder="mm/dd/yyyy"
+              min={todayString}
               disabled={disabled}
               className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
                 errors.startDate
@@ -94,7 +104,7 @@ export default function TaskInfoSection({
               type="date"
               value={data.applicablePeriod.endDate}
               onChange={(e) => handleDateChange('endDate', e.target.value)}
-              placeholder="mm/dd/yyyy"
+              min={data.applicablePeriod.startDate || todayString}
               disabled={disabled}
               className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
                 errors.endDate
@@ -126,7 +136,6 @@ export default function TaskInfoSection({
               : 'border-gray-300 dark:border-gray-600'
           }`}
         >
-          <option value="">Select execution time</option>
           {executionTimeOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}

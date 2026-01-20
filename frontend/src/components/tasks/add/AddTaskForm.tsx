@@ -1,8 +1,15 @@
 'use client';
 
 import { useState, useCallback, useMemo, useEffect, memo, useRef } from 'react';
-import { TaskLevel, TaskInformation, TaskInstructions, TaskScope, TaskApproval, DropdownOption } from '@/types/addTask';
-import { mockMasterData, createEmptyTaskLevel, getTaskTypeOptionsForLevel, TASK_TYPE_ORDER, DEFAULT_TASK_TYPE_BY_LEVEL } from '@/data/mockAddTask';
+import { TaskLevel, TaskInformation, TaskInstructions, TaskScope, TaskApproval, DropdownOption, TaskFrequency, ExecutionTime } from '@/types/addTask';
+import { mockMasterData, createEmptyTaskLevel } from '@/data/mockAddTask';
+import {
+  TASK_TYPE_ORDER,
+  DEFAULT_TASK_TYPE_BY_LEVEL,
+  getTaskTypeOptionsForLevel,
+  getExecutionTimeMinutes,
+  getDefaultExecutionTimeForChild,
+} from '@/config/wsConfig';
 import TaskLevelCard from './TaskLevelCard';
 import SectionCard from './SectionCard';
 import TaskInfoSection from './TaskInfoSection';
@@ -15,6 +22,10 @@ import {
   getErrorsForSection,
   getFieldError,
   ValidationError,
+  isDateRangeValidForTaskType,
+  getAllowedTaskTypesForDateRange,
+  TASK_TYPE_LABELS,
+  TASK_TYPE_MAX_DAYS,
 } from '@/utils/taskValidation';
 import { useUser } from '@/contexts/UserContext';
 import { getApproverForStaff, ApproverInfo } from '@/lib/api';
@@ -321,6 +332,10 @@ export default function AddTaskForm({
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [showValidationToast, setShowValidationToast] = useState(false);
 
+  // Warning toast for Task Type / Date Range mismatch (real-time feedback)
+  const [warningMessage, setWarningMessage] = useState<string | null>(null);
+  const [showWarningToast, setShowWarningToast] = useState(false);
+
   // State for reject modal
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
@@ -452,7 +467,7 @@ export default function AddTaskForm({
   }, [updateTaskLevel, clearValidationErrors]);
 
 
-  // Handle task information change - with cascade update for task type
+  // Handle task information change - with cascade update for task type and real-time date validation
   const handleTaskInfoChange = useCallback((taskLevelId: string, taskInformation: TaskInformation) => {
     const currentLevels = taskLevelsRef.current;
     const onChange = onTaskLevelsChangeRef.current;
@@ -462,6 +477,33 @@ export default function AddTaskForm({
       updateTaskLevel(taskLevelId, { taskInformation });
       clearValidationErrors();
       return;
+    }
+
+    // Real-time validation: Check Task Type and Date Range correlation
+    const { taskType, applicablePeriod } = taskInformation;
+    if (taskType && applicablePeriod.startDate && applicablePeriod.endDate && source !== 'library') {
+      const validation = isDateRangeValidForTaskType(
+        taskType,
+        applicablePeriod.startDate,
+        applicablePeriod.endDate
+      );
+
+      if (!validation.valid) {
+        const taskTypeLabel = TASK_TYPE_LABELS[taskType] || taskType;
+        const allowedTypes = getAllowedTaskTypesForDateRange(applicablePeriod.startDate, applicablePeriod.endDate);
+        const allowedLabels = allowedTypes.map((t) => TASK_TYPE_LABELS[t] || t).join(', ');
+
+        setWarningMessage(
+          `⚠️ ${taskTypeLabel} task cannot exceed ${validation.maxDays} day${validation.maxDays > 1 ? 's' : ''}. ` +
+          `Current range: ${validation.actualDays} days. ` +
+          `Allowed Task Types for this range: ${allowedLabels || 'None'}.`
+        );
+        setShowWarningToast(true);
+      } else {
+        // Clear warning if valid
+        setShowWarningToast(false);
+        setWarningMessage(null);
+      }
     }
 
     // Check if task type changed
@@ -476,7 +518,8 @@ export default function AddTaskForm({
     }
 
     // Task type changed - need to cascade update children if necessary
-    const newTaskTypeIndex = TASK_TYPE_ORDER.indexOf(newTaskType);
+    // newTaskType is guaranteed to be non-empty at this point since we're in the "changed" branch
+    const newTaskTypeIndex = TASK_TYPE_ORDER.indexOf(newTaskType as TaskFrequency);
 
     // Find all descendants recursively
     const findAllDescendants = (parentId: string, levels: TaskLevel[]): TaskLevel[] => {
@@ -487,7 +530,7 @@ export default function AddTaskForm({
     const descendants = findAllDescendants(taskLevelId, currentLevels);
 
     // Update this task level and cascade update descendants if their task type is now invalid
-    const updatedLevels = currentLevels.map((tl) => {
+    const updatedLevels = currentLevels.map((tl): TaskLevel => {
       if (tl.id === taskLevelId) {
         return { ...tl, taskInformation };
       }
@@ -495,14 +538,14 @@ export default function AddTaskForm({
       // Check if this is a descendant that needs task type update
       const isDescendant = descendants.some((d) => d.id === tl.id);
       if (isDescendant) {
-        const childTaskTypeIndex = TASK_TYPE_ORDER.indexOf(tl.taskInformation.taskType);
+        const childTaskTypeIndex = TASK_TYPE_ORDER.indexOf(tl.taskInformation.taskType as TaskFrequency);
         // If child's task type has larger time span than new parent's, update to default for that level
         if (childTaskTypeIndex < newTaskTypeIndex) {
           // Get the appropriate default task type for this level that is valid
           const validDefaultForLevel = DEFAULT_TASK_TYPE_BY_LEVEL[tl.level] || 'daily';
           const validDefaultIndex = TASK_TYPE_ORDER.indexOf(validDefaultForLevel);
           // Use the default if it's valid, otherwise use parent's type
-          const newChildTaskType = validDefaultIndex >= newTaskTypeIndex ? validDefaultForLevel : newTaskType;
+          const newChildTaskType = (validDefaultIndex >= newTaskTypeIndex ? validDefaultForLevel : newTaskType) as TaskFrequency | '';
           return {
             ...tl,
             taskInformation: {
@@ -518,7 +561,7 @@ export default function AddTaskForm({
 
     onChange(updatedLevels);
     clearValidationErrors();
-  }, [updateTaskLevel, clearValidationErrors]);
+  }, [updateTaskLevel, clearValidationErrors, source]);
 
   // Handle instructions change
   const handleInstructionsChange = useCallback((taskLevelId: string, instructions: TaskInstructions) => {
@@ -539,13 +582,40 @@ export default function AddTaskForm({
   }, [updateTaskLevel, clearValidationErrors]);
 
   // Add sub-level - use refs to keep stable callback
+  // Auto-calculate execution time based on parent's remaining time after siblings
   const handleAddSubLevel = useCallback((parentId: string) => {
     const currentLevels = taskLevelsRef.current;
     const onChange = onTaskLevelsChangeRef.current;
     const parent = currentLevels.find((tl) => tl.id === parentId);
     if (!parent || parent.level >= 5) return;
 
+    // Find existing siblings (children of the same parent)
+    const siblings = currentLevels.filter((tl) => tl.parentId === parentId);
+    const siblingsExecutionTimes = siblings.map((s) => s.taskInformation.executionTime).filter(Boolean);
+
+    // Calculate default execution time for the new child based on parent constraints
+    const parentExecutionTime = parent.taskInformation.executionTime;
+    const childLevel = parent.level + 1;
+    const defaultExecutionTime = parentExecutionTime
+      ? getDefaultExecutionTimeForChild(parentExecutionTime, siblingsExecutionTimes, childLevel)
+      : '';
+
+    // Check if there's remaining time for a new child
+    if (parentExecutionTime && !defaultExecutionTime) {
+      // No remaining time - show warning
+      setWarningMessage(
+        `⚠️ Cannot add sub-task: Parent's execution time (${getExecutionTimeMinutes(parentExecutionTime)} min) is fully allocated to existing child tasks.`
+      );
+      setShowWarningToast(true);
+      return;
+    }
+
     const newTaskLevel = createEmptyTaskLevel(parent.level + 1, parentId);
+    // Override the default execution time with the calculated one
+    if (defaultExecutionTime) {
+      newTaskLevel.taskInformation.executionTime = defaultExecutionTime as ExecutionTime;
+    }
+
     onChange([...currentLevels, newTaskLevel]);
   }, []); // Empty deps - uses refs
 
@@ -800,6 +870,35 @@ export default function AddTaskForm({
                   </li>
                 )}
               </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Warning Toast for Task Type / Date Range mismatch */}
+      {showWarningToast && warningMessage && (
+        <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+          <div className="flex items-start gap-3">
+            <svg className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-1">
+                <h4 className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                  Task Type and Date Range Mismatch
+                </h4>
+                <button
+                  onClick={() => setShowWarningToast(false)}
+                  className="text-amber-500 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <p className="text-sm text-amber-700 dark:text-amber-300">
+                {warningMessage}
+              </p>
             </div>
           </div>
         </div>

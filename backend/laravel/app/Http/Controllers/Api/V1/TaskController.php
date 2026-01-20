@@ -167,11 +167,14 @@ class TaskController extends Controller
             'assigned_staff_id' => 'nullable|exists:staff,staff_id',
             'assigned_store_id' => 'nullable|exists:stores,store_id',
             'dept_id' => 'nullable|exists:departments,department_id',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date',
+            // Date validation: start_date >= today, end_date >= start_date
+            'start_date' => 'nullable|date|after_or_equal:today',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
             'priority' => 'nullable|string|in:low,normal,high,urgent',
             'source' => 'nullable|string|in:task_list,library,todo_task',
             'receiver_type' => 'nullable|string|in:store,hq_user',
+            // Task frequency type for date range validation
+            'frequency_type' => 'nullable|string|in:yearly,quarterly,monthly,weekly,daily',
             // Task hierarchy fields
             'parent_task_id' => 'nullable|exists:tasks,task_id',
             'task_level' => 'nullable|integer|min:1|max:5',
@@ -179,6 +182,7 @@ class TaskController extends Controller
             'sub_tasks' => 'nullable|array',
             'sub_tasks.*.task_name' => 'required|string|max:500',
             'sub_tasks.*.task_level' => 'nullable|integer|min:2|max:5',
+            'sub_tasks.*.frequency_type' => 'nullable|string|in:yearly,quarterly,monthly,weekly,daily',
         ]);
 
         $statusId = $request->input('status_id', self::DRAFT_STATUS_ID);
@@ -198,8 +202,30 @@ class TaskController extends Controller
             }
         }
 
-        // Prepare task data (exclude sub_tasks from direct creation)
-        $taskData = $request->except(['sub_tasks']);
+        // Validate Task Type (frequency_type) and Date Range correlation
+        // Skip for library source as dates are set later when dispatching
+        if ($source !== Task::SOURCE_LIBRARY) {
+            $frequencyType = $request->input('frequency_type');
+            $startDate = $request->input('start_date');
+            $endDate = $request->input('end_date');
+
+            if ($frequencyType && $startDate && $endDate) {
+                $validation = $this->validateTaskTypeDateRange($frequencyType, $startDate, $endDate);
+                if (!$validation['valid']) {
+                    return response()->json([
+                        'message' => 'Validation failed',
+                        'error' => $validation['errors'][0] ?? 'Task type and date range mismatch',
+                        'frequency_type' => $frequencyType,
+                        'max_days' => $validation['maxDays'],
+                        'actual_days' => $validation['actualDays'],
+                    ], 422);
+                }
+            }
+        }
+
+        // Prepare task data (exclude sub_tasks and frequency_type from direct creation)
+        // frequency_type is for validation only, not a DB column
+        $taskData = $request->except(['sub_tasks', 'frequency_type']);
         $taskData['created_staff_id'] = $user->staff_id;
         $taskData['source'] = $source;
         $taskData['task_level'] = $request->input('task_level', 1);
@@ -223,10 +249,12 @@ class TaskController extends Controller
 
     /**
      * Create sub-tasks recursively (max 5 levels)
+     *
+     * @throws \Illuminate\Validation\ValidationException
      */
     private function createSubTasksRecursively(Task $parentTask, array $subTasks, int $createdStaffId, string $source, int $statusId): void
     {
-        foreach ($subTasks as $subTaskData) {
+        foreach ($subTasks as $index => $subTaskData) {
             $level = $subTaskData['task_level'] ?? ($parentTask->task_level + 1);
 
             // Validate max level (5)
@@ -234,9 +262,36 @@ class TaskController extends Controller
                 continue;
             }
 
+            // Validate child date range is within parent date range
+            $dateValidation = $this->validateChildDateRange($subTaskData, $parentTask);
+            if (!$dateValidation['valid']) {
+                $taskName = $subTaskData['task_name'] ?? "Sub-task at level {$level}";
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    "sub_tasks.{$index}.start_date" => $dateValidation['errors'],
+                ]);
+            }
+
+            // Validate frequency_type and date range correlation for sub-tasks (skip for library source)
+            if ($source !== Task::SOURCE_LIBRARY) {
+                $frequencyType = $subTaskData['frequency_type'] ?? null;
+                $startDate = $subTaskData['start_date'] ?? null;
+                $endDate = $subTaskData['end_date'] ?? null;
+
+                if ($frequencyType && $startDate && $endDate) {
+                    $typeValidation = $this->validateTaskTypeDateRange($frequencyType, $startDate, $endDate);
+                    if (!$typeValidation['valid']) {
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            "sub_tasks.{$index}.frequency_type" => $typeValidation['errors'],
+                        ]);
+                    }
+                }
+            }
+
             // Extract nested sub_tasks before creating
             $nestedSubTasks = $subTaskData['sub_tasks'] ?? [];
             unset($subTaskData['sub_tasks']);
+            // Remove frequency_type from data before saving (not a DB column)
+            unset($subTaskData['frequency_type']);
 
             // Create sub-task
             $subTask = Task::create(array_merge($subTaskData, [
@@ -268,13 +323,16 @@ class TaskController extends Controller
             'response_type_id' => 'nullable|exists:code_master,code_master_id',
             'status_id' => 'nullable|exists:code_master,code_master_id',
             'assigned_staff_id' => 'nullable|exists:staff,staff_id',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date',
+            'start_date' => 'nullable|date|after_or_equal:today',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
             'priority' => 'nullable|string|in:low,normal,high,urgent',
+            // Task frequency type for date range validation
+            'frequency_type' => 'nullable|string|in:yearly,quarterly,monthly,weekly,daily',
             // Nested sub-tasks validation
             'sub_tasks' => 'nullable|array',
             'sub_tasks.*.task_name' => 'required|string|max:500',
             'sub_tasks.*.task_level' => 'nullable|integer|min:2|max:5',
+            'sub_tasks.*.frequency_type' => 'nullable|string|in:yearly,quarterly,monthly,weekly,daily',
         ]);
 
         // Get effective user (may be switched user in testing mode)
@@ -296,8 +354,62 @@ class TaskController extends Controller
             }
         }
 
-        // Exclude sub_tasks from update data (will handle separately)
-        $updateData = $request->except(['sub_tasks']);
+        // Exclude sub_tasks and frequency_type from update data (frequency_type is for validation only, not a DB column)
+        $updateData = $request->except(['sub_tasks', 'frequency_type']);
+
+        // Validate frequency_type and date range correlation (skip for library source)
+        if ($source !== Task::SOURCE_LIBRARY) {
+            $frequencyType = $request->input('frequency_type');
+            $startDate = $request->input('start_date') ?? $task->start_date;
+            $endDate = $request->input('end_date') ?? $task->end_date;
+
+            if ($frequencyType && $startDate && $endDate) {
+                $validation = $this->validateTaskTypeDateRange($frequencyType, $startDate, $endDate);
+                if (!$validation['valid']) {
+                    return response()->json([
+                        'message' => 'Validation failed',
+                        'error' => $validation['errors'][0] ?? 'Task type and date range mismatch',
+                        'frequency_type' => $frequencyType,
+                        'max_days' => $validation['maxDays'],
+                        'actual_days' => $validation['actualDays'],
+                    ], 422);
+                }
+            }
+        }
+
+        // Validate parent date change doesn't violate existing children date ranges
+        $newStartDate = $request->input('start_date');
+        $newEndDate = $request->input('end_date');
+        if ($newStartDate || $newEndDate) {
+            $existingChildren = Task::where('parent_task_id', $task->task_id)->get();
+            $dateErrors = [];
+
+            foreach ($existingChildren as $child) {
+                if ($child->start_date && $newStartDate) {
+                    $childStart = Carbon::parse($child->start_date);
+                    $parentNewStart = Carbon::parse($newStartDate);
+                    if ($childStart->lt($parentNewStart)) {
+                        $dateErrors[] = "Child task '{$child->task_name}' has start date ({$child->start_date}) before new parent start date ({$newStartDate})";
+                    }
+                }
+                if ($child->end_date && $newEndDate) {
+                    $childEnd = Carbon::parse($child->end_date);
+                    $parentNewEnd = Carbon::parse($newEndDate);
+                    if ($childEnd->gt($parentNewEnd)) {
+                        $dateErrors[] = "Child task '{$child->task_name}' has end date ({$child->end_date}) after new parent end date ({$newEndDate})";
+                    }
+                }
+            }
+
+            if (!empty($dateErrors)) {
+                return response()->json([
+                    'message' => 'Date validation failed',
+                    'errors' => [
+                        'start_date' => $dateErrors,
+                    ],
+                ], 422);
+            }
+        }
 
         // If task was rejected and user is editing, set has_changes_since_rejection flag
         if ($task->rejection_count > 0 && $task->status_id == self::DRAFT_STATUS_ID) {
@@ -597,6 +709,113 @@ class TaskController extends Controller
             Task::SOURCE_TODO_TASK => 'To Do Tasks',
             default => 'Tasks',
         };
+    }
+
+    /**
+     * Validate child task date range is within parent task date range
+     *
+     * @param array $childData - Child task data with start_date and end_date
+     * @param Task $parent - Parent task
+     * @return array - ['valid' => bool, 'errors' => array]
+     */
+    private function validateChildDateRange(array $childData, Task $parent): array
+    {
+        $errors = [];
+
+        // Skip if parent doesn't have dates set
+        if (!$parent->start_date && !$parent->end_date) {
+            return ['valid' => true, 'errors' => []];
+        }
+
+        $childStartDate = isset($childData['start_date']) ? Carbon::parse($childData['start_date']) : null;
+        $childEndDate = isset($childData['end_date']) ? Carbon::parse($childData['end_date']) : null;
+        $parentStartDate = $parent->start_date ? Carbon::parse($parent->start_date) : null;
+        $parentEndDate = $parent->end_date ? Carbon::parse($parent->end_date) : null;
+
+        // Child start date must be >= parent start date
+        if ($childStartDate && $parentStartDate && $childStartDate->lt($parentStartDate)) {
+            $errors[] = "Start date must be on or after parent task start date ({$parentStartDate->format('Y-m-d')})";
+        }
+
+        // Child end date must be <= parent end date
+        if ($childEndDate && $parentEndDate && $childEndDate->gt($parentEndDate)) {
+            $errors[] = "End date must be on or before parent task end date ({$parentEndDate->format('Y-m-d')})";
+        }
+
+        return [
+            'valid' => empty($errors),
+            'errors' => $errors,
+        ];
+    }
+
+    /**
+     * Maximum duration in days for each task type
+     * Yearly: 365 days, Quarterly: 90 days, Monthly: 31 days, Weekly: 7 days, Daily: 1 day
+     */
+    const TASK_TYPE_MAX_DAYS = [
+        'yearly' => 365,
+        'quarterly' => 90,
+        'monthly' => 31,
+        'weekly' => 7,
+        'daily' => 1,
+    ];
+
+    /**
+     * Human-readable labels for task types
+     */
+    const TASK_TYPE_LABELS = [
+        'yearly' => 'Yearly',
+        'quarterly' => 'Quarterly',
+        'monthly' => 'Monthly',
+        'weekly' => 'Weekly',
+        'daily' => 'Daily',
+    ];
+
+    /**
+     * Validate Task Type and Date Range correlation
+     * Date range duration must not exceed maximum allowed for the selected task type
+     *
+     * @param string|null $taskType - Task type value (yearly, quarterly, monthly, weekly, daily)
+     * @param string|null $startDate - Start date
+     * @param string|null $endDate - End date
+     * @return array - ['valid' => bool, 'errors' => array, 'maxDays' => int, 'actualDays' => int]
+     */
+    private function validateTaskTypeDateRange(?string $taskType, ?string $startDate, ?string $endDate): array
+    {
+        // Skip validation if task type or dates are not set
+        if (!$taskType || !$startDate || !$endDate) {
+            return ['valid' => true, 'errors' => [], 'maxDays' => 0, 'actualDays' => 0];
+        }
+
+        $maxDays = self::TASK_TYPE_MAX_DAYS[$taskType] ?? null;
+        if (!$maxDays) {
+            return ['valid' => true, 'errors' => [], 'maxDays' => 0, 'actualDays' => 0];
+        }
+
+        $start = Carbon::parse($startDate)->startOfDay();
+        $end = Carbon::parse($endDate)->startOfDay();
+
+        // Calculate days inclusive (start and end dates count)
+        $actualDays = $start->diffInDays($end) + 1;
+
+        if ($actualDays > $maxDays) {
+            $taskTypeLabel = self::TASK_TYPE_LABELS[$taskType] ?? $taskType;
+            return [
+                'valid' => false,
+                'errors' => [
+                    "{$taskTypeLabel} task cannot exceed {$maxDays} day" . ($maxDays > 1 ? 's' : '') . ". Current range is {$actualDays} days. Please select a different Task Type or adjust the date range."
+                ],
+                'maxDays' => $maxDays,
+                'actualDays' => $actualDays,
+            ];
+        }
+
+        return [
+            'valid' => true,
+            'errors' => [],
+            'maxDays' => $maxDays,
+            'actualDays' => $actualDays,
+        ];
     }
 
     /**

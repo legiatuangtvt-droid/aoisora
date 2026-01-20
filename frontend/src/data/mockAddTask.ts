@@ -1,69 +1,29 @@
+/**
+ * Mock Data for Add Task Form
+ *
+ * This file contains ONLY mock/sample data for development and testing.
+ * All configurable values (options, validation rules) are in @/config/wsConfig.ts
+ *
+ * @module WS
+ */
+
 import {
   AddTaskMasterData,
   TaskLevel,
   DropdownOption,
 } from '@/types/addTask';
 
-// Task frequency options (ordered from largest to smallest frequency)
-// Yearly > Quarterly > Monthly > Weekly > Daily
-export const taskTypeOptions: DropdownOption[] = [
-  { value: 'yearly', label: 'Yearly' },
-  { value: 'quarterly', label: 'Quarterly' },
-  { value: 'monthly', label: 'Monthly' },
-  { value: 'weekly', label: 'Weekly' },
-  { value: 'daily', label: 'Daily' },
-];
+import {
+  DEFAULT_TASK_TYPE_BY_LEVEL,
+  DEFAULT_EXECUTION_TIME_BY_LEVEL,
+  taskTypeDropdownOptions,
+  executionTimeDropdownOptions,
+  instructionTypeDropdownOptions,
+} from '@/config/wsConfig';
 
-// Task type frequency order (lower index = larger time span)
-// Used for validation: child task type must have equal or smaller time span than parent
-export const TASK_TYPE_ORDER = ['yearly', 'quarterly', 'monthly', 'weekly', 'daily'];
-
-// Default task type by level
-// Level 1 = Yearly, Level 2 = Quarterly, Level 3 = Monthly, Level 4 = Weekly, Level 5 = Daily
-export const DEFAULT_TASK_TYPE_BY_LEVEL: Record<number, string> = {
-  1: 'yearly',
-  2: 'quarterly',
-  3: 'monthly',
-  4: 'weekly',
-  5: 'daily',
-};
-
-// Get available task type options based on parent's task type
-// Child can only select task types with equal or smaller time span than parent
-export function getTaskTypeOptionsForLevel(parentTaskType: string | null): DropdownOption[] {
-  if (!parentTaskType) {
-    // No parent (level 1) - all options available
-    return taskTypeOptions;
-  }
-
-  const parentIndex = TASK_TYPE_ORDER.indexOf(parentTaskType);
-  if (parentIndex === -1) {
-    // Unknown parent type - return all options
-    return taskTypeOptions;
-  }
-
-  // Filter to only include task types at or after parent's index (smaller or equal time span)
-  return taskTypeOptions.filter((opt) => {
-    const optIndex = TASK_TYPE_ORDER.indexOf(opt.value);
-    return optIndex >= parentIndex;
-  });
-}
-
-// Execution time options
-export const executionTimeOptions: DropdownOption[] = [
-  { value: '30min', label: '30 min' },
-  { value: '1hour', label: '1 hour' },
-  { value: '2hours', label: '2 hours' },
-  { value: '4hours', label: '4 hours' },
-  { value: '8hours', label: '8 hours' },
-];
-
-// Instruction task type options
-export const instructionTaskTypeOptions: DropdownOption[] = [
-  { value: 'image', label: 'Image' },
-  { value: 'document', label: 'Document' },
-  { value: 'checklist', label: 'Checklist' },
-];
+// =============================================================================
+// MOCK DATA - Geographic Hierarchy (Region > Zone > Area > Store)
+// =============================================================================
 
 // Region options
 export const regionOptions: DropdownOption[] = [
@@ -130,6 +90,10 @@ export const storeOptionsByArea: Record<string, DropdownOption[]> = {
   ],
 };
 
+// =============================================================================
+// MOCK DATA - Staff & Leadership
+// =============================================================================
+
 // Store leaders
 export const storeLeaderOptions: DropdownOption[] = [
   { value: 'sl-1', label: 'Tùng (SM Ocean)' },
@@ -162,11 +126,18 @@ export const hodOptions: DropdownOption[] = [
   { value: 'hod-2', label: 'Director A' },
 ];
 
-// Combined master data
+// =============================================================================
+// COMBINED MOCK MASTER DATA
+// =============================================================================
+
+/**
+ * Combined master data for Add Task form
+ * Used by components to populate dropdowns
+ */
 export const mockMasterData: AddTaskMasterData = {
-  taskTypes: taskTypeOptions,
-  executionTimes: executionTimeOptions,
-  instructionTaskTypes: instructionTaskTypeOptions,
+  taskTypes: taskTypeDropdownOptions,
+  executionTimes: executionTimeDropdownOptions,
+  instructionTaskTypes: instructionTypeDropdownOptions,
   regions: regionOptions,
   zones: zoneOptionsByRegion,
   areas: areaOptionsByZone,
@@ -178,14 +149,26 @@ export const mockMasterData: AddTaskMasterData = {
   hods: hodOptions,
 };
 
-// Generate unique ID with timestamp and random string
+// =============================================================================
+// TASK LEVEL FACTORY
+// =============================================================================
+
+/**
+ * Generate unique ID with timestamp and random string
+ */
 function generateUniqueId(): string {
   const timestamp = Date.now();
   const randomStr = Math.random().toString(36).substring(2, 11);
   return `task-level-${timestamp}-${randomStr}`;
 }
 
-// Create empty task level with default task type based on level
+/**
+ * Create empty task level with default task type and execution time based on level
+ *
+ * @param level - Task level (1-5)
+ * @param parentId - Parent task level ID (null for root)
+ * @returns New TaskLevel object with defaults
+ */
 export function createEmptyTaskLevel(level: number, parentId: string | null = null): TaskLevel {
   return {
     id: generateUniqueId(),
@@ -198,7 +181,7 @@ export function createEmptyTaskLevel(level: number, parentId: string | null = nu
         startDate: '',
         endDate: '',
       },
-      executionTime: '',
+      executionTime: DEFAULT_EXECUTION_TIME_BY_LEVEL[level] || '30min',
     },
     instructions: {
       taskType: '',
@@ -224,7 +207,9 @@ export function createEmptyTaskLevel(level: number, parentId: string | null = nu
   };
 }
 
-// Initial task levels (just level 1)
+/**
+ * Initial task levels (just level 1)
+ */
 export const initialTaskLevels: TaskLevel[] = [
   createEmptyTaskLevel(1),
 ];

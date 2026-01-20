@@ -219,6 +219,9 @@ export interface TaskCreate {
   due_datetime?: string;
   // Task creation source
   source?: string;
+  // Task frequency type: yearly, quarterly, monthly, weekly, daily
+  // Used for validation with date range
+  frequency_type?: string;
   // Task hierarchy (max 5 levels)
   parent_task_id?: number;
   task_level?: number;
@@ -247,6 +250,9 @@ export interface TaskUpdate {
   completed_time?: string;
   comment?: string;
   attachments?: string[];
+  // Task frequency type: yearly, quarterly, monthly, weekly, daily
+  // Used for validation with date range
+  frequency_type?: string;
   // Task hierarchy
   task_level?: number;
   sub_tasks?: TaskCreate[];

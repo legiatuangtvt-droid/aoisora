@@ -205,6 +205,8 @@ function AddTaskContent() {
       task_description: child.instructions.note || undefined,
       start_date: child.taskInformation.applicablePeriod.startDate || undefined,
       end_date: child.taskInformation.applicablePeriod.endDate || undefined,
+      // Task frequency type for validation (yearly, quarterly, monthly, weekly, daily)
+      frequency_type: child.taskInformation.taskType || undefined,
       task_level: child.level,
       status_id: statusId,
       priority: 'normal' as const,
@@ -255,6 +257,8 @@ function AddTaskContent() {
         task_description: rootTask.instructions.note || undefined,
         start_date: rootTask.taskInformation.applicablePeriod.startDate || undefined,
         end_date: rootTask.taskInformation.applicablePeriod.endDate || undefined,
+        // Task frequency type for validation (yearly, quarterly, monthly, weekly, daily)
+        frequency_type: rootTask.taskInformation.taskType || undefined,
         task_level: 1,
         sub_tasks: subTasks, // Always send, even if empty - backend will sync
       };
@@ -320,6 +324,8 @@ function AddTaskContent() {
         task_description: rootTask.instructions.note || undefined,
         start_date: rootTask.taskInformation.applicablePeriod.startDate || undefined,
         end_date: rootTask.taskInformation.applicablePeriod.endDate || undefined,
+        // Task frequency type for validation (yearly, quarterly, monthly, weekly, daily)
+        frequency_type: rootTask.taskInformation.taskType || undefined,
         task_level: 1,
         sub_tasks: subTasks, // Always send, even if empty - backend will sync
       };

@@ -1,6 +1,27 @@
 // Task validation utilities for Add Task form
 import type { TaskLevel, TaskInformation, TaskInstructions, TaskScope } from '@/types/addTask';
 import type { TaskSource } from '@/components/tasks/add/AddTaskForm';
+import {
+  getExecutionTimeMinutes,
+  getTaskTypeMaxDays,
+  getTaskTypeLabel,
+  isDateRangeValidForTaskType as configIsDateRangeValidForTaskType,
+  getAllowedTaskTypesForDateRange as configGetAllowedTaskTypesForDateRange,
+  TASK_VALIDATION_RULES,
+  TASK_TYPE_OPTIONS,
+} from '@/config/wsConfig';
+
+// Re-export for backward compatibility
+// These are now derived from TASK_TYPE_OPTIONS in @/config/wsConfig.ts
+export const TASK_TYPE_MAX_DAYS: Record<string, number> = TASK_TYPE_OPTIONS.reduce(
+  (acc, opt) => ({ ...acc, [opt.value]: opt.maxDays }),
+  {} as Record<string, number>
+);
+
+export const TASK_TYPE_LABELS: Record<string, string> = TASK_TYPE_OPTIONS.reduce(
+  (acc, opt) => ({ ...acc, [opt.value]: opt.label }),
+  {} as Record<string, string>
+);
 
 // Validation error structure
 export interface ValidationError {
@@ -17,15 +38,47 @@ export interface ValidationResult {
 }
 
 /**
+ * Get allowed task types based on date range duration
+ * Returns task types that can accommodate the given duration
+ * @deprecated Use configGetAllowedTaskTypesForDateRange from @/config/wsConfig instead
+ */
+export function getAllowedTaskTypesForDateRange(startDate: string, endDate: string): string[] {
+  const options = configGetAllowedTaskTypesForDateRange(startDate, endDate);
+  return options.map(opt => opt.value);
+}
+
+/**
+ * Validate if date range is valid for a given task type
+ * @deprecated Use configIsDateRangeValidForTaskType from @/config/wsConfig instead
+ */
+export function isDateRangeValidForTaskType(
+  taskType: string,
+  startDate: string,
+  endDate: string
+): { valid: boolean; maxDays: number; actualDays: number } {
+  return configIsDateRangeValidForTaskType(taskType as any, startDate, endDate);
+}
+
+/**
  * Validate task name (required for both Save Draft and Submit)
  */
 function validateTaskName(taskLevel: TaskLevel): ValidationError[] {
   const errors: ValidationError[] = [];
+  const rules = TASK_VALIDATION_RULES.taskName;
 
-  if (!taskLevel.name || taskLevel.name.trim() === '') {
+  if (rules.required && (!taskLevel.name || taskLevel.name.trim() === '')) {
     errors.push({
       field: 'name',
-      message: 'Task name is required',
+      message: rules.errorMessages.required,
+      section: 'name',
+      taskLevelId: taskLevel.id,
+    });
+  }
+
+  if (taskLevel.name && taskLevel.name.length > rules.maxLength) {
+    errors.push({
+      field: 'name',
+      message: rules.errorMessages.maxLength,
       section: 'name',
       taskLevelId: taskLevel.id,
     });
@@ -39,19 +92,25 @@ function validateTaskName(taskLevel: TaskLevel): ValidationError[] {
  * - Task Type: required
  * - Applicable Period: required for task_list and todo_task flows
  * - Execution Time: required
+ * - Child task date range must be within parent date range
  */
 function validateTaskInformation(
   taskLevel: TaskLevel,
-  source: TaskSource
+  source: TaskSource,
+  allTaskLevels: TaskLevel[]
 ): ValidationError[] {
   const errors: ValidationError[] = [];
   const info = taskLevel.taskInformation;
 
+  const taskTypeRules = TASK_VALIDATION_RULES.taskType;
+  const periodRules = TASK_VALIDATION_RULES.applicablePeriod;
+  const execTimeRules = TASK_VALIDATION_RULES.executionTime;
+
   // Task Type is always required
-  if (!info.taskType) {
+  if (taskTypeRules.required && !info.taskType) {
     errors.push({
       field: 'taskType',
-      message: 'Task Type is required',
+      message: taskTypeRules.errorMessages.required,
       section: 'A',
       taskLevelId: taskLevel.id,
     });
@@ -59,47 +118,142 @@ function validateTaskInformation(
 
   // Applicable Period: required for task_list and todo_task, hidden for library
   if (source !== 'library') {
-    if (!info.applicablePeriod.startDate) {
+    if (periodRules.required && !info.applicablePeriod.startDate) {
       errors.push({
         field: 'applicablePeriod.startDate',
-        message: 'Start date is required',
+        message: periodRules.errorMessages.startDateRequired,
         section: 'A',
         taskLevelId: taskLevel.id,
       });
     }
 
-    if (!info.applicablePeriod.endDate) {
+    if (periodRules.required && !info.applicablePeriod.endDate) {
       errors.push({
         field: 'applicablePeriod.endDate',
-        message: 'End date is required',
+        message: periodRules.errorMessages.endDateRequired,
         section: 'A',
         taskLevelId: taskLevel.id,
       });
     }
 
-    // Validate end date >= start date
-    if (info.applicablePeriod.startDate && info.applicablePeriod.endDate) {
+    // Validate start date >= today (cannot select past dates)
+    if (periodRules.startDateCannotBePast && info.applicablePeriod.startDate) {
       const startDate = new Date(info.applicablePeriod.startDate);
-      const endDate = new Date(info.applicablePeriod.endDate);
-      if (endDate < startDate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Reset time to start of day
+      startDate.setHours(0, 0, 0, 0);
+      if (startDate < today) {
         errors.push({
-          field: 'applicablePeriod.endDate',
-          message: 'End date must be after or equal to start date',
+          field: 'applicablePeriod.startDate',
+          message: periodRules.errorMessages.startDateCannotBePast,
           section: 'A',
           taskLevelId: taskLevel.id,
         });
       }
     }
+
+    // Validate end date >= start date
+    if (periodRules.endDateMustBeAfterOrEqualStart && info.applicablePeriod.startDate && info.applicablePeriod.endDate) {
+      const startDate = new Date(info.applicablePeriod.startDate);
+      const endDate = new Date(info.applicablePeriod.endDate);
+      if (endDate < startDate) {
+        errors.push({
+          field: 'applicablePeriod.endDate',
+          message: periodRules.errorMessages.endDateMustBeAfterOrEqualStart,
+          section: 'A',
+          taskLevelId: taskLevel.id,
+        });
+      }
+    }
+
+    // Validate child task date range must be within parent date range
+    if (periodRules.childDateRangeMustBeWithinParent && taskLevel.parentId && info.applicablePeriod.startDate && info.applicablePeriod.endDate) {
+      const parent = allTaskLevels.find((tl) => tl.id === taskLevel.parentId);
+      if (parent && parent.taskInformation.applicablePeriod.startDate && parent.taskInformation.applicablePeriod.endDate) {
+        const childStart = new Date(info.applicablePeriod.startDate);
+        const childEnd = new Date(info.applicablePeriod.endDate);
+        const parentStart = new Date(parent.taskInformation.applicablePeriod.startDate);
+        const parentEnd = new Date(parent.taskInformation.applicablePeriod.endDate);
+
+        // Reset times to compare dates only
+        childStart.setHours(0, 0, 0, 0);
+        childEnd.setHours(0, 0, 0, 0);
+        parentStart.setHours(0, 0, 0, 0);
+        parentEnd.setHours(0, 0, 0, 0);
+
+        // Child start date must be >= parent start date
+        if (childStart < parentStart) {
+          errors.push({
+            field: 'applicablePeriod.startDate',
+            message: periodRules.errorMessages.childStartDateBeforeParent(parent.taskInformation.applicablePeriod.startDate),
+            section: 'A',
+            taskLevelId: taskLevel.id,
+          });
+        }
+
+        // Child end date must be <= parent end date
+        if (childEnd > parentEnd) {
+          errors.push({
+            field: 'applicablePeriod.endDate',
+            message: periodRules.errorMessages.childEndDateAfterParent(parent.taskInformation.applicablePeriod.endDate),
+            section: 'A',
+            taskLevelId: taskLevel.id,
+          });
+        }
+      }
+    }
+  }
+
+  // Validate Task Type and Date Range correlation
+  // Date range duration must not exceed maximum allowed for the selected task type
+  if (periodRules.dateRangeMustMatchTaskType && source !== 'library' && info.taskType && info.applicablePeriod.startDate && info.applicablePeriod.endDate) {
+    const validation = isDateRangeValidForTaskType(
+      info.taskType,
+      info.applicablePeriod.startDate,
+      info.applicablePeriod.endDate
+    );
+
+    if (!validation.valid) {
+      const taskTypeLabel = getTaskTypeLabel(info.taskType as any);
+      errors.push({
+        field: 'taskType',
+        message: taskTypeRules.errorMessages.invalidForDateRange(validation.maxDays, validation.actualDays, taskTypeLabel),
+        section: 'A',
+        taskLevelId: taskLevel.id,
+      });
+    }
   }
 
   // Execution Time is always required
-  if (!info.executionTime) {
+  if (execTimeRules.required && !info.executionTime) {
     errors.push({
       field: 'executionTime',
-      message: 'Execution time is required',
+      message: execTimeRules.errorMessages.required,
       section: 'A',
       taskLevelId: taskLevel.id,
     });
+  }
+
+  // Validate Execution Time: Sum of immediate children's execution time cannot exceed parent's
+  if (execTimeRules.childrenSumCannotExceedParent && info.executionTime) {
+    // Find all immediate children of this task
+    const immediateChildren = allTaskLevels.filter(tl => tl.parentId === taskLevel.id);
+
+    if (immediateChildren.length > 0) {
+      const parentMinutes = getExecutionTimeMinutes(info.executionTime);
+      const childrenTotalMinutes = immediateChildren.reduce((sum, child) => {
+        return sum + getExecutionTimeMinutes(child.taskInformation.executionTime);
+      }, 0);
+
+      if (childrenTotalMinutes > parentMinutes) {
+        errors.push({
+          field: 'executionTime',
+          message: execTimeRules.errorMessages.childrenExceedParent(childrenTotalMinutes, parentMinutes),
+          section: 'A',
+          taskLevelId: taskLevel.id,
+        });
+      }
+    }
   }
 
   return errors;
@@ -246,8 +400,8 @@ export function validateForSubmit(
     // Task Name
     errors.push(...validateTaskName(taskLevel));
 
-    // A. Task Information
-    errors.push(...validateTaskInformation(taskLevel, source));
+    // A. Task Information (pass all taskLevels for parent-child date validation)
+    errors.push(...validateTaskInformation(taskLevel, source, taskLevels));
 
     // B. Instructions
     errors.push(...validateInstructions(taskLevel));
