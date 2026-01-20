@@ -770,11 +770,11 @@ INSERT INTO `stores` (`store_name`, `store_code`, `region_id`, `address`, `phone
 -- ============================================
 
 INSERT INTO `staff` (`staff_name`, `staff_code`, `username`, `email`, `phone`, `store_id`, `department_id`, `team_id`, `role`, `position`, `sap_code`, `password_hash`, `status`) VALUES
-('Admin User', 'ADMIN001', 'admin', 'admin@aoisora.vn', '0901234567', 1, 1, 'OPE-STORE', 'ADMIN', 'System Administrator', 'SAP001', '$2y$10$wMUXEBLWnyfQ5S6k0AykoODieUy.QiIpzzCGUHki/EnZ6QcogJuYm', 'active'),
-('Nguyễn Văn Manager', 'MGR001', 'manager', 'manager@aoisora.vn', '0901234568', 1, 1, 'OPE-STORE', 'MANAGER', 'Store Manager', 'SAP002', '$2y$10$wMUXEBLWnyfQ5S6k0AykoODieUy.QiIpzzCGUHki/EnZ6QcogJuYm', 'active'),
-('Trần Thị Staff', 'STF001', 'staff1', 'staff1@aoisora.vn', '0901234569', 1, 1, 'OPE-STORE', 'STAFF', 'Sales Staff', 'SAP003', '$2y$10$wMUXEBLWnyfQ5S6k0AykoODieUy.QiIpzzCGUHki/EnZ6QcogJuYm', 'active'),
-('Lê Văn QC', 'QC001', 'qc1', 'qc1@aoisora.vn', '0901234570', 1, 1, 'OPE-QC', 'STAFF', 'QC Staff', 'SAP004', '$2y$10$wMUXEBLWnyfQ5S6k0AykoODieUy.QiIpzzCGUHki/EnZ6QcogJuYm', 'active'),
-('Phạm Thị Account', 'ACC001', 'acc1', 'acc1@aoisora.vn', '0901234571', 1, 2, 'ACC-AP', 'STAFF', 'Accountant', 'SAP005', '$2y$10$wMUXEBLWnyfQ5S6k0AykoODieUy.QiIpzzCGUHki/EnZ6QcogJuYm', 'active');
+('Admin User', 'ADMIN001', 'admin', 'admin@aoisora.vn', '0901234567', 1, 1, 'OPE-STORE', 'ADMIN', 'System Administrator', 'SAP001', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+('Nguyễn Văn Manager', 'MGR001', 'manager', 'manager@aoisora.vn', '0901234568', 1, 1, 'OPE-STORE', 'MANAGER', 'Store Manager', 'SAP002', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+('Trần Thị Staff', 'STF001', 'staff1', 'staff1@aoisora.vn', '0901234569', 1, 1, 'OPE-STORE', 'STAFF', 'Sales Staff', 'SAP003', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+('Lê Văn QC', 'QC001', 'qc1', 'qc1@aoisora.vn', '0901234570', 1, 1, 'OPE-QC', 'STAFF', 'QC Staff', 'SAP004', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+('Phạm Thị Account', 'ACC001', 'acc1', 'acc1@aoisora.vn', '0901234571', 1, 2, 'ACC-AP', 'STAFF', 'Accountant', 'SAP005', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active');
 
 -- Set line managers
 UPDATE `staff` SET `line_manager_id` = 1 WHERE `staff_id` IN (2);
@@ -880,11 +880,11 @@ UPDATE `staff` SET `job_grade` = 'G3' WHERE `staff_id` = 5;
 -- ============================================
 
 INSERT INTO `staff` (`staff_name`, `staff_code`, `username`, `email`, `phone`, `store_id`, `department_id`, `team_id`, `role`, `position`, `job_grade`, `sap_code`, `password_hash`, `status`) VALUES
-('Trần Văn G8', 'G8001', 'g8user', 'g8@aoisora.vn', '0901234580', 1, 1, 'OPE-QC', 'MANAGER', 'Senior Manager', 'G8', 'SAP010', '$2y$10$wMUXEBLWnyfQ5S6k0AykoODieUy.QiIpzzCGUHki/EnZ6QcogJuYm', 'active'),
-('Nguyễn Thị G7', 'G7001', 'g7user', 'g7@aoisora.vn', '0901234581', 1, 1, 'OPE-QC', 'MANAGER', 'Area Manager', 'G7', 'SAP011', '$2y$10$wMUXEBLWnyfQ5S6k0AykoODieUy.QiIpzzCGUHki/EnZ6QcogJuYm', 'active'),
-('Lê Văn G5', 'G5001', 'g5user', 'g5@aoisora.vn', '0901234582', 1, 1, 'OPE-QC', 'STAFF', 'Team Lead', 'G5', 'SAP012', '$2y$10$wMUXEBLWnyfQ5S6k0AykoODieUy.QiIpzzCGUHki/EnZ6QcogJuYm', 'active'),
-('Phạm Văn G4', 'G4001', 'g4user', 'g4@aoisora.vn', '0901234583', 1, 1, 'OPE-QC', 'STAFF', 'Senior Staff', 'G4', 'SAP013', '$2y$10$wMUXEBLWnyfQ5S6k0AykoODieUy.QiIpzzCGUHki/EnZ6QcogJuYm', 'active'),
-('Hoàng Văn G2', 'G2001', 'g2user', 'g2@aoisora.vn', '0901234584', 1, 1, 'OPE-QC', 'STAFF', 'Junior Staff', 'G2', 'SAP014', '$2y$10$wMUXEBLWnyfQ5S6k0AykoODieUy.QiIpzzCGUHki/EnZ6QcogJuYm', 'active');
+('Trần Văn G8', 'G8001', 'g8user', 'g8@aoisora.vn', '0901234580', 1, 1, 'OPE-QC', 'MANAGER', 'Senior Manager', 'G8', 'SAP010', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+('Nguyễn Thị G7', 'G7001', 'g7user', 'g7@aoisora.vn', '0901234581', 1, 1, 'OPE-QC', 'MANAGER', 'Area Manager', 'G7', 'SAP011', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+('Lê Văn G5', 'G5001', 'g5user', 'g5@aoisora.vn', '0901234582', 1, 1, 'OPE-QC', 'STAFF', 'Team Lead', 'G5', 'SAP012', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+('Phạm Văn G4', 'G4001', 'g4user', 'g4@aoisora.vn', '0901234583', 1, 1, 'OPE-QC', 'STAFF', 'Senior Staff', 'G4', 'SAP013', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active'),
+('Hoàng Văn G2', 'G2001', 'g2user', 'g2@aoisora.vn', '0901234584', 1, 1, 'OPE-QC', 'STAFF', 'Junior Staff', 'G2', 'SAP014', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active');
 
 -- Note: New staff IDs will be auto-incremented based on existing data
 -- The line_manager updates below should be adjusted after checking actual staff_id values

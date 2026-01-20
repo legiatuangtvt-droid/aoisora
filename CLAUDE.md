@@ -763,14 +763,41 @@ MYSQLD="D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysqld.exe"
 
 ### 6. Database
 
-**⚠️ QUAN TRỌNG**: Local và Production đều dùng **MySQL** để đảm bảo tương thích.
+**⚠️ QUAN TRỌNG**: Local và Production dùng **CÙNG TÊN DATABASE** để tránh lỗi không đồng bộ.
 
-- **Database engine**: MySQL 8.4
-- **Database name**: `aoisora`
-- **Schema file**: `database/schema_mysql.sql`
-- **Seed file**: `deploy/seed_data_mysql.sql`
-- **Username**: `root` (local) / `auraorie_app` (production)
-- **Password**: `` (empty, local) / `***` (production)
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ⚠️ QUY TẮC DATABASE - BẮT BUỘC                                 │
+│                                                                 │
+│  1. CHỈ SỬ DỤNG 1 FILE SQL DUY NHẤT: deploy/full_reset.sql     │
+│     → File này chứa: Schema + Seed data + Migration            │
+│     → Dùng cho CẢ local và production (phpMyAdmin)             │
+│     → KHÔNG tạo file SQL riêng lẻ khác                         │
+│                                                                 │
+│  2. TÊN DATABASE GIỐNG NHAU:                                    │
+│     → Local: auraorie68aa_aoisora                              │
+│     → Production: auraorie68aa_aoisora                         │
+│     → Đảm bảo file SQL chạy được ở cả 2 môi trường             │
+│                                                                 │
+│  3. KHI CẦN THAY ĐỔI DATABASE:                                  │
+│     → Sửa trực tiếp trong deploy/full_reset.sql                │
+│     → Import lại file này lên cả local và server               │
+│     → KHÔNG tạo migration file riêng                           │
+│                                                                 │
+│  4. DEFAULT PASSWORD: password                                  │
+│     → Tất cả users có password = "password"                    │
+│     → Hash: $2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/...    │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+| Setting | Value |
+|---------|-------|
+| **Database engine** | MySQL 8.4 |
+| **Database name** | `auraorie68aa_aoisora` (cả local và production) |
+| **Single SQL file** | `deploy/full_reset.sql` |
+| **Username** | `root` (local) / `auraorie_app` (production) |
+| **Password** | `` (empty, local) / `***` (production) |
+| **Default user password** | `password` |
 
 **Khởi động MySQL:**
 ```bash
@@ -779,12 +806,16 @@ MYSQLD="D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysqld.exe"
 mysqld --defaults-file="D:\devtool\laragon\data\mysql\my.ini"
 ```
 
-**Import Schema:**
+**Import/Reset Database (Local):**
 ```bash
 cd "D:\Project\Aura Web"
-"D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysql.exe" -uroot aoisora < database/schema_mysql.sql
-"D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysql.exe" -uroot aoisora < deploy/seed_data_mysql.sql
+"D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysql.exe" -uroot auraorie68aa_aoisora < deploy/full_reset.sql
 ```
+
+**Import/Reset Database (Production - phpMyAdmin):**
+1. Vào DirectAdmin → MySQL → phpMyAdmin
+2. Chọn database `auraorie68aa_aoisora`
+3. Import file `deploy/full_reset.sql`
 
 ### 7. Module Scope
 
