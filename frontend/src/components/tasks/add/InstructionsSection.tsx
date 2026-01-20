@@ -94,7 +94,6 @@ export default function InstructionsSection({
               : 'border-gray-300 dark:border-gray-600'
           }`}
         >
-          <option value="">Select task type</option>
           {taskTypeOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
@@ -111,24 +110,21 @@ export default function InstructionsSection({
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           2. Manual Link
         </label>
-        <div className="relative">
-          <input
-            type="url"
-            value={data.manualLink}
-            onChange={(e) => handleChange('manualLink', e.target.value)}
-            placeholder="Paste link"
-            disabled={disabled}
-            className="w-full px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          />
-          <button
-            type="button"
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-        </div>
+        <input
+          type="url"
+          value={data.manualLink}
+          onChange={(e) => handleChange('manualLink', e.target.value)}
+          placeholder="Paste link"
+          disabled={disabled}
+          className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
+            errors.manualLink
+              ? 'border-red-500 focus:ring-red-500'
+              : 'border-gray-300 dark:border-gray-600'
+          }`}
+        />
+        {errors.manualLink && (
+          <p className="mt-1 text-xs text-red-500">{errors.manualLink}</p>
+        )}
       </div>
 
       {/* 3. Note */}

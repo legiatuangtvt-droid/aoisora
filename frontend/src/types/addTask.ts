@@ -6,8 +6,9 @@ export type TaskFrequency = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'year
 // Execution time options
 export type ExecutionTime = '30min' | '1hour' | '2hours' | '4hours' | '8hours';
 
-// Task type for instructions
-export type InstructionTaskType = 'image' | 'document' | 'checklist';
+// Task type for instructions (Section B)
+// Options: image (default), document
+export type InstructionTaskType = 'image' | 'document';
 
 // Photo guideline item
 export interface PhotoGuideline {

@@ -260,9 +260,23 @@ function validateTaskInformation(
 }
 
 /**
+ * Validate URL format
+ * Returns true if the string is a valid URL
+ */
+function isValidUrl(urlString: string): boolean {
+  try {
+    const url = new URL(urlString);
+    // Only allow http and https protocols
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Validate Section B: Instructions
  * - Task Type: required
- * - Manual Link: required
+ * - Manual Link: required + URL validation
  * - Document: required if task type is 'document'
  * - Photo Guidelines: at least 1 required if task type is 'image'
  */
@@ -270,24 +284,38 @@ function validateInstructions(taskLevel: TaskLevel): ValidationError[] {
   const errors: ValidationError[] = [];
   const instructions = taskLevel.instructions;
 
+  const taskTypeRules = TASK_VALIDATION_RULES.instructionTaskType;
+  const manualLinkRules = TASK_VALIDATION_RULES.manualLink;
+  const photoRules = TASK_VALIDATION_RULES.photoGuidelines;
+
   // Task Type is required
-  if (!instructions.taskType) {
+  if (taskTypeRules.required && !instructions.taskType) {
     errors.push({
       field: 'instructions.taskType',
-      message: 'Instruction type is required',
+      message: taskTypeRules.errorMessages.required,
       section: 'B',
       taskLevelId: taskLevel.id,
     });
   }
 
-  // Manual Link is required
-  if (!instructions.manualLink || instructions.manualLink.trim() === '') {
+  // Manual Link validation
+  if (manualLinkRules.required && (!instructions.manualLink || instructions.manualLink.trim() === '')) {
     errors.push({
       field: 'manualLink',
-      message: 'Manual link is required',
+      message: manualLinkRules.errorMessages.required,
       section: 'B',
       taskLevelId: taskLevel.id,
     });
+  } else if (manualLinkRules.validateUrl && instructions.manualLink && instructions.manualLink.trim() !== '') {
+    // Validate URL format only if there's a value
+    if (!isValidUrl(instructions.manualLink.trim())) {
+      errors.push({
+        field: 'manualLink',
+        message: manualLinkRules.errorMessages.invalidUrl,
+        section: 'B',
+        taskLevelId: taskLevel.id,
+      });
+    }
   }
 
   // Conditional validation based on task type
@@ -300,10 +328,20 @@ function validateInstructions(taskLevel: TaskLevel): ValidationError[] {
 
   if (instructions.taskType === 'image') {
     // Photo Guidelines: at least 1 required for image type
-    if (!instructions.photoGuidelines || instructions.photoGuidelines.length === 0) {
+    if (photoRules.requiredForImageType && (!instructions.photoGuidelines || instructions.photoGuidelines.length === 0)) {
       errors.push({
         field: 'photoGuidelines',
-        message: 'At least one photo guideline is required for image tasks',
+        message: photoRules.errorMessages.required,
+        section: 'B',
+        taskLevelId: taskLevel.id,
+      });
+    }
+
+    // Max photos check
+    if (instructions.photoGuidelines && instructions.photoGuidelines.length > photoRules.maxPhotos) {
+      errors.push({
+        field: 'photoGuidelines',
+        message: photoRules.errorMessages.maxExceeded,
         section: 'B',
         taskLevelId: taskLevel.id,
       });

@@ -107,12 +107,14 @@ export const DEFAULT_EXECUTION_TIME_BY_LEVEL: Record<number, ExecutionTime> = {
  * Instruction Task Type Options
  *
  * Types of instructions/evidence required for task completion.
+ * Options: Image (default), Document
  */
 export interface InstructionTypeOption {
   value: InstructionTaskType;
   label: string;
   requiresUpload: boolean; // Whether this type requires file upload
   description?: string;
+  isDefault?: boolean; // Whether this is the default option
 }
 
 export const INSTRUCTION_TYPE_OPTIONS: InstructionTypeOption[] = [
@@ -120,21 +122,21 @@ export const INSTRUCTION_TYPE_OPTIONS: InstructionTypeOption[] = [
     value: 'image',
     label: 'Image',
     requiresUpload: true,
-    description: 'Photo evidence required for task completion'
+    description: 'Photo evidence required for task completion',
+    isDefault: true,
   },
   {
     value: 'document',
     label: 'Document',
     requiresUpload: true,
-    description: 'Document attachment required'
-  },
-  {
-    value: 'checklist',
-    label: 'Checklist',
-    requiresUpload: false,
-    description: 'Checklist items to complete'
+    description: 'Document attachment required',
   },
 ];
+
+/**
+ * Default Instruction Task Type
+ */
+export const DEFAULT_INSTRUCTION_TASK_TYPE: InstructionTaskType = 'image';
 
 // =============================================================================
 // VALIDATION RULES CONFIG
@@ -205,6 +207,39 @@ export const TASK_VALIDATION_RULES = {
         `Total execution time of child tasks (${childrenTotal} min) exceeds parent's execution time (${parentTotal} min)`,
       noRemainingTime: (parentMinutes: number) =>
         `Cannot add sub-task: Parent's execution time (${parentMinutes} min) is fully allocated to existing child tasks.`,
+    },
+  },
+
+  // =========================================================================
+  // SECTION B: INSTRUCTIONS VALIDATION
+  // =========================================================================
+
+  // Instruction Task Type
+  instructionTaskType: {
+    required: true,
+    errorMessages: {
+      required: 'Instruction type is required',
+    },
+  },
+
+  // Manual Link
+  manualLink: {
+    required: true,
+    validateUrl: true,
+    errorMessages: {
+      required: 'Manual link is required',
+      invalidUrl: 'Please enter a valid URL (e.g., https://example.com)',
+    },
+  },
+
+  // Photo Guidelines
+  photoGuidelines: {
+    requiredForImageType: true,
+    minPhotos: 1,
+    maxPhotos: 4,
+    errorMessages: {
+      required: 'At least one photo guideline is required for image tasks',
+      maxExceeded: 'Maximum 4 photo guidelines allowed',
     },
   },
 };

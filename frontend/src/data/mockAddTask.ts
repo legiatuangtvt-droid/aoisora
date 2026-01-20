@@ -16,6 +16,7 @@ import {
 import {
   DEFAULT_TASK_TYPE_BY_LEVEL,
   DEFAULT_EXECUTION_TIME_BY_LEVEL,
+  DEFAULT_INSTRUCTION_TASK_TYPE,
   taskTypeDropdownOptions,
   executionTimeDropdownOptions,
   instructionTypeDropdownOptions,
@@ -184,7 +185,7 @@ export function createEmptyTaskLevel(level: number, parentId: string | null = nu
       executionTime: DEFAULT_EXECUTION_TIME_BY_LEVEL[level] || '30min',
     },
     instructions: {
-      taskType: '',
+      taskType: DEFAULT_INSTRUCTION_TASK_TYPE,
       manualLink: '',
       note: '',
       photoGuidelines: [],
