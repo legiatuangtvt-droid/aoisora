@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo, useEffect, memo, useRef } from 'react';
 import { TaskLevel, TaskInformation, TaskInstructions, TaskScope, TaskApproval, DropdownOption } from '@/types/addTask';
-import { mockMasterData, createEmptyTaskLevel } from '@/data/mockAddTask';
+import { mockMasterData, createEmptyTaskLevel, getTaskTypeOptionsForLevel, TASK_TYPE_ORDER, DEFAULT_TASK_TYPE_BY_LEVEL } from '@/data/mockAddTask';
 import TaskLevelCard from './TaskLevelCard';
 import SectionCard from './SectionCard';
 import TaskInfoSection from './TaskInfoSection';
@@ -80,6 +80,8 @@ interface TaskLevelItemProps {
   canDelete: boolean;
   showScopeSection: boolean;
   scopeType: 'store' | 'hq';
+  // Filtered task type options based on parent's task type
+  taskTypeOptions: DropdownOption[];
   zoneOptions: DropdownOption[];
   areaOptions: DropdownOption[];
   storeOptions: DropdownOption[];
@@ -105,6 +107,7 @@ const TaskLevelItem = memo(function TaskLevelItem({
   canDelete,
   showScopeSection,
   scopeType,
+  taskTypeOptions,
   zoneOptions,
   areaOptions,
   storeOptions,
@@ -207,7 +210,7 @@ const TaskLevelItem = memo(function TaskLevelItem({
         <TaskInfoSection
           data={taskLevel.taskInformation}
           onChange={handleTaskInfoChange}
-          taskTypeOptions={mockMasterData.taskTypes}
+          taskTypeOptions={taskTypeOptions}
           executionTimeOptions={mockMasterData.executionTimes}
         />
       </SectionCard>
@@ -449,9 +452,71 @@ export default function AddTaskForm({
   }, [updateTaskLevel, clearValidationErrors]);
 
 
-  // Handle task information change
+  // Handle task information change - with cascade update for task type
   const handleTaskInfoChange = useCallback((taskLevelId: string, taskInformation: TaskInformation) => {
-    updateTaskLevel(taskLevelId, { taskInformation });
+    const currentLevels = taskLevelsRef.current;
+    const onChange = onTaskLevelsChangeRef.current;
+    const currentLevel = currentLevels.find((tl) => tl.id === taskLevelId);
+
+    if (!currentLevel) {
+      updateTaskLevel(taskLevelId, { taskInformation });
+      clearValidationErrors();
+      return;
+    }
+
+    // Check if task type changed
+    const oldTaskType = currentLevel.taskInformation.taskType;
+    const newTaskType = taskInformation.taskType;
+
+    if (oldTaskType === newTaskType) {
+      // No task type change, just update
+      updateTaskLevel(taskLevelId, { taskInformation });
+      clearValidationErrors();
+      return;
+    }
+
+    // Task type changed - need to cascade update children if necessary
+    const newTaskTypeIndex = TASK_TYPE_ORDER.indexOf(newTaskType);
+
+    // Find all descendants recursively
+    const findAllDescendants = (parentId: string, levels: TaskLevel[]): TaskLevel[] => {
+      const children = levels.filter((tl) => tl.parentId === parentId);
+      return children.flatMap((c) => [c, ...findAllDescendants(c.id, levels)]);
+    };
+
+    const descendants = findAllDescendants(taskLevelId, currentLevels);
+
+    // Update this task level and cascade update descendants if their task type is now invalid
+    const updatedLevels = currentLevels.map((tl) => {
+      if (tl.id === taskLevelId) {
+        return { ...tl, taskInformation };
+      }
+
+      // Check if this is a descendant that needs task type update
+      const isDescendant = descendants.some((d) => d.id === tl.id);
+      if (isDescendant) {
+        const childTaskTypeIndex = TASK_TYPE_ORDER.indexOf(tl.taskInformation.taskType);
+        // If child's task type has larger time span than new parent's, update to default for that level
+        if (childTaskTypeIndex < newTaskTypeIndex) {
+          // Get the appropriate default task type for this level that is valid
+          const validDefaultForLevel = DEFAULT_TASK_TYPE_BY_LEVEL[tl.level] || 'daily';
+          const validDefaultIndex = TASK_TYPE_ORDER.indexOf(validDefaultForLevel);
+          // Use the default if it's valid, otherwise use parent's type
+          const newChildTaskType = validDefaultIndex >= newTaskTypeIndex ? validDefaultForLevel : newTaskType;
+          return {
+            ...tl,
+            taskInformation: {
+              ...tl.taskInformation,
+              taskType: newChildTaskType,
+            },
+          };
+        }
+      }
+
+      return tl;
+    });
+
+    onChange(updatedLevels);
     clearValidationErrors();
   }, [updateTaskLevel, clearValidationErrors]);
 
@@ -524,6 +589,12 @@ export default function AddTaskForm({
       const canAddSubLevel = taskLevel.level < 5;
       const canDelete = taskLevels.length > 1;
 
+      // Get parent's task type to filter available options for this task level
+      // Child task type must have equal or smaller time span than parent
+      const parent = taskLevel.parentId ? taskLevels.find((tl) => tl.id === taskLevel.parentId) : null;
+      const parentTaskType = parent?.taskInformation.taskType || null;
+      const filteredTaskTypeOptions = getTaskTypeOptionsForLevel(parentTaskType);
+
       return (
         <TaskLevelItem
           key={taskLevel.id}
@@ -548,6 +619,7 @@ export default function AddTaskForm({
           canDelete={canDelete}
           showScopeSection={showScopeSection}
           scopeType={source === 'todo_task' ? 'hq' : 'store'}
+          taskTypeOptions={filteredTaskTypeOptions}
           zoneOptions={getZoneOptions(taskLevel.scope.regionId)}
           areaOptions={getAreaOptions(taskLevel.scope.zoneId)}
           storeOptions={getStoreOptions(taskLevel.scope.areaId)}

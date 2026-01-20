@@ -4,14 +4,50 @@ import {
   DropdownOption,
 } from '@/types/addTask';
 
-// Task frequency options
+// Task frequency options (ordered from largest to smallest frequency)
+// Yearly > Quarterly > Monthly > Weekly > Daily
 export const taskTypeOptions: DropdownOption[] = [
-  { value: 'daily', label: 'Daily' },
-  { value: 'weekly', label: 'Weekly' },
-  { value: 'monthly', label: 'Monthly' },
-  { value: 'quarterly', label: 'Quarterly' },
   { value: 'yearly', label: 'Yearly' },
+  { value: 'quarterly', label: 'Quarterly' },
+  { value: 'monthly', label: 'Monthly' },
+  { value: 'weekly', label: 'Weekly' },
+  { value: 'daily', label: 'Daily' },
 ];
+
+// Task type frequency order (lower index = larger time span)
+// Used for validation: child task type must have equal or smaller time span than parent
+export const TASK_TYPE_ORDER = ['yearly', 'quarterly', 'monthly', 'weekly', 'daily'];
+
+// Default task type by level
+// Level 1 = Yearly, Level 2 = Quarterly, Level 3 = Monthly, Level 4 = Weekly, Level 5 = Daily
+export const DEFAULT_TASK_TYPE_BY_LEVEL: Record<number, string> = {
+  1: 'yearly',
+  2: 'quarterly',
+  3: 'monthly',
+  4: 'weekly',
+  5: 'daily',
+};
+
+// Get available task type options based on parent's task type
+// Child can only select task types with equal or smaller time span than parent
+export function getTaskTypeOptionsForLevel(parentTaskType: string | null): DropdownOption[] {
+  if (!parentTaskType) {
+    // No parent (level 1) - all options available
+    return taskTypeOptions;
+  }
+
+  const parentIndex = TASK_TYPE_ORDER.indexOf(parentTaskType);
+  if (parentIndex === -1) {
+    // Unknown parent type - return all options
+    return taskTypeOptions;
+  }
+
+  // Filter to only include task types at or after parent's index (smaller or equal time span)
+  return taskTypeOptions.filter((opt) => {
+    const optIndex = TASK_TYPE_ORDER.indexOf(opt.value);
+    return optIndex >= parentIndex;
+  });
+}
 
 // Execution time options
 export const executionTimeOptions: DropdownOption[] = [
@@ -149,7 +185,7 @@ function generateUniqueId(): string {
   return `task-level-${timestamp}-${randomStr}`;
 }
 
-// Create empty task level
+// Create empty task level with default task type based on level
 export function createEmptyTaskLevel(level: number, parentId: string | null = null): TaskLevel {
   return {
     id: generateUniqueId(),
@@ -157,7 +193,7 @@ export function createEmptyTaskLevel(level: number, parentId: string | null = nu
     name: '',
     parentId,
     taskInformation: {
-      taskType: '',
+      taskType: DEFAULT_TASK_TYPE_BY_LEVEL[level] || 'daily',
       applicablePeriod: {
         startDate: '',
         endDate: '',
