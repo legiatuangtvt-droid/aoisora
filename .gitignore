@@ -62,3 +62,4 @@ __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
+deploy/laravel/.env

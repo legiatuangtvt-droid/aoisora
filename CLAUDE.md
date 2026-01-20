@@ -1076,6 +1076,37 @@ Chi tiết: `docs/SESSION_START_CHECKLIST.md`
 | Backend API | `https://auraorientalis.vn/api/api/v1` |
 | phpMyAdmin | DirectAdmin → MySQL → phpMyAdmin |
 
+#### ⚠️ QUAN TRỌNG: File .env (Local vs Production)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ⚠️ CẤU HÌNH .ENV KHÁC NHAU GIỮA LOCAL VÀ PRODUCTION            │
+│                                                                 │
+│  📁 FILE LOCATIONS:                                             │
+│     • Local:      backend/laravel/.env                          │
+│     • Production: deploy/laravel/.env (KHÔNG COMMIT LÊN GIT)    │
+│                                                                 │
+│  🔴 TUYỆT ĐỐI KHÔNG UPLOAD backend/laravel/.env LÊN SERVER!     │
+│     → File này chứa cấu hình LOCAL (root, no password)          │
+│     → Sẽ gây lỗi 500 vì không kết nối được DB production        │
+│                                                                 │
+│  ✅ CÁCH LÀM ĐÚNG:                                               │
+│     → Dùng file deploy/laravel/.env cho production              │
+│     → Hoặc sửa trực tiếp .env trên server qua File Manager      │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**So sánh cấu hình .env:**
+
+| Config | Local (`backend/laravel/.env`) | Production (`deploy/laravel/.env`) |
+|--------|--------------------------------|-----------------------------------|
+| `APP_URL` | `http://localhost` | `https://auraorientalis.vn` |
+| `DB_DATABASE` | `auraorie68aa_aoisora` | `auraorie68aa_aoisora` |
+| `DB_USERNAME` | `root` | `auraorie68aa_aoisora` |
+| `DB_PASSWORD` | (trống) | `<password từ DirectAdmin>` |
+| `SANCTUM_STATEFUL_DOMAINS` | `localhost:3000,...` | `aoisora.auraorientalis.vn` |
+| `SESSION_DOMAIN` | `localhost` | `auraorientalis.vn` |
+
 #### Khi nào cần Upload Backend (FileZilla)
 
 **Cấu trúc local → server mapping:**
@@ -1090,43 +1121,77 @@ backend/laravel/  →  public_html/laravel/
 | **Routes** | `backend/laravel/routes/` | `public_html/laravel/routes/` |
 | **Config** (cors, auth...) | `backend/laravel/config/` | `public_html/laravel/config/` |
 | **Resources/Views** | `backend/laravel/resources/` | `public_html/laravel/resources/` |
-| **Environment** | `backend/laravel/.env` | `public_html/laravel/.env` |
 | **API Entry** | `backend/api/` | `public_html/api/` |
 | **Thêm package mới** | `backend/laravel/vendor/` | `public_html/laravel/vendor/` |
 
-**KHÔNG cần upload lại:**
-- `vendor/` - Chỉ khi thêm package mới (composer require)
-- `storage/` - Chứa logs, cache, sessions
-- `.env` - Chỉ khi thay đổi config
+**⚠️ KHÔNG upload các file/folder sau:**
+- **`.env`** - File local sẽ ghi đè cấu hình production → LỖI 500!
+- `storage/` - Chứa logs, cache, sessions của server
+- `vendor/` - Chỉ upload khi thêm package mới (composer require)
 
 #### Khi nào cần Import Database (phpMyAdmin)
 
 | Tình huống | File import | Ghi chú |
 |------------|-------------|---------|
-| **Thêm/sửa table/column** | Tạo file migration SQL mới | Chỉ chạy migration, không reset data |
-| **Reset toàn bộ DB** | `deploy/schema_mysql.sql` | ⚠️ XÓA TOÀN BỘ DATA |
-| **Reset + seed data** | `schema_mysql.sql` → `seed_data_mysql.sql` | ⚠️ XÓA TOÀN BỘ DATA |
-| **Fix password user** | `deploy/update_password.sql` | Password sẽ là `password` |
-| **Thêm data mẫu** | `deploy/seed_data_mysql.sql` | Chỉ khi DB trống |
+| **Reset toàn bộ DB** | `deploy/full_reset.sql` | ⚠️ XÓA TOÀN BỘ DATA, dùng file này duy nhất |
+| **Thêm/sửa table/column** | Tạo file migration SQL mới trong `database/migrations/` | Chỉ chạy migration, không reset data |
 
-#### Quy trình Deploy sau khi code
+> **Lưu ý**: Chỉ sử dụng DUY NHẤT file `deploy/full_reset.sql` để reset database. Không tạo thêm file SQL khác trong thư mục deploy.
+
+#### Quy trình Deploy Backend
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  CHECKLIST DEPLOY SAU KHI CODE:                                 │
+│  CHECKLIST DEPLOY BACKEND:                                      │
 │                                                                 │
 │  ☐ 1. Test local hoạt động đúng                                 │
 │                                                                 │
 │  ☐ 2. Commit & Push (Frontend auto-deploy qua Vercel)           │
 │                                                                 │
-│  ☐ 3. Backend thay đổi? → Upload qua FileZilla                  │
-│       - backend/laravel/ → public_html/laravel/                 │
+│  ☐ 3. Upload backend qua FileZilla:                             │
+│       ⚠️ EXCLUDE file .env khi upload!                          │
+│       - backend/laravel/app/ → public_html/laravel/app/         │
+│       - backend/laravel/routes/ → public_html/laravel/routes/   │
+│       - backend/laravel/config/ → public_html/laravel/config/   │
 │       - backend/api/ → public_html/api/ (nếu có thay đổi)       │
 │                                                                 │
-│  ☐ 4. Database schema thay đổi? → Import qua phpMyAdmin         │
-│       - Tạo file migration SQL riêng (không dùng schema_mysql)  │
+│  ☐ 4. Nếu LỠ upload .env local → Sửa lại trên server:           │
+│       → Mở File Manager trên DirectAdmin                        │
+│       → Edit public_html/laravel/.env                           │
+│       → Copy nội dung từ deploy/laravel/.env                    │
+│       → Save file                                               │
 │                                                                 │
-│  ☐ 5. Test trên production: https://aoisora.auraorientalis.vn   │
+│  ☐ 5. Clear Laravel cache trên server:                          │
+│       → Xóa files trong public_html/laravel/bootstrap/cache/    │
+│                                                                 │
+│  ☐ 6. Database schema thay đổi?                                 │
+│       → Import file migration qua phpMyAdmin                    │
+│                                                                 │
+│  ☐ 7. Test trên production: https://aoisora.auraorientalis.vn   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### Troubleshooting: Lỗi 500 sau khi deploy
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  KHI GẶP LỖI 500 INTERNAL SERVER ERROR:                         │
+│                                                                 │
+│  1. Kiểm tra .env trên server:                                  │
+│     → DB_USERNAME phải là: auraorie68aa_aoisora                 │
+│     → DB_PASSWORD phải có password (không để trống)             │
+│     → Nếu sai → copy từ deploy/laravel/.env                     │
+│                                                                 │
+│  2. Clear cache:                                                │
+│     → Xóa files trong public_html/laravel/bootstrap/cache/      │
+│                                                                 │
+│  3. Kiểm tra Laravel log:                                       │
+│     → Download: public_html/laravel/storage/logs/laravel.log    │
+│     → Xem lỗi cụ thể ở cuối file                                │
+│                                                                 │
+│  4. Kiểm tra database:                                          │
+│     → phpMyAdmin: Đảm bảo database auraorie68aa_aoisora tồn tại │
+│     → Đảm bảo đã import deploy/full_reset.sql                   │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
