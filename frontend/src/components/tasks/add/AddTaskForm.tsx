@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useMemo, useEffect, memo, useRef } from 'react';
-import { TaskLevel, TaskInformation, TaskInstructions, TaskScope, TaskApproval } from '@/types/addTask';
+import { TaskLevel, TaskInformation, TaskInstructions, TaskScope, TaskApproval, DropdownOption } from '@/types/addTask';
 import { mockMasterData, createEmptyTaskLevel } from '@/data/mockAddTask';
 import TaskLevelCard from './TaskLevelCard';
 import SectionCard from './SectionCard';
@@ -80,9 +80,9 @@ interface TaskLevelItemProps {
   canDelete: boolean;
   showScopeSection: boolean;
   scopeType: 'store' | 'hq';
-  zoneOptions: Array<{ id: string; name: string }>;
-  areaOptions: Array<{ id: string; name: string }>;
-  storeOptions: Array<{ id: string; name: string }>;
+  zoneOptions: DropdownOption[];
+  areaOptions: DropdownOption[];
+  storeOptions: DropdownOption[];
   currentUser?: { id: number; name: string; position: string };
   autoApprover?: { id: number; name: string; position: string; job_grade: string };
   isApprovalReadOnly: boolean;
