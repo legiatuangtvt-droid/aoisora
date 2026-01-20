@@ -142,10 +142,17 @@ export const mockMasterData: AddTaskMasterData = {
   hods: hodOptions,
 };
 
+// Generate unique ID with timestamp and random string
+function generateUniqueId(): string {
+  const timestamp = Date.now();
+  const randomStr = Math.random().toString(36).substring(2, 11);
+  return `task-level-${timestamp}-${randomStr}`;
+}
+
 // Create empty task level
 export function createEmptyTaskLevel(level: number, parentId: string | null = null): TaskLevel {
   return {
-    id: `task-level-${Date.now()}-${level}`,
+    id: generateUniqueId(),
     level,
     name: '',
     parentId,
