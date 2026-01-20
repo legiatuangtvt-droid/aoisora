@@ -373,13 +373,6 @@ export default function AddTaskForm({
 
   // Handle save draft with validation
   const handleSaveDraft = useCallback(() => {
-    // DEBUG: Log taskLevels when save draft is clicked
-    console.log('=== DEBUG AddTaskForm.handleSaveDraft ===');
-    console.log('taskLevels (prop) count:', taskLevels.length);
-    taskLevels.forEach((tl, i) => {
-      console.log(`  [${i}] id=${tl.id}, level=${tl.level}, parentId=${tl.parentId}, name="${tl.name}"`);
-    });
-
     const result = validateForDraft(taskLevels);
     if (!result.isValid) {
       setValidationErrors(result.errors);
@@ -482,16 +475,12 @@ export default function AddTaskForm({
 
   // Add sub-level - use refs to keep stable callback
   const handleAddSubLevel = useCallback((parentId: string) => {
-    console.log('=== DEBUG AddTaskForm.handleAddSubLevel ===');
-    console.log('parentId:', parentId);
     const currentLevels = taskLevelsRef.current;
     const onChange = onTaskLevelsChangeRef.current;
     const parent = currentLevels.find((tl) => tl.id === parentId);
-    console.log('parent found:', parent ? `level=${parent.level}, id=${parent.id}` : 'NOT FOUND');
     if (!parent || parent.level >= 5) return;
 
     const newTaskLevel = createEmptyTaskLevel(parent.level + 1, parentId);
-    console.log('newTaskLevel created:', `id=${newTaskLevel.id}, level=${newTaskLevel.level}, parentId=${newTaskLevel.parentId}`);
     onChange([...currentLevels, newTaskLevel]);
   }, []); // Empty deps - uses refs
 
@@ -621,11 +610,13 @@ export default function AddTaskForm({
       // Render parent and children horizontally
       return (
         <div key={taskLevel.id} className="flex items-start gap-4">
-          {/* Parent task level */}
-          {renderTaskLevelCard(taskLevel)}
+          {/* Parent task level - explicitly wrap in flex-shrink-0 to prevent collapsing */}
+          <div className="flex-shrink-0">
+            {renderTaskLevelCard(taskLevel)}
+          </div>
 
           {/* Children task levels + Add button */}
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 flex-shrink-0">
             {children.map((child) => renderTaskLevel(child))}
             {/* Button to add more children at this level */}
             {canAddMoreChildren && renderAddSubTaskButton(taskLevel)}
@@ -639,9 +630,11 @@ export default function AddTaskForm({
 
   return (
     <div className="space-y-6">
-      {/* Task Levels */}
-      <div className="space-y-4">
-        {getTaskLevelsTree()}
+      {/* Task Levels - with horizontal scroll for deep hierarchies */}
+      <div className="space-y-4 overflow-x-auto pb-4">
+        <div className="inline-flex flex-col gap-4 min-w-max">
+          {getTaskLevelsTree()}
+        </div>
       </div>
 
       {/* Rejection Info Banner - Show when task was rejected */}
