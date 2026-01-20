@@ -153,16 +153,22 @@
 │  1. BUILD & TEST TRÊN LOCAL                                     │
 │     → Phát triển và test tất cả trên local trước                │
 │                                                                 │
-│  2. KHI HOÀN THÀNH SCREEN/FEATURE → NHẮC USER DEPLOY            │
-│     → Frontend: Tự động deploy khi commit & push (Vercel)       │
+│  2. COMMIT & PUSH LÊN GITHUB                                    │
+│     → Code được đẩy lên GitHub                                  │
+│     → ⚠️ FE KHÔNG tự động deploy (đã tắt auto-deploy Vercel)   │
+│                                                                 │
+│  3. KHI HOÀN THÀNH SCREEN/FEATURE → DEPLOY THỦ CÔNG             │
+│     → Database: Import SQL qua phpMyAdmin (nếu có thay đổi)     │
 │     → Backend: Upload thủ công qua FileZilla                    │
-│     → Database: Import file MySQL qua phpMyAdmin (DirectAdmin)  │
+│     → Frontend: Deploy thủ công qua Vercel Dashboard            │
+│       (Deployments → "..." → Redeploy)                          │
 │                                                                 │
 │  ⚠️ CLAUDE PHẢI NHẮC USER KHI:                                  │
 │     - Hoàn thành 1 screen/feature                               │
 │     - Định kỳ sau nhiều thay đổi                                │
 │     - Có thay đổi backend code → nhắc deploy BE                 │
 │     - Có thay đổi DB schema → nhắc import SQL                   │
+│     - Có thay đổi frontend → nhắc Redeploy trên Vercel          │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -1138,36 +1144,70 @@ backend/laravel/  →  public_html/laravel/
 
 > **Lưu ý**: Chỉ sử dụng DUY NHẤT file `deploy/full_reset.sql` để reset database. Không tạo thêm file SQL khác trong thư mục deploy.
 
-#### Quy trình Deploy Backend
+#### Quy trình Deploy Production (Manual - Đã tắt Auto-Deploy)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  CHECKLIST DEPLOY BACKEND:                                      │
+│  ⚠️ QUAN TRỌNG: FE ĐÃ TẮT AUTO-DEPLOY                           │
+│     → Vercel Settings > Git > "Don't build anything"            │
+│     → Commit & Push sẽ KHÔNG tự động deploy FE                  │
+│     → Phải deploy thủ công theo quy trình dưới đây              │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  QUY TRÌNH DEPLOY AN TOÀN (Theo thứ tự):                        │
 │                                                                 │
-│  ☐ 1. Test local hoạt động đúng                                 │
+│  ☐ 1. TEST LOCAL                                                │
+│       → Đảm bảo tất cả hoạt động đúng trên local                │
 │                                                                 │
-│  ☐ 2. Commit & Push (Frontend auto-deploy qua Vercel)           │
+│  ☐ 2. COMMIT & PUSH LÊN GITHUB                                  │
+│       → Code được đẩy lên GitHub                                │
+│       → FE sẽ KHÔNG tự deploy (đã tắt)                          │
 │                                                                 │
-│  ☐ 3. Upload backend qua FileZilla:                             │
+│  ☐ 3. DEPLOY DATABASE (nếu có thay đổi schema)                  │
+│       → Vào DirectAdmin → phpMyAdmin                            │
+│       → Import file SQL migration                               │
+│                                                                 │
+│  ☐ 4. DEPLOY BACKEND (FileZilla)                                │
 │       ⚠️ EXCLUDE file .env khi upload!                          │
 │       - backend/laravel/app/ → public_html/laravel/app/         │
 │       - backend/laravel/routes/ → public_html/laravel/routes/   │
 │       - backend/laravel/config/ → public_html/laravel/config/   │
 │       - backend/api/ → public_html/api/ (nếu có thay đổi)       │
 │                                                                 │
-│  ☐ 4. Nếu LỠ upload .env local → Sửa lại trên server:           │
-│       → Mở File Manager trên DirectAdmin                        │
-│       → Edit public_html/laravel/.env                           │
-│       → Copy nội dung từ deploy/laravel/.env                    │
-│       → Save file                                               │
+│  ☐ 5. TEST API PRODUCTION                                       │
+│       → Test các API endpoints đã thay đổi                      │
+│       → Đảm bảo BE hoạt động trước khi deploy FE                │
 │                                                                 │
-│  ☐ 5. Clear Laravel cache trên server:                          │
-│       → Xóa files trong public_html/laravel/bootstrap/cache/    │
+│  ☐ 6. DEPLOY FRONTEND (Vercel - Thủ công)                       │
+│       → Vào Vercel Dashboard: vercel.com                        │
+│       → Project: aoisora                                        │
+│       → Tab: Deployments                                        │
+│       → Click vào deployment có tag "Current"                   │
+│       → Click "..." (3 chấm) → "Redeploy"                       │
+│       → Vercel sẽ build từ code mới nhất trên GitHub            │
 │                                                                 │
-│  ☐ 6. Database schema thay đổi?                                 │
-│       → Import file migration qua phpMyAdmin                    │
+│  ☐ 7. TEST TOÀN BỘ PRODUCTION                                   │
+│       → https://aoisora.auraorientalis.vn                       │
+│       → Test các tính năng đã thay đổi                          │
 │                                                                 │
-│  ☐ 7. Test trên production: https://aoisora.auraorientalis.vn   │
+│  📌 LƯU Ý:                                                       │
+│     → Redeploy tạo bản deployment MỚI (bản cũ vẫn còn)          │
+│     → Có thể Rollback: Click bản cũ → "Promote to Production"   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### Nếu LỠ upload .env local lên server
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  KHẮC PHỤC:                                                     │
+│                                                                 │
+│  1. Mở File Manager trên DirectAdmin                            │
+│  2. Edit public_html/laravel/.env                               │
+│  3. Copy nội dung từ deploy/laravel/.env                        │
+│  4. Save file                                                   │
+│  5. Xóa files trong public_html/laravel/bootstrap/cache/        │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
