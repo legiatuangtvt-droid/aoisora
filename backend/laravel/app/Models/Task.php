@@ -14,6 +14,9 @@ class Task extends Model
     const UPDATED_AT = 'updated_at';
 
     protected $fillable = [
+        // Task hierarchy (max 5 levels)
+        'parent_task_id',
+        'task_level',
         // Source tracking (3 creation flows)
         'source',
         'receiver_type',
@@ -74,6 +77,10 @@ class Task extends Model
     const MAX_REJECTIONS = 3;
 
     protected $casts = [
+        // Task hierarchy
+        'parent_task_id' => 'integer',
+        'task_level' => 'integer',
+        // Dates
         'start_date' => 'date',
         'end_date' => 'date',
         'start_time' => 'datetime',
@@ -158,6 +165,92 @@ class Task extends Model
     {
         return $this->belongsToMany(CheckList::class, 'task_check_list', 'task_id', 'check_list_id')
             ->withPivot('check_status', 'completed_at', 'completed_by', 'notes');
+    }
+
+    // ============================================
+    // Task Hierarchy Relationships (max 5 levels)
+    // ============================================
+
+    /**
+     * Get the parent task (if this is a sub-task)
+     */
+    public function parentTask()
+    {
+        return $this->belongsTo(Task::class, 'parent_task_id', 'task_id');
+    }
+
+    /**
+     * Get direct children (sub-tasks at next level)
+     */
+    public function children()
+    {
+        return $this->hasMany(Task::class, 'parent_task_id', 'task_id');
+    }
+
+    /**
+     * Get all descendants recursively (all sub-tasks at all levels)
+     * Use with caution on large datasets
+     */
+    public function allDescendants()
+    {
+        return $this->children()->with('allDescendants');
+    }
+
+    /**
+     * Check if this task is a parent (level 1)
+     */
+    public function isParentTask(): bool
+    {
+        return $this->task_level === 1 || $this->parent_task_id === null;
+    }
+
+    /**
+     * Check if this task is a sub-task (level 2-5)
+     */
+    public function isSubTask(): bool
+    {
+        return $this->task_level > 1 && $this->parent_task_id !== null;
+    }
+
+    /**
+     * Check if can add more sub-tasks (max depth is 5)
+     */
+    public function canHaveChildren(): bool
+    {
+        return $this->task_level < 5;
+    }
+
+    /**
+     * Get the root parent task (level 1)
+     */
+    public function getRootTask(): Task
+    {
+        if ($this->isParentTask()) {
+            return $this;
+        }
+
+        $parent = $this->parentTask;
+        while ($parent && $parent->parent_task_id !== null) {
+            $parent = $parent->parentTask;
+        }
+
+        return $parent ?? $this;
+    }
+
+    /**
+     * Scope: Get only parent tasks (level 1)
+     */
+    public function scopeParentTasks($query)
+    {
+        return $query->whereNull('parent_task_id')->orWhere('task_level', 1);
+    }
+
+    /**
+     * Scope: Get sub-tasks for a parent task
+     */
+    public function scopeSubTasksOf($query, int $parentTaskId)
+    {
+        return $query->where('parent_task_id', $parentTaskId);
     }
 
     // ============================================

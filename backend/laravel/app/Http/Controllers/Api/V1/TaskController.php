@@ -31,7 +31,7 @@ class TaskController extends Controller
     const MAX_DRAFTS_PER_USER = 5;
 
     /**
-     * Get all tasks
+     * Get all tasks (only parent tasks level 1, with nested sub_tasks)
      */
     public function index(Request $request)
     {
@@ -39,6 +39,12 @@ class TaskController extends Controller
 
         // Apply job grade permission filter
         $query = $this->applyJobGradeFilter($query, $request);
+
+        // Only get parent tasks (level 1) - sub-tasks will be nested
+        $query->where(function ($q) {
+            $q->whereNull('parent_task_id')
+              ->orWhere('task_level', 1);
+        });
 
         // Get effective user for DRAFT filtering
         $effectiveUser = $this->getEffectiveUser($request);
@@ -87,8 +93,13 @@ class TaskController extends Controller
             ->allowedIncludes(['assignedStaff', 'createdBy', 'assignedStore', 'department', 'taskType', 'responseType', 'status'])
             ->paginate($request->get('per_page', 20));
 
-        // Convert to array and add draft_info for HQ users
+        // Convert to array and add sub_tasks + draft_info
         $response = $tasks->toArray();
+
+        // Add nested sub_tasks for each parent task
+        $response['data'] = array_map(function ($task) {
+            return $this->addNestedSubTasks($task);
+        }, $response['data']);
 
         // Include draft_info in response (only for authenticated HQ users)
         if ($effectiveStaffId) {
@@ -102,7 +113,7 @@ class TaskController extends Controller
     }
 
     /**
-     * Get single task
+     * Get single task (with nested sub_tasks for parent tasks)
      */
     public function show($id)
     {
@@ -111,7 +122,11 @@ class TaskController extends Controller
             'taskType', 'responseType', 'status', 'manual', 'checklists'
         ])->findOrFail($id);
 
-        return response()->json($task);
+        // Convert to array and add nested sub_tasks
+        $taskArray = $task->toArray();
+        $taskArray = $this->addNestedSubTasks($taskArray);
+
+        return response()->json($taskArray);
     }
 
     /**
@@ -157,6 +172,13 @@ class TaskController extends Controller
             'priority' => 'nullable|string|in:low,normal,high,urgent',
             'source' => 'nullable|string|in:task_list,library,todo_task',
             'receiver_type' => 'nullable|string|in:store,hq_user',
+            // Task hierarchy fields
+            'parent_task_id' => 'nullable|exists:tasks,task_id',
+            'task_level' => 'nullable|integer|min:1|max:5',
+            // Nested sub-tasks (recursive)
+            'sub_tasks' => 'nullable|array',
+            'sub_tasks.*.task_name' => 'required|string|max:500',
+            'sub_tasks.*.task_level' => 'nullable|integer|min:2|max:5',
         ]);
 
         $statusId = $request->input('status_id', self::DRAFT_STATUS_ID);
@@ -176,18 +198,65 @@ class TaskController extends Controller
             }
         }
 
-        $task = Task::create(array_merge(
-            $request->all(),
-            [
-                'created_staff_id' => $user->staff_id,
-                'source' => $source,
-            ]
-        ));
+        // Prepare task data (exclude sub_tasks from direct creation)
+        $taskData = $request->except(['sub_tasks']);
+        $taskData['created_staff_id'] = $user->staff_id;
+        $taskData['source'] = $source;
+        $taskData['task_level'] = $request->input('task_level', 1);
+
+        $task = Task::create($taskData);
+
+        // Create nested sub-tasks recursively if provided
+        $subTasks = $request->input('sub_tasks', []);
+        \Log::info('Creating task with sub_tasks', [
+            'parent_task_id' => $task->task_id,
+            'sub_tasks_count' => count($subTasks),
+            'sub_tasks_data' => $subTasks,
+        ]);
+        if (!empty($subTasks)) {
+            $this->createSubTasksRecursively($task, $subTasks, $user->staff_id, $source, $statusId);
+        }
+
+        // Load sub_tasks for response
+        $task = $this->addNestedSubTasks($task->toArray());
 
         // Broadcast task created event
-        broadcast(new TaskUpdated($task, 'created'))->toOthers();
+        broadcast(new TaskUpdated(Task::find($task['task_id']), 'created'))->toOthers();
 
         return response()->json($task, 201);
+    }
+
+    /**
+     * Create sub-tasks recursively (max 5 levels)
+     */
+    private function createSubTasksRecursively(Task $parentTask, array $subTasks, int $createdStaffId, string $source, int $statusId): void
+    {
+        foreach ($subTasks as $subTaskData) {
+            $level = $subTaskData['task_level'] ?? ($parentTask->task_level + 1);
+
+            // Validate max level (5)
+            if ($level > 5) {
+                continue;
+            }
+
+            // Extract nested sub_tasks before creating
+            $nestedSubTasks = $subTaskData['sub_tasks'] ?? [];
+            unset($subTaskData['sub_tasks']);
+
+            // Create sub-task
+            $subTask = Task::create(array_merge($subTaskData, [
+                'parent_task_id' => $parentTask->task_id,
+                'task_level' => $level,
+                'created_staff_id' => $createdStaffId,
+                'source' => $source,
+                'status_id' => $statusId,
+            ]));
+
+            // Recursively create nested sub-tasks if level < 5
+            if (!empty($nestedSubTasks) && $level < 5) {
+                $this->createSubTasksRecursively($subTask, $nestedSubTasks, $createdStaffId, $source, $statusId);
+            }
+        }
     }
 
     /**
@@ -207,6 +276,10 @@ class TaskController extends Controller
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date',
             'priority' => 'nullable|string|in:low,normal,high,urgent',
+            // Nested sub-tasks validation
+            'sub_tasks' => 'nullable|array',
+            'sub_tasks.*.task_name' => 'required|string|max:500',
+            'sub_tasks.*.task_level' => 'nullable|integer|min:2|max:5',
         ]);
 
         // Get effective user (may be switched user in testing mode)
@@ -228,7 +301,8 @@ class TaskController extends Controller
             }
         }
 
-        $updateData = $request->all();
+        // Exclude sub_tasks from update data (will handle separately)
+        $updateData = $request->except(['sub_tasks']);
 
         // If task was rejected and user is editing, set has_changes_since_rejection flag
         if ($task->rejection_count > 0 && $task->status_id == self::DRAFT_STATUS_ID) {
@@ -237,10 +311,50 @@ class TaskController extends Controller
 
         $task->update($updateData);
 
+        // Handle sub_tasks update (sync: delete old, create new)
+        $subTasks = $request->input('sub_tasks', []);
+        \Log::info('Updating task with sub_tasks', [
+            'task_id' => $task->task_id,
+            'sub_tasks_count' => count($subTasks),
+            'sub_tasks_data' => $subTasks,
+        ]);
+
+        // Only process sub_tasks if the field was explicitly sent (even if empty array)
+        if ($request->has('sub_tasks')) {
+            // Delete all existing sub-tasks for this parent task (recursive delete)
+            $this->deleteSubTasksRecursively($task->task_id);
+
+            // Create new sub-tasks if provided
+            if (!empty($subTasks)) {
+                $statusId = $task->status_id;
+                $createdStaffId = $user ? $user->staff_id : $task->created_staff_id;
+                $this->createSubTasksRecursively($task, $subTasks, $createdStaffId, $source, $statusId);
+            }
+        }
+
         // Broadcast task updated event
         broadcast(new TaskUpdated($task, 'updated'))->toOthers();
 
-        return response()->json($task);
+        // Return task with nested sub_tasks
+        $taskArray = $task->fresh()->toArray();
+        $taskArray = $this->addNestedSubTasks($taskArray);
+
+        return response()->json($taskArray);
+    }
+
+    /**
+     * Delete sub-tasks recursively (for sync update)
+     */
+    private function deleteSubTasksRecursively(int $parentTaskId): void
+    {
+        $children = Task::where('parent_task_id', $parentTaskId)->get();
+
+        foreach ($children as $child) {
+            // First delete grandchildren recursively
+            $this->deleteSubTasksRecursively($child->task_id);
+            // Then delete this child
+            $child->delete();
+        }
     }
 
     /**
@@ -331,6 +445,36 @@ class TaskController extends Controller
         }
 
         return response()->json($query->get());
+    }
+
+    /**
+     * Add nested sub_tasks to a task array (recursive, max 5 levels)
+     *
+     * @param array $task Task array
+     * @return array Task with sub_tasks
+     */
+    private function addNestedSubTasks(array $task): array
+    {
+        $taskId = $task['task_id'];
+
+        // Get direct children
+        $children = Task::where('parent_task_id', $taskId)
+            ->with(['assignedStaff', 'status'])
+            ->orderBy('task_id')
+            ->get()
+            ->toArray();
+
+        // Recursively add sub_tasks for each child (max 5 levels enforced by task_level)
+        $task['sub_tasks'] = array_map(function ($child) {
+            // Only recurse if not at max depth
+            if (($child['task_level'] ?? 1) < 5) {
+                return $this->addNestedSubTasks($child);
+            }
+            $child['sub_tasks'] = [];
+            return $child;
+        }, $children);
+
+        return $task;
     }
 
     /**

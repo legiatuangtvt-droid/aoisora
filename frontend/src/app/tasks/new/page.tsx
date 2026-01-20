@@ -35,6 +35,29 @@ const BACK_LINKS: Record<TaskSource, { href: string; label: string }> = {
 
 type TabType = 'detail' | 'maps';
 
+// Helper function: Convert Task from API to TaskLevel[] (flat array)
+// Moved outside component to avoid dependency issues
+const convertTaskToTaskLevels = (task: Task, parentId: string | null = null): TaskLevel[] => {
+  const taskLevel = createEmptyTaskLevel(task.task_level || 1, parentId);
+  taskLevel.name = task.task_name || '';
+  taskLevel.instructions.note = task.task_description || '';
+  taskLevel.taskInformation.applicablePeriod.startDate = task.start_date || '';
+  taskLevel.taskInformation.applicablePeriod.endDate = task.end_date || '';
+
+  // Start with current task level
+  const levels: TaskLevel[] = [taskLevel];
+
+  // Recursively convert sub_tasks if present
+  if (task.sub_tasks && task.sub_tasks.length > 0) {
+    for (const subTask of task.sub_tasks) {
+      const childLevels = convertTaskToTaskLevels(subTask, taskLevel.id);
+      levels.push(...childLevels);
+    }
+  }
+
+  return levels;
+};
+
 // Inner component that uses searchParams
 function AddTaskContent() {
   const router = useRouter();
@@ -116,14 +139,13 @@ function AddTaskContent() {
           const taskData = await getTaskById(taskId);
           setTask(taskData);
 
-          // Convert task data to TaskLevel format
-          const taskLevel = createEmptyTaskLevel(1);
-          taskLevel.name = taskData.task_name || '';
-          taskLevel.instructions.note = taskData.task_description || '';
-          taskLevel.taskInformation.applicablePeriod.startDate = taskData.start_date || '';
-          taskLevel.taskInformation.applicablePeriod.endDate = taskData.end_date || '';
-
-          setTaskLevels([taskLevel]);
+          // Convert task data (including sub_tasks) to TaskLevel[] format
+          const taskLevelsFromApi = convertTaskToTaskLevels(taskData);
+          console.log('=== DEBUG Edit Mode: Loaded task levels ===');
+          taskLevelsFromApi.forEach((tl, i) => {
+            console.log(`  [${i}] id=${tl.id}, level=${tl.level}, parentId=${tl.parentId}, name="${tl.name}"`);
+          });
+          setTaskLevels(taskLevelsFromApi);
         } catch (err) {
           console.error('Failed to fetch task:', err);
           setError(err instanceof Error ? err.message : 'Failed to load task');
@@ -148,10 +170,14 @@ function AddTaskContent() {
 
   // Add sub-level handler for Maps tab
   const handleAddSubLevel = useCallback((parentId: string) => {
+    console.log('=== DEBUG page.tsx handleAddSubLevel ===');
+    console.log('parentId:', parentId);
     const parent = taskLevels.find((tl) => tl.id === parentId);
+    console.log('parent found:', parent ? `level=${parent.level}, id=${parent.id}` : 'NOT FOUND');
     if (!parent || parent.level >= 5) return;
 
     const newTaskLevel = createEmptyTaskLevel(parent.level + 1, parentId);
+    console.log('newTaskLevel created:', `id=${newTaskLevel.id}, level=${newTaskLevel.level}, parentId=${newTaskLevel.parentId}`);
     handleTaskLevelsChange([...taskLevels, newTaskLevel]);
   }, [taskLevels, handleTaskLevelsChange]);
 
@@ -171,8 +197,50 @@ function AddTaskContent() {
     };
   };
 
+  // Helper function: Build nested task structure from flat TaskLevel array
+  // Converts TaskLevel[] to nested TaskCreate with sub_tasks
+  const buildNestedTaskData = (
+    taskLevels: TaskLevel[],
+    parentId: string | null,
+    parentLevel: number,
+    statusId: number
+  ): import('@/types/api').TaskCreate[] => {
+    // DEBUG: Log filter parameters
+    console.log(`buildNestedTaskData called: parentId="${parentId}" (type: ${typeof parentId}), parentLevel=${parentLevel}`);
+    console.log(`  Total taskLevels: ${taskLevels.length}`);
+    taskLevels.forEach((tl, i) => {
+      const matchParent = tl.parentId === parentId;
+      const matchLevel = tl.level === parentLevel + 1;
+      console.log(`  [${i}] id="${tl.id}", parentId="${tl.parentId}" (type: ${typeof tl.parentId}), level=${tl.level} | matchParent=${matchParent}, matchLevel=${matchLevel}`);
+    });
+
+    // Find direct children of this parent
+    const children = taskLevels.filter((tl) => tl.parentId === parentId && tl.level === parentLevel + 1);
+    console.log(`  Found ${children.length} children`);
+
+    return children.map((child) => ({
+      task_name: child.name,
+      task_description: child.instructions.note || undefined,
+      start_date: child.taskInformation.applicablePeriod.startDate || undefined,
+      end_date: child.taskInformation.applicablePeriod.endDate || undefined,
+      task_level: child.level,
+      status_id: statusId,
+      priority: 'normal' as const,
+      source: source,
+      // Recursively build sub_tasks if level < 5
+      sub_tasks: child.level < 5 ? buildNestedTaskData(taskLevels, child.id, child.level, statusId) : undefined,
+    }));
+  };
+
   // Handle Save Draft
   const handleSaveDraft = async (taskLevels: TaskLevel[]) => {
+    // DEBUG: Log taskLevels to check if sub-tasks are present
+    console.log('=== DEBUG handleSaveDraft ===');
+    console.log('taskLevels count:', taskLevels.length);
+    taskLevels.forEach((tl, i) => {
+      console.log(`  [${i}] id=${tl.id}, level=${tl.level}, parentId=${tl.parentId}, name="${tl.name}"`);
+    });
+
     // Check draft limit before saving (frontend check) - only for new tasks
     if (!isEditMode && isHQUser && sourceDraftInfo && !sourceDraftInfo.can_create_draft) {
       showToast(
@@ -202,20 +270,32 @@ function AddTaskContent() {
         return;
       }
 
+      // Build nested sub_tasks from taskLevels (levels 2-5)
+      console.log('=== DEBUG buildNestedTaskData (handleSaveDraft) ===');
+      console.log('rootTask.id:', rootTask.id);
+      console.log('rootTask.level:', rootTask.level);
+      const subTasks = buildNestedTaskData(taskLevels, rootTask.id, rootTask.level, STATUS_DRAFT_ID);
+      console.log('subTasks result:', JSON.stringify(subTasks, null, 2));
+
       // Prepare task data for API
+      // Always include sub_tasks (even empty array) so backend knows to sync
       const taskData = {
         task_name: rootTask.name,
         task_description: rootTask.instructions.note || undefined,
         start_date: rootTask.taskInformation.applicablePeriod.startDate || undefined,
         end_date: rootTask.taskInformation.applicablePeriod.endDate || undefined,
+        task_level: 1,
+        sub_tasks: subTasks, // Always send, even if empty - backend will sync
       };
+      console.log('=== DEBUG taskData to send ===');
+      console.log(JSON.stringify(taskData, null, 2));
 
       if (isEditMode && taskId) {
         // Update existing task
         await updateTask(taskId, taskData);
         showToast('Draft saved successfully', 'success');
       } else {
-        // Create new task
+        // Create new task with sub-tasks
         await createTask({
           ...taskData,
           status_id: STATUS_DRAFT_ID,
@@ -261,12 +341,18 @@ function AddTaskContent() {
         return;
       }
 
+      // Build nested sub_tasks from taskLevels (levels 2-5)
+      const subTasks = buildNestedTaskData(taskLevels, rootTask.id, rootTask.level, STATUS_DRAFT_ID);
+
       // Prepare task data for API
+      // Always include sub_tasks (even empty array) so backend knows to sync
       const taskData = {
         task_name: rootTask.name,
         task_description: rootTask.instructions.note || undefined,
         start_date: rootTask.taskInformation.applicablePeriod.startDate || undefined,
         end_date: rootTask.taskInformation.applicablePeriod.endDate || undefined,
+        task_level: 1,
+        sub_tasks: subTasks, // Always send, even if empty - backend will sync
       };
 
       let submitTaskId = taskId;
@@ -275,7 +361,7 @@ function AddTaskContent() {
         // Update existing task first
         await updateTask(taskId, taskData);
       } else {
-        // Create new task first
+        // Create new task first with sub-tasks
         const createdTask = await createTask({
           ...taskData,
           status_id: STATUS_DRAFT_ID,
@@ -538,6 +624,10 @@ function AddTaskContent() {
         <TaskMapsTab
           taskLevels={taskLevels}
           onAddSubLevel={handleAddSubLevel}
+          onSaveDraft={() => handleSaveDraft(taskLevels)}
+          onSubmit={() => handleSubmit(taskLevels)}
+          isSavingDraft={isSavingDraft}
+          isSubmitting={isSubmitting}
         />
       )}
     </div>

@@ -146,6 +146,10 @@ export interface TaskCheckList {
 
 export interface Task {
   task_id: number;
+  // Task hierarchy (max 5 levels: 1=parent, 2-5=sub-tasks)
+  parent_task_id?: number | null;
+  task_level?: number;
+  // Basic info
   task_name: string;
   task_description: string | null;
   manual_id: number | null;
@@ -192,6 +196,8 @@ export interface Task {
   created_staff?: Staff;
   approver?: Staff;
   checklists?: TaskCheckList[];
+  // Nested sub-tasks (recursive structure, max 5 levels)
+  sub_tasks?: Task[];
 }
 
 export interface TaskCreate {
@@ -213,6 +219,11 @@ export interface TaskCreate {
   due_datetime?: string;
   // Task creation source
   source?: string;
+  // Task hierarchy (max 5 levels)
+  parent_task_id?: number;
+  task_level?: number;
+  // Nested sub-tasks for creation (recursive)
+  sub_tasks?: TaskCreate[];
 }
 
 export interface TaskUpdate {
@@ -236,6 +247,9 @@ export interface TaskUpdate {
   completed_time?: string;
   comment?: string;
   attachments?: string[];
+  // Task hierarchy
+  task_level?: number;
+  sub_tasks?: TaskCreate[];
 }
 
 export interface TaskStatusUpdate {

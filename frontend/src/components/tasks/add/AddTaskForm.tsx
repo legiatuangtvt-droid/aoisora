@@ -373,6 +373,13 @@ export default function AddTaskForm({
 
   // Handle save draft with validation
   const handleSaveDraft = useCallback(() => {
+    // DEBUG: Log taskLevels when save draft is clicked
+    console.log('=== DEBUG AddTaskForm.handleSaveDraft ===');
+    console.log('taskLevels (prop) count:', taskLevels.length);
+    taskLevels.forEach((tl, i) => {
+      console.log(`  [${i}] id=${tl.id}, level=${tl.level}, parentId=${tl.parentId}, name="${tl.name}"`);
+    });
+
     const result = validateForDraft(taskLevels);
     if (!result.isValid) {
       setValidationErrors(result.errors);
@@ -475,12 +482,16 @@ export default function AddTaskForm({
 
   // Add sub-level - use refs to keep stable callback
   const handleAddSubLevel = useCallback((parentId: string) => {
+    console.log('=== DEBUG AddTaskForm.handleAddSubLevel ===');
+    console.log('parentId:', parentId);
     const currentLevels = taskLevelsRef.current;
     const onChange = onTaskLevelsChangeRef.current;
     const parent = currentLevels.find((tl) => tl.id === parentId);
+    console.log('parent found:', parent ? `level=${parent.level}, id=${parent.id}` : 'NOT FOUND');
     if (!parent || parent.level >= 5) return;
 
     const newTaskLevel = createEmptyTaskLevel(parent.level + 1, parentId);
+    console.log('newTaskLevel created:', `id=${newTaskLevel.id}, level=${newTaskLevel.level}, parentId=${newTaskLevel.parentId}`);
     onChange([...currentLevels, newTaskLevel]);
   }, []); // Empty deps - uses refs
 

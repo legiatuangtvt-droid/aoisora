@@ -5,6 +5,10 @@ import { TaskLevel } from '@/types/addTask';
 interface TaskMapsTabProps {
   taskLevels: TaskLevel[];
   onAddSubLevel: (parentId: string) => void;
+  onSaveDraft?: () => void;
+  onSubmit?: () => void;
+  isSavingDraft?: boolean;
+  isSubmitting?: boolean;
 }
 
 // Level subtitles
@@ -16,7 +20,14 @@ const LEVEL_SUBTITLES: Record<number, string> = {
   5: 'Sub task level 5',
 };
 
-export default function TaskMapsTab({ taskLevels, onAddSubLevel }: TaskMapsTabProps) {
+export default function TaskMapsTab({
+  taskLevels,
+  onAddSubLevel,
+  onSaveDraft,
+  onSubmit,
+  isSavingDraft = false,
+  isSubmitting = false,
+}: TaskMapsTabProps) {
   // Get children of a task level
   const getChildren = (parentId: string): TaskLevel[] => {
     return taskLevels.filter((tl) => tl.parentId === parentId);
@@ -65,11 +76,12 @@ export default function TaskMapsTab({ taskLevels, onAddSubLevel }: TaskMapsTabPr
         </p>
       </div>
 
-      {/* Add button (only for non-root and can add) */}
-      {!isRoot && canAddSubLevel && (
+      {/* Add button (for all levels that can add sub-levels) */}
+      {canAddSubLevel && (
         <button
           onClick={() => onAddSubLevel(taskLevel.id)}
           className="w-8 h-8 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center hover:bg-pink-200 dark:hover:bg-pink-800/50 transition-colors"
+          title={`Add sub-task level ${taskLevel.level + 1}`}
         >
           <svg className="w-4 h-4 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -170,14 +182,18 @@ export default function TaskMapsTab({ taskLevels, onAddSubLevel }: TaskMapsTabPr
       {/* Footer Actions */}
       <div className="flex items-center justify-end gap-4">
         <button
-          className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          onClick={onSaveDraft}
+          disabled={isSavingDraft || isSubmitting}
+          className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Save as draft
+          {isSavingDraft ? 'Saving...' : 'Save as draft'}
         </button>
         <button
-          className="px-6 py-2 bg-pink-600 text-white rounded-lg text-sm font-medium hover:bg-pink-700 transition-colors"
+          onClick={onSubmit}
+          disabled={isSavingDraft || isSubmitting}
+          className="px-6 py-2 bg-pink-600 text-white rounded-lg text-sm font-medium hover:bg-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Submit
+          {isSubmitting ? 'Submitting...' : 'Submit'}
         </button>
       </div>
     </div>

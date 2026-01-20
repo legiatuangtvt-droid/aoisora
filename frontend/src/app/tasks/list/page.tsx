@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { TaskGroup, DateMode, TaskFilters, TaskStatus, HQCheckStatus } from '@/types/tasks';
+import { TaskGroup, DateMode, TaskFilters, TaskStatus, HQCheckStatus, SubTask } from '@/types/tasks';
 import { Task as ApiTask, Department } from '@/types/api';
 import { getTasks, getDepartments, DraftInfo, PaginatedTaskResponse, TaskQueryParamsExtended } from '@/lib/api';
 import StatusPill from '@/components/ui/StatusPill';
@@ -54,17 +54,47 @@ const STATUS_ID_MAP: Record<TaskStatus, number> = {
   'APPROVE': 13,
 };
 
+// Format dates from API (YYYY-MM-DD) to UI format (DD/MM)
+const formatDateForUI = (dateStr: string | null): string => {
+  if (!dateStr) return '--/--';
+  const date = new Date(dateStr);
+  return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+};
+
+// Transform API sub_tasks to UI SubTask format (recursive)
+function transformApiSubTasks(subTasks: ApiTask[] | undefined): SubTask[] {
+  if (!subTasks || subTasks.length === 0) return [];
+
+  return subTasks.map((subTask) => ({
+    id: subTask.task_id.toString(),
+    name: subTask.task_name,
+    status: STATUS_MAP[subTask.status_id || 7] || 'NOT_YET',
+    assignee: subTask.assigned_staff?.staff_name || undefined,
+    completedAt: subTask.completed_time || undefined,
+    // Note: UI SubTask interface doesn't support nested sub_tasks currently
+    // If needed, extend SubTask interface to support recursive structure
+  }));
+}
+
 // Transform API Task to UI TaskGroup format
 function transformApiTaskToTaskGroup(task: ApiTask, index: number, departments: Department[]): TaskGroup {
   const dept = departments.find(d => d.department_id === task.dept_id);
   const deptCode = dept?.department_code || dept?.department_name?.substring(0, 3).toUpperCase() || 'N/A';
 
-  // Format dates from API (YYYY-MM-DD) to UI format (DD/MM)
-  const formatDate = (dateStr: string | null): string => {
-    if (!dateStr) return '--/--';
-    const date = new Date(dateStr);
-    return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-  };
+  // Transform nested sub_tasks from API
+  const subTasks = transformApiSubTasks(task.sub_tasks);
+
+  // Calculate progress from sub_tasks if available
+  let progressCompleted = 0;
+  let progressTotal = 1;
+
+  if (subTasks.length > 0) {
+    progressTotal = subTasks.length;
+    progressCompleted = subTasks.filter(st => st.status === 'DONE').length;
+  } else {
+    // No sub-tasks: use task's own status
+    progressCompleted = task.status_id === 9 ? 1 : 0;
+  }
 
   return {
     id: task.task_id.toString(),
@@ -73,16 +103,16 @@ function transformApiTaskToTaskGroup(task: ApiTask, index: number, departments: 
     deptId: task.dept_id,
     taskGroupName: task.task_name,
     taskType: undefined,
-    startDate: formatDate(task.start_date),
-    endDate: formatDate(task.end_date),
+    startDate: formatDateForUI(task.start_date),
+    endDate: formatDateForUI(task.end_date),
     progress: {
-      completed: task.status_id === 9 ? 1 : 0,
-      total: 1,
+      completed: progressCompleted,
+      total: progressTotal,
     },
     unable: 0,
     status: STATUS_MAP[task.status_id || 7] || 'NOT_YET',
     hqCheck: HQ_CHECK_MAP[task.status_id || 7] || 'NOT_YET',
-    subTasks: [],
+    subTasks: subTasks,
     createdStaffId: task.created_staff_id,
   };
 }
@@ -262,19 +292,21 @@ export default function TaskListPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, itemsPerPage, debouncedSearch, dateRange, filters.departments, filters.status]);
+  // Include currentUser.staff_id to trigger refetch when user switches
+  }, [currentPage, itemsPerPage, debouncedSearch, dateRange, filters.departments, filters.status, currentUser?.staff_id]);
 
   // Initial load - fetch departments once
   useEffect(() => {
     fetchDepartments();
   }, [fetchDepartments]);
 
-  // Fetch tasks when filters change (server-side filtering)
+  // Fetch tasks when filters change or user switches (server-side filtering)
   useEffect(() => {
     if (departments.length > 0) {
       fetchTasks(departments);
     }
-  }, [departments, currentPage, debouncedSearch, dateRange, filters.departments, filters.status, fetchTasks]);
+  // Include currentUser.staff_id to trigger refetch when user switches
+  }, [departments, currentPage, debouncedSearch, dateRange, filters.departments, filters.status, fetchTasks, currentUser?.staff_id]);
 
   // Real-time updates via WebSocket
   const { isConnected: wsConnected } = useTaskUpdates({
@@ -632,29 +664,35 @@ export default function TaskListPage() {
                         </td>
                         <td className="px-4 py-3 text-sm border-r border-gray-200">
                           <div className="flex items-center justify-start gap-2">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleRow(task.id);
-                              }}
-                              className="flex items-center justify-center w-5 h-5 hover:bg-gray-200 rounded transition-colors"
-                            >
-                              <svg
-                                className={`w-4 h-4 text-gray-600 transition-transform ${
-                                  expandedRows === task.id ? 'rotate-180' : ''
-                                }`}
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
+                            {/* Only show expand button if task has subtasks */}
+                            {task.subTasks && task.subTasks.length > 0 ? (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleRow(task.id);
+                                }}
+                                className="flex items-center justify-center w-5 h-5 hover:bg-gray-200 rounded transition-colors"
                               >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M19 9l-7 7-7-7"
-                                />
-                              </svg>
-                            </button>
+                                <svg
+                                  className={`w-4 h-4 text-gray-600 transition-transform ${
+                                    expandedRows === task.id ? 'rotate-180' : ''
+                                  }`}
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M19 9l-7 7-7-7"
+                                  />
+                                </svg>
+                              </button>
+                            ) : (
+                              // Placeholder to maintain consistent alignment
+                              <div className="w-5 h-5" />
+                            )}
                             <span className="text-gray-900">{task.taskGroupName}</span>
                           </div>
                         </td>
