@@ -56,7 +56,8 @@ export default function TaskInfoSection({
               : 'border-gray-300 dark:border-gray-600'
           }`}
         >
-          <option value="">Select task type</option>
+          {/* No placeholder - Task Type always has default value based on level */}
+          {/* Options are already filtered based on parent's task type */}
           {taskTypeOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
