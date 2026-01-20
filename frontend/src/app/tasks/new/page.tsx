@@ -141,10 +141,6 @@ function AddTaskContent() {
 
           // Convert task data (including sub_tasks) to TaskLevel[] format
           const taskLevelsFromApi = convertTaskToTaskLevels(taskData);
-          console.log('=== DEBUG Edit Mode: Loaded task levels ===');
-          taskLevelsFromApi.forEach((tl, i) => {
-            console.log(`  [${i}] id=${tl.id}, level=${tl.level}, parentId=${tl.parentId}, name="${tl.name}"`);
-          });
           setTaskLevels(taskLevelsFromApi);
         } catch (err) {
           console.error('Failed to fetch task:', err);
@@ -170,14 +166,10 @@ function AddTaskContent() {
 
   // Add sub-level handler for Maps tab
   const handleAddSubLevel = useCallback((parentId: string) => {
-    console.log('=== DEBUG page.tsx handleAddSubLevel ===');
-    console.log('parentId:', parentId);
     const parent = taskLevels.find((tl) => tl.id === parentId);
-    console.log('parent found:', parent ? `level=${parent.level}, id=${parent.id}` : 'NOT FOUND');
     if (!parent || parent.level >= 5) return;
 
     const newTaskLevel = createEmptyTaskLevel(parent.level + 1, parentId);
-    console.log('newTaskLevel created:', `id=${newTaskLevel.id}, level=${newTaskLevel.level}, parentId=${newTaskLevel.parentId}`);
     handleTaskLevelsChange([...taskLevels, newTaskLevel]);
   }, [taskLevels, handleTaskLevelsChange]);
 
@@ -205,18 +197,8 @@ function AddTaskContent() {
     parentLevel: number,
     statusId: number
   ): import('@/types/api').TaskCreate[] => {
-    // DEBUG: Log filter parameters
-    console.log(`buildNestedTaskData called: parentId="${parentId}" (type: ${typeof parentId}), parentLevel=${parentLevel}`);
-    console.log(`  Total taskLevels: ${taskLevels.length}`);
-    taskLevels.forEach((tl, i) => {
-      const matchParent = tl.parentId === parentId;
-      const matchLevel = tl.level === parentLevel + 1;
-      console.log(`  [${i}] id="${tl.id}", parentId="${tl.parentId}" (type: ${typeof tl.parentId}), level=${tl.level} | matchParent=${matchParent}, matchLevel=${matchLevel}`);
-    });
-
-    // Find direct children of this parent
-    const children = taskLevels.filter((tl) => tl.parentId === parentId && tl.level === parentLevel + 1);
-    console.log(`  Found ${children.length} children`);
+    // Find direct children of this parent (match by parentId only, level is implicit)
+    const children = taskLevels.filter((tl) => tl.parentId === parentId);
 
     return children.map((child) => ({
       task_name: child.name,
@@ -234,13 +216,6 @@ function AddTaskContent() {
 
   // Handle Save Draft
   const handleSaveDraft = async (taskLevels: TaskLevel[]) => {
-    // DEBUG: Log taskLevels to check if sub-tasks are present
-    console.log('=== DEBUG handleSaveDraft ===');
-    console.log('taskLevels count:', taskLevels.length);
-    taskLevels.forEach((tl, i) => {
-      console.log(`  [${i}] id=${tl.id}, level=${tl.level}, parentId=${tl.parentId}, name="${tl.name}"`);
-    });
-
     // Check draft limit before saving (frontend check) - only for new tasks
     if (!isEditMode && isHQUser && sourceDraftInfo && !sourceDraftInfo.can_create_draft) {
       showToast(
@@ -271,11 +246,7 @@ function AddTaskContent() {
       }
 
       // Build nested sub_tasks from taskLevels (levels 2-5)
-      console.log('=== DEBUG buildNestedTaskData (handleSaveDraft) ===');
-      console.log('rootTask.id:', rootTask.id);
-      console.log('rootTask.level:', rootTask.level);
       const subTasks = buildNestedTaskData(taskLevels, rootTask.id, rootTask.level, STATUS_DRAFT_ID);
-      console.log('subTasks result:', JSON.stringify(subTasks, null, 2));
 
       // Prepare task data for API
       // Always include sub_tasks (even empty array) so backend knows to sync
@@ -287,8 +258,6 @@ function AddTaskContent() {
         task_level: 1,
         sub_tasks: subTasks, // Always send, even if empty - backend will sync
       };
-      console.log('=== DEBUG taskData to send ===');
-      console.log(JSON.stringify(taskData, null, 2));
 
       if (isEditMode && taskId) {
         // Update existing task

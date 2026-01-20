@@ -208,11 +208,6 @@ class TaskController extends Controller
 
         // Create nested sub-tasks recursively if provided
         $subTasks = $request->input('sub_tasks', []);
-        \Log::info('Creating task with sub_tasks', [
-            'parent_task_id' => $task->task_id,
-            'sub_tasks_count' => count($subTasks),
-            'sub_tasks_data' => $subTasks,
-        ]);
         if (!empty($subTasks)) {
             $this->createSubTasksRecursively($task, $subTasks, $user->staff_id, $source, $statusId);
         }
@@ -313,11 +308,6 @@ class TaskController extends Controller
 
         // Handle sub_tasks update (sync: delete old, create new)
         $subTasks = $request->input('sub_tasks', []);
-        \Log::info('Updating task with sub_tasks', [
-            'task_id' => $task->task_id,
-            'sub_tasks_count' => count($subTasks),
-            'sub_tasks_data' => $subTasks,
-        ]);
 
         // Only process sub_tasks if the field was explicitly sent (even if empty array)
         if ($request->has('sub_tasks')) {
