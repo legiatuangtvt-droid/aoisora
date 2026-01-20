@@ -149,11 +149,11 @@ export default function InstructionsSection({
         )}
       </div>
 
-      {/* 4. Photo Guidelines - Only show when Task Type is NOT Image */}
-      {data.taskType !== 'image' && (
+      {/* 4. Photo Guidelines - Only show when Task Type is Image */}
+      {data.taskType === 'image' && (
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            4. Photo Guidelines
+            4. Photo Guidelines <span className="text-red-500">*</span>
           </label>
 
           {/* Error message */}
