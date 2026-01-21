@@ -29,6 +29,12 @@ export default function TaskInfoSection({
   // Memoize today's date string to avoid recalculating on each render
   const todayString = useMemo(() => getTodayString(), []);
 
+  // Ensure startDate has a value (fallback to today if empty)
+  // Handle both null/undefined and empty string cases
+  const startDateValue = data.applicablePeriod.startDate && data.applicablePeriod.startDate.trim() !== ''
+    ? data.applicablePeriod.startDate
+    : todayString;
+
   const handleChange = (field: keyof TaskInformation, value: string) => {
     if (disabled) return;
     if (field === 'applicablePeriod') return;
@@ -60,6 +66,7 @@ export default function TaskInfoSection({
           value={data.taskType}
           onChange={(e) => handleChange('taskType', e.target.value)}
           disabled={disabled}
+          data-field="taskType"
           className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
             errors.taskType
               ? 'border-red-500 focus:ring-red-500'
@@ -84,40 +91,49 @@ export default function TaskInfoSection({
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           2. Applicable Period
         </label>
-        <div className="flex items-center gap-3">
-          <div className="flex-1 relative">
+        <div className="flex items-start gap-3">
+          {/* Start Date */}
+          <div className="flex-1">
             <input
               type="date"
-              value={data.applicablePeriod.startDate || todayString}
+              value={startDateValue}
               onChange={(e) => handleDateChange('startDate', e.target.value)}
               min={todayString}
               disabled={disabled}
+              data-field="startDate"
               className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
                 errors.startDate
                   ? 'border-red-500 focus:ring-red-500'
                   : 'border-gray-300 dark:border-gray-600'
               }`}
             />
+            {errors.startDate && (
+              <p className="mt-1 text-xs text-red-500">{errors.startDate}</p>
+            )}
           </div>
-          <div className="flex-1 relative">
+          {/* End Date */}
+          <div className="flex-1">
             <input
               type="date"
               value={data.applicablePeriod.endDate}
               onChange={(e) => handleDateChange('endDate', e.target.value)}
-              min={data.applicablePeriod.startDate || todayString}
+              min={startDateValue}
               disabled={disabled}
+              data-field="endDate"
               className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
                 errors.endDate
                   ? 'border-red-500 focus:ring-red-500'
                   : 'border-gray-300 dark:border-gray-600'
               }`}
             />
+            {errors.endDate && (
+              <p className="mt-1 text-xs text-red-500">{errors.endDate}</p>
+            )}
           </div>
         </div>
-        {(errors.startDate || errors.endDate || errors.applicablePeriod) && (
-          <p className="mt-1 text-xs text-red-500">
-            {errors.startDate || errors.endDate || errors.applicablePeriod}
-          </p>
+        {/* General applicable period error (when not specific to start/end) */}
+        {errors.applicablePeriod && !errors.startDate && !errors.endDate && (
+          <p className="mt-1 text-xs text-red-500">{errors.applicablePeriod}</p>
         )}
       </div>
 
@@ -130,6 +146,7 @@ export default function TaskInfoSection({
           value={data.executionTime}
           onChange={(e) => handleChange('executionTime', e.target.value)}
           disabled={disabled}
+          data-field="executionTime"
           className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
             errors.executionTime
               ? 'border-red-500 focus:ring-red-500'

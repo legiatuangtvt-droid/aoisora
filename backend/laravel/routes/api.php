@@ -58,6 +58,7 @@ Route::prefix('v1')->group(function () {
     Route::get('tasks/{task}', [TaskController::class, 'show'])->where('task', '[0-9]+');
     Route::get('stores', [StoreController::class, 'index']);
     Route::get('stores/{store}', [StoreController::class, 'show']);
+    Route::get('stores/{store}/staff', [StoreController::class, 'staff']);
     Route::get('regions', [RegionController::class, 'index']);
     Route::get('regions/{region}', [RegionController::class, 'show']);
     Route::get('regions/{region}/zones', [ZoneController::class, 'byRegion']);

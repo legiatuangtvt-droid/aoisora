@@ -1,6 +1,8 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { TaskScope, DropdownOption } from '@/types/addTask';
+import { getStoreStaff } from '@/lib/api';
 
 // Scope type determines the hierarchy structure to display
 // - 'store': Region > Zone > Area > Store (for Flow 1 - Task List)
@@ -14,8 +16,6 @@ interface ScopeSectionProps {
   zoneOptions: DropdownOption[];
   areaOptions: DropdownOption[];
   storeOptions: DropdownOption[];
-  storeLeaderOptions: DropdownOption[];
-  staffOptions: DropdownOption[];
   errors?: Record<string, string>;
   disabled?: boolean;
   // Scope type determines which hierarchy structure to show
@@ -31,13 +31,39 @@ export default function ScopeSection({
   zoneOptions,
   areaOptions,
   storeOptions,
-  storeLeaderOptions,
-  staffOptions,
   errors = {},
   disabled = false,
   scopeType = 'store',
   totalStores = 5,
 }: ScopeSectionProps) {
+  // State for store staff (fetched from API when store is selected)
+  const [storeLeaderOptions, setStoreLeaderOptions] = useState<DropdownOption[]>([]);
+  const [staffOptions, setStaffOptions] = useState<DropdownOption[]>([]);
+  const [isLoadingStaff, setIsLoadingStaff] = useState(false);
+
+  // Fetch store staff when storeId changes
+  useEffect(() => {
+    if (data.storeId && scopeType === 'store') {
+      setIsLoadingStaff(true);
+      getStoreStaff(Number(data.storeId))
+        .then((response) => {
+          setStoreLeaderOptions(response.leaders);
+          setStaffOptions(response.staff);
+        })
+        .catch((error) => {
+          console.error('Failed to fetch store staff:', error);
+          setStoreLeaderOptions([]);
+          setStaffOptions([]);
+        })
+        .finally(() => {
+          setIsLoadingStaff(false);
+        });
+    } else {
+      // Clear options when no store is selected
+      setStoreLeaderOptions([]);
+      setStaffOptions([]);
+    }
+  }, [data.storeId, scopeType]);
   // Calculate scope summary based on current selection
   const getScopeSummary = (): string => {
     const entityName = scopeType === 'hq' ? 'Users' : 'Stores';
@@ -230,14 +256,16 @@ export default function ScopeSection({
           <select
             value={data.storeLeaderId}
             onChange={(e) => handleChange('storeLeaderId', e.target.value)}
-            disabled={disabled || !data.storeId}
+            disabled={disabled || !data.storeId || isLoadingStaff}
             className={`flex-1 px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
               errors.storeLeaderId
                 ? 'border-red-500 focus:ring-red-500'
                 : 'border-gray-300 dark:border-gray-600'
             }`}
           >
-            <option value="">All {labels.level5}</option>
+            <option value="">
+              {isLoadingStaff ? 'Loading...' : `All ${labels.level5}`}
+            </option>
             {storeLeaderOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -247,7 +275,7 @@ export default function ScopeSection({
         </div>
       )}
 
-      {/* Level 6 (Specific Staff) - Only show for store scope type */}
+      {/* Level 6 (Staff) - Only show for store scope type */}
       {scopeType === 'store' && (
         <div className="flex items-center gap-4">
           <label className="w-20 text-sm text-gray-600 dark:text-gray-400">
@@ -256,14 +284,16 @@ export default function ScopeSection({
           <select
             value={data.specificStaffId}
             onChange={(e) => handleChange('specificStaffId', e.target.value)}
-            disabled={disabled || !data.storeId}
+            disabled={disabled || !data.storeId || isLoadingStaff}
             className={`flex-1 px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
               errors.specificStaffId
                 ? 'border-red-500 focus:ring-red-500'
                 : 'border-gray-300 dark:border-gray-600'
             }`}
           >
-            <option value="">All {labels.level6}</option>
+            <option value="">
+              {isLoadingStaff ? 'Loading...' : `All ${labels.level6}`}
+            </option>
             {staffOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}

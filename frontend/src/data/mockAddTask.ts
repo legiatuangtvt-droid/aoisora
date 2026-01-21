@@ -164,6 +164,14 @@ function generateUniqueId(): string {
 }
 
 /**
+ * Get today's date in YYYY-MM-DD format
+ */
+function getTodayString(): string {
+  const today = new Date();
+  return today.toISOString().split('T')[0];
+}
+
+/**
  * Create empty task level with default task type and execution time based on level
  *
  * @param level - Task level (1-5)
@@ -171,6 +179,8 @@ function generateUniqueId(): string {
  * @returns New TaskLevel object with defaults
  */
 export function createEmptyTaskLevel(level: number, parentId: string | null = null): TaskLevel {
+  const todayString = getTodayString();
+
   return {
     id: generateUniqueId(),
     level,
@@ -179,7 +189,7 @@ export function createEmptyTaskLevel(level: number, parentId: string | null = nu
     taskInformation: {
       taskType: DEFAULT_TASK_TYPE_BY_LEVEL[level] || 'daily',
       applicablePeriod: {
-        startDate: '',
+        startDate: todayString, // Default to today instead of empty
         endDate: '',
       },
       executionTime: DEFAULT_EXECUTION_TIME_BY_LEVEL[level] || '30min',

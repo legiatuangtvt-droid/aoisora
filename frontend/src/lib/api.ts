@@ -270,6 +270,35 @@ export async function getStoreById(id: number): Promise<Store> {
   return fetchApi<Store>(`/stores/${id}`);
 }
 
+// Staff options for dropdown (value + label format)
+export interface StoreStaffOption {
+  value: string;
+  label: string;
+  job_grade: string;
+  position?: string;
+}
+
+// Response from GET /stores/{id}/staff
+export interface StoreStaffResponse {
+  success: boolean;
+  store_id: number;
+  store_name: string;
+  leaders: StoreStaffOption[];
+  staff: StoreStaffOption[];
+  total_leaders: number;
+  total_staff: number;
+}
+
+/**
+ * Get staff members for a specific store
+ * Returns:
+ * - leaders: Staff with job_grade S2, S3, S4 (Store Leaders)
+ * - staff: Staff with job_grade S1 (Regular Staff)
+ */
+export async function getStoreStaff(storeId: number): Promise<StoreStaffResponse> {
+  return fetchApi<StoreStaffResponse>(`/stores/${storeId}/staff`);
+}
+
 // ============================================
 // Department API
 // ============================================
@@ -602,6 +631,7 @@ export interface ApproverInfo {
 export interface GetApproverResponse {
   success: boolean;
   approver: ApproverInfo | null;
+  is_highest_grade?: boolean;
   message?: string;
 }
 

@@ -164,6 +164,9 @@ export default function TaskListPage() {
   const [statusColumnFilter, setStatusColumnFilter] = useState<string[]>([]);
   const [hqCheckColumnFilter, setHqCheckColumnFilter] = useState<string[]>([]);
 
+  // Row action menu state
+  const [openActionMenu, setOpenActionMenu] = useState<string | null>(null);
+
   // Server-side pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -344,6 +347,34 @@ export default function TaskListPage() {
       router.push(`/tasks/detail?id=${task.id}`);
     }
   };
+
+  // Row action menu handlers
+  const handleViewApprovalHistory = (taskId: string) => {
+    setOpenActionMenu(null);
+    // TODO: Open approval history modal or navigate to history page
+    console.log('View approval history for task:', taskId);
+  };
+
+  const handlePauseTask = (taskId: string) => {
+    setOpenActionMenu(null);
+    // TODO: Implement pause task functionality
+    console.log('Pause task:', taskId);
+  };
+
+  // Close action menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (openActionMenu) {
+        const target = event.target as HTMLElement;
+        if (!target.closest('[data-action-menu]')) {
+          setOpenActionMenu(null);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [openActionMenu]);
 
   // Apply filters handler
   const handleApplyFilters = (newFilters: TaskFilters) => {
@@ -622,7 +653,7 @@ export default function TaskListPage() {
                       />
                     </div>
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 bg-pink-50">
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
                     <div className="flex items-center justify-center gap-1">
                       <span>HQ Check</span>
                       <ColumnFilterDropdown
@@ -633,12 +664,15 @@ export default function TaskListPage() {
                       />
                     </div>
                   </th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 bg-pink-50 w-12">
+                    {/* Action column - empty header */}
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-100">
                 {paginatedTasks.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-12 text-center text-gray-500">
+                    <td colSpan={9} className="px-4 py-12 text-center text-gray-500">
                       No tasks found
                     </td>
                   </tr>
@@ -647,7 +681,7 @@ export default function TaskListPage() {
                     <React.Fragment key={task.id}>
                       {/* Parent Row */}
                       <tr
-                        className="hover:bg-gray-50 cursor-pointer"
+                        className="group hover:bg-gray-50 cursor-pointer"
                         onClick={() => handleRowClick(task)}
                       >
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-center border-r border-gray-200">
@@ -716,6 +750,54 @@ export default function TaskListPage() {
                             <StatusPill status={task.hqCheck} />
                           </div>
                         </td>
+                        {/* Action Menu Cell */}
+                        <td className="px-2 py-3 whitespace-nowrap text-sm">
+                          <div className="relative flex items-center justify-center" data-action-menu>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenActionMenu(openActionMenu === task.id ? null : task.id);
+                              }}
+                              className="p-1.5 rounded-md opacity-0 group-hover:opacity-100 hover:bg-gray-100 transition-opacity"
+                              title="More actions"
+                            >
+                              <svg className="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                                <circle cx="12" cy="5" r="1.5" />
+                                <circle cx="12" cy="12" r="1.5" />
+                                <circle cx="12" cy="19" r="1.5" />
+                              </svg>
+                            </button>
+                            {/* Dropdown Menu */}
+                            {openActionMenu === task.id && (
+                              <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleViewApprovalHistory(task.id);
+                                  }}
+                                  className="w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 text-left"
+                                >
+                                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  View Approval History
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handlePauseTask(task.id);
+                                  }}
+                                  className="w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 text-left"
+                                >
+                                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  Pause Task
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </td>
                       </tr>
 
                       {/* Sub Tasks (Accordion) */}
@@ -746,7 +828,8 @@ export default function TaskListPage() {
                                   <StatusPill status={subTask.status} />
                                 </div>
                               </td>
-                              <td className="px-4 py-2"></td>
+                              <td className="px-4 py-2 border-r border-gray-200"></td>
+                              <td className="px-2 py-2"></td>
                             </tr>
                           ))}
                         </>

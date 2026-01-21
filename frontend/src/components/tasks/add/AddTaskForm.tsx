@@ -22,12 +22,30 @@ import {
   validateForDraft,
   getErrorsForSection,
   getFieldError,
+  getErrorsForTaskLevel,
   ValidationError,
   isDateRangeValidForTaskType,
   getAllowedTaskTypesForDateRange,
   TASK_TYPE_LABELS,
   TASK_TYPE_MAX_DAYS,
 } from '@/utils/taskValidation';
+
+// Helper to convert ValidationError[] to Record<string, string> for a section
+function getFieldErrorsForSection(
+  errors: ValidationError[],
+  taskLevelId: string,
+  section: 'A' | 'B' | 'C' | 'D'
+): Record<string, string> {
+  const sectionErrors = getErrorsForSection(errors, taskLevelId, section);
+  return sectionErrors.reduce((acc, error) => {
+    // Extract field name from nested field paths (e.g., 'applicablePeriod.startDate' -> 'startDate')
+    const fieldName = error.field.includes('.')
+      ? error.field.split('.').pop()!
+      : error.field;
+    acc[fieldName] = error.message;
+    return acc;
+  }, {} as Record<string, string>);
+}
 import { useUser } from '@/contexts/UserContext';
 import { getApproverForStaff, ApproverInfo } from '@/lib/api';
 
@@ -88,6 +106,13 @@ interface TaskLevelItemProps {
   expandedSection: SectionId | null;
   nameError?: string;
   sectionErrorCounts: { A: number; B: number; C: number; D: number };
+  // Field-level errors for each section
+  sectionFieldErrors: {
+    A: Record<string, string>;
+    B: Record<string, string>;
+    C: Record<string, string>;
+    D: Record<string, string>;
+  };
   canAddSubLevel: boolean;
   canDelete: boolean;
   showScopeSection: boolean;
@@ -99,6 +124,7 @@ interface TaskLevelItemProps {
   storeOptions: DropdownOption[];
   currentUser?: { id: number; name: string; position: string };
   autoApprover?: { id: number; name: string; position: string; job_grade: string };
+  isHighestGrade?: boolean;
   isApprovalReadOnly: boolean;
   // API data for regions and stores
   regionOptions: DropdownOption[];
@@ -118,6 +144,7 @@ const TaskLevelItem = memo(function TaskLevelItem({
   expandedSection,
   nameError,
   sectionErrorCounts,
+  sectionFieldErrors,
   canAddSubLevel,
   canDelete,
   showScopeSection,
@@ -128,6 +155,7 @@ const TaskLevelItem = memo(function TaskLevelItem({
   storeOptions,
   currentUser,
   autoApprover,
+  isHighestGrade,
   isApprovalReadOnly,
   regionOptions,
   totalStores,
@@ -229,6 +257,7 @@ const TaskLevelItem = memo(function TaskLevelItem({
           onChange={handleTaskInfoChange}
           taskTypeOptions={taskTypeOptions}
           executionTimeOptions={mockMasterData.executionTimes}
+          errors={sectionFieldErrors.A}
         />
       </SectionCard>
 
@@ -245,6 +274,7 @@ const TaskLevelItem = memo(function TaskLevelItem({
           data={taskLevel.instructions}
           onChange={handleInstructionsChange}
           taskTypeOptions={mockMasterData.instructionTaskTypes}
+          errors={sectionFieldErrors.B}
         />
       </SectionCard>
 
@@ -265,10 +295,9 @@ const TaskLevelItem = memo(function TaskLevelItem({
             zoneOptions={zoneOptions}
             areaOptions={areaOptions}
             storeOptions={storeOptions}
-            storeLeaderOptions={mockMasterData.storeLeaders}
-            staffOptions={mockMasterData.staff}
             scopeType={scopeType}
             totalStores={totalStores}
+            errors={sectionFieldErrors.C}
           />
         </SectionCard>
       )}
@@ -290,6 +319,7 @@ const TaskLevelItem = memo(function TaskLevelItem({
           hodOptions={mockMasterData.hods}
           currentUser={currentUser}
           autoApprover={autoApprover}
+          isHighestGrade={isHighestGrade}
           isReadOnly={isApprovalReadOnly}
         />
       </SectionCard>
@@ -364,6 +394,7 @@ export default function AddTaskForm({
 
   // State for auto-determined approver
   const [autoApprover, setAutoApprover] = useState<ApproverInfo | null>(null);
+  const [isHighestGrade, setIsHighestGrade] = useState(false);
   const [isLoadingApprover, setIsLoadingApprover] = useState(false);
 
   // Fetch approver on mount or when current user changes
@@ -372,8 +403,9 @@ export default function AddTaskForm({
       setIsLoadingApprover(true);
       getApproverForStaff(currentUser.staff_id)
         .then((response) => {
-          if (response.success && response.approver) {
+          if (response.success) {
             setAutoApprover(response.approver);
+            setIsHighestGrade(response.is_highest_grade || false);
           }
         })
         .catch((error) => {
@@ -426,8 +458,61 @@ export default function AddTaskForm({
     if (!result.isValid) {
       setValidationErrors(result.errors);
       setShowValidationToast(true);
-      // Scroll to top to show error toast
+
+      // Auto-expand sections with errors
+      // Find the first error for each task level and expand that section
+      const newExpandedSections: Record<string, SectionId | null> = {};
+      taskLevels.forEach((taskLevel) => {
+        const taskLevelErrors = getErrorsForTaskLevel(result.errors, taskLevel.id);
+        if (taskLevelErrors.length > 0) {
+          // Find the first section with errors
+          const sectionsWithErrors: SectionId[] = ['A', 'B', 'C', 'D'].filter(
+            (section) => getErrorsForSection(result.errors, taskLevel.id, section as SectionId).length > 0
+          ) as SectionId[];
+
+          if (sectionsWithErrors.length > 0) {
+            // Expand the first section with errors
+            newExpandedSections[taskLevel.id] = sectionsWithErrors[0];
+          }
+        }
+      });
+
+      // Update expanded sections state
+      setExpandedSections((prev) => ({
+        ...prev,
+        ...newExpandedSections,
+      }));
+
+      // Scroll to top to show error toast first, then scroll to first error field
       window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // After a short delay, scroll to the first field with error
+      setTimeout(() => {
+        // Find first task level with error
+        const firstTaskLevelWithError = taskLevels.find((tl) =>
+          getErrorsForTaskLevel(result.errors, tl.id).length > 0
+        );
+
+        if (firstTaskLevelWithError) {
+          const firstError = getErrorsForTaskLevel(result.errors, firstTaskLevelWithError.id)[0];
+          if (firstError) {
+            // Try to find and scroll to the error field
+            // Field IDs are typically constructed as: section-field-taskLevelId
+            const fieldElement = document.querySelector(`[data-field="${firstError.field}"]`) ||
+                                 document.querySelector(`[name="${firstError.field}"]`) ||
+                                 document.querySelector(`#${firstError.field}`);
+
+            if (fieldElement) {
+              fieldElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              // Focus the field if it's focusable
+              if (fieldElement instanceof HTMLElement && 'focus' in fieldElement) {
+                (fieldElement as HTMLInputElement).focus();
+              }
+            }
+          }
+        }
+      }, 300);
+
       return;
     }
     onSubmit(taskLevels);
@@ -709,6 +794,12 @@ export default function AddTaskForm({
             C: getSectionErrorCount(taskLevel.id, 'C'),
             D: getSectionErrorCount(taskLevel.id, 'D'),
           }}
+          sectionFieldErrors={{
+            A: getFieldErrorsForSection(validationErrors, taskLevel.id, 'A'),
+            B: getFieldErrorsForSection(validationErrors, taskLevel.id, 'B'),
+            C: getFieldErrorsForSection(validationErrors, taskLevel.id, 'C'),
+            D: getFieldErrorsForSection(validationErrors, taskLevel.id, 'D'),
+          }}
           canAddSubLevel={canAddSubLevel}
           canDelete={canDelete}
           showScopeSection={showScopeSection}
@@ -728,6 +819,7 @@ export default function AddTaskForm({
             position: autoApprover.position,
             job_grade: autoApprover.job_grade,
           } : undefined}
+          isHighestGrade={isHighestGrade}
           isApprovalReadOnly={isCreatorViewingApproval || taskStatus === 'approve'}
           regionOptions={apiRegionOptions}
           totalStores={totalStores}
@@ -862,42 +954,6 @@ export default function AddTaskForm({
           <span className="text-sm text-yellow-700 dark:text-yellow-300">
             Waiting for approval from your leader
           </span>
-        </div>
-      )}
-
-      {/* Validation Error Toast */}
-      {showValidationToast && validationErrors.length > 0 && (
-        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-          <div className="flex items-start gap-3">
-            <svg className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <div className="flex-1">
-              <div className="flex items-center justify-between mb-1">
-                <h4 className="text-sm font-semibold text-red-800 dark:text-red-300">
-                  Please fix the following errors
-                </h4>
-                <button
-                  onClick={() => setShowValidationToast(false)}
-                  className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              <ul className="list-disc list-inside text-sm text-red-700 dark:text-red-300 space-y-1">
-                {validationErrors.slice(0, 5).map((error, idx) => (
-                  <li key={idx}>{error.message}</li>
-                ))}
-                {validationErrors.length > 5 && (
-                  <li className="text-red-600 dark:text-red-400">
-                    ...and {validationErrors.length - 5} more errors
-                  </li>
-                )}
-              </ul>
-            </div>
-          </div>
         </div>
       )}
 

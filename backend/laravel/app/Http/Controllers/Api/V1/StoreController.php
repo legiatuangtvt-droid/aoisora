@@ -103,4 +103,58 @@ class StoreController extends Controller
 
         return response()->json(null, 204);
     }
+
+    /**
+     * Get staff members for a specific store
+     *
+     * Returns:
+     * - leaders: Staff with job_grade S2, S3, S4 (Store Leaders)
+     * - staff: Staff with job_grade S1 (Regular Staff)
+     *
+     * @param int $id Store ID
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function staff($id)
+    {
+        $store = Store::findOrFail($id);
+
+        // Get all staff for this store
+        $allStaff = \App\Models\Staff::where('store_id', $id)
+            ->where('is_active', true)
+            ->orderBy('job_grade', 'desc')
+            ->orderBy('staff_name', 'asc')
+            ->get(['staff_id', 'staff_name', 'staff_code', 'job_grade', 'position']);
+
+        // Separate leaders (S2, S3, S4) and regular staff (S1)
+        $leaders = $allStaff->filter(function ($staff) {
+            return in_array($staff->job_grade, ['S2', 'S3', 'S4']);
+        })->map(function ($staff) {
+            return [
+                'value' => (string) $staff->staff_id,
+                'label' => $staff->staff_name . ' (' . $staff->job_grade . ')',
+                'job_grade' => $staff->job_grade,
+                'position' => $staff->position,
+            ];
+        })->values();
+
+        $regularStaff = $allStaff->filter(function ($staff) {
+            return $staff->job_grade === 'S1';
+        })->map(function ($staff) {
+            return [
+                'value' => (string) $staff->staff_id,
+                'label' => $staff->staff_name,
+                'job_grade' => $staff->job_grade,
+            ];
+        })->values();
+
+        return response()->json([
+            'success' => true,
+            'store_id' => $id,
+            'store_name' => $store->store_name,
+            'leaders' => $leaders,
+            'staff' => $regularStaff,
+            'total_leaders' => $leaders->count(),
+            'total_staff' => $regularStaff->count(),
+        ]);
+    }
 }

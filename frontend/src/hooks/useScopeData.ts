@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { getScopeHierarchy, ScopeRegion } from '@/lib/api';
+import { getScopeHierarchy, ScopeRegion, getStoreStaff, StoreStaffOption } from '@/lib/api';
 import type { DropdownOption } from '@/types/addTask';
 
 interface UseScopeDataReturn {
@@ -37,6 +37,12 @@ interface UseScopeDataReturn {
   getAreasByZone: (zoneId: string) => DropdownOption[];
   getStoresByArea: (areaId: string) => DropdownOption[];
   getStoresByRegion: (regionId: string) => DropdownOption[];
+
+  // Functions to get staff by store (async - calls API)
+  getStaffByStore: (storeId: string) => Promise<{
+    leaders: DropdownOption[];
+    staff: DropdownOption[];
+  }>;
 
   // Refresh function (single refresh for all)
   refresh: () => Promise<void>;
@@ -191,6 +197,27 @@ export function useScopeData(): UseScopeDataReturn {
       .map(s => ({ value: String(s.id), label: s.name }));
   }, [allZones, allAreas, allStores, storeOptions]);
 
+  // Get staff by store (async - calls API)
+  const getStaffByStore = useCallback(async (storeId: string): Promise<{
+    leaders: DropdownOption[];
+    staff: DropdownOption[];
+  }> => {
+    if (!storeId) {
+      return { leaders: [], staff: [] };
+    }
+
+    try {
+      const response = await getStoreStaff(Number(storeId));
+      return {
+        leaders: response.leaders.map(l => ({ value: l.value, label: l.label })),
+        staff: response.staff.map(s => ({ value: s.value, label: s.label })),
+      };
+    } catch (err) {
+      console.error('Failed to fetch store staff:', err);
+      return { leaders: [], staff: [] };
+    }
+  }, []);
+
   // Initial fetch
   useEffect(() => {
     fetchScopeData();
@@ -225,6 +252,7 @@ export function useScopeData(): UseScopeDataReturn {
     getAreasByZone,
     getStoresByArea,
     getStoresByRegion,
+    getStaffByStore,
 
     // Refresh functions
     refresh: fetchScopeData,

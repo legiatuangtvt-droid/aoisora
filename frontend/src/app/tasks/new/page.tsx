@@ -35,13 +35,26 @@ const BACK_LINKS: Record<TaskSource, { href: string; label: string }> = {
 
 type TabType = 'detail' | 'maps';
 
+// Helper to get today's date in YYYY-MM-DD format
+const getTodayString = (): string => {
+  const today = new Date();
+  return today.toISOString().split('T')[0];
+};
+
 // Helper function: Convert Task from API to TaskLevel[] (flat array)
 // Moved outside component to avoid dependency issues
 const convertTaskToTaskLevels = (task: Task, parentId: string | null = null): TaskLevel[] => {
   const taskLevel = createEmptyTaskLevel(task.task_level || 1, parentId);
   taskLevel.name = task.task_name || '';
   taskLevel.instructions.note = task.task_description || '';
-  taskLevel.taskInformation.applicablePeriod.startDate = task.start_date || '';
+
+  // IMPORTANT: startDate must ALWAYS have a value - use API value or default to today
+  // Handle null, undefined, and empty string cases
+  const today = getTodayString();
+  const apiStartDate = task.start_date;
+  const finalStartDate = apiStartDate && apiStartDate.trim() !== '' ? apiStartDate : today;
+
+  taskLevel.taskInformation.applicablePeriod.startDate = finalStartDate;
   taskLevel.taskInformation.applicablePeriod.endDate = task.end_date || '';
 
   // Start with current task level
@@ -84,7 +97,8 @@ function AddTaskContent() {
   const [localChangesDetected, setLocalChangesDetected] = useState(false);
 
   // Lifted state for task levels - shared between Detail and Maps tabs
-  const [taskLevels, setTaskLevels] = useState<TaskLevel[]>([createEmptyTaskLevel(1)]);
+  // Use lazy initialization to ensure createEmptyTaskLevel is called fresh on each mount
+  const [taskLevels, setTaskLevels] = useState<TaskLevel[]>(() => [createEmptyTaskLevel(1)]);
 
   // User info
   const isHQUser = currentUser?.job_grade?.startsWith('G') || false;
@@ -267,18 +281,22 @@ function AddTaskContent() {
         // Update existing task
         await updateTask(taskId, taskData);
         showToast('Draft saved successfully', 'success');
+        // Stay on the same page - don't redirect
       } else {
         // Create new task with sub-tasks
-        await createTask({
+        const createdTask = await createTask({
           ...taskData,
           status_id: STATUS_DRAFT_ID,
           priority: 'normal',
           source: source,
         });
         showToast('Task saved as draft successfully', 'success');
-      }
 
-      router.push(backLink.href);
+        // Switch to edit mode with the new task ID (stay on page, now editing the draft)
+        if (createdTask?.task_id) {
+          router.replace(`/tasks/new?id=${createdTask.task_id}&source=${source}`);
+        }
+      }
     } catch (error: unknown) {
       console.error('Error saving draft:', error);
 

@@ -23,6 +23,7 @@ interface ApprovalSectionProps {
     position?: string;
   };
   autoApprover?: ApproverInfo;
+  isHighestGrade?: boolean;
   isReadOnly?: boolean;
 }
 
@@ -35,6 +36,7 @@ export default function ApprovalSection({
   errors = {},
   currentUser,
   autoApprover,
+  isHighestGrade = false,
   isReadOnly = false,
 }: ApprovalSectionProps) {
   const handleChange = (field: keyof TaskApproval, value: string) => {
@@ -47,21 +49,35 @@ export default function ApprovalSection({
 
   // If we have auto-populated data (current user as initiator, auto-found approver)
   // Show read-only display instead of dropdowns
-  if (currentUser || autoApprover) {
+  if (currentUser || autoApprover || isHighestGrade) {
     return (
       <div className="space-y-4">
         {/* Approval Flow Info */}
-        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-          <div className="flex items-start gap-3">
-            <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <div className="text-sm text-blue-700 dark:text-blue-300">
-              <p className="font-medium mb-1">Approval Process</p>
-              <p>When you submit this task, it will be sent to your direct supervisor for approval.</p>
+        {isHighestGrade ? (
+          <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+            <div className="flex items-start gap-3">
+              <svg className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div className="text-sm text-green-700 dark:text-green-300">
+                <p className="font-medium mb-1">Auto-Approval</p>
+                <p>As G9 (highest grade), your tasks will be automatically approved upon submission.</p>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <div className="flex items-start gap-3">
+              <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div className="text-sm text-blue-700 dark:text-blue-300">
+                <p className="font-medium mb-1">Approval Process</p>
+                <p>When you submit this task, it will be sent to your direct supervisor for approval.</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* 1. Initiator (Current User) */}
         <div>
@@ -87,12 +103,21 @@ export default function ApprovalSection({
           </div>
         </div>
 
-        {/* 2. Approver (Auto-found) */}
+        {/* 2. Approver (Auto-found or N/A for G9) */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             2. Approver
           </label>
-          {autoApprover ? (
+          {isHighestGrade ? (
+            <div className="flex items-center gap-3 px-3 py-2.5 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg">
+              <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-sm text-green-700 dark:text-green-300">
+                Not required - G9 is the highest grade (auto-approved)
+              </p>
+            </div>
+          ) : autoApprover ? (
             <div className="flex items-center gap-3 px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
               <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
                 <span className="text-sm font-medium text-green-600 dark:text-green-400">
@@ -122,7 +147,10 @@ export default function ApprovalSection({
 
         {/* Note about approval */}
         <div className="text-xs text-gray-500 dark:text-gray-400 italic">
-          * The approver is automatically determined based on your organizational hierarchy.
+          {isHighestGrade
+            ? '* As the highest grade in the system, your tasks do not require approval from others.'
+            : '* The approver is automatically determined based on your organizational hierarchy.'
+          }
         </div>
       </div>
     );

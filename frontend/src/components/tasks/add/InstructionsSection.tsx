@@ -217,6 +217,7 @@ export default function InstructionsSection({
           value={data.taskType}
           onChange={(e) => handleChange('taskType', e.target.value)}
           disabled={disabled}
+          data-field="instructionTaskType"
           className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
             errors.taskType
               ? 'border-red-500 focus:ring-red-500'
@@ -245,6 +246,7 @@ export default function InstructionsSection({
           onChange={(e) => handleChange('manualLink', e.target.value)}
           placeholder="Paste link"
           disabled={disabled}
+          data-field="manualLink"
           className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
             errors.manualLink
               ? 'border-red-500 focus:ring-red-500'
@@ -267,6 +269,7 @@ export default function InstructionsSection({
           placeholder="Please attach the report file in the comment section after completing the task."
           rows={3}
           disabled={disabled}
+          data-field="note"
           className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 resize-none disabled:opacity-50 disabled:cursor-not-allowed ${
             errors.note
               ? 'border-red-500 focus:ring-red-500'

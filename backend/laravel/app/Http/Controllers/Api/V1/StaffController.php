@@ -160,6 +160,38 @@ class StaffController extends Controller
     }
 
     /**
+     * Job grade hierarchy for proper comparison
+     * Higher index = higher grade
+     */
+    private const JOB_GRADE_ORDER = [
+        // Store grades (S1 lowest to S7 highest)
+        'S1' => 1,
+        'S2' => 2,
+        'S3' => 3,
+        'S4' => 4,
+        'S5' => 5,
+        'S6' => 6,
+        'S7' => 7,
+        // HQ grades (G2 lowest to G9 highest)
+        'G2' => 12,
+        'G3' => 13,
+        'G4' => 14,
+        'G5' => 15,
+        'G6' => 16,
+        'G7' => 17,
+        'G8' => 18,
+        'G9' => 19, // Highest - CEO level, no approver above
+    ];
+
+    /**
+     * Get the numeric order of a job grade for comparison
+     */
+    private function getJobGradeOrder(?string $jobGrade): int
+    {
+        return self::JOB_GRADE_ORDER[$jobGrade] ?? 0;
+    }
+
+    /**
      * Get approver for a staff member based on organizational hierarchy
      * Used to preview who will approve tasks before submission
      *
@@ -176,12 +208,23 @@ class StaffController extends Controller
             ], 404);
         }
 
+        // G9 is the highest grade - no approver exists
+        if ($staff->job_grade === 'G9') {
+            return response()->json([
+                'success' => true,
+                'approver' => null,
+                'is_highest_grade' => true,
+                'message' => 'G9 is the highest grade in the system. Tasks will be auto-approved.',
+            ]);
+        }
+
         $approver = $this->findApprover($staff);
 
         if (!$approver) {
             return response()->json([
                 'success' => true,
                 'approver' => null,
+                'is_highest_grade' => false,
                 'message' => 'No approver found in organizational hierarchy',
             ]);
         }
@@ -199,6 +242,7 @@ class StaffController extends Controller
                 'store_id' => $approver->store_id,
                 'store_name' => $approver->store?->store_name ?? 'HQ',
             ],
+            'is_highest_grade' => false,
         ]);
     }
 
@@ -215,16 +259,27 @@ class StaffController extends Controller
             return Staff::with(['store', 'department'])->find($creator->line_manager_id);
         }
 
-        // If no line manager, find someone with higher job grade in same team/department
-        $jobGrade = $creator->job_grade;
+        // Get creator's grade order for comparison
+        $creatorGradeOrder = $this->getJobGradeOrder($creator->job_grade);
+
+        // Get all higher grades for query
+        $higherGrades = array_keys(array_filter(
+            self::JOB_GRADE_ORDER,
+            fn($order) => $order > $creatorGradeOrder
+        ));
+
+        if (empty($higherGrades)) {
+            return null; // Already at highest grade
+        }
 
         // Try same team first
         if ($creator->team_id) {
             $approver = Staff::with(['store', 'department'])
                 ->where('team_id', $creator->team_id)
-                ->where('job_grade', '>', $jobGrade)
+                ->whereIn('job_grade', $higherGrades)
                 ->where('is_active', true)
-                ->orderBy('job_grade', 'asc')
+                ->get()
+                ->sortBy(fn($s) => $this->getJobGradeOrder($s->job_grade))
                 ->first();
 
             if ($approver) {
@@ -236,9 +291,10 @@ class StaffController extends Controller
         if ($creator->department_id) {
             $approver = Staff::with(['store', 'department'])
                 ->where('department_id', $creator->department_id)
-                ->where('job_grade', '>', $jobGrade)
+                ->whereIn('job_grade', $higherGrades)
                 ->where('is_active', true)
-                ->orderBy('job_grade', 'asc')
+                ->get()
+                ->sortBy(fn($s) => $this->getJobGradeOrder($s->job_grade))
                 ->first();
 
             if ($approver) {
@@ -248,9 +304,10 @@ class StaffController extends Controller
 
         // Fallback: find any active staff with higher grade (system admin level)
         return Staff::with(['store', 'department'])
-            ->where('job_grade', '>', $jobGrade)
+            ->whereIn('job_grade', $higherGrades)
             ->where('is_active', true)
-            ->orderBy('job_grade', 'asc')
+            ->get()
+            ->sortBy(fn($s) => $this->getJobGradeOrder($s->job_grade))
             ->first();
     }
 
