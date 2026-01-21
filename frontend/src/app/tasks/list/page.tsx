@@ -653,7 +653,7 @@ export default function TaskListPage() {
                       />
                     </div>
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 bg-pink-50">
                     <div className="flex items-center justify-center gap-1">
                       <span>HQ Check</span>
                       <ColumnFilterDropdown
@@ -664,15 +664,12 @@ export default function TaskListPage() {
                       />
                     </div>
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 bg-pink-50 w-12">
-                    {/* Action column - empty header */}
-                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-100">
                 {paginatedTasks.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="px-4 py-12 text-center text-gray-500">
+                    <td colSpan={8} className="px-4 py-12 text-center text-gray-500">
                       No tasks found
                     </td>
                   </tr>
@@ -745,57 +742,56 @@ export default function TaskListPage() {
                             <StatusPill status={task.status} />
                           </div>
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm border-r border-gray-200">
-                          <div className="flex items-center justify-center">
+                        {/* HQ Check + Action Menu */}
+                        <td className="px-4 py-3 whitespace-nowrap text-sm">
+                          <div className="flex items-center justify-center gap-2">
                             <StatusPill status={task.hqCheck} />
-                          </div>
-                        </td>
-                        {/* Action Menu Cell */}
-                        <td className="px-2 py-3 whitespace-nowrap text-sm">
-                          <div className="relative flex items-center justify-center" data-action-menu>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setOpenActionMenu(openActionMenu === task.id ? null : task.id);
-                              }}
-                              className="p-1.5 rounded-md opacity-0 group-hover:opacity-100 hover:bg-gray-100 transition-opacity"
-                              title="More actions"
-                            >
-                              <svg className="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
-                                <circle cx="12" cy="5" r="1.5" />
-                                <circle cx="12" cy="12" r="1.5" />
-                                <circle cx="12" cy="19" r="1.5" />
-                              </svg>
-                            </button>
-                            {/* Dropdown Menu */}
-                            {openActionMenu === task.id && (
-                              <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleViewApprovalHistory(task.id);
-                                  }}
-                                  className="w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 text-left"
-                                >
-                                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                  </svg>
-                                  View Approval History
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handlePauseTask(task.id);
-                                  }}
-                                  className="w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 text-left"
-                                >
-                                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                  </svg>
-                                  Pause Task
-                                </button>
-                              </div>
-                            )}
+                            {/* 3-dots Action Menu */}
+                            <div className="relative" data-action-menu>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenActionMenu(openActionMenu === task.id ? null : task.id);
+                                }}
+                                className="p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-gray-100 transition-opacity"
+                                title="More actions"
+                              >
+                                <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                                  <circle cx="12" cy="5" r="1.5" />
+                                  <circle cx="12" cy="12" r="1.5" />
+                                  <circle cx="12" cy="19" r="1.5" />
+                                </svg>
+                              </button>
+                              {/* Dropdown Menu */}
+                              {openActionMenu === task.id && (
+                                <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleViewApprovalHistory(task.id);
+                                    }}
+                                    className="w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 text-left"
+                                  >
+                                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    View Approval History
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handlePauseTask(task.id);
+                                    }}
+                                    className="w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 text-left"
+                                  >
+                                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Pause Task
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </td>
                       </tr>
@@ -823,13 +819,11 @@ export default function TaskListPage() {
                               <td className="px-4 py-2 text-sm text-gray-500 text-center border-r border-gray-200">{task.startDate} → {task.endDate}</td>
                               <td className="px-4 py-2 text-center border-r border-gray-200"></td>
                               <td className="px-4 py-2 text-center border-r border-gray-200"></td>
-                              <td className="px-4 py-2 border-r border-gray-200">
+                              <td className="px-4 py-2">
                                 <div className="flex items-center justify-center">
                                   <StatusPill status={subTask.status} />
                                 </div>
                               </td>
-                              <td className="px-4 py-2 border-r border-gray-200"></td>
-                              <td className="px-2 py-2"></td>
                             </tr>
                           ))}
                         </>
