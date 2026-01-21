@@ -204,9 +204,55 @@ backend/laravel/routes/api.php → public_html/laravel/routes/api.php
 | Type | Count | Location |
 |------|-------|----------|
 | SQL Migration | 1 | `deploy/migration_v0.2.0.sql` |
+| SQL Full Reset | 1 | `deploy/full_reset.sql` (v0.2.0) |
 | Backend NEW | 8 | Controllers, Models, Services, Exceptions |
 | Backend MODIFIED | 7 | Controllers, Models, Routes |
 | Frontend | Auto | Vercel handles build |
+
+---
+
+## 6. FULL DATABASE RESET (Demo Environment)
+
+> **Sử dụng khi cần reset toàn bộ database về trạng thái ban đầu**
+
+### File:
+```
+deploy/full_reset.sql
+```
+
+### Nội dung bao gồm:
+| Category | Count |
+|----------|-------|
+| Regions | 3 |
+| Zones | 6 |
+| Areas | 15 |
+| Stores | 13 |
+| Staff | 23 |
+| Departments | 5 |
+| Tasks | 90 (đủ các status) |
+
+### Task Status Distribution:
+- Draft: 10
+- Approve: 8
+- Not Yet: 22
+- On Progress: 25
+- Done: 15
+- Overdue: 10
+
+### Quy trình import (Local):
+```bash
+"D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysql.exe" -uroot -e "DROP DATABASE IF EXISTS auraorie68aa_aoisora; CREATE DATABASE auraorie68aa_aoisora CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+"D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysql.exe" -uroot auraorie68aa_aoisora < deploy/full_reset.sql
+```
+
+### Quy trình import (Production - phpMyAdmin):
+1. Vào DirectAdmin → MySQL → phpMyAdmin
+2. Chọn database `auraorie68aa_aoisora`
+3. **Tab "Operations" → "Drop the database"** (xóa sạch)
+4. Tạo lại database cùng tên
+5. Tab "Import" → Chọn file `full_reset.sql`
+6. Click "Go"
+7. Verify output cuối file
 
 ---
 
@@ -216,3 +262,4 @@ backend/laravel/routes/api.php → public_html/laravel/routes/api.php
 - **Double Token**: Access token 15min, Refresh token 7 days
 - **Geographic Hierarchy**: Region → Zone → Area → Store
 - Nếu gặp lỗi 500, kiểm tra `.env` trên server (xem CLAUDE.md)
+- **Để reset demo**: Dùng `deploy/full_reset.sql` (không dùng `migration_v0.2.0.sql`)
