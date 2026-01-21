@@ -277,9 +277,10 @@ export default function TaskListPage() {
         return priorityA - priorityB;
       });
 
-      // Re-number after sorting
+      // Re-number after sorting - account for pagination offset
+      const pageOffset = (currentPage - 1) * itemsPerPage;
       sortedTasks.forEach((task, index) => {
-        task.no = index + 1;
+        task.no = pageOffset + index + 1;
       });
 
       setTasks(sortedTasks);

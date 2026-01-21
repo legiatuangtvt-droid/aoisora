@@ -98,10 +98,26 @@ export async function fetchWithAuth(
   const accessToken = tokenManager.getAccessToken();
 
   // Get switched user ID for testing mode (User Switcher)
-  const switchedUserId =
-    typeof window !== 'undefined'
-      ? localStorage.getItem('optichain_switched_user_id')
-      : null;
+  // If no switched user, use current user's id for API calls that need user identity
+  let effectiveUserId: string | null = null;
+  if (typeof window !== 'undefined') {
+    // First priority: switched user (User Switcher feature)
+    effectiveUserId = localStorage.getItem('optichain_switched_user_id');
+
+    // Fallback: current logged-in user's id from AuthContext storage
+    if (!effectiveUserId) {
+      const authDataStr = localStorage.getItem('optichain_auth');
+      if (authDataStr) {
+        try {
+          const authData = JSON.parse(authDataStr);
+          // AuthContext stores { user: AuthUser } where AuthUser.id is the staff_id
+          effectiveUserId = authData.user?.id?.toString() || null;
+        } catch {
+          // Ignore parse errors
+        }
+      }
+    }
+  }
 
   // Build headers
   const headers: Record<string, string> = {
@@ -114,9 +130,10 @@ export async function fetchWithAuth(
     headers['Authorization'] = `Bearer ${accessToken}`;
   }
 
-  // Add X-Switch-User-Id header for testing mode
-  if (switchedUserId) {
-    headers['X-Switch-User-Id'] = switchedUserId;
+  // Add X-Switch-User-Id header for user identity (switched user or current user)
+  // This is needed because GET /tasks is a public route but needs user ID for draft filtering
+  if (effectiveUserId) {
+    headers['X-Switch-User-Id'] = effectiveUserId;
   }
 
   // Make the request

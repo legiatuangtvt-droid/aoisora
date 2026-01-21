@@ -75,23 +75,45 @@ class TaskController extends Controller
                 AllowedFilter::exact('status_id'),
                 AllowedFilter::exact('priority'),
                 AllowedFilter::partial('task_name'),
-                // Date range filters - also include tasks with NULL dates (drafts)
+                // Date range filters - also include:
+                // 1. Tasks with NULL dates (drafts without dates set)
+                // 2. DRAFT and APPROVE status tasks (always show regardless of date)
                 AllowedFilter::callback('start_date_from', fn ($query, $value) => $query->where(function ($q) use ($value) {
-                    $q->where('start_date', '>=', $value)->orWhereNull('start_date');
+                    $q->where('start_date', '>=', $value)
+                      ->orWhereNull('start_date')
+                      ->orWhereIn('status_id', [self::DRAFT_STATUS_ID, self::APPROVE_STATUS_ID]);
                 })),
                 AllowedFilter::callback('start_date_to', fn ($query, $value) => $query->where(function ($q) use ($value) {
-                    $q->where('start_date', '<=', $value)->orWhereNull('start_date');
+                    $q->where('start_date', '<=', $value)
+                      ->orWhereNull('start_date')
+                      ->orWhereIn('status_id', [self::DRAFT_STATUS_ID, self::APPROVE_STATUS_ID]);
                 })),
                 AllowedFilter::callback('end_date_from', fn ($query, $value) => $query->where(function ($q) use ($value) {
-                    $q->where('end_date', '>=', $value)->orWhereNull('end_date');
+                    $q->where('end_date', '>=', $value)
+                      ->orWhereNull('end_date')
+                      ->orWhereIn('status_id', [self::DRAFT_STATUS_ID, self::APPROVE_STATUS_ID]);
                 })),
                 AllowedFilter::callback('end_date_to', fn ($query, $value) => $query->where(function ($q) use ($value) {
-                    $q->where('end_date', '<=', $value)->orWhereNull('end_date');
+                    $q->where('end_date', '<=', $value)
+                      ->orWhereNull('end_date')
+                      ->orWhereIn('status_id', [self::DRAFT_STATUS_ID, self::APPROVE_STATUS_ID]);
                 })),
             ])
             ->allowedSorts(['task_id', 'task_name', 'end_date', 'start_date', 'created_at'])
-            ->allowedIncludes(['assignedStaff', 'createdBy', 'assignedStore', 'department', 'taskType', 'responseType', 'status'])
-            ->paginate($request->get('per_page', 20));
+            ->allowedIncludes(['assignedStaff', 'createdBy', 'assignedStore', 'department', 'taskType', 'responseType', 'status']);
+
+        // Default sort: APPROVE → DRAFT → others (by status priority), then by task_id
+        // This ensures DRAFT and APPROVE tasks always appear first in pagination
+        if (!$request->has('sort')) {
+            $tasks = $tasks->orderByRaw("CASE
+                WHEN status_id = " . self::APPROVE_STATUS_ID . " THEN 1
+                WHEN status_id = " . self::DRAFT_STATUS_ID . " THEN 2
+                ELSE 3
+            END")
+            ->orderBy('task_id', 'desc');
+        }
+
+        $tasks = $tasks->paginate($request->get('per_page', 20));
 
         // Convert to array and add sub_tasks + draft_info
         $response = $tasks->toArray();
