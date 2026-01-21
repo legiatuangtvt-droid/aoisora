@@ -88,7 +88,7 @@ export default function ScopeSection({
         level3: 'Area',
         level4: 'Store',
         level5: 'Store Leader',
-        level6: 'Specific Staff',
+        level6: 'Staff',
       };
   const handleChange = (field: keyof TaskScope, value: string) => {
     if (disabled) return;
@@ -256,7 +256,7 @@ export default function ScopeSection({
           <select
             value={data.specificStaffId}
             onChange={(e) => handleChange('specificStaffId', e.target.value)}
-            disabled={disabled || !data.storeLeaderId}
+            disabled={disabled || !data.storeId}
             className={`flex-1 px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
               errors.specificStaffId
                 ? 'border-red-500 focus:ring-red-500'
