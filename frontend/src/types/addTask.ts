@@ -43,6 +43,8 @@ export interface TaskScope {
   zoneId: string;
   areaId: string;
   storeId: string;
+  storeLeaderId: string;
+  specificStaffId: string;
 }
 
 // Section D: Approval Process
@@ -81,6 +83,8 @@ export interface AddTaskMasterData {
   zones: Record<string, DropdownOption[]>; // keyed by regionId
   areas: Record<string, DropdownOption[]>; // keyed by zoneId
   stores: Record<string, DropdownOption[]>; // keyed by areaId
+  storeLeaders: DropdownOption[];
+  staff: DropdownOption[];
   initiators: DropdownOption[];
   leaders: DropdownOption[];
   hods: DropdownOption[];

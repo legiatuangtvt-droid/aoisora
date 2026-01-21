@@ -14,6 +14,8 @@ interface ScopeSectionProps {
   zoneOptions: DropdownOption[];
   areaOptions: DropdownOption[];
   storeOptions: DropdownOption[];
+  storeLeaderOptions: DropdownOption[];
+  staffOptions: DropdownOption[];
   errors?: Record<string, string>;
   disabled?: boolean;
   // Scope type determines which hierarchy structure to show
@@ -29,6 +31,8 @@ export default function ScopeSection({
   zoneOptions,
   areaOptions,
   storeOptions,
+  storeLeaderOptions,
+  staffOptions,
   errors = {},
   disabled = false,
   scopeType = 'store',
@@ -83,6 +87,8 @@ export default function ScopeSection({
         level2: 'Zone',
         level3: 'Area',
         level4: 'Store',
+        level5: 'Store Leader',
+        level6: 'Specific Staff',
       };
   const handleChange = (field: keyof TaskScope, value: string) => {
     if (disabled) return;
@@ -98,6 +104,13 @@ export default function ScopeSection({
       newData.storeId = '';
     } else if (field === 'areaId') {
       newData.storeId = '';
+      newData.storeLeaderId = '';
+      newData.specificStaffId = '';
+    } else if (field === 'storeId') {
+      newData.storeLeaderId = '';
+      newData.specificStaffId = '';
+    } else if (field === 'storeLeaderId') {
+      newData.specificStaffId = '';
     }
 
     onChange(newData);
@@ -207,6 +220,58 @@ export default function ScopeSection({
           ))}
         </select>
       </div>
+
+      {/* Level 5 (Store Leader) - Only show for store scope type */}
+      {scopeType === 'store' && (
+        <div className="flex items-center gap-4">
+          <label className="w-20 text-sm text-gray-600 dark:text-gray-400">
+            {labels.level5}
+          </label>
+          <select
+            value={data.storeLeaderId}
+            onChange={(e) => handleChange('storeLeaderId', e.target.value)}
+            disabled={disabled || !data.storeId}
+            className={`flex-1 px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
+              errors.storeLeaderId
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-gray-300 dark:border-gray-600'
+            }`}
+          >
+            <option value="">All {labels.level5}</option>
+            {storeLeaderOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* Level 6 (Specific Staff) - Only show for store scope type */}
+      {scopeType === 'store' && (
+        <div className="flex items-center gap-4">
+          <label className="w-20 text-sm text-gray-600 dark:text-gray-400">
+            {labels.level6}
+          </label>
+          <select
+            value={data.specificStaffId}
+            onChange={(e) => handleChange('specificStaffId', e.target.value)}
+            disabled={disabled || !data.storeLeaderId}
+            className={`flex-1 px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
+              errors.specificStaffId
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-gray-300 dark:border-gray-600'
+            }`}
+          >
+            <option value="">All {labels.level6}</option>
+            {staffOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
     </div>
   );
 }

@@ -95,6 +95,20 @@ export const storeOptionsByArea: Record<string, DropdownOption[]> = {
 // MOCK DATA - Staff & Leadership
 // =============================================================================
 
+// Store leaders
+export const storeLeaderOptions: DropdownOption[] = [
+  { value: 'sl-1', label: 'Tùng (SM Ocean)' },
+  { value: 'sl-2', label: 'Việt (SM Zen)' },
+  { value: 'sl-3', label: 'Hoa (SM Mountain)' },
+];
+
+// Staff options
+export const staffOptions: DropdownOption[] = [
+  { value: 'staff-1', label: 'Nguyễn Văn A' },
+  { value: 'staff-2', label: 'Trần Thị B' },
+  { value: 'staff-3', label: 'Lê Văn C' },
+];
+
 // Initiator options
 export const initiatorOptions: DropdownOption[] = [
   { value: 'init-1', label: 'Nguyen Dai Viet' },
@@ -129,6 +143,8 @@ export const mockMasterData: AddTaskMasterData = {
   zones: zoneOptionsByRegion,
   areas: areaOptionsByZone,
   stores: storeOptionsByArea,
+  storeLeaders: storeLeaderOptions,
+  staff: staffOptions,
   initiators: initiatorOptions,
   leaders: leaderOptions,
   hods: hodOptions,
@@ -179,6 +195,8 @@ export function createEmptyTaskLevel(level: number, parentId: string | null = nu
       zoneId: '',
       areaId: '',
       storeId: '',
+      storeLeaderId: '',
+      specificStaffId: '',
     },
     approval: {
       initiatorId: '',

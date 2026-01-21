@@ -265,6 +265,8 @@ const TaskLevelItem = memo(function TaskLevelItem({
             zoneOptions={zoneOptions}
             areaOptions={areaOptions}
             storeOptions={storeOptions}
+            storeLeaderOptions={mockMasterData.storeLeaders}
+            staffOptions={mockMasterData.staff}
             scopeType={scopeType}
             totalStores={totalStores}
           />
