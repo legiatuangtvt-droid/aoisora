@@ -744,10 +744,10 @@ export default function TaskListPage() {
                         </td>
                         {/* HQ Check + Action Menu */}
                         <td className="px-4 py-3 whitespace-nowrap text-sm">
-                          <div className="flex items-center justify-center gap-2">
+                          <div className="relative flex items-center justify-center">
                             <StatusPill status={task.hqCheck} />
-                            {/* 3-dots Action Menu */}
-                            <div className="relative" data-action-menu>
+                            {/* 3-dots Action Menu - positioned absolute to not take space */}
+                            <div className="absolute right-0 top-1/2 -translate-y-1/2" data-action-menu>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
