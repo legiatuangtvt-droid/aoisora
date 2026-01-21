@@ -12,21 +12,33 @@ class StoreController extends Controller
 {
     /**
      * Get all stores
+     *
+     * @param Request $request
+     * @queryParam area_id int Filter by area ID
+     * @queryParam region_id int Filter by region ID
+     * @queryParam status string Filter by status
+     * @queryParam is_active string Filter by active status: "true" (default), "false", or "all"
      */
     public function index(Request $request)
     {
-        $stores = QueryBuilder::for(Store::class)
+        $query = QueryBuilder::for(Store::class)
             ->allowedFilters([
                 AllowedFilter::exact('region_id'),
+                AllowedFilter::exact('area_id'),
                 AllowedFilter::exact('status'),
                 AllowedFilter::partial('store_name'),
                 AllowedFilter::partial('store_code'),
             ])
             ->allowedSorts(['store_id', 'store_name', 'store_code'])
-            ->allowedIncludes(['region', 'staff'])
-            ->paginate($request->get('per_page', 20));
+            ->allowedIncludes(['region', 'area', 'area.zone', 'staff']);
 
-        return response()->json($stores);
+        // Check if pagination is requested
+        if ($request->has('per_page')) {
+            return response()->json($query->paginate($request->get('per_page', 20)));
+        }
+
+        // Return all stores without pagination (for dropdowns)
+        return response()->json($query->get());
     }
 
     /**

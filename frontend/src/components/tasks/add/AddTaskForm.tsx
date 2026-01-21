@@ -3,6 +3,7 @@
 import { useState, useCallback, useMemo, useEffect, memo, useRef } from 'react';
 import { TaskLevel, TaskInformation, TaskInstructions, TaskScope, TaskApproval, DropdownOption, TaskFrequency, ExecutionTime } from '@/types/addTask';
 import { mockMasterData, createEmptyTaskLevel } from '@/data/mockAddTask';
+import { useScopeData } from '@/hooks/useScopeData';
 import {
   TASK_TYPE_ORDER,
   DEFAULT_TASK_TYPE_BY_LEVEL,
@@ -99,6 +100,9 @@ interface TaskLevelItemProps {
   currentUser?: { id: number; name: string; position: string };
   autoApprover?: { id: number; name: string; position: string; job_grade: string };
   isApprovalReadOnly: boolean;
+  // API data for regions and stores
+  regionOptions: DropdownOption[];
+  totalStores: number;
 }
 
 const TaskLevelItem = memo(function TaskLevelItem({
@@ -125,6 +129,8 @@ const TaskLevelItem = memo(function TaskLevelItem({
   currentUser,
   autoApprover,
   isApprovalReadOnly,
+  regionOptions,
+  totalStores,
 }: TaskLevelItemProps) {
   const taskLevelId = taskLevel.id;
 
@@ -246,7 +252,7 @@ const TaskLevelItem = memo(function TaskLevelItem({
       {showScopeSection && (
         <SectionCard
           id="C"
-          title={scopeType === 'hq' ? 'Scope (HQ Users)' : 'Scope (Stores)'}
+          title={scopeType === 'hq' ? 'Scope (HQ Users)' : 'Scope'}
           icon={ScopeIcon}
           isExpanded={expandedSection === 'C'}
           onToggle={handleSectionToggleC}
@@ -255,13 +261,12 @@ const TaskLevelItem = memo(function TaskLevelItem({
           <ScopeSection
             data={taskLevel.scope}
             onChange={handleScopeChange}
-            regionOptions={mockMasterData.regions}
+            regionOptions={regionOptions}
             zoneOptions={zoneOptions}
             areaOptions={areaOptions}
             storeOptions={storeOptions}
-            storeLeaderOptions={mockMasterData.storeLeaders}
-            staffOptions={mockMasterData.staff}
             scopeType={scopeType}
+            totalStores={totalStores}
           />
         </SectionCard>
       )}
@@ -308,6 +313,19 @@ export default function AddTaskForm({
 }: AddTaskFormProps) {
   // Get current user from context
   const { currentUser } = useUser();
+
+  // Get scope data from API
+  const {
+    regionOptions: apiRegionOptions,
+    storeOptions: apiStoreOptions,
+    isLoadingRegions,
+    isLoadingStores,
+    totalStores,
+    getStoresByRegion,
+    getZonesByRegion,
+    getAreasByZone,
+    getStoresByArea,
+  } = useScopeData();
 
   // Use refs to keep stable references for callbacks
   const taskLevelsRef = useRef(taskLevels);
@@ -634,19 +652,23 @@ export default function AddTaskForm({
   }, []); // Empty deps - uses refs
 
   // Get zone options based on selected region
-  const getZoneOptions = (regionId: string) => {
-    return mockMasterData.zones[regionId] || [];
-  };
+  const getZoneOptions = useCallback((regionId: string) => {
+    return getZonesByRegion(regionId);
+  }, [getZonesByRegion]);
 
   // Get area options based on selected zone
-  const getAreaOptions = (zoneId: string) => {
-    return mockMasterData.areas[zoneId] || [];
-  };
+  const getAreaOptions = useCallback((zoneId: string) => {
+    return getAreasByZone(zoneId);
+  }, [getAreasByZone]);
 
-  // Get store options based on selected area
-  const getStoreOptions = (areaId: string) => {
-    return mockMasterData.stores[areaId] || [];
-  };
+  // Get store options based on selected scope level
+  // Cascade: If area is selected, filter by area. Otherwise filter by region.
+  const getStoreOptionsForScope = useCallback((areaId: string, regionId: string) => {
+    if (areaId) {
+      return getStoresByArea(areaId);
+    }
+    return getStoresByRegion(regionId);
+  }, [getStoresByArea, getStoresByRegion]);
 
   // Organize task levels into tree structure
   const getTaskLevelsTree = () => {
@@ -692,7 +714,7 @@ export default function AddTaskForm({
           taskTypeOptions={filteredTaskTypeOptions}
           zoneOptions={getZoneOptions(taskLevel.scope.regionId)}
           areaOptions={getAreaOptions(taskLevel.scope.zoneId)}
-          storeOptions={getStoreOptions(taskLevel.scope.areaId)}
+          storeOptions={getStoreOptionsForScope(taskLevel.scope.areaId, taskLevel.scope.regionId)}
           currentUser={currentUser ? {
             id: currentUser.staff_id,
             name: currentUser.staff_name,
@@ -705,6 +727,8 @@ export default function AddTaskForm({
             job_grade: autoApprover.job_grade,
           } : undefined}
           isApprovalReadOnly={isCreatorViewingApproval || taskStatus === 'approve'}
+          regionOptions={apiRegionOptions}
+          totalStores={totalStores}
         />
       );
     };

@@ -53,10 +53,10 @@ interface FloatingIcon {
 
 // Mock data from JSON files (subset for demo)
 const MOCK_STORES: Store[] = [
-  { store_id: 1, store_code: 'AMPM_D1_NCT', store_name: 'AEON MaxValu Nguyen Cu Trinh', region_id: null, address: 'Quan 1, TP.HCM', phone: null, email: null, manager_id: null, status: 'ACTIVE', created_at: '', updated_at: '' },
-  { store_id: 2, store_code: 'AMPM_D3_LVT', store_name: 'AEON MaxValu Le Van Sy', region_id: null, address: 'Quan 3, TP.HCM', phone: null, email: null, manager_id: null, status: 'ACTIVE', created_at: '', updated_at: '' },
-  { store_id: 3, store_code: 'AMPM_D10_CMT', store_name: 'AEON MaxValu CMT8', region_id: null, address: 'Quan 10, TP.HCM', phone: null, email: null, manager_id: null, status: 'ACTIVE', created_at: '', updated_at: '' },
-  { store_id: 4, store_code: 'AMPM_SALA', store_name: 'AEON MaxValu Sala', region_id: null, address: 'Quan 2, TP.HCM', phone: null, email: null, manager_id: null, status: 'ACTIVE', created_at: '', updated_at: '' },
+  { store_id: 1, store_code: 'AMPM_D1_NCT', store_name: 'AEON MaxValu Nguyen Cu Trinh', region_id: null, area_id: null, address: 'Quan 1, TP.HCM', phone: null, email: null, manager_id: null, status: 'ACTIVE', created_at: '', updated_at: '' },
+  { store_id: 2, store_code: 'AMPM_D3_LVT', store_name: 'AEON MaxValu Le Van Sy', region_id: null, area_id: null, address: 'Quan 3, TP.HCM', phone: null, email: null, manager_id: null, status: 'ACTIVE', created_at: '', updated_at: '' },
+  { store_id: 3, store_code: 'AMPM_D10_CMT', store_name: 'AEON MaxValu CMT8', region_id: null, area_id: null, address: 'Quan 10, TP.HCM', phone: null, email: null, manager_id: null, status: 'ACTIVE', created_at: '', updated_at: '' },
+  { store_id: 4, store_code: 'AMPM_SALA', store_name: 'AEON MaxValu Sala', region_id: null, area_id: null, address: 'Quan 2, TP.HCM', phone: null, email: null, manager_id: null, status: 'ACTIVE', created_at: '', updated_at: '' },
 ];
 
 const MOCK_STAFF: Staff[] = [

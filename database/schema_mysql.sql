@@ -54,8 +54,46 @@ CREATE TABLE `regions` (
     `region_name` VARCHAR(255) NOT NULL,
     `region_code` VARCHAR(50) UNIQUE,
     `description` TEXT,
+    `is_active` TINYINT(1) DEFAULT 1,
+    `sort_order` INT DEFAULT 0,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX `idx_regions_is_active` (`is_active`),
+    INDEX `idx_regions_sort_order` (`sort_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Zones Table (belongs to Region)
+CREATE TABLE `zones` (
+    `zone_id` INT AUTO_INCREMENT PRIMARY KEY,
+    `zone_name` VARCHAR(255) NOT NULL,
+    `zone_code` VARCHAR(50) UNIQUE,
+    `region_id` INT NOT NULL,
+    `description` TEXT,
+    `is_active` TINYINT(1) DEFAULT 1,
+    `sort_order` INT DEFAULT 0,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT `fk_zones_region` FOREIGN KEY (`region_id`) REFERENCES `regions`(`region_id`) ON DELETE CASCADE,
+    INDEX `idx_zones_region` (`region_id`),
+    INDEX `idx_zones_is_active` (`is_active`),
+    INDEX `idx_zones_sort_order` (`sort_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Areas Table (belongs to Zone)
+CREATE TABLE `areas` (
+    `area_id` INT AUTO_INCREMENT PRIMARY KEY,
+    `area_name` VARCHAR(255) NOT NULL,
+    `area_code` VARCHAR(50) UNIQUE,
+    `zone_id` INT NOT NULL,
+    `description` TEXT,
+    `is_active` TINYINT(1) DEFAULT 1,
+    `sort_order` INT DEFAULT 0,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT `fk_areas_zone` FOREIGN KEY (`zone_id`) REFERENCES `zones`(`zone_id`) ON DELETE CASCADE,
+    INDEX `idx_areas_zone` (`zone_id`),
+    INDEX `idx_areas_is_active` (`is_active`),
+    INDEX `idx_areas_sort_order` (`sort_order`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Departments Table
@@ -90,23 +128,28 @@ CREATE TABLE `teams` (
     CONSTRAINT `fk_teams_department` FOREIGN KEY (`department_id`) REFERENCES `departments`(`department_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Stores Table
+-- Stores Table (belongs to Area in hierarchy: Region → Zone → Area → Store)
 CREATE TABLE `stores` (
     `store_id` INT AUTO_INCREMENT PRIMARY KEY,
     `store_name` VARCHAR(255) NOT NULL,
     `store_code` VARCHAR(50) UNIQUE,
-    `region_id` INT NULL,
+    `area_id` INT NULL,
     `address` TEXT,
     `phone` VARCHAR(20),
     `email` VARCHAR(100),
     `manager_id` INT NULL,
     `status` VARCHAR(20) DEFAULT 'active',
+    `is_active` TINYINT(1) DEFAULT 1,
+    `sort_order` INT DEFAULT 0,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT `fk_stores_region` FOREIGN KEY (`region_id`) REFERENCES `regions`(`region_id`) ON DELETE SET NULL
+    CONSTRAINT `fk_stores_area` FOREIGN KEY (`area_id`) REFERENCES `areas`(`area_id`) ON DELETE SET NULL,
+    INDEX `idx_stores_area` (`area_id`),
+    INDEX `idx_stores_is_active` (`is_active`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Staff Table
+-- Geographic scope: S7 uses region_id, S6 uses zone_id, S5 uses area_id, S4-S1 uses store_id
 CREATE TABLE `staff` (
     `staff_id` INT AUTO_INCREMENT PRIMARY KEY,
     `staff_name` VARCHAR(255) NOT NULL,
@@ -116,6 +159,9 @@ CREATE TABLE `staff` (
     `google_id` VARCHAR(255) UNIQUE NULL,
     `phone` VARCHAR(20),
     `store_id` INT NULL,
+    `region_id` INT NULL,
+    `zone_id` INT NULL,
+    `area_id` INT NULL,
     `department_id` INT NULL,
     `team_id` VARCHAR(50) NULL,
     `role` VARCHAR(50) DEFAULT 'STAFF',
@@ -131,8 +177,14 @@ CREATE TABLE `staff` (
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT `fk_staff_store` FOREIGN KEY (`store_id`) REFERENCES `stores`(`store_id`) ON DELETE SET NULL,
+    CONSTRAINT `fk_staff_region` FOREIGN KEY (`region_id`) REFERENCES `regions`(`region_id`) ON DELETE SET NULL,
+    CONSTRAINT `fk_staff_zone` FOREIGN KEY (`zone_id`) REFERENCES `zones`(`zone_id`) ON DELETE SET NULL,
+    CONSTRAINT `fk_staff_area` FOREIGN KEY (`area_id`) REFERENCES `areas`(`area_id`) ON DELETE SET NULL,
     CONSTRAINT `fk_staff_department` FOREIGN KEY (`department_id`) REFERENCES `departments`(`department_id`) ON DELETE SET NULL,
-    CONSTRAINT `fk_staff_team` FOREIGN KEY (`team_id`) REFERENCES `teams`(`team_id`) ON DELETE SET NULL
+    CONSTRAINT `fk_staff_team` FOREIGN KEY (`team_id`) REFERENCES `teams`(`team_id`) ON DELETE SET NULL,
+    INDEX `idx_staff_region` (`region_id`),
+    INDEX `idx_staff_zone` (`zone_id`),
+    INDEX `idx_staff_area` (`area_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Add self-referencing FK after table creation

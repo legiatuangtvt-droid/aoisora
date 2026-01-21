@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\V1\UserInfoController;
 use App\Http\Controllers\Api\V1\StoreInfoController;
 use App\Http\Controllers\Api\V1\ZoneController;
 use App\Http\Controllers\Api\V1\AreaController;
+use App\Http\Controllers\Api\V1\ScopeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -66,6 +67,9 @@ Route::prefix('v1')->group(function () {
     Route::get('areas', [AreaController::class, 'index']);
     Route::get('areas/{area}', [AreaController::class, 'show']);
     Route::get('code-master', [TaskController::class, 'getCodeMaster']);
+
+    // Scope Hierarchy - Single API for all geographic data (Region → Zone → Area → Store)
+    Route::get('scope-hierarchy', [ScopeController::class, 'hierarchy']);
 
     // User Information (public read-only)
     Route::prefix('user-info')->group(function () {

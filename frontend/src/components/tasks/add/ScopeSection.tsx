@@ -14,12 +14,12 @@ interface ScopeSectionProps {
   zoneOptions: DropdownOption[];
   areaOptions: DropdownOption[];
   storeOptions: DropdownOption[];
-  storeLeaderOptions: DropdownOption[];
-  staffOptions: DropdownOption[];
   errors?: Record<string, string>;
   disabled?: boolean;
   // Scope type determines which hierarchy structure to show
   scopeType?: ScopeType;
+  // Total number of stores/users for calculating scope summary
+  totalStores?: number;
 }
 
 export default function ScopeSection({
@@ -29,31 +29,60 @@ export default function ScopeSection({
   zoneOptions,
   areaOptions,
   storeOptions,
-  storeLeaderOptions,
-  staffOptions,
   errors = {},
   disabled = false,
   scopeType = 'store',
+  totalStores = 5,
 }: ScopeSectionProps) {
+  // Calculate scope summary based on current selection
+  const getScopeSummary = (): string => {
+    const entityName = scopeType === 'hq' ? 'Users' : 'Stores';
+    const selectedCount = storeOptions.length || totalStores;
+
+    // If specific store/user is selected
+    if (data.storeId) {
+      const selectedStore = storeOptions.find(opt => opt.value === data.storeId);
+      const selectedArea = areaOptions.find(opt => opt.value === data.areaId);
+      return `1/${totalStores} ${entityName} of Area ${selectedArea?.label || ''}`;
+    }
+
+    // If area/team is selected
+    if (data.areaId) {
+      const selectedArea = areaOptions.find(opt => opt.value === data.areaId);
+      return `${selectedCount}/${totalStores} ${entityName} of Area ${selectedArea?.label || ''}`;
+    }
+
+    // If zone/department is selected
+    if (data.zoneId) {
+      const selectedZone = zoneOptions.find(opt => opt.value === data.zoneId);
+      return `${selectedCount}/${totalStores} ${entityName} of Zone ${selectedZone?.label || ''}`;
+    }
+
+    // If region/division is selected
+    if (data.regionId) {
+      const selectedRegion = regionOptions.find(opt => opt.value === data.regionId);
+      return `${selectedCount}/${totalStores} ${entityName} of Region ${selectedRegion?.label || ''}`;
+    }
+
+    // Default: All stores selected
+    return `All ${entityName} (${totalStores}/${totalStores})`;
+  };
+
   // Labels based on scope type
   const labels = scopeType === 'hq'
     ? {
-        header: '1. HQ Users',
+        header: 'HQ Users',
         level1: 'Division',
         level2: 'Department',
         level3: 'Team',
         level4: 'User',
-        level5: 'Team Leader',
-        level6: 'Specific User',
       }
     : {
-        header: '1. Store',
+        header: 'Store',
         level1: 'Region',
         level2: 'Zone',
         level3: 'Area',
         level4: 'Store',
-        level5: 'Store Leader',
-        level6: 'Specific Staff',
       };
   const handleChange = (field: keyof TaskScope, value: string) => {
     if (disabled) return;
@@ -76,15 +105,17 @@ export default function ScopeSection({
 
   return (
     <div className="space-y-4">
-      {/* 1. Header (Store or HQ Users) */}
-      <div className="text-sm font-semibold text-gray-900 dark:text-white">
-        {labels.header}
+      {/* Scope Summary */}
+      <div className="px-3 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-center">
+        <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+          {getScopeSummary()}
+        </span>
       </div>
 
-      {/* 1.1 Level 1 (Region or Division) */}
+      {/* Level 1 (Region or Division) */}
       <div className="flex items-center gap-4">
         <label className="w-20 text-sm text-gray-600 dark:text-gray-400">
-          1.1<br />{labels.level1}
+          {labels.level1}
         </label>
         <select
           value={data.regionId}
@@ -96,7 +127,7 @@ export default function ScopeSection({
               : 'border-gray-300 dark:border-gray-600'
           }`}
         >
-          <option value=""></option>
+          <option value="">All {labels.level1}</option>
           {regionOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
@@ -105,10 +136,10 @@ export default function ScopeSection({
         </select>
       </div>
 
-      {/* 1.2 Level 2 (Zone or Department) */}
+      {/* Level 2 (Zone or Department) */}
       <div className="flex items-center gap-4">
         <label className="w-20 text-sm text-gray-600 dark:text-gray-400">
-          1.2<br />{labels.level2}
+          {labels.level2}
         </label>
         <select
           value={data.zoneId}
@@ -120,7 +151,7 @@ export default function ScopeSection({
               : 'border-gray-300 dark:border-gray-600'
           }`}
         >
-          <option value=""></option>
+          <option value="">All {labels.level2}</option>
           {zoneOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
@@ -129,10 +160,10 @@ export default function ScopeSection({
         </select>
       </div>
 
-      {/* 1.3 Level 3 (Area or Team) */}
+      {/* Level 3 (Area or Team) */}
       <div className="flex items-center gap-4">
         <label className="w-20 text-sm text-gray-600 dark:text-gray-400">
-          1.3<br />{labels.level3}
+          {labels.level3}
         </label>
         <select
           value={data.areaId}
@@ -144,7 +175,7 @@ export default function ScopeSection({
               : 'border-gray-300 dark:border-gray-600'
           }`}
         >
-          <option value=""></option>
+          <option value="">All {labels.level3}</option>
           {areaOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
@@ -153,10 +184,10 @@ export default function ScopeSection({
         </select>
       </div>
 
-      {/* 1.4 Level 4 (Store or User) */}
+      {/* Level 4 (Store or User) */}
       <div className="flex items-center gap-4">
         <label className="w-20 text-sm text-gray-600 dark:text-gray-400">
-          1.4<br />{labels.level4}
+          {labels.level4}
         </label>
         <select
           value={data.storeId}
@@ -168,48 +199,8 @@ export default function ScopeSection({
               : 'border-gray-300 dark:border-gray-600'
           }`}
         >
-          <option value=""></option>
+          <option value="">All {labels.level4}</option>
           {storeOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* 1.5 Level 5 (Store Leader or Team Leader) */}
-      <div className="flex items-center gap-4">
-        <label className="w-20 text-sm text-gray-600 dark:text-gray-400">
-          1.5<br />{labels.level5}
-        </label>
-        <select
-          value={data.storeLeaderId}
-          onChange={(e) => handleChange('storeLeaderId', e.target.value)}
-          disabled={disabled}
-          className="flex-1 px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <option value=""></option>
-          {storeLeaderOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* 1.6 Level 6 (Specific Staff or Specific User) */}
-      <div className="flex items-center gap-4">
-        <label className="w-20 text-sm text-gray-600 dark:text-gray-400">
-          1.6<br />{labels.level6}
-        </label>
-        <select
-          value={data.specificStaffId}
-          onChange={(e) => handleChange('specificStaffId', e.target.value)}
-          disabled={disabled}
-          className="flex-1 px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <option value=""></option>
-          {staffOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>

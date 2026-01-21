@@ -54,6 +54,7 @@ export interface Store {
   store_name: string;
   store_code: string | null;
   region_id: number | null;
+  area_id: number | null;
   address: string | null;
   phone: string | null;
   email: string | null;

@@ -251,6 +251,7 @@ export async function deleteStaff(id: number): Promise<{ message: string }> {
 
 export async function getStores(params?: {
   region_id?: number;
+  area_id?: number;
   status?: string;
 }): Promise<Store[]> {
   const searchParams = new URLSearchParams();
@@ -262,11 +263,11 @@ export async function getStores(params?: {
     });
   }
   const query = searchParams.toString();
-  return fetchApi<Store[]>(`/staff/stores/${query ? `?${query}` : ''}`);
+  return fetchApi<Store[]>(`/stores${query ? `?${query}` : ''}`);
 }
 
 export async function getStoreById(id: number): Promise<Store> {
-  return fetchApi<Store>(`/staff/stores/${id}`);
+  return fetchApi<Store>(`/stores/${id}`);
 }
 
 // ============================================
@@ -282,7 +283,130 @@ export async function getDepartments(): Promise<Department[]> {
 // ============================================
 
 export async function getRegions(): Promise<Region[]> {
-  return fetchApi<Region[]>('/staff/regions');
+  return fetchApi<Region[]>('/regions');
+}
+
+// ============================================
+// Scope Hierarchy API (Single call for all geographic data)
+// ============================================
+
+export interface ScopeStore {
+  store_id: number;
+  store_name: string;
+  store_code: string | null;
+  area_id: number;
+}
+
+export interface ScopeArea {
+  area_id: number;
+  area_name: string;
+  area_code: string | null;
+  zone_id: number;
+  stores: ScopeStore[];
+}
+
+export interface ScopeZone {
+  zone_id: number;
+  zone_name: string;
+  zone_code: string | null;
+  region_id: number;
+  areas: ScopeArea[];
+}
+
+export interface ScopeRegion {
+  region_id: number;
+  region_name: string;
+  region_code: string | null;
+  zones: ScopeZone[];
+}
+
+export interface ScopeHierarchyResponse {
+  regions: ScopeRegion[];
+}
+
+/**
+ * Get complete geographic hierarchy in one API call
+ * Returns: Region → Zone → Area → Store hierarchy
+ * Replaces: getRegions() + getZones() + getAreas() + getStores()
+ */
+export async function getScopeHierarchy(): Promise<ScopeHierarchyResponse> {
+  return fetchApi<ScopeHierarchyResponse>('/scope-hierarchy');
+}
+
+// ============================================
+// Zone API (4-level hierarchy: Region → Zone → Area → Store)
+// ============================================
+
+export interface Zone {
+  zone_id: number;
+  zone_name: string;
+  zone_code: string | null;
+  region_id: number;
+  description: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  region?: Region;
+  areas?: Area[];
+}
+
+export async function getZones(params?: { region_id?: number; is_active?: string }): Promise<Zone[]> {
+  const searchParams = new URLSearchParams();
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        searchParams.append(key, String(value));
+      }
+    });
+  }
+  const query = searchParams.toString();
+  return fetchApi<Zone[]>(`/zones${query ? `?${query}` : ''}`);
+}
+
+export async function getZoneById(id: number): Promise<Zone> {
+  return fetchApi<Zone>(`/zones/${id}`);
+}
+
+export async function getZonesByRegion(regionId: number): Promise<Zone[]> {
+  return fetchApi<Zone[]>(`/regions/${regionId}/zones`);
+}
+
+// ============================================
+// Area API (4-level hierarchy: Region → Zone → Area → Store)
+// ============================================
+
+export interface Area {
+  area_id: number;
+  area_name: string;
+  area_code: string | null;
+  zone_id: number;
+  description: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  zone?: Zone;
+  stores?: Store[];
+}
+
+export async function getAreas(params?: { zone_id?: number; is_active?: string }): Promise<Area[]> {
+  const searchParams = new URLSearchParams();
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        searchParams.append(key, String(value));
+      }
+    });
+  }
+  const query = searchParams.toString();
+  return fetchApi<Area[]>(`/areas${query ? `?${query}` : ''}`);
+}
+
+export async function getAreaById(id: number): Promise<Area> {
+  return fetchApi<Area>(`/areas/${id}`);
+}
+
+export async function getAreasByZone(zoneId: number): Promise<Area[]> {
+  return fetchApi<Area[]>(`/zones/${zoneId}/areas`);
 }
 
 // ============================================

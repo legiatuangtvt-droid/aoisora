@@ -27,4 +27,9 @@ class Region extends Model
     {
         return $this->hasMany(Store::class, 'region_id', 'region_id');
     }
+
+    public function zones()
+    {
+        return $this->hasMany(Zone::class, 'region_id', 'region_id');
+    }
 }
