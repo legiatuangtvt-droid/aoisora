@@ -1070,6 +1070,49 @@ cd backend/laravel && "D:\devtool\laragon\bin\php\php-8.3.28-Win32-vs16-x64\php.
 > - Backend chạy từ `backend/api/` (entry point) chứ không phải `backend/laravel/`
 > - Reverb là optional. Nếu không chạy, app vẫn hoạt động bình thường nhưng không có real-time updates (Task List sẽ hiển thị "Offline").
 
+#### Troubleshooting: Frontend Server Issues
+
+**Lỗi 1: Port đã bị chiếm (Port 3000 is in use)**
+
+```bash
+# Tìm process đang dùng port 3000
+netstat -ano | findstr :3000 | findstr LISTENING
+
+# Kill process (thay PID bằng số từ lệnh trên)
+taskkill //F //PID <PID>
+
+# Khởi động lại frontend
+cd frontend && npm run dev
+```
+
+**Lỗi 2: Webpack build cache bị hỏng (Cannot find module './72.js')**
+
+Triệu chứng: Server trả về 500 error với message như:
+- `Error: Cannot find module './72.js'`
+- `Error: Cannot find module './578.js'`
+
+```bash
+# 1. Kill frontend process nếu đang chạy
+taskkill //F //PID <PID>
+
+# 2. Xóa thư mục .next (build cache)
+cd frontend && rm -rf .next
+
+# 3. Khởi động lại
+npm run dev
+```
+
+**Lỗi 3: Cả hai lỗi trên (Port chiếm + Cache hỏng)**
+
+```bash
+# Full reset sequence
+netstat -ano | findstr :3000 | findstr LISTENING
+# Ghi nhớ PID
+
+taskkill //F //PID <PID>
+cd frontend && rm -rf .next && npm run dev
+```
+
 Chi tiết: `docs/SESSION_START_CHECKLIST.md`
 
 ### 11. Production Deployment (PA Vietnam Hosting)
