@@ -1,59 +1,120 @@
 /**
- * Authenticated Fetch Wrapper
+ * Authenticated Fetch Wrapper with Double Token System
  *
  * Automatically handles:
- * - 401 Unauthorized responses (auto-logout)
- * - Authorization header injection
+ * - Token refresh when access token is expired
+ * - Retry on 401 with new tokens
+ * - Concurrent request queuing during refresh
  * - Session expiration detection
  */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+import { tokenManager } from '../auth/tokenManager';
+
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
 interface FetchWithAuthOptions extends RequestInit {
   skipAuthCheck?: boolean;
+  _isRetry?: boolean; // Internal flag to prevent infinite retry loops
 }
 
 let logoutCallback: (() => void) | null = null;
 
 /**
- * Register logout callback to be called on 401 errors
+ * Register logout callback to be called on session expiration
  */
 export function registerLogoutCallback(callback: () => void) {
   logoutCallback = callback;
 }
 
 /**
- * Fetch wrapper with automatic 401 handling
+ * Handle session expiration - clear tokens and redirect
+ */
+function handleSessionExpired(message?: string): void {
+  console.warn('[Auth] Session expired, logging out...');
+
+  // Clear all tokens
+  tokenManager.clearTokens();
+
+  // Also clear legacy storage
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('optichain_auth');
+  }
+
+  // Call logout callback if registered
+  if (logoutCallback) {
+    logoutCallback();
+  }
+
+  // Redirect to signin with message
+  if (typeof window !== 'undefined') {
+    const currentPath = window.location.pathname;
+    const expiredMessage =
+      message || 'Your session has expired. Please sign in again.';
+    const encodedMessage = encodeURIComponent(expiredMessage);
+    window.location.href = `/auth/signin?expired=true&message=${encodedMessage}&redirect=${currentPath}`;
+  }
+}
+
+/**
+ * Fetch wrapper with automatic token refresh and 401 retry
  */
 export async function fetchWithAuth(
   endpoint: string,
   options: FetchWithAuthOptions = {}
 ): Promise<Response> {
-  const { skipAuthCheck, ...fetchOptions } = options;
+  const { skipAuthCheck, _isRetry, ...fetchOptions } = options;
 
-  // Get token from localStorage
-  const token = typeof window !== 'undefined'
-    ? localStorage.getItem('optichain_token')
-    : null;
+  // Skip auth for certain endpoints
+  if (skipAuthCheck) {
+    const url = endpoint.startsWith('http') ? endpoint : `${API_URL}${endpoint}`;
+    return fetch(url, {
+      ...fetchOptions,
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        ...(fetchOptions.headers as Record<string, string>),
+      },
+    });
+  }
+
+  // Check if access token needs refresh BEFORE making the request
+  if (tokenManager.isAccessTokenExpired() && tokenManager.hasTokens()) {
+    try {
+      // Wait if refresh is already in progress
+      if (tokenManager.isRefreshing()) {
+        await tokenManager.waitForRefresh();
+      } else {
+        await tokenManager.refreshTokens();
+      }
+    } catch (error) {
+      console.error('[Auth] Pre-request token refresh failed:', error);
+      handleSessionExpired();
+      throw error;
+    }
+  }
+
+  // Get current access token
+  const accessToken = tokenManager.getAccessToken();
 
   // Get switched user ID for testing mode (User Switcher)
-  const switchedUserId = typeof window !== 'undefined'
-    ? localStorage.getItem('optichain_switched_user_id')
-    : null;
+  const switchedUserId =
+    typeof window !== 'undefined'
+      ? localStorage.getItem('optichain_switched_user_id')
+      : null;
 
-  // Add Authorization header if token exists
+  // Build headers
   const headers: Record<string, string> = {
-    'Accept': 'application/json',
+    Accept: 'application/json',
     'Content-Type': 'application/json',
-    ...(fetchOptions.headers as Record<string, string> || {}),
+    ...(fetchOptions.headers as Record<string, string>),
   };
 
-  if (token && !skipAuthCheck) {
-    headers['Authorization'] = `Bearer ${token}`;
+  if (accessToken) {
+    headers['Authorization'] = `Bearer ${accessToken}`;
   }
 
   // Add X-Switch-User-Id header for testing mode
-  // This allows testing different user permissions without re-authenticating
   if (switchedUserId) {
     headers['X-Switch-User-Id'] = switchedUserId;
   }
@@ -65,27 +126,34 @@ export async function fetchWithAuth(
     headers,
   });
 
-  // Handle 401 Unauthorized
-  if (response.status === 401 && !skipAuthCheck) {
-    console.warn('[Auth] 401 Unauthorized - Session expired, logging out...');
+  // Handle 401 Unauthorized - try to refresh and retry once
+  if (response.status === 401 && !_isRetry) {
+    console.warn('[Auth] 401 Unauthorized - Attempting token refresh...');
 
-    // Clear localStorage
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('optichain_auth');
-      localStorage.removeItem('optichain_token');
-    }
+    try {
+      // Wait if refresh is already in progress, otherwise start one
+      if (tokenManager.isRefreshing()) {
+        await tokenManager.waitForRefresh();
+      } else {
+        await tokenManager.refreshTokens();
+      }
 
-    // Call logout callback if registered
-    if (logoutCallback) {
-      logoutCallback();
+      // Retry the original request with new token
+      return fetchWithAuth(endpoint, {
+        ...options,
+        _isRetry: true,
+      });
+    } catch (error) {
+      console.error('[Auth] Token refresh failed on 401:', error);
+      handleSessionExpired();
+      throw error;
     }
+  }
 
-    // Redirect to signin with message
-    if (typeof window !== 'undefined') {
-      const currentPath = window.location.pathname;
-      const message = encodeURIComponent('Your session has expired. Please sign in again.');
-      window.location.href = `/auth/signin?expired=true&message=${message}&redirect=${currentPath}`;
-    }
+  // If still 401 after retry, session is truly expired
+  if (response.status === 401 && _isRetry) {
+    console.warn('[Auth] 401 after retry - Session truly expired');
+    handleSessionExpired();
   }
 
   return response;
@@ -101,7 +169,11 @@ export async function get(endpoint: string, options?: FetchWithAuthOptions) {
 /**
  * Convenience method for POST requests
  */
-export async function post(endpoint: string, body?: any, options?: FetchWithAuthOptions) {
+export async function post(
+  endpoint: string,
+  body?: unknown,
+  options?: FetchWithAuthOptions
+) {
   return fetchWithAuth(endpoint, {
     ...options,
     method: 'POST',
@@ -112,7 +184,11 @@ export async function post(endpoint: string, body?: any, options?: FetchWithAuth
 /**
  * Convenience method for PUT requests
  */
-export async function put(endpoint: string, body?: any, options?: FetchWithAuthOptions) {
+export async function put(
+  endpoint: string,
+  body?: unknown,
+  options?: FetchWithAuthOptions
+) {
   return fetchWithAuth(endpoint, {
     ...options,
     method: 'PUT',

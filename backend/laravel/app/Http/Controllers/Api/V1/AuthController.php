@@ -4,7 +4,11 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Staff;
+use App\Models\RefreshToken;
 use App\Models\PasswordResetToken;
+use App\Services\TokenService;
+use App\Exceptions\TokenReuseException;
+use App\Exceptions\InvalidRefreshTokenException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -14,6 +18,18 @@ use Carbon\Carbon;
 
 class AuthController extends Controller
 {
+    /**
+     * Token service instance.
+     */
+    protected TokenService $tokenService;
+
+    /**
+     * Create a new controller instance.
+     */
+    public function __construct(TokenService $tokenService)
+    {
+        $this->tokenService = $tokenService;
+    }
     /**
      * Login with email/phone/sap_code and password
      * Supports: email, phone, sap_code, username
@@ -59,9 +75,11 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // Token expiration based on remember_me
-        $expiration = $request->remember_me ? now()->addDays(30) : now()->addHours(24);
-        $token = $staff->createToken('auth-token', ['*'], $expiration)->plainTextToken;
+        // Generate token pair (access + refresh) using TokenService
+        $tokens = $this->tokenService->generateTokenPair(
+            $staff,
+            $request->boolean('remember_me')
+        );
 
         // Load relationships
         $staff->load(['store', 'department']);
@@ -72,9 +90,10 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'access_token' => $token,
-            'token_type' => 'bearer',
-            'expires_at' => $expiration->toISOString(),
+            'access_token' => $tokens['access_token'],
+            'refresh_token' => $tokens['refresh_token'],
+            'expires_in' => $tokens['expires_in'],
+            'token_type' => $tokens['token_type'],
             'user' => [
                 'id' => $staff->staff_id,
                 'staff_code' => $staff->staff_code,
@@ -131,11 +150,12 @@ class AuthController extends Controller
     }
 
     /**
-     * Logout - revoke current token
+     * Logout - revoke all tokens for current user
      */
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        // Revoke all tokens (access + refresh) using TokenService
+        $this->tokenService->revokeAllTokens($request->user());
 
         return response()->json([
             'success' => true,
@@ -144,34 +164,41 @@ class AuthController extends Controller
     }
 
     /**
-     * Refresh/Extend session
-     * Extends the current token expiration time
+     * Refresh tokens using refresh token
+     * Implements token rotation - old refresh token is invalidated
      */
     public function refresh(Request $request)
     {
-        $user = $request->user();
-        $token = $user->currentAccessToken();
+        $request->validate([
+            'refresh_token' => 'required|string',
+        ]);
 
-        // Check if token is still valid
-        if ($token->expires_at && Carbon::parse($token->expires_at)->isPast()) {
+        try {
+            $tokens = $this->tokenService->refreshTokens($request->input('refresh_token'));
+
+            return response()->json([
+                'success' => true,
+                'access_token' => $tokens['access_token'],
+                'refresh_token' => $tokens['refresh_token'],
+                'expires_in' => $tokens['expires_in'],
+                'token_type' => $tokens['token_type'],
+            ]);
+        } catch (TokenReuseException $e) {
+            // Security breach detected - all sessions invalidated
             return response()->json([
                 'success' => false,
-                'error' => 'TOKEN_EXPIRED',
-                'message' => 'Your session has expired. Please sign in again.',
+                'error' => 'Session invalidated for security reasons',
+                'error_code' => 'TOKEN_REUSE_DETECTED',
+                'message' => $e->getMessage(),
+            ], 401);
+        } catch (InvalidRefreshTokenException $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Invalid or expired refresh token',
+                'error_code' => 'INVALID_REFRESH_TOKEN',
+                'message' => $e->getMessage(),
             ], 401);
         }
-
-        // Extend token expiration (120 minutes from now)
-        $expirationMinutes = config('sanctum.expiration', 120);
-        $token->expires_at = Carbon::now()->addMinutes($expirationMinutes);
-        $token->last_used_at = Carbon::now();
-        $token->save();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Session extended successfully',
-            'expires_at' => Carbon::parse($token->expires_at)->toISOString(),
-        ]);
     }
 
     /**
@@ -330,8 +357,8 @@ class AuthController extends Controller
         // Delete the reset token
         $resetToken->delete();
 
-        // Revoke all existing tokens
-        $staff->tokens()->delete();
+        // Revoke all existing tokens (access + refresh)
+        $this->tokenService->revokeAllTokens($staff);
 
         return response()->json([
             'success' => true,

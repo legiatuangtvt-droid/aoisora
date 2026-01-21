@@ -1,10 +1,18 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
 import { useRouter } from 'next/navigation';
 import { registerLogoutCallback } from '@/lib/api/fetchWithAuth';
+import { tokenManager } from '@/lib/auth/tokenManager';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
 export interface UserPermissions {
   job_grade: string | null;
@@ -41,16 +49,21 @@ interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (identifier: string, password: string, rememberMe?: boolean) => Promise<{ success: boolean; error?: string }>;
+  login: (
+    identifier: string,
+    password: string,
+    rememberMe?: boolean
+  ) => Promise<{ success: boolean; error?: string }>;
   loginWithGoogle: () => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
-  checkPasswordStrength: (password: string) => Promise<{ strength: string; score: number; feedback: string[] }>;
+  checkPasswordStrength: (
+    password: string
+  ) => Promise<{ strength: string; score: number; feedback: string[] }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const AUTH_STORAGE_KEY = 'optichain_auth';
-const TOKEN_STORAGE_KEY = 'optichain_token';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -60,76 +73,89 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Check for existing session on mount
   useEffect(() => {
-    const checkAuth = async () => {
-      if (typeof window !== 'undefined') {
-        const savedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
-        const savedAuth = localStorage.getItem(AUTH_STORAGE_KEY);
-
-        if (savedToken && savedAuth) {
-          try {
-            const authData = JSON.parse(savedAuth);
-
-            // Verify token with backend
-            const response = await fetch(`${API_URL}/auth/me`, {
-              headers: {
-                'Authorization': `Bearer ${savedToken}`,
-                'Accept': 'application/json',
-              }
-            });
-
-            if (!response.ok) {
-              throw new Error('Token expired or invalid');
-            }
-
-            const data = await response.json();
-
-            if (data.success && data.user) {
-              // Update user data from backend
-              const authUser: AuthUser = {
-                id: data.user.id,
-                staffCode: data.user.staff_code,
-                email: data.user.email,
-                phone: data.user.phone,
-                fullName: data.user.full_name,
-                role: data.user.role,
-                position: data.user.position,
-                jobGrade: data.user.job_grade,
-                storeId: data.user.store_id,
-                storeName: data.user.store_name,
-                departmentId: data.user.department_id,
-                departmentName: data.user.department_name,
-                teamId: data.user.team_id,
-                teamName: data.user.team_name,
-                avatarUrl: data.user.avatar_url,
-                permissions: data.user.permissions,
-              };
-
-              setUser(authUser);
-              setToken(savedToken);
-
-              // Update localStorage with fresh data
-              localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ user: authUser }));
-            } else {
-              throw new Error('Invalid user data');
-            }
-          } catch (error) {
-            console.warn('[Auth] Token verification failed:', error);
-            // Clear invalid session
-            localStorage.removeItem(AUTH_STORAGE_KEY);
-            localStorage.removeItem(TOKEN_STORAGE_KEY);
-            setUser(null);
-            setToken(null);
-
-            // Redirect to signin with session expired message
-            const message = encodeURIComponent('Your session has expired. Please sign in again.');
-            router.push(`/auth/signin?expired=true&message=${message}`);
-          }
-        }
+    const restoreSession = async () => {
+      if (typeof window === 'undefined') {
+        setIsLoading(false);
+        return;
       }
-      setIsLoading(false);
+
+      // Check if we have tokens
+      if (!tokenManager.hasTokens()) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        // Try to refresh tokens if access token is expired
+        if (tokenManager.isAccessTokenExpired()) {
+          await tokenManager.refreshTokens();
+        }
+
+        const accessToken = tokenManager.getAccessToken();
+        if (!accessToken) {
+          throw new Error('No access token after refresh');
+        }
+
+        // Verify token with backend
+        const response = await fetch(`${API_URL}/auth/me`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            Accept: 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Token verification failed');
+        }
+
+        const data = await response.json();
+
+        if (data.success && data.user) {
+          // Update user data from backend
+          const authUser: AuthUser = {
+            id: data.user.id,
+            staffCode: data.user.staff_code,
+            email: data.user.email,
+            phone: data.user.phone,
+            fullName: data.user.full_name,
+            role: data.user.role,
+            position: data.user.position,
+            jobGrade: data.user.job_grade,
+            storeId: data.user.store_id,
+            storeName: data.user.store_name,
+            departmentId: data.user.department_id,
+            departmentName: data.user.department_name,
+            teamId: data.user.team_id,
+            teamName: data.user.team_name,
+            avatarUrl: data.user.avatar_url,
+            permissions: data.user.permissions,
+          };
+
+          setUser(authUser);
+          setToken(accessToken);
+
+          // Update localStorage with fresh user data
+          localStorage.setItem(
+            AUTH_STORAGE_KEY,
+            JSON.stringify({ user: authUser })
+          );
+        } else {
+          throw new Error('Invalid user data');
+        }
+      } catch (error) {
+        console.warn('[Auth] Session restore failed:', error);
+        // Clear invalid session
+        tokenManager.clearTokens();
+        localStorage.removeItem(AUTH_STORAGE_KEY);
+        setUser(null);
+        setToken(null);
+      } finally {
+        setIsLoading(false);
+      }
     };
-    checkAuth();
-  }, [router]);
+
+    restoreSession();
+  }, []);
 
   const login = async (
     identifier: string,
@@ -143,7 +169,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
+          Accept: 'application/json',
         },
         body: JSON.stringify({
           identifier,
@@ -157,9 +183,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!response.ok || !data.success) {
         return {
           success: false,
-          error: data.error || 'Login failed'
+          error: data.error || 'Login failed',
         };
       }
+
+      // Store tokens using tokenManager
+      tokenManager.setTokens({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+        expires_in: data.expires_in,
+      });
 
       const authUser: AuthUser = {
         id: data.user.id,
@@ -181,45 +214,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(authUser);
       setToken(data.access_token);
 
-      // Save to localStorage
+      // Save user data to localStorage
       if (typeof window !== 'undefined') {
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ user: authUser }));
-        localStorage.setItem(TOKEN_STORAGE_KEY, data.access_token);
+        localStorage.setItem(
+          AUTH_STORAGE_KEY,
+          JSON.stringify({ user: authUser })
+        );
       }
 
       return { success: true };
     } catch (error) {
       console.error('Login error:', error);
-      return { success: false, error: 'Network error. Please check your connection.' };
+      return {
+        success: false,
+        error: 'Network error. Please check your connection.',
+      };
     } finally {
       setIsLoading(false);
     }
   };
 
-  const loginWithGoogle = async (): Promise<{ success: boolean; error?: string }> => {
+  const loginWithGoogle = async (): Promise<{
+    success: boolean;
+    error?: string;
+  }> => {
     // TODO: Implement Google OAuth
     return { success: false, error: 'Google sign in is not available yet.' };
   };
 
   const logout = async () => {
     try {
-      if (token) {
+      const accessToken = tokenManager.getAccessToken();
+      if (accessToken) {
         await fetch(`${API_URL}/auth/logout`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+            Accept: 'application/json',
           },
         });
       }
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
+      // Clear all tokens and state
+      tokenManager.clearTokens();
       setUser(null);
       setToken(null);
       if (typeof window !== 'undefined') {
         localStorage.removeItem(AUTH_STORAGE_KEY);
-        localStorage.removeItem(TOKEN_STORAGE_KEY);
       }
       router.push('/auth/signin');
     }
@@ -233,13 +276,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const checkPasswordStrength = async (password: string): Promise<{ strength: string; score: number; feedback: string[] }> => {
+  const checkPasswordStrength = async (
+    password: string
+  ): Promise<{ strength: string; score: number; feedback: string[] }> => {
     try {
       const response = await fetch(`${API_URL}/auth/check-password-strength`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
+          Accept: 'application/json',
         },
         body: JSON.stringify({ password }),
       });
@@ -280,7 +325,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 }
 
 // Client-side password strength calculation (fallback)
-function calculatePasswordStrengthClient(password: string): { strength: string; score: number; feedback: string[] } {
+function calculatePasswordStrengthClient(password: string): {
+  strength: string;
+  score: number;
+  feedback: string[];
+} {
   let score = 0;
   const feedback: string[] = [];
 

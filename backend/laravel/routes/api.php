@@ -22,6 +22,8 @@ use App\Http\Controllers\Api\V1\ManualMediaController;
 use App\Http\Controllers\Api\V1\TeamController;
 use App\Http\Controllers\Api\V1\UserInfoController;
 use App\Http\Controllers\Api\V1\StoreInfoController;
+use App\Http\Controllers\Api\V1\ZoneController;
+use App\Http\Controllers\Api\V1\AreaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -42,6 +44,7 @@ Route::prefix('v1')->group(function () {
     // Public auth routes
     Route::prefix('auth')->group(function () {
         Route::post('login', [AuthController::class, 'login']);
+        Route::post('refresh', [AuthController::class, 'refresh']); // Uses refresh_token, not access_token
         Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
         Route::post('verify-code', [AuthController::class, 'verifyResetCode']);
         Route::post('reset-password', [AuthController::class, 'resetPassword']);
@@ -56,6 +59,12 @@ Route::prefix('v1')->group(function () {
     Route::get('stores/{store}', [StoreController::class, 'show']);
     Route::get('regions', [RegionController::class, 'index']);
     Route::get('regions/{region}', [RegionController::class, 'show']);
+    Route::get('regions/{region}/zones', [ZoneController::class, 'byRegion']);
+    Route::get('zones', [ZoneController::class, 'index']);
+    Route::get('zones/{zone}', [ZoneController::class, 'show']);
+    Route::get('zones/{zone}/areas', [AreaController::class, 'byZone']);
+    Route::get('areas', [AreaController::class, 'index']);
+    Route::get('areas/{area}', [AreaController::class, 'show']);
     Route::get('code-master', [TaskController::class, 'getCodeMaster']);
 
     // User Information (public read-only)
@@ -102,10 +111,9 @@ Route::prefix('v1')->group(function () {
 
     // Protected routes
     Route::middleware('auth:sanctum')->group(function () {
-        // Auth
+        // Auth (protected routes)
         Route::get('auth/me', [AuthController::class, 'me']);
         Route::post('auth/logout', [AuthController::class, 'logout']);
-        Route::post('auth/refresh', [AuthController::class, 'refresh']);
         Route::post('auth/change-password', [AuthController::class, 'changePassword']);
 
         // Staff
@@ -125,6 +133,16 @@ Route::prefix('v1')->group(function () {
         Route::post('regions', [RegionController::class, 'store']);
         Route::put('regions/{region}', [RegionController::class, 'update']);
         Route::delete('regions/{region}', [RegionController::class, 'destroy']);
+
+        // Zones (only write operations - read operations are public)
+        Route::post('zones', [ZoneController::class, 'store']);
+        Route::put('zones/{zone}', [ZoneController::class, 'update']);
+        Route::delete('zones/{zone}', [ZoneController::class, 'destroy']);
+
+        // Areas (only write operations - read operations are public)
+        Route::post('areas', [AreaController::class, 'store']);
+        Route::put('areas/{area}', [AreaController::class, 'update']);
+        Route::delete('areas/{area}', [AreaController::class, 'destroy']);
 
         // Tasks (only write operations - read operations are public)
         Route::post('tasks', [TaskController::class, 'store']);
