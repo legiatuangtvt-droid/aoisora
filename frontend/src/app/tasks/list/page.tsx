@@ -746,8 +746,8 @@ export default function TaskListPage() {
                         <td className="px-4 py-3 whitespace-nowrap text-sm">
                           <div className="relative flex items-center justify-center">
                             <StatusPill status={task.hqCheck} />
-                            {/* 3-dots Action Menu - positioned absolute to not take space */}
-                            <div className="absolute right-0 top-1/2 -translate-y-1/2" data-action-menu>
+                            {/* 3-dots Action Menu - positioned with margin from StatusPill */}
+                            <div className="absolute -right-2 top-1/2 -translate-y-1/2" data-action-menu>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -764,7 +764,7 @@ export default function TaskListPage() {
                               </button>
                               {/* Dropdown Menu */}
                               {openActionMenu === task.id && (
-                                <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                                <div className="absolute right-0 top-full mt-1 w-52 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 py-1 z-50">
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
