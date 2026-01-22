@@ -1359,6 +1359,45 @@ LOCK TABLES `task_store_assignments` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `task_execution_logs`
+-- Tracks all actions on store assignments (per CLAUDE.md Section 12.5)
+--
+
+DROP TABLE IF EXISTS `task_execution_logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `task_execution_logs` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `task_store_assignment_id` bigint unsigned NOT NULL COMMENT 'FK to task_store_assignments',
+  `action` enum('dispatched','assigned_to_staff','reassigned','unassigned','started','completed','marked_unable','hq_checked','hq_rejected') COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Type of action performed',
+  `performed_by` int NOT NULL COMMENT 'Staff ID who performed this action',
+  `performed_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'When action was performed',
+  `old_status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Previous status before action',
+  `new_status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'New status after action',
+  `target_staff_id` int DEFAULT NULL COMMENT 'For assign/reassign: the staff being assigned',
+  `notes` text COLLATE utf8mb4_unicode_ci COMMENT 'Additional notes, reasons, etc.',
+  PRIMARY KEY (`id`),
+  KEY `idx_log_assignment` (`task_store_assignment_id`),
+  KEY `idx_log_performed_at` (`performed_at`),
+  KEY `idx_log_action` (`action`),
+  KEY `idx_log_performed_by` (`performed_by`),
+  KEY `fk_log_target_staff` (`target_staff_id`),
+  CONSTRAINT `fk_log_assignment` FOREIGN KEY (`task_store_assignment_id`) REFERENCES `task_store_assignments` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_log_performed_by` FOREIGN KEY (`performed_by`) REFERENCES `staff` (`staff_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_log_target_staff` FOREIGN KEY (`target_staff_id`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `task_execution_logs`
+--
+
+LOCK TABLES `task_execution_logs` WRITE;
+/*!40000 ALTER TABLE `task_execution_logs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `task_execution_logs` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `task_approval_history`
 --
 

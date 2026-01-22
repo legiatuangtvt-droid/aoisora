@@ -112,6 +112,15 @@ class TaskStoreAssignment extends Model
         return $this->belongsTo(Staff::class, 'checked_by', 'staff_id');
     }
 
+    /**
+     * Get execution logs for this assignment
+     */
+    public function executionLogs()
+    {
+        return $this->hasMany(TaskExecutionLog::class, 'task_store_assignment_id', 'id')
+            ->orderBy('performed_at', 'desc');
+    }
+
     // ============================================
     // Helper Methods
     // ============================================
