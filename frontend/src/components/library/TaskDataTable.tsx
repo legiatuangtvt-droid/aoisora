@@ -11,6 +11,7 @@ interface TaskDataTableProps {
   onDuplicate: (task: TaskTemplate) => void;
   onDelete: (task: TaskTemplate) => void;
   onViewUsage: (task: TaskTemplate) => void;
+  onOverrideCooldown?: (task: TaskTemplate) => void;
 }
 
 type SortField = 'type' | 'taskName' | 'lastUpdate' | 'usage';
@@ -22,6 +23,7 @@ const TaskDataTable: React.FC<TaskDataTableProps> = ({
   onDuplicate,
   onDelete,
   onViewUsage,
+  onOverrideCooldown,
 }) => {
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -147,6 +149,7 @@ const TaskDataTable: React.FC<TaskDataTableProps> = ({
                   onDuplicate={onDuplicate}
                   onDelete={onDelete}
                   onViewUsage={onViewUsage}
+                  onOverrideCooldown={onOverrideCooldown}
                 />
               </td>
             </tr>

@@ -11,6 +11,7 @@ interface TaskGroupSectionProps {
   onDuplicate: (task: TaskTemplate) => void;
   onDelete: (task: TaskTemplate) => void;
   onViewUsage: (task: TaskTemplate) => void;
+  onOverrideCooldown?: (task: TaskTemplate) => void;
 }
 
 const TaskGroupSection: React.FC<TaskGroupSectionProps> = ({
@@ -20,6 +21,7 @@ const TaskGroupSection: React.FC<TaskGroupSectionProps> = ({
   onDuplicate,
   onDelete,
   onViewUsage,
+  onOverrideCooldown,
 }) => {
   const departmentIcons: Record<DepartmentType, React.ReactNode> = {
     Admin: (
@@ -105,6 +107,7 @@ const TaskGroupSection: React.FC<TaskGroupSectionProps> = ({
             onDuplicate={onDuplicate}
             onDelete={onDelete}
             onViewUsage={onViewUsage}
+            onOverrideCooldown={onOverrideCooldown}
           />
         </div>
       )}

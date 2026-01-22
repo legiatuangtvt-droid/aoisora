@@ -9,6 +9,7 @@ interface TaskRowActionsProps {
   onDuplicate: (task: TaskTemplate) => void;
   onDelete: (task: TaskTemplate) => void;
   onViewUsage: (task: TaskTemplate) => void;
+  onOverrideCooldown?: (task: TaskTemplate) => void;
 }
 
 const TaskRowActions: React.FC<TaskRowActionsProps> = ({
@@ -17,6 +18,7 @@ const TaskRowActions: React.FC<TaskRowActionsProps> = ({
   onDuplicate,
   onDelete,
   onViewUsage,
+  onOverrideCooldown,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -32,6 +34,7 @@ const TaskRowActions: React.FC<TaskRowActionsProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Build actions array with conditional override cooldown
   const actions = [
     {
       label: 'Edit',
@@ -84,6 +87,29 @@ const TaskRowActions: React.FC<TaskRowActionsProps> = ({
         setIsOpen(false);
       },
     },
+    // Override Cooldown - only show if task is in cooldown and handler is provided
+    ...(task.isInCooldown && onOverrideCooldown
+      ? [
+          {
+            label: 'Override Cooldown',
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            ),
+            onClick: () => {
+              onOverrideCooldown(task);
+              setIsOpen(false);
+            },
+            warning: true,
+          },
+        ]
+      : []),
     {
       label: 'Delete',
       icon: (
@@ -134,6 +160,8 @@ const TaskRowActions: React.FC<TaskRowActionsProps> = ({
               className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
                 action.danger
                   ? 'text-red-600 hover:bg-red-50'
+                  : action.warning
+                  ? 'text-cyan-600 hover:bg-cyan-50'
                   : 'text-gray-700 hover:bg-gray-50'
               }`}
             >
