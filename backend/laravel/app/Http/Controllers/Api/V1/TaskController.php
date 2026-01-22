@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Task;
 use App\Models\Staff;
 use App\Models\CodeMaster;
+use App\Models\TaskApprovalHistory;
 use App\Events\TaskUpdated;
+use App\Http\Resources\TaskApprovalHistoryResource;
 use App\Traits\HasJobGradePermissions;
 use Illuminate\Http\Request;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -1084,5 +1086,127 @@ class TaskController extends Controller
             ->paginate($request->get('per_page', 20));
 
         return response()->json($tasks);
+    }
+
+    /**
+     * Get task approval history (workflow steps timeline)
+     *
+     * GET /api/v1/tasks/{id}/history
+     *
+     * Returns the complete approval workflow history for a task,
+     * organized by rounds (for rejection/resubmission cycles).
+     */
+    public function getApprovalHistory(Request $request, $id)
+    {
+        $task = Task::with(['approvalHistory', 'createdBy', 'approver'])
+            ->findOrFail($id);
+
+        // If no history exists yet, create initial history entries based on current task state
+        if ($task->approvalHistory->isEmpty()) {
+            $this->createInitialHistory($task);
+            $task->load('approvalHistory');
+        }
+
+        return new TaskApprovalHistoryResource($task);
+    }
+
+    /**
+     * Create initial history entries for a task based on its current state
+     *
+     * This is called when history is requested but no entries exist yet.
+     * It creates history entries based on the task's current status and timestamps.
+     */
+    private function createInitialHistory(Task $task): void
+    {
+        $roundNumber = max(1, $task->rejection_count + 1);
+        $creator = $task->createdBy;
+        $approver = $task->approver;
+
+        // Step 1: SUBMIT
+        $submitStatus = 'pending';
+        if ($task->submitted_at) {
+            $submitStatus = 'submitted';
+        }
+
+        TaskApprovalHistory::create([
+            'task_id' => $task->task_id,
+            'round_number' => $roundNumber,
+            'step_number' => 1,
+            'step_name' => 'SUBMIT',
+            'step_status' => $submitStatus,
+            'assigned_to_type' => 'user',
+            'assigned_to_id' => $creator?->staff_id,
+            'assigned_to_name' => $creator ? ($creator->first_name . ' ' . $creator->last_name) : 'Unknown',
+            'start_date' => $task->created_at?->toDateString(),
+            'end_date' => $task->submitted_at?->toDateString() ?? $task->created_at?->toDateString(),
+            'actual_start_at' => $task->created_at,
+            'actual_end_at' => $task->submitted_at,
+        ]);
+
+        // Step 2: APPROVE
+        $approveStatus = 'pending';
+        if ($task->status_id === self::APPROVE_STATUS_ID) {
+            $approveStatus = 'in_process';
+        } elseif ($task->status_id === self::APPROVED_STATUS_ID) {
+            $approveStatus = 'done';
+        } elseif ($task->rejection_count > 0 && $task->status_id === self::DRAFT_STATUS_ID) {
+            $approveStatus = 'rejected';
+        }
+
+        TaskApprovalHistory::create([
+            'task_id' => $task->task_id,
+            'round_number' => $roundNumber,
+            'step_number' => 2,
+            'step_name' => 'APPROVE',
+            'step_status' => $approveStatus,
+            'assigned_to_type' => 'user',
+            'assigned_to_id' => $approver?->staff_id,
+            'assigned_to_name' => $approver ? ($approver->first_name . ' ' . $approver->last_name) : 'Pending Assignment',
+            'start_date' => $task->submitted_at?->toDateString(),
+            'end_date' => $task->approved_at?->toDateString() ?? $task->last_rejected_at?->toDateString(),
+            'actual_start_at' => $task->submitted_at,
+            'actual_end_at' => $task->approved_at ?? $task->last_rejected_at,
+            'comment' => $task->last_rejection_reason,
+        ]);
+
+        // Step 3: DO_TASK (only if approved)
+        if ($task->status_id === self::APPROVED_STATUS_ID) {
+            // TODO: Calculate actual store progress when store assignment is implemented
+            $doTaskStatus = $task->completed_time ? 'done' : 'in_process';
+
+            TaskApprovalHistory::create([
+                'task_id' => $task->task_id,
+                'round_number' => $roundNumber,
+                'step_number' => 3,
+                'step_name' => 'DO_TASK',
+                'step_status' => $doTaskStatus,
+                'assigned_to_type' => 'stores',
+                'assigned_to_name' => 'Assigned Stores',
+                'assigned_to_count' => 1, // TODO: Get actual count from task_store_assignments
+                'start_date' => $task->start_date?->toDateString(),
+                'end_date' => $task->end_date?->toDateString(),
+                'actual_start_at' => $task->approved_at,
+                'progress_done' => $task->completed_time ? 1 : 0,
+                'progress_total' => 1,
+            ]);
+
+            // Step 4: CHECK (only if task execution started)
+            $checkStatus = 'pending';
+            if ($task->completed_time) {
+                $checkStatus = 'done';
+            }
+
+            TaskApprovalHistory::create([
+                'task_id' => $task->task_id,
+                'round_number' => $roundNumber,
+                'step_number' => 4,
+                'step_name' => 'CHECK',
+                'step_status' => $checkStatus,
+                'assigned_to_type' => 'user',
+                'assigned_to_name' => 'PERI',
+                'start_date' => $task->end_date?->toDateString(),
+                'end_date' => $task->end_date?->toDateString(),
+            ]);
+        }
     }
 }

@@ -1235,6 +1235,40 @@ INSERT INTO `tasks` VALUES (1,NULL,1,'task_list','store','Lập kế hoạch ki�
 UNLOCK TABLES;
 
 --
+-- Table structure for table `task_approval_history`
+--
+
+DROP TABLE IF EXISTS `task_approval_history`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `task_approval_history` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `task_id` int NOT NULL,
+  `round_number` tinyint unsigned DEFAULT '1',
+  `step_number` tinyint unsigned NOT NULL,
+  `step_name` enum('SUBMIT','APPROVE','DO_TASK','CHECK') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `step_status` enum('submitted','done','in_process','rejected','pending') COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+  `assigned_to_type` enum('user','stores','team') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `assigned_to_id` bigint unsigned DEFAULT NULL,
+  `assigned_to_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `assigned_to_count` int unsigned DEFAULT NULL,
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
+  `actual_start_at` timestamp NULL DEFAULT NULL,
+  `actual_end_at` timestamp NULL DEFAULT NULL,
+  `progress_done` int unsigned DEFAULT '0',
+  `progress_total` int unsigned DEFAULT '0',
+  `comment` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_task_round` (`task_id`,`round_number`),
+  KEY `idx_task_step` (`task_id`,`step_number`),
+  CONSTRAINT `fk_task_approval_history_task` FOREIGN KEY (`task_id`) REFERENCES `tasks` (`task_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `teams`
 --
 

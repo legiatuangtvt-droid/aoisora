@@ -167,6 +167,16 @@ class Task extends Model
             ->withPivot('check_status', 'completed_at', 'completed_by', 'notes');
     }
 
+    /**
+     * Get the approval history for this task
+     */
+    public function approvalHistory()
+    {
+        return $this->hasMany(TaskApprovalHistory::class, 'task_id', 'task_id')
+            ->orderBy('round_number')
+            ->orderBy('step_number');
+    }
+
     // ============================================
     // Task Hierarchy Relationships (max 5 levels)
     // ============================================

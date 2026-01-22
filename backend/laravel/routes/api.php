@@ -157,6 +157,7 @@ Route::prefix('v1')->group(function () {
         Route::delete('tasks/{task}', [TaskController::class, 'destroy']);
         Route::put('tasks/{task}/status', [TaskController::class, 'updateStatus']);
         Route::get('tasks/{task}/checklists', [TaskController::class, 'getChecklists']);
+        Route::get('tasks/{task}/history', [TaskController::class, 'getApprovalHistory']);
 
         // Task Approval Flow
         Route::post('tasks/{task}/submit', [TaskController::class, 'submit']);
