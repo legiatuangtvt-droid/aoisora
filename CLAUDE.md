@@ -823,6 +823,46 @@ cd "D:\Project\Aura Web"
 2. Chọn database `auraorie68aa_aoisora`
 3. Import file `deploy/full_reset.sql`
 
+**Export Database từ Local (Tạo file SQL chuẩn để deploy):**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ⚠️ QUY TRÌNH EXPORT DATABASE - BẮT BUỘC TRƯỚC KHI DEPLOY       │
+│                                                                 │
+│  Khi cần deploy database lên server, PHẢI export từ local:     │
+│                                                                 │
+│  1. ĐẢM BẢO LOCAL DATABASE ĐÃ CHUẨN                             │
+│     → Test đầy đủ trên local trước                              │
+│     → Kiểm tra data, schema, views đã đúng                      │
+│                                                                 │
+│  2. EXPORT BẰNG MYSQLDUMP                                       │
+│     → Chạy lệnh mysqldump để export toàn bộ database            │
+│     → Output ra file deploy/full_reset.sql                      │
+│                                                                 │
+│  3. VERIFY FILE SQL                                             │
+│     → Kiểm tra file đã export đúng chưa                         │
+│     → So sánh số lượng tables, views, data                      │
+│                                                                 │
+│  4. COMMIT & PUSH                                               │
+│     → Commit file deploy/full_reset.sql                         │
+│     → Push lên GitHub trước khi deploy                          │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+```bash
+# Export toàn bộ database từ local ra file SQL
+"D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysqldump.exe" -uroot --databases auraorie68aa_aoisora --add-drop-database --add-drop-table --routines --triggers --events > "d:\Project\auraProject\deploy\full_reset.sql"
+
+# Verify số lượng records (optional)
+"D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysql.exe" -uroot auraorie68aa_aoisora -e "SELECT COUNT(*) as stores FROM stores; SELECT COUNT(*) as staff FROM staff; SELECT COUNT(*) as tasks FROM tasks;"
+```
+
+**Lưu ý quan trọng:**
+- **KHÔNG** tự tạo INSERT statements thủ công
+- **PHẢI** export từ local database để đảm bảo data consistency
+- File `deploy/full_reset.sql` là **nguồn duy nhất** để import lên server
+- Sau khi export, test import lại trên local để verify
+
 ### 7. Module Scope
 
 Hệ thống có **6 module chính** (hiển thị sau khi login success). **Chỉ sửa code trong scope module được yêu cầu**.
