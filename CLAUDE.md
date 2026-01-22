@@ -4112,17 +4112,17 @@ TRIGGERS tự động tạo history entries:
 **To Do Task (/tasks/todo):**
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 1.3.31 | Danh sách tasks HQ→HQ | ⏳ | Tasks giao cho HQ users |
-| 1.3.32 | Add New → Add Task (source=todo_task) | ⏳ | Scope = HQ hierarchy |
-| 1.3.33 | My tasks (assigned to me) | ⏳ | Tasks tôi cần làm |
+| 1.3.31 | Danh sách tasks HQ→HQ | ⏳ | Needs source filter in API (backend stores source but index lacks filter) |
+| 1.3.32 | Add New → Add Task (source=todo_task) | ✅ | Routes to /tasks/new?source=todo_task |
+| 1.3.33 | My tasks (assigned to me) | 🔄 | API filter[assigned_staff_id] exists, needs frontend integration |
 
 **Approval Screen (/tasks/approval):**
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 1.3.34 | Pending approvals list | ⏳ | Tasks cần user duyệt |
-| 1.3.35 | Approve action | ⏳ | Button + confirm |
-| 1.3.36 | Reject action | ⏳ | Button + reason modal |
-| 1.3.37 | View task detail (read-only) | ⏳ | Xem trước khi duyệt |
+| 1.3.34 | Pending approvals list | ✅ | Real API (getPendingApprovals), table with task info |
+| 1.3.35 | Approve action | ✅ | Approve button with API call (approveTask) |
+| 1.3.36 | Reject action | ✅ | Reject modal with reason input (rejectTask API) |
+| 1.3.37 | View task detail (read-only) | ✅ | View button links to /tasks/detail |
 
 **Store Task View (/stores/[id]/tasks):**
 | # | Task | Status | Notes |
@@ -4203,10 +4203,10 @@ TRIGGERS tự động tạo history entries:
 │                                                                 │
 │  Database:     [██████████] 100% (6/6 tasks)                   │
 │  Backend APIs: [██████████] 100% (26/26 tasks)                 │
-│  Frontend:     [████░░░░░░] 40%  (19/47 tasks)                 │
+│  Frontend:     [█████░░░░░] 49%  (23/47 tasks)                 │
 │  Components:   [███░░░░░░░] 29%  (2/7 tasks)                   │
 │  ────────────────────────────────────────────────────────────── │
-│  OVERALL:      [██████░░░░] ~62%                               │
+│  OVERALL:      [███████░░░] ~67%                               │
 │                                                                 │
 │  PHASE 2 PROGRESS: [░░░░░░░░░░] 0%                             │
 │  PHASE 3 PROGRESS: [░░░░░░░░░░] 0%                             │

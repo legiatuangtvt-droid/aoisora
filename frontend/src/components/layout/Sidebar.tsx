@@ -10,7 +10,7 @@ import { useToast } from '@/components/ui/Toast';
 import { MenuItem } from '@/types/layout';
 
 // Routes that are implemented (WS module only)
-const implementedRoutes = ['/tasks/list', '/tasks/new', '/tasks/detail', '/tasks/', '/tasks/messages', '/tasks/todo', '/tasks/library', '/tasks/info', '/tasks/store-info', '/tasks/report'];
+const implementedRoutes = ['/tasks/list', '/tasks/new', '/tasks/detail', '/tasks/', '/tasks/messages', '/tasks/todo', '/tasks/library', '/tasks/approval', '/tasks/info', '/tasks/store-info', '/tasks/report'];
 
 // Menu items configuration with parent-child structure
 export const menuItems: MenuItem[] = [
@@ -51,6 +51,12 @@ export const menuItems: MenuItem[] = [
     label: 'Task Library',
     icon: 'task-library',
     route: '/tasks/library',
+  },
+  {
+    id: 'approval',
+    label: 'Pending Approvals',
+    icon: 'check-circle',
+    route: '/tasks/approval',
   },
   {
     id: 'report',
