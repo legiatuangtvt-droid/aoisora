@@ -4105,7 +4105,7 @@ TRIGGERS tự động tạo history entries:
 |---|------|--------|-------|
 | 1.3.26 | Danh sách templates | ✅ | Real API (getWsLibraryTemplates), grouped by department |
 | 1.3.27 | Add New template | ✅ | Routes to /tasks/new?source=library |
-| 1.3.28 | Dispatch template | 🔄 | Routes to dispatch page, API ready (dispatchWsLibraryTemplate) |
+| 1.3.28 | Dispatch template | ✅ | Full dispatch page with scope selector, dates, priority |
 | 1.3.29 | Cooldown status display | ✅ | Cooldown badge (cyan), isInCooldown/cooldownMinutes mapped |
 | 1.3.30 | Override cooldown (highest grade) | ✅ | Modal with reason, API integration (overrideWsLibraryCooldown) |
 
@@ -4203,10 +4203,10 @@ TRIGGERS tự động tạo history entries:
 │                                                                 │
 │  Database:     [██████████] 100% (6/6 tasks)                   │
 │  Backend APIs: [██████████] 100% (26/26 tasks)                 │
-│  Frontend:     [███████░░░] 72%  (34/47 tasks)                 │
+│  Frontend:     [███████░░░] 74%  (35/47 tasks)                 │
 │  Components:   [███░░░░░░░] 29%  (2/7 tasks)                   │
 │  ────────────────────────────────────────────────────────────── │
-│  OVERALL:      [████████░░] ~79%                               │
+│  OVERALL:      [████████░░] ~80%                               │
 │                                                                 │
 │  PHASE 2 PROGRESS: [░░░░░░░░░░] 0%                             │
 │  PHASE 3 PROGRESS: [░░░░░░░░░░] 0%                             │
