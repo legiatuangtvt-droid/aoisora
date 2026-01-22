@@ -185,6 +185,21 @@ Route::prefix('v1')->group(function () {
 
         Route::get('tasks/{task}/progress', [TaskStoreAssignmentController::class, 'getTaskProgress']);
 
+        // WS Task Library (Templates)
+        Route::prefix('library-tasks')->group(function () {
+            Route::get('/', [TaskLibraryController::class, 'index']);
+            Route::post('/', [TaskLibraryController::class, 'store']);
+            Route::get('/pending-approval', [TaskLibraryController::class, 'pendingApproval']);
+            Route::get('/{id}', [TaskLibraryController::class, 'show']);
+            Route::put('/{id}', [TaskLibraryController::class, 'update']);
+            Route::delete('/{id}', [TaskLibraryController::class, 'destroy']);
+            Route::post('/{id}/submit', [TaskLibraryController::class, 'submit']);
+            Route::post('/{id}/approve', [TaskLibraryController::class, 'approve']);
+            Route::post('/{id}/reject', [TaskLibraryController::class, 'reject']);
+            Route::post('/{id}/dispatch', [TaskLibraryController::class, 'dispatch']);
+            Route::post('/{id}/override-cooldown', [TaskLibraryController::class, 'overrideCooldown']);
+        });
+
         // Checklists
         Route::apiResource('checklists', CheckListController::class);
         Route::post('checklists/toggle', [CheckListController::class, 'toggle']);
