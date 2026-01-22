@@ -202,6 +202,38 @@ class Task extends Model
             ->orderBy('step_number');
     }
 
+    /**
+     * Get store assignments for this task
+     * (Only for dispatched tasks with receiver_type = 'store')
+     */
+    public function storeAssignments()
+    {
+        return $this->hasMany(TaskStoreAssignment::class, 'task_id', 'task_id');
+    }
+
+    /**
+     * Get store assignments with specific status
+     */
+    public function storeAssignmentsByStatus(string $status)
+    {
+        return $this->storeAssignments()->where('status', $status);
+    }
+
+    /**
+     * Get count of store assignments by status
+     */
+    public function getStoreStatusCounts(): array
+    {
+        return [
+            'not_yet' => $this->storeAssignments()->where('status', TaskStoreAssignment::STATUS_NOT_YET)->count(),
+            'on_progress' => $this->storeAssignments()->where('status', TaskStoreAssignment::STATUS_ON_PROGRESS)->count(),
+            'done_pending' => $this->storeAssignments()->where('status', TaskStoreAssignment::STATUS_DONE_PENDING)->count(),
+            'done' => $this->storeAssignments()->where('status', TaskStoreAssignment::STATUS_DONE)->count(),
+            'unable' => $this->storeAssignments()->where('status', TaskStoreAssignment::STATUS_UNABLE)->count(),
+            'total' => $this->storeAssignments()->count(),
+        ];
+    }
+
     // ============================================
     // Task Hierarchy Relationships (max 5 levels)
     // ============================================

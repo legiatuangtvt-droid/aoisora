@@ -1244,6 +1244,62 @@ INSERT INTO `tasks` (`task_id`,`parent_task_id`,`task_level`,`source`,`receiver_
 UNLOCK TABLES;
 
 --
+-- Table structure for table `task_store_assignments`
+--
+
+DROP TABLE IF EXISTS `task_store_assignments`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `task_store_assignments` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `task_id` int NOT NULL,
+  `store_id` int NOT NULL,
+  `status` enum('not_yet','on_progress','done_pending','done','unable') COLLATE utf8mb4_unicode_ci DEFAULT 'not_yet' COMMENT 'Store execution status',
+  `assigned_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'When HQ dispatched task to store',
+  `started_at` timestamp NULL DEFAULT NULL COMMENT 'When store started working on task',
+  `completed_at` timestamp NULL DEFAULT NULL COMMENT 'When store marked done/unable',
+  `assigned_by` int DEFAULT NULL COMMENT 'HQ staff who dispatched task to store',
+  `assigned_to_staff` int DEFAULT NULL COMMENT 'Staff (S1) assigned by Store Leader',
+  `assigned_to_at` timestamp NULL DEFAULT NULL COMMENT 'When Store Leader assigned to staff',
+  `started_by` int DEFAULT NULL COMMENT 'Store user who started',
+  `completed_by` int DEFAULT NULL COMMENT 'Store user who completed/marked unable',
+  `checked_by` int DEFAULT NULL COMMENT 'HQ staff who verified completion',
+  `checked_at` timestamp NULL DEFAULT NULL COMMENT 'When HQ verified completion',
+  `check_notes` text COLLATE utf8mb4_unicode_ci COMMENT 'Notes from HQ checker',
+  `unable_reason` text COLLATE utf8mb4_unicode_ci COMMENT 'Required reason when status=unable',
+  `notes` text COLLATE utf8mb4_unicode_ci COMMENT 'General notes',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_task_store` (`task_id`,`store_id`),
+  KEY `idx_task_status` (`task_id`,`status`),
+  KEY `idx_store_status` (`store_id`,`status`),
+  KEY `idx_assigned_staff` (`assigned_to_staff`),
+  KEY `idx_status` (`status`),
+  KEY `fk_tsa_assigned_by` (`assigned_by`),
+  KEY `fk_tsa_started_by` (`started_by`),
+  KEY `fk_tsa_completed_by` (`completed_by`),
+  KEY `fk_tsa_checked_by` (`checked_by`),
+  CONSTRAINT `fk_tsa_task` FOREIGN KEY (`task_id`) REFERENCES `tasks` (`task_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_tsa_store` FOREIGN KEY (`store_id`) REFERENCES `stores` (`store_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_tsa_assigned_by` FOREIGN KEY (`assigned_by`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_tsa_assigned_to_staff` FOREIGN KEY (`assigned_to_staff`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_tsa_started_by` FOREIGN KEY (`started_by`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_tsa_completed_by` FOREIGN KEY (`completed_by`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_tsa_checked_by` FOREIGN KEY (`checked_by`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `task_store_assignments`
+--
+
+LOCK TABLES `task_store_assignments` WRITE;
+/*!40000 ALTER TABLE `task_store_assignments` DISABLE KEYS */;
+/*!40000 ALTER TABLE `task_store_assignments` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `task_approval_history`
 --
 
