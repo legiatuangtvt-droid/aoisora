@@ -3994,65 +3994,65 @@ TRIGGERS tự động tạo history entries:
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 1.1.1 | `tasks` table - review & update schema | ⏳ | Thêm fields còn thiếu theo spec |
-| 1.1.2 | `task_store_assignments` table | ⏳ | Gán task cho stores, track store status |
-| 1.1.3 | `task_approval_history` table | ✅ | Đã có, cần verify |
-| 1.1.4 | `task_library` table | ⏳ | Templates cho dispatch |
-| 1.1.5 | `task_execution_logs` table | ⏳ | Log actions của stores |
-| 1.1.6 | Foreign keys & indexes | ⏳ | Đảm bảo data integrity |
+| 1.1.1 | `tasks` table - review & update schema | ✅ | Enhanced with approval workflow fields |
+| 1.1.2 | `task_store_assignments` table | ✅ | Store task execution tracking |
+| 1.1.3 | `task_approval_history` table | ✅ | Verified and working |
+| 1.1.4 | `task_library` table | ✅ | Templates with cooldown support |
+| 1.1.5 | `task_execution_logs` table | ✅ | Action logging implemented |
+| 1.1.6 | Foreign keys & indexes | ✅ | Data integrity ensured |
 
 #### 1.2 Backend APIs
 
 **Task List Screen:**
 | # | API | Method | Status | Notes |
 |---|-----|--------|--------|-------|
-| 1.2.1 | GET /tasks | GET | 🔄 | Cần optimize response, loại bỏ ~25 fields thừa |
+| 1.2.1 | GET /tasks | GET | ✅ | Status calculation, filtering, pagination |
 | 1.2.2 | GET /tasks-draft-info | GET | ✅ | Đếm drafts per user |
 | 1.2.3 | DELETE /tasks/{id} | DELETE | ✅ | Xóa draft |
 
 **Task Detail Screen:**
 | # | API | Method | Status | Notes |
 |---|-----|--------|--------|-------|
-| 1.2.4 | GET /tasks/{id} | GET | 🔄 | Chi tiết task với sub_tasks |
+| 1.2.4 | GET /tasks/{id} | GET | ✅ | Chi tiết task với sub_tasks |
 | 1.2.5 | GET /tasks/{id}/history | GET | ✅ | Approval history |
-| 1.2.6 | GET /tasks/{id}/progress | GET | ⏳ | Store progress (cần task_store_assignments) |
+| 1.2.6 | GET /tasks/{id}/progress | GET | ✅ | Store progress - `329eaa37` |
 
 **Add Task Screen:**
 | # | API | Method | Status | Notes |
 |---|-----|--------|--------|-------|
-| 1.2.7 | POST /tasks | POST | 🔄 | Tạo task/draft |
-| 1.2.8 | PUT /tasks/{id} | PUT | 🔄 | Update draft |
-| 1.2.9 | POST /tasks/{id}/submit | POST | ⏳ | Submit for approval |
+| 1.2.7 | POST /tasks | POST | ✅ | Tạo task/draft |
+| 1.2.8 | PUT /tasks/{id} | PUT | ✅ | Update draft |
+| 1.2.9 | POST /tasks/{id}/submit | POST | ✅ | Submit for approval |
 
 **Approval Flow:**
 | # | API | Method | Status | Notes |
 |---|-----|--------|--------|-------|
-| 1.2.10 | GET /tasks/pending-approval | GET | ⏳ | Tasks chờ user duyệt |
-| 1.2.11 | POST /tasks/{id}/approve | POST | ⏳ | Approve task |
-| 1.2.12 | POST /tasks/{id}/reject | POST | ⏳ | Reject task |
-| 1.2.13 | GET /staff/{id}/approver | GET | ⏳ | Tìm approver của user |
+| 1.2.10 | GET /tasks/pending-approval | GET | ✅ | Tasks chờ user duyệt |
+| 1.2.11 | POST /tasks/{id}/approve | POST | ✅ | Approve task |
+| 1.2.12 | POST /tasks/{id}/reject | POST | ✅ | Reject task |
+| 1.2.13 | GET /staff/{id}/approver | GET | ✅ | Tìm approver của user |
 
 **Library Screen:**
 | # | API | Method | Status | Notes |
 |---|-----|--------|--------|-------|
-| 1.2.14 | GET /tasks/library | GET | ⏳ | Danh sách templates |
-| 1.2.15 | POST /tasks/library | POST | ⏳ | Tạo template trực tiếp |
-| 1.2.16 | POST /tasks/{id}/dispatch | POST | ⏳ | Gửi template đến stores |
+| 1.2.14 | GET /library-tasks | GET | ✅ | Danh sách templates - `00281d13` |
+| 1.2.15 | POST /library-tasks | POST | ✅ | Tạo template trực tiếp |
+| 1.2.16 | POST /library-tasks/{id}/dispatch | POST | ✅ | Gửi template đến stores |
 
 **Store Execution:**
 | # | API | Method | Status | Notes |
 |---|-----|--------|--------|-------|
-| 1.2.17 | GET /stores/{id}/tasks | GET | ⏳ | Tasks của store |
-| 1.2.18 | POST /tasks/{id}/stores/{store_id}/start | POST | ⏳ | Bắt đầu task |
-| 1.2.19 | POST /tasks/{id}/stores/{store_id}/complete | POST | ⏳ | Hoàn thành task |
-| 1.2.20 | POST /tasks/{id}/stores/{store_id}/unable | POST | ⏳ | Mark unable |
-| 1.2.21 | POST /tasks/{id}/stores/{store_id}/assign | POST | ⏳ | Giao việc cho staff |
+| 1.2.17 | GET /stores/{id}/tasks | GET | ✅ | Tasks của store - `329eaa37` |
+| 1.2.18 | POST /tasks/{id}/stores/{store_id}/start | POST | ✅ | Bắt đầu task |
+| 1.2.19 | POST /tasks/{id}/stores/{store_id}/complete | POST | ✅ | Hoàn thành task |
+| 1.2.20 | POST /tasks/{id}/stores/{store_id}/unable | POST | ✅ | Mark unable |
+| 1.2.21 | POST /tasks/{id}/stores/{store_id}/assign | POST | ✅ | Giao việc cho staff |
 
 **HQ Check:**
 | # | API | Method | Status | Notes |
 |---|-----|--------|--------|-------|
-| 1.2.22 | GET /tasks/hq-check | GET | ⏳ | Tasks cần HQ kiểm tra |
-| 1.2.23 | POST /tasks/{id}/stores/{store_id}/check | POST | ⏳ | Checked/Reject |
+| 1.2.22 | GET /tasks/hq-check | GET | ⏳ | Tasks cần HQ kiểm tra (filter endpoint) |
+| 1.2.23 | POST /tasks/{id}/stores/{store_id}/check | POST | ✅ | HQ Check - `329eaa37` |
 
 **Supporting APIs:**
 | # | API | Method | Status | Notes |
