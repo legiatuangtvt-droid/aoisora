@@ -1078,6 +1078,69 @@ Khi implement tables mới:
 
 **Next review**: Sau khi WS module hoàn thiện, review lại Phase 1 checklist
 
+### 9.2 WS Module Implementation Progress
+
+> **Cập nhật lần cuối**: 2026-01-22
+
+#### Backend API Progress
+
+| Task | Status | Commit | Notes |
+|------|--------|--------|-------|
+| **1.1 Database Schema** | ✅ Done | - | Tasks, task_store_assignments, task_approval_history, task_library, task_execution_logs |
+| **1.2 GET /tasks API** | ✅ Done | - | Status calculation, filtering, pagination with Spatie QueryBuilder |
+| **1.3 Store Assignments API** | ✅ Done | `329eaa37` | 12 endpoints for task execution (assign, start, complete, unable, hq-check) |
+| **1.4 Task Library API** | ✅ Done | `00281d13` | Full WS workflow: draft → approve → available → cooldown → dispatch |
+
+#### Completed Features
+
+**Task Store Assignments (`/api/v1/stores/{store}/tasks`, `/api/v1/tasks/{task}/stores/{store}`):**
+- GET store tasks với filtering
+- GET my store tasks (assigned to current user)
+- GET task store detail
+- POST assign to staff (S2-S4 only)
+- PUT reassign to different staff
+- DELETE unassign (return to store leader)
+- POST start task
+- POST complete task
+- POST mark unable (with reason)
+- POST hq check (approve completion)
+- POST hq reject (reject completion)
+- GET task progress (all stores summary)
+
+**Task Library (`/api/v1/library-tasks`):**
+- CRUD operations with draft/approval workflow
+- GET pending approval (for approvers)
+- POST submit (draft → approve)
+- POST approve (approve → available + auto-create task)
+- POST reject (approve → draft with reason)
+- POST dispatch (available → create task + store assignments)
+- POST override-cooldown (for dept/team heads)
+- Auto-save from approved tasks (static method)
+- Cooldown mechanism to prevent duplicate dispatches
+
+#### Pending Tasks
+
+| Task | Priority | Notes |
+|------|----------|-------|
+| Frontend Task List improvements | High | Connect to new APIs |
+| Task Detail screen | High | Show store progress, HQ check actions |
+| Add Task flow updates | Medium | Connect to approval workflow |
+| Library screen | Medium | Template management and dispatch |
+| Store Task List screen | Medium | For store users (S1-S4) |
+| Real-time updates (Reverb) | Low | WebSocket for live status |
+
+#### Database Tables Implemented
+
+```
+✅ tasks (enhanced with approval workflow fields)
+✅ task_store_assignments (store task execution)
+✅ task_approval_history (approval audit trail)
+✅ task_library (reusable templates)
+✅ task_execution_logs (action logging)
+```
+
+---
+
 ### 10. Session Start (Khởi động phiên làm việc mới)
 
 **⚠️ BẮT BUỘC**: Trước khi bắt đầu code, **PHẢI** đồng bộ nhánh với remote:
