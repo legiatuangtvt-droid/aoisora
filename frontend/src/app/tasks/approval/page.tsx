@@ -223,13 +223,13 @@ export default function ApprovalPage() {
                       <td className="px-4 py-4">
                         <div className="flex items-center">
                           <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600">
-                            {task.createdBy?.first_name?.[0] || 'U'}
+                            {task.created_staff?.staff_name?.[0] || 'U'}
                           </div>
                           <div className="ml-2">
                             <p className="text-sm text-gray-900">
-                              {task.createdBy ? `${task.createdBy.first_name || ''} ${task.createdBy.last_name || ''}`.trim() : 'Unknown'}
+                              {task.created_staff?.staff_name || 'Unknown'}
                             </p>
-                            <p className="text-xs text-gray-500">{task.createdBy?.job_grade || '-'}</p>
+                            <p className="text-xs text-gray-500">{task.created_staff?.role || '-'}</p>
                           </div>
                         </div>
                       </td>
@@ -240,8 +240,8 @@ export default function ApprovalPage() {
                         <p className="text-sm text-gray-900">{formatDate(task.start_date)} - {formatDate(task.end_date)}</p>
                       </td>
                       <td className="px-4 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(task.status?.code_value || '')}`}>
-                          {task.status?.code_value || 'pending'}
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(task.status?.code || '')}`}>
+                          {task.status?.name || 'pending'}
                         </span>
                       </td>
                       <td className="px-4 py-4">

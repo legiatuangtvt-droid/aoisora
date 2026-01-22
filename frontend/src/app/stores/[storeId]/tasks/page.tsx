@@ -306,7 +306,7 @@ export default function StoreTasksPage() {
                       <td className="px-4 py-4">
                         <p className="text-sm text-gray-900">
                           {assignment.assignedToStaff
-                            ? `${assignment.assignedToStaff.first_name || ''} ${assignment.assignedToStaff.last_name || ''}`.trim()
+                            ? assignment.assignedToStaff.staff_name
                             : 'Store Leader'}
                         </p>
                       </td>

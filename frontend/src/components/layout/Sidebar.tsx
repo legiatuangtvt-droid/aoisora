@@ -10,7 +10,7 @@ import { useToast } from '@/components/ui/Toast';
 import { MenuItem } from '@/types/layout';
 
 // Routes that are implemented (WS module only)
-const implementedRoutes = ['/tasks/list', '/tasks/new', '/tasks/detail', '/tasks/', '/tasks/messages', '/tasks/todo', '/tasks/library', '/tasks/approval', '/tasks/info', '/tasks/store-info', '/tasks/report'];
+const implementedRoutes = ['/tasks/list', '/tasks/new', '/tasks/detail', '/tasks/', '/tasks/messages', '/tasks/todo', '/tasks/library', '/tasks/approval', '/tasks/hq-check', '/tasks/info', '/tasks/store-info', '/tasks/report'];
 
 // Menu items configuration with parent-child structure
 export const menuItems: MenuItem[] = [
@@ -57,6 +57,12 @@ export const menuItems: MenuItem[] = [
     label: 'Pending Approvals',
     icon: 'check-circle',
     route: '/tasks/approval',
+  },
+  {
+    id: 'hq-check',
+    label: 'HQ Check',
+    icon: 'clipboard-check',
+    route: '/tasks/hq-check',
   },
   {
     id: 'report',
@@ -261,6 +267,11 @@ export function MenuIcon({ name, className = '', isActive = false }: { name: str
     'check-circle': (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+    'clipboard-check': (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
       </svg>
     ),
     'library': (

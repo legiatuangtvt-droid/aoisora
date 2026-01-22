@@ -24,14 +24,12 @@ function transformTemplateToTaskTemplate(template: WsLibraryTemplate, index: num
   return {
     id: String(template.task_library_id),
     no: index + 1,
-    type: template.taskType?.code_value || 'Daily',
+    type: template.taskType?.name || 'Daily',
     taskName: template.task_name,
     owner: {
       id: String(template.created_staff_id),
-      name: template.creator
-        ? `${template.creator.first_name || ''} ${template.creator.last_name || ''}`.trim() || 'Unknown'
-        : 'Unknown',
-      avatar: template.creator?.avatar || '/avatars/default.png',
+      name: template.creator?.staff_name || 'Unknown',
+      avatar: '/avatars/default.png',
     },
     lastUpdate: template.updated_at
       ? new Date(template.updated_at).toLocaleDateString('en-GB', {

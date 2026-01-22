@@ -4137,10 +4137,10 @@ TRIGGERS tự động tạo history entries:
 **HQ Check Screen (/tasks/hq-check):**
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 1.3.44 | Tasks pending HQ check | ⏳ | done_pending stores |
-| 1.3.45 | View store evidence | ⏳ | Ảnh, notes |
-| 1.3.46 | Checked action | ⏳ | done_pending → done |
-| 1.3.47 | Reject action | ⏳ | done_pending → on_progress |
+| 1.3.44 | Tasks pending HQ check | ✅ | Real API (getHQCheckList), expand/collapse task cards |
+| 1.3.45 | View store evidence | ✅ | Store list with completion info, notes |
+| 1.3.46 | Checked action | ✅ | hqCheckStore API, done_pending → done |
+| 1.3.47 | Reject action | ✅ | hqRejectStore API with reason modal |
 
 #### 1.4 Shared Components
 
@@ -4203,10 +4203,10 @@ TRIGGERS tự động tạo history entries:
 │                                                                 │
 │  Database:     [██████████] 100% (6/6 tasks)                   │
 │  Backend APIs: [██████████] 100% (26/26 tasks)                 │
-│  Frontend:     [██████░░░░] 57%  (27/47 tasks)                 │
+│  Frontend:     [███████░░░] 66%  (31/47 tasks)                 │
 │  Components:   [███░░░░░░░] 29%  (2/7 tasks)                   │
 │  ────────────────────────────────────────────────────────────── │
-│  OVERALL:      [███████░░░] ~71%                               │
+│  OVERALL:      [████████░░] ~76%                               │
 │                                                                 │
 │  PHASE 2 PROGRESS: [░░░░░░░░░░] 0%                             │
 │  PHASE 3 PROGRESS: [░░░░░░░░░░] 0%                             │

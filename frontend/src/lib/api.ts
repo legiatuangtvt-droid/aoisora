@@ -65,6 +65,9 @@ import type {
   TaskProgressResponse,
 } from '@/types/api';
 
+// Re-export commonly used types for convenience
+export type { Task, Staff, Store, Department, Region, CodeMaster } from '@/types/api';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
 // ============================================
@@ -1072,6 +1075,47 @@ export async function hqRejectStoreTask(taskId: number, storeId: number, reason:
     method: 'POST',
     body: JSON.stringify({ reason }),
   });
+}
+
+// HQ Check List - Get tasks awaiting HQ verification
+export interface HQCheckSummary {
+  total_stores: number;
+  pending_check: number;
+  checked: number;
+  rejected: number;
+  stores_pending_check: Array<{
+    store_id: number;
+    store_code: string;
+    store_name: string;
+    completed_at: string;
+    completed_by_name: string | null;
+    completion_notes: string | null;
+  }>;
+}
+
+export interface TaskWithHQCheck extends Task {
+  hq_check_summary: HQCheckSummary;
+}
+
+export interface PaginatedHQCheckResponse {
+  data: TaskWithHQCheck[];
+  meta?: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
+}
+
+export async function getHQCheckList(params?: {
+  per_page?: number;
+  page?: number;
+}): Promise<PaginatedHQCheckResponse> {
+  const queryParams = new URLSearchParams();
+  if (params?.per_page) queryParams.append('per_page', params.per_page.toString());
+  if (params?.page) queryParams.append('page', params.page.toString());
+  const query = queryParams.toString() ? `?${queryParams.toString()}` : '';
+  return fetchApi<PaginatedHQCheckResponse>(`/tasks/hq-check${query}`);
 }
 
 // Code Master
