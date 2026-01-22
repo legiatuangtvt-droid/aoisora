@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\V1\StoreInfoController;
 use App\Http\Controllers\Api\V1\ZoneController;
 use App\Http\Controllers\Api\V1\AreaController;
 use App\Http\Controllers\Api\V1\ScopeController;
+use App\Http\Controllers\Api\V1\TaskStoreAssignmentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -163,6 +164,26 @@ Route::prefix('v1')->group(function () {
         Route::post('tasks/{task}/submit', [TaskController::class, 'submit']);
         Route::post('tasks/{task}/approve', [TaskController::class, 'approve']);
         Route::post('tasks/{task}/reject', [TaskController::class, 'reject']);
+
+        // Task Store Assignments (Store Task Execution)
+        Route::prefix('stores/{store}/tasks')->group(function () {
+            Route::get('/', [TaskStoreAssignmentController::class, 'getStoreTasks']);
+            Route::get('/my', [TaskStoreAssignmentController::class, 'getMyStoreTasks']);
+        });
+
+        Route::prefix('tasks/{task}/stores/{store}')->group(function () {
+            Route::get('/', [TaskStoreAssignmentController::class, 'getTaskStoreDetail']);
+            Route::post('/assign', [TaskStoreAssignmentController::class, 'assignToStaff']);
+            Route::put('/assign', [TaskStoreAssignmentController::class, 'reassignToStaff']);
+            Route::delete('/assign', [TaskStoreAssignmentController::class, 'unassign']);
+            Route::post('/start', [TaskStoreAssignmentController::class, 'start']);
+            Route::post('/complete', [TaskStoreAssignmentController::class, 'complete']);
+            Route::post('/unable', [TaskStoreAssignmentController::class, 'markUnable']);
+            Route::post('/check', [TaskStoreAssignmentController::class, 'hqCheck']);
+            Route::post('/reject', [TaskStoreAssignmentController::class, 'hqReject']);
+        });
+
+        Route::get('tasks/{task}/progress', [TaskStoreAssignmentController::class, 'getTaskProgress']);
 
         // Checklists
         Route::apiResource('checklists', CheckListController::class);
