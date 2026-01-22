@@ -85,17 +85,30 @@ function transformApiTaskToTaskGroup(task: ApiTask, index: number, departments: 
   // Transform nested sub_tasks from API
   const subTasks = transformApiSubTasks(task.sub_tasks);
 
-  // Calculate progress from sub_tasks if available
+  // Calculate progress from store_progress (preferred) or sub_tasks (fallback)
   let progressCompleted = 0;
   let progressTotal = 1;
+  let unableCount = 0;
 
-  if (subTasks.length > 0) {
+  if (task.store_progress && task.store_progress.total > 0) {
+    // Use store_progress from API (task_store_assignments data)
+    progressTotal = task.store_progress.total;
+    progressCompleted = task.store_progress.completed_count;
+    unableCount = task.store_progress.unable;
+  } else if (subTasks.length > 0) {
+    // Fallback: Calculate from sub_tasks
     progressTotal = subTasks.length;
     progressCompleted = subTasks.filter(st => st.status === 'DONE').length;
+    unableCount = subTasks.filter(st => st.status === 'UNABLE').length;
   } else {
-    // No sub-tasks: use task's own status
+    // No sub-tasks and no store_progress: use task's own status
     progressCompleted = task.status_id === 9 ? 1 : 0;
   }
+
+  // Use calculated_status from API if available, otherwise fall back to status_id mapping
+  const taskStatus = task.calculated_status
+    ? task.calculated_status.toUpperCase() as TaskGroup['status']
+    : STATUS_MAP[task.status_id || 7] || 'NOT_YET';
 
   return {
     id: task.task_id.toString(),
@@ -110,8 +123,8 @@ function transformApiTaskToTaskGroup(task: ApiTask, index: number, departments: 
       completed: progressCompleted,
       total: progressTotal,
     },
-    unable: 0,
-    status: STATUS_MAP[task.status_id || 7] || 'NOT_YET',
+    unable: unableCount,
+    status: taskStatus,
     hqCheck: HQ_CHECK_MAP[task.status_id || 7] || 'NOT_YET',
     subTasks: subTasks,
     createdStaffId: task.created_staff_id,

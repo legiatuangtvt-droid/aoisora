@@ -4071,8 +4071,8 @@ TRIGGERS tự động tạo history entries:
 | 1.3.3 | Filter by department | 🔄 | Cần test với real data |
 | 1.3.4 | Search by task name | 🔄 | Cần verify |
 | 1.3.5 | Pagination | ✅ | Đang hoạt động |
-| 1.3.6 | Progress column - từ store assignments | ⏳ | Hiện tính từ sub_tasks (sai) |
-| 1.3.7 | Unable column - từ store assignments | ⏳ | Hiện hardcode = 0 |
+| 1.3.6 | Progress column - từ store assignments | ✅ | Dùng store_progress từ API |
+| 1.3.7 | Unable column - từ store assignments | ✅ | Dùng store_progress từ API |
 | 1.3.8 | Click Status → History modal | ✅ | Đã implement |
 | 1.3.9 | 3-dots menu actions | 🔄 | Cần verify các actions |
 | 1.3.10 | Sub-tasks expand/collapse | ✅ | Đang hoạt động |

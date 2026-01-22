@@ -199,6 +199,19 @@ export interface Task {
   checklists?: TaskCheckList[];
   // Nested sub-tasks (recursive structure, max 5 levels)
   sub_tasks?: Task[];
+  // Store progress (calculated from task_store_assignments)
+  store_progress?: {
+    not_yet: number;
+    on_progress: number;
+    done_pending: number;
+    done: number;
+    unable: number;
+    total: number;
+    completed_count: number;
+    completion_rate: number;
+  };
+  // Calculated status from store assignments (not_yet, on_progress, done, overdue)
+  calculated_status?: string;
 }
 
 export interface TaskCreate {
