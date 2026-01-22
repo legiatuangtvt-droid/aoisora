@@ -909,6 +909,171 @@ export async function getWsLibraryPendingApproval(params?: {
   return fetchApi<PaginatedWsLibraryResponse>(`/library-tasks/pending-approval${query ? `?${query}` : ''}`);
 }
 
+// ============================================
+// Store Task Assignment API (WS Module)
+// ============================================
+
+// Store task assignment status
+export type StoreTaskStatus = 'not_yet' | 'on_progress' | 'done_pending' | 'done' | 'unable';
+
+// Store task assignment type
+export interface StoreTaskAssignment {
+  id: number;
+  task_id: number;
+  store_id: number;
+  status: StoreTaskStatus;
+  assigned_at: string;
+  started_at: string | null;
+  completed_at: string | null;
+  assigned_by: number | null;
+  assigned_to_staff_id: number | null;
+  assigned_to_at: string | null;
+  started_by: number | null;
+  completed_by: number | null;
+  unable_reason: string | null;
+  notes: string | null;
+  // Relationships
+  task?: Task;
+  store?: Store;
+  assignedToStaff?: Staff;
+}
+
+// Get tasks assigned to a store
+export interface GetStoreTasksParams {
+  page?: number;
+  per_page?: number;
+  status?: StoreTaskStatus;
+}
+
+export interface PaginatedStoreTasksResponse {
+  data: StoreTaskAssignment[];
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+}
+
+export async function getStoreTasks(storeId: number, params?: GetStoreTasksParams): Promise<PaginatedStoreTasksResponse> {
+  const searchParams = new URLSearchParams();
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        searchParams.append(key, String(value));
+      }
+    });
+  }
+  const query = searchParams.toString();
+  return fetchApi<PaginatedStoreTasksResponse>(`/stores/${storeId}/tasks${query ? `?${query}` : ''}`);
+}
+
+// Get my tasks within a store (for staff)
+export async function getMyStoreTasks(storeId: number, params?: GetStoreTasksParams): Promise<PaginatedStoreTasksResponse> {
+  const searchParams = new URLSearchParams();
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        searchParams.append(key, String(value));
+      }
+    });
+  }
+  const query = searchParams.toString();
+  return fetchApi<PaginatedStoreTasksResponse>(`/stores/${storeId}/tasks/my${query ? `?${query}` : ''}`);
+}
+
+// Get task detail for a specific store
+export async function getTaskStoreDetail(taskId: number, storeId: number): Promise<StoreTaskAssignment> {
+  return fetchApi<StoreTaskAssignment>(`/tasks/${taskId}/stores/${storeId}`);
+}
+
+// Assign task to staff within store (S2-S4 only)
+export async function assignTaskToStaff(taskId: number, storeId: number, staffId: number): Promise<{
+  message: string;
+  assignment: StoreTaskAssignment;
+}> {
+  return fetchApi<{ message: string; assignment: StoreTaskAssignment }>(`/tasks/${taskId}/stores/${storeId}/assign`, {
+    method: 'POST',
+    body: JSON.stringify({ staff_id: staffId }),
+  });
+}
+
+// Reassign task to different staff
+export async function reassignTask(taskId: number, storeId: number, staffId: number): Promise<{
+  message: string;
+  assignment: StoreTaskAssignment;
+}> {
+  return fetchApi<{ message: string; assignment: StoreTaskAssignment }>(`/tasks/${taskId}/stores/${storeId}/assign`, {
+    method: 'PUT',
+    body: JSON.stringify({ staff_id: staffId }),
+  });
+}
+
+// Unassign task (return to store leader)
+export async function unassignTask(taskId: number, storeId: number): Promise<{
+  message: string;
+  assignment: StoreTaskAssignment;
+}> {
+  return fetchApi<{ message: string; assignment: StoreTaskAssignment }>(`/tasks/${taskId}/stores/${storeId}/assign`, {
+    method: 'DELETE',
+  });
+}
+
+// Start task execution
+export async function startStoreTask(taskId: number, storeId: number): Promise<{
+  message: string;
+  assignment: StoreTaskAssignment;
+}> {
+  return fetchApi<{ message: string; assignment: StoreTaskAssignment }>(`/tasks/${taskId}/stores/${storeId}/start`, {
+    method: 'POST',
+  });
+}
+
+// Complete task
+export async function completeStoreTask(taskId: number, storeId: number, data?: {
+  notes?: string;
+  evidence?: string[];
+}): Promise<{
+  message: string;
+  assignment: StoreTaskAssignment;
+}> {
+  return fetchApi<{ message: string; assignment: StoreTaskAssignment }>(`/tasks/${taskId}/stores/${storeId}/complete`, {
+    method: 'POST',
+    body: JSON.stringify(data || {}),
+  });
+}
+
+// Mark task as unable (with required reason)
+export async function markStoreTaskUnable(taskId: number, storeId: number, reason: string, notes?: string): Promise<{
+  message: string;
+  assignment: StoreTaskAssignment;
+}> {
+  return fetchApi<{ message: string; assignment: StoreTaskAssignment }>(`/tasks/${taskId}/stores/${storeId}/unable`, {
+    method: 'POST',
+    body: JSON.stringify({ reason, notes }),
+  });
+}
+
+// HQ Check - approve store completion
+export async function hqCheckStoreTask(taskId: number, storeId: number, comment?: string): Promise<{
+  message: string;
+  assignment: StoreTaskAssignment;
+}> {
+  return fetchApi<{ message: string; assignment: StoreTaskAssignment }>(`/tasks/${taskId}/stores/${storeId}/check`, {
+    method: 'POST',
+    body: JSON.stringify({ comment }),
+  });
+}
+
+// HQ Reject - reject store completion
+export async function hqRejectStoreTask(taskId: number, storeId: number, reason: string): Promise<{
+  message: string;
+  assignment: StoreTaskAssignment;
+}> {
+  return fetchApi<{ message: string; assignment: StoreTaskAssignment }>(`/tasks/${taskId}/stores/${storeId}/reject`, {
+    method: 'POST',
+    body: JSON.stringify({ reason }),
+  });
+}
+
 // Code Master
 export async function getCodeMaster(codeType?: string): Promise<CodeMaster[]> {
   const query = codeType ? `?code_type=${codeType}` : '';

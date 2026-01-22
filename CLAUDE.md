@@ -4127,12 +4127,12 @@ TRIGGERS tự động tạo history entries:
 **Store Task View (/stores/[id]/tasks):**
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 1.3.38 | Tasks assigned to store | ⏳ | Danh sách tasks |
-| 1.3.39 | Start task action | ⏳ | not_yet → on_progress |
-| 1.3.40 | Complete task action | ⏳ | on_progress → done |
-| 1.3.41 | Mark unable action | ⏳ | → unable + reason |
-| 1.3.42 | Upload evidence | ⏳ | Ảnh kết quả |
-| 1.3.43 | Assign to staff (S4-S2) | ⏳ | Giao việc cho S1 |
+| 1.3.38 | Tasks assigned to store | ✅ | Real API (getStoreTasks, getMyStoreTasks), role-based visibility |
+| 1.3.39 | Start task action | ✅ | startStoreTask API, not_yet → on_progress |
+| 1.3.40 | Complete task action | ✅ | completeStoreTask API, on_progress → done_pending |
+| 1.3.41 | Mark unable action | ✅ | markStoreTaskUnable API with reason modal |
+| 1.3.42 | Upload evidence | ⏳ | API ready (completeStoreTask.evidence), needs file upload UI |
+| 1.3.43 | Assign to staff (S4-S2) | ⏳ | API ready (assignTaskToStaff), needs assignment UI |
 
 **HQ Check Screen (/tasks/hq-check):**
 | # | Task | Status | Notes |
@@ -4203,10 +4203,10 @@ TRIGGERS tự động tạo history entries:
 │                                                                 │
 │  Database:     [██████████] 100% (6/6 tasks)                   │
 │  Backend APIs: [██████████] 100% (26/26 tasks)                 │
-│  Frontend:     [█████░░░░░] 49%  (23/47 tasks)                 │
+│  Frontend:     [██████░░░░] 57%  (27/47 tasks)                 │
 │  Components:   [███░░░░░░░] 29%  (2/7 tasks)                   │
 │  ────────────────────────────────────────────────────────────── │
-│  OVERALL:      [███████░░░] ~67%                               │
+│  OVERALL:      [███████░░░] ~71%                               │
 │                                                                 │
 │  PHASE 2 PROGRESS: [░░░░░░░░░░] 0%                             │
 │  PHASE 3 PROGRESS: [░░░░░░░░░░] 0%                             │
