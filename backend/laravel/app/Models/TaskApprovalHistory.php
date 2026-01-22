@@ -9,6 +9,30 @@ class TaskApprovalHistory extends Model
 {
     protected $table = 'task_approval_history';
 
+    /**
+     * Step names for task workflow
+     */
+    const STEP_SUBMIT = 'SUBMIT';
+    const STEP_APPROVE = 'APPROVE';
+    const STEP_DO_TASK = 'DO_TASK';
+    const STEP_CHECK = 'CHECK';
+
+    /**
+     * Step statuses
+     */
+    const STATUS_SUBMITTED = 'submitted';
+    const STATUS_DONE = 'done';
+    const STATUS_IN_PROCESS = 'in_process';
+    const STATUS_REJECTED = 'rejected';
+    const STATUS_PENDING = 'pending';
+
+    /**
+     * Assigned to types
+     */
+    const TYPE_USER = 'user';
+    const TYPE_STORES = 'stores';
+    const TYPE_TEAM = 'team';
+
     protected $fillable = [
         'task_id',
         'round_number',
@@ -71,5 +95,92 @@ class TaskApprovalHistory extends Model
     public function scopeOrderByStep($query)
     {
         return $query->orderBy('step_number');
+    }
+
+    // ============================================
+    // Helper Methods
+    // ============================================
+
+    /**
+     * Check if this step is the SUBMIT step
+     */
+    public function isSubmitStep(): bool
+    {
+        return $this->step_name === self::STEP_SUBMIT;
+    }
+
+    /**
+     * Check if this step is the APPROVE step
+     */
+    public function isApproveStep(): bool
+    {
+        return $this->step_name === self::STEP_APPROVE;
+    }
+
+    /**
+     * Check if this step is the DO_TASK step
+     */
+    public function isDoTaskStep(): bool
+    {
+        return $this->step_name === self::STEP_DO_TASK;
+    }
+
+    /**
+     * Check if this step is the CHECK step
+     */
+    public function isCheckStep(): bool
+    {
+        return $this->step_name === self::STEP_CHECK;
+    }
+
+    /**
+     * Check if this step is completed (done)
+     */
+    public function isCompleted(): bool
+    {
+        return $this->step_status === self::STATUS_DONE;
+    }
+
+    /**
+     * Check if this step is rejected
+     */
+    public function isRejected(): bool
+    {
+        return $this->step_status === self::STATUS_REJECTED;
+    }
+
+    /**
+     * Check if this step is in progress
+     */
+    public function isInProgress(): bool
+    {
+        return $this->step_status === self::STATUS_IN_PROCESS;
+    }
+
+    /**
+     * Check if this step is pending (not started)
+     */
+    public function isPending(): bool
+    {
+        return $this->step_status === self::STATUS_PENDING;
+    }
+
+    /**
+     * Check if assigned to stores (DO_TASK step typically)
+     */
+    public function isAssignedToStores(): bool
+    {
+        return $this->assigned_to_type === self::TYPE_STORES;
+    }
+
+    /**
+     * Get progress percentage for DO_TASK step
+     */
+    public function getProgressPercentage(): float
+    {
+        if ($this->progress_total === 0) {
+            return 0;
+        }
+        return round(($this->progress_done / $this->progress_total) * 100, 2);
     }
 }
