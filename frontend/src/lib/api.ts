@@ -655,6 +655,44 @@ export async function updateTaskChecklist(
   });
 }
 
+// Task Approval History
+export interface TaskApprovalHistoryResponse {
+  taskId: string;
+  taskName: string;
+  taskStartDate?: string;
+  taskEndDate?: string;
+  currentRound: number;
+  totalRounds: number;
+  rounds: Array<{
+    roundNumber: number;
+    steps: Array<{
+      stepNumber: number;
+      stepName: 'SUBMIT' | 'APPROVE' | 'DO_TASK' | 'CHECK';
+      status: 'submitted' | 'done' | 'in_process' | 'rejected' | 'pending';
+      assignee: {
+        type: 'user' | 'stores' | 'team';
+        id?: number;
+        name: string;
+        avatar?: string;
+        count?: number;
+      };
+      startDate: string;
+      endDate: string;
+      actualStartAt?: string;
+      actualEndAt?: string;
+      comment?: string;
+      progress?: {
+        done: number;
+        total: number;
+      };
+    }>;
+  }>;
+}
+
+export async function getTaskApprovalHistory(taskId: number): Promise<TaskApprovalHistoryResponse> {
+  return fetchApi<TaskApprovalHistoryResponse>(`/tasks/${taskId}/history`);
+}
+
 // Code Master
 export async function getCodeMaster(codeType?: string): Promise<CodeMaster[]> {
   const query = codeType ? `?code_type=${codeType}` : '';

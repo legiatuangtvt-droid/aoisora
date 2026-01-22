@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { TaskGroup, DateMode, TaskFilters, TaskStatus, HQCheckStatus, SubTask } from '@/types/tasks';
 import { Task as ApiTask, Department } from '@/types/api';
-import { getTasks, getDepartments, DraftInfo, PaginatedTaskResponse, TaskQueryParamsExtended } from '@/lib/api';
+import { getTasks, getDepartments, getTaskApprovalHistory, DraftInfo, PaginatedTaskResponse, TaskQueryParamsExtended } from '@/lib/api';
 import StatusPill from '@/components/ui/StatusPill';
 import FilterModal from '@/components/tasks/FilterModal';
 import DatePicker from '@/components/ui/DatePicker';
@@ -357,89 +357,69 @@ export default function TaskListPage() {
   };
 
   // Row action menu handlers
-  const handleViewApprovalHistory = (taskId: string) => {
+  const handleViewApprovalHistory = async (taskId: string) => {
     setOpenActionMenu(null);
 
-    // Find the task to get its name
-    const task = tasks.find(t => t.id === taskId);
+    try {
+      // Fetch approval history from backend API
+      const historyResponse = await getTaskApprovalHistory(parseInt(taskId, 10));
 
-    // Create mock history data for demonstration
-    // TODO: Replace with actual API call to get task history
-    const mockHistory: TaskApprovalHistory = {
-      taskId: taskId,
-      taskName: task?.taskGroupName || 'Task',
-      taskStartDate: '2025-11-30T04:30:00',
-      taskEndDate: '2025-12-03T17:00:00',
-      currentRound: 1,
-      totalRounds: 1,
-      rounds: [
-        {
+      // Transform API response to match frontend interface
+      const history: TaskApprovalHistory = {
+        taskId: historyResponse.taskId,
+        taskName: historyResponse.taskName,
+        taskStartDate: historyResponse.taskStartDate,
+        taskEndDate: historyResponse.taskEndDate,
+        currentRound: historyResponse.currentRound,
+        totalRounds: historyResponse.totalRounds,
+        rounds: historyResponse.rounds.map(round => ({
+          roundNumber: round.roundNumber,
+          steps: round.steps.map(step => ({
+            stepNumber: step.stepNumber,
+            stepName: step.stepName,
+            status: step.status,
+            assignee: {
+              type: step.assignee.type,
+              id: step.assignee.id,
+              name: step.assignee.name,
+              avatar: step.assignee.avatar,
+              count: step.assignee.count,
+            },
+            startDate: step.startDate || '',
+            endDate: step.endDate || '',
+            actualStartAt: step.actualStartAt,
+            actualEndAt: step.actualEndAt,
+            comment: step.comment,
+            progress: step.progress,
+          })),
+        })),
+      };
+
+      setSelectedTaskHistory(history);
+      setIsHistoryModalOpen(true);
+    } catch (error) {
+      console.error('Failed to fetch approval history:', error);
+      // Show error message or fallback to basic info
+      const task = tasks.find(t => t.id === taskId);
+      setSelectedTaskHistory({
+        taskId: taskId,
+        taskName: task?.taskGroupName || 'Task',
+        currentRound: 1,
+        totalRounds: 1,
+        rounds: [{
           roundNumber: 1,
-          steps: [
-            {
-              stepNumber: 1,
-              stepName: 'SUBMIT',
-              status: 'submitted',
-              assignee: {
-                type: 'user',
-                id: 45,
-                name: 'Nguyen Dai Viet',
-                avatar: undefined,
-              },
-              startDate: '2025-10-10',
-              endDate: '2025-10-12',
-              comment: 'Reference site about Lorem Ipsum, giving information on its origins as well as a random Lipsum generator.',
-            },
-            {
-              stepNumber: 2,
-              stepName: 'APPROVE',
-              status: 'done',
-              assignee: {
-                type: 'user',
-                id: 12,
-                name: 'Yoshinaga',
-                avatar: undefined,
-              },
-              startDate: '2025-10-14',
-              endDate: '2025-10-15',
-              comment: 'Lorem Ipsum, giving information on its origins',
-            },
-            {
-              stepNumber: 3,
-              stepName: 'DO_TASK',
-              status: 'in_process',
-              assignee: {
-                type: 'stores',
-                name: '27 Stores',
-                count: 27,
-              },
-              startDate: '2025-10-19',
-              endDate: '2025-10-21',
-              progress: {
-                done: 23,
-                total: 27,
-              },
-            },
-            {
-              stepNumber: 4,
-              stepName: 'CHECK',
-              status: 'in_process',
-              assignee: {
-                type: 'user',
-                id: 8,
-                name: 'PERI',
-                avatar: undefined,
-              },
-              startDate: '2025-10-19',
-              endDate: '2025-10-21',
-            },
-          ],
-        },
-      ],
-    };
-
-    setSelectedTaskHistory(mockHistory);
-    setIsHistoryModalOpen(true);
+          steps: [{
+            stepNumber: 1,
+            stepName: 'SUBMIT',
+            status: 'pending',
+            assignee: { type: 'user', name: 'Loading...' },
+            startDate: '',
+            endDate: '',
+          }],
+        }],
+      });
+      setIsHistoryModalOpen(true);
+    }
   };
 
   const handlePauseTask = (taskId: string) => {
