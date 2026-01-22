@@ -10,6 +10,7 @@ import StatusPill from '@/components/ui/StatusPill';
 import FilterModal from '@/components/tasks/FilterModal';
 import DatePicker from '@/components/ui/DatePicker';
 import ColumnFilterDropdown from '@/components/ui/ColumnFilterDropdown';
+import ApprovalHistoryModal, { TaskApprovalHistory } from '@/components/tasks/ApprovalHistoryModal';
 import { useTaskUpdates } from '@/hooks/useTaskUpdates';
 import { useUser } from '@/contexts/UserContext';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -169,6 +170,10 @@ export default function TaskListPage() {
     taskId: string;
     position: { top: number; right: number };
   } | null>(null);
+
+  // Approval History Modal state
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [selectedTaskHistory, setSelectedTaskHistory] = useState<TaskApprovalHistory | null>(null);
 
   // Server-side pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -354,8 +359,87 @@ export default function TaskListPage() {
   // Row action menu handlers
   const handleViewApprovalHistory = (taskId: string) => {
     setOpenActionMenu(null);
-    // TODO: Open approval history modal or navigate to history page
-    console.log('View approval history for task:', taskId);
+
+    // Find the task to get its name
+    const task = tasks.find(t => t.id === taskId);
+
+    // Create mock history data for demonstration
+    // TODO: Replace with actual API call to get task history
+    const mockHistory: TaskApprovalHistory = {
+      taskId: taskId,
+      taskName: task?.taskGroupName || 'Task',
+      taskStartDate: '2025-11-30T04:30:00',
+      taskEndDate: '2025-12-03T17:00:00',
+      currentRound: 1,
+      totalRounds: 1,
+      rounds: [
+        {
+          roundNumber: 1,
+          steps: [
+            {
+              stepNumber: 1,
+              stepName: 'SUBMIT',
+              status: 'submitted',
+              assignee: {
+                type: 'user',
+                id: 45,
+                name: 'Nguyen Dai Viet',
+                avatar: undefined,
+              },
+              startDate: '2025-10-10',
+              endDate: '2025-10-12',
+              comment: 'Reference site about Lorem Ipsum, giving information on its origins as well as a random Lipsum generator.',
+            },
+            {
+              stepNumber: 2,
+              stepName: 'APPROVE',
+              status: 'done',
+              assignee: {
+                type: 'user',
+                id: 12,
+                name: 'Yoshinaga',
+                avatar: undefined,
+              },
+              startDate: '2025-10-14',
+              endDate: '2025-10-15',
+              comment: 'Lorem Ipsum, giving information on its origins',
+            },
+            {
+              stepNumber: 3,
+              stepName: 'DO_TASK',
+              status: 'in_process',
+              assignee: {
+                type: 'stores',
+                name: '27 Stores',
+                count: 27,
+              },
+              startDate: '2025-10-19',
+              endDate: '2025-10-21',
+              progress: {
+                done: 23,
+                total: 27,
+              },
+            },
+            {
+              stepNumber: 4,
+              stepName: 'CHECK',
+              status: 'in_process',
+              assignee: {
+                type: 'user',
+                id: 8,
+                name: 'PERI',
+                avatar: undefined,
+              },
+              startDate: '2025-10-19',
+              endDate: '2025-10-21',
+            },
+          ],
+        },
+      ],
+    };
+
+    setSelectedTaskHistory(mockHistory);
+    setIsHistoryModalOpen(true);
   };
 
   const handlePauseTask = (taskId: string) => {
@@ -939,6 +1023,20 @@ export default function TaskListPage() {
           </button>
         </div>
       )}
+
+      {/* Approval History Modal */}
+      <ApprovalHistoryModal
+        isOpen={isHistoryModalOpen}
+        onClose={() => {
+          setIsHistoryModalOpen(false);
+          setSelectedTaskHistory(null);
+        }}
+        history={selectedTaskHistory}
+        onViewTask={(taskId) => {
+          setIsHistoryModalOpen(false);
+          router.push(`/tasks/new?id=${taskId}&source=task_list`);
+        }}
+      />
       </div>
     </div>
   );
