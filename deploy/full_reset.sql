@@ -983,7 +983,7 @@ DROP TABLE IF EXISTS `task_library`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `task_library` (
-  `task_library_id` bigint NOT NULL AUTO_INCREMENT,
+  `task_library_id` bigint unsigned NOT NULL AUTO_INCREMENT,
   -- Source tracking
   `source` enum('task_list','library') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'task_list' COMMENT 'task_list=auto-saved when task approved, library=created directly',
   `status` enum('draft','approve','available','cooldown') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'available' COMMENT 'draft/approve only for direct Library creation (Flow 2)',
@@ -1250,7 +1250,7 @@ CREATE TABLE `tasks` (
   `last_rejection_reason` text COLLATE utf8mb4_unicode_ci,
   `last_rejected_at` timestamp NULL DEFAULT NULL,
   `last_rejected_by` int DEFAULT NULL,
-  `library_task_id` int DEFAULT NULL,
+  `library_task_id` bigint unsigned DEFAULT NULL COMMENT 'FK to task_library for tasks created from templates',
   `submitted_at` timestamp NULL DEFAULT NULL,
   `approved_at` timestamp NULL DEFAULT NULL,
   `dispatched_at` timestamp NULL DEFAULT NULL COMMENT 'Timestamp when task was sent to stores after approval',
@@ -1276,6 +1276,10 @@ CREATE TABLE `tasks` (
   KEY `idx_tasks_dates` (`start_date`,`end_date`),
   KEY `idx_tasks_instruction_type` (`task_instruction_type`),
   KEY `fk_tasks_paused_by` (`paused_by`),
+  KEY `idx_tasks_library` (`library_task_id`),
+  KEY `idx_tasks_draft_status` (`created_staff_id`,`source`,`status_id`,`submitted_at`),
+  KEY `idx_tasks_receiver_type` (`receiver_type`),
+  KEY `idx_tasks_dispatched` (`dispatched_at`,`status_id`),
   CONSTRAINT `fk_tasks_approver` FOREIGN KEY (`approver_id`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL,
   CONSTRAINT `fk_tasks_assigned_staff` FOREIGN KEY (`assigned_staff_id`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL,
   CONSTRAINT `fk_tasks_assigned_store` FOREIGN KEY (`assigned_store_id`) REFERENCES `stores` (`store_id`) ON DELETE SET NULL,
@@ -1288,7 +1292,8 @@ CREATE TABLE `tasks` (
   CONSTRAINT `fk_tasks_response_type` FOREIGN KEY (`response_type_id`) REFERENCES `code_master` (`code_master_id`),
   CONSTRAINT `fk_tasks_status` FOREIGN KEY (`status_id`) REFERENCES `code_master` (`code_master_id`),
   CONSTRAINT `fk_tasks_task_type` FOREIGN KEY (`task_type_id`) REFERENCES `code_master` (`code_master_id`),
-  CONSTRAINT `fk_tasks_paused_by` FOREIGN KEY (`paused_by`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL
+  CONSTRAINT `fk_tasks_paused_by` FOREIGN KEY (`paused_by`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_tasks_library` FOREIGN KEY (`library_task_id`) REFERENCES `task_library` (`task_library_id`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=91 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
