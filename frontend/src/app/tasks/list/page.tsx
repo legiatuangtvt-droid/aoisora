@@ -265,6 +265,11 @@ export default function TaskListPage() {
         queryParams['filter[status_id]'] = STATUS_ID_MAP[filters.status[0] as TaskStatus];
       }
 
+      // My Tasks filter - filter by created_staff_id when viewScope is "My Tasks"
+      if (filters.viewScope === 'My Tasks' && currentUser?.staff_id) {
+        queryParams['filter[created_staff_id]'] = currentUser.staff_id;
+      }
+
       // Fetch tasks with server-side pagination
       // Response now includes draft_info for HQ users (no separate API call needed)
       const response = await getTasks(queryParams);
@@ -318,7 +323,8 @@ export default function TaskListPage() {
       setIsLoading(false);
     }
   // Include currentUser.staff_id to trigger refetch when user switches
-  }, [currentPage, itemsPerPage, debouncedSearch, dateRange, filters.departments, filters.status, currentUser?.staff_id]);
+  // Include filters.viewScope to trigger refetch when switching between "All team" and "My Tasks"
+  }, [currentPage, itemsPerPage, debouncedSearch, dateRange, filters.departments, filters.status, filters.viewScope, currentUser?.staff_id]);
 
   // Initial load - fetch departments once
   useEffect(() => {

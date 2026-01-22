@@ -415,7 +415,7 @@ class TaskLibraryController extends Controller
      *
      * Creates a new task from the template and assigns it to selected stores.
      */
-    public function dispatch(Request $request, $id)
+    public function dispatchToStores(Request $request, $id)
     {
         $template = TaskLibrary::findOrFail($id);
         $user = $this->getEffectiveUser($request);

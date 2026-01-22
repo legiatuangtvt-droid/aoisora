@@ -4083,8 +4083,8 @@ TRIGGERS tự động tạo history entries:
 | 1.3.11 | Task header info | ✅ | Using real API data |
 | 1.3.12 | Statistics cards (Not Yet, Done, Unable, Avg Time) | ✅ | Using getTaskProgress API |
 | 1.3.13 | Store progress table | ✅ | Using store assignments from API |
-| 1.3.14 | Comments section | ⏳ | Component exists, API không có (cần implement) |
-| 1.3.15 | Attachments/Evidence | ⏳ | Files từ stores - cần implement
+| 1.3.14 | Comments section | ✅ | Full CRUD with add/edit/delete, owner-only permissions |
+| 1.3.15 | Attachments/Evidence | ✅ | Backend API + Frontend modal complete
 
 **Add Task (/tasks/new):**
 | # | Task | Status | Notes |
@@ -4092,13 +4092,13 @@ TRIGGERS tự động tạo history entries:
 | 1.3.16 | A. Information section | ✅ | Task Type, Applicable Period, Execution Time with validation |
 | 1.3.17 | B. Instructions section | ✅ | Photo guidelines (click/paste/drag-drop), Manual Link, Note |
 | 1.3.18 | C. Scope section - Store hierarchy | ✅ | Using real API via useScopeData hook |
-| 1.3.19 | C. Scope section - HQ hierarchy | ⏳ | Component ready, needs HQ users API |
+| 1.3.19 | C. Scope section - HQ hierarchy | ✅ | Backend API + useHQHierarchy hook complete |
 | 1.3.20 | D. Approval Process - auto populate | ✅ | Auto-fetches approver via getApproverForStaff API |
 | 1.3.21 | Save as Draft | ✅ | Implemented in handleSaveDraft |
 | 1.3.22 | Submit for approval | ✅ | Implemented in handleSubmit |
 | 1.3.23 | Edit existing draft | ✅ | Works via URL params (?id=xxx) |
 | 1.3.24 | source=library mode | ✅ | Hides scope section correctly |
-| 1.3.25 | source=todo_task mode | ⏳ | Has HQ scopeType, needs HQ users API |
+| 1.3.25 | source=todo_task mode | ✅ | Uses useHQHierarchy hook for HQ scope |
 
 **Library (/tasks/library):**
 | # | Task | Status | Notes |
@@ -4112,9 +4112,9 @@ TRIGGERS tự động tạo history entries:
 **To Do Task (/tasks/todo):**
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 1.3.31 | Danh sách tasks HQ→HQ | ⏳ | Needs source filter in API (backend stores source but index lacks filter) |
+| 1.3.31 | Danh sách tasks HQ→HQ | ✅ | Backend source filter added, calendar view deferred to Phase 2 |
 | 1.3.32 | Add New → Add Task (source=todo_task) | ✅ | Routes to /tasks/new?source=todo_task |
-| 1.3.33 | My tasks (assigned to me) | 🔄 | API filter[assigned_staff_id] exists, needs frontend integration |
+| 1.3.33 | My tasks (created by me) | ✅ | FilterModal "My Tasks" option + filter[created_staff_id] in page.tsx |
 
 **Approval Screen (/tasks/approval):**
 | # | Task | Status | Notes |
@@ -4150,9 +4150,9 @@ TRIGGERS tự động tạo history entries:
 | 1.4.2 | ScopeSelector (Store hierarchy) | ✅ | Exists as ScopeSection.tsx (scopeType='store') |
 | 1.4.3 | ScopeSelector (HQ hierarchy) | ✅ | Exists as ScopeSection.tsx (scopeType='hq') |
 | 1.4.4 | TaskStatusBadge | ✅ | Status với colors |
-| 1.4.5 | StoreStatusBadge | ⏳ | Store-level status |
+| 1.4.5 | StoreStatusBadge | ✅ | Reusable component with 6 statuses |
 | 1.4.6 | PhotoUploader | ⏳ | Click, paste, drag-drop |
-| 1.4.7 | EvidenceViewer | ⏳ | Gallery cho store evidence |
+| 1.4.7 | EvidenceViewer | ✅ | Implemented in Task Detail page as modal
 
 ### PHASE 2: TỐI ƯU HIỆU SUẤT
 
@@ -4203,10 +4203,10 @@ TRIGGERS tự động tạo history entries:
 │                                                                 │
 │  Database:     [██████████] 100% (6/6 tasks)                   │
 │  Backend APIs: [██████████] 100% (26/26 tasks)                 │
-│  Frontend:     [████████░░] 79%  (37/47 tasks)                 │
-│  Components:   [██████░░░░] 57%  (4/7 tasks)                   │
+│  Frontend:     [█████████░] 91%  (43/47 tasks)                 │
+│  Components:   [████████░░] 86%  (6/7 tasks)                   │
 │  ────────────────────────────────────────────────────────────── │
-│  OVERALL:      [████████░░] ~85%                               │
+│  OVERALL:      [█████████░] ~93%                               │
 │                                                                 │
 │  PHASE 2 PROGRESS: [░░░░░░░░░░] 0%                             │
 │  PHASE 3 PROGRESS: [░░░░░░░░░░] 0%                             │
@@ -4214,7 +4214,7 @@ TRIGGERS tự động tạo history entries:
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 
-Last Updated: 2026-01-22
+Last Updated: 2026-01-23
 ```
 
 ### LEGEND

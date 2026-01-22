@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getTaskById, getDepartments, getTasks, getTaskProgress } from '@/lib/api';
+import { getTaskById, getDepartments, getTasks, getTaskProgress, getTaskComments, createTaskComment, updateTaskComment, deleteTaskComment, TaskComment, getTaskImages, TaskImage } from '@/lib/api';
 import { Task as ApiTask, Department, TaskProgressResponse, TaskStoreAssignment } from '@/types/api';
+import { useUser } from '@/contexts/UserContext';
 import { ViewMode, TaskGroup } from '@/types/tasks';
 import Link from 'next/link';
 import ViewModeToggle from '@/components/tasks/ViewModeToggle';
@@ -27,6 +28,20 @@ export default function TaskDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isWorkflowPanelOpen, setIsWorkflowPanelOpen] = useState(false);
+
+  // Comments state
+  const [comments, setComments] = useState<TaskComment[]>([]);
+  const [newComment, setNewComment] = useState('');
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editingContent, setEditingContent] = useState('');
+
+  // Evidence images state
+  const [taskImages, setTaskImages] = useState<TaskImage[]>([]);
+  const [selectedEvidence, setSelectedEvidence] = useState<{ storeId: number; storeName: string; images: TaskImage[] } | null>(null);
+
+  // Get current user
+  const { currentUser } = useUser();
 
   // Refs for scroll preservation
   const scrollPositions = useRef<Record<ViewMode, number>>({
@@ -146,9 +161,63 @@ export default function TaskDetailPage() {
     fetchTask();
   }, [taskId]);
 
+  // Fetch comments when taskId changes
+  useEffect(() => {
+    if (!taskId) return;
+
+    const fetchComments = async () => {
+      try {
+        const response = await getTaskComments(Number(taskId));
+        if (response.success) {
+          setComments(response.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch comments:', err);
+      }
+    };
+
+    fetchComments();
+  }, [taskId]);
+
+  // Fetch evidence images when taskId changes
+  useEffect(() => {
+    if (!taskId) return;
+
+    const fetchImages = async () => {
+      try {
+        const response = await getTaskImages(Number(taskId));
+        if (response.success) {
+          setTaskImages(response.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch task images:', err);
+      }
+    };
+
+    fetchImages();
+  }, [taskId]);
+
+  // Group images by store_result_id for easy lookup
+  const imagesByAssignment = useMemo(() => {
+    const map = new Map<number, TaskImage[]>();
+    taskImages.forEach((img) => {
+      if (img.store_result_id) {
+        const existing = map.get(img.store_result_id) || [];
+        map.set(img.store_result_id, [...existing, img]);
+      }
+    });
+    return map;
+  }, [taskImages]);
+
+  // Open evidence viewer for a specific store
+  const openEvidenceViewer = (assignmentId: number, storeName: string) => {
+    const images = imagesByAssignment.get(assignmentId) || [];
+    setSelectedEvidence({ storeId: assignmentId, storeName, images });
+  };
+
   // Calculate counts for badges using real data from taskProgress
   const resultsCount = taskProgress?.assignments?.length || 0;
-  const commentsCount = 0; // TODO: Implement comments API
+  const commentsCount = comments.length;
 
   // Sort store assignments by status priority:
   // 1. not_yet/on_progress (chưa hoàn thành) - first
@@ -296,9 +365,77 @@ export default function TaskDetailPage() {
     );
   }
 
-  const handleAddComment = (storeId: string, content: string) => {
-    console.log('Add comment to store:', storeId, content);
-    // TODO: Implement API call
+  // Comment handlers
+  const handleSubmitComment = async () => {
+    if (!newComment.trim() || !taskId) return;
+
+    setIsSubmittingComment(true);
+    try {
+      const response = await createTaskComment(Number(taskId), newComment.trim());
+      if (response.success) {
+        setComments((prev) => [response.data, ...prev]);
+        setNewComment('');
+      }
+    } catch (err) {
+      console.error('Failed to add comment:', err);
+    } finally {
+      setIsSubmittingComment(false);
+    }
+  };
+
+  const handleEditComment = async (commentId: number) => {
+    if (!editingContent.trim() || !taskId) return;
+
+    try {
+      const response = await updateTaskComment(Number(taskId), commentId, editingContent.trim());
+      if (response.success) {
+        setComments((prev) =>
+          prev.map((c) => (c.comment_id === commentId ? response.data : c))
+        );
+        setEditingCommentId(null);
+        setEditingContent('');
+      }
+    } catch (err) {
+      console.error('Failed to edit comment:', err);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: number) => {
+    if (!taskId || !confirm('Are you sure you want to delete this comment?')) return;
+
+    try {
+      const response = await deleteTaskComment(Number(taskId), commentId);
+      if (response.success) {
+        setComments((prev) => prev.filter((c) => c.comment_id !== commentId));
+      }
+    } catch (err) {
+      console.error('Failed to delete comment:', err);
+    }
+  };
+
+  const startEditingComment = (comment: TaskComment) => {
+    setEditingCommentId(comment.comment_id);
+    setEditingContent(comment.content);
+  };
+
+  const cancelEditing = () => {
+    setEditingCommentId(null);
+    setEditingContent('');
+  };
+
+  const formatCommentDate = (dateStr: string): string => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} min ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   };
 
   return (
@@ -527,6 +664,7 @@ export default function TaskDetailPage() {
                       <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Assigned To</th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Time</th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Completed By</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Evidence</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -558,6 +696,25 @@ export default function TaskDetailPage() {
                         <td className="px-4 py-3 text-sm text-gray-600">
                           {assignment.completed_by?.name || '-'}
                         </td>
+                        <td className="px-4 py-3">
+                          {(() => {
+                            const images = imagesByAssignment.get(assignment.id) || [];
+                            if (images.length === 0) {
+                              return <span className="text-gray-400">-</span>;
+                            }
+                            return (
+                              <button
+                                onClick={() => openEvidenceViewer(assignment.id, assignment.store_name)}
+                                className="flex items-center gap-1.5 text-[#C5055B] hover:text-[#A00449] transition-colors"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                <span className="text-sm font-medium">{images.length}</span>
+                              </button>
+                            );
+                          })()}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -570,10 +727,118 @@ export default function TaskDetailPage() {
             </div>
           )}
 
-          {/* Comment View - TODO: Implement comments API */}
+          {/* Comment View */}
           {viewMode === 'comment' && (
-            <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
-              <p className="text-gray-500">Comments feature coming soon.</p>
+            <div className="bg-white border border-gray-200 rounded-lg">
+              {/* Add Comment Form */}
+              <div className="p-4 border-b border-gray-200">
+                <div className="flex gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#C5055B] flex items-center justify-center text-white font-medium text-sm flex-shrink-0">
+                    {currentUser?.staff_name?.charAt(0) || 'U'}
+                  </div>
+                  <div className="flex-1">
+                    <textarea
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      placeholder="Write a comment..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C5055B] focus:border-transparent resize-none"
+                      rows={3}
+                    />
+                    <div className="flex justify-end mt-2">
+                      <button
+                        onClick={handleSubmitComment}
+                        disabled={!newComment.trim() || isSubmittingComment}
+                        className="px-4 py-2 bg-[#C5055B] text-white rounded-lg hover:bg-[#A00449] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                      >
+                        {isSubmittingComment ? 'Posting...' : 'Post Comment'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Comments List */}
+              <div className="divide-y divide-gray-200">
+                {comments.length > 0 ? (
+                  comments.map((comment) => (
+                    <div key={comment.comment_id} className="p-4">
+                      <div className="flex gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-medium text-sm flex-shrink-0">
+                          {comment.user?.staff_name?.charAt(0) || '?'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-gray-900">
+                                {comment.user?.staff_name || 'Unknown User'}
+                              </span>
+                              <span className="text-sm text-gray-500">
+                                {formatCommentDate(comment.created_at)}
+                              </span>
+                            </div>
+                            {currentUser?.staff_id === comment.user?.staff_id && (
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => startEditingComment(comment)}
+                                  className="p-1 text-gray-400 hover:text-gray-600 rounded"
+                                  title="Edit"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                  </svg>
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteComment(comment.comment_id)}
+                                  className="p-1 text-gray-400 hover:text-red-600 rounded"
+                                  title="Delete"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                          {editingCommentId === comment.comment_id ? (
+                            <div className="mt-2">
+                              <textarea
+                                value={editingContent}
+                                onChange={(e) => setEditingContent(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C5055B] focus:border-transparent resize-none"
+                                rows={3}
+                              />
+                              <div className="flex justify-end gap-2 mt-2">
+                                <button
+                                  onClick={cancelEditing}
+                                  className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  onClick={() => handleEditComment(comment.comment_id)}
+                                  disabled={!editingContent.trim()}
+                                  className="px-3 py-1.5 bg-[#C5055B] text-white rounded-lg hover:bg-[#A00449] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                >
+                                  Save
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="mt-1 text-gray-700 whitespace-pre-wrap">{comment.content}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-12 text-center">
+                    <svg className="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                    <p className="text-gray-500">No comments yet. Be the first to comment!</p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -595,6 +860,101 @@ export default function TaskDetailPage() {
               </button>
             </div>
             <p className="text-gray-500">Workflow steps coming soon.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Evidence Viewer Modal */}
+      {selectedEvidence && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex justify-between items-center p-4 border-b">
+              <h3 className="text-lg font-semibold">
+                Evidence - {selectedEvidence.storeName}
+              </h3>
+              <button
+                onClick={() => setSelectedEvidence(null)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-4 overflow-y-auto max-h-[calc(90vh-120px)]">
+              {selectedEvidence.images.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <p>No evidence uploaded yet</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {selectedEvidence.images.map((image) => (
+                    <div key={image.image_id} className="relative group">
+                      <a
+                        href={image.image_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block"
+                      >
+                        <img
+                          src={image.thumbnail_url || image.image_url}
+                          alt={image.title || 'Evidence'}
+                          className="w-full h-40 object-cover rounded-lg border hover:border-blue-500 transition-colors"
+                        />
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all rounded-lg flex items-center justify-center">
+                          <svg className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                          </svg>
+                        </div>
+                      </a>
+                      <div className="mt-2">
+                        {image.title && (
+                          <p className="text-sm font-medium text-gray-700 truncate">{image.title}</p>
+                        )}
+                        <p className="text-xs text-gray-500">
+                          {image.uploaded_at ? new Date(image.uploaded_at).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          }) : 'Unknown date'}
+                        </p>
+                        {image.uploaded_by && (
+                          <p className="text-xs text-gray-500">
+                            By: {image.uploaded_by.staff_name}
+                          </p>
+                        )}
+                        {image.is_completed && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 mt-1">
+                            Completion Evidence
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t bg-gray-50 flex justify-between items-center">
+              <span className="text-sm text-gray-500">
+                {selectedEvidence.images.length} image{selectedEvidence.images.length !== 1 ? 's' : ''}
+              </span>
+              <button
+                onClick={() => setSelectedEvidence(null)}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -77,6 +77,8 @@ class TaskController extends Controller
                 AllowedFilter::exact('created_staff_id'),
                 AllowedFilter::exact('status_id'),
                 AllowedFilter::exact('priority'),
+                AllowedFilter::exact('source'),
+                AllowedFilter::exact('receiver_type'),
                 AllowedFilter::partial('task_name'),
                 // Date range filters - also include:
                 // 1. Tasks with NULL dates (drafts without dates set)

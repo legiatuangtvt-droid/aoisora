@@ -367,6 +367,80 @@ export async function getScopeHierarchy(): Promise<ScopeHierarchyResponse> {
 }
 
 // ============================================
+// HQ Hierarchy API (Division → Dept → Team → User)
+// ============================================
+
+export interface HQUser {
+  user_id: number;
+  user_name: string;
+  user_code: string;
+  position: string | null;
+  job_grade: string | null;
+}
+
+export interface HQTeam {
+  team_id: string;
+  team_name: string;
+  users: HQUser[];
+}
+
+export interface HQDepartment {
+  department_id: number;
+  department_name: string;
+  department_code: string | null;
+  teams: HQTeam[];
+}
+
+export interface HQDivision {
+  division_id: number;
+  division_name: string;
+  division_code: string | null;
+  departments: HQDepartment[];
+}
+
+export interface HQHierarchyResponse {
+  success: boolean;
+  divisions: HQDivision[];
+  meta: {
+    total_divisions: number;
+    total_users: number;
+  };
+}
+
+export interface HQUsersResponse {
+  success: boolean;
+  users: HQUser[];
+  meta: {
+    team_id?: string;
+    department_id?: number;
+    total: number;
+  };
+}
+
+/**
+ * Get complete HQ organizational hierarchy in one API call
+ * Returns: Division → Department → Team → User hierarchy
+ * Used by: Add Task (source=todo_task) for scoping tasks to HQ users
+ */
+export async function getHQHierarchy(): Promise<HQHierarchyResponse> {
+  return fetchApi<HQHierarchyResponse>('/hq-hierarchy');
+}
+
+/**
+ * Get users by team
+ */
+export async function getHQUsersByTeam(teamId: string): Promise<HQUsersResponse> {
+  return fetchApi<HQUsersResponse>(`/hq-hierarchy/teams/${teamId}/users`);
+}
+
+/**
+ * Get users by department (all users in department, including all teams)
+ */
+export async function getHQUsersByDepartment(departmentId: number): Promise<HQUsersResponse> {
+  return fetchApi<HQUsersResponse>(`/hq-hierarchy/departments/${departmentId}/users`);
+}
+
+// ============================================
 // Zone API (4-level hierarchy: Region → Zone → Area → Store)
 // ============================================
 
@@ -464,9 +538,16 @@ export interface TaskQueryParamsExtended extends TaskQueryParams {
   'filter[assigned_store_id]'?: number;
   'filter[dept_id]'?: number;
   'filter[assigned_staff_id]'?: number;
+  'filter[created_staff_id]'?: number;
   'filter[status_id]'?: number;
   'filter[priority]'?: string;
   'filter[task_name]'?: string;
+  // Source filter (task_list, library, todo_task)
+  'filter[source]'?: 'task_list' | 'library' | 'todo_task';
+  // Receiver type filter (store, hq_user)
+  'filter[receiver_type]'?: 'store' | 'hq_user';
+  // Calculated status filter (not_yet, on_progress, done, overdue)
+  'filter[calculated_status]'?: 'not_yet' | 'on_progress' | 'done' | 'overdue';
   // Date range filters (YYYY-MM-DD format)
   'filter[start_date_from]'?: string;
   'filter[start_date_to]'?: string;
@@ -700,6 +781,186 @@ export interface TaskApprovalHistoryResponse {
 
 export async function getTaskApprovalHistory(taskId: number): Promise<TaskApprovalHistoryResponse> {
   return fetchApi<TaskApprovalHistoryResponse>(`/tasks/${taskId}/history`);
+}
+
+// ============================================
+// Task Comments API
+// ============================================
+
+export interface TaskComment {
+  comment_id: number;
+  task_id: number;
+  content: string;
+  store_result_id: number | null;
+  created_at: string;
+  updated_at: string;
+  user: {
+    staff_id: number;
+    staff_name: string;
+    staff_code: string;
+    avatar: string | null;
+  } | null;
+}
+
+export interface TaskCommentsResponse {
+  success: boolean;
+  data: TaskComment[];
+  meta: {
+    total: number;
+    task_id: number;
+  };
+}
+
+export interface CreateCommentResponse {
+  success: boolean;
+  message: string;
+  data: TaskComment;
+}
+
+/**
+ * Get all comments for a task
+ */
+export async function getTaskComments(taskId: number): Promise<TaskCommentsResponse> {
+  return fetchApi<TaskCommentsResponse>(`/tasks/${taskId}/comments`);
+}
+
+/**
+ * Create a new comment for a task
+ */
+export async function createTaskComment(
+  taskId: number,
+  content: string,
+  storeResultId?: number
+): Promise<CreateCommentResponse> {
+  return fetchApi<CreateCommentResponse>(`/tasks/${taskId}/comments`, {
+    method: 'POST',
+    body: JSON.stringify({
+      content,
+      store_result_id: storeResultId,
+    }),
+  });
+}
+
+/**
+ * Update a comment
+ */
+export async function updateTaskComment(
+  taskId: number,
+  commentId: number,
+  content: string
+): Promise<CreateCommentResponse> {
+  return fetchApi<CreateCommentResponse>(`/tasks/${taskId}/comments/${commentId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ content }),
+  });
+}
+
+/**
+ * Delete a comment
+ */
+export async function deleteTaskComment(
+  taskId: number,
+  commentId: number
+): Promise<{ success: boolean; message: string }> {
+  return fetchApi<{ success: boolean; message: string }>(`/tasks/${taskId}/comments/${commentId}`, {
+    method: 'DELETE',
+  });
+}
+
+// ============================================
+// Task Evidence Images API
+// ============================================
+
+export interface TaskImage {
+  image_id: number;
+  task_id: number;
+  store_result_id: number | null;
+  title: string | null;
+  image_url: string;
+  thumbnail_url: string | null;
+  is_completed: boolean;
+  uploaded_at: string;
+  uploaded_by: {
+    staff_id: number;
+    staff_name: string;
+    staff_code: string;
+  } | null;
+}
+
+export interface TaskImagesResponse {
+  success: boolean;
+  data: TaskImage[];
+  meta: {
+    total: number;
+    task_id: number;
+  };
+}
+
+export interface StoreEvidenceResponse {
+  success: boolean;
+  data: TaskImage[];
+  meta: {
+    total: number;
+    task_id: number;
+    store_id: number;
+    assignment_id: number;
+  };
+}
+
+export interface UploadImageResponse {
+  success: boolean;
+  message: string;
+  data: TaskImage;
+}
+
+/**
+ * Get all evidence images for a task
+ */
+export async function getTaskImages(taskId: number): Promise<TaskImagesResponse> {
+  return fetchApi<TaskImagesResponse>(`/tasks/${taskId}/images`);
+}
+
+/**
+ * Get evidence images for a specific store's task execution
+ */
+export async function getStoreEvidence(taskId: number, storeId: number): Promise<StoreEvidenceResponse> {
+  return fetchApi<StoreEvidenceResponse>(`/tasks/${taskId}/stores/${storeId}/evidence`);
+}
+
+/**
+ * Upload evidence image for a store's task execution
+ */
+export async function uploadStoreEvidence(
+  taskId: number,
+  storeId: number,
+  imageUrl: string,
+  options?: {
+    title?: string;
+    thumbnailUrl?: string;
+    isCompleted?: boolean;
+  }
+): Promise<UploadImageResponse> {
+  return fetchApi<UploadImageResponse>(`/tasks/${taskId}/stores/${storeId}/evidence`, {
+    method: 'POST',
+    body: JSON.stringify({
+      image_url: imageUrl,
+      thumbnail_url: options?.thumbnailUrl,
+      title: options?.title,
+      is_completed: options?.isCompleted ?? true,
+    }),
+  });
+}
+
+/**
+ * Delete an evidence image
+ */
+export async function deleteTaskImage(
+  taskId: number,
+  imageId: number
+): Promise<{ success: boolean; message: string }> {
+  return fetchApi<{ success: boolean; message: string }>(`/tasks/${taskId}/images/${imageId}`, {
+    method: 'DELETE',
+  });
 }
 
 // ============================================

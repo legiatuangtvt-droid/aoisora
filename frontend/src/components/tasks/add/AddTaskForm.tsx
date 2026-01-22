@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo, useEffect, memo, useRef } from 'react';
 import { TaskLevel, TaskInformation, TaskInstructions, TaskScope, TaskApproval, DropdownOption, TaskFrequency, ExecutionTime } from '@/types/addTask';
 import { mockMasterData, createEmptyTaskLevel } from '@/data/mockAddTask';
 import { useScopeData } from '@/hooks/useScopeData';
+import { useHQHierarchy } from '@/hooks/useHQHierarchy';
 import {
   TASK_TYPE_ORDER,
   DEFAULT_TASK_TYPE_BY_LEVEL,
@@ -347,17 +348,33 @@ export default function AddTaskForm({
   const { currentUser } = useUser();
 
   // Get scope data from API
+  // Store hierarchy data (for task_list source)
+  const storeScopeData = useScopeData();
+
+  // HQ hierarchy data (for todo_task source)
+  const hqScopeData = useHQHierarchy();
+
+  // Select the appropriate scope data based on source
+  // - task_list: Use store hierarchy (Region/Zone/Area/Store)
+  // - todo_task: Use HQ hierarchy (Division/Dept/Team/User)
+  // - library: Hidden, but we still need data for fallback
+  const scopeType = source === 'todo_task' ? 'hq' : 'store';
+  const scopeData = scopeType === 'hq' ? hqScopeData : storeScopeData;
+
   const {
     regionOptions: apiRegionOptions,
     storeOptions: apiStoreOptions,
-    isLoadingRegions,
-    isLoadingStores,
+    isLoading: isLoadingScopeData,
     totalStores,
     getStoresByRegion,
     getZonesByRegion,
     getAreasByZone,
     getStoresByArea,
-  } = useScopeData();
+  } = scopeData;
+
+  // Keep backward compatibility names
+  const isLoadingRegions = isLoadingScopeData;
+  const isLoadingStores = isLoadingScopeData;
 
   // Use refs to keep stable references for callbacks
   const taskLevelsRef = useRef(taskLevels);
@@ -803,7 +820,7 @@ export default function AddTaskForm({
           canAddSubLevel={canAddSubLevel}
           canDelete={canDelete}
           showScopeSection={showScopeSection}
-          scopeType={source === 'todo_task' ? 'hq' : 'store'}
+          scopeType={scopeType}
           taskTypeOptions={filteredTaskTypeOptions}
           zoneOptions={getZoneOptions(taskLevel.scope.regionId)}
           areaOptions={getAreaOptions(taskLevel.scope.zoneId)}

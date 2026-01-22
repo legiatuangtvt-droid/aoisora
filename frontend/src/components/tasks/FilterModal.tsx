@@ -196,9 +196,7 @@ export default function FilterModal({
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             >
               <option value="All team">All team</option>
-              <option value="Team A">Team A</option>
-              <option value="Team B">Team B</option>
-              <option value="Team C">Team C</option>
+              <option value="My Tasks">My Tasks (created by me)</option>
             </select>
           </div>
 

@@ -26,6 +26,9 @@ use App\Http\Controllers\Api\V1\ZoneController;
 use App\Http\Controllers\Api\V1\AreaController;
 use App\Http\Controllers\Api\V1\ScopeController;
 use App\Http\Controllers\Api\V1\TaskStoreAssignmentController;
+use App\Http\Controllers\Api\V1\TaskCommentController;
+use App\Http\Controllers\Api\V1\TaskImageController;
+use App\Http\Controllers\Api\V1\HQHierarchyController;
 
 /*
 |--------------------------------------------------------------------------
@@ -57,6 +60,9 @@ Route::prefix('v1')->group(function () {
     // Public read-only routes (for listing/browsing)
     Route::get('tasks', [TaskController::class, 'index']);
     Route::get('tasks/{task}', [TaskController::class, 'show'])->where('task', '[0-9]+');
+    Route::get('tasks/{task}/comments', [TaskCommentController::class, 'index']);
+    Route::get('tasks/{task}/images', [TaskImageController::class, 'index']);
+    Route::get('tasks/{task}/stores/{store}/evidence', [TaskImageController::class, 'getStoreEvidence']);
     Route::get('stores', [StoreController::class, 'index']);
     Route::get('stores/{store}', [StoreController::class, 'show']);
     Route::get('stores/{store}/staff', [StoreController::class, 'staff']);
@@ -72,6 +78,11 @@ Route::prefix('v1')->group(function () {
 
     // Scope Hierarchy - Single API for all geographic data (Region → Zone → Area → Store)
     Route::get('scope-hierarchy', [ScopeController::class, 'hierarchy']);
+
+    // HQ Hierarchy - Single API for HQ organizational structure (Division → Dept → Team → User)
+    Route::get('hq-hierarchy', [HQHierarchyController::class, 'index']);
+    Route::get('hq-hierarchy/teams/{team}/users', [HQHierarchyController::class, 'getUsersByTeam']);
+    Route::get('hq-hierarchy/departments/{department}/users', [HQHierarchyController::class, 'getUsersByDepartment']);
 
     // User Information (public read-only)
     Route::prefix('user-info')->group(function () {
@@ -186,6 +197,17 @@ Route::prefix('v1')->group(function () {
 
         Route::get('tasks/{task}/progress', [TaskStoreAssignmentController::class, 'getTaskProgress']);
 
+        // Task Comments (GET is public, write operations require auth)
+        Route::prefix('tasks/{task}/comments')->group(function () {
+            Route::post('/', [TaskCommentController::class, 'store']);
+            Route::put('/{comment}', [TaskCommentController::class, 'update']);
+            Route::delete('/{comment}', [TaskCommentController::class, 'destroy']);
+        });
+
+        // Task Evidence Images (GET is public, write operations require auth)
+        Route::post('tasks/{task}/stores/{store}/evidence', [TaskImageController::class, 'uploadStoreEvidence']);
+        Route::delete('tasks/{task}/images/{image}', [TaskImageController::class, 'destroy']);
+
         // WS Task Library (Templates)
         Route::prefix('library-tasks')->group(function () {
             Route::get('/', [TaskLibraryController::class, 'index']);
@@ -197,7 +219,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/{id}/submit', [TaskLibraryController::class, 'submit']);
             Route::post('/{id}/approve', [TaskLibraryController::class, 'approve']);
             Route::post('/{id}/reject', [TaskLibraryController::class, 'reject']);
-            Route::post('/{id}/dispatch', [TaskLibraryController::class, 'dispatch']);
+            Route::post('/{id}/dispatch', [TaskLibraryController::class, 'dispatchToStores']);
             Route::post('/{id}/override-cooldown', [TaskLibraryController::class, 'overrideCooldown']);
         });
 
