@@ -699,6 +699,216 @@ export async function getTaskApprovalHistory(taskId: number): Promise<TaskApprov
   return fetchApi<TaskApprovalHistoryResponse>(`/tasks/${taskId}/history`);
 }
 
+// ============================================
+// WS Task Library API (Templates for WS Module)
+// ============================================
+
+/**
+ * WS Library Template - different from DWS TaskLibrary
+ * Used for the Library screen (/tasks/library)
+ */
+export interface WsLibraryTemplate {
+  task_library_id: number;
+  source: 'task_list' | 'library' | 'todo_task';
+  status: 'draft' | 'approve' | 'available' | 'cooldown';
+  task_name: string;
+  task_description: string | null;
+  task_type_id: number | null;
+  response_type_id: number | null;
+  response_num: number | null;
+  is_repeat: boolean;
+  repeat_config: Record<string, unknown> | null;
+  dept_id: number | null;
+  task_instruction_type: 'image' | 'document' | null;
+  manual_link: string | null;
+  photo_guidelines: string[] | null;
+  manual_id: number | null;
+  comment: string | null;
+  attachments: string[] | null;
+  created_staff_id: number;
+  approver_id: number | null;
+  approved_at: string | null;
+  submitted_at: string | null;
+  dispatch_count: number;
+  last_dispatched_at: string | null;
+  last_dispatched_by: number | null;
+  had_issues: boolean;
+  rejection_count: number;
+  has_changes_since_rejection: boolean;
+  last_rejection_reason: string | null;
+  last_rejected_at: string | null;
+  last_rejected_by: number | null;
+  cooldown_until: string | null;
+  cooldown_triggered_by: number | null;
+  cooldown_triggered_at: string | null;
+  original_task_id: number | null;
+  created_at: string;
+  updated_at: string;
+  // Computed fields
+  can_dispatch?: boolean;
+  is_in_active_cooldown?: boolean;
+  cooldown_remaining_minutes?: number;
+  can_submit?: boolean;
+  // Relations
+  creator?: Staff;
+  approver?: Staff;
+  department?: Department;
+  taskType?: CodeMaster;
+  responseType?: CodeMaster;
+}
+
+export interface WsLibraryTemplateCreate {
+  task_name: string;
+  task_description?: string;
+  task_type_id?: number;
+  response_type_id?: number;
+  dept_id?: number;
+  task_instruction_type?: 'image' | 'document';
+  manual_link?: string;
+  photo_guidelines?: string[];
+  manual_id?: number;
+  comment?: string;
+  attachments?: string[];
+}
+
+export interface WsLibraryTemplateUpdate extends Partial<WsLibraryTemplateCreate> {}
+
+export interface PaginatedWsLibraryResponse {
+  data: WsLibraryTemplate[];
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+}
+
+export interface WsLibraryDispatchRequest {
+  start_date: string;
+  end_date: string;
+  store_ids: number[];
+  priority?: 'low' | 'normal' | 'high' | 'urgent';
+  force_override?: boolean;
+}
+
+export interface WsLibraryDispatchResponse {
+  message: string;
+  task: Task;
+  stores_count: number;
+}
+
+// Get all library templates
+export async function getWsLibraryTemplates(params?: {
+  page?: number;
+  per_page?: number;
+  status?: string;
+  source?: string;
+  dept_id?: number;
+  task_name?: string;
+  had_issues?: boolean;
+  sort?: string;
+}): Promise<PaginatedWsLibraryResponse> {
+  const searchParams = new URLSearchParams();
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        if (key === 'task_name') {
+          searchParams.append('filter[task_name]', String(value));
+        } else if (key === 'status' || key === 'source' || key === 'dept_id' || key === 'had_issues') {
+          searchParams.append(`filter[${key}]`, String(value));
+        } else if (key === 'sort') {
+          searchParams.append('sort', String(value));
+        } else {
+          searchParams.append(key, String(value));
+        }
+      }
+    });
+  }
+  const query = searchParams.toString();
+  return fetchApi<PaginatedWsLibraryResponse>(`/library-tasks${query ? `?${query}` : ''}`);
+}
+
+// Get single library template
+export async function getWsLibraryTemplate(id: number): Promise<WsLibraryTemplate> {
+  return fetchApi<WsLibraryTemplate>(`/library-tasks/${id}`);
+}
+
+// Create library template
+export async function createWsLibraryTemplate(data: WsLibraryTemplateCreate): Promise<WsLibraryTemplate> {
+  return fetchApi<WsLibraryTemplate>('/library-tasks', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+// Update library template
+export async function updateWsLibraryTemplate(id: number, data: WsLibraryTemplateUpdate): Promise<WsLibraryTemplate> {
+  return fetchApi<WsLibraryTemplate>(`/library-tasks/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+// Delete library template
+export async function deleteWsLibraryTemplate(id: number): Promise<void> {
+  return fetchApi<void>(`/library-tasks/${id}`, {
+    method: 'DELETE',
+  });
+}
+
+// Submit library template for approval
+export async function submitWsLibraryTemplate(id: number): Promise<{ message: string; template: WsLibraryTemplate }> {
+  return fetchApi<{ message: string; template: WsLibraryTemplate }>(`/library-tasks/${id}/submit`, {
+    method: 'POST',
+  });
+}
+
+// Approve library template
+export async function approveWsLibraryTemplate(id: number): Promise<{ message: string; template: WsLibraryTemplate }> {
+  return fetchApi<{ message: string; template: WsLibraryTemplate }>(`/library-tasks/${id}/approve`, {
+    method: 'POST',
+  });
+}
+
+// Reject library template
+export async function rejectWsLibraryTemplate(id: number, reason: string): Promise<{ message: string; template: WsLibraryTemplate; can_resubmit: boolean }> {
+  return fetchApi<{ message: string; template: WsLibraryTemplate; can_resubmit: boolean }>(`/library-tasks/${id}/reject`, {
+    method: 'POST',
+    body: JSON.stringify({ reason }),
+  });
+}
+
+// Dispatch library template to stores
+export async function dispatchWsLibraryTemplate(id: number, data: WsLibraryDispatchRequest): Promise<WsLibraryDispatchResponse> {
+  return fetchApi<WsLibraryDispatchResponse>(`/library-tasks/${id}/dispatch`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+// Override cooldown
+export async function overrideWsLibraryCooldown(id: number, reason?: string): Promise<{ message: string; template: WsLibraryTemplate }> {
+  return fetchApi<{ message: string; template: WsLibraryTemplate }>(`/library-tasks/${id}/override-cooldown`, {
+    method: 'POST',
+    body: JSON.stringify({ reason }),
+  });
+}
+
+// Get templates pending approval
+export async function getWsLibraryPendingApproval(params?: {
+  page?: number;
+  per_page?: number;
+}): Promise<PaginatedWsLibraryResponse> {
+  const searchParams = new URLSearchParams();
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        searchParams.append(key, String(value));
+      }
+    });
+  }
+  const query = searchParams.toString();
+  return fetchApi<PaginatedWsLibraryResponse>(`/library-tasks/pending-approval${query ? `?${query}` : ''}`);
+}
+
 // Code Master
 export async function getCodeMaster(codeType?: string): Promise<CodeMaster[]> {
   const query = codeType ? `?code_type=${codeType}` : '';

@@ -1,12 +1,12 @@
 // Task Library Types - SCR_TASK_LIBRARY
 
-export type TaskType = 'Daily' | 'Weekly' | 'Ad hoc';
+export type TaskType = 'Daily' | 'Weekly' | 'Ad hoc' | 'Monthly' | 'Quarterly' | 'Yearly' | string;
 
-export type TaskStatus = 'In progress' | 'Draft' | 'Available';
+export type TaskStatus = 'In progress' | 'Draft' | 'Available' | 'Cooldown';
 
 export type TaskCategory = 'office' | 'store';
 
-export type DepartmentType = 'Admin' | 'HR' | 'Legal';
+export type DepartmentType = 'Admin' | 'HR' | 'Legal' | 'IT' | 'Finance' | 'Marketing' | 'Sales' | 'Operations' | string;
 
 export interface TaskOwner {
   id: string;
@@ -25,6 +25,10 @@ export interface TaskTemplate {
   usage: number;
   department: DepartmentType;
   category: TaskCategory;
+  // API integration fields (optional)
+  canDispatch?: boolean;
+  isInCooldown?: boolean;
+  cooldownMinutes?: number;
 }
 
 export interface TaskGroup {
@@ -44,8 +48,9 @@ export interface TaskLibraryFilters {
 // Status color mapping
 export const STATUS_COLORS: Record<TaskStatus, { bg: string; text: string }> = {
   'In progress': { bg: 'bg-orange-100', text: 'text-orange-600' },
-  'Draft': { bg: 'bg-green-100', text: 'text-green-600' },
-  'Available': { bg: 'bg-blue-100', text: 'text-blue-600' },
+  'Draft': { bg: 'bg-gray-100', text: 'text-gray-600' },
+  'Available': { bg: 'bg-green-100', text: 'text-green-600' },
+  'Cooldown': { bg: 'bg-cyan-100', text: 'text-cyan-600' },
 };
 
 // Department color mapping

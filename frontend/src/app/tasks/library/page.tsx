@@ -1,16 +1,87 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { TaskCategory, DepartmentType, TaskTemplate, TaskGroup } from '@/types/taskLibrary';
-import { getFilteredTasks, officeTaskGroups, storeTaskGroups } from '@/data/mockTaskLibrary';
 import TaskLibraryHeader from '@/components/library/TaskLibraryHeader';
 import TaskLibraryTabs from '@/components/library/TaskLibraryTabs';
 import DepartmentFilterChips from '@/components/library/DepartmentFilterChips';
 import TaskSearchBar from '@/components/library/TaskSearchBar';
 import TaskGroupSection from '@/components/library/TaskGroupSection';
-import { getDraftInfo, DraftInfo } from '@/lib/api';
+import { getDraftInfo, DraftInfo, getWsLibraryTemplates, WsLibraryTemplate } from '@/lib/api';
 import { useUser } from '@/contexts/UserContext';
+
+// Transform API data to component format
+function transformTemplateToTaskTemplate(template: WsLibraryTemplate, index: number): TaskTemplate {
+  // Map API status to display status
+  const statusMap: Record<string, 'Draft' | 'In progress' | 'Available' | 'Cooldown'> = {
+    draft: 'Draft',
+    approve: 'In progress',
+    available: 'Available',
+    cooldown: 'Cooldown',
+  };
+
+  return {
+    id: String(template.task_library_id),
+    no: index + 1,
+    type: template.taskType?.code_value || 'Daily',
+    taskName: template.task_name,
+    owner: {
+      id: String(template.created_staff_id),
+      name: template.creator
+        ? `${template.creator.first_name || ''} ${template.creator.last_name || ''}`.trim() || 'Unknown'
+        : 'Unknown',
+      avatar: template.creator?.avatar || '/avatars/default.png',
+    },
+    lastUpdate: template.updated_at
+      ? new Date(template.updated_at).toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: 'short',
+          year: '2-digit',
+        })
+      : '-',
+    status: statusMap[template.status] || 'Available',
+    usage: template.dispatch_count || 0,
+    department: (template.department?.department_name || 'Admin') as DepartmentType,
+    category: 'office' as TaskCategory,
+    // Additional fields for API integration
+    canDispatch: template.can_dispatch,
+    isInCooldown: template.is_in_active_cooldown,
+    cooldownMinutes: template.cooldown_remaining_minutes,
+  };
+}
+
+// Group templates by department
+function groupTemplatesByDepartment(templates: TaskTemplate[]): TaskGroup[] {
+  const grouped = templates.reduce((acc, task) => {
+    const dept = task.department;
+    if (!acc[dept]) {
+      acc[dept] = [];
+    }
+    acc[dept].push(task);
+    return acc;
+  }, {} as Record<DepartmentType, TaskTemplate[]>);
+
+  // Define department colors
+  const deptColors: Record<string, string> = {
+    Admin: '#E91E63',
+    HR: '#9C27B0',
+    Legal: '#4CAF50',
+    IT: '#2196F3',
+    Finance: '#FF9800',
+    Marketing: '#00BCD4',
+    Sales: '#F44336',
+    Operations: '#795548',
+  };
+
+  return Object.entries(grouped).map(([dept, tasks]) => ({
+    department: dept as DepartmentType,
+    icon: `/icons/${dept.toLowerCase()}.png`,
+    color: deptColors[dept] || '#607D8B',
+    tasks,
+    isExpanded: false,
+  }));
+}
 
 export default function TaskLibraryPage() {
   const router = useRouter();
@@ -26,9 +97,37 @@ export default function TaskLibraryPage() {
     Legal: false,
   });
 
+  // API data state
+  const [templates, setTemplates] = useState<WsLibraryTemplate[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   // Draft limit state
   const [draftInfo, setDraftInfo] = useState<DraftInfo | null>(null);
   const sourceDraftInfo = draftInfo?.by_source?.['library'];
+
+  // Fetch templates from API
+  const fetchTemplates = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await getWsLibraryTemplates({
+        per_page: 100,
+        task_name: searchQuery.length >= 2 ? searchQuery : undefined,
+      });
+      setTemplates(response.data);
+    } catch (err) {
+      console.error('Failed to fetch library templates:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch templates');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [searchQuery]);
+
+  // Fetch templates on mount and when search changes
+  useEffect(() => {
+    fetchTemplates();
+  }, [fetchTemplates]);
 
   // Fetch draft info (for HQ users only)
   useEffect(() => {
@@ -41,20 +140,32 @@ export default function TaskLibraryPage() {
     }
   }, [isHQUser]);
 
-  // Get available departments based on active tab
+  // Transform and group templates
+  const taskGroups = useMemo(() => {
+    const transformedTasks = templates.map((t, i) => transformTemplateToTaskTemplate(t, i));
+    return groupTemplatesByDepartment(transformedTasks);
+  }, [templates]);
+
+  // Get available departments
   const availableDepartments = useMemo(() => {
-    const groups = activeTab === 'office' ? officeTaskGroups : storeTaskGroups;
-    return groups.map(g => g.department);
-  }, [activeTab]);
+    return taskGroups.map(g => g.department);
+  }, [taskGroups]);
 
   // Get filtered task groups
   const filteredGroups = useMemo(() => {
-    const groups = getFilteredTasks(activeTab, selectedDepartments, searchQuery);
+    let groups = taskGroups;
+
+    // Filter by departments if specified
+    if (selectedDepartments.length > 0) {
+      groups = groups.filter(group => selectedDepartments.includes(group.department));
+    }
+
+    // Apply expanded state
     return groups.map(group => ({
       ...group,
       isExpanded: expandedGroups[group.department] ?? false,
     }));
-  }, [activeTab, selectedDepartments, searchQuery, expandedGroups]);
+  }, [taskGroups, selectedDepartments, expandedGroups]);
 
   const handleTabChange = (tab: TaskCategory) => {
     setActiveTab(tab);
@@ -97,14 +208,27 @@ export default function TaskLibraryPage() {
     console.log('Duplicate task:', task);
   };
 
-  const handleDelete = (task: TaskTemplate) => {
-    // TODO: Implement delete task
-    console.log('Delete task:', task);
+  const handleDelete = async (task: TaskTemplate) => {
+    // TODO: Implement delete with API call
+    if (confirm(`Are you sure you want to delete "${task.taskName}"?`)) {
+      try {
+        // await deleteWsLibraryTemplate(Number(task.id));
+        // fetchTemplates(); // Refresh list
+        console.log('Delete task:', task);
+      } catch (err) {
+        console.error('Failed to delete template:', err);
+      }
+    }
   };
 
   const handleViewUsage = (task: TaskTemplate) => {
     // TODO: Implement view usage stats
     console.log('View usage:', task);
+  };
+
+  const handleDispatch = (task: TaskTemplate) => {
+    // Navigate to dispatch modal/page
+    router.push(`/tasks/library/dispatch?id=${task.id}`);
   };
 
   return (
@@ -133,42 +257,78 @@ export default function TaskLibraryPage() {
           onFilterClick={handleFilterClick}
         />
 
-        {/* Task Groups */}
-        <div className="space-y-4">
-          {filteredGroups.length > 0 ? (
-            filteredGroups.map(group => (
-              <TaskGroupSection
-                key={group.department}
-                group={group}
-                onToggle={handleGroupToggle}
-                onEdit={handleEdit}
-                onDuplicate={handleDuplicate}
-                onDelete={handleDelete}
-                onViewUsage={handleViewUsage}
+        {/* Loading State */}
+        {isLoading && (
+          <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500 mx-auto mb-4" />
+            <p className="text-gray-500 text-sm">Loading templates...</p>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !isLoading && (
+          <div className="text-center py-12 bg-white rounded-lg border border-red-200">
+            <svg
+              className="w-12 h-12 text-red-300 mx-auto mb-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
               />
-            ))
-          ) : (
-            <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-              <svg
-                className="w-12 h-12 text-gray-300 mx-auto mb-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+            </svg>
+            <p className="text-red-500 text-sm">{error}</p>
+            <button
+              onClick={fetchTemplates}
+              className="mt-4 px-4 py-2 text-sm text-pink-600 hover:text-pink-700 underline"
+            >
+              Try again
+            </button>
+          </div>
+        )}
+
+        {/* Task Groups */}
+        {!isLoading && !error && (
+          <div className="space-y-4">
+            {filteredGroups.length > 0 ? (
+              filteredGroups.map(group => (
+                <TaskGroupSection
+                  key={group.department}
+                  group={group}
+                  onToggle={handleGroupToggle}
+                  onEdit={handleEdit}
+                  onDuplicate={handleDuplicate}
+                  onDelete={handleDelete}
+                  onViewUsage={handleViewUsage}
                 />
-              </svg>
-              <p className="text-gray-500 text-sm">No matching tasks found</p>
-              <p className="text-gray-400 text-xs mt-1">
-                Try adjusting your search or filter criteria
-              </p>
-            </div>
-          )}
-        </div>
+              ))
+            ) : (
+              <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+                <svg
+                  className="w-12 h-12 text-gray-300 mx-auto mb-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
+                </svg>
+                <p className="text-gray-500 text-sm">No matching tasks found</p>
+                <p className="text-gray-400 text-xs mt-1">
+                  Try adjusting your search or filter criteria
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

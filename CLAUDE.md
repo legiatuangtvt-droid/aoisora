@@ -4103,11 +4103,11 @@ TRIGGERS tự động tạo history entries:
 **Library (/tasks/library):**
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 1.3.26 | Danh sách templates | ⏳ | List với status badges |
-| 1.3.27 | Add New template | ⏳ | → Add Task (source=library) |
-| 1.3.28 | Dispatch template | ⏳ | Chọn scope và gửi |
-| 1.3.29 | Cooldown status display | ⏳ | Ice blue badge |
-| 1.3.30 | Override cooldown (highest grade) | ⏳ | Permission check |
+| 1.3.26 | Danh sách templates | ✅ | Real API (getWsLibraryTemplates), grouped by department |
+| 1.3.27 | Add New template | ✅ | Routes to /tasks/new?source=library |
+| 1.3.28 | Dispatch template | 🔄 | Routes to dispatch page, API ready (dispatchWsLibraryTemplate) |
+| 1.3.29 | Cooldown status display | ✅ | Cooldown badge (cyan), isInCooldown/cooldownMinutes mapped |
+| 1.3.30 | Override cooldown (highest grade) | ⏳ | API exists (overrideWsLibraryCooldown), UI not implemented |
 
 **To Do Task (/tasks/todo):**
 | # | Task | Status | Notes |
@@ -4203,10 +4203,10 @@ TRIGGERS tự động tạo history entries:
 │                                                                 │
 │  Database:     [██████████] 100% (6/6 tasks)                   │
 │  Backend APIs: [██████████] 100% (26/26 tasks)                 │
-│  Frontend:     [███░░░░░░░] 34%  (16/47 tasks)                 │
+│  Frontend:     [████░░░░░░] 40%  (19/47 tasks)                 │
 │  Components:   [███░░░░░░░] 29%  (2/7 tasks)                   │
 │  ────────────────────────────────────────────────────────────── │
-│  OVERALL:      [██████░░░░] ~58%                               │
+│  OVERALL:      [██████░░░░] ~62%                               │
 │                                                                 │
 │  PHASE 2 PROGRESS: [░░░░░░░░░░] 0%                             │
 │  PHASE 3 PROGRESS: [░░░░░░░░░░] 0%                             │
