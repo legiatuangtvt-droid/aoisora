@@ -62,6 +62,7 @@ import type {
   ManualStepUpdate,
   ManualDocumentWithSteps,
   ManualMedia,
+  TaskProgressResponse,
 } from '@/types/api';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
@@ -523,6 +524,11 @@ export async function deleteTask(id: number): Promise<{ message: string }> {
   return fetchApi<{ message: string }>(`/tasks/${id}`, {
     method: 'DELETE',
   });
+}
+
+// Task Progress (store assignments)
+export async function getTaskProgress(taskId: number): Promise<TaskProgressResponse> {
+  return fetchApi<TaskProgressResponse>(`/tasks/${taskId}/progress`);
 }
 
 // Draft Info (per source)

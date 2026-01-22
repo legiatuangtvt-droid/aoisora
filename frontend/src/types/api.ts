@@ -214,6 +214,45 @@ export interface Task {
   calculated_status?: string;
 }
 
+// Task Progress Response (from GET /tasks/{id}/progress)
+export interface TaskStoreAssignment {
+  id: number;
+  store_id: number;
+  store_name: string;
+  status: 'not_yet' | 'on_progress' | 'done_pending' | 'done' | 'unable';
+  assigned_to_staff: {
+    id: number;
+    name: string;
+  } | null;
+  started_at: string | null;
+  completed_at: string | null;
+  completed_by: {
+    id: number;
+    name: string;
+  } | null;
+  execution_time_minutes: number | null;
+  unable_reason: string | null;
+  notes: string | null;
+}
+
+export interface TaskProgressResponse {
+  task_id: number;
+  task_name: string;
+  calculated_status: string;
+  progress: {
+    not_yet: number;
+    on_progress: number;
+    done_pending: number;
+    done: number;
+    unable: number;
+    total: number;
+    completed_count: number;
+    completion_rate: number;
+  };
+  avg_execution_time_minutes: number | null;
+  assignments: TaskStoreAssignment[];
+}
+
 export interface TaskCreate {
   task_name: string;
   task_description?: string;

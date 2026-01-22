@@ -4080,11 +4080,11 @@ TRIGGERS tự động tạo history entries:
 **Task Detail (/tasks/[id]):**
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 1.3.11 | Task header info | ⏳ | Cần implement |
-| 1.3.12 | Statistics cards (Not Yet, Done, Unable, Avg Time) | ⏳ | Cần store assignments |
-| 1.3.13 | Store progress table | ⏳ | Danh sách stores + status |
-| 1.3.14 | Comments section | ⏳ | Task comments |
-| 1.3.15 | Attachments/Evidence | ⏳ | Files từ stores |
+| 1.3.11 | Task header info | ✅ | Using real API data |
+| 1.3.12 | Statistics cards (Not Yet, Done, Unable, Avg Time) | ✅ | Using getTaskProgress API |
+| 1.3.13 | Store progress table | ✅ | Using store assignments from API |
+| 1.3.14 | Comments section | 🔄 | Existing component, cần verify |
+| 1.3.15 | Attachments/Evidence | ⏳ | Files từ stores - cần implement
 
 **Add Task (/tasks/new):**
 | # | Task | Status | Notes |
@@ -4201,12 +4201,12 @@ TRIGGERS tự động tạo history entries:
 ┌─────────────────────────────────────────────────────────────────┐
 │  PHASE 1 PROGRESS                                               │
 │                                                                 │
-│  Database:     [██░░░░░░░░] 20%  (1/6 tasks)                   │
-│  Backend APIs: [████░░░░░░] 35%  (9/26 tasks)                  │
-│  Frontend:     [███░░░░░░░] 25%  (12/47 tasks)                 │
-│  Components:   [██░░░░░░░░] 28%  (2/7 tasks)                   │
+│  Database:     [██████████] 100% (6/6 tasks)                   │
+│  Backend APIs: [██████████] 100% (26/26 tasks)                 │
+│  Frontend:     [██░░░░░░░░] 19%  (9/47 tasks)                  │
+│  Components:   [███░░░░░░░] 29%  (2/7 tasks)                   │
 │  ────────────────────────────────────────────────────────────── │
-│  OVERALL:      [███░░░░░░░] ~27%                               │
+│  OVERALL:      [█████░░░░░] ~50%                               │
 │                                                                 │
 │  PHASE 2 PROGRESS: [░░░░░░░░░░] 0%                             │
 │  PHASE 3 PROGRESS: [░░░░░░░░░░] 0%                             │

@@ -2,14 +2,11 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getTaskById, getDepartments, getTasks } from '@/lib/api';
-import { Task as ApiTask, Department } from '@/types/api';
-import { getMockTaskDetail } from '@/data/mockTaskDetail';
-import { ViewMode, TaskGroup, StoreResult } from '@/types/tasks';
+import { getTaskById, getDepartments, getTasks, getTaskProgress } from '@/lib/api';
+import { Task as ApiTask, Department, TaskProgressResponse, TaskStoreAssignment } from '@/types/api';
+import { ViewMode, TaskGroup } from '@/types/tasks';
 import Link from 'next/link';
-import StoreResultCard from '@/components/tasks/StoreResultCard';
 import ViewModeToggle from '@/components/tasks/ViewModeToggle';
-import WorkflowStepsPanel from '@/components/tasks/WorkflowStepsPanel';
 
 /**
  * Task Detail page
@@ -26,6 +23,7 @@ export default function TaskDetailPage() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isContentVisible, setIsContentVisible] = useState(true);
   const [task, setTask] = useState<TaskGroup | null>(null);
+  const [taskProgress, setTaskProgress] = useState<TaskProgressResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isWorkflowPanelOpen, setIsWorkflowPanelOpen] = useState(false);
@@ -90,9 +88,10 @@ export default function TaskDetailPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const [apiTask, departments] = await Promise.all([
+        const [apiTask, departments, progressData] = await Promise.all([
           getTaskById(Number(taskId)),
-          getDepartments()
+          getDepartments(),
+          getTaskProgress(Number(taskId)).catch(() => null) // Progress data is optional
         ]);
 
         // Transform API task to TaskGroup format
@@ -111,6 +110,8 @@ export default function TaskDetailPage() {
           9: 'DONE',
         };
 
+        // Use progress data if available, otherwise fall back to task status
+        const progress = progressData?.progress;
         const transformedTask: TaskGroup = {
           id: apiTask.task_id.toString(),
           no: 1,
@@ -119,16 +120,21 @@ export default function TaskDetailPage() {
           taskGroupName: apiTask.task_name,
           startDate: formatDate(apiTask.start_date),
           endDate: formatDate(apiTask.end_date),
-          progress: {
+          progress: progress ? {
+            completed: progress.completed_count,
+            total: progress.total,
+          } : {
             completed: apiTask.status_id === 9 ? 1 : 0,
             total: 1,
           },
-          unable: 0,
-          status: STATUS_MAP[apiTask.status_id || 7] || 'NOT_YET',
+          unable: progress?.unable || 0,
+          status: progressData?.calculated_status?.toUpperCase() as TaskGroup['status'] ||
+                  STATUS_MAP[apiTask.status_id || 7] || 'NOT_YET',
           hqCheck: STATUS_MAP[apiTask.status_id || 7] || 'NOT_YET',
         };
 
         setTask(transformedTask);
+        setTaskProgress(progressData);
       } catch (err) {
         console.error('Failed to fetch task:', err);
         setError(err instanceof Error ? err.message : 'Failed to load task');
@@ -140,50 +146,33 @@ export default function TaskDetailPage() {
     fetchTask();
   }, [taskId]);
 
-  // Get detailed task data (still using mock for now as detail API not ready)
-  const taskDetail = taskId ? getMockTaskDetail(`task-${taskId}`) : null;
+  // Calculate counts for badges using real data from taskProgress
+  const resultsCount = taskProgress?.assignments?.length || 0;
+  const commentsCount = 0; // TODO: Implement comments API
 
-  // Calculate counts for badges
-  const resultsCount = taskDetail?.storeResults.length || 0;
-  const commentsCount = taskDetail?.storeResults.reduce(
-    (acc, store) => acc + store.comments.length,
-    0
-  ) || 0;
+  // Sort store assignments by status priority:
+  // 1. not_yet/on_progress (chưa hoàn thành) - first
+  // 2. unable (không hoàn thành được) - second
+  // 3. done_pending/done (đã hoàn thành) - last, sorted by completion time
+  const sortedAssignments = useMemo(() => {
+    if (!taskProgress?.assignments) return [];
 
-  // Sort store results by status priority:
-  // 1. in_progress/not_started (chưa hoàn thành) - first
-  // 2. failed (không hoàn thành được) - second
-  // 3. success (đã hoàn thành) - last, sorted by completedTime ascending (earliest completion at bottom)
-  const sortedStoreResults = useMemo(() => {
-    if (!taskDetail?.storeResults) return [];
-
-    const getStatusPriority = (status: StoreResult['status']): number => {
+    const getStatusPriority = (status: TaskStoreAssignment['status']): number => {
       switch (status) {
-        case 'in_progress':
-        case 'not_started':
+        case 'not_yet':
+        case 'on_progress':
           return 1; // Highest priority - show first
-        case 'failed':
+        case 'unable':
           return 2; // Second priority
-        case 'success':
+        case 'done_pending':
+        case 'done':
           return 3; // Lowest priority - show last
         default:
           return 4;
       }
     };
 
-    const parseCompletedTime = (timeStr?: string): number => {
-      if (!timeStr) return 0;
-      // Parse formats like "17:00 03 Dec, 2025" or "17:00 03 Dec 2025"
-      try {
-        const normalized = timeStr.replace(',', '');
-        const date = new Date(normalized);
-        return isNaN(date.getTime()) ? 0 : date.getTime();
-      } catch {
-        return 0;
-      }
-    };
-
-    return [...taskDetail.storeResults].sort((a, b) => {
+    return [...taskProgress.assignments].sort((a, b) => {
       const priorityA = getStatusPriority(a.status);
       const priorityB = getStatusPriority(b.status);
 
@@ -193,16 +182,16 @@ export default function TaskDetailPage() {
       }
 
       // For completed stores, sort by completion time (earlier completion goes to bottom)
-      if (a.status === 'success' && b.status === 'success') {
-        const timeA = parseCompletedTime(a.completedTime);
-        const timeB = parseCompletedTime(b.completedTime);
-        // Ascending order: earlier time = larger value = goes to bottom
+      if ((a.status === 'done' || a.status === 'done_pending') &&
+          (b.status === 'done' || b.status === 'done_pending')) {
+        const timeA = a.completed_at ? new Date(a.completed_at).getTime() : 0;
+        const timeB = b.completed_at ? new Date(b.completed_at).getTime() : 0;
         return timeB - timeA;
       }
 
       return 0;
     });
-  }, [taskDetail?.storeResults]);
+  }, [taskProgress?.assignments]);
 
   // Save scroll position before view change
   const saveScrollPosition = useCallback(() => {
@@ -353,7 +342,7 @@ export default function TaskDetailPage() {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    HQ Check: {taskDetail?.hqCheckCode || '27/27'}
+                    HQ Check: {taskProgress ? `${taskProgress.progress.done + taskProgress.progress.done_pending}/${taskProgress.progress.total}` : '0/0'}
                   </span>
                 </div>
               </div>
@@ -362,16 +351,10 @@ export default function TaskDetailPage() {
               <div className="flex items-center gap-4 text-sm">
                 {/* Task Type */}
                 <span className="flex items-center gap-1.5 text-gray-600">
-                  {taskDetail?.taskType === 'yes_no' ? (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  ) : (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  )}
-                  Task type: {taskDetail?.taskType === 'yes_no' ? 'Yes/No' : taskDetail?.taskType === 'image' ? 'Image' : taskDetail?.taskType || 'Image'}
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  Task type: Image
                 </span>
 
                 {/* Manual Link */}
@@ -409,7 +392,9 @@ export default function TaskDetailPage() {
                     </svg>
                   </div>
                 </div>
-                <div className="text-4xl font-bold text-gray-900 mb-1">{taskDetail?.stats.notStarted || 10}</div>
+                <div className="text-4xl font-bold text-gray-900 mb-1">
+                  {(taskProgress?.progress?.not_yet || 0) + (taskProgress?.progress?.on_progress || 0)}
+                </div>
                 <div className="text-sm text-gray-500">Not Started</div>
               </div>
 
@@ -422,7 +407,9 @@ export default function TaskDetailPage() {
                     </svg>
                   </div>
                 </div>
-                <div className="text-4xl font-bold text-gray-900 mb-1">{taskDetail?.stats.completed || task.progress.completed}</div>
+                <div className="text-4xl font-bold text-gray-900 mb-1">
+                  {taskProgress?.progress?.done || task.progress.completed}
+                </div>
                 <div className="text-sm text-gray-500">Completed</div>
               </div>
 
@@ -435,7 +422,9 @@ export default function TaskDetailPage() {
                     </svg>
                   </div>
                 </div>
-                <div className="text-4xl font-bold text-gray-900 mb-1">{taskDetail?.stats.unableToComplete || task.unable}</div>
+                <div className="text-4xl font-bold text-gray-900 mb-1">
+                  {taskProgress?.progress?.unable || task.unable}
+                </div>
                 <div className="text-sm text-gray-500">Unable to Complete</div>
               </div>
 
@@ -449,7 +438,7 @@ export default function TaskDetailPage() {
                   </div>
                 </div>
                 <div className="text-4xl font-bold text-gray-900 mb-1">
-                  {taskDetail?.stats.avgCompletionTime || 60}<span className="text-xl">min</span>
+                  {taskProgress?.avg_execution_time_minutes || 0}<span className="text-xl">min</span>
                 </div>
                 <div className="text-sm text-gray-500">Average Completion Time</div>
               </div>
@@ -525,57 +514,89 @@ export default function TaskDetailPage() {
           className={`transition-opacity duration-150 ease-in-out ${isContentVisible ? 'opacity-100' : 'opacity-0'
             }`}
         >
-          {/* Store Results - sorted by: in_progress -> failed -> success (by completion time) */}
-          {viewMode === 'results' && taskDetail && (
-            <div className="space-y-6">
-              {sortedStoreResults.length > 0 ? (
-                sortedStoreResults.map((result) => (
-                  <StoreResultCard
-                    key={result.id}
-                    result={result}
-                    showImages={true}
-                    taskType={taskDetail.taskType}
-                    onAddComment={handleAddComment}
-                  />
-                ))
+          {/* Store Results Table */}
+          {viewMode === 'results' && (
+            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+              {sortedAssignments.length > 0 ? (
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">#</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Store</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Status</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Assigned To</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Time</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Completed By</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {sortedAssignments.map((assignment, index) => (
+                      <tr key={assignment.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-3 text-sm text-gray-900">{index + 1}</td>
+                        <td className="px-4 py-3 text-sm text-gray-900 font-medium">{assignment.store_name}</td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                            assignment.status === 'done' ? 'bg-green-100 text-green-700' :
+                            assignment.status === 'done_pending' ? 'bg-yellow-100 text-yellow-700' :
+                            assignment.status === 'on_progress' ? 'bg-blue-100 text-blue-700' :
+                            assignment.status === 'unable' ? 'bg-red-100 text-red-700' :
+                            'bg-gray-100 text-gray-700'
+                          }`}>
+                            {assignment.status === 'done' ? 'Done' :
+                             assignment.status === 'done_pending' ? 'Pending Check' :
+                             assignment.status === 'on_progress' ? 'In Progress' :
+                             assignment.status === 'unable' ? 'Unable' :
+                             'Not Yet'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-600">
+                          {assignment.assigned_to_staff?.name || '-'}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-600">
+                          {assignment.execution_time_minutes ? `${assignment.execution_time_minutes} min` : '-'}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-600">
+                          {assignment.completed_by?.name || '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               ) : (
-                <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
-                  <p className="text-gray-500">No store results yet.</p>
+                <div className="p-12 text-center">
+                  <p className="text-gray-500">No store assignments yet.</p>
                 </div>
               )}
             </div>
           )}
 
-          {/* Comment View - Uses StoreResultCard with viewMode="comment" */}
-          {viewMode === 'comment' && taskDetail && (
-            <div className="space-y-6">
-              {sortedStoreResults.length > 0 ? (
-                sortedStoreResults.map((result) => (
-                  <StoreResultCard
-                    key={result.id}
-                    result={result}
-                    viewMode="comment"
-                    taskType={taskDetail.taskType}
-                    onAddComment={handleAddComment}
-                  />
-                ))
-              ) : (
-                <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
-                  <p className="text-gray-500">No comments yet.</p>
-                </div>
-              )}
+          {/* Comment View - TODO: Implement comments API */}
+          {viewMode === 'comment' && (
+            <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
+              <p className="text-gray-500">Comments feature coming soon.</p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Workflow Steps Panel */}
-      {taskDetail && (
-        <WorkflowStepsPanel
-          steps={taskDetail.workflowSteps}
-          isOpen={isWorkflowPanelOpen}
-          onClose={() => setIsWorkflowPanelOpen(false)}
-        />
+      {/* Workflow Steps Panel - TODO: Implement workflow steps API */}
+      {isWorkflowPanelOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex justify-end">
+          <div className="w-[400px] bg-white h-full p-6 overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-lg font-semibold">Workflow Steps</h2>
+              <button
+                onClick={() => setIsWorkflowPanelOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <p className="text-gray-500">Workflow steps coming soon.</p>
+          </div>
+        </div>
       )}
     </div>
   );

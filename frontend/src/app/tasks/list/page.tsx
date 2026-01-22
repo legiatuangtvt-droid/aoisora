@@ -96,10 +96,10 @@ function transformApiTaskToTaskGroup(task: ApiTask, index: number, departments: 
     progressCompleted = task.store_progress.completed_count;
     unableCount = task.store_progress.unable;
   } else if (subTasks.length > 0) {
-    // Fallback: Calculate from sub_tasks
+    // Fallback: Calculate from sub_tasks (sub_tasks don't have 'UNABLE' status)
     progressTotal = subTasks.length;
     progressCompleted = subTasks.filter(st => st.status === 'DONE').length;
-    unableCount = subTasks.filter(st => st.status === 'UNABLE').length;
+    // Note: unableCount stays 0 for sub_tasks as they don't have 'UNABLE' status
   } else {
     // No sub-tasks and no store_progress: use task's own status
     progressCompleted = task.status_id === 9 ? 1 : 0;
