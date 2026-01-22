@@ -10,8 +10,10 @@ import {
   markStoreTaskUnable,
   assignTaskToStaff,
   unassignTask,
+  getStoreStaff,
   StoreTaskAssignment,
   StoreTaskStatus,
+  StoreStaffOption,
 } from '@/lib/api';
 import { useUser } from '@/contexts/UserContext';
 
@@ -77,6 +79,19 @@ export default function StoreTasksPage() {
   const [unableReason, setUnableReason] = useState('');
   const [actionError, setActionError] = useState<string | null>(null);
 
+  // Complete modal state (with evidence)
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [completeTaskId, setCompleteTaskId] = useState<number | null>(null);
+  const [completeNotes, setCompleteNotes] = useState('');
+  const [completeEvidence, setCompleteEvidence] = useState<string[]>([]);
+
+  // Assign modal state
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [assignTaskId, setAssignTaskId] = useState<number | null>(null);
+  const [selectedStaffId, setSelectedStaffId] = useState<number | null>(null);
+  const [storeStaff, setStoreStaff] = useState<StoreStaffOption[]>([]);
+  const [loadingStaff, setLoadingStaff] = useState(false);
+
   // Fetch tasks
   const fetchTasks = useCallback(async () => {
     if (!storeId) return;
@@ -123,19 +138,48 @@ export default function StoreTasksPage() {
     }
   };
 
-  // Handle complete task
-  const handleComplete = async (taskId: number) => {
-    setProcessingTaskId(taskId);
+  // Handle complete click - open modal
+  const handleCompleteClick = (taskId: number) => {
+    setCompleteTaskId(taskId);
+    setCompleteNotes('');
+    setCompleteEvidence([]);
+    setShowCompleteModal(true);
+  };
+
+  // Handle complete confirm
+  const handleCompleteConfirm = async () => {
+    if (!completeTaskId) return;
+
+    setProcessingTaskId(completeTaskId);
     setActionError(null);
     try {
-      await completeStoreTask(taskId, storeId);
+      await completeStoreTask(completeTaskId, storeId, {
+        notes: completeNotes.trim() || undefined,
+        evidence: completeEvidence.length > 0 ? completeEvidence : undefined,
+      });
       fetchTasks(); // Refresh list
+      setShowCompleteModal(false);
+      setCompleteTaskId(null);
+      setCompleteNotes('');
+      setCompleteEvidence([]);
     } catch (err) {
       console.error('Failed to complete task:', err);
       setActionError(err instanceof Error ? err.message : 'Failed to complete task');
     } finally {
       setProcessingTaskId(null);
     }
+  };
+
+  // Handle add evidence URL
+  const handleAddEvidence = (url: string) => {
+    if (url.trim() && !completeEvidence.includes(url.trim())) {
+      setCompleteEvidence([...completeEvidence, url.trim()]);
+    }
+  };
+
+  // Handle remove evidence
+  const handleRemoveEvidence = (index: number) => {
+    setCompleteEvidence(completeEvidence.filter((_, i) => i !== index));
   };
 
   // Handle unable click
@@ -160,6 +204,62 @@ export default function StoreTasksPage() {
     } catch (err) {
       console.error('Failed to mark task unable:', err);
       setActionError(err instanceof Error ? err.message : 'Failed to mark task unable');
+    } finally {
+      setProcessingTaskId(null);
+    }
+  };
+
+  // Handle assign click - open modal and load staff
+  const handleAssignClick = async (taskId: number) => {
+    setAssignTaskId(taskId);
+    setSelectedStaffId(null);
+    setShowAssignModal(true);
+    setLoadingStaff(true);
+    try {
+      const response = await getStoreStaff(storeId);
+      // Only show S1 staff for assignment (not leaders)
+      setStoreStaff(response.staff || []);
+    } catch (err) {
+      console.error('Failed to fetch store staff:', err);
+      setActionError(err instanceof Error ? err.message : 'Failed to fetch staff list');
+    } finally {
+      setLoadingStaff(false);
+    }
+  };
+
+  // Handle assign confirm
+  const handleAssignConfirm = async () => {
+    if (!assignTaskId || !selectedStaffId) return;
+
+    setProcessingTaskId(assignTaskId);
+    setActionError(null);
+    try {
+      await assignTaskToStaff(assignTaskId, storeId, selectedStaffId);
+      fetchTasks(); // Refresh list
+      setShowAssignModal(false);
+      setAssignTaskId(null);
+      setSelectedStaffId(null);
+      setStoreStaff([]);
+    } catch (err) {
+      console.error('Failed to assign task:', err);
+      setActionError(err instanceof Error ? err.message : 'Failed to assign task');
+    } finally {
+      setProcessingTaskId(null);
+    }
+  };
+
+  // Handle unassign
+  const handleUnassign = async (taskId: number) => {
+    if (!confirm('Are you sure you want to unassign this task?')) return;
+
+    setProcessingTaskId(taskId);
+    setActionError(null);
+    try {
+      await unassignTask(taskId, storeId);
+      fetchTasks(); // Refresh list
+    } catch (err) {
+      console.error('Failed to unassign task:', err);
+      setActionError(err instanceof Error ? err.message : 'Failed to unassign task');
     } finally {
       setProcessingTaskId(null);
     }
@@ -343,7 +443,7 @@ export default function StoreTasksPage() {
                           {/* Complete button (for on_progress status) */}
                           {assignment.status === 'on_progress' && canActOnTask(assignment) && (
                             <button
-                              onClick={() => handleComplete(assignment.task_id)}
+                              onClick={() => handleCompleteClick(assignment.task_id)}
                               disabled={processingTaskId === assignment.task_id}
                               className="px-3 py-1.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded disabled:opacity-50"
                               title="Complete Task"
@@ -361,6 +461,30 @@ export default function StoreTasksPage() {
                               title="Mark Unable"
                             >
                               Unable
+                            </button>
+                          )}
+
+                          {/* Assign button (for Store Leaders only, tasks without staff assigned) */}
+                          {isStoreLeader && ['not_yet', 'on_progress'].includes(assignment.status) && !assignment.assigned_to_staff_id && (
+                            <button
+                              onClick={() => handleAssignClick(assignment.task_id)}
+                              disabled={processingTaskId === assignment.task_id}
+                              className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded disabled:opacity-50"
+                              title="Assign to Staff"
+                            >
+                              Assign
+                            </button>
+                          )}
+
+                          {/* Unassign button (for Store Leaders only, tasks with staff assigned) */}
+                          {isStoreLeader && ['not_yet', 'on_progress'].includes(assignment.status) && assignment.assigned_to_staff_id && (
+                            <button
+                              onClick={() => handleUnassign(assignment.task_id)}
+                              disabled={processingTaskId === assignment.task_id}
+                              className="px-3 py-1.5 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded disabled:opacity-50"
+                              title="Unassign"
+                            >
+                              Unassign
                             </button>
                           )}
                         </div>
@@ -405,6 +529,172 @@ export default function StoreTasksPage() {
                   className="px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded disabled:opacity-50"
                 >
                   {processingTaskId === unableTaskId ? 'Processing...' : 'Confirm'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Complete Modal (with evidence upload) */}
+        {showCompleteModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Complete Task</h3>
+              <p className="text-sm text-gray-500 mb-4">
+                Add notes and evidence (optional) before marking as complete.
+              </p>
+
+              {/* Notes */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <textarea
+                  value={completeNotes}
+                  onChange={(e) => setCompleteNotes(e.target.value)}
+                  placeholder="Add completion notes..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 resize-none"
+                  rows={3}
+                />
+              </div>
+
+              {/* Evidence URLs */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Evidence (Image URLs)</label>
+                <div className="flex gap-2 mb-2">
+                  <input
+                    type="url"
+                    placeholder="Paste image URL..."
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 text-sm"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddEvidence((e.target as HTMLInputElement).value);
+                        (e.target as HTMLInputElement).value = '';
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      const input = (e.target as HTMLElement).previousElementSibling as HTMLInputElement;
+                      handleAddEvidence(input.value);
+                      input.value = '';
+                    }}
+                    className="px-3 py-2 text-sm font-medium text-white bg-pink-600 hover:bg-pink-700 rounded"
+                  >
+                    Add
+                  </button>
+                </div>
+
+                {/* Evidence list */}
+                {completeEvidence.length > 0 && (
+                  <div className="space-y-2 max-h-32 overflow-y-auto">
+                    {completeEvidence.map((url, index) => (
+                      <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                        <span className="flex-1 text-xs text-gray-600 truncate">{url}</span>
+                        <button
+                          onClick={() => handleRemoveEvidence(index)}
+                          className="p-1 text-red-500 hover:text-red-700"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <p className="text-xs text-gray-400 mt-1">Press Enter or click Add to add image URLs</p>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setShowCompleteModal(false);
+                    setCompleteTaskId(null);
+                    setCompleteNotes('');
+                    setCompleteEvidence([]);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCompleteConfirm}
+                  disabled={processingTaskId === completeTaskId}
+                  className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded disabled:opacity-50"
+                >
+                  {processingTaskId === completeTaskId ? 'Processing...' : 'Mark Complete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Assign Modal */}
+        {showAssignModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Assign Task to Staff</h3>
+              <p className="text-sm text-gray-500 mb-4">
+                Select a staff member to assign this task to.
+              </p>
+
+              {loadingStaff ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-pink-500" />
+                </div>
+              ) : storeStaff.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 text-sm">No staff members available</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-60 overflow-y-auto mb-4">
+                  {storeStaff.map((staff) => (
+                    <label
+                      key={staff.value}
+                      className={`flex items-center p-3 rounded-lg cursor-pointer border ${
+                        selectedStaffId === Number(staff.value)
+                          ? 'border-pink-500 bg-pink-50'
+                          : 'border-gray-200 hover:bg-gray-50'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="staff"
+                        value={staff.value}
+                        checked={selectedStaffId === Number(staff.value)}
+                        onChange={() => setSelectedStaffId(Number(staff.value))}
+                        className="w-4 h-4 text-pink-600 focus:ring-pink-500"
+                      />
+                      <div className="ml-3">
+                        <p className="text-sm font-medium text-gray-900">{staff.label}</p>
+                        <p className="text-xs text-gray-500">
+                          {staff.job_grade} {staff.position ? `- ${staff.position}` : ''}
+                        </p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setShowAssignModal(false);
+                    setAssignTaskId(null);
+                    setSelectedStaffId(null);
+                    setStoreStaff([]);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAssignConfirm}
+                  disabled={!selectedStaffId || processingTaskId === assignTaskId}
+                  className="px-4 py-2 text-sm font-medium text-white bg-pink-600 hover:bg-pink-700 rounded disabled:opacity-50"
+                >
+                  {processingTaskId === assignTaskId ? 'Assigning...' : 'Assign'}
                 </button>
               </div>
             </div>

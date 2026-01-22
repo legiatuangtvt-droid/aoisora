@@ -4131,8 +4131,8 @@ TRIGGERS tự động tạo history entries:
 | 1.3.39 | Start task action | ✅ | startStoreTask API, not_yet → on_progress |
 | 1.3.40 | Complete task action | ✅ | completeStoreTask API, on_progress → done_pending |
 | 1.3.41 | Mark unable action | ✅ | markStoreTaskUnable API with reason modal |
-| 1.3.42 | Upload evidence | ⏳ | API ready (completeStoreTask.evidence), needs file upload UI |
-| 1.3.43 | Assign to staff (S4-S2) | ⏳ | API ready (assignTaskToStaff), needs assignment UI |
+| 1.3.42 | Upload evidence | ✅ | Complete modal with notes and evidence URLs |
+| 1.3.43 | Assign to staff (S4-S2) | ✅ | Assign/Unassign buttons with staff selection modal |
 
 **HQ Check Screen (/tasks/hq-check):**
 | # | Task | Status | Notes |
@@ -4203,10 +4203,10 @@ TRIGGERS tự động tạo history entries:
 │                                                                 │
 │  Database:     [██████████] 100% (6/6 tasks)                   │
 │  Backend APIs: [██████████] 100% (26/26 tasks)                 │
-│  Frontend:     [███████░░░] 66%  (31/47 tasks)                 │
+│  Frontend:     [███████░░░] 70%  (33/47 tasks)                 │
 │  Components:   [███░░░░░░░] 29%  (2/7 tasks)                   │
 │  ────────────────────────────────────────────────────────────── │
-│  OVERALL:      [████████░░] ~76%                               │
+│  OVERALL:      [████████░░] ~78%                               │
 │                                                                 │
 │  PHASE 2 PROGRESS: [░░░░░░░░░░] 0%                             │
 │  PHASE 3 PROGRESS: [░░░░░░░░░░] 0%                             │
