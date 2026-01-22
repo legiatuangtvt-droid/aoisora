@@ -4093,7 +4093,7 @@ TRIGGERS tự động tạo history entries:
 | 1.3.17 | B. Instructions section | ✅ | Photo guidelines (click/paste/drag-drop), Manual Link, Note |
 | 1.3.18 | C. Scope section - Store hierarchy | ✅ | Using real API via useScopeData hook |
 | 1.3.19 | C. Scope section - HQ hierarchy | ⏳ | Component ready, needs HQ users API |
-| 1.3.20 | D. Approval Process - auto populate | 🔄 | Component exists, verify approver lookup |
+| 1.3.20 | D. Approval Process - auto populate | ✅ | Auto-fetches approver via getApproverForStaff API |
 | 1.3.21 | Save as Draft | ✅ | Implemented in handleSaveDraft |
 | 1.3.22 | Submit for approval | ✅ | Implemented in handleSubmit |
 | 1.3.23 | Edit existing draft | ✅ | Works via URL params (?id=xxx) |
@@ -4147,8 +4147,8 @@ TRIGGERS tự động tạo history entries:
 | # | Component | Status | Notes |
 |---|-----------|--------|-------|
 | 1.4.1 | ApprovalHistoryModal | ✅ | Đã implement |
-| 1.4.2 | ScopeSelector (Store hierarchy) | ⏳ | Region/Zone/Area/Store picker |
-| 1.4.3 | ScopeSelector (HQ hierarchy) | ⏳ | Division/Dept/Team/User picker |
+| 1.4.2 | ScopeSelector (Store hierarchy) | ✅ | Exists as ScopeSection.tsx (scopeType='store') |
+| 1.4.3 | ScopeSelector (HQ hierarchy) | ✅ | Exists as ScopeSection.tsx (scopeType='hq') |
 | 1.4.4 | TaskStatusBadge | ✅ | Status với colors |
 | 1.4.5 | StoreStatusBadge | ⏳ | Store-level status |
 | 1.4.6 | PhotoUploader | ⏳ | Click, paste, drag-drop |
@@ -4203,10 +4203,10 @@ TRIGGERS tự động tạo history entries:
 │                                                                 │
 │  Database:     [██████████] 100% (6/6 tasks)                   │
 │  Backend APIs: [██████████] 100% (26/26 tasks)                 │
-│  Frontend:     [███████░░░] 74%  (35/47 tasks)                 │
-│  Components:   [███░░░░░░░] 29%  (2/7 tasks)                   │
+│  Frontend:     [████████░░] 79%  (37/47 tasks)                 │
+│  Components:   [██████░░░░] 57%  (4/7 tasks)                   │
 │  ────────────────────────────────────────────────────────────── │
-│  OVERALL:      [████████░░] ~80%                               │
+│  OVERALL:      [████████░░] ~85%                               │
 │                                                                 │
 │  PHASE 2 PROGRESS: [░░░░░░░░░░] 0%                             │
 │  PHASE 3 PROGRESS: [░░░░░░░░░░] 0%                             │
