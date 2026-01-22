@@ -975,35 +975,94 @@ UNLOCK TABLES;
 
 --
 -- Table structure for table `task_library`
+-- Redesigned per CLAUDE.md Section 12.0 & 12.3
+-- Library stores task templates (from Task List auto-save or direct creation)
 --
 
 DROP TABLE IF EXISTS `task_library`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `task_library` (
-  `task_lib_id` int NOT NULL AUTO_INCREMENT,
-  `task_code` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `task_library_id` bigint NOT NULL AUTO_INCREMENT,
+  -- Source tracking
+  `source` enum('task_list','library') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'task_list' COMMENT 'task_list=auto-saved when task approved, library=created directly',
+  `status` enum('draft','approve','available','cooldown') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'available' COMMENT 'draft/approve only for direct Library creation (Flow 2)',
+  -- A. Information Section
   `task_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `group_id` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `duration_minutes` int DEFAULT '15',
-  `description` text COLLATE utf8mb4_unicode_ci,
-  `is_active` tinyint(1) DEFAULT '1',
+  `task_description` text COLLATE utf8mb4_unicode_ci,
+  `task_type_id` int DEFAULT NULL COMMENT 'FK to code_master',
+  `response_type_id` int DEFAULT NULL COMMENT 'FK to code_master',
+  `response_num` int DEFAULT NULL,
+  `is_repeat` tinyint(1) DEFAULT '0',
+  `repeat_config` json DEFAULT NULL,
+  `dept_id` int DEFAULT NULL COMMENT 'FK to departments',
+  -- B. Instructions Section
+  `task_instruction_type` enum('image','document') COLLATE utf8mb4_unicode_ci DEFAULT 'image',
+  `manual_link` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `photo_guidelines` json DEFAULT NULL,
+  `manual_id` int DEFAULT NULL COMMENT 'FK to manual_documents',
+  `comment` text COLLATE utf8mb4_unicode_ci,
+  `attachments` json DEFAULT NULL,
+  -- Creator & Approval
+  `created_staff_id` int DEFAULT NULL,
+  `approver_id` int DEFAULT NULL,
+  `submitted_at` timestamp NULL DEFAULT NULL,
+  `approved_at` timestamp NULL DEFAULT NULL,
+  -- Rejection tracking
+  `rejection_count` int DEFAULT '0',
+  `has_changes_since_rejection` tinyint(1) DEFAULT '0',
+  `last_rejection_reason` text COLLATE utf8mb4_unicode_ci,
+  `last_rejected_at` timestamp NULL DEFAULT NULL,
+  `last_rejected_by` int DEFAULT NULL,
+  -- Dispatch tracking
+  `dispatch_count` int DEFAULT '0',
+  `last_dispatched_at` timestamp NULL DEFAULT NULL,
+  `last_dispatched_by` int DEFAULT NULL,
+  -- Cooldown mechanism
+  `cooldown_until` timestamp NULL DEFAULT NULL,
+  `cooldown_triggered_by` int DEFAULT NULL,
+  `cooldown_triggered_at` timestamp NULL DEFAULT NULL,
+  -- Issue tracking
+  `had_issues` tinyint(1) DEFAULT '0',
+  `issues_note` text COLLATE utf8mb4_unicode_ci,
+  -- Link to original task
+  `original_task_id` int DEFAULT NULL,
+  -- Audit timestamps
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`task_lib_id`),
-  UNIQUE KEY `task_code` (`task_code`),
-  KEY `fk_task_library_group` (`group_id`),
-  CONSTRAINT `fk_task_library_group` FOREIGN KEY (`group_id`) REFERENCES `task_groups` (`group_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  PRIMARY KEY (`task_library_id`),
+  KEY `idx_library_source` (`source`),
+  KEY `idx_library_status` (`status`),
+  KEY `idx_library_creator` (`created_staff_id`),
+  KEY `idx_library_dept` (`dept_id`),
+  KEY `idx_library_status_source` (`status`,`source`),
+  KEY `fk_library_task_type` (`task_type_id`),
+  KEY `fk_library_response_type` (`response_type_id`),
+  KEY `fk_library_manual` (`manual_id`),
+  KEY `fk_library_approver` (`approver_id`),
+  KEY `fk_library_rejected_by` (`last_rejected_by`),
+  KEY `fk_library_dispatched_by` (`last_dispatched_by`),
+  KEY `fk_library_cooldown_by` (`cooldown_triggered_by`),
+  KEY `fk_library_original_task` (`original_task_id`),
+  CONSTRAINT `fk_library_approver` FOREIGN KEY (`approver_id`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_library_cooldown_by` FOREIGN KEY (`cooldown_triggered_by`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_library_creator` FOREIGN KEY (`created_staff_id`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_library_dept` FOREIGN KEY (`dept_id`) REFERENCES `departments` (`department_id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_library_dispatched_by` FOREIGN KEY (`last_dispatched_by`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_library_manual` FOREIGN KEY (`manual_id`) REFERENCES `manual_documents` (`document_id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_library_original_task` FOREIGN KEY (`original_task_id`) REFERENCES `tasks` (`task_id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_library_rejected_by` FOREIGN KEY (`last_rejected_by`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_library_response_type` FOREIGN KEY (`response_type_id`) REFERENCES `code_master` (`code_master_id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_library_task_type` FOREIGN KEY (`task_type_id`) REFERENCES `code_master` (`code_master_id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `task_library`
+-- Dumping data for table `task_library` (empty - templates created at runtime)
 --
 
 LOCK TABLES `task_library` WRITE;
 /*!40000 ALTER TABLE `task_library` DISABLE KEYS */;
-INSERT INTO `task_library` VALUES (1,'POS-OPEN','Mở ca POS','POS',15,'Kiểm tra và mở máy POS đầu ca',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(2,'POS-CLOSE','Đóng ca POS','POS',20,'Kiểm đếm tiền và đóng ca POS',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(3,'POS-CLEAN','Vệ sinh khu vực POS','POS',10,'Lau dọn khu vực thu ngân',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(4,'PERI-CHECK','Kiểm tra thực phẩm tươi','PERI',30,'Kiểm tra nhiệt độ và chất lượng',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(5,'PERI-ROTATE','Xoay hàng FIFO','PERI',45,'Xoay hàng theo nguyên tắc FIFO',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(6,'DRY-REFILL','Bổ sung hàng khô','DRY',60,'Đưa hàng từ kho lên kệ',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(7,'DRY-CLEAN','Vệ sinh kệ hàng khô','DRY',30,'Lau dọn và sắp xếp kệ',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(8,'MMD-RECEIVE','Nhận hàng','MMD',90,'Tiếp nhận và kiểm tra hàng nhập',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(9,'LEADER-MEETING','Họp đầu ca','LEADER',15,'Họp triển khai công việc đầu ca',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(10,'QC-AUDIT','Kiểm tra chất lượng','QC-FSH',45,'Kiểm tra chất lượng định kỳ',1,'2026-01-22 01:42:52','2026-01-22 01:42:52');
 /*!40000 ALTER TABLE `task_library` ENABLE KEYS */;
 UNLOCK TABLES;
 
