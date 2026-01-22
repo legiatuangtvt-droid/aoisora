@@ -23,6 +23,10 @@ class Task extends Model
         // Basic task info
         'task_name',
         'task_description',
+        // B. Instructions section
+        'task_instruction_type',
+        'manual_link',
+        'photo_guidelines',
         'manual_id',
         'task_type_id',
         'response_type_id',
@@ -56,6 +60,10 @@ class Task extends Model
         // Workflow timestamps
         'submitted_at',
         'approved_at',
+        'dispatched_at',
+        // Pause workflow
+        'paused_at',
+        'paused_by',
     ];
 
     /**
@@ -76,10 +84,18 @@ class Task extends Model
      */
     const MAX_REJECTIONS = 3;
 
+    /**
+     * Valid task instruction types
+     */
+    const INSTRUCTION_TYPE_IMAGE = 'image';
+    const INSTRUCTION_TYPE_DOCUMENT = 'document';
+
     protected $casts = [
         // Task hierarchy
         'parent_task_id' => 'integer',
         'task_level' => 'integer',
+        // B. Instructions
+        'photo_guidelines' => 'array',
         // Dates
         'start_date' => 'date',
         'end_date' => 'date',
@@ -96,6 +112,10 @@ class Task extends Model
         // Workflow timestamps
         'submitted_at' => 'datetime',
         'approved_at' => 'datetime',
+        'dispatched_at' => 'datetime',
+        // Pause workflow
+        'paused_at' => 'datetime',
+        'paused_by' => 'integer',
         // Audit timestamps
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
@@ -149,6 +169,11 @@ class Task extends Model
     public function lastRejectedBy()
     {
         return $this->belongsTo(Staff::class, 'last_rejected_by', 'staff_id');
+    }
+
+    public function pausedBy()
+    {
+        return $this->belongsTo(Staff::class, 'paused_by', 'staff_id');
     }
 
     public function libraryTask()
@@ -336,6 +361,61 @@ class Task extends Model
     public function isForHQUser(): bool
     {
         return $this->receiver_type === self::RECEIVER_TYPE_HQ_USER;
+    }
+
+    // ============================================
+    // Helper Methods for Instruction Type
+    // ============================================
+
+    /**
+     * Check if task instruction type is Image (requires photo guidelines)
+     */
+    public function isImageInstruction(): bool
+    {
+        return $this->task_instruction_type === self::INSTRUCTION_TYPE_IMAGE;
+    }
+
+    /**
+     * Check if task instruction type is Document (requires note)
+     */
+    public function isDocumentInstruction(): bool
+    {
+        return $this->task_instruction_type === self::INSTRUCTION_TYPE_DOCUMENT;
+    }
+
+    // ============================================
+    // Helper Methods for Pause Workflow
+    // ============================================
+
+    /**
+     * Check if task is currently paused
+     */
+    public function isPaused(): bool
+    {
+        return $this->paused_at !== null;
+    }
+
+    /**
+     * Check if task can be paused (by approver)
+     * Task can only be paused when in NOT_YET or ON_PROGRESS status
+     * and no store has completed (done or done_pending)
+     */
+    public function canBePaused(): bool
+    {
+        // Can only pause dispatched tasks (not drafts, not done)
+        return $this->dispatched_at !== null
+            && $this->paused_at === null
+            && !$this->isCompleted();
+    }
+
+    /**
+     * Check if task is completed (all stores done or unable)
+     */
+    public function isCompleted(): bool
+    {
+        // This will be fully implemented when task_store_assignments is added
+        // For now, check if status is DONE
+        return $this->status?->code === 'DONE';
     }
 
     /**

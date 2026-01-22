@@ -3882,6 +3882,289 @@ TRIGGERS tự động tạo history entries:
 
 ---
 
+## 13. WS MODULE - KẾ HOẠCH HOÀN THIỆN (Master Checklist)
+
+> **Mục tiêu**: Hoàn thiện toàn bộ WS Module, loại bỏ mockData, code FE+BE+DB hoàn chỉnh
+> **Cập nhật lần cuối**: 2026-01-22
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  TỔNG QUAN 4 GIAI ĐOẠN                                          │
+│                                                                 │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │  PHASE 1: HOÀN THIỆN CHỨC NĂNG                           │   │
+│  │  → Mục tiêu: Tất cả screens chạy được, không mockData    │   │
+│  │  → FE + BE + DB hoàn chỉnh                               │   │
+│  │  → Status: 🔄 IN PROGRESS                                │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                         ↓                                       │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │  PHASE 2: TỐI ƯU HIỆU SUẤT                               │   │
+│  │  → API response optimization (loại bỏ fields thừa)       │   │
+│  │  → Query optimization (N+1, indexing)                    │   │
+│  │  → Frontend performance (lazy loading, caching)          │   │
+│  │  → Status: ⏳ PENDING                                    │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                         ↓                                       │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │  PHASE 3: CẢI THIỆN UI/UX                                │   │
+│  │  → Responsive design                                     │   │
+│  │  → Loading states, error handling                        │   │
+│  │  → Accessibility                                         │   │
+│  │  → Status: ⏳ PENDING                                    │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                         ↓                                       │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │  PHASE 4: DEPLOY DEMO & FEEDBACK                         │   │
+│  │  → Deploy lên server cho user test                       │   │
+│  │  → Thu thập feedback về bug, UI/UX                       │   │
+│  │  → ⚡ CÓ THỂ CHẠY SONG SONG với Phase 1-3               │   │
+│  │  → Status: ⏳ PENDING                                    │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### PHASE 1: HOÀN THIỆN CHỨC NĂNG (No MockData)
+
+#### 1.1 Database - Tables & Migrations
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 1.1.1 | `tasks` table - review & update schema | ⏳ | Thêm fields còn thiếu theo spec |
+| 1.1.2 | `task_store_assignments` table | ⏳ | Gán task cho stores, track store status |
+| 1.1.3 | `task_approval_history` table | ✅ | Đã có, cần verify |
+| 1.1.4 | `task_library` table | ⏳ | Templates cho dispatch |
+| 1.1.5 | `task_execution_logs` table | ⏳ | Log actions của stores |
+| 1.1.6 | Foreign keys & indexes | ⏳ | Đảm bảo data integrity |
+
+#### 1.2 Backend APIs
+
+**Task List Screen:**
+| # | API | Method | Status | Notes |
+|---|-----|--------|--------|-------|
+| 1.2.1 | GET /tasks | GET | 🔄 | Cần optimize response, loại bỏ ~25 fields thừa |
+| 1.2.2 | GET /tasks-draft-info | GET | ✅ | Đếm drafts per user |
+| 1.2.3 | DELETE /tasks/{id} | DELETE | ✅ | Xóa draft |
+
+**Task Detail Screen:**
+| # | API | Method | Status | Notes |
+|---|-----|--------|--------|-------|
+| 1.2.4 | GET /tasks/{id} | GET | 🔄 | Chi tiết task với sub_tasks |
+| 1.2.5 | GET /tasks/{id}/history | GET | ✅ | Approval history |
+| 1.2.6 | GET /tasks/{id}/progress | GET | ⏳ | Store progress (cần task_store_assignments) |
+
+**Add Task Screen:**
+| # | API | Method | Status | Notes |
+|---|-----|--------|--------|-------|
+| 1.2.7 | POST /tasks | POST | 🔄 | Tạo task/draft |
+| 1.2.8 | PUT /tasks/{id} | PUT | 🔄 | Update draft |
+| 1.2.9 | POST /tasks/{id}/submit | POST | ⏳ | Submit for approval |
+
+**Approval Flow:**
+| # | API | Method | Status | Notes |
+|---|-----|--------|--------|-------|
+| 1.2.10 | GET /tasks/pending-approval | GET | ⏳ | Tasks chờ user duyệt |
+| 1.2.11 | POST /tasks/{id}/approve | POST | ⏳ | Approve task |
+| 1.2.12 | POST /tasks/{id}/reject | POST | ⏳ | Reject task |
+| 1.2.13 | GET /staff/{id}/approver | GET | ⏳ | Tìm approver của user |
+
+**Library Screen:**
+| # | API | Method | Status | Notes |
+|---|-----|--------|--------|-------|
+| 1.2.14 | GET /tasks/library | GET | ⏳ | Danh sách templates |
+| 1.2.15 | POST /tasks/library | POST | ⏳ | Tạo template trực tiếp |
+| 1.2.16 | POST /tasks/{id}/dispatch | POST | ⏳ | Gửi template đến stores |
+
+**Store Execution:**
+| # | API | Method | Status | Notes |
+|---|-----|--------|--------|-------|
+| 1.2.17 | GET /stores/{id}/tasks | GET | ⏳ | Tasks của store |
+| 1.2.18 | POST /tasks/{id}/stores/{store_id}/start | POST | ⏳ | Bắt đầu task |
+| 1.2.19 | POST /tasks/{id}/stores/{store_id}/complete | POST | ⏳ | Hoàn thành task |
+| 1.2.20 | POST /tasks/{id}/stores/{store_id}/unable | POST | ⏳ | Mark unable |
+| 1.2.21 | POST /tasks/{id}/stores/{store_id}/assign | POST | ⏳ | Giao việc cho staff |
+
+**HQ Check:**
+| # | API | Method | Status | Notes |
+|---|-----|--------|--------|-------|
+| 1.2.22 | GET /tasks/hq-check | GET | ⏳ | Tasks cần HQ kiểm tra |
+| 1.2.23 | POST /tasks/{id}/stores/{store_id}/check | POST | ⏳ | Checked/Reject |
+
+**Supporting APIs:**
+| # | API | Method | Status | Notes |
+|---|-----|--------|--------|-------|
+| 1.2.24 | GET /scope-hierarchy | GET | ✅ | Region/Zone/Area/Store |
+| 1.2.25 | GET /code-master | GET | ✅ | Task types, categories |
+| 1.2.26 | GET /departments | GET | ✅ | Departments list |
+
+#### 1.3 Frontend Screens
+
+**Task List (/tasks/list):**
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 1.3.1 | Hiển thị danh sách tasks | ✅ | Đang hoạt động |
+| 1.3.2 | Filter by status | 🔄 | Cần test với real data |
+| 1.3.3 | Filter by department | 🔄 | Cần test với real data |
+| 1.3.4 | Search by task name | 🔄 | Cần verify |
+| 1.3.5 | Pagination | ✅ | Đang hoạt động |
+| 1.3.6 | Progress column - từ store assignments | ⏳ | Hiện tính từ sub_tasks (sai) |
+| 1.3.7 | Unable column - từ store assignments | ⏳ | Hiện hardcode = 0 |
+| 1.3.8 | Click Status → History modal | ✅ | Đã implement |
+| 1.3.9 | 3-dots menu actions | 🔄 | Cần verify các actions |
+| 1.3.10 | Sub-tasks expand/collapse | ✅ | Đang hoạt động |
+
+**Task Detail (/tasks/[id]):**
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 1.3.11 | Task header info | ⏳ | Cần implement |
+| 1.3.12 | Statistics cards (Not Yet, Done, Unable, Avg Time) | ⏳ | Cần store assignments |
+| 1.3.13 | Store progress table | ⏳ | Danh sách stores + status |
+| 1.3.14 | Comments section | ⏳ | Task comments |
+| 1.3.15 | Attachments/Evidence | ⏳ | Files từ stores |
+
+**Add Task (/tasks/new):**
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 1.3.16 | A. Information section | 🔄 | Cần verify validation |
+| 1.3.17 | B. Instructions section | 🔄 | Photo guidelines, manual link |
+| 1.3.18 | C. Scope section - Store hierarchy | ⏳ | Chọn Region/Zone/Area/Store |
+| 1.3.19 | C. Scope section - HQ hierarchy | ⏳ | Chọn Division/Dept/Team/User |
+| 1.3.20 | D. Approval Process - auto populate | ⏳ | Hiển thị approver |
+| 1.3.21 | Save as Draft | 🔄 | Cần test |
+| 1.3.22 | Submit for approval | ⏳ | Gửi đến approver |
+| 1.3.23 | Edit existing draft | ⏳ | Load và edit |
+| 1.3.24 | source=library mode | ⏳ | C. Scope hidden |
+| 1.3.25 | source=todo_task mode | ⏳ | C. Scope = HQ users |
+
+**Library (/tasks/library):**
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 1.3.26 | Danh sách templates | ⏳ | List với status badges |
+| 1.3.27 | Add New template | ⏳ | → Add Task (source=library) |
+| 1.3.28 | Dispatch template | ⏳ | Chọn scope và gửi |
+| 1.3.29 | Cooldown status display | ⏳ | Ice blue badge |
+| 1.3.30 | Override cooldown (highest grade) | ⏳ | Permission check |
+
+**To Do Task (/tasks/todo):**
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 1.3.31 | Danh sách tasks HQ→HQ | ⏳ | Tasks giao cho HQ users |
+| 1.3.32 | Add New → Add Task (source=todo_task) | ⏳ | Scope = HQ hierarchy |
+| 1.3.33 | My tasks (assigned to me) | ⏳ | Tasks tôi cần làm |
+
+**Approval Screen (/tasks/approval):**
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 1.3.34 | Pending approvals list | ⏳ | Tasks cần user duyệt |
+| 1.3.35 | Approve action | ⏳ | Button + confirm |
+| 1.3.36 | Reject action | ⏳ | Button + reason modal |
+| 1.3.37 | View task detail (read-only) | ⏳ | Xem trước khi duyệt |
+
+**Store Task View (/stores/[id]/tasks):**
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 1.3.38 | Tasks assigned to store | ⏳ | Danh sách tasks |
+| 1.3.39 | Start task action | ⏳ | not_yet → on_progress |
+| 1.3.40 | Complete task action | ⏳ | on_progress → done |
+| 1.3.41 | Mark unable action | ⏳ | → unable + reason |
+| 1.3.42 | Upload evidence | ⏳ | Ảnh kết quả |
+| 1.3.43 | Assign to staff (S4-S2) | ⏳ | Giao việc cho S1 |
+
+**HQ Check Screen (/tasks/hq-check):**
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 1.3.44 | Tasks pending HQ check | ⏳ | done_pending stores |
+| 1.3.45 | View store evidence | ⏳ | Ảnh, notes |
+| 1.3.46 | Checked action | ⏳ | done_pending → done |
+| 1.3.47 | Reject action | ⏳ | done_pending → on_progress |
+
+#### 1.4 Shared Components
+
+| # | Component | Status | Notes |
+|---|-----------|--------|-------|
+| 1.4.1 | ApprovalHistoryModal | ✅ | Đã implement |
+| 1.4.2 | ScopeSelector (Store hierarchy) | ⏳ | Region/Zone/Area/Store picker |
+| 1.4.3 | ScopeSelector (HQ hierarchy) | ⏳ | Division/Dept/Team/User picker |
+| 1.4.4 | TaskStatusBadge | ✅ | Status với colors |
+| 1.4.5 | StoreStatusBadge | ⏳ | Store-level status |
+| 1.4.6 | PhotoUploader | ⏳ | Click, paste, drag-drop |
+| 1.4.7 | EvidenceViewer | ⏳ | Gallery cho store evidence |
+
+### PHASE 2: TỐI ƯU HIỆU SUẤT
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 2.1 | Tạo TaskListResource - loại bỏ ~25 fields thừa | ⏳ | Giảm payload size |
+| 2.2 | Tạo TaskDetailResource - full info | ⏳ | Cho detail screen |
+| 2.3 | Fix N+1 queries trong Task List | ⏳ | Eager loading |
+| 2.4 | Add database indexes | ⏳ | task_id, store_id, status |
+| 2.5 | Frontend: React Query caching | ⏳ | Avoid duplicate fetches |
+| 2.6 | Frontend: Lazy loading images | ⏳ | Photo guidelines, evidence |
+| 2.7 | Frontend: Virtual scrolling cho long lists | ⏳ | Nếu cần |
+| 2.8 | API response compression | ⏳ | Gzip |
+| 2.9 | Pagination optimization | ⏳ | Cursor-based nếu cần |
+
+### PHASE 3: CẢI THIỆN UI/UX
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 3.1 | Loading states cho tất cả screens | ⏳ | Skeleton, spinners |
+| 3.2 | Error handling UI | ⏳ | Toast, error boundaries |
+| 3.3 | Empty states | ⏳ | Khi không có data |
+| 3.4 | Responsive design (mobile) | ⏳ | Tables, forms |
+| 3.5 | Accessibility (a11y) | ⏳ | ARIA labels, keyboard nav |
+| 3.6 | Form validation UX | ⏳ | Inline errors, focus |
+| 3.7 | Confirmation dialogs | ⏳ | Delete, submit, approve |
+| 3.8 | Success feedback | ⏳ | Toast sau actions |
+| 3.9 | Dark mode support | ⏳ | Nếu cần |
+| 3.10 | Animation/transitions | ⏳ | Subtle, professional |
+
+### PHASE 4: DEPLOY DEMO & FEEDBACK
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 4.1 | Deploy database changes | ⏳ | phpMyAdmin |
+| 4.2 | Deploy backend changes | ⏳ | FileZilla |
+| 4.3 | Deploy frontend changes | ⏳ | Vercel Redeploy |
+| 4.4 | Test trên production | ⏳ | All screens |
+| 4.5 | Tạo test accounts cho users | ⏳ | HQ + Store roles |
+| 4.6 | Thu thập feedback | ⏳ | Bug reports, UI/UX |
+| 4.7 | Prioritize & fix issues | ⏳ | Based on feedback |
+
+### PROGRESS TRACKING
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  PHASE 1 PROGRESS                                               │
+│                                                                 │
+│  Database:     [██░░░░░░░░] 20%  (1/6 tasks)                   │
+│  Backend APIs: [████░░░░░░] 35%  (9/26 tasks)                  │
+│  Frontend:     [███░░░░░░░] 25%  (12/47 tasks)                 │
+│  Components:   [██░░░░░░░░] 28%  (2/7 tasks)                   │
+│  ────────────────────────────────────────────────────────────── │
+│  OVERALL:      [███░░░░░░░] ~27%                               │
+│                                                                 │
+│  PHASE 2 PROGRESS: [░░░░░░░░░░] 0%                             │
+│  PHASE 3 PROGRESS: [░░░░░░░░░░] 0%                             │
+│  PHASE 4 PROGRESS: [░░░░░░░░░░] 0%                             │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+Last Updated: 2026-01-22
+```
+
+### LEGEND
+
+| Symbol | Meaning |
+|--------|---------|
+| ✅ | Hoàn thành |
+| 🔄 | Đang làm / Cần review |
+| ⏳ | Chưa bắt đầu |
+| ❌ | Blocked / Có vấn đề |
+
+---
+
 ## Tham khảo chi tiết
 
 - Session Start: `docs/SESSION_START_CHECKLIST.md`
