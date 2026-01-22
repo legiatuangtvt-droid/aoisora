@@ -4083,22 +4083,22 @@ TRIGGERS tự động tạo history entries:
 | 1.3.11 | Task header info | ✅ | Using real API data |
 | 1.3.12 | Statistics cards (Not Yet, Done, Unable, Avg Time) | ✅ | Using getTaskProgress API |
 | 1.3.13 | Store progress table | ✅ | Using store assignments from API |
-| 1.3.14 | Comments section | 🔄 | Existing component, cần verify |
+| 1.3.14 | Comments section | ⏳ | Component exists, API không có (cần implement) |
 | 1.3.15 | Attachments/Evidence | ⏳ | Files từ stores - cần implement
 
 **Add Task (/tasks/new):**
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 1.3.16 | A. Information section | 🔄 | Cần verify validation |
-| 1.3.17 | B. Instructions section | 🔄 | Photo guidelines, manual link |
-| 1.3.18 | C. Scope section - Store hierarchy | ⏳ | Chọn Region/Zone/Area/Store |
-| 1.3.19 | C. Scope section - HQ hierarchy | ⏳ | Chọn Division/Dept/Team/User |
-| 1.3.20 | D. Approval Process - auto populate | ⏳ | Hiển thị approver |
-| 1.3.21 | Save as Draft | 🔄 | Cần test |
-| 1.3.22 | Submit for approval | ⏳ | Gửi đến approver |
-| 1.3.23 | Edit existing draft | ⏳ | Load và edit |
-| 1.3.24 | source=library mode | ⏳ | C. Scope hidden |
-| 1.3.25 | source=todo_task mode | ⏳ | C. Scope = HQ users |
+| 1.3.16 | A. Information section | ✅ | Task Type, Applicable Period, Execution Time with validation |
+| 1.3.17 | B. Instructions section | ✅ | Photo guidelines (click/paste/drag-drop), Manual Link, Note |
+| 1.3.18 | C. Scope section - Store hierarchy | ✅ | Using real API via useScopeData hook |
+| 1.3.19 | C. Scope section - HQ hierarchy | ⏳ | Component ready, needs HQ users API |
+| 1.3.20 | D. Approval Process - auto populate | 🔄 | Component exists, verify approver lookup |
+| 1.3.21 | Save as Draft | ✅ | Implemented in handleSaveDraft |
+| 1.3.22 | Submit for approval | ✅ | Implemented in handleSubmit |
+| 1.3.23 | Edit existing draft | ✅ | Works via URL params (?id=xxx) |
+| 1.3.24 | source=library mode | ✅ | Hides scope section correctly |
+| 1.3.25 | source=todo_task mode | ⏳ | Has HQ scopeType, needs HQ users API |
 
 **Library (/tasks/library):**
 | # | Task | Status | Notes |
@@ -4203,10 +4203,10 @@ TRIGGERS tự động tạo history entries:
 │                                                                 │
 │  Database:     [██████████] 100% (6/6 tasks)                   │
 │  Backend APIs: [██████████] 100% (26/26 tasks)                 │
-│  Frontend:     [██░░░░░░░░] 19%  (9/47 tasks)                  │
+│  Frontend:     [███░░░░░░░] 34%  (16/47 tasks)                 │
 │  Components:   [███░░░░░░░] 29%  (2/7 tasks)                   │
 │  ────────────────────────────────────────────────────────────── │
-│  OVERALL:      [█████░░░░░] ~50%                               │
+│  OVERALL:      [██████░░░░] ~58%                               │
 │                                                                 │
 │  PHASE 2 PROGRESS: [░░░░░░░░░░] 0%                             │
 │  PHASE 3 PROGRESS: [░░░░░░░░░░] 0%                             │
