@@ -445,9 +445,126 @@ class Task extends Model
      */
     public function isCompleted(): bool
     {
-        // This will be fully implemented when task_store_assignments is added
-        // For now, check if status is DONE
-        return $this->status?->code === 'DONE';
+        $counts = $this->getStoreStatusCounts();
+        if ($counts['total'] === 0) {
+            return false;
+        }
+        // All stores are in final state (done or unable)
+        return ($counts['done'] + $counts['unable']) === $counts['total'];
+    }
+
+    // ============================================
+    // Calculated Status Methods (CLAUDE.md Section 12.4-12.5)
+    // ============================================
+
+    /**
+     * Overall status values for task (calculated from store statuses)
+     * These are different from code_master status_id which is workflow status
+     */
+    const OVERALL_NOT_YET = 'not_yet';
+    const OVERALL_ON_PROGRESS = 'on_progress';
+    const OVERALL_DONE = 'done';
+    const OVERALL_OVERDUE = 'overdue';
+
+    /**
+     * Calculate overall task status from store assignment statuses
+     *
+     * Rules (from CLAUDE.md Section 12.4):
+     * - NOT YET: All stores = not_yet
+     * - ON PROGRESS: At least 1 store is on_progress or done_pending (and no overdue)
+     * - DONE: All stores = done or unable
+     * - OVERDUE: end_date < today AND task not done (has stores not in final state)
+     *
+     * @return string|null Overall status or null if task has no store assignments
+     */
+    public function getCalculatedStatus(): ?string
+    {
+        // Only calculate for dispatched tasks with store assignments
+        if (!$this->dispatched_at || $this->receiver_type !== self::RECEIVER_TYPE_STORE) {
+            return null;
+        }
+
+        $counts = $this->getStoreStatusCounts();
+
+        // No assignments yet
+        if ($counts['total'] === 0) {
+            return null;
+        }
+
+        $finalCount = $counts['done'] + $counts['unable'];
+        $inProgressCount = $counts['on_progress'] + $counts['done_pending'];
+
+        // Check DONE: All stores in final state
+        if ($finalCount === $counts['total']) {
+            return self::OVERALL_DONE;
+        }
+
+        // Check OVERDUE: end_date < today AND not all done
+        if ($this->end_date && $this->end_date->lt(now()->startOfDay())) {
+            return self::OVERALL_OVERDUE;
+        }
+
+        // Check ON PROGRESS: At least 1 store in progress
+        if ($inProgressCount > 0) {
+            return self::OVERALL_ON_PROGRESS;
+        }
+
+        // Default: NOT YET (all stores are not_yet)
+        return self::OVERALL_NOT_YET;
+    }
+
+    /**
+     * Get store progress statistics for this task
+     *
+     * @return array Progress statistics
+     */
+    public function getStoreProgress(): array
+    {
+        $counts = $this->getStoreStatusCounts();
+
+        if ($counts['total'] === 0) {
+            return [
+                'not_yet' => 0,
+                'on_progress' => 0,
+                'done_pending' => 0,
+                'done' => 0,
+                'unable' => 0,
+                'total' => 0,
+                'completed_count' => 0,
+                'completion_rate' => 0,
+            ];
+        }
+
+        $completedCount = $counts['done'] + $counts['unable'];
+
+        return array_merge($counts, [
+            'completed_count' => $completedCount,
+            'completion_rate' => round(($completedCount / $counts['total']) * 100, 1),
+        ]);
+    }
+
+    /**
+     * Check if task is overdue
+     */
+    public function isOverdue(): bool
+    {
+        return $this->getCalculatedStatus() === self::OVERALL_OVERDUE;
+    }
+
+    /**
+     * Check if task has any store in progress
+     */
+    public function isInProgress(): bool
+    {
+        return $this->getCalculatedStatus() === self::OVERALL_ON_PROGRESS;
+    }
+
+    /**
+     * Check if task is not started yet (all stores not_yet)
+     */
+    public function isNotYet(): bool
+    {
+        return $this->getCalculatedStatus() === self::OVERALL_NOT_YET;
     }
 
     /**

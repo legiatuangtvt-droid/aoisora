@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Task;
 use App\Models\Staff;
 use App\Models\CodeMaster;
+use App\Models\TaskStoreAssignment;
 use App\Models\TaskApprovalHistory;
 use App\Events\TaskUpdated;
 use App\Http\Resources\TaskApprovalHistoryResource;
@@ -100,9 +101,53 @@ class TaskController extends Controller
                       ->orWhereNull('end_date')
                       ->orWhereIn('status_id', [self::DRAFT_STATUS_ID, self::APPROVE_STATUS_ID]);
                 })),
+                // Filter by calculated status (not_yet, on_progress, done, overdue)
+                // This filters based on store assignment statuses
+                AllowedFilter::callback('calculated_status', function ($query, $value) {
+                    $today = now()->startOfDay();
+
+                    switch ($value) {
+                        case Task::OVERALL_NOT_YET:
+                            // All stores are not_yet OR task has no assignments yet
+                            $query->where(function ($q) {
+                                $q->whereDoesntHave('storeAssignments', function ($sq) {
+                                    $sq->where('status', '!=', 'not_yet');
+                                })
+                                ->whereHas('storeAssignments');
+                            });
+                            break;
+
+                        case Task::OVERALL_ON_PROGRESS:
+                            // At least 1 store is on_progress or done_pending, and not overdue
+                            $query->whereHas('storeAssignments', function ($sq) {
+                                $sq->whereIn('status', ['on_progress', 'done_pending']);
+                            })
+                            ->where(function ($q) use ($today) {
+                                $q->whereNull('end_date')
+                                  ->orWhere('end_date', '>=', $today);
+                            });
+                            break;
+
+                        case Task::OVERALL_DONE:
+                            // All stores are done or unable
+                            $query->whereDoesntHave('storeAssignments', function ($sq) {
+                                $sq->whereNotIn('status', ['done', 'unable']);
+                            })
+                            ->whereHas('storeAssignments');
+                            break;
+
+                        case Task::OVERALL_OVERDUE:
+                            // end_date < today AND has stores not in final state
+                            $query->where('end_date', '<', $today)
+                                ->whereHas('storeAssignments', function ($sq) {
+                                    $sq->whereNotIn('status', ['done', 'unable']);
+                                });
+                            break;
+                    }
+                }),
             ])
             ->allowedSorts(['task_id', 'task_name', 'end_date', 'start_date', 'created_at'])
-            ->allowedIncludes(['assignedStaff', 'createdBy', 'assignedStore', 'department', 'taskType', 'responseType', 'status']);
+            ->allowedIncludes(['assignedStaff', 'createdBy', 'assignedStore', 'department', 'taskType', 'responseType', 'status', 'storeAssignments']);
 
         // Default sort: APPROVE → DRAFT → others (by status priority), then by task_id
         // This ensures DRAFT and APPROVE tasks always appear first in pagination
@@ -117,12 +162,14 @@ class TaskController extends Controller
 
         $tasks = $tasks->paginate($request->get('per_page', 20));
 
-        // Convert to array and add sub_tasks + draft_info
+        // Convert to array and add sub_tasks + calculated fields + draft_info
         $response = $tasks->toArray();
 
-        // Add nested sub_tasks for each parent task
+        // Add nested sub_tasks and calculated fields for each parent task
         $response['data'] = array_map(function ($task) {
-            return $this->addNestedSubTasks($task);
+            $task = $this->addNestedSubTasks($task);
+            $task = $this->addCalculatedFields($task);
+            return $task;
         }, $response['data']);
 
         // Include draft_info in response (only for authenticated HQ users)
@@ -143,12 +190,14 @@ class TaskController extends Controller
     {
         $task = Task::with([
             'assignedStaff', 'createdBy', 'assignedStore', 'department',
-            'taskType', 'responseType', 'status', 'manual', 'checklists'
+            'taskType', 'responseType', 'status', 'manual', 'checklists',
+            'storeAssignments.store', 'storeAssignments.assignedToStaff'
         ])->findOrFail($id);
 
-        // Convert to array and add nested sub_tasks
+        // Convert to array and add nested sub_tasks + calculated fields
         $taskArray = $task->toArray();
         $taskArray = $this->addNestedSubTasks($taskArray);
+        $taskArray = $this->addCalculatedFields($taskArray);
 
         return response()->json($taskArray);
     }
@@ -599,6 +648,33 @@ class TaskController extends Controller
             $child['sub_tasks'] = [];
             return $child;
         }, $children);
+
+        return $task;
+    }
+
+    /**
+     * Add calculated status and store progress to a task array
+     *
+     * This adds:
+     * - calculated_status: Overall status calculated from store assignments (not_yet, on_progress, done, overdue)
+     * - store_progress: Statistics about store execution progress
+     *
+     * @param array $task Task array
+     * @return array Task with calculated fields
+     */
+    private function addCalculatedFields(array $task): array
+    {
+        $taskModel = Task::find($task['task_id']);
+
+        if (!$taskModel) {
+            return $task;
+        }
+
+        // Add calculated overall status (from store assignments)
+        $task['calculated_status'] = $taskModel->getCalculatedStatus();
+
+        // Add store progress statistics
+        $task['store_progress'] = $taskModel->getStoreProgress();
 
         return $task;
     }
