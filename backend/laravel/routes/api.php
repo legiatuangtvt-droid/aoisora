@@ -154,6 +154,7 @@ Route::prefix('v1')->group(function () {
         Route::post('tasks', [TaskController::class, 'store']);
         Route::get('tasks-draft-info', [TaskController::class, 'getDraftInfo']);
         Route::get('tasks/pending-approval', [TaskController::class, 'pendingApproval']);  // Must be before {task} routes
+        Route::get('tasks/hq-check', [TaskController::class, 'hqCheckList']);  // Tasks awaiting HQ verification
         Route::put('tasks/{task}', [TaskController::class, 'update']);
         Route::delete('tasks/{task}', [TaskController::class, 'destroy']);
         Route::put('tasks/{task}/status', [TaskController::class, 'updateStatus']);

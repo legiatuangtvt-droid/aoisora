@@ -1146,6 +1146,100 @@ class TaskController extends Controller
     }
 
     /**
+     * Get tasks that have stores pending HQ check (done_pending status)
+     *
+     * GET /api/v1/tasks/hq-check
+     *
+     * Returns tasks that have at least one store with done_pending status,
+     * meaning stores have completed the task and are waiting for HQ verification.
+     */
+    public function hqCheckList(Request $request)
+    {
+        // Get effective user (may be switched user in testing mode)
+        $user = $this->getEffectiveUser($request);
+
+        // Permission check: Only HQ users (G2-G9) can see HQ check list
+        $permissionService = app(\App\Services\JobGradePermissionService::class);
+        if (!$permissionService->canCreateTask($user)) {
+            return response()->json([
+                'message' => 'Permission denied',
+                'error' => 'Only HQ users (G2-G9) can view the HQ check list.',
+            ], 403);
+        }
+
+        // Find tasks that have at least one store with done_pending status
+        $query = Task::query()
+            ->whereHas('storeAssignments', function ($sq) {
+                $sq->where('status', TaskStoreAssignment::STATUS_DONE_PENDING);
+            })
+            ->with([
+                'createdBy',
+                'department',
+                'taskType',
+                'status',
+                // Load stores that need HQ check (done_pending only)
+                'storeAssignments' => function ($q) {
+                    $q->where('status', TaskStoreAssignment::STATUS_DONE_PENDING)
+                      ->with(['store', 'completedBy']);
+                }
+            ]);
+
+        // Apply filters
+        $query = QueryBuilder::for($query)
+            ->allowedFilters([
+                AllowedFilter::exact('dept_id'),
+                AllowedFilter::exact('created_staff_id'),
+                AllowedFilter::partial('task_name'),
+            ])
+            ->allowedSorts(['task_id', 'task_name', 'end_date', 'created_at']);
+
+        // Default sort by end_date (most urgent first)
+        if (!$request->has('sort')) {
+            $query = $query->orderBy('end_date', 'asc')
+                           ->orderBy('task_id', 'desc');
+        }
+
+        $tasks = $query->paginate($request->get('per_page', 20));
+
+        // Transform response to include HQ check summary
+        $response = $tasks->toArray();
+        $response['data'] = array_map(function ($task) {
+            // Count stores waiting for HQ check
+            $pendingCheckCount = count($task['store_assignments'] ?? []);
+
+            // Get total stores for this task
+            $totalStores = TaskStoreAssignment::where('task_id', $task['task_id'])->count();
+
+            $task['hq_check_summary'] = [
+                'pending_check_count' => $pendingCheckCount,
+                'total_stores' => $totalStores,
+                'stores_awaiting_check' => array_map(function ($assignment) {
+                    return [
+                        'assignment_id' => $assignment['id'],
+                        'store_id' => $assignment['store_id'],
+                        'store_name' => $assignment['store']['store_name'] ?? 'Unknown Store',
+                        'store_code' => $assignment['store']['store_code'] ?? null,
+                        'completed_at' => $assignment['completed_at'],
+                        'completed_by' => $assignment['completed_by'] ? [
+                            'staff_id' => $assignment['completed_by']['staff_id'] ?? null,
+                            'name' => isset($assignment['completed_by'])
+                                ? ($assignment['completed_by']['first_name'] ?? '') . ' ' . ($assignment['completed_by']['last_name'] ?? '')
+                                : null,
+                        ] : null,
+                    ];
+                }, $task['store_assignments'] ?? []),
+            ];
+
+            // Remove raw store_assignments from response (replaced by hq_check_summary)
+            unset($task['store_assignments']);
+
+            return $task;
+        }, $response['data']);
+
+        return response()->json($response);
+    }
+
+    /**
      * Get tasks pending approval for current user
      *
      * GET /api/v1/tasks/pending-approval

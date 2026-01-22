@@ -4051,7 +4051,7 @@ TRIGGERS tự động tạo history entries:
 **HQ Check:**
 | # | API | Method | Status | Notes |
 |---|-----|--------|--------|-------|
-| 1.2.22 | GET /tasks/hq-check | GET | ⏳ | Tasks cần HQ kiểm tra (filter endpoint) |
+| 1.2.22 | GET /tasks/hq-check | GET | ✅ | Tasks cần HQ kiểm tra (filter endpoint) |
 | 1.2.23 | POST /tasks/{id}/stores/{store_id}/check | POST | ✅ | HQ Check - `329eaa37` |
 
 **Supporting APIs:**
