@@ -9,6 +9,7 @@ import {
   WsLibraryTemplate,
   WsLibraryDispatchRequest,
 } from '@/lib/api';
+import { DispatchPageSkeleton } from '@/components/ui/Skeleton';
 
 export default function DispatchPage() {
   const router = useRouter();
@@ -161,14 +162,11 @@ export default function DispatchPage() {
     }
   };
 
-  // Loading state
+  // Loading state - Skeleton
   if (isLoadingTemplate || isLoadingScope) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500 mx-auto mb-4" />
-          <p className="text-gray-500 text-sm">Loading template...</p>
-        </div>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+        <DispatchPageSkeleton />
       </div>
     );
   }

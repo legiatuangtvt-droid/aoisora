@@ -8,6 +8,7 @@ import { useUser } from '@/contexts/UserContext';
 import { ViewMode, TaskGroup } from '@/types/tasks';
 import Link from 'next/link';
 import ViewModeToggle from '@/components/tasks/ViewModeToggle';
+import { TaskDetailPageSkeleton } from '@/components/ui/Skeleton';
 
 /**
  * Task Detail page
@@ -326,23 +327,17 @@ export default function TaskDetailPage() {
       );
     }
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C5055B] mx-auto mb-4"></div>
-          <p className="text-gray-500">Đang tải task...</p>
-        </div>
+      <div className="min-h-screen bg-white p-8">
+        <TaskDetailPageSkeleton />
       </div>
     );
   }
 
-  // Loading state
+  // Loading state - Skeleton
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C5055B] mx-auto mb-4"></div>
-          <p className="text-gray-500">Loading task...</p>
-        </div>
+      <div className="min-h-screen bg-white p-8">
+        <TaskDetailPageSkeleton />
       </div>
     );
   }

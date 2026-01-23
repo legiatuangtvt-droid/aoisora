@@ -16,6 +16,8 @@ import {
   StoreStaffOption,
 } from '@/lib/api';
 import { useUser } from '@/contexts/UserContext';
+import { StoreTasksPageSkeleton } from '@/components/ui/Skeleton';
+import { LoadingSpinner } from '@/components/ui/LoadingIndicator';
 
 // Status badge colors
 const getStatusColor = (status: StoreTaskStatus): string => {
@@ -339,13 +341,8 @@ export default function StoreTasksPage() {
           </div>
         )}
 
-        {/* Loading State */}
-        {isLoading && (
-          <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500 mx-auto mb-4" />
-            <p className="text-gray-500 text-sm">Loading tasks...</p>
-          </div>
-        )}
+        {/* Loading State - Skeleton */}
+        {isLoading && <StoreTasksPageSkeleton />}
 
         {/* Error State */}
         {error && !isLoading && (
@@ -641,7 +638,7 @@ export default function StoreTasksPage() {
 
               {loadingStaff ? (
                 <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-pink-500" />
+                  <LoadingSpinner size="md" color="pink" />
                 </div>
               ) : storeStaff.length === 0 ? (
                 <div className="text-center py-8">

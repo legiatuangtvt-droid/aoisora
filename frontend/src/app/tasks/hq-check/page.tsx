@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { getHQCheckList, hqCheckStoreTask, hqRejectStoreTask, TaskWithHQCheck } from '@/lib/api';
 import { useUser } from '@/contexts/UserContext';
+import { HQCheckPageSkeleton } from '@/components/ui/Skeleton';
 
 // Status badge colors
 const getStatusColor = (status: string) => {
@@ -185,13 +186,8 @@ export default function HQCheckPage() {
           </div>
         )}
 
-        {/* Loading State */}
-        {isLoading && (
-          <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500 mx-auto mb-4" />
-            <p className="text-gray-500 text-sm">Loading pending checks...</p>
-          </div>
-        )}
+        {/* Loading State - Skeleton */}
+        {isLoading && <HQCheckPageSkeleton />}
 
         {/* Error State */}
         {error && !isLoading && (

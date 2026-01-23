@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { LoadingSpinner } from '@/components/ui/LoadingIndicator';
 
 export default function TasksPage() {
   const router = useRouter();
@@ -11,8 +12,8 @@ export default function TasksPage() {
   }, [router]);
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500"></div>
+    <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
+      <LoadingSpinner size="lg" color="pink" />
     </div>
   );
 }

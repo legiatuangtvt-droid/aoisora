@@ -16,6 +16,7 @@ import StoreHierarchyTree from '@/components/stores/StoreHierarchyTree';
 import StorePermissionsModal from '@/components/stores/StorePermissionsModal';
 import StoreImportExcelModal from '@/components/stores/StoreImportExcelModal';
 import StaffDetailModal from '@/components/stores/StaffDetailModal';
+import { StoreInfoPageSkeleton, HierarchySkeleton } from '@/components/ui/Skeleton';
 
 export default function StoreInformationPage() {
   const [activeTab, setActiveTab] = useState<RegionId>('');
@@ -220,12 +221,9 @@ export default function StoreInformationPage() {
           </div>
         )}
 
-        {/* Loading State */}
+        {/* Loading State - Skeleton */}
         {loading && !currentRegion && (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#003E95]"></div>
-            <span className="ml-3 text-gray-600">Loading...</span>
-          </div>
+          <HierarchySkeleton />
         )}
 
         {/* Content - Hierarchy Tree */}

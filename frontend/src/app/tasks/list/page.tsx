@@ -11,6 +11,7 @@ import FilterModal from '@/components/tasks/FilterModal';
 import DatePicker from '@/components/ui/DatePicker';
 import ColumnFilterDropdown from '@/components/ui/ColumnFilterDropdown';
 import ApprovalHistoryModal, { TaskApprovalHistory } from '@/components/tasks/ApprovalHistoryModal';
+import { TaskListPageSkeleton } from '@/components/ui/Skeleton';
 import { useTaskUpdates } from '@/hooks/useTaskUpdates';
 import { useUser } from '@/contexts/UserContext';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -726,13 +727,8 @@ export default function TaskListPage() {
         </div>
       </div>
 
-      {/* Loading State */}
-      {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500"></div>
-          <span className="ml-3 text-gray-600">Loading tasks...</span>
-        </div>
-      )}
+      {/* Loading State - Skeleton */}
+      {isLoading && <TaskListPageSkeleton />}
 
       {/* Error State */}
       {error && !isLoading && (

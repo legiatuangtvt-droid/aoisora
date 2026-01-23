@@ -8,6 +8,7 @@ import { createEmptyTaskLevel } from '@/data/mockAddTask';
 import AddTaskForm, { RejectionInfo } from '@/components/tasks/add/AddTaskForm';
 import TaskMapsTab from '@/components/tasks/add/TaskMapsTab';
 import { useToast } from '@/components/ui/Toast';
+import { AddTaskPageSkeleton } from '@/components/ui/Skeleton';
 import { createTask, getDraftInfo, DraftInfo, submitTask, getTaskById, updateTask, deleteTask } from '@/lib/api';
 import { Task } from '@/types/api';
 import { useUser } from '@/contexts/UserContext';
@@ -406,14 +407,11 @@ function AddTaskContent() {
     }
   };
 
-  // Loading state (edit mode only)
+  // Loading state (edit mode only) - Skeleton
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-8 h-8 border-4 border-pink-600 border-t-transparent rounded-full animate-spin" />
-          <span className="text-gray-500 dark:text-gray-400">Loading task...</span>
-        </div>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+        <AddTaskPageSkeleton />
       </div>
     );
   }
@@ -631,11 +629,8 @@ function AddTaskContent() {
 export default function NewTaskPage() {
   return (
     <Suspense fallback={
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-8 h-8 border-4 border-pink-600 border-t-transparent rounded-full animate-spin" />
-          <span className="text-gray-500 dark:text-gray-400">Loading...</span>
-        </div>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+        <AddTaskPageSkeleton />
       </div>
     }>
       <AddTaskContent />

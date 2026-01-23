@@ -10,6 +10,7 @@ import TaskSearchBar from '@/components/library/TaskSearchBar';
 import TaskGroupSection from '@/components/library/TaskGroupSection';
 import { getDraftInfo, DraftInfo, getWsLibraryTemplates, WsLibraryTemplate, overrideWsLibraryCooldown } from '@/lib/api';
 import { useUser } from '@/contexts/UserContext';
+import { LibraryPageSkeleton } from '@/components/ui/Skeleton';
 
 // Transform API data to component format
 function transformTemplateToTaskTemplate(template: WsLibraryTemplate, index: number): TaskTemplate {
@@ -286,13 +287,8 @@ export default function TaskLibraryPage() {
           onFilterClick={handleFilterClick}
         />
 
-        {/* Loading State */}
-        {isLoading && (
-          <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500 mx-auto mb-4" />
-            <p className="text-gray-500 text-sm">Loading templates...</p>
-          </div>
-        )}
+        {/* Loading State - Skeleton */}
+        {isLoading && <LibraryPageSkeleton />}
 
         {/* Error State */}
         {error && !isLoading && (

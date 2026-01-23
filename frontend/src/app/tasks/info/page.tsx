@@ -24,6 +24,7 @@ import EmployeeDetailModal from '@/components/users/EmployeeDetailModal';
 import PermissionsModal from '@/components/users/PermissionsModal';
 import ImportExcelModal from '@/components/users/ImportExcelModal';
 import { getRolesList, getUsersList, savePermissions, importUsersFromExcel, RoleItem, UserItem } from '@/lib/api';
+import { UserInfoPageSkeleton, HierarchySkeleton } from '@/components/ui/Skeleton';
 
 // Department code to ID mapping (from database)
 const DEPARTMENT_CODE_TO_ID: Record<string, number> = {
@@ -366,10 +367,9 @@ export default function UserInfoPage() {
 
   if (loading && !hierarchy) {
     return (
-      <div className="min-h-screen bg-[#F8F8F8] flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C5055B] mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading user information...</p>
+      <div className="min-h-screen bg-[#F8F8F8] dark:bg-gray-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <UserInfoPageSkeleton />
         </div>
       </div>
     );
@@ -429,9 +429,7 @@ export default function UserInfoPage() {
             onMemberClick={handleMemberClick}
           />
         ) : loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C5055B]"></div>
-          </div>
+          <HierarchySkeleton />
         ) : null}
       </div>
 
