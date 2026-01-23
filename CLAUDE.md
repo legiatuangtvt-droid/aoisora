@@ -3952,7 +3952,7 @@ TRIGGERS tự động tạo history entries:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  TỔNG QUAN 4 GIAI ĐOẠN                                          │
+│  TỔNG QUAN 5 GIAI ĐOẠN                                          │
 │                                                                 │
 │  ┌──────────────────────────────────────────────────────────┐   │
 │  │  PHASE 1: HOÀN THIỆN CHỨC NĂNG                           │   │
@@ -3978,10 +3978,18 @@ TRIGGERS tự động tạo history entries:
 │  └──────────────────────────────────────────────────────────┘   │
 │                         ↓                                       │
 │  ┌──────────────────────────────────────────────────────────┐   │
-│  │  PHASE 4: DEPLOY DEMO & FEEDBACK                         │   │
+│  │  PHASE 4: REFACTOR THEO TECH STACK REFERENCE             │   │
+│  │  → Áp dụng recommendations từ Dev Team                   │   │
+│  │  → Service Layer, Form Requests, Caching, etc.           │   │
+│  │  → Chuẩn bị codebase cho production                      │   │
+│  │  → Status: ⏳ PENDING                                    │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                         ↓                                       │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │  PHASE 5: DEPLOY DEMO & FEEDBACK                         │   │
 │  │  → Deploy lên server cho user test                       │   │
 │  │  → Thu thập feedback về bug, UI/UX                       │   │
-│  │  → ⚡ CÓ THỂ CHẠY SONG SONG với Phase 1-3               │   │
+│  │  → ⚡ CÓ THỂ CHẠY SONG SONG với Phase 1-4               │   │
 │  │  → Status: ⏳ PENDING                                    │   │
 │  └──────────────────────────────────────────────────────────┘   │
 │                                                                 │
@@ -4183,22 +4191,117 @@ TRIGGERS tự động tạo history entries:
 | 3.9 | Dark mode support | ✅ | Full dark mode với dark: classes trên tất cả components |
 | 3.10 | Animation/transitions | ✅ | Page fade-in, stagger animations, modal transitions, hover effects |
 
-### PHASE 4: DEPLOY DEMO & FEEDBACK
+### PHASE 4: REFACTOR THEO TECH STACK REFERENCE
+
+> **Mục tiêu**: Áp dụng các recommendations từ Dev Team để codebase sẵn sàng cho production
+> **Tham khảo**: CLAUDE.md > Section "Tech Stack Reference" (dòng 110-143)
+
+#### 4.1 Service Layer Pattern
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 4.1 | Test toàn bộ tại LOCAL | 🔄 | Step 1 CLI/Bash: ✅ PASSED (2026-01-23), Step 2 Manual: ⏳ |
-| 4.2 | Deploy database changes | ⏳ | phpMyAdmin |
-| 4.3 | Deploy backend changes | ⏳ | FileZilla |
-| 4.4 | Deploy frontend changes | ⏳ | Vercel Redeploy |
-| 4.5 | Test trên production | ⏳ | All screens |
-| 4.6 | Tạo test accounts cho users | ⏳ | HQ + Store roles |
-| 4.7 | Thu thập feedback | ⏳ | Bug reports, UI/UX |
-| 4.8 | Prioritize & fix issues | ⏳ | Based on feedback |
+| 4.1.1 | Tạo `app/Services/` directory | ⏳ | Cấu trúc thư mục cho Services |
+| 4.1.2 | `TaskService.php` | ⏳ | Business logic cho Tasks (create, update, submit, approve) |
+| 4.1.3 | `TaskStoreService.php` | ⏳ | Store execution logic (start, complete, unable, assign) |
+| 4.1.4 | `TaskLibraryService.php` | ⏳ | Library logic (dispatch, cooldown, override) |
+| 4.1.5 | `ApprovalService.php` | ⏳ | Approval workflow (find approver, approve, reject) |
+| 4.1.6 | Refactor Controllers → gọi Services | ⏳ | Controllers chỉ handle request/response |
+
+**Cấu trúc mới:**
+```
+Request → Controller → Service → Model → Resource → Response
+```
+
+#### 4.2 Form Request Classes (Validation)
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 4.2.1 | `StoreTaskRequest.php` | ⏳ | Validation cho tạo/update task |
+| 4.2.2 | `SubmitTaskRequest.php` | ⏳ | Validation cho submit task |
+| 4.2.3 | `ApproveRejectRequest.php` | ⏳ | Validation cho approve/reject |
+| 4.2.4 | `StoreExecutionRequest.php` | ⏳ | Validation cho store actions (start, complete, unable) |
+| 4.2.5 | `DispatchLibraryRequest.php` | ⏳ | Validation cho dispatch từ Library |
+| 4.2.6 | Refactor Controllers → dùng Form Requests | ⏳ | Loại bỏ validation khỏi Controllers |
+
+#### 4.3 Authentication (Laravel Passport)
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 4.3.1 | Install Laravel Passport | ⏳ | `composer require laravel/passport` |
+| 4.3.2 | Publish & migrate Passport tables | ⏳ | `php artisan passport:install` |
+| 4.3.3 | Configure User model với HasApiTokens | ⏳ | Trait cho OAuth2 |
+| 4.3.4 | Tạo Personal Access Tokens | ⏳ | Token-based auth thay vì Sanctum |
+| 4.3.5 | Update AuthController | ⏳ | Login trả về Passport token |
+| 4.3.6 | Update Frontend auth flow | ⏳ | Store & refresh Passport tokens |
+| 4.3.7 | Test authentication flow | ⏳ | Login, logout, token refresh |
+
+#### 4.4 Caching Strategy (Redis + Response Caching)
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 4.4.1 | Install & configure Redis | ⏳ | `predis/predis` hoặc phpredis |
+| 4.4.2 | Install Spatie Response Caching | ⏳ | `composer require spatie/laravel-responsecache` |
+| 4.4.3 | Cache master data (departments, stores, code_master) | ⏳ | Redis cache với TTL |
+| 4.4.4 | Cache scope hierarchy (regions, zones, areas) | ⏳ | Ít thay đổi, cache lâu |
+| 4.4.5 | Response cache cho static pages | ⏳ | Library list, department list |
+| 4.4.6 | Cache invalidation strategy | ⏳ | Clear cache khi data thay đổi |
+
+#### 4.5 Background Jobs (Laravel Horizon)
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 4.5.1 | Install Laravel Horizon | ⏳ | `composer require laravel/horizon` |
+| 4.5.2 | Configure Horizon dashboard | ⏳ | Monitoring UI |
+| 4.5.3 | `SendTaskNotificationJob` | ⏳ | Async notifications |
+| 4.5.4 | `ProcessOverdueTasksJob` | ⏳ | Daily check for overdue |
+| 4.5.5 | `CleanupExpiredDraftsJob` | ⏳ | 30-day draft cleanup |
+| 4.5.6 | `AutoConfirmOverdueCheckJob` | ⏳ | Auto-confirm done_pending khi overdue |
+
+#### 4.6 Query Optimization
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 4.6.1 | Audit N+1 queries với Debugbar | ⏳ | Identify problematic queries |
+| 4.6.2 | Refactor sang Query Builder cho complex queries | ⏳ | Performance improvement |
+| 4.6.3 | Giữ Eloquent cho simple CRUD | ⏳ | Readability + relationships |
+| 4.6.4 | Add missing indexes | ⏳ | Based on query analysis |
+| 4.6.5 | Optimize eager loading | ⏳ | Load only needed relations |
+
+#### 4.7 Code Quality Tools
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 4.7.1 | Install Laravel Pint | ⏳ | Code style fixer |
+| 4.7.2 | Configure Pint rules | ⏳ | PSR-12 + Laravel conventions |
+| 4.7.3 | Run Pint trên toàn bộ codebase | ⏳ | Auto-fix style issues |
+| 4.7.4 | Install Pest PHP | ⏳ | Testing framework |
+| 4.7.5 | Write basic tests cho critical flows | ⏳ | Auth, Task CRUD, Approval |
+
+#### 4.8 Monitoring (Laravel Pulse)
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 4.8.1 | Install Laravel Pulse | ⏳ | `composer require laravel/pulse` |
+| 4.8.2 | Configure Pulse dashboard | ⏳ | Performance monitoring |
+| 4.8.3 | Setup slow query alerts | ⏳ | Queries > 1s |
+| 4.8.4 | Monitor memory usage | ⏳ | Prevent memory leaks |
+
+### PHASE 5: DEPLOY DEMO & FEEDBACK
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 5.1 | Test toàn bộ tại LOCAL | 🔄 | Step 1 CLI/Bash: ✅ PASSED (2026-01-23), Step 2 Manual: ⏳ |
+| 5.2 | Deploy database changes | ⏳ | phpMyAdmin |
+| 5.3 | Deploy backend changes | ⏳ | FileZilla |
+| 5.4 | Deploy frontend changes | ⏳ | Vercel Redeploy |
+| 5.5 | Test trên production | ⏳ | All screens |
+| 5.6 | Tạo test accounts cho users | ⏳ | HQ + Store roles |
+| 5.7 | Thu thập feedback | ⏳ | Bug reports, UI/UX |
+| 5.8 | Prioritize & fix issues | ⏳ | Based on feedback |
 
 ---
 
-#### 4.1 CHI TIẾT: KẾ HOẠCH TEST LOCAL
+#### 5.1 CHI TIẾT: KẾ HOẠCH TEST LOCAL
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -4356,7 +4459,16 @@ TRIGGERS tự động tạo history entries:
 │                                                                 │
 │  PHASE 2 PROGRESS: [██████████] 100% (9/9 tasks)               │
 │  PHASE 3 PROGRESS: [██████████] 100% (10/10 tasks)             │
-│  PHASE 4 PROGRESS: [█░░░░░░░░░] ~10% (Step 1/8 in progress)    │
+│  PHASE 4 PROGRESS: [░░░░░░░░░░] 0% (0/39 tasks)                │
+│    → 4.1 Service Layer: ⏳ (0/6)                                │
+│    → 4.2 Form Requests: ⏳ (0/6)                                │
+│    → 4.3 Passport Auth: ⏳ (0/7)                                │
+│    → 4.4 Caching: ⏳ (0/6)                                      │
+│    → 4.5 Background Jobs: ⏳ (0/6)                              │
+│    → 4.6 Query Optimization: ⏳ (0/5)                           │
+│    → 4.7 Code Quality: ⏳ (0/5)                                 │
+│    → 4.8 Monitoring: ⏳ (0/4)                                   │
+│  PHASE 5 PROGRESS: [█░░░░░░░░░] ~10% (Step 1/8 in progress)    │
 │    → Step 1 CLI/Bash Tests: ✅ PASSED (2026-01-23)             │
 │    → Step 2 Manual Tests: ⏳ PENDING                           │
 │                                                                 │
