@@ -4456,10 +4456,21 @@ Request → Controller → Service → Model → Resource → Response
 > │     → User chọn implement những gì                             │
 > │     → User có thể skip hoặc defer to later                    │
 > │                                                                 │
-> │  6️⃣ CLAUDE THỰC HIỆN & RETEST                                   │
+> │  6️⃣ CLAUDE THỰC HIỆN CHANGES                                    │
 > │     → Implement changes theo quyết định của user              │
-> │     → Retest lại những nội dung liên quan                     │
-> │     → Cập nhật Status và Tested At trong bảng                 │
+> │     → Commit changes (nếu cần)                                │
+> │                                                                 │
+> │  7️⃣ VERIFY CODE TRƯỚC KHI RETEST                                │
+> │     → Claude đọc lại file đã sửa để xác nhận code đúng        │
+> │     → Báo cáo cho user: code đã sửa đúng chưa?                │
+> │     → Nếu code chưa đúng → quay lại bước 6                    │
+> │     → Nếu code đã đúng → hướng dẫn user hard refresh          │
+> │       (Ctrl+Shift+R hoặc restart dev server)                  │
+> │                                                                 │
+> │  8️⃣ USER RETEST & CLAUDE CẬP NHẬT                               │
+> │     → User retest sau khi hard refresh                        │
+> │     → User cung cấp screenshot kết quả                        │
+> │     → Claude cập nhật Status và Tested At trong bảng          │
 > │                                                                 │
 > └─────────────────────────────────────────────────────────────────┘
 > ```
