@@ -4196,6 +4196,151 @@ TRIGGERS tự động tạo history entries:
 | 4.7 | Thu thập feedback | ⏳ | Bug reports, UI/UX |
 | 4.8 | Prioritize & fix issues | ⏳ | Based on feedback |
 
+---
+
+#### 4.1 CHI TIẾT: KẾ HOẠCH TEST LOCAL
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  QUY TRÌNH TEST LOCAL (Lặp lại cho đến khi hết bug)            │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  BƯỚC 1: CLI/BASH TEST (Tự động)                        │   │
+│  │  → Test DB connection, API endpoints, build process     │   │
+│  │  → Nếu FAIL → Fix → Quay lại Bước 1                     │   │
+│  │  → Nếu PASS → Chuyển sang Bước 2                        │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                          ↓                                      │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  BƯỚC 2: MANUAL TEST (Thủ công)                         │   │
+│  │  → Test UI/UX, user flows, edge cases                   │   │
+│  │  → Nếu có BUG → Fix → Quay lại Bước 1                   │   │
+│  │  → Nếu PASS → Task 4.1 hoàn thành ✓                     │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**BƯỚC 1: CLI/BASH TEST**
+
+| # | Test Case | Command | Expected | Status |
+|---|-----------|---------|----------|--------|
+| **A. DATABASE TESTS** |
+| A.1 | MySQL connection | `mysql -uroot -e "SELECT 1"` | OK | ⏳ |
+| A.2 | Database exists | `mysql -uroot -e "USE auraorie68aa_aoisora; SELECT COUNT(*) FROM staff;"` | Count > 0 | ⏳ |
+| A.3 | Tables exist | `mysql -uroot auraorie68aa_aoisora -e "SHOW TABLES;"` | 28+ tables | ⏳ |
+| A.4 | Test data exists | `mysql -uroot auraorie68aa_aoisora -e "SELECT COUNT(*) FROM tasks;"` | Count > 0 | ⏳ |
+| A.5 | Foreign keys OK | `mysql -uroot auraorie68aa_aoisora -e "SELECT * FROM task_store_assignments LIMIT 1;"` | No error | ⏳ |
+| **B. BACKEND TESTS** |
+| B.1 | PHP version | `php -v` | 8.3.x | ⏳ |
+| B.2 | Composer deps | `cd backend/laravel && composer check-platform-reqs` | OK | ⏳ |
+| B.3 | Laravel artisan | `cd backend/laravel && php artisan --version` | Laravel 10.x | ⏳ |
+| B.4 | Config cache | `cd backend/laravel && php artisan config:clear` | OK | ⏳ |
+| B.5 | Route list | `cd backend/laravel && php artisan route:list --path=api/v1` | Routes listed | ⏳ |
+| B.6 | API Health check | `curl -s http://localhost:8000/api/v1/health` | {"status":"ok"} | ⏳ |
+| B.7 | Auth - Login | `curl -X POST http://localhost:8000/api/v1/auth/login -d "..."` | Token returned | ⏳ |
+| B.8 | Auth - Me | `curl -H "Authorization: Bearer $TOKEN" http://localhost:8000/api/v1/auth/me` | User data | ⏳ |
+| B.9 | GET Tasks | `curl -H "Authorization: Bearer $TOKEN" http://localhost:8000/api/v1/tasks` | Tasks array | ⏳ |
+| B.10 | GET Departments | `curl http://localhost:8000/api/v1/departments` | Departments | ⏳ |
+| B.11 | GET Library Tasks | `curl -H "Authorization: Bearer $TOKEN" http://localhost:8000/api/v1/library-tasks` | Templates | ⏳ |
+| B.12 | GET Store Tasks | `curl -H "Authorization: Bearer $TOKEN" http://localhost:8000/api/v1/stores/1/tasks` | Assignments | ⏳ |
+| B.13 | GET Scope Hierarchy | `curl http://localhost:8000/api/v1/scope-hierarchy` | Regions/Zones | ⏳ |
+| B.14 | GET Pending Approvals | `curl -H "Authorization: Bearer $TOKEN" http://localhost:8000/api/v1/tasks/pending-approval` | Tasks | ⏳ |
+| B.15 | GET HQ Check List | `curl -H "Authorization: Bearer $TOKEN" http://localhost:8000/api/v1/tasks/hq-check` | Tasks | ⏳ |
+| **C. FRONTEND TESTS** |
+| C.1 | Node version | `node -v` | 18.x+ | ⏳ |
+| C.2 | NPM deps | `cd frontend && npm ls --depth=0` | No errors | ⏳ |
+| C.3 | TypeScript check | `cd frontend && npx tsc --noEmit` | No errors | ⏳ |
+| C.4 | ESLint check | `cd frontend && npm run lint` | No errors | ⏳ |
+| C.5 | Build check | `cd frontend && npm run build` | Build success | ⏳ |
+| C.6 | Dev server start | `cd frontend && npm run dev` | Port 3000 | ⏳ |
+
+**BƯỚC 2: MANUAL TEST**
+
+| # | Screen/Flow | Test Cases | Status |
+|---|-------------|------------|--------|
+| **D. AUTHENTICATION** |
+| D.1 | Login Page | - Login với HQ user (admin/password) | ⏳ |
+| D.2 | Login Page | - Login với Store user | ⏳ |
+| D.3 | Login Page | - Login fail với wrong password | ⏳ |
+| D.4 | Logout | - Logout và redirect về login | ⏳ |
+| **E. TASK LIST (HQ)** |
+| E.1 | /tasks/list | - Hiển thị danh sách tasks | ⏳ |
+| E.2 | /tasks/list | - Filter by Department | ⏳ |
+| E.3 | /tasks/list | - Filter by Status | ⏳ |
+| E.4 | /tasks/list | - Search by task name | ⏳ |
+| E.5 | /tasks/list | - Pagination hoạt động | ⏳ |
+| E.6 | /tasks/list | - Click Status → History modal | ⏳ |
+| E.7 | /tasks/list | - Expand/Collapse sub-tasks | ⏳ |
+| E.8 | /tasks/list | - Progress & Unable columns hiển thị đúng | ⏳ |
+| **F. TASK DETAIL** |
+| F.1 | /tasks/detail | - Hiển thị task info đầy đủ | ⏳ |
+| F.2 | /tasks/detail | - Statistics cards (Not Yet, Done, Unable, Avg Time) | ⏳ |
+| F.3 | /tasks/detail | - Store progress table | ⏳ |
+| F.4 | /tasks/detail | - Comments section CRUD | ⏳ |
+| F.5 | /tasks/detail | - Attachments/Evidence modal | ⏳ |
+| **G. ADD TASK** |
+| G.1 | /tasks/new | - Tạo task mới (source=task_list) | ⏳ |
+| G.2 | /tasks/new | - Save as Draft | ⏳ |
+| G.3 | /tasks/new | - Submit for approval | ⏳ |
+| G.4 | /tasks/new | - Edit existing draft | ⏳ |
+| G.5 | /tasks/new | - Validation hiển thị đúng | ⏳ |
+| G.6 | /tasks/new | - Scope selector (Store hierarchy) | ⏳ |
+| G.7 | /tasks/new | - Photo upload (click/paste/drag) | ⏳ |
+| G.8 | /tasks/new?source=library | - Không hiển thị Scope section | ⏳ |
+| G.9 | /tasks/new?source=todo_task | - HQ hierarchy cho scope | ⏳ |
+| **H. APPROVAL FLOW** |
+| H.1 | /tasks/approval | - Hiển thị pending approvals | ⏳ |
+| H.2 | /tasks/approval | - Approve task → status change | ⏳ |
+| H.3 | /tasks/approval | - Reject task với reason | ⏳ |
+| H.4 | /tasks/approval | - Toast notifications | ⏳ |
+| **I. LIBRARY** |
+| I.1 | /tasks/library | - Hiển thị templates theo department | ⏳ |
+| I.2 | /tasks/library | - Add New → /tasks/new?source=library | ⏳ |
+| I.3 | /tasks/library | - Dispatch button → dispatch page | ⏳ |
+| I.4 | /tasks/library/dispatch | - Chọn scope, dates, priority | ⏳ |
+| I.5 | /tasks/library | - Cooldown badge hiển thị | ⏳ |
+| I.6 | /tasks/library | - Override cooldown (nếu có quyền) | ⏳ |
+| **J. TODO TASK** |
+| J.1 | /tasks/todo | - Hiển thị tasks HQ→HQ | ⏳ |
+| J.2 | /tasks/todo | - Add New → /tasks/new?source=todo_task | ⏳ |
+| J.3 | /tasks/todo | - Filter "My Tasks" | ⏳ |
+| **K. STORE TASKS** |
+| K.1 | /stores/[id]/tasks | - Hiển thị tasks assigned to store | ⏳ |
+| K.2 | /stores/[id]/tasks | - Start task action | ⏳ |
+| K.3 | /stores/[id]/tasks | - Complete task action | ⏳ |
+| K.4 | /stores/[id]/tasks | - Mark unable với reason | ⏳ |
+| K.5 | /stores/[id]/tasks | - Assign to staff (S4-S2) | ⏳ |
+| K.6 | /stores/[id]/tasks | - Upload evidence | ⏳ |
+| **L. HQ CHECK** |
+| L.1 | /tasks/hq-check | - Hiển thị tasks pending check | ⏳ |
+| L.2 | /tasks/hq-check | - Expand task → store list | ⏳ |
+| L.3 | /tasks/hq-check | - Checked action | ⏳ |
+| L.4 | /tasks/hq-check | - Reject với reason | ⏳ |
+| **M. UI/UX GENERAL** |
+| M.1 | All screens | - Dark mode toggle hoạt động | ⏳ |
+| M.2 | All screens | - Loading skeletons hiển thị | ⏳ |
+| M.3 | All screens | - Error states hiển thị đúng | ⏳ |
+| M.4 | All screens | - Empty states hiển thị đúng | ⏳ |
+| M.5 | All screens | - Toast notifications | ⏳ |
+| M.6 | All screens | - Page animations smooth | ⏳ |
+| M.7 | All screens | - Responsive (resize window) | ⏳ |
+
+**TEST ACCOUNTS:**
+
+| Role | Username | Password | Job Grade | Notes |
+|------|----------|----------|-----------|-------|
+| HQ Admin | admin | password | G9 | Full access |
+| HQ User | hq_user1 | password | G3 | Normal HQ |
+| Store Leader | store_lead | password | S3 | Store 1 |
+| Store Staff | store_staff | password | S1 | Store 1 |
+
+**BUG TRACKING:**
+
+| # | Screen | Bug Description | Priority | Status | Fixed In |
+|---|--------|-----------------|----------|--------|----------|
+| - | - | (Ghi lại bugs tìm thấy) | - | - | - |
+
 ### PROGRESS TRACKING
 
 ```
