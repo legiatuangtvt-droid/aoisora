@@ -176,6 +176,7 @@ Route::prefix('v1')->group(function () {
         Route::post('tasks/{task}/submit', [TaskController::class, 'submit']);
         Route::post('tasks/{task}/approve', [TaskController::class, 'approve']);
         Route::post('tasks/{task}/reject', [TaskController::class, 'reject']);
+        Route::post('tasks/{task}/pause', [TaskController::class, 'pause']);
 
         // Task Store Assignments (Store Task Execution)
         Route::prefix('stores/{store}/tasks')->group(function () {

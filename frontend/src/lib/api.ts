@@ -693,6 +693,21 @@ export async function rejectTask(taskId: number, reason: string): Promise<Reject
   });
 }
 
+// Pause Task (return to APPROVE status for review)
+export interface PauseTaskResponse {
+  message: string;
+  task: Task;
+  deleted_assignments: number;
+  info: string;
+}
+
+export async function pauseTask(taskId: number, reason?: string): Promise<PauseTaskResponse> {
+  return fetchApi<PauseTaskResponse>(`/tasks/${taskId}/pause`, {
+    method: 'POST',
+    body: JSON.stringify({ reason }),
+  });
+}
+
 export async function getPendingApprovals(params?: {
   page?: number;
   per_page?: number;

@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { TaskGroup, DateMode, TaskFilters, TaskStatus, HQCheckStatus, SubTask } from '@/types/tasks';
 import { Task as ApiTask, Department } from '@/types/api';
-import { getTasks, getDepartments, getTaskApprovalHistory, DraftInfo, PaginatedTaskResponse, TaskQueryParamsExtended } from '@/lib/api';
+import { getTasks, getDepartments, getTaskApprovalHistory, pauseTask, DraftInfo, PaginatedTaskResponse, TaskQueryParamsExtended } from '@/lib/api';
 import StatusPill from '@/components/ui/StatusPill';
 import FilterModal from '@/components/tasks/FilterModal';
 import DatePicker from '@/components/ui/DatePicker';
@@ -187,6 +187,13 @@ export default function TaskListPage() {
   // Approval History Modal state
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [selectedTaskHistory, setSelectedTaskHistory] = useState<TaskApprovalHistory | null>(null);
+
+  // Pause Task Modal state
+  const [isPauseModalOpen, setIsPauseModalOpen] = useState(false);
+  const [pauseTaskId, setPauseTaskId] = useState<string | null>(null);
+  const [pauseReason, setPauseReason] = useState('');
+  const [isPausing, setIsPausing] = useState(false);
+  const [pauseError, setPauseError] = useState<string | null>(null);
 
   // Server-side pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -452,8 +459,48 @@ export default function TaskListPage() {
 
   const handlePauseTask = (taskId: string) => {
     setOpenActionMenu(null);
-    // TODO: Implement pause task functionality
-    console.log('Pause task:', taskId);
+    // Find the task to check if current user is the approver
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    // Check permission: Only approver can pause (not implemented in frontend - backend will check)
+    // Check status: Only NOT_YET or ON_PROGRESS can be paused
+    if (!['NOT_YET', 'ON_PROGRESS'].includes(task.status)) {
+      alert('Only tasks with status "Not Yet" or "On Progress" can be paused.');
+      return;
+    }
+
+    // Open confirmation modal
+    setPauseTaskId(taskId);
+    setPauseReason('');
+    setPauseError(null);
+    setIsPauseModalOpen(true);
+  };
+
+  const handleConfirmPause = async () => {
+    if (!pauseTaskId) return;
+
+    setIsPausing(true);
+    setPauseError(null);
+
+    try {
+      await pauseTask(parseInt(pauseTaskId, 10), pauseReason || undefined);
+
+      // Close modal and refresh tasks
+      setIsPauseModalOpen(false);
+      setPauseTaskId(null);
+      setPauseReason('');
+
+      // Refresh task list
+      if (departments.length > 0) {
+        fetchTasks(departments);
+      }
+    } catch (error) {
+      console.error('Failed to pause task:', error);
+      setPauseError(error instanceof Error ? error.message : 'Failed to pause task. You may not have permission.');
+    } finally {
+      setIsPausing(false);
+    }
   };
 
   // Close action menu when clicking outside
@@ -1046,6 +1093,80 @@ export default function TaskListPage() {
           router.push(`/tasks/new?id=${taskId}&source=task_list`);
         }}
       />
+
+      {/* Pause Task Confirmation Modal */}
+      {isPauseModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 shadow-xl">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Pause Task</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Are you sure you want to pause this task? This will:
+            </p>
+            <ul className="text-sm text-gray-600 mb-4 list-disc list-inside space-y-1">
+              <li>Return the task to &quot;Pending Approval&quot; status</li>
+              <li>Remove all store assignments</li>
+              <li>Allow the approver to edit and re-approve</li>
+            </ul>
+
+            <div className="mb-4">
+              <label htmlFor="pauseReason" className="block text-sm font-medium text-gray-700 mb-1">
+                Reason (optional)
+              </label>
+              <textarea
+                id="pauseReason"
+                value={pauseReason}
+                onChange={(e) => setPauseReason(e.target.value)}
+                placeholder="Why is this task being paused?"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                rows={3}
+              />
+            </div>
+
+            {pauseError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-700">{pauseError}</p>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setIsPauseModalOpen(false);
+                  setPauseTaskId(null);
+                  setPauseReason('');
+                  setPauseError(null);
+                }}
+                disabled={isPausing}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmPause}
+                disabled={isPausing}
+                className="px-4 py-2 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600 disabled:opacity-50 flex items-center gap-2"
+              >
+                {isPausing ? (
+                  <>
+                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Pausing...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Pause Task
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
     </div>
   );

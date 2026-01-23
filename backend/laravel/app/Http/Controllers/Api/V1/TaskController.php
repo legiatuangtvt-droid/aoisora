@@ -23,6 +23,8 @@ class TaskController extends Controller
     /**
      * Status IDs from code_master table
      */
+    const NOT_YET_STATUS_ID = 7;       // Task dispatched, not started
+    const ON_PROGRESS_STATUS_ID = 8;   // Task in progress
     const DRAFT_STATUS_ID = 12;
     const APPROVE_STATUS_ID = 13;      // Pending approval
     const APPROVED_STATUS_ID = 14;     // Approved
@@ -1384,5 +1386,85 @@ class TaskController extends Controller
                 'end_date' => $task->end_date?->toDateString(),
             ]);
         }
+    }
+
+    /**
+     * Pause a task (return to APPROVE status for review)
+     *
+     * POST /api/v1/tasks/{id}/pause
+     *
+     * Rules:
+     * - Only APPROVER can pause (not Creator)
+     * - Only for tasks with status NOT_YET or ON_PROGRESS
+     * - Deletes all store assignments
+     * - Returns task to APPROVE status for approver to review and re-approve
+     * - Marks associated Library task as "had_issues" if exists
+     */
+    public function pause(Request $request, $id)
+    {
+        $task = Task::findOrFail($id);
+        // Get effective user (may be switched user in testing mode)
+        $user = $this->getEffectiveUser($request);
+
+        // Only assigned approver can pause (not creator)
+        if ($task->approver_id !== $user->staff_id) {
+            return response()->json([
+                'message' => 'Unauthorized',
+                'error' => 'Only the assigned approver can pause this task.',
+            ], 403);
+        }
+
+        // Check if task has any store with done or done_pending status
+        $hasCompletedStores = $task->storeAssignments()
+            ->whereIn('status', ['done', 'done_pending'])
+            ->exists();
+
+        if ($hasCompletedStores) {
+            return response()->json([
+                'message' => 'Cannot pause',
+                'error' => 'Cannot pause task because at least one store has completed or is pending check.',
+            ], 422);
+        }
+
+        // Must be in NOT_YET or ON_PROGRESS status
+        if (!in_array($task->status_id, [self::NOT_YET_STATUS_ID, self::ON_PROGRESS_STATUS_ID])) {
+            return response()->json([
+                'message' => 'Invalid status',
+                'error' => 'Only tasks with status Not Yet or On Progress can be paused.',
+                'current_status_id' => $task->status_id,
+            ], 422);
+        }
+
+        $request->validate([
+            'reason' => 'nullable|string|max:1000',
+        ]);
+
+        // Delete all store assignments
+        $deletedAssignments = $task->storeAssignments()->delete();
+
+        // Return task to APPROVE status for approver review
+        $task->update([
+            'status_id' => self::APPROVE_STATUS_ID,
+            'paused_at' => Carbon::now(),
+            'paused_by' => $user->staff_id,
+            'pause_reason' => $request->input('reason'),
+        ]);
+
+        // Mark associated Library task as "had_issues" if exists
+        if ($task->library_task_id) {
+            \DB::table('task_library')
+                ->where('id', $task->library_task_id)
+                ->update(['had_issues' => true, 'updated_at' => Carbon::now()]);
+        }
+
+        // Broadcast event
+        broadcast(new TaskUpdated($task, 'paused'))->toOthers();
+
+        return response()->json([
+            'message' => 'Task paused successfully',
+            'task' => $task->fresh(),
+            'deleted_assignments' => $deletedAssignments,
+            'info' => 'Task returned to Approval status. Approver can now edit and re-approve the task.',
+        ]);
     }
 }

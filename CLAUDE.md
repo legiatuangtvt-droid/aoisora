@@ -4074,7 +4074,7 @@ TRIGGERS tự động tạo history entries:
 | 1.3.6 | Progress column - từ store assignments | ✅ | Dùng store_progress từ API |
 | 1.3.7 | Unable column - từ store assignments | ✅ | Dùng store_progress từ API |
 | 1.3.8 | Click Status → History modal | ✅ | Đã implement |
-| 1.3.9 | 3-dots menu actions | 🔄 | Cần verify các actions |
+| 1.3.9 | 3-dots menu actions | ✅ | View Approval History + Pause Task (with confirmation modal) |
 | 1.3.10 | Sub-tasks expand/collapse | ✅ | Đang hoạt động |
 
 **Task Detail (/tasks/[id]):**
@@ -4203,10 +4203,10 @@ TRIGGERS tự động tạo history entries:
 │                                                                 │
 │  Database:     [██████████] 100% (6/6 tasks)                   │
 │  Backend APIs: [██████████] 100% (26/26 tasks)                 │
-│  Frontend:     [█████████░] 94%  (44/47 tasks)                 │
+│  Frontend:     [█████████░] 96%  (45/47 tasks)                 │
 │  Components:   [████████░░] 86%  (6/7 tasks)                   │
 │  ────────────────────────────────────────────────────────────── │
-│  OVERALL:      [█████████░] ~94%                               │
+│  OVERALL:      [█████████░] ~95%                               │
 │                                                                 │
 │  PHASE 2 PROGRESS: [░░░░░░░░░░] 0%                             │
 │  PHASE 3 PROGRESS: [░░░░░░░░░░] 0%                             │
