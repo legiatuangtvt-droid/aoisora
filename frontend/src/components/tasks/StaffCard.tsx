@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { StaffResult, Comment, RequirementImage } from '@/types/tasks';
 import ImageLightbox from './ImageLightbox';
+import { LazyImageSimple } from '@/components/ui/LazyImage';
 
 interface StaffCardProps {
   staff: StaffResult;
@@ -71,7 +72,7 @@ export default function StaffCard({ staff, onSendReminder, onAddComment }: Staff
             <div className="relative">
               <div className="w-12 h-12 rounded-full bg-pink-200 dark:bg-pink-900/50 flex items-center justify-center overflow-hidden">
                 {staff.avatar ? (
-                  <img src={staff.avatar} alt={staff.staffName} className="w-full h-full object-cover" />
+                  <LazyImageSimple src={staff.avatar} alt={staff.staffName} className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-pink-700 dark:text-pink-300 font-bold text-lg">
                     {staff.staffName.charAt(0)}

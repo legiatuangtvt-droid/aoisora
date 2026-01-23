@@ -4163,7 +4163,7 @@ TRIGGERS tự động tạo history entries:
 | 2.3 | Fix N+1 queries trong Task List | ✅ | Eager loading với select columns |
 | 2.4 | Add database indexes | ✅ | Verified existing indexes on tasks, task_store_assignments |
 | 2.5 | Frontend: React Query caching | ✅ | QueryProvider + useTasks, useStoreTasks, useLibraryTasks, useScopeHierarchy hooks |
-| 2.6 | Frontend: Lazy loading images | ⏳ | Photo guidelines, evidence |
+| 2.6 | Frontend: Lazy loading images | ✅ | LazyImage component + updated ImageGrid, ImageLightbox, StaffCard, etc. |
 | 2.7 | Frontend: Virtual scrolling cho long lists | ⏳ | Nếu cần |
 | 2.8 | API response compression | ⏳ | Gzip |
 | 2.9 | Pagination optimization | ⏳ | Cursor-based nếu cần |
@@ -4208,7 +4208,7 @@ TRIGGERS tự động tạo history entries:
 │  ────────────────────────────────────────────────────────────── │
 │  OVERALL:      [██████████] 100%                               │
 │                                                                 │
-│  PHASE 2 PROGRESS: [█████░░░░░] 56% (5/9 tasks)                │
+│  PHASE 2 PROGRESS: [██████░░░░] 67% (6/9 tasks)                │
 │  PHASE 3 PROGRESS: [░░░░░░░░░░] 0%                             │
 │  PHASE 4 PROGRESS: [░░░░░░░░░░] 0%                             │
 │                                                                 │

@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { TaskInstructions, DropdownOption, PhotoGuideline } from '@/types/addTask';
 import { TASK_VALIDATION_RULES } from '@/config/wsConfig';
+import { LazyImageSimple } from '@/components/ui/LazyImage';
 
 const MAX_PHOTOS = TASK_VALIDATION_RULES.photoGuidelines.maxPhotos; // 20
 
@@ -331,7 +332,7 @@ export default function InstructionsSection({
                     {/* Image preview */}
                     <div className="flex flex-col items-center">
                       <div className="w-12 h-12 mb-2 rounded overflow-hidden">
-                        <img
+                        <LazyImageSimple
                           src={photo.url}
                           alt="Photo guideline"
                           className="w-full h-full object-cover"

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { ImageItem } from '@/types/tasks';
+import { LazyImageSimple } from '@/components/ui/LazyImage';
 
 interface ImageGridProps {
   images: ImageItem[];
@@ -129,7 +130,7 @@ function ImageCard({ image, onClick }: ImageCardProps) {
         onMouseLeave={() => setIsHovered(false)}
         onClick={onClick}
       >
-        <img
+        <LazyImageSimple
           src={image.thumbnailUrl || image.url}
           alt={image.title}
           className="w-full h-full object-cover rounded-md"

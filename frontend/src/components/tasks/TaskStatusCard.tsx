@@ -1,6 +1,7 @@
 'use client';
 
 import { TaskResultStatus, LikeInfo } from '@/types/tasks';
+import { LazyImageSimple } from '@/components/ui/LazyImage';
 
 interface TaskStatusCardProps {
   status: TaskResultStatus;
@@ -106,7 +107,7 @@ export default function TaskStatusCard({ status, linkUrl, likes, onLike }: TaskS
                     title={user.name}
                   >
                     {user.avatar ? (
-                      <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                      <LazyImageSimple src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
                     ) : (
                       <span className="text-gray-600 text-xs font-medium">
                         {user.name.charAt(0)}

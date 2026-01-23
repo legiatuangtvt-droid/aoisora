@@ -1,6 +1,7 @@
 'use client';
 
 import { TaskResultStatus, LikeInfo } from '@/types/tasks';
+import { LazyImageSimple } from '@/components/ui/LazyImage';
 
 interface YesNoStatusSectionProps {
   status: TaskResultStatus;
@@ -96,7 +97,7 @@ export default function YesNoStatusSection({
                     title={user.name}
                   >
                     {user.avatar ? (
-                      <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                      <LazyImageSimple src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
                     ) : (
                       <span className="text-xs font-medium text-gray-600">
                         {user.name.charAt(0).toUpperCase()}
