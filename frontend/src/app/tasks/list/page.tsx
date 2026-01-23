@@ -295,9 +295,9 @@ export default function TaskListPage() {
       const response = await getTasks(queryParams);
       allTasks = response.data || [];
 
-      // Use server's pagination info
-      setTotalPages(response.last_page || 1);
-      setTotalItems(response.total || 0);
+      // Use server's pagination info (Laravel wraps in 'meta' object)
+      setTotalPages(response.meta?.last_page || 1);
+      setTotalItems(response.meta?.total || 0);
 
       // Update draft info from response (included for HQ users)
       if (response.draft_info) {
@@ -581,7 +581,7 @@ export default function TaskListPage() {
   }, [debouncedSearch, dateRange, filters]);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="bg-white dark:bg-gray-900">
       <div className="p-8">
       {/* Header */}
       <div className="mb-6">

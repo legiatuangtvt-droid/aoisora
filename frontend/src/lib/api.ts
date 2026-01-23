@@ -520,15 +520,30 @@ export async function getAreasByZone(zoneId: number): Promise<Area[]> {
 // Task API (WS)
 // ============================================
 
-// Paginated response from Laravel
+// Paginated response from Laravel Resource Collection
+// Laravel wraps pagination metadata in 'meta' and 'links' objects
 export interface PaginatedTaskResponse {
   data: Task[];
-  current_page: number;
-  last_page: number;
-  per_page: number;
-  total: number;
-  from: number | null;
-  to: number | null;
+  links: {
+    first: string;
+    last: string;
+    prev: string | null;
+    next: string | null;
+  };
+  meta: {
+    current_page: number;
+    from: number | null;
+    last_page: number;
+    path: string;
+    per_page: number;
+    to: number | null;
+    total: number;
+    links: Array<{
+      url: string | null;
+      label: string;
+      active: boolean;
+    }>;
+  };
   // Draft info is included for HQ users (no separate API call needed)
   draft_info?: DraftInfo;
 }
