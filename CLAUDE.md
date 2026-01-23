@@ -4492,8 +4492,8 @@ Request → Controller → Service → Model → Resource → Response
 | N.2 | Login form - Dark mode | Form switch sang dark theme, colors phù hợp | N/A | N/A | 2026-01-24 |
 | N.3 | Validation error - Empty fields | Button disables when fields empty (correct behavior) | ✅ | ✅ | 2026-01-24 |
 | N.4 | Validation error - Wrong credentials | Error message hiển thị below password field | ✅ | ✅ PASSED | 2026-01-24 |
-| N.5 | Loading state | Button disabled, spinner hiển thị khi đang login | ⏳ | ⏳ | - |
-| N.6 | Mobile responsive | Form centered, full width on mobile (<768px) | ⏳ | ⏳ | - |
+| N.5 | Loading state | Button disabled, spinner hiển thị khi đang login | ✅ | ✅ PASSED | 2026-01-24 |
+| N.6 | Mobile responsive | Form centered, full width on mobile (<768px) | ✅ | ✅ PASSED | 2026-01-24 |
 
 **N.1 Fix Details (2026-01-24):**
 - Fixed typo: "Welcom back" → "Welcome back"
