@@ -10,6 +10,7 @@ import TaskMapsTab from '@/components/tasks/add/TaskMapsTab';
 import { useToast } from '@/components/ui/Toast';
 import { AddTaskPageSkeleton } from '@/components/ui/Skeleton';
 import { FullPageError } from '@/components/ui/ErrorBoundary';
+import { ConfirmationDialog } from '@/components/ui/ConfirmationDialog';
 import { createTask, getDraftInfo, DraftInfo, submitTask, getTaskById, updateTask, deleteTask } from '@/lib/api';
 import { Task } from '@/types/api';
 import { useUser } from '@/contexts/UserContext';
@@ -90,6 +91,7 @@ function AddTaskContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(isEditMode);
   const [error, setError] = useState<string | null>(null);
   const [draftInfo, setDraftInfo] = useState<DraftInfo | null>(null);
@@ -386,19 +388,22 @@ function AddTaskContent() {
     }
   };
 
-  // Handle Delete Draft
-  const handleDelete = async () => {
+  // Handle Delete Draft - Open confirmation dialog
+  const handleDeleteClick = () => {
     if (!taskId) return;
+    setShowDeleteConfirm(true);
+  };
 
-    if (!confirm('Are you sure you want to delete this draft? This action cannot be undone.')) {
-      return;
-    }
+  // Handle Delete Draft - Confirm and execute
+  const handleDeleteConfirm = async () => {
+    if (!taskId) return;
 
     setIsDeleting(true);
 
     try {
       await deleteTask(taskId);
       showToast('Draft deleted successfully', 'success');
+      setShowDeleteConfirm(false);
       router.push(backLink.href);
     } catch (error: unknown) {
       console.error('Error deleting draft:', error);
@@ -439,7 +444,7 @@ function AddTaskContent() {
           href={backLink.href}
           className="inline-flex items-center gap-2 px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
           Back to {backLink.label}
@@ -455,7 +460,7 @@ function AddTaskContent() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
         <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg text-center">
-          <svg className="w-12 h-12 text-yellow-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-12 h-12 text-yellow-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
           <h3 className="text-lg font-semibold text-yellow-800 dark:text-yellow-300 mb-2">Cannot Edit This Task</h3>
@@ -466,7 +471,7 @@ function AddTaskContent() {
             href={backLink.href}
             className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             Back to {backLink.label}
@@ -482,7 +487,7 @@ function AddTaskContent() {
   return (
     <div>
       {/* Breadcrumb */}
-      <nav className="flex items-center justify-between mb-6">
+      <nav aria-label="Breadcrumb" className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-6">
         <div className="flex items-center gap-2 text-sm">
           <Link
             href={backLink.href}
@@ -490,10 +495,10 @@ function AddTaskContent() {
           >
             {backLink.label}
           </Link>
-          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-gray-900 dark:text-white font-medium">{pageTitle}</span>
+          <span className="text-gray-900 dark:text-white font-medium" aria-current="page">{pageTitle}</span>
         </div>
 
         <div className="flex items-center gap-3">
@@ -505,8 +510,8 @@ function AddTaskContent() {
                 : sourceDraftInfo.remaining_drafts <= 2
                 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
                 : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
-            }`}>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            }`} aria-label={`${sourceDraftInfo.current_drafts} of ${sourceDraftInfo.max_drafts} drafts used`}>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               <span>Drafts: {sourceDraftInfo.current_drafts}/{sourceDraftInfo.max_drafts}</span>
@@ -516,11 +521,12 @@ function AddTaskContent() {
           {/* Delete Draft button (edit mode only) */}
           {isEditMode && canEdit && (
             <button
-              onClick={handleDelete}
+              onClick={handleDeleteClick}
               disabled={isDeleting || isSubmitting || isSavingDraft}
               className="flex items-center gap-2 px-3 py-1.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="Delete draft"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
               {isDeleting ? 'Deleting...' : 'Delete Draft'}
@@ -538,9 +544,9 @@ function AddTaskContent() {
 
         if (daysUntilDeletion <= 5 && daysUntilDeletion > 0) {
           return (
-            <div className="mb-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+            <div className="mb-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg" role="alert">
               <div className="flex items-start gap-3">
-                <svg className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
                 <div>
@@ -560,8 +566,11 @@ function AddTaskContent() {
 
       {/* Tabs - aligned to right */}
       <div className="flex justify-end mb-6">
-        <div className="flex items-center gap-1 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center gap-1 border-b border-gray-200 dark:border-gray-700" role="tablist" aria-label="Task view options">
           <button
+            role="tab"
+            aria-selected={activeTab === 'detail'}
+            aria-controls="detail-panel"
             onClick={() => setActiveTab('detail')}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
               activeTab === 'detail'
@@ -572,6 +581,9 @@ function AddTaskContent() {
             Detail
           </button>
           <button
+            role="tab"
+            aria-selected={activeTab === 'maps'}
+            aria-controls="maps-panel"
             onClick={() => setActiveTab('maps')}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
               activeTab === 'maps'
@@ -585,6 +597,7 @@ function AddTaskContent() {
       </div>
 
       {/* Tab Content */}
+      <div role="tabpanel" id={activeTab === 'detail' ? 'detail-panel' : 'maps-panel'}>
       {activeTab === 'detail' ? (
         <AddTaskForm
           taskLevels={taskLevels}
@@ -610,6 +623,20 @@ function AddTaskContent() {
           isSubmitting={isSubmitting}
         />
       )}
+      </div>
+
+      {/* Delete Draft Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Draft"
+        message="Are you sure you want to delete this draft? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

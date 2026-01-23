@@ -59,11 +59,11 @@ const TaskGroupSection: React.FC<TaskGroupSectionProps> = ({
   const color = DEPARTMENT_COLORS[group.department];
 
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden mb-4">
+    <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden mb-4">
       {/* Group Header */}
       <button
         onClick={() => onToggle(group.department)}
-        className="w-full flex items-center justify-between px-4 py-3 bg-white hover:bg-gray-50 transition-colors"
+        className="w-full flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
       >
         <div className="flex items-center gap-3">
           <div
@@ -72,16 +72,16 @@ const TaskGroupSection: React.FC<TaskGroupSectionProps> = ({
           >
             <span style={{ color }}>{departmentIcons[group.department]}</span>
           </div>
-          <span className="font-semibold text-gray-900 text-sm uppercase tracking-wide">
+          <span className="font-semibold text-gray-900 dark:text-white text-sm uppercase tracking-wide">
             {group.department} TASKS
           </span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">
+          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
             {group.tasks.length} GROUP TASKS
           </span>
           <svg
-            className={`w-5 h-5 text-gray-400 transition-transform ${
+            className={`w-5 h-5 text-gray-400 dark:text-gray-500 transition-transform ${
               group.isExpanded ? 'rotate-180' : ''
             }`}
             fill="none"
@@ -100,7 +100,7 @@ const TaskGroupSection: React.FC<TaskGroupSectionProps> = ({
 
       {/* Group Content */}
       {group.isExpanded && (
-        <div className="border-t border-gray-200">
+        <div className="border-t border-gray-200 dark:border-gray-700">
           <TaskDataTable
             tasks={group.tasks}
             onEdit={onEdit}

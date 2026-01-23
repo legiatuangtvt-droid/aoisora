@@ -13,6 +13,7 @@ import { useUser } from '@/contexts/UserContext';
 import { LibraryPageSkeleton } from '@/components/ui/Skeleton';
 import { ErrorDisplay } from '@/components/ui/ErrorBoundary';
 import { SearchEmptyState } from '@/components/ui/EmptyState';
+import { ConfirmationDialog } from '@/components/ui/ConfirmationDialog';
 
 // Transform API data to component format
 function transformTemplateToTaskTemplate(template: WsLibraryTemplate, index: number): TaskTemplate {
@@ -112,6 +113,10 @@ export default function TaskLibraryPage() {
   const [overrideTask, setOverrideTask] = useState<TaskTemplate | null>(null);
   const [overrideReason, setOverrideReason] = useState('');
   const [isOverriding, setIsOverriding] = useState(false);
+
+  // Delete confirmation state
+  const [deleteTask, setDeleteTask] = useState<TaskTemplate | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Fetch templates from API
   const fetchTemplates = useCallback(async () => {
@@ -215,16 +220,24 @@ export default function TaskLibraryPage() {
     console.log('Duplicate task:', task);
   };
 
-  const handleDelete = async (task: TaskTemplate) => {
-    // TODO: Implement delete with API call
-    if (confirm(`Are you sure you want to delete "${task.taskName}"?`)) {
-      try {
-        // await deleteWsLibraryTemplate(Number(task.id));
-        // fetchTemplates(); // Refresh list
-        console.log('Delete task:', task);
-      } catch (err) {
-        console.error('Failed to delete template:', err);
-      }
+  const handleDeleteClick = (task: TaskTemplate) => {
+    setDeleteTask(task);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTask) return;
+
+    setIsDeleting(true);
+    try {
+      // TODO: Implement delete with API call
+      // await deleteWsLibraryTemplate(Number(deleteTask.id));
+      // fetchTemplates(); // Refresh list
+      console.log('Delete task:', deleteTask);
+    } catch (err) {
+      console.error('Failed to delete template:', err);
+    } finally {
+      setIsDeleting(false);
+      setDeleteTask(null);
     }
   };
 
@@ -264,7 +277,7 @@ export default function TaskLibraryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Header */}
         <TaskLibraryHeader
@@ -312,7 +325,7 @@ export default function TaskLibraryPage() {
                   onToggle={handleGroupToggle}
                   onEdit={handleEdit}
                   onDuplicate={handleDuplicate}
-                  onDelete={handleDelete}
+                  onDelete={handleDeleteClick}
                   onViewUsage={handleViewUsage}
                   onOverrideCooldown={handleOverrideCooldown}
                 />
@@ -328,12 +341,12 @@ export default function TaskLibraryPage() {
 
         {/* Override Cooldown Modal */}
         {showOverrideModal && overrideTask && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50" role="dialog" aria-modal="true" aria-labelledby="override-cooldown-title">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4">
               <div className="p-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-full bg-cyan-100 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-10 h-10 rounded-full bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -343,38 +356,39 @@ export default function TaskLibraryPage() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Override Cooldown</h3>
-                    <p className="text-sm text-gray-500">This task is in cooldown period</p>
+                    <h3 id="override-cooldown-title" className="text-lg font-semibold text-gray-900 dark:text-white">Override Cooldown</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">This task is in cooldown period</p>
                   </div>
                 </div>
 
-                <div className="mb-4 p-3 bg-cyan-50 rounded-lg border border-cyan-100">
-                  <p className="text-sm text-cyan-800">
+                <div className="mb-4 p-3 bg-cyan-50 dark:bg-cyan-900/20 rounded-lg border border-cyan-100 dark:border-cyan-800">
+                  <p className="text-sm text-cyan-800 dark:text-cyan-300">
                     <strong>{overrideTask.taskName}</strong>
                   </p>
                   {overrideTask.cooldownMinutes && (
-                    <p className="text-xs text-cyan-600 mt-1">
+                    <p className="text-xs text-cyan-600 dark:text-cyan-400 mt-1">
                       Remaining cooldown: {Math.ceil(overrideTask.cooldownMinutes / 60)} hour(s)
                     </p>
                   )}
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Reason for override (optional)
                   </label>
                   <textarea
                     value={overrideReason}
                     onChange={(e) => setOverrideReason(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                     rows={3}
                     placeholder="Enter reason for overriding cooldown..."
+                    aria-label="Override reason"
                   />
                 </div>
 
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 mb-4">
                   <div className="flex gap-2">
-                    <svg className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -382,7 +396,7 @@ export default function TaskLibraryPage() {
                         d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                       />
                     </svg>
-                    <p className="text-sm text-yellow-800">
+                    <p className="text-sm text-yellow-800 dark:text-yellow-300">
                       Overriding cooldown will allow this template to be dispatched again immediately.
                       This action will be logged.
                     </p>
@@ -390,14 +404,14 @@ export default function TaskLibraryPage() {
                 </div>
               </div>
 
-              <div className="flex gap-3 px-6 py-4 bg-gray-50 rounded-b-lg">
+              <div className="flex gap-3 px-6 py-4 bg-gray-50 dark:bg-gray-900 rounded-b-lg">
                 <button
                   onClick={() => {
                     setShowOverrideModal(false);
                     setOverrideTask(null);
                     setOverrideReason('');
                   }}
-                  className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
                   disabled={isOverriding}
                 >
                   Cancel
@@ -413,6 +427,19 @@ export default function TaskLibraryPage() {
             </div>
           </div>
         )}
+
+        {/* Delete Template Confirmation Dialog */}
+        <ConfirmationDialog
+          isOpen={deleteTask !== null}
+          onClose={() => setDeleteTask(null)}
+          onConfirm={handleDeleteConfirm}
+          title="Delete Template"
+          message={`Are you sure you want to delete "${deleteTask?.taskName}"? This action cannot be undone.`}
+          confirmText="Delete"
+          cancelText="Cancel"
+          variant="danger"
+          isLoading={isDeleting}
+        />
       </div>
     </div>
   );

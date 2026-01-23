@@ -19,23 +19,23 @@ export interface StatusConfig {
 export const STATUS_CONFIG: Record<TaskStatus, StatusConfig> = {
   in_process: {
     label: 'In process',
-    color: 'text-[#EDA600]',
-    bgColor: 'bg-[#EDA600]/10',
-    dotColor: 'bg-[#EDA600]',
+    color: 'text-[#EDA600] dark:text-amber-400',
+    bgColor: 'bg-[#EDA600]/10 dark:bg-amber-900/30',
+    dotColor: 'bg-[#EDA600] dark:bg-amber-400',
     hexBorderColor: '#EDA600',
   },
   done: {
     label: 'Done',
-    color: 'text-[#297EF6]',
-    bgColor: 'bg-[#E5F0FF]',
-    dotColor: 'bg-[#297EF6]',
+    color: 'text-[#297EF6] dark:text-blue-400',
+    bgColor: 'bg-[#E5F0FF] dark:bg-blue-900/30',
+    dotColor: 'bg-[#297EF6] dark:bg-blue-400',
     hexBorderColor: '#297EF6',
   },
   draft: {
     label: 'Draft',
-    color: 'text-[#1BBA5E]',
-    bgColor: 'bg-[#1BBA5E]/10',
-    dotColor: 'bg-[#1BBA5E]',
+    color: 'text-[#1BBA5E] dark:text-green-400',
+    bgColor: 'bg-[#1BBA5E]/10 dark:bg-green-900/30',
+    dotColor: 'bg-[#1BBA5E] dark:bg-green-400',
     hexBorderColor: '#1BBA5E',
   },
   not_yet: {

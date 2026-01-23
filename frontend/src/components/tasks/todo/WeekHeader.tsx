@@ -56,7 +56,7 @@ export default function WeekHeader({ weekInfo, onAddNew, showAddButton = true, d
             disabled={isLimitReached}
             className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               isLimitReached
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                 : 'bg-pink-600 text-white hover:bg-pink-700'
             }`}
             title={isLimitReached

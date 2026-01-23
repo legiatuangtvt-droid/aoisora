@@ -211,14 +211,17 @@ export default function InstructionsSection({
     <div className="space-y-4">
       {/* 1. Task Type */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          1. Task Type
+        <label htmlFor="instructionTaskType" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          1. Task Type <span className="text-red-500">*</span>
         </label>
         <select
+          id="instructionTaskType"
           value={data.taskType}
           onChange={(e) => handleChange('taskType', e.target.value)}
           disabled={disabled}
           data-field="instructionTaskType"
+          aria-invalid={errors.taskType ? 'true' : 'false'}
+          aria-describedby={errors.taskType ? 'instructionTaskType-error' : undefined}
           className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
             errors.taskType
               ? 'border-red-500 focus:ring-red-500'
@@ -232,22 +235,30 @@ export default function InstructionsSection({
           ))}
         </select>
         {errors.taskType && (
-          <p className="mt-1 text-xs text-red-500">{errors.taskType}</p>
+          <p id="instructionTaskType-error" className="mt-1 text-xs text-red-500 flex items-center gap-1" role="alert">
+            <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            {errors.taskType}
+          </p>
         )}
       </div>
 
       {/* 2. Manual Link */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          2. Manual Link
+        <label htmlFor="manualLink" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          2. Manual Link <span className="text-red-500">*</span>
         </label>
         <input
+          id="manualLink"
           type="url"
           value={data.manualLink}
           onChange={(e) => handleChange('manualLink', e.target.value)}
           placeholder="Paste link"
           disabled={disabled}
           data-field="manualLink"
+          aria-invalid={errors.manualLink ? 'true' : 'false'}
+          aria-describedby={errors.manualLink ? 'manualLink-error' : undefined}
           className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
             errors.manualLink
               ? 'border-red-500 focus:ring-red-500'
@@ -255,22 +266,30 @@ export default function InstructionsSection({
           }`}
         />
         {errors.manualLink && (
-          <p className="mt-1 text-xs text-red-500">{errors.manualLink}</p>
+          <p id="manualLink-error" className="mt-1 text-xs text-red-500 flex items-center gap-1" role="alert">
+            <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            {errors.manualLink}
+          </p>
         )}
       </div>
 
       {/* 3. Note */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label htmlFor="note" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           3. Note {data.taskType === 'document' && <span className="text-red-500">*</span>}
         </label>
         <textarea
+          id="note"
           value={data.note}
           onChange={(e) => handleChange('note', e.target.value)}
           placeholder="Please attach the report file in the comment section after completing the task."
           rows={3}
           disabled={disabled}
           data-field="note"
+          aria-invalid={errors.note ? 'true' : 'false'}
+          aria-describedby={errors.note ? 'note-error' : undefined}
           className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 resize-none disabled:opacity-50 disabled:cursor-not-allowed ${
             errors.note
               ? 'border-red-500 focus:ring-red-500'
@@ -278,7 +297,12 @@ export default function InstructionsSection({
           }`}
         />
         {errors.note && (
-          <p className="mt-1 text-xs text-red-500">{errors.note}</p>
+          <p id="note-error" className="mt-1 text-xs text-red-500 flex items-center gap-1" role="alert">
+            <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            {errors.note}
+          </p>
         )}
       </div>
 
@@ -294,7 +318,12 @@ export default function InstructionsSection({
 
           {/* Error message */}
           {errors.photoGuidelines && (
-            <p className="mb-2 text-xs text-red-500">{errors.photoGuidelines}</p>
+            <p id="photoGuidelines-error" className="mb-2 text-xs text-red-500 flex items-center gap-1" role="alert">
+              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              {errors.photoGuidelines}
+            </p>
           )}
 
           {/* Photo Grid - Dynamic slots with drag-drop support */}

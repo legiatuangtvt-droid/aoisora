@@ -139,9 +139,12 @@ export default function TodoTaskPage() {
         <FilterBar filters={filters} onFiltersChange={setFilters} />
 
         {/* Mobile: Tab navigation between Calendar and Comments */}
-        <div className="sm:hidden mb-4">
+        <div className="sm:hidden mb-4" role="tablist" aria-label="View options">
           <div className="flex border-b border-gray-200 dark:border-gray-700">
             <button
+              role="tab"
+              aria-selected={!showComments}
+              aria-controls="calendar-panel"
               onClick={() => setShowComments(false)}
               className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors ${
                 !showComments
@@ -152,6 +155,9 @@ export default function TodoTaskPage() {
               Calendar
             </button>
             <button
+              role="tab"
+              aria-selected={showComments}
+              aria-controls="comments-panel"
               onClick={() => setShowComments(true)}
               className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors ${
                 showComments
@@ -165,7 +171,7 @@ export default function TodoTaskPage() {
         </div>
 
         {/* Mobile: Show Calendar or Comments based on tab */}
-        <div className="sm:hidden">
+        <div className="sm:hidden" role="tabpanel" id={!showComments ? 'calendar-panel' : 'comments-panel'}>
           {!showComments ? (
             <CalendarView
               weekInfo={mockWeekInfo}
@@ -236,7 +242,7 @@ export default function TodoTaskPage() {
             : 'Add new task'
           }
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
         </button>

@@ -233,69 +233,84 @@ export default function DispatchPage() {
         {/* Dispatch Form */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-6">
           {/* Date Range */}
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">Applicable Period</h3>
-            <div className="grid grid-cols-2 gap-4">
+          <fieldset>
+            <legend className="text-sm font-semibold text-gray-900 mb-3">Applicable Period <span className="text-red-500">*</span></legend>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm text-gray-700 mb-1">Start Date</label>
+                <label htmlFor="dispatchStartDate" className="block text-sm text-gray-700 mb-1">Start Date</label>
                 <input
+                  id="dispatchStartDate"
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                  aria-required="true"
+                  aria-invalid={!startDate ? 'true' : 'false'}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
+                    !startDate ? 'border-gray-300' : 'border-gray-300'
+                  }`}
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-700 mb-1">End Date</label>
+                <label htmlFor="dispatchEndDate" className="block text-sm text-gray-700 mb-1">End Date</label>
                 <input
+                  id="dispatchEndDate"
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                   min={startDate}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                  aria-required="true"
+                  aria-invalid={!endDate ? 'true' : 'false'}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
+                    !endDate ? 'border-gray-300' : 'border-gray-300'
+                  }`}
                 />
               </div>
             </div>
-          </div>
+          </fieldset>
 
           {/* Priority */}
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">Priority</h3>
-            <div className="flex gap-3">
+          <fieldset>
+            <legend className="text-sm font-semibold text-gray-900 mb-3">Priority</legend>
+            <div className="flex flex-wrap gap-3" role="radiogroup" aria-label="Task priority">
               {(['low', 'normal', 'high', 'urgent'] as const).map((p) => (
                 <button
                   key={p}
+                  type="button"
                   onClick={() => setPriority(p)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  role="radio"
+                  aria-checked={priority === p}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                     priority === p
                       ? p === 'urgent'
-                        ? 'bg-red-500 text-white'
+                        ? 'bg-red-500 text-white focus:ring-red-500'
                         : p === 'high'
-                        ? 'bg-orange-500 text-white'
+                        ? 'bg-orange-500 text-white focus:ring-orange-500'
                         : p === 'normal'
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-gray-500 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-blue-500 text-white focus:ring-blue-500'
+                        : 'bg-gray-500 text-white focus:ring-gray-500'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-pink-500'
                   }`}
                 >
                   {p.charAt(0).toUpperCase() + p.slice(1)}
                 </button>
               ))}
             </div>
-          </div>
+          </fieldset>
 
           {/* Scope Selection */}
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">Select Stores</h3>
+          <fieldset>
+            <legend className="text-sm font-semibold text-gray-900 mb-3">Select Stores <span className="text-red-500">*</span></legend>
 
             {/* Hierarchy filters */}
-            <div className="grid grid-cols-3 gap-4 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
               <div>
-                <label className="block text-sm text-gray-700 mb-1">Region</label>
+                <label htmlFor="dispatchRegion" className="block text-sm text-gray-700 mb-1">Region</label>
                 <select
+                  id="dispatchRegion"
                   value={selectedRegion}
                   onChange={(e) => handleRegionChange(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                  aria-required="true"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                 >
                   <option value="">Select Region</option>
                   {regionOptions.map((opt) => (
@@ -306,12 +321,14 @@ export default function DispatchPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm text-gray-700 mb-1">Zone</label>
+                <label htmlFor="dispatchZone" className="block text-sm text-gray-700 mb-1">Zone</label>
                 <select
+                  id="dispatchZone"
                   value={selectedZone}
                   onChange={(e) => handleZoneChange(e.target.value)}
                   disabled={!selectedRegion}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 disabled:bg-gray-100"
+                  aria-disabled={!selectedRegion}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                 >
                   <option value="">All Zones</option>
                   {zoneOptions.map((opt) => (
@@ -322,12 +339,14 @@ export default function DispatchPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm text-gray-700 mb-1">Area</label>
+                <label htmlFor="dispatchArea" className="block text-sm text-gray-700 mb-1">Area</label>
                 <select
+                  id="dispatchArea"
                   value={selectedArea}
                   onChange={(e) => handleAreaChange(e.target.value)}
                   disabled={!selectedZone}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 disabled:bg-gray-100"
+                  aria-disabled={!selectedZone}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                 >
                   <option value="">All Areas</option>
                   {areaOptions.map((opt) => (
@@ -341,19 +360,24 @@ export default function DispatchPage() {
 
             {/* Store list */}
             {storeOptions.length > 0 ? (
-              <div className="border border-gray-200 rounded-lg">
+              <div className={`border rounded-lg ${selectedStores.length === 0 ? 'border-gray-200' : 'border-gray-200'}`}>
                 <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b border-gray-200">
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-gray-600" aria-live="polite">
                     {selectedStores.length} of {storeOptions.length} stores selected
                   </span>
                   <button
+                    type="button"
                     onClick={handleSelectAllStores}
-                    className="text-sm text-pink-600 hover:text-pink-700"
+                    className="text-sm text-pink-600 hover:text-pink-700 focus:outline-none focus:underline"
                   >
                     {selectedStores.length === storeOptions.length ? 'Deselect All' : 'Select All'}
                   </button>
                 </div>
-                <div className="max-h-60 overflow-y-auto p-2">
+                <div
+                  className="max-h-60 overflow-y-auto p-2"
+                  role="group"
+                  aria-label="Available stores"
+                >
                   {storeOptions.map((store) => (
                     <label
                       key={store.value}
@@ -363,7 +387,8 @@ export default function DispatchPage() {
                         type="checkbox"
                         checked={selectedStores.includes(store.value)}
                         onChange={() => handleStoreToggle(store.value)}
-                        className="w-4 h-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500"
+                        className="w-4 h-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500 focus:ring-2"
+                        aria-label={`Select ${store.label}`}
                       />
                       <span className="text-sm text-gray-900">{store.label}</span>
                     </label>
@@ -371,15 +396,28 @@ export default function DispatchPage() {
                 </div>
               </div>
             ) : selectedRegion ? (
-              <div className="text-center py-8 text-gray-500 text-sm bg-gray-50 rounded-lg border border-gray-200">
+              <div className="text-center py-8 text-gray-500 text-sm bg-gray-50 rounded-lg border border-gray-200" role="status">
                 No stores found in selected region/zone/area
               </div>
             ) : (
               <div className="text-center py-8 text-gray-500 text-sm bg-gray-50 rounded-lg border border-gray-200">
-                Select a region to see available stores
+                <p className="flex items-center justify-center gap-1">
+                  <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                  Select a region to see available stores
+                </p>
               </div>
             )}
-          </div>
+            {selectedStores.length === 0 && storeOptions.length > 0 && (
+              <p className="mt-2 text-xs text-gray-500 flex items-center gap-1">
+                <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+                At least one store must be selected
+              </p>
+            )}
+          </fieldset>
 
           {/* Error Message */}
           {submitError && (

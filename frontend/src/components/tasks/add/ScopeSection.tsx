@@ -152,154 +152,234 @@ export default function ScopeSection({
       </div>
 
       {/* Level 1 (Region or Division) */}
-      <div className="flex items-center gap-4">
-        <label className="w-20 text-sm text-gray-600 dark:text-gray-400">
+      <div className="flex items-start gap-4">
+        <label htmlFor="regionId" className="w-20 text-sm text-gray-600 dark:text-gray-400 pt-2.5">
           {labels.level1}
         </label>
-        <select
-          value={data.regionId}
-          onChange={(e) => handleChange('regionId', e.target.value)}
-          disabled={disabled}
-          className={`flex-1 px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
-            errors.regionId
-              ? 'border-red-500 focus:ring-red-500'
-              : 'border-gray-300 dark:border-gray-600'
-          }`}
-        >
-          <option value="">All {labels.level1}</option>
-          {regionOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Level 2 (Zone or Department) */}
-      <div className="flex items-center gap-4">
-        <label className="w-20 text-sm text-gray-600 dark:text-gray-400">
-          {labels.level2}
-        </label>
-        <select
-          value={data.zoneId}
-          onChange={(e) => handleChange('zoneId', e.target.value)}
-          disabled={disabled || !data.regionId}
-          className={`flex-1 px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
-            errors.zoneId
-              ? 'border-red-500 focus:ring-red-500'
-              : 'border-gray-300 dark:border-gray-600'
-          }`}
-        >
-          <option value="">All {labels.level2}</option>
-          {zoneOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Level 3 (Area or Team) */}
-      <div className="flex items-center gap-4">
-        <label className="w-20 text-sm text-gray-600 dark:text-gray-400">
-          {labels.level3}
-        </label>
-        <select
-          value={data.areaId}
-          onChange={(e) => handleChange('areaId', e.target.value)}
-          disabled={disabled || !data.zoneId}
-          className={`flex-1 px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
-            errors.areaId
-              ? 'border-red-500 focus:ring-red-500'
-              : 'border-gray-300 dark:border-gray-600'
-          }`}
-        >
-          <option value="">All {labels.level3}</option>
-          {areaOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Level 4 (Store or User) */}
-      <div className="flex items-center gap-4">
-        <label className="w-20 text-sm text-gray-600 dark:text-gray-400">
-          {labels.level4}
-        </label>
-        <select
-          value={data.storeId}
-          onChange={(e) => handleChange('storeId', e.target.value)}
-          disabled={disabled || !data.areaId}
-          className={`flex-1 px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
-            errors.storeId
-              ? 'border-red-500 focus:ring-red-500'
-              : 'border-gray-300 dark:border-gray-600'
-          }`}
-        >
-          <option value="">All {labels.level4}</option>
-          {storeOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Level 5 (Store Leader) - Only show for store scope type */}
-      {scopeType === 'store' && (
-        <div className="flex items-center gap-4">
-          <label className="w-20 text-sm text-gray-600 dark:text-gray-400">
-            {labels.level5}
-          </label>
+        <div className="flex-1">
           <select
-            value={data.storeLeaderId}
-            onChange={(e) => handleChange('storeLeaderId', e.target.value)}
-            disabled={disabled || !data.storeId || isLoadingStaff}
-            className={`flex-1 px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
-              errors.storeLeaderId
+            id="regionId"
+            value={data.regionId}
+            onChange={(e) => handleChange('regionId', e.target.value)}
+            disabled={disabled}
+            aria-invalid={errors.regionId ? 'true' : 'false'}
+            aria-describedby={errors.regionId ? 'regionId-error' : undefined}
+            className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
+              errors.regionId
                 ? 'border-red-500 focus:ring-red-500'
                 : 'border-gray-300 dark:border-gray-600'
             }`}
           >
-            <option value="">
-              {isLoadingStaff ? 'Loading...' : `All ${labels.level5}`}
-            </option>
-            {storeLeaderOptions.map((option) => (
+            <option value="">All {labels.level1}</option>
+            {regionOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
             ))}
           </select>
+          {errors.regionId && (
+            <p id="regionId-error" className="mt-1 text-xs text-red-500 flex items-center gap-1" role="alert">
+              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              {errors.regionId}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Level 2 (Zone or Department) */}
+      <div className="flex items-start gap-4">
+        <label htmlFor="zoneId" className="w-20 text-sm text-gray-600 dark:text-gray-400 pt-2.5">
+          {labels.level2}
+        </label>
+        <div className="flex-1">
+          <select
+            id="zoneId"
+            value={data.zoneId}
+            onChange={(e) => handleChange('zoneId', e.target.value)}
+            disabled={disabled || !data.regionId}
+            aria-invalid={errors.zoneId ? 'true' : 'false'}
+            aria-describedby={errors.zoneId ? 'zoneId-error' : undefined}
+            className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
+              errors.zoneId
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-gray-300 dark:border-gray-600'
+            }`}
+          >
+            <option value="">All {labels.level2}</option>
+            {zoneOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          {errors.zoneId && (
+            <p id="zoneId-error" className="mt-1 text-xs text-red-500 flex items-center gap-1" role="alert">
+              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              {errors.zoneId}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Level 3 (Area or Team) */}
+      <div className="flex items-start gap-4">
+        <label htmlFor="areaId" className="w-20 text-sm text-gray-600 dark:text-gray-400 pt-2.5">
+          {labels.level3}
+        </label>
+        <div className="flex-1">
+          <select
+            id="areaId"
+            value={data.areaId}
+            onChange={(e) => handleChange('areaId', e.target.value)}
+            disabled={disabled || !data.zoneId}
+            aria-invalid={errors.areaId ? 'true' : 'false'}
+            aria-describedby={errors.areaId ? 'areaId-error' : undefined}
+            className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
+              errors.areaId
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-gray-300 dark:border-gray-600'
+            }`}
+          >
+            <option value="">All {labels.level3}</option>
+            {areaOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          {errors.areaId && (
+            <p id="areaId-error" className="mt-1 text-xs text-red-500 flex items-center gap-1" role="alert">
+              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              {errors.areaId}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Level 4 (Store or User) */}
+      <div className="flex items-start gap-4">
+        <label htmlFor="storeId" className="w-20 text-sm text-gray-600 dark:text-gray-400 pt-2.5">
+          {labels.level4}
+        </label>
+        <div className="flex-1">
+          <select
+            id="storeId"
+            value={data.storeId}
+            onChange={(e) => handleChange('storeId', e.target.value)}
+            disabled={disabled || !data.areaId}
+            aria-invalid={errors.storeId ? 'true' : 'false'}
+            aria-describedby={errors.storeId ? 'storeId-error' : undefined}
+            className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
+              errors.storeId
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-gray-300 dark:border-gray-600'
+            }`}
+          >
+            <option value="">All {labels.level4}</option>
+            {storeOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          {errors.storeId && (
+            <p id="storeId-error" className="mt-1 text-xs text-red-500 flex items-center gap-1" role="alert">
+              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              {errors.storeId}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Level 5 (Store Leader) - Only show for store scope type */}
+      {scopeType === 'store' && (
+        <div className="flex items-start gap-4">
+          <label htmlFor="storeLeaderId" className="w-20 text-sm text-gray-600 dark:text-gray-400 pt-2.5">
+            {labels.level5}
+          </label>
+          <div className="flex-1">
+            <select
+              id="storeLeaderId"
+              value={data.storeLeaderId}
+              onChange={(e) => handleChange('storeLeaderId', e.target.value)}
+              disabled={disabled || !data.storeId || isLoadingStaff}
+              aria-invalid={errors.storeLeaderId ? 'true' : 'false'}
+              aria-describedby={errors.storeLeaderId ? 'storeLeaderId-error' : undefined}
+              aria-busy={isLoadingStaff}
+              className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
+                errors.storeLeaderId
+                  ? 'border-red-500 focus:ring-red-500'
+                  : 'border-gray-300 dark:border-gray-600'
+              }`}
+            >
+              <option value="">
+                {isLoadingStaff ? 'Loading...' : `All ${labels.level5}`}
+              </option>
+              {storeLeaderOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            {errors.storeLeaderId && (
+              <p id="storeLeaderId-error" className="mt-1 text-xs text-red-500 flex items-center gap-1" role="alert">
+                <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                {errors.storeLeaderId}
+              </p>
+            )}
+          </div>
         </div>
       )}
 
       {/* Level 6 (Staff) - Only show for store scope type */}
       {scopeType === 'store' && (
-        <div className="flex items-center gap-4">
-          <label className="w-20 text-sm text-gray-600 dark:text-gray-400">
+        <div className="flex items-start gap-4">
+          <label htmlFor="specificStaffId" className="w-20 text-sm text-gray-600 dark:text-gray-400 pt-2.5">
             {labels.level6}
           </label>
-          <select
-            value={data.specificStaffId}
-            onChange={(e) => handleChange('specificStaffId', e.target.value)}
-            disabled={disabled || !data.storeId || isLoadingStaff}
-            className={`flex-1 px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
-              errors.specificStaffId
-                ? 'border-red-500 focus:ring-red-500'
-                : 'border-gray-300 dark:border-gray-600'
-            }`}
-          >
-            <option value="">
-              {isLoadingStaff ? 'Loading...' : `All ${labels.level6}`}
-            </option>
-            {staffOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
+          <div className="flex-1">
+            <select
+              id="specificStaffId"
+              value={data.specificStaffId}
+              onChange={(e) => handleChange('specificStaffId', e.target.value)}
+              disabled={disabled || !data.storeId || isLoadingStaff}
+              aria-invalid={errors.specificStaffId ? 'true' : 'false'}
+              aria-describedby={errors.specificStaffId ? 'specificStaffId-error' : undefined}
+              aria-busy={isLoadingStaff}
+              className={`w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed ${
+                errors.specificStaffId
+                  ? 'border-red-500 focus:ring-red-500'
+                  : 'border-gray-300 dark:border-gray-600'
+              }`}
+            >
+              <option value="">
+                {isLoadingStaff ? 'Loading...' : `All ${labels.level6}`}
               </option>
-            ))}
-          </select>
+              {staffOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            {errors.specificStaffId && (
+              <p id="specificStaffId-error" className="mt-1 text-xs text-red-500 flex items-center gap-1" role="alert">
+                <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                {errors.specificStaffId}
+              </p>
+            )}
+          </div>
         </div>
       )}
     </div>

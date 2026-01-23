@@ -14,6 +14,7 @@ import ApprovalHistoryModal, { TaskApprovalHistory } from '@/components/tasks/Ap
 import { TaskListPageSkeleton } from '@/components/ui/Skeleton';
 import { ErrorDisplay, InlineError } from '@/components/ui/ErrorBoundary';
 import { TableEmptyState } from '@/components/ui/EmptyState';
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable';
 import { useTaskUpdates } from '@/hooks/useTaskUpdates';
 import { useUser } from '@/contexts/UserContext';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -639,7 +640,7 @@ export default function TaskListPage() {
         )}
 
         {/* Date Display & Actions */}
-        <div className="flex items-center justify-between gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           {/* Date Picker */}
           <DatePicker
             dateMode={dateMode}
@@ -647,13 +648,14 @@ export default function TaskListPage() {
           />
 
           {/* Search & Actions */}
-          <div className="flex items-center gap-3 flex-1 justify-end">
-            <div className="relative w-96">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto sm:flex-1 sm:justify-end">
+            <div className="relative w-full sm:w-64 md:w-80 lg:w-96">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search"
+                aria-label="Search tasks by name"
                 className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               />
               <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -663,9 +665,9 @@ export default function TaskListPage() {
                 <button
                   onClick={() => setSearchQuery('')}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors"
-                  title="Clear search"
+                  aria-label="Clear search"
                 >
-                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
@@ -674,9 +676,10 @@ export default function TaskListPage() {
 
             <button
               onClick={() => setIsFilterOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium"
+              className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium w-full sm:w-auto"
+              aria-label="Open filter options"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
               </svg>
               Filter
@@ -689,10 +692,10 @@ export default function TaskListPage() {
 
             {/* Draft limit indicator + Add New button (HQ users only) */}
             {isHQ && (
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
                 {/* Draft limit badge */}
                 {sourceDraftInfo && (
-                  <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${
+                  <div className={`flex items-center justify-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${
                     sourceDraftInfo.remaining_drafts === 0
                       ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
                       : sourceDraftInfo.remaining_drafts <= 2
@@ -710,7 +713,7 @@ export default function TaskListPage() {
                 <button
                   onClick={() => router.push('/tasks/new?source=task_list')}
                   disabled={Boolean(sourceDraftInfo && !sourceDraftInfo.can_create_draft)}
-                  className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-colors w-full sm:w-auto ${
                     sourceDraftInfo && !sourceDraftInfo.can_create_draft
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       : 'bg-red-500 text-white hover:bg-red-600'
@@ -744,14 +747,15 @@ export default function TaskListPage() {
 
       {/* Body - Table Container */}
       {!isLoading && !error && (
-        <div className="border border-gray-200 rounded-lg mb-6 overflow-visible">
-          <table className="w-full">
+        <div className="border border-gray-200 rounded-lg mb-6 overflow-hidden">
+          <ResponsiveTable>
+          <table className="w-full min-w-[800px]">
             <thead className="bg-pink-50">
                 <tr>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
+                  <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
                     No
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
+                  <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
                     <div className="flex items-center justify-center gap-1">
                       <span>Dept</span>
                       <ColumnFilterDropdown
@@ -762,19 +766,19 @@ export default function TaskListPage() {
                       />
                     </div>
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
+                  <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
                     Task Group
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
+                  <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
                     Start → End
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
+                  <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
                     Progress
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
+                  <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
                     Unable
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
+                  <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
                     <div className="flex items-center justify-center gap-1">
                       <span>Status</span>
                       <ColumnFilterDropdown
@@ -785,7 +789,7 @@ export default function TaskListPage() {
                       />
                     </div>
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 bg-pink-50">
+                  <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-gray-700 bg-pink-50">
                     <div className="flex items-center justify-center gap-1">
                       <span>HQ Check</span>
                       <ColumnFilterDropdown
@@ -832,6 +836,8 @@ export default function TaskListPage() {
                                   toggleRow(task.id);
                                 }}
                                 className="flex items-center justify-center w-5 h-5 hover:bg-gray-200 rounded transition-colors"
+                                aria-expanded={expandedRows === task.id}
+                                aria-label={expandedRows === task.id ? 'Collapse subtasks' : 'Expand subtasks'}
                               >
                                 <svg
                                   className={`w-4 h-4 text-gray-600 transition-transform ${
@@ -840,6 +846,7 @@ export default function TaskListPage() {
                                   fill="none"
                                   stroke="currentColor"
                                   viewBox="0 0 24 24"
+                                  aria-hidden="true"
                                 >
                                   <path
                                     strokeLinecap="round"
@@ -892,10 +899,12 @@ export default function TaskListPage() {
                                     });
                                   }
                                 }}
-                                className="p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-gray-100 transition-opacity"
-                                title="More actions"
+                                className="p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-gray-100 transition-opacity focus:opacity-100"
+                                aria-label="Task actions menu"
+                                aria-haspopup="menu"
+                                aria-expanded={openActionMenu?.taskId === task.id}
                               >
-                                <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                   <circle cx="12" cy="5" r="1.5" />
                                   <circle cx="12" cy="12" r="1.5" />
                                   <circle cx="12" cy="19" r="1.5" />
@@ -943,6 +952,7 @@ export default function TaskListPage() {
                 )}
               </tbody>
             </table>
+          </ResponsiveTable>
 
           {/* Pagination */}
           <div className="bg-white px-4 py-3 border-t border-gray-200">
@@ -973,8 +983,9 @@ export default function TaskListPage() {
                   onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
                   className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label="Previous page"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
@@ -1008,8 +1019,9 @@ export default function TaskListPage() {
                   onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages || totalPages === 0}
                   className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label="Next page"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
@@ -1082,9 +1094,9 @@ export default function TaskListPage() {
 
       {/* Pause Task Confirmation Modal */}
       {isPauseModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]" role="dialog" aria-modal="true" aria-labelledby="pause-modal-title">
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Pause Task</h3>
+            <h3 id="pause-modal-title" className="text-lg font-semibold text-gray-900 mb-2">Pause Task</h3>
             <p className="text-sm text-gray-600 mb-4">
               Are you sure you want to pause this task? This will:
             </p>

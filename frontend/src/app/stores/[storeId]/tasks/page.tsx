@@ -20,22 +20,25 @@ import { StoreTasksPageSkeleton } from '@/components/ui/Skeleton';
 import { LoadingSpinner } from '@/components/ui/LoadingIndicator';
 import { ErrorDisplay } from '@/components/ui/ErrorBoundary';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable';
+import { ConfirmationDialog } from '@/components/ui/ConfirmationDialog';
+import { useToast } from '@/components/ui/Toast';
 
 // Status badge colors
 const getStatusColor = (status: StoreTaskStatus): string => {
   switch (status) {
     case 'not_yet':
-      return 'bg-gray-100 text-gray-600';
+      return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300';
     case 'on_progress':
-      return 'bg-blue-100 text-blue-700';
+      return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
     case 'done_pending':
-      return 'bg-yellow-100 text-yellow-700';
+      return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
     case 'done':
-      return 'bg-green-100 text-green-700';
+      return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
     case 'unable':
-      return 'bg-orange-100 text-orange-700';
+      return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
     default:
-      return 'bg-gray-100 text-gray-600';
+      return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300';
   }
 };
 
@@ -61,6 +64,7 @@ export default function StoreTasksPage() {
   const params = useParams();
   const router = useRouter();
   const { currentUser } = useUser();
+  const { showToast } = useToast();
 
   const storeId = Number(params.storeId);
 
@@ -95,6 +99,10 @@ export default function StoreTasksPage() {
   const [selectedStaffId, setSelectedStaffId] = useState<number | null>(null);
   const [storeStaff, setStoreStaff] = useState<StoreStaffOption[]>([]);
   const [loadingStaff, setLoadingStaff] = useState(false);
+
+  // Unassign confirmation state
+  const [showUnassignConfirm, setShowUnassignConfirm] = useState(false);
+  const [unassignTaskId, setUnassignTaskId] = useState<number | null>(null);
 
   // Fetch tasks
   const fetchTasks = useCallback(async () => {
@@ -133,10 +141,13 @@ export default function StoreTasksPage() {
     setActionError(null);
     try {
       await startStoreTask(taskId, storeId);
+      showToast('Task started successfully', 'success');
       fetchTasks(); // Refresh list
     } catch (err) {
       console.error('Failed to start task:', err);
-      setActionError(err instanceof Error ? err.message : 'Failed to start task');
+      const errorMsg = err instanceof Error ? err.message : 'Failed to start task';
+      setActionError(errorMsg);
+      showToast(errorMsg, 'error');
     } finally {
       setProcessingTaskId(null);
     }
@@ -161,6 +172,7 @@ export default function StoreTasksPage() {
         notes: completeNotes.trim() || undefined,
         evidence: completeEvidence.length > 0 ? completeEvidence : undefined,
       });
+      showToast('Task marked as completed. Waiting for HQ verification.', 'success');
       fetchTasks(); // Refresh list
       setShowCompleteModal(false);
       setCompleteTaskId(null);
@@ -168,7 +180,9 @@ export default function StoreTasksPage() {
       setCompleteEvidence([]);
     } catch (err) {
       console.error('Failed to complete task:', err);
-      setActionError(err instanceof Error ? err.message : 'Failed to complete task');
+      const errorMsg = err instanceof Error ? err.message : 'Failed to complete task';
+      setActionError(errorMsg);
+      showToast(errorMsg, 'error');
     } finally {
       setProcessingTaskId(null);
     }
@@ -201,13 +215,16 @@ export default function StoreTasksPage() {
     setActionError(null);
     try {
       await markStoreTaskUnable(unableTaskId, storeId, unableReason.trim());
+      showToast('Task marked as unable to complete', 'success');
       fetchTasks(); // Refresh list
       setShowUnableModal(false);
       setUnableTaskId(null);
       setUnableReason('');
     } catch (err) {
       console.error('Failed to mark task unable:', err);
-      setActionError(err instanceof Error ? err.message : 'Failed to mark task unable');
+      const errorMsg = err instanceof Error ? err.message : 'Failed to mark task unable';
+      setActionError(errorMsg);
+      showToast(errorMsg, 'error');
     } finally {
       setProcessingTaskId(null);
     }
@@ -239,6 +256,8 @@ export default function StoreTasksPage() {
     setActionError(null);
     try {
       await assignTaskToStaff(assignTaskId, storeId, selectedStaffId);
+      const staff = storeStaff.find(s => s.id === selectedStaffId);
+      showToast(`Task assigned to ${staff?.name || 'staff'}`, 'success');
       fetchTasks(); // Refresh list
       setShowAssignModal(false);
       setAssignTaskId(null);
@@ -246,26 +265,39 @@ export default function StoreTasksPage() {
       setStoreStaff([]);
     } catch (err) {
       console.error('Failed to assign task:', err);
-      setActionError(err instanceof Error ? err.message : 'Failed to assign task');
+      const errorMsg = err instanceof Error ? err.message : 'Failed to assign task';
+      setActionError(errorMsg);
+      showToast(errorMsg, 'error');
     } finally {
       setProcessingTaskId(null);
     }
   };
 
-  // Handle unassign
-  const handleUnassign = async (taskId: number) => {
-    if (!confirm('Are you sure you want to unassign this task?')) return;
+  // Handle unassign click - open confirmation
+  const handleUnassignClick = (taskId: number) => {
+    setUnassignTaskId(taskId);
+    setShowUnassignConfirm(true);
+  };
 
-    setProcessingTaskId(taskId);
+  // Handle unassign confirm
+  const handleUnassignConfirm = async () => {
+    if (!unassignTaskId) return;
+
+    setShowUnassignConfirm(false);
+    setProcessingTaskId(unassignTaskId);
     setActionError(null);
     try {
-      await unassignTask(taskId, storeId);
+      await unassignTask(unassignTaskId, storeId);
+      showToast('Task unassigned from staff', 'success');
       fetchTasks(); // Refresh list
     } catch (err) {
       console.error('Failed to unassign task:', err);
-      setActionError(err instanceof Error ? err.message : 'Failed to unassign task');
+      const errorMsg = err instanceof Error ? err.message : 'Failed to unassign task';
+      setActionError(errorMsg);
+      showToast(errorMsg, 'error');
     } finally {
       setProcessingTaskId(null);
+      setUnassignTaskId(null);
     }
   };
 
@@ -294,35 +326,35 @@ export default function StoreTasksPage() {
   // Non-store user view
   if (!isStoreUser) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
-          <p className="text-gray-500">Only store users can access store tasks.</p>
+          <p className="text-gray-500 dark:text-gray-400">Only store users can access store tasks.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-gray-900">Store Tasks</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Store Tasks</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             {isStaff ? 'Tasks assigned to you' : 'Tasks assigned to this store'} ({filteredTasks.length} tasks)
           </p>
         </div>
 
         {/* Filter Bar */}
         <div className="mb-4 flex items-center gap-4">
-          <label className="text-sm text-gray-600">Filter by status:</label>
+          <label className="text-sm text-gray-600 dark:text-gray-300">Filter by status:</label>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as StoreTaskStatus | 'all')}
-            className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-pink-500"
+            className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           >
             <option value="all">All Statuses</option>
             <option value="not_yet">Not Started</option>
@@ -369,25 +401,25 @@ export default function StoreTasksPage() {
 
         {/* Tasks Table */}
         {!isLoading && !error && filteredTasks.length > 0 && (
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <ResponsiveTable>
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-900">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Task</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Assigned To</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dates</th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Task</th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Assigned To</th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Dates</th>
+                    <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {filteredTasks.map((assignment) => (
-                    <tr key={assignment.id} className="hover:bg-gray-50">
+                    <tr key={assignment.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                       <td className="px-4 py-4">
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{assignment.task?.task_name || `Task #${assignment.task_id}`}</p>
-                          <p className="text-xs text-gray-500">ID: {assignment.task_id}</p>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">{assignment.task?.task_name || `Task #${assignment.task_id}`}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">ID: {assignment.task_id}</p>
                         </div>
                       </td>
                       <td className="px-4 py-4">
@@ -396,14 +428,14 @@ export default function StoreTasksPage() {
                         </span>
                       </td>
                       <td className="px-4 py-4">
-                        <p className="text-sm text-gray-900">
+                        <p className="text-sm text-gray-900 dark:text-white">
                           {assignment.assignedToStaff
                             ? assignment.assignedToStaff.staff_name
                             : 'Store Leader'}
                         </p>
                       </td>
                       <td className="px-4 py-4">
-                        <p className="text-sm text-gray-900">
+                        <p className="text-sm text-gray-900 dark:text-white">
                           {assignment.task?.start_date ? formatDate(assignment.task.start_date) : '-'} - {assignment.task?.end_date ? formatDate(assignment.task.end_date) : '-'}
                         </p>
                       </td>
@@ -411,10 +443,10 @@ export default function StoreTasksPage() {
                         <div className="flex items-center justify-center gap-2">
                           <button
                             onClick={() => handleViewDetail(assignment.task_id)}
-                            className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
-                            title="View Details"
+                            className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 rounded"
+                            aria-label={`View details for task ${assignment.task?.task_name || assignment.task_id}`}
                           >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                             </svg>
@@ -461,7 +493,7 @@ export default function StoreTasksPage() {
                             <button
                               onClick={() => handleAssignClick(assignment.task_id)}
                               disabled={processingTaskId === assignment.task_id}
-                              className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded disabled:opacity-50"
+                              className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded disabled:opacity-50"
                               title="Assign to Staff"
                             >
                               Assign
@@ -471,9 +503,9 @@ export default function StoreTasksPage() {
                           {/* Unassign button (for Store Leaders only, tasks with staff assigned) */}
                           {isStoreLeader && ['not_yet', 'on_progress'].includes(assignment.status) && assignment.assigned_to_staff_id && (
                             <button
-                              onClick={() => handleUnassign(assignment.task_id)}
+                              onClick={() => handleUnassignClick(assignment.task_id)}
                               disabled={processingTaskId === assignment.task_id}
-                              className="px-3 py-1.5 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded disabled:opacity-50"
+                              className="px-3 py-1.5 text-sm font-medium text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 rounded disabled:opacity-50"
                               title="Unassign"
                             >
                               Unassign
@@ -485,25 +517,38 @@ export default function StoreTasksPage() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </ResponsiveTable>
           </div>
         )}
 
         {/* Unable Modal */}
         {showUnableModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Mark Task as Unable</h3>
-              <p className="text-sm text-gray-500 mb-4">
+          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50" role="dialog" aria-modal="true" aria-labelledby="unable-modal-title">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+              <h3 id="unable-modal-title" className="text-lg font-medium text-gray-900 dark:text-white mb-4">Mark Task as Unable</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                 Please provide a reason why this task cannot be completed.
               </p>
               <textarea
+                id="unableReason"
                 value={unableReason}
                 onChange={(e) => setUnableReason(e.target.value)}
                 placeholder="Enter reason..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 resize-none"
+                aria-label="Reason for unable to complete"
+                aria-required="true"
+                aria-invalid={!unableReason.trim() ? 'true' : 'false'}
+                aria-describedby="unableReason-hint"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 ${
+                  !unableReason.trim() ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
+                }`}
                 rows={4}
               />
+              <p id="unableReason-hint" className="mt-1 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+                A reason is required to mark this task as unable
+              </p>
               <div className="mt-4 flex justify-end gap-3">
                 <button
                   onClick={() => {
@@ -511,7 +556,7 @@ export default function StoreTasksPage() {
                     setUnableTaskId(null);
                     setUnableReason('');
                   }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
                 >
                   Cancel
                 </button>
@@ -529,33 +574,38 @@ export default function StoreTasksPage() {
 
         {/* Complete Modal (with evidence upload) */}
         {showCompleteModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Complete Task</h3>
-              <p className="text-sm text-gray-500 mb-4">
+          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50" role="dialog" aria-modal="true" aria-labelledby="complete-modal-title">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-lg w-full mx-4 p-6">
+              <h3 id="complete-modal-title" className="text-lg font-medium text-gray-900 dark:text-white mb-4">Complete Task</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                 Add notes and evidence (optional) before marking as complete.
               </p>
 
               {/* Notes */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <label htmlFor="completeNotes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
                 <textarea
+                  id="completeNotes"
                   value={completeNotes}
                   onChange={(e) => setCompleteNotes(e.target.value)}
                   placeholder="Add completion notes..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 resize-none"
+                  aria-describedby="completeNotes-hint"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                   rows={3}
                 />
+                <p id="completeNotes-hint" className="mt-1 text-xs text-gray-400 dark:text-gray-500">Optional notes about task completion</p>
               </div>
 
               {/* Evidence URLs */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Evidence (Image URLs)</label>
+                <label htmlFor="evidenceUrl" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Evidence (Image URLs)</label>
                 <div className="flex gap-2 mb-2">
                   <input
+                    id="evidenceUrl"
                     type="url"
                     placeholder="Paste image URL..."
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 text-sm"
+                    aria-describedby="evidenceUrl-hint"
+                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -579,23 +629,24 @@ export default function StoreTasksPage() {
 
                 {/* Evidence list */}
                 {completeEvidence.length > 0 && (
-                  <div className="space-y-2 max-h-32 overflow-y-auto">
+                  <ul className="space-y-2 max-h-32 overflow-y-auto" aria-label="Added evidence URLs">
                     {completeEvidence.map((url, index) => (
-                      <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
-                        <span className="flex-1 text-xs text-gray-600 truncate">{url}</span>
+                      <li key={index} className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-700 rounded">
+                        <span className="flex-1 text-xs text-gray-600 dark:text-gray-300 truncate">{url}</span>
                         <button
                           onClick={() => handleRemoveEvidence(index)}
-                          className="p-1 text-red-500 hover:text-red-700"
+                          className="p-1 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                          aria-label={`Remove evidence ${index + 1}`}
                         >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                           </svg>
                         </button>
-                      </div>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 )}
-                <p className="text-xs text-gray-400 mt-1">Press Enter or click Add to add image URLs</p>
+                <p id="evidenceUrl-hint" className="text-xs text-gray-400 dark:text-gray-500 mt-1">Press Enter or click Add to add image URLs (optional)</p>
               </div>
 
               <div className="flex justify-end gap-3">
@@ -606,7 +657,7 @@ export default function StoreTasksPage() {
                     setCompleteNotes('');
                     setCompleteEvidence([]);
                   }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
                 >
                   Cancel
                 </button>
@@ -624,49 +675,67 @@ export default function StoreTasksPage() {
 
         {/* Assign Modal */}
         {showAssignModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Assign Task to Staff</h3>
-              <p className="text-sm text-gray-500 mb-4">
+          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50" role="dialog" aria-modal="true" aria-labelledby="assign-modal-title">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+              <h3 id="assign-modal-title" className="text-lg font-medium text-gray-900 dark:text-white mb-4">Assign Task to Staff</h3>
+              <p id="assign-modal-description" className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                 Select a staff member to assign this task to.
               </p>
 
               {loadingStaff ? (
-                <div className="flex items-center justify-center py-8">
+                <div className="flex items-center justify-center py-8" aria-busy="true" aria-label="Loading staff list">
                   <LoadingSpinner size="md" color="pink" />
                 </div>
               ) : storeStaff.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-gray-500 text-sm">No staff members available</p>
+                  <p className="text-gray-500 dark:text-gray-400 text-sm">No staff members available</p>
                 </div>
               ) : (
-                <div className="space-y-2 max-h-60 overflow-y-auto mb-4">
-                  {storeStaff.map((staff) => (
-                    <label
-                      key={staff.value}
-                      className={`flex items-center p-3 rounded-lg cursor-pointer border ${
-                        selectedStaffId === Number(staff.value)
-                          ? 'border-pink-500 bg-pink-50'
-                          : 'border-gray-200 hover:bg-gray-50'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="staff"
-                        value={staff.value}
-                        checked={selectedStaffId === Number(staff.value)}
-                        onChange={() => setSelectedStaffId(Number(staff.value))}
-                        className="w-4 h-4 text-pink-600 focus:ring-pink-500"
-                      />
-                      <div className="ml-3">
-                        <p className="text-sm font-medium text-gray-900">{staff.label}</p>
-                        <p className="text-xs text-gray-500">
-                          {staff.job_grade} {staff.position ? `- ${staff.position}` : ''}
-                        </p>
-                      </div>
-                    </label>
-                  ))}
-                </div>
+                <fieldset>
+                  <legend className="sr-only">Select a staff member</legend>
+                  <div
+                    className="space-y-2 max-h-60 overflow-y-auto mb-4"
+                    role="radiogroup"
+                    aria-required="true"
+                    aria-describedby="assign-modal-description"
+                    aria-invalid={!selectedStaffId ? 'true' : 'false'}
+                  >
+                    {storeStaff.map((staff) => (
+                      <label
+                        key={staff.value}
+                        className={`flex items-center p-3 rounded-lg cursor-pointer border transition-colors ${
+                          selectedStaffId === Number(staff.value)
+                            ? 'border-pink-500 bg-pink-50 dark:bg-pink-900/20'
+                            : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="staff"
+                          value={staff.value}
+                          checked={selectedStaffId === Number(staff.value)}
+                          onChange={() => setSelectedStaffId(Number(staff.value))}
+                          className="w-4 h-4 text-pink-600 focus:ring-pink-500 focus:ring-2"
+                          aria-describedby={`staff-${staff.value}-info`}
+                        />
+                        <div className="ml-3">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">{staff.label}</p>
+                          <p id={`staff-${staff.value}-info`} className="text-xs text-gray-500 dark:text-gray-400">
+                            {staff.job_grade} {staff.position ? `- ${staff.position}` : ''}
+                          </p>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+              )}
+              {!loadingStaff && storeStaff.length > 0 && !selectedStaffId && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mb-4">
+                  <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                  Please select a staff member to assign the task
+                </p>
               )}
 
               <div className="flex justify-end gap-3">
@@ -677,14 +746,14 @@ export default function StoreTasksPage() {
                     setSelectedStaffId(null);
                     setStoreStaff([]);
                   }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleAssignConfirm}
                   disabled={!selectedStaffId || processingTaskId === assignTaskId}
-                  className="px-4 py-2 text-sm font-medium text-white bg-pink-600 hover:bg-pink-700 rounded disabled:opacity-50"
+                  className="px-4 py-2 text-sm font-medium text-white bg-pink-600 hover:bg-pink-700 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {processingTaskId === assignTaskId ? 'Assigning...' : 'Assign'}
                 </button>
@@ -692,6 +761,22 @@ export default function StoreTasksPage() {
             </div>
           </div>
         )}
+
+        {/* Unassign Confirmation Dialog */}
+        <ConfirmationDialog
+          isOpen={showUnassignConfirm}
+          onClose={() => {
+            setShowUnassignConfirm(false);
+            setUnassignTaskId(null);
+          }}
+          onConfirm={handleUnassignConfirm}
+          title="Unassign Task"
+          message="Are you sure you want to unassign this task? The task will be returned to you (Store Leader) for reassignment or self-completion."
+          confirmText="Unassign"
+          cancelText="Cancel"
+          variant="warning"
+          isLoading={processingTaskId === unassignTaskId}
+        />
       </div>
     </div>
   );

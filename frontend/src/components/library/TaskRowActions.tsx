@@ -134,10 +134,10 @@ const TaskRowActions: React.FC<TaskRowActionsProps> = ({
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+        className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
       >
         <svg
-          className="w-5 h-5 text-gray-400"
+          className="w-5 h-5 text-gray-400 dark:text-gray-500"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -152,17 +152,17 @@ const TaskRowActions: React.FC<TaskRowActionsProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50">
+        <div className="absolute right-0 mt-1 w-40 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 py-1 z-50">
           {actions.map((action) => (
             <button
               key={action.label}
               onClick={action.onClick}
               className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
                 action.danger
-                  ? 'text-red-600 hover:bg-red-50'
+                  ? 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
                   : action.warning
-                  ? 'text-cyan-600 hover:bg-cyan-50'
-                  : 'text-gray-700 hover:bg-gray-50'
+                  ? 'text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
               }`}
             >
               {action.icon}

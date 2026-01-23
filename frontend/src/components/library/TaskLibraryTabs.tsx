@@ -41,7 +41,7 @@ const TaskLibraryTabs: React.FC<TaskLibraryTabsProps> = ({ activeTab, onTabChang
   ];
 
   return (
-    <div className="border-b border-gray-200 mb-6">
+    <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
       <nav className="flex gap-8">
         {tabs.map((tab) => (
           <button
@@ -49,14 +49,14 @@ const TaskLibraryTabs: React.FC<TaskLibraryTabsProps> = ({ activeTab, onTabChang
             onClick={() => onTabChange(tab.id)}
             className={`flex items-center gap-2 pb-3 text-sm font-medium transition-colors relative ${
               activeTab === tab.id
-                ? 'text-[#C5055B]'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'text-[#C5055B] dark:text-pink-400'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
             {tab.icon}
             {tab.label}
             {activeTab === tab.id && (
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#C5055B]" />
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#C5055B] dark:bg-pink-400" />
             )}
           </button>
         ))}

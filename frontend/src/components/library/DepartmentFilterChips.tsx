@@ -57,8 +57,8 @@ const DepartmentFilterChips: React.FC<DepartmentFilterChipsProps> = ({
             onClick={() => onDepartmentToggle(dept)}
             className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
               isSelected
-                ? 'bg-pink-100 text-[#C5055B] border border-[#C5055B]'
-                : 'bg-gray-100 text-gray-600 border border-transparent hover:bg-gray-200'
+                ? 'bg-pink-100 dark:bg-pink-900/30 text-[#C5055B] dark:text-pink-400 border border-[#C5055B] dark:border-pink-500'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border border-transparent hover:bg-gray-200 dark:hover:bg-gray-600'
             }`}
           >
             {departmentIcons[dept]}

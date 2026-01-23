@@ -4172,8 +4172,8 @@ TRIGGERS tự động tạo history entries:
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 3.1 | Loading states cho tất cả screens | ⏳ | Skeleton, spinners |
-| 3.2 | Error handling UI | ⏳ | Toast, error boundaries |
+| 3.1 | Loading states cho tất cả screens | ✅ | Page-specific skeletons, LoadingSpinner, LoadingOverlay |
+| 3.2 | Error handling UI | 🔄 | Toast, error boundaries |
 | 3.3 | Empty states | ⏳ | Khi không có data |
 | 3.4 | Responsive design (mobile) | ⏳ | Tables, forms |
 | 3.5 | Accessibility (a11y) | ⏳ | ARIA labels, keyboard nav |
@@ -4209,7 +4209,7 @@ TRIGGERS tự động tạo history entries:
 │  OVERALL:      [██████████] 100%                               │
 │                                                                 │
 │  PHASE 2 PROGRESS: [██████████] 100% (9/9 tasks)               │
-│  PHASE 3 PROGRESS: [░░░░░░░░░░] 0%                             │
+│  PHASE 3 PROGRESS: [█░░░░░░░░░] 10%  (1/10 tasks)              │
 │  PHASE 4 PROGRESS: [░░░░░░░░░░] 0%                             │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘

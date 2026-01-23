@@ -77,28 +77,19 @@ export default function ManagerCommentPanel({
           comments.map((comment) => (
             <div key={comment.id} className="flex gap-2 sm:gap-3">
               {/* Avatar with initials */}
-              <div
-                className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: '#E5F0FF' }}
-              >
-                <span className="text-[11px] sm:text-[13px] font-bold" style={{ color: '#003E95' }}>
+              <div className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center bg-blue-100 dark:bg-blue-900/40">
+                <span className="text-[11px] sm:text-[13px] font-bold text-blue-800 dark:text-blue-300">
                   {getInitials(comment.author)}
                 </span>
               </div>
 
               {/* Content */}
-              <div
-                className="flex-1 px-3 sm:px-5 py-2 sm:py-3 dark:bg-gray-700"
-                style={{
-                  backgroundColor: '#F4F4F4',
-                  borderRadius: '0px 10px 10px 10px',
-                }}
-              >
+              <div className="flex-1 px-3 sm:px-5 py-2 sm:py-3 bg-gray-100 dark:bg-gray-700 rounded-tr-[10px] rounded-br-[10px] rounded-bl-[10px]">
                 <div className="flex flex-wrap items-baseline gap-1 sm:gap-2">
                   <span className="font-bold text-[14px] sm:text-[16px] text-black dark:text-white">
                     {comment.author}
                   </span>
-                  <span className="text-[11px] sm:text-[13px]" style={{ color: '#6B6B6B' }}>
+                  <span className="text-[11px] sm:text-[13px] text-gray-500 dark:text-gray-400">
                     {formatTime(comment.createdAt)}
                   </span>
                 </div>
@@ -114,17 +105,14 @@ export default function ManagerCommentPanel({
       {/* Reply Input */}
       <div className="flex items-center gap-2 sm:gap-3 mt-3 sm:mt-4">
         {/* User Avatar placeholder */}
-        <div className="flex-shrink-0 w-6 h-6 rounded-full overflow-hidden bg-gray-300 flex items-center justify-center">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-gray-500">
+        <div className="flex-shrink-0 w-6 h-6 rounded-full overflow-hidden bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-gray-500 dark:text-gray-400">
             <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
           </svg>
         </div>
 
         {/* Input with Send Button */}
-        <div
-          className="flex-1 relative rounded-[10px] bg-white dark:bg-gray-800"
-          style={{ border: '0.5px solid #9B9B9B' }}
-        >
+        <div className="flex-1 relative rounded-[10px] bg-white dark:bg-gray-800 border border-gray-400 dark:border-gray-600">
           <input
             type="text"
             value={replyText}
