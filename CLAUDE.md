@@ -4456,9 +4456,9 @@ Request → Controller → Service → Model → Resource → Response
 > │     → User chọn implement những gì                             │
 > │     → User có thể skip hoặc defer to later                    │
 > │                                                                 │
-> │  6️⃣ CLAUDE THỰC HIỆN CHANGES                                    │
+> │  6️⃣ CLAUDE THỰC HIỆN CHANGES (CHƯA COMMIT)                      │
 > │     → Implement changes theo quyết định của user              │
-> │     → Commit changes (nếu cần)                                │
+> │     → ⚠️ CHƯA COMMIT - chờ user xác nhận fix thành công       │
 > │                                                                 │
 > │  7️⃣ VERIFY CODE TRƯỚC KHI RETEST                                │
 > │     → Claude đọc lại file đã sửa để xác nhận code đúng        │
@@ -4467,10 +4467,19 @@ Request → Controller → Service → Model → Resource → Response
 > │     → Nếu code đã đúng → hướng dẫn user hard refresh          │
 > │       (Ctrl+Shift+R hoặc restart dev server)                  │
 > │                                                                 │
-> │  8️⃣ USER RETEST & CLAUDE CẬP NHẬT                               │
+> │  8️⃣ USER RETEST & CUNG CẤP SCREENSHOT                           │
 > │     → User retest sau khi hard refresh                        │
 > │     → User cung cấp screenshot kết quả                        │
-> │     → Claude cập nhật Status và Tested At trong bảng          │
+> │     → Claude review screenshot                                │
+> │                                                                 │
+> │  9️⃣ CLAUDE XÁC NHẬN & COMMIT                                    │
+> │     → Nếu screenshot cho thấy FIX THÀNH CÔNG:                 │
+> │       ✓ Commit & Push changes                                 │
+> │       ✓ Cập nhật Status = ✅ PASSED trong bảng                │
+> │       ✓ Ghi Fix Details                                       │
+> │     → Nếu screenshot cho thấy VẪN LỖI:                        │
+> │       ✗ KHÔNG commit                                          │
+> │       ✗ Quay lại bước 3 để phân tích tiếp                    │
 > │                                                                 │
 > └─────────────────────────────────────────────────────────────────┘
 > ```
@@ -4482,7 +4491,7 @@ Request → Controller → Service → Model → Resource → Response
 | N.1 | Login form - Light mode | Logo, Email input, Password input, Login button hiển thị đúng | ✅ | ✅ FIX | 2026-01-24 |
 | N.2 | Login form - Dark mode | Form switch sang dark theme, colors phù hợp | N/A | N/A | 2026-01-24 |
 | N.3 | Validation error - Empty fields | Button disables when fields empty (correct behavior) | ✅ | ✅ | 2026-01-24 |
-| N.4 | Validation error - Wrong credentials | Error message hiển thị below password field | 🔍 Retest | 🔄 Fixed | 2026-01-24 |
+| N.4 | Validation error - Wrong credentials | Error message hiển thị below password field | ✅ | ✅ PASSED | 2026-01-24 |
 | N.5 | Loading state | Button disabled, spinner hiển thị khi đang login | ⏳ | ⏳ | - |
 | N.6 | Mobile responsive | Form centered, full width on mobile (<768px) | ⏳ | ⏳ | - |
 
@@ -4495,6 +4504,13 @@ Request → Controller → Service → Model → Resource → Response
 **N.2 Note:** Login page không có dark mode toggle. Dark mode chỉ available sau khi login.
 
 **N.3 Note:** Form sử dụng button disable thay vì hiển thị error message khi fields trống. Sign in button chỉ enable khi cả 2 fields (Email/Phone và Password) đều có giá trị.
+
+**N.4 Fix Details (2026-01-24):**
+- **Root Cause:** AuthGuard was showing spinner for ALL routes when `isLoading=true`, causing SignInPage to unmount during login and losing form state (error message).
+- **Fix:** Added early return for public routes in AuthGuard - always render children immediately for `/auth/*` routes.
+- **File:** `frontend/src/components/auth/AuthGuard.tsx` (lines 39-43)
+- **Commit:** `a50c63a`
+- **Result:** Error message "Incorrect password" now displays correctly after login failure.
 
 #### O. TASK LIST PAGE (/tasks/list)
 
