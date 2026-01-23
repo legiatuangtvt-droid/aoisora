@@ -165,14 +165,8 @@ export default function SignInPage() {
                 autoComplete="current-password"
                 placeholder="Password"
                 value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  setError(''); // Clear error when typing
-                }}
-                onInput={(e) => {
-                  setPassword(e.currentTarget.value);
-                  setError('');
-                }}
+                onChange={(e) => setPassword(e.target.value)}
+                onInput={(e) => setPassword(e.currentTarget.value)}
                 className={`w-full pl-10 pr-12 py-3 border-b-2 ${
                   error ? 'border-red-400' : 'border-gray-200 focus:border-[#1E3A5F]'
                 } outline-none transition-colors bg-transparent text-gray-800 placeholder-gray-400`}

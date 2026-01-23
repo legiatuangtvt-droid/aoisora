@@ -4471,7 +4471,7 @@ Request → Controller → Service → Model → Resource → Response
 | N.1 | Login form - Light mode | Logo, Email input, Password input, Login button hiển thị đúng | ✅ | ✅ FIX | 2026-01-24 |
 | N.2 | Login form - Dark mode | Form switch sang dark theme, colors phù hợp | N/A | N/A | 2026-01-24 |
 | N.3 | Validation error - Empty fields | Button disables when fields empty (correct behavior) | ✅ | ✅ | 2026-01-24 |
-| N.4 | Validation error - Wrong credentials | Toast/Alert hiển thị "Invalid credentials" | ⏳ | ⏳ | - |
+| N.4 | Validation error - Wrong credentials | Error message hiển thị below password field | 🔍 Retest | 🔄 Fixed | 2026-01-24 |
 | N.5 | Loading state | Button disabled, spinner hiển thị khi đang login | ⏳ | ⏳ | - |
 | N.6 | Mobile responsive | Form centered, full width on mobile (<768px) | ⏳ | ⏳ | - |
 
