@@ -36,7 +36,13 @@ export default function AuthGuard({ children }: AuthGuardProps) {
     }
   }, [isAuthenticated, isLoading, isPublicRoute, router]);
 
-  // Show loading spinner while checking authentication
+  // IMPORTANT: Always render children for public routes immediately
+  // This prevents unmounting during login which would lose form state (error messages)
+  if (isPublicRoute) {
+    return <>{children}</>;
+  }
+
+  // Show loading spinner while checking authentication (protected routes only)
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-sky-200 via-sky-100 to-orange-100">
@@ -49,7 +55,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   }
 
   // If not authenticated and not on public route, show nothing (will redirect)
-  if (!isAuthenticated && !isPublicRoute) {
+  if (!isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-sky-200 via-sky-100 to-orange-100">
         <div className="flex flex-col items-center gap-4">
