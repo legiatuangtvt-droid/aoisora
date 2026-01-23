@@ -4068,8 +4068,8 @@ TRIGGERS tự động tạo history entries:
 |---|------|--------|-------|
 | 1.3.1 | Hiển thị danh sách tasks | ✅ | Đang hoạt động |
 | 1.3.2 | Filter by status | ✅ | Full status options for HQ/Store users, multi-select support |
-| 1.3.3 | Filter by department | 🔄 | Cần test với real data |
-| 1.3.4 | Search by task name | 🔄 | Cần verify |
+| 1.3.3 | Filter by department | ✅ | Multi-department filter support |
+| 1.3.4 | Search by task name | ✅ | Debounced search (300ms), partial matching, clear button |
 | 1.3.5 | Pagination | ✅ | Đang hoạt động |
 | 1.3.6 | Progress column - từ store assignments | ✅ | Dùng store_progress từ API |
 | 1.3.7 | Unable column - từ store assignments | ✅ | Dùng store_progress từ API |
@@ -4203,10 +4203,10 @@ TRIGGERS tự động tạo history entries:
 │                                                                 │
 │  Database:     [██████████] 100% (6/6 tasks)                   │
 │  Backend APIs: [██████████] 100% (26/26 tasks)                 │
-│  Frontend:     [█████████░] 91%  (43/47 tasks)                 │
+│  Frontend:     [█████████░] 94%  (44/47 tasks)                 │
 │  Components:   [████████░░] 86%  (6/7 tasks)                   │
 │  ────────────────────────────────────────────────────────────── │
-│  OVERALL:      [█████████░] ~93%                               │
+│  OVERALL:      [█████████░] ~94%                               │
 │                                                                 │
 │  PHASE 2 PROGRESS: [░░░░░░░░░░] 0%                             │
 │  PHASE 3 PROGRESS: [░░░░░░░░░░] 0%                             │
