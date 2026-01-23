@@ -75,9 +75,9 @@ class TaskController extends Controller
 
         // Eager load relationships to prevent N+1 queries (Task 2.3)
         $query->with([
-            'status:code_master_id,code_name,code_value',
+            'status:code_master_id,name,code',
             'department:department_id,department_code,department_name',
-            'taskType:code_master_id,code_name,code_value',
+            'taskType:code_master_id,name,code',
             'createdBy:staff_id,staff_name,job_grade',
             'approver:staff_id,staff_name,job_grade',
         ]);
@@ -220,9 +220,9 @@ class TaskController extends Controller
             'approver:staff_id,staff_name,job_grade',
             'assignedStore:store_id,store_code,store_name',
             'department:department_id,department_code,department_name',
-            'taskType:code_master_id,code_name,code_value',
-            'responseType:code_master_id,code_name,code_value',
-            'status:code_master_id,code_name,code_value',
+            'taskType:code_master_id,name,code',
+            'responseType:code_master_id,name,code',
+            'status:code_master_id,name,code',
             'manual:document_id,document_name',
             'lastRejectedBy:staff_id,staff_name',
             'pausedBy:staff_id,staff_name',
@@ -253,9 +253,9 @@ class TaskController extends Controller
             ->with([
                 'assignedStaff:staff_id,staff_name,job_grade',
                 'createdBy:staff_id,staff_name,job_grade',
-                'status:code_master_id,code_name,code_value',
+                'status:code_master_id,name,code',
                 'department:department_id,department_code,department_name',
-                'taskType:code_master_id,code_name,code_value',
+                'taskType:code_master_id,name,code',
             ])
             ->orderBy('task_id')
             ->get();
@@ -776,9 +776,9 @@ class TaskController extends Controller
                 'source', 'receiver_type', 'created_at', 'updated_at'
             ])
             ->with([
-                'status:code_master_id,code_name,code_value',
+                'status:code_master_id,name,code',
                 'department:department_id,department_code,department_name',
-                'taskType:code_master_id,code_name,code_value',
+                'taskType:code_master_id,name,code',
                 'createdBy:staff_id,staff_name,job_grade',
                 'approver:staff_id,staff_name,job_grade',
             ])
@@ -796,8 +796,8 @@ class TaskController extends Controller
                 'status_id' => $child->status_id,
                 'status' => $child->status ? [
                     'code_master_id' => $child->status->code_master_id,
-                    'code_name' => $child->status->code_name,
-                    'code_value' => $child->status->code_value,
+                    'name' => $child->status->name,
+                    'code' => $child->status->code,
                 ] : null,
                 'dept_id' => $child->dept_id,
                 'department' => $child->department ? [
@@ -808,8 +808,8 @@ class TaskController extends Controller
                 'task_type_id' => $child->task_type_id,
                 'taskType' => $child->taskType ? [
                     'code_master_id' => $child->taskType->code_master_id,
-                    'code_name' => $child->taskType->code_name,
-                    'code_value' => $child->taskType->code_value,
+                    'name' => $child->taskType->name,
+                    'code' => $child->taskType->code,
                 ] : null,
                 'priority' => $child->priority,
                 'start_date' => $child->start_date?->format('Y-m-d'),

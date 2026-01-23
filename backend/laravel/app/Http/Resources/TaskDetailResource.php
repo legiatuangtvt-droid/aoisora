@@ -40,16 +40,16 @@ class TaskDetailResource extends JsonResource
             'taskType' => $this->whenLoaded('taskType', function () {
                 return [
                     'code_master_id' => $this->taskType->code_master_id,
-                    'code_name' => $this->taskType->code_name,
-                    'code_value' => $this->taskType->code_value,
+                    'name' => $this->taskType->name,
+                    'code' => $this->taskType->code,
                 ];
             }),
             'response_type_id' => $this->response_type_id,
             'responseType' => $this->whenLoaded('responseType', function () {
                 return [
                     'code_master_id' => $this->responseType->code_master_id,
-                    'code_name' => $this->responseType->code_name,
-                    'code_value' => $this->responseType->code_value,
+                    'name' => $this->responseType->name,
+                    'code' => $this->responseType->code,
                 ];
             }),
             'response_num' => $this->response_num,
@@ -76,8 +76,8 @@ class TaskDetailResource extends JsonResource
             'status' => $this->whenLoaded('status', function () {
                 return [
                     'code_master_id' => $this->status->code_master_id,
-                    'code_name' => $this->status->code_name,
-                    'code_value' => $this->status->code_value,
+                    'name' => $this->status->name,
+                    'code' => $this->status->code,
                 ];
             }),
 

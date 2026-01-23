@@ -7,15 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 class CodeMaster extends Model
 {
     protected $table = 'code_master';
-    protected $primaryKey = 'code_id';
+    protected $primaryKey = 'code_master_id';
     public $timestamps = false;
 
     protected $fillable = [
         'code_type',
-        'code_value',
-        'code_name',
+        'code',
+        'name',
         'description',
-        'display_order',
+        'sort_order',
         'is_active',
     ];
 
@@ -25,6 +25,6 @@ class CodeMaster extends Model
 
     public function scopeByType($query, $type)
     {
-        return $query->where('code_type', $type)->where('is_active', true)->orderBy('display_order');
+        return $query->where('code_type', $type)->where('is_active', true)->orderBy('sort_order');
     }
 }

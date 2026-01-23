@@ -41,8 +41,8 @@ class TaskListResource extends JsonResource
             'status' => $this->whenLoaded('status', function () {
                 return [
                     'code_master_id' => $this->status->code_master_id,
-                    'code_name' => $this->status->code_name,
-                    'code_value' => $this->status->code_value,
+                    'name' => $this->status->name,
+                    'code' => $this->status->code,
                 ];
             }),
 
@@ -61,8 +61,8 @@ class TaskListResource extends JsonResource
             'taskType' => $this->whenLoaded('taskType', function () {
                 return [
                     'code_master_id' => $this->taskType->code_master_id,
-                    'code_name' => $this->taskType->code_name,
-                    'code_value' => $this->taskType->code_value,
+                    'name' => $this->taskType->name,
+                    'code' => $this->taskType->code,
                 ];
             }),
 

@@ -256,8 +256,8 @@ export default function StoreTasksPage() {
     setActionError(null);
     try {
       await assignTaskToStaff(assignTaskId, storeId, selectedStaffId);
-      const staff = storeStaff.find(s => s.id === selectedStaffId);
-      showToast(`Task assigned to ${staff?.name || 'staff'}`, 'success');
+      const staff = storeStaff.find(s => s.value === String(selectedStaffId));
+      showToast(`Task assigned to ${staff?.label || 'staff'}`, 'success');
       fetchTasks(); // Refresh list
       setShowAssignModal(false);
       setAssignTaskId(null);
