@@ -12,6 +12,7 @@ import DatePicker from '@/components/ui/DatePicker';
 import ColumnFilterDropdown from '@/components/ui/ColumnFilterDropdown';
 import ApprovalHistoryModal, { TaskApprovalHistory } from '@/components/tasks/ApprovalHistoryModal';
 import { TaskListPageSkeleton } from '@/components/ui/Skeleton';
+import { ErrorDisplay, InlineError } from '@/components/ui/ErrorBoundary';
 import { useTaskUpdates } from '@/hooks/useTaskUpdates';
 import { useUser } from '@/contexts/UserContext';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -732,20 +733,12 @@ export default function TaskListPage() {
 
       {/* Error State */}
       {error && !isLoading && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-          <div className="flex items-center gap-2 text-red-700">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span>{error}</span>
-          </div>
-          <button
-            onClick={() => fetchTasks(departments)}
-            className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
-          >
-            Try again
-          </button>
-        </div>
+        <ErrorDisplay
+          title="Failed to load tasks"
+          message={error}
+          onRetry={() => fetchTasks(departments)}
+          className="mb-6"
+        />
       )}
 
       {/* Body - Table Container */}
@@ -1119,8 +1112,8 @@ export default function TaskListPage() {
             </div>
 
             {pauseError && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-700">{pauseError}</p>
+              <div className="mb-4">
+                <InlineError message={pauseError} />
               </div>
             )}
 

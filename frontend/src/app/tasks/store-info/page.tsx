@@ -17,6 +17,7 @@ import StorePermissionsModal from '@/components/stores/StorePermissionsModal';
 import StoreImportExcelModal from '@/components/stores/StoreImportExcelModal';
 import StaffDetailModal from '@/components/stores/StaffDetailModal';
 import { StoreInfoPageSkeleton, HierarchySkeleton } from '@/components/ui/Skeleton';
+import { ErrorDisplay } from '@/components/ui/ErrorBoundary';
 
 export default function StoreInformationPage() {
   const [activeTab, setActiveTab] = useState<RegionId>('');
@@ -216,9 +217,12 @@ export default function StoreInformationPage() {
 
         {/* Error State */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 mb-4">
-            {error}
-          </div>
+          <ErrorDisplay
+            title="Failed to load store information"
+            message={error}
+            onRetry={() => window.location.reload()}
+            className="mb-4"
+          />
         )}
 
         {/* Loading State - Skeleton */}

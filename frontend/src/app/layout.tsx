@@ -12,6 +12,7 @@ import AuthGuard from "@/components/auth/AuthGuard";
 import UserSwitcherBubble from "@/components/UserSwitcherBubble";
 import DevLogger from "@/components/DevLogger";
 import SessionWarningWrapper from "@/components/SessionWarningWrapper";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 // Digital/Calculator style font
 const orbitron = Orbitron({
@@ -45,9 +46,11 @@ export default function RootLayout({
                 <IdleTimerProvider>
                   <LanguageProvider>
                     <UserProvider>
-                      <AuthGuard>
-                        {children}
-                      </AuthGuard>
+                      <ErrorBoundary>
+                        <AuthGuard>
+                          {children}
+                        </AuthGuard>
+                      </ErrorBoundary>
                       <SessionWarningWrapper />
                       <UserSwitcherBubble />
                       <DevLogger />
