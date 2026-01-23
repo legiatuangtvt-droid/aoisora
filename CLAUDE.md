@@ -4151,7 +4151,7 @@ TRIGGERS tự động tạo history entries:
 | 1.4.3 | ScopeSelector (HQ hierarchy) | ✅ | Exists as ScopeSection.tsx (scopeType='hq') |
 | 1.4.4 | TaskStatusBadge | ✅ | Status với colors |
 | 1.4.5 | StoreStatusBadge | ✅ | Reusable component with 6 statuses |
-| 1.4.6 | PhotoUploader | ⏳ | Click, paste, drag-drop |
+| 1.4.6 | PhotoUploader | ✅ | Integrated in InstructionsSection (click, paste, drag-drop) |
 | 1.4.7 | EvidenceViewer | ✅ | Implemented in Task Detail page as modal
 
 ### PHASE 2: TỐI ƯU HIỆU SUẤT
@@ -4204,9 +4204,9 @@ TRIGGERS tự động tạo history entries:
 │  Database:     [██████████] 100% (6/6 tasks)                   │
 │  Backend APIs: [██████████] 100% (26/26 tasks)                 │
 │  Frontend:     [█████████░] 96%  (45/47 tasks)                 │
-│  Components:   [████████░░] 86%  (6/7 tasks)                   │
+│  Components:   [██████████] 100% (7/7 tasks)                   │
 │  ────────────────────────────────────────────────────────────── │
-│  OVERALL:      [█████████░] ~95%                               │
+│  OVERALL:      [█████████░] ~96%                               │
 │                                                                 │
 │  PHASE 2 PROGRESS: [░░░░░░░░░░] 0%                             │
 │  PHASE 3 PROGRESS: [░░░░░░░░░░] 0%                             │
