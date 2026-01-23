@@ -12,7 +12,14 @@ interface FilterModalProps {
   filters: TaskFilters;
   onApplyFilters: (filters: TaskFilters) => void;
   departments: ApiDepartment[];
+  isHQUser?: boolean;
 }
+
+// Status options based on user type
+// HQ users (G2-G9): APPROVE → DRAFT → OVERDUE → NOT_YET → ON_PROGRESS → DONE
+// Store users (S1-S6): OVERDUE → NOT_YET → ON_PROGRESS → DONE
+const HQ_STATUS_OPTIONS: TaskStatus[] = ['APPROVE', 'DRAFT', 'OVERDUE', 'NOT_YET', 'ON_PROGRESS', 'DONE'];
+const STORE_STATUS_OPTIONS: TaskStatus[] = ['OVERDUE', 'NOT_YET', 'ON_PROGRESS', 'DONE'];
 
 export default function FilterModal({
   isOpen,
@@ -20,6 +27,7 @@ export default function FilterModal({
   filters,
   onApplyFilters,
   departments,
+  isHQUser = true,
 }: FilterModalProps) {
   const [localFilters, setLocalFilters] = useState<TaskFilters>(filters);
   const [selectedDepts, setSelectedDepts] = useState<Set<string>>(
@@ -315,7 +323,7 @@ export default function FilterModal({
             {expandedSection === 'status' && (
               <div className="px-6 pb-4 pt-3">
                 <div className="flex flex-wrap gap-2">
-              {(['NOT_YET', 'DONE', 'DRAFT'] as TaskStatus[]).map((status) => (
+              {(isHQUser ? HQ_STATUS_OPTIONS : STORE_STATUS_OPTIONS).map((status) => (
                 <button
                   key={status}
                   onClick={() => handleStatusToggle(status)}
@@ -325,7 +333,7 @@ export default function FilterModal({
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  {status === 'NOT_YET' ? 'Not Yet' : status.charAt(0) + status.slice(1).toLowerCase()}
+                  {status === 'NOT_YET' ? 'Not Yet' : status === 'ON_PROGRESS' ? 'On Progress' : status.charAt(0) + status.slice(1).toLowerCase()}
                 </button>
               ))}
                 </div>
@@ -367,7 +375,7 @@ export default function FilterModal({
             {expandedSection === 'hqCheck' && (
               <div className="px-6 pb-4 pt-3">
                 <div className="flex flex-wrap gap-2">
-              {(['NOT_YET', 'DONE', 'DRAFT'] as HQCheckStatus[]).map((hqCheck) => (
+              {(isHQUser ? HQ_STATUS_OPTIONS : STORE_STATUS_OPTIONS).map((hqCheck) => (
                 <button
                   key={hqCheck}
                   onClick={() => handleHQCheckToggle(hqCheck)}
@@ -377,7 +385,7 @@ export default function FilterModal({
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  {hqCheck === 'NOT_YET' ? 'Not Yet' : hqCheck.charAt(0) + hqCheck.slice(1).toLowerCase()}
+                  {hqCheck === 'NOT_YET' ? 'Not Yet' : hqCheck === 'ON_PROGRESS' ? 'On Progress' : hqCheck.charAt(0) + hqCheck.slice(1).toLowerCase()}
                 </button>
               ))}
                 </div>

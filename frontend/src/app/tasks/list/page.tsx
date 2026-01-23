@@ -260,9 +260,14 @@ export default function TaskListPage() {
         queryParams['filter[dept_id]'] = parseInt(filters.departments[0]);
       }
 
-      // Status filter from modal
+      // Status filter from modal (supports multiple statuses)
       if (filters.status.length === 1) {
+        // Single status - use exact filter
         queryParams['filter[status_id]'] = STATUS_ID_MAP[filters.status[0] as TaskStatus];
+      } else if (filters.status.length > 1) {
+        // Multiple statuses - use comma-separated filter
+        const statusIds = filters.status.map(s => STATUS_ID_MAP[s as TaskStatus]).join(',');
+        queryParams['filter[status_ids]'] = statusIds;
       }
 
       // My Tasks filter - filter by created_staff_id when viewScope is "My Tasks"
@@ -984,6 +989,7 @@ export default function TaskListPage() {
         filters={filters}
         onApplyFilters={handleApplyFilters}
         departments={departments}
+        isHQUser={isHQ}
       />
 
       {/* Fixed Position Action Menu Dropdown */}

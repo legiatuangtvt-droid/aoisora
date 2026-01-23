@@ -76,6 +76,8 @@ class TaskController extends Controller
                 AllowedFilter::exact('assigned_staff_id'),
                 AllowedFilter::exact('created_staff_id'),
                 AllowedFilter::exact('status_id'),
+                // Multi-status filter (comma-separated status IDs, e.g., "12,13" for DRAFT and APPROVE)
+                AllowedFilter::callback('status_ids', fn ($query, $value) => $query->whereIn('status_id', explode(',', $value))),
                 AllowedFilter::exact('priority'),
                 AllowedFilter::exact('source'),
                 AllowedFilter::exact('receiver_type'),

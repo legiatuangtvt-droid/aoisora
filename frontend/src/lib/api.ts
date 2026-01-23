@@ -540,6 +540,8 @@ export interface TaskQueryParamsExtended extends TaskQueryParams {
   'filter[assigned_staff_id]'?: number;
   'filter[created_staff_id]'?: number;
   'filter[status_id]'?: number;
+  // Multi-status filter (comma-separated status IDs, e.g., "12,13")
+  'filter[status_ids]'?: string;
   'filter[priority]'?: string;
   'filter[task_name]'?: string;
   // Source filter (task_list, library, todo_task)
