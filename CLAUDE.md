@@ -4429,7 +4429,40 @@ Request → Controller → Service → Model → Resource → Response
 **BƯỚC 3: UI/UX SCREENSHOT TEST**
 
 > **Mục đích**: Test giao diện visual của từng screen, user cung cấp screenshot để verify.
-> **Quy trình**: Chạy test case → User chụp màn hình → Đánh dấu Pass/Fail → Ghi timestamp
+>
+> **Quy trình thực hiện**:
+> ```
+> ┌─────────────────────────────────────────────────────────────────┐
+> │  SCREENSHOT TEST WORKFLOW                                       │
+> │                                                                 │
+> │  1️⃣ CLAUDE YÊU CẦU CAPTURE                                      │
+> │     → Hướng dẫn user chụp màn hình ở đâu, như thế nào          │
+> │     → Chỉ rõ URL, trạng thái cần test, điều kiện cụ thể        │
+> │                                                                 │
+> │  2️⃣ USER CUNG CẤP SCREENSHOT                                    │
+> │     → User chụp màn hình theo hướng dẫn                        │
+> │     → Paste ảnh vào chat                                       │
+> │                                                                 │
+> │  3️⃣ CLAUDE PHÂN TÍCH & THẢO LUẬN                                │
+> │     → Review screenshot theo test scenario                     │
+> │     → So sánh với Expected UI                                  │
+> │     → Thảo luận với user về findings                          │
+> │                                                                 │
+> │  4️⃣ CLAUDE ĐỀ XUẤT                                              │
+> │     → Đề xuất cải thiện UI/UX nếu có vấn đề                   │
+> │     → Liệt kê các options (nếu có nhiều cách fix)             │
+> │                                                                 │
+> │  5️⃣ USER QUYẾT ĐỊNH                                             │
+> │     → User chọn implement những gì                             │
+> │     → User có thể skip hoặc defer to later                    │
+> │                                                                 │
+> │  6️⃣ CLAUDE THỰC HIỆN & RETEST                                   │
+> │     → Implement changes theo quyết định của user              │
+> │     → Retest lại những nội dung liên quan                     │
+> │     → Cập nhật Status và Tested At trong bảng                 │
+> │                                                                 │
+> └─────────────────────────────────────────────────────────────────┘
+> ```
 
 #### N. LOGIN PAGE
 
