@@ -127,8 +127,8 @@ export default function SignInPage() {
         <div className="w-full max-w-md bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl p-8">
           {/* Header */}
           <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">Welcom back</h2>
-            <p className="text-gray-500 mt-1">Welcome back! Please enter your deatls</p>
+            <h2 className="text-2xl font-bold text-gray-800">Welcome back</h2>
+            <p className="text-gray-500 mt-1">Please enter your details</p>
           </div>
 
           {/* Form */}
