@@ -19,6 +19,7 @@ import { useUser } from '@/contexts/UserContext';
 import { StoreTasksPageSkeleton } from '@/components/ui/Skeleton';
 import { LoadingSpinner } from '@/components/ui/LoadingIndicator';
 import { ErrorDisplay } from '@/components/ui/ErrorBoundary';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 // Status badge colors
 const getStatusColor = (status: StoreTaskStatus): string => {
@@ -356,17 +357,14 @@ export default function StoreTasksPage() {
 
         {/* Empty State */}
         {!isLoading && !error && filteredTasks.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-            <svg className="w-12 h-12 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            <p className="text-gray-500 text-sm">No tasks found</p>
-            {statusFilter !== 'all' && (
-              <button onClick={() => setStatusFilter('all')} className="mt-2 text-sm text-pink-600 underline">
-                Clear filter
-              </button>
-            )}
-          </div>
+          <EmptyState
+            icon="tasks"
+            title="No tasks found"
+            action={statusFilter !== 'all' ? {
+              label: 'Clear filter',
+              onClick: () => setStatusFilter('all'),
+            } : undefined}
+          />
         )}
 
         {/* Tasks Table */}

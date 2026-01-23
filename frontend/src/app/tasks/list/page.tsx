@@ -13,6 +13,7 @@ import ColumnFilterDropdown from '@/components/ui/ColumnFilterDropdown';
 import ApprovalHistoryModal, { TaskApprovalHistory } from '@/components/tasks/ApprovalHistoryModal';
 import { TaskListPageSkeleton } from '@/components/ui/Skeleton';
 import { ErrorDisplay, InlineError } from '@/components/ui/ErrorBoundary';
+import { TableEmptyState } from '@/components/ui/EmptyState';
 import { useTaskUpdates } from '@/hooks/useTaskUpdates';
 import { useUser } from '@/contexts/UserContext';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -799,11 +800,7 @@ export default function TaskListPage() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-100">
                 {paginatedTasks.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="px-4 py-12 text-center text-gray-500">
-                      No tasks found
-                    </td>
-                  </tr>
+                  <TableEmptyState message="No tasks found" colSpan={8} />
                 ) : (
                   paginatedTasks.map((task, index) => (
                     <React.Fragment key={task.id}>

@@ -6,6 +6,7 @@ import { getPendingApprovals, approveTask, rejectTask, Task } from '@/lib/api';
 import { useUser } from '@/contexts/UserContext';
 import { ApprovalPageSkeleton } from '@/components/ui/Skeleton';
 import { ErrorDisplay } from '@/components/ui/ErrorBoundary';
+import { SuccessEmptyState } from '@/components/ui/EmptyState';
 
 // Status badge colors
 const getStatusColor = (status: string) => {
@@ -165,13 +166,10 @@ export default function ApprovalPage() {
 
         {/* Empty State */}
         {!isLoading && !error && tasks.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-            <svg className="w-12 h-12 text-green-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <p className="text-gray-500 text-sm">No pending approvals</p>
-            <p className="text-gray-400 text-xs mt-1">All tasks have been reviewed</p>
-          </div>
+          <SuccessEmptyState
+            title="No pending approvals"
+            description="All tasks have been reviewed"
+          />
         )}
 
         {/* Tasks Table */}
