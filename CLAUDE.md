@@ -4470,7 +4470,7 @@ Request → Controller → Service → Model → Resource → Response
 |---|---------------|-------------|------------|--------|-----------|
 | N.1 | Login form - Light mode | Logo, Email input, Password input, Login button hiển thị đúng | ✅ | ✅ FIX | 2026-01-24 |
 | N.2 | Login form - Dark mode | Form switch sang dark theme, colors phù hợp | N/A | N/A | 2026-01-24 |
-| N.3 | Validation error - Empty fields | Red border, error message "Field is required" | ⏳ | ⏳ | - |
+| N.3 | Validation error - Empty fields | Button disables when fields empty (correct behavior) | ✅ | ✅ | 2026-01-24 |
 | N.4 | Validation error - Wrong credentials | Toast/Alert hiển thị "Invalid credentials" | ⏳ | ⏳ | - |
 | N.5 | Loading state | Button disabled, spinner hiển thị khi đang login | ⏳ | ⏳ | - |
 | N.6 | Mobile responsive | Form centered, full width on mobile (<768px) | ⏳ | ⏳ | - |
@@ -4482,6 +4482,8 @@ Request → Controller → Service → Model → Resource → Response
 - File: `frontend/src/app/auth/signin/page.tsx` (lines 130-131)
 
 **N.2 Note:** Login page không có dark mode toggle. Dark mode chỉ available sau khi login.
+
+**N.3 Note:** Form sử dụng button disable thay vì hiển thị error message khi fields trống. Sign in button chỉ enable khi cả 2 fields (Email/Phone và Password) đều có giá trị.
 
 #### O. TASK LIST PAGE (/tasks/list)
 
@@ -4688,7 +4690,7 @@ Request → Controller → Service → Model → Resource → Response
 
 | Section | Total Tests | Passed | Failed | N/A | Pending |
 |---------|-------------|--------|--------|-----|---------|
-| N. Login | 6 | 1 | 0 | 1 | 4 |
+| N. Login | 6 | 2 | 0 | 1 | 3 |
 | O. Task List | 20 | 0 | 0 | 0 | 20 |
 | P. Task Detail | 18 | 0 | 0 | 0 | 18 |
 | Q. Add Task | 27 | 0 | 0 | 0 | 27 |
@@ -4699,7 +4701,7 @@ Request → Controller → Service → Model → Resource → Response
 | V. Store Tasks | 14 | 0 | 0 | 0 | 14 |
 | W. HQ Check | 12 | 0 | 0 | 0 | 12 |
 | X. General UI | 17 | 0 | 0 | 0 | 17 |
-| **TOTAL** | **155** | **1** | **0** | **1** | **153** |
+| **TOTAL** | **155** | **2** | **0** | **1** | **152** |
 
 ---
 
@@ -4747,12 +4749,12 @@ Request → Controller → Service → Model → Resource → Response
 │    → Step 1 CLI/Bash Tests: ✅ PASSED (2026-01-23)             │
 │    → Step 2 Manual Tests: ✅ PASSED (2026-01-23)               │
 │      54/56 tests passed, 1 bug found (BUG#1), 1 fix applied    │
-│    → Step 3 UI/UX Screenshot Tests: 🔄 IN PROGRESS (2/155)     │
-│      N.1 ✅ (typo fixes), N.2 N/A (no dark mode on login)      │
+│    → Step 3 UI/UX Screenshot Tests: 🔄 IN PROGRESS (3/155)     │
+│      N.1 ✅ (typo fixes), N.2 N/A, N.3 ✅ (button disable)     │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 
-Last Updated: 2026-01-24 (Step 3 UI/UX Test - N.1, N.2 completed)
+Last Updated: 2026-01-24 (Step 3 UI/UX Test - N.3 completed)
 ```
 
 ### LEGEND
