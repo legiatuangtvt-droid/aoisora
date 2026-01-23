@@ -126,7 +126,11 @@ const TaskDataTable: React.FC<TaskDataTableProps> = ({
         </thead>
         <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
           {sortedTasks.map((task, index) => (
-            <tr key={task.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            <tr
+              key={task.id}
+              className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 animate-fade-in-up"
+              style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}
+            >
               <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{index + 1}</td>
               <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">{task.type}</td>
               <td className="px-4 py-3 text-sm text-gray-900 dark:text-white font-medium">{task.taskName}</td>

@@ -109,7 +109,7 @@ export default function TodoTaskPage() {
   const totalComments = mockManagerComments.length + mockOtherComments.length;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 animate-fade-in">
       <div className="p-4 sm:p-6">
         {/* Week Header */}
         <WeekHeader

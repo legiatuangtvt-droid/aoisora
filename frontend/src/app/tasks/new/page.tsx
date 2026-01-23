@@ -485,7 +485,7 @@ function AddTaskContent() {
   const pageTitle = isEditMode ? 'Edit Draft' : 'Add task';
 
   return (
-    <div>
+    <div className="animate-fade-in">
       {/* Breadcrumb */}
       <nav aria-label="Breadcrumb" className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-6">
         <div className="flex items-center gap-2 text-sm">

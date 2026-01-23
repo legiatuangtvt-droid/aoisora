@@ -199,16 +199,12 @@ function StepCard({ step }: StepCardProps) {
 
   return (
     <div
-      className="rounded-lg p-4 flex-1"
-      style={{
-        backgroundColor: '#F9F9F9',
-        border: '1px solid #9B9B9B',
-      }}
+      className="rounded-lg p-4 flex-1 bg-gray-50 dark:bg-gray-700 border border-gray-400 dark:border-gray-600 transition-all duration-200 hover:shadow-md"
     >
       {/* Card Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
-          <h4 className="font-semibold text-gray-900 text-sm">
+          <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
             {stepTitles[step.stepName]}
           </h4>
           <StatusBadge status={step.status} progress={step.progress} />
@@ -236,8 +232,8 @@ function StepCard({ step }: StepCardProps) {
 
       {/* Assignee */}
       <div className="mb-3">
-        <p className="text-xs text-gray-500 mb-0.5">Assign to</p>
-        <p className="text-sm font-medium text-gray-900">
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Assign to</p>
+        <p className="text-sm font-medium text-gray-900 dark:text-white">
           {step.assignee.type === 'stores'
             ? `${step.assignee.count || step.assignee.name} Stores`
             : step.assignee.name
@@ -248,24 +244,21 @@ function StepCard({ step }: StepCardProps) {
       {/* Date Range */}
       <div className="flex gap-6 mb-3">
         <div>
-          <p className="text-xs text-gray-500 mb-0.5">Start Day</p>
-          <p className="text-sm font-medium text-gray-900">{formatDate(step.startDate)}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Start Day</p>
+          <p className="text-sm font-medium text-gray-900 dark:text-white">{formatDate(step.startDate)}</p>
         </div>
         <div>
-          <p className="text-xs text-gray-500 mb-0.5">End Day</p>
-          <p className="text-sm font-medium text-gray-900">{formatDate(step.endDate)}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">End Day</p>
+          <p className="text-sm font-medium text-gray-900 dark:text-white">{formatDate(step.endDate)}</p>
         </div>
       </div>
 
       {/* Comment Section */}
       {step.comment && (
-        <div
-          className="rounded-lg p-3 mt-2"
-          style={{ backgroundColor: '#E9E9E9' }}
-        >
+        <div className="rounded-lg p-3 mt-2 bg-gray-200 dark:bg-gray-600">
           <div className="flex items-start gap-2">
             <svg
-              className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0"
+              className="w-4 h-4 text-gray-500 dark:text-gray-400 mt-0.5 flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -278,8 +271,8 @@ function StepCard({ step }: StepCardProps) {
               />
             </svg>
             <div>
-              <p className="text-xs font-medium text-gray-600 mb-1">Comment</p>
-              <p className="text-sm text-gray-700">{step.comment}</p>
+              <p className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Comment</p>
+              <p className="text-sm text-gray-700 dark:text-gray-200">{step.comment}</p>
             </div>
           </div>
         </div>
@@ -331,14 +324,14 @@ export default function ApprovalHistoryModal({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-40"
+        className="fixed inset-0 bg-black bg-opacity-50 z-40 animate-fade-in"
         onClick={onClose}
       />
 
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div
-          className="bg-white rounded-2xl shadow-2xl max-h-[90vh] flex flex-col"
+          className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-h-[90vh] flex flex-col animate-scale-in"
           style={{ width: '414px' }}
           onClick={e => e.stopPropagation()}
         >
@@ -362,7 +355,7 @@ export default function ApprovalHistoryModal({
             </div>
 
             {/* Task Name */}
-            <h2 className="text-xl font-bold text-gray-900 mb-3">{history.taskName}</h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3">{history.taskName}</h2>
 
             {/* Task Dates */}
             {(history.taskStartDate || history.taskEndDate) && (
@@ -375,18 +368,17 @@ export default function ApprovalHistoryModal({
                     >
                       Start
                     </span>
-                    <p className="text-sm text-gray-900">{formatDateTime(history.taskStartDate)}</p>
+                    <p className="text-sm text-gray-900 dark:text-white">{formatDateTime(history.taskStartDate)}</p>
                   </div>
                 )}
                 {history.taskEndDate && (
                   <div>
                     <span
-                      className="text-xs font-medium mb-1"
-                      style={{ color: '#0F766E' }}
+                      className="text-xs font-medium mb-1 text-teal-700 dark:text-teal-400"
                     >
                       End
                     </span>
-                    <p className="text-sm text-gray-900">{formatDateTime(history.taskEndDate)}</p>
+                    <p className="text-sm text-gray-900 dark:text-white">{formatDateTime(history.taskEndDate)}</p>
                   </div>
                 )}
               </div>
@@ -395,15 +387,15 @@ export default function ApprovalHistoryModal({
 
           {/* Round Tabs (if multiple rounds) */}
           {history.totalRounds > 1 && (
-            <div className="px-6 py-3 border-b border-gray-200 flex gap-2 flex-shrink-0">
+            <div className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 flex gap-2 flex-shrink-0">
               {history.rounds.map((round) => (
                 <button
                   key={round.roundNumber}
                   onClick={() => setSelectedRound(round.roundNumber)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-105 ${
                     selectedRound === round.roundNumber
                       ? 'bg-[#C5055B] text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                   }`}
                 >
                   Round {round.roundNumber}
@@ -428,7 +420,11 @@ export default function ApprovalHistoryModal({
           <div className="flex-1 overflow-y-auto px-6 py-4">
             <div className="flex flex-col gap-4">
               {currentRoundSteps.map((step, index) => (
-                <div key={step.stepNumber} className="flex gap-4">
+                <div
+                  key={step.stepNumber}
+                  className="flex gap-4 animate-fade-in-up"
+                  style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'both' }}
+                >
                   {/* Icon with connecting line */}
                   <StepIcon
                     stepName={step.stepName}

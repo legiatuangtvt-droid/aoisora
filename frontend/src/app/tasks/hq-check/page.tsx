@@ -159,7 +159,7 @@ export default function HQCheckPage() {
   // Non-HQ user view
   if (!isHQUser) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center animate-fade-in">
         <div className="text-center">
           <svg className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -174,7 +174,7 @@ export default function HQCheckPage() {
   const totalPendingStores = tasks.reduce((sum, task) => sum + task.hq_check_summary.pending_check, 0);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 animate-fade-in">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Header */}
         <div className="mb-6">
@@ -217,8 +217,12 @@ export default function HQCheckPage() {
         {/* Tasks List */}
         {!isLoading && !error && tasks.length > 0 && (
           <div className="space-y-4">
-            {tasks.map((task) => (
-              <div key={task.task_id} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+            {tasks.map((task, index) => (
+              <div
+                key={task.task_id}
+                className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden animate-fade-in-up transition-shadow duration-200 hover:shadow-md"
+                style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}
+              >
                 {/* Task Header */}
                 <div
                   className="px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -286,8 +290,12 @@ export default function HQCheckPage() {
                           </tr>
                         </thead>
                         <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                          {task.hq_check_summary.stores_pending_check.map((store) => (
-                            <tr key={store.store_id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                          {task.hq_check_summary.stores_pending_check.map((store, storeIndex) => (
+                            <tr
+                              key={store.store_id}
+                              className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 animate-fade-in-up"
+                              style={{ animationDelay: `${storeIndex * 30}ms`, animationFillMode: 'both' }}
+                            >
                               <td className="px-4 py-3">
                                 <div>
                                   <p className="text-sm font-medium text-gray-900 dark:text-white">{store.store_name}</p>

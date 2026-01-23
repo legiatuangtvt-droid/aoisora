@@ -122,7 +122,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toasts.map(toast => (
           <div
             key={toast.id}
-            className={`${getToastStyles(toast.type)} border-l-4 px-4 py-3 rounded-lg shadow-lg flex items-start gap-3 min-w-[300px] animate-slide-in backdrop-blur-sm`}
+            className={`${getToastStyles(toast.type)} border-l-4 px-4 py-3 rounded-lg shadow-lg flex items-start gap-3 min-w-[300px] animate-slide-in-right backdrop-blur-sm`}
           >
             {/* Icon */}
             <div className={getIconColor(toast.type)}>

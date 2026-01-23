@@ -326,7 +326,7 @@ export default function StoreTasksPage() {
   // Non-store user view
   if (!isStoreUser) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center animate-fade-in">
         <div className="text-center">
           <svg className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -338,7 +338,7 @@ export default function StoreTasksPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 animate-fade-in">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Header */}
         <div className="mb-6">
@@ -414,8 +414,12 @@ export default function StoreTasksPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {filteredTasks.map((assignment) => (
-                    <tr key={assignment.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  {filteredTasks.map((assignment, index) => (
+                    <tr
+                      key={assignment.id}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 animate-fade-in-up"
+                      style={{ animationDelay: `${index * 30}ms`, animationFillMode: 'both' }}
+                    >
                       <td className="px-4 py-4">
                         <div>
                           <p className="text-sm font-medium text-gray-900 dark:text-white">{assignment.task?.task_name || `Task #${assignment.task_id}`}</p>

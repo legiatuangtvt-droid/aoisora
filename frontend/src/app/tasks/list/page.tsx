@@ -810,7 +810,8 @@ export default function TaskListPage() {
                     <React.Fragment key={task.id}>
                       {/* Parent Row */}
                       <tr
-                        className="group hover:bg-gray-50 cursor-pointer"
+                        className="group hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-all duration-200 animate-fade-in-up"
+                        style={{ animationDelay: `${index * 30}ms`, animationFillMode: 'both' }}
                         onClick={() => handleRowClick(task)}
                       >
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-center border-r border-gray-200">
@@ -918,8 +919,12 @@ export default function TaskListPage() {
                       {/* Sub Tasks (Accordion) */}
                       {expandedRows === task.id && task.subTasks && task.subTasks.length > 0 && (
                         <>
-                          {task.subTasks.map((subTask) => (
-                            <tr key={subTask.id} className="bg-gray-50 border-t border-gray-100">
+                          {task.subTasks.map((subTask, subIndex) => (
+                            <tr
+                              key={subTask.id}
+                              className="bg-gray-50 dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 animate-fade-in-down"
+                              style={{ animationDelay: `${subIndex * 50}ms`, animationFillMode: 'both' }}
+                            >
                               <td className="px-4 py-2 text-center border-r border-gray-200"></td>
                               <td className="px-4 py-2 border-r border-gray-200"></td>
                               <td className="px-4 py-2 text-sm text-gray-700 border-r border-gray-200">
