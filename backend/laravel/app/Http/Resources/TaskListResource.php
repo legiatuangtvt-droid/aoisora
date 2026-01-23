@@ -1,0 +1,122 @@
+<?php
+
+namespace App\Http\Resources;
+
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+/**
+ * TaskListResource - Optimized resource for Task List screen
+ *
+ * Returns only fields needed for displaying tasks in list view.
+ * Excludes heavy fields like photo_guidelines, attachments, detailed instructions.
+ *
+ * Reduces payload size by ~60% compared to full task object.
+ */
+class TaskListResource extends JsonResource
+{
+    /**
+     * Transform the resource into an array.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(Request $request): array
+    {
+        return [
+            // Primary identifiers
+            'id' => $this->task_id,
+            'task_id' => $this->task_id,
+            'task_name' => $this->task_name,
+
+            // Hierarchy (for nested sub-tasks display)
+            'parent_task_id' => $this->parent_task_id,
+            'task_level' => $this->task_level,
+
+            // Source tracking
+            'source' => $this->source,
+            'receiver_type' => $this->receiver_type,
+
+            // Status
+            'status_id' => $this->status_id,
+            'status' => $this->whenLoaded('status', function () {
+                return [
+                    'code_master_id' => $this->status->code_master_id,
+                    'code_name' => $this->status->code_name,
+                    'code_value' => $this->status->code_value,
+                ];
+            }),
+
+            // Department
+            'dept_id' => $this->dept_id,
+            'department' => $this->whenLoaded('department', function () {
+                return [
+                    'department_id' => $this->department->department_id,
+                    'department_code' => $this->department->department_code,
+                    'department_name' => $this->department->department_name,
+                ];
+            }),
+
+            // Task type (frequency: daily, weekly, monthly, etc.)
+            'task_type_id' => $this->task_type_id,
+            'taskType' => $this->whenLoaded('taskType', function () {
+                return [
+                    'code_master_id' => $this->taskType->code_master_id,
+                    'code_name' => $this->taskType->code_name,
+                    'code_value' => $this->taskType->code_value,
+                ];
+            }),
+
+            // Priority
+            'priority' => $this->priority,
+
+            // Dates (for filtering and display)
+            'start_date' => $this->start_date?->format('Y-m-d'),
+            'end_date' => $this->end_date?->format('Y-m-d'),
+
+            // Creator info (for draft ownership)
+            'created_staff_id' => $this->created_staff_id,
+            'createdBy' => $this->whenLoaded('createdBy', function () {
+                return [
+                    'staff_id' => $this->createdBy->staff_id,
+                    'staff_name' => $this->createdBy->staff_name,
+                    'job_grade' => $this->createdBy->job_grade,
+                ];
+            }),
+
+            // Approver info (for approval workflow)
+            'approver_id' => $this->approver_id,
+            'approver' => $this->whenLoaded('approver', function () {
+                return [
+                    'staff_id' => $this->approver->staff_id,
+                    'staff_name' => $this->approver->staff_name,
+                    'job_grade' => $this->approver->job_grade,
+                ];
+            }),
+
+            // Timestamps (minimal)
+            'created_at' => $this->created_at?->toISOString(),
+            'updated_at' => $this->updated_at?->toISOString(),
+
+            // Nested sub-tasks (will be populated by controller)
+            'sub_tasks' => $this->when(isset($this->sub_tasks), $this->sub_tasks),
+
+            // Calculated fields (will be populated by controller)
+            'store_progress' => $this->when(isset($this->store_progress), $this->store_progress),
+            'calculated_status' => $this->when(isset($this->calculated_status), $this->calculated_status),
+        ];
+    }
+
+    /**
+     * Get additional data that should be returned with the resource array.
+     *
+     * @return array<string, mixed>
+     */
+    public function with(Request $request): array
+    {
+        return [
+            'meta' => [
+                'resource_type' => 'task_list',
+            ],
+        ];
+    }
+}

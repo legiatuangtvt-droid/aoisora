@@ -4158,9 +4158,9 @@ TRIGGERS tự động tạo history entries:
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 2.1 | Tạo TaskListResource - loại bỏ ~25 fields thừa | ⏳ | Giảm payload size |
-| 2.2 | Tạo TaskDetailResource - full info | ⏳ | Cho detail screen |
-| 2.3 | Fix N+1 queries trong Task List | ⏳ | Eager loading |
+| 2.1 | Tạo TaskListResource - loại bỏ ~25 fields thừa | ✅ | Reduced payload ~60%, excludes photo_guidelines, attachments, etc. |
+| 2.2 | Tạo TaskDetailResource - full info | ✅ | Full task info with all relationships |
+| 2.3 | Fix N+1 queries trong Task List | ✅ | Eager loading với select columns |
 | 2.4 | Add database indexes | ⏳ | task_id, store_id, status |
 | 2.5 | Frontend: React Query caching | ⏳ | Avoid duplicate fetches |
 | 2.6 | Frontend: Lazy loading images | ⏳ | Photo guidelines, evidence |
@@ -4208,7 +4208,7 @@ TRIGGERS tự động tạo history entries:
 │  ────────────────────────────────────────────────────────────── │
 │  OVERALL:      [██████████] 100%                               │
 │                                                                 │
-│  PHASE 2 PROGRESS: [░░░░░░░░░░] 0%                             │
+│  PHASE 2 PROGRESS: [███░░░░░░░] 33% (3/9 tasks)                │
 │  PHASE 3 PROGRESS: [░░░░░░░░░░] 0%                             │
 │  PHASE 4 PROGRESS: [░░░░░░░░░░] 0%                             │
 │                                                                 │

@@ -10,6 +10,8 @@ use App\Models\TaskStoreAssignment;
 use App\Models\TaskApprovalHistory;
 use App\Events\TaskUpdated;
 use App\Http\Resources\TaskApprovalHistoryResource;
+use App\Http\Resources\TaskListResource;
+use App\Http\Resources\TaskDetailResource;
 use App\Traits\HasJobGradePermissions;
 use Illuminate\Http\Request;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -70,6 +72,15 @@ class TaskController extends Controller
             // No authenticated user: exclude all DRAFT tasks
             $query->where('status_id', '!=', self::DRAFT_STATUS_ID);
         }
+
+        // Eager load relationships to prevent N+1 queries (Task 2.3)
+        $query->with([
+            'status:code_master_id,code_name,code_value',
+            'department:department_id,department_code,department_name',
+            'taskType:code_master_id,code_name,code_value',
+            'createdBy:staff_id,staff_name,job_grade',
+            'approver:staff_id,staff_name,job_grade',
+        ]);
 
         $tasks = QueryBuilder::for($query)
             ->allowedFilters([
@@ -154,8 +165,7 @@ class TaskController extends Controller
                     }
                 }),
             ])
-            ->allowedSorts(['task_id', 'task_name', 'end_date', 'start_date', 'created_at'])
-            ->allowedIncludes(['assignedStaff', 'createdBy', 'assignedStore', 'department', 'taskType', 'responseType', 'status', 'storeAssignments']);
+            ->allowedSorts(['task_id', 'task_name', 'end_date', 'start_date', 'created_at']);
 
         // Default sort: APPROVE → DRAFT → others (by status priority), then by task_id
         // This ensures DRAFT and APPROVE tasks always appear first in pagination
@@ -168,17 +178,23 @@ class TaskController extends Controller
             ->orderBy('task_id', 'desc');
         }
 
-        $tasks = $tasks->paginate($request->get('per_page', 20));
+        $paginatedTasks = $tasks->paginate($request->get('per_page', 20));
 
-        // Convert to array and add sub_tasks + calculated fields + draft_info
-        $response = $tasks->toArray();
+        // Transform paginated tasks using TaskListResource
+        // Add calculated fields to each task before transforming
+        $paginatedTasks->getCollection()->transform(function ($task) {
+            // Add calculated fields as dynamic properties
+            $task->calculated_status = $task->getCalculatedStatus();
+            $task->store_progress = $task->getStoreProgress();
 
-        // Add nested sub_tasks and calculated fields for each parent task
-        $response['data'] = array_map(function ($task) {
-            $task = $this->addNestedSubTasks($task);
-            $task = $this->addCalculatedFields($task);
+            // Add nested sub_tasks (optimized query)
+            $task->sub_tasks = $this->getNestedSubTasksForList($task->task_id);
+
             return $task;
-        }, $response['data']);
+        });
+
+        // Build response using Resource collection
+        $response = TaskListResource::collection($paginatedTasks)->response()->getData(true);
 
         // Include draft_info in response (only for authenticated HQ users)
         if ($effectiveStaffId) {
@@ -193,21 +209,73 @@ class TaskController extends Controller
 
     /**
      * Get single task (with nested sub_tasks for parent tasks)
+     *
+     * Uses TaskDetailResource for full task information.
      */
     public function show($id)
     {
         $task = Task::with([
-            'assignedStaff', 'createdBy', 'assignedStore', 'department',
-            'taskType', 'responseType', 'status', 'manual', 'checklists',
-            'storeAssignments.store', 'storeAssignments.assignedToStaff'
+            'assignedStaff:staff_id,staff_name,job_grade',
+            'createdBy:staff_id,staff_name,job_grade,email',
+            'approver:staff_id,staff_name,job_grade',
+            'assignedStore:store_id,store_code,store_name',
+            'department:department_id,department_code,department_name',
+            'taskType:code_master_id,code_name,code_value',
+            'responseType:code_master_id,code_name,code_value',
+            'status:code_master_id,code_name,code_value',
+            'manual:document_id,document_name',
+            'lastRejectedBy:staff_id,staff_name',
+            'pausedBy:staff_id,staff_name',
+            'libraryTask:task_library_id,task_name',
+            'storeAssignments.store:store_id,store_code,store_name',
+            'storeAssignments.assignedToStaff:staff_id,staff_name',
         ])->findOrFail($id);
 
-        // Convert to array and add nested sub_tasks + calculated fields
-        $taskArray = $task->toArray();
-        $taskArray = $this->addNestedSubTasks($taskArray);
-        $taskArray = $this->addCalculatedFields($taskArray);
+        // Add calculated fields as dynamic properties
+        $task->calculated_status = $task->getCalculatedStatus();
+        $task->store_progress = $task->getStoreProgress();
 
-        return response()->json($taskArray);
+        // Add nested sub_tasks for detail view
+        $task->sub_tasks = $this->getNestedSubTasksForDetail($task->task_id);
+
+        return new TaskDetailResource($task);
+    }
+
+    /**
+     * Get nested sub-tasks with full details for detail view
+     *
+     * @param int $parentTaskId Parent task ID
+     * @return array Array of sub-tasks with full fields
+     */
+    private function getNestedSubTasksForDetail(int $parentTaskId): array
+    {
+        $children = Task::where('parent_task_id', $parentTaskId)
+            ->with([
+                'assignedStaff:staff_id,staff_name,job_grade',
+                'createdBy:staff_id,staff_name,job_grade',
+                'status:code_master_id,code_name,code_value',
+                'department:department_id,department_code,department_name',
+                'taskType:code_master_id,code_name,code_value',
+            ])
+            ->orderBy('task_id')
+            ->get();
+
+        return $children->map(function ($child) {
+            $childData = (new TaskDetailResource($child))->toArray(request());
+
+            // Add calculated fields
+            $childData['calculated_status'] = $child->getCalculatedStatus();
+            $childData['store_progress'] = $child->getStoreProgress();
+
+            // Recursively get nested sub_tasks
+            if (($child->task_level ?? 1) < 5) {
+                $childData['sub_tasks'] = $this->getNestedSubTasksForDetail($child->task_id);
+            } else {
+                $childData['sub_tasks'] = [];
+            }
+
+            return $childData;
+        })->toArray();
     }
 
     /**
@@ -685,6 +753,97 @@ class TaskController extends Controller
         $task['store_progress'] = $taskModel->getStoreProgress();
 
         return $task;
+    }
+
+    /**
+     * Get nested sub-tasks optimized for list view (reduced fields)
+     *
+     * This method recursively fetches sub-tasks with only the fields needed
+     * for display in Task List, reducing payload size.
+     *
+     * @param int $parentTaskId Parent task ID
+     * @param int $currentLevel Current nesting level (default 1)
+     * @return array Array of sub-tasks with minimal fields
+     */
+    private function getNestedSubTasksForList(int $parentTaskId, int $currentLevel = 1): array
+    {
+        // Get direct children with only necessary fields and relationships
+        $children = Task::where('parent_task_id', $parentTaskId)
+            ->select([
+                'task_id', 'task_name', 'parent_task_id', 'task_level',
+                'status_id', 'dept_id', 'task_type_id', 'priority',
+                'start_date', 'end_date', 'created_staff_id', 'approver_id',
+                'source', 'receiver_type', 'created_at', 'updated_at'
+            ])
+            ->with([
+                'status:code_master_id,code_name,code_value',
+                'department:department_id,department_code,department_name',
+                'taskType:code_master_id,code_name,code_value',
+                'createdBy:staff_id,staff_name,job_grade',
+                'approver:staff_id,staff_name,job_grade',
+            ])
+            ->orderBy('task_id')
+            ->get();
+
+        // Transform each child to include calculated fields and nested sub_tasks
+        return $children->map(function ($child) use ($currentLevel) {
+            $childArray = [
+                'id' => $child->task_id,
+                'task_id' => $child->task_id,
+                'task_name' => $child->task_name,
+                'parent_task_id' => $child->parent_task_id,
+                'task_level' => $child->task_level,
+                'status_id' => $child->status_id,
+                'status' => $child->status ? [
+                    'code_master_id' => $child->status->code_master_id,
+                    'code_name' => $child->status->code_name,
+                    'code_value' => $child->status->code_value,
+                ] : null,
+                'dept_id' => $child->dept_id,
+                'department' => $child->department ? [
+                    'department_id' => $child->department->department_id,
+                    'department_code' => $child->department->department_code,
+                    'department_name' => $child->department->department_name,
+                ] : null,
+                'task_type_id' => $child->task_type_id,
+                'taskType' => $child->taskType ? [
+                    'code_master_id' => $child->taskType->code_master_id,
+                    'code_name' => $child->taskType->code_name,
+                    'code_value' => $child->taskType->code_value,
+                ] : null,
+                'priority' => $child->priority,
+                'start_date' => $child->start_date?->format('Y-m-d'),
+                'end_date' => $child->end_date?->format('Y-m-d'),
+                'created_staff_id' => $child->created_staff_id,
+                'createdBy' => $child->createdBy ? [
+                    'staff_id' => $child->createdBy->staff_id,
+                    'staff_name' => $child->createdBy->staff_name,
+                    'job_grade' => $child->createdBy->job_grade,
+                ] : null,
+                'approver_id' => $child->approver_id,
+                'approver' => $child->approver ? [
+                    'staff_id' => $child->approver->staff_id,
+                    'staff_name' => $child->approver->staff_name,
+                    'job_grade' => $child->approver->job_grade,
+                ] : null,
+                'source' => $child->source,
+                'receiver_type' => $child->receiver_type,
+                'created_at' => $child->created_at?->toISOString(),
+                'updated_at' => $child->updated_at?->toISOString(),
+                // Calculated fields
+                'calculated_status' => $child->getCalculatedStatus(),
+                'store_progress' => $child->getStoreProgress(),
+            ];
+
+            // Recursively get nested sub_tasks (max 5 levels enforced by task_level)
+            if (($child->task_level ?? 1) < 5) {
+                $childArray['sub_tasks'] = $this->getNestedSubTasksForList($child->task_id, $currentLevel + 1);
+            } else {
+                $childArray['sub_tasks'] = [];
+            }
+
+            return $childArray;
+        })->toArray();
     }
 
     /**
