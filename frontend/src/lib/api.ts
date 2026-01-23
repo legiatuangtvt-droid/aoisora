@@ -537,6 +537,8 @@ export interface TaskQueryParamsExtended extends TaskQueryParams {
   // Spatie QueryBuilder filters (filter[field]=value)
   'filter[assigned_store_id]'?: number;
   'filter[dept_id]'?: number;
+  // Multi-department filter (comma-separated department IDs)
+  'filter[dept_ids]'?: string;
   'filter[assigned_staff_id]'?: number;
   'filter[created_staff_id]'?: number;
   'filter[status_id]'?: number;

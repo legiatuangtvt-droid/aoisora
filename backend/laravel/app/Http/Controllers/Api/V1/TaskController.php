@@ -73,6 +73,8 @@ class TaskController extends Controller
             ->allowedFilters([
                 AllowedFilter::exact('assigned_store_id'),
                 AllowedFilter::exact('dept_id'),
+                // Multi-department filter (comma-separated department IDs)
+                AllowedFilter::callback('dept_ids', fn ($query, $value) => $query->whereIn('dept_id', explode(',', $value))),
                 AllowedFilter::exact('assigned_staff_id'),
                 AllowedFilter::exact('created_staff_id'),
                 AllowedFilter::exact('status_id'),

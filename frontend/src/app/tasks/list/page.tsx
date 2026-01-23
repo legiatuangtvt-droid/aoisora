@@ -255,9 +255,13 @@ export default function TaskListPage() {
         queryParams['filter[start_date_to]'] = formatDateForApi(dateRange.to);
       }
 
-      // Department filter from modal
+      // Department filter from modal (supports multiple departments)
       if (filters.departments.length === 1) {
+        // Single department - use exact filter
         queryParams['filter[dept_id]'] = parseInt(filters.departments[0]);
+      } else if (filters.departments.length > 1) {
+        // Multiple departments - use comma-separated filter
+        queryParams['filter[dept_ids]'] = filters.departments.join(',');
       }
 
       // Status filter from modal (supports multiple statuses)

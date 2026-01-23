@@ -4067,7 +4067,7 @@ TRIGGERS tự động tạo history entries:
 | # | Task | Status | Notes |
 |---|------|--------|-------|
 | 1.3.1 | Hiển thị danh sách tasks | ✅ | Đang hoạt động |
-| 1.3.2 | Filter by status | 🔄 | Cần test với real data |
+| 1.3.2 | Filter by status | ✅ | Full status options for HQ/Store users, multi-select support |
 | 1.3.3 | Filter by department | 🔄 | Cần test với real data |
 | 1.3.4 | Search by task name | 🔄 | Cần verify |
 | 1.3.5 | Pagination | ✅ | Đang hoạt động |
