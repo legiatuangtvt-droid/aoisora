@@ -4360,69 +4360,307 @@ Request → Controller → Service → Model → Resource → Response
 
 **BƯỚC 2: MANUAL TEST**
 
-| # | Screen/Flow | Test Cases | Status |
-|---|-------------|------------|--------|
+| # | Screen/Flow | Test Cases | Status | Tested At |
+|---|-------------|------------|--------|-----------|
 | **D. AUTHENTICATION** |
-| D.1 | Login Page | - Login với HQ user (admin/password) | ✅ |
-| D.2 | Login Page | - Login với Store user | ✅ |
-| D.3 | Login Page | - Login fail với wrong password | ✅ |
-| D.4 | Logout | - Logout và redirect về login | ✅ |
+| D.1 | Login Page | - Login với HQ user (admin/password) | ✅ | 2026-01-23 |
+| D.2 | Login Page | - Login với Store user | ✅ | 2026-01-23 |
+| D.3 | Login Page | - Login fail với wrong password | ✅ | 2026-01-23 |
+| D.4 | Logout | - Logout và redirect về login | ✅ | 2026-01-23 |
 | **E. TASK LIST (HQ)** |
-| E.1 | /tasks/list | - Hiển thị danh sách tasks | ✅ |
-| E.2 | /tasks/list | - Filter by Department | ✅ |
-| E.3 | /tasks/list | - Filter by Status | ✅ |
-| E.4 | /tasks/list | - Search by task name | ✅ |
-| E.5 | /tasks/list | - Pagination hoạt động | ✅ |
-| E.6 | /tasks/list | - Click Status → History modal | ✅ |
-| E.7 | /tasks/list | - Expand/Collapse sub-tasks | ✅ |
-| E.8 | /tasks/list | - Progress & Unable columns hiển thị đúng | ✅ |
+| E.1 | /tasks/list | - Hiển thị danh sách tasks | ✅ | 2026-01-23 |
+| E.2 | /tasks/list | - Filter by Department | ✅ | 2026-01-23 |
+| E.3 | /tasks/list | - Filter by Status | ✅ | 2026-01-23 |
+| E.4 | /tasks/list | - Search by task name | ✅ | 2026-01-23 |
+| E.5 | /tasks/list | - Pagination hoạt động | ✅ | 2026-01-23 |
+| E.6 | /tasks/list | - Click Status → History modal | ✅ | 2026-01-23 |
+| E.7 | /tasks/list | - Expand/Collapse sub-tasks | ✅ | 2026-01-23 |
+| E.8 | /tasks/list | - Progress & Unable columns hiển thị đúng | ✅ | 2026-01-23 |
 | **F. TASK DETAIL** |
-| F.1 | /tasks/detail | - Hiển thị task info đầy đủ | ✅ |
-| F.2 | /tasks/detail | - Statistics cards (Not Yet, Done, Unable, Avg Time) | ✅ |
-| F.3 | /tasks/detail | - Store progress table | ✅ |
-| F.4 | /tasks/detail | - Comments section CRUD | ✅ |
-| F.5 | /tasks/detail | - Attachments/Evidence modal | ✅ |
+| F.1 | /tasks/detail | - Hiển thị task info đầy đủ | ✅ | 2026-01-23 |
+| F.2 | /tasks/detail | - Statistics cards (Not Yet, Done, Unable, Avg Time) | ✅ | 2026-01-23 |
+| F.3 | /tasks/detail | - Store progress table | ✅ | 2026-01-23 |
+| F.4 | /tasks/detail | - Comments section CRUD | ✅ | 2026-01-23 |
+| F.5 | /tasks/detail | - Attachments/Evidence modal | ✅ | 2026-01-23 |
 | **G. ADD TASK** |
-| G.1 | /tasks/new | - Tạo task mới (source=task_list) | ✅ |
-| G.2 | /tasks/new | - Save as Draft | ⚠️ BUG#1 |
-| G.3 | /tasks/new | - Submit for approval | ✅ |
-| G.4 | /tasks/new | - Edit existing draft | ✅ |
-| G.5 | /tasks/new | - Validation hiển thị đúng | ✅ |
-| G.6 | /tasks/new | - Scope selector (Store hierarchy) | ✅ |
-| G.7 | /tasks/new | - Photo upload (click/paste/drag) | ✅ |
-| G.8 | /tasks/new?source=library | - Không hiển thị Scope section | ✅ |
-| G.9 | /tasks/new?source=todo_task | - HQ hierarchy cho scope | ✅ |
+| G.1 | /tasks/new | - Tạo task mới (source=task_list) | ✅ | 2026-01-23 |
+| G.2 | /tasks/new | - Save as Draft | ⚠️ BUG#1 | 2026-01-23 |
+| G.3 | /tasks/new | - Submit for approval | ✅ | 2026-01-23 |
+| G.4 | /tasks/new | - Edit existing draft | ✅ | 2026-01-23 |
+| G.5 | /tasks/new | - Validation hiển thị đúng | ✅ | 2026-01-23 |
+| G.6 | /tasks/new | - Scope selector (Store hierarchy) | ✅ | 2026-01-23 |
+| G.7 | /tasks/new | - Photo upload (click/paste/drag) | ✅ | 2026-01-23 |
+| G.8 | /tasks/new?source=library | - Không hiển thị Scope section | ✅ | 2026-01-23 |
+| G.9 | /tasks/new?source=todo_task | - HQ hierarchy cho scope | ✅ | 2026-01-23 |
 | **H. APPROVAL FLOW** |
-| H.1 | /tasks/approval | - Hiển thị pending approvals | ✅ |
-| H.2 | /tasks/approval | - Approve task → status change | ✅ (FIX#1) |
-| H.3 | /tasks/approval | - Reject task với reason | ✅ |
-| H.4 | /tasks/approval | - Approver auto-determine | ✅ |
+| H.1 | /tasks/approval | - Hiển thị pending approvals | ✅ | 2026-01-23 |
+| H.2 | /tasks/approval | - Approve task → status change | ✅ (FIX#1) | 2026-01-23 |
+| H.3 | /tasks/approval | - Reject task với reason | ✅ | 2026-01-23 |
+| H.4 | /tasks/approval | - Approver auto-determine | ✅ | 2026-01-23 |
 | **I. LIBRARY** |
-| I.1 | /tasks/library | - Hiển thị templates theo department | ✅ |
-| I.2 | /tasks/library | - Add New → /tasks/new?source=library | ✅ |
-| I.3 | /tasks/library | - Submit template for approval | ✅ |
-| I.4 | /tasks/library | - Approve → status=available | ✅ |
-| I.5 | /tasks/library | - Dispatch to stores | ✅ |
-| I.6 | /tasks/library | - dispatch_count updates | ✅ |
+| I.1 | /tasks/library | - Hiển thị templates theo department | ✅ | 2026-01-23 |
+| I.2 | /tasks/library | - Add New → /tasks/new?source=library | ✅ | 2026-01-23 |
+| I.3 | /tasks/library | - Submit template for approval | ✅ | 2026-01-23 |
+| I.4 | /tasks/library | - Approve → status=available | ✅ | 2026-01-23 |
+| I.5 | /tasks/library | - Dispatch to stores | ✅ | 2026-01-23 |
+| I.6 | /tasks/library | - dispatch_count updates | ✅ | 2026-01-23 |
 | **J. TODO TASK** |
-| J.1 | /tasks/todo | - Filter source=todo_task | ✅ |
-| J.2 | /tasks/todo | - Page loads (HTTP 200) | ✅ |
-| J.3 | /tasks/todo | - Filter "My Tasks" (created_staff_id) | ✅ |
+| J.1 | /tasks/todo | - Filter source=todo_task | ✅ | 2026-01-23 |
+| J.2 | /tasks/todo | - Page loads (HTTP 200) | ✅ | 2026-01-23 |
+| J.3 | /tasks/todo | - Filter "My Tasks" (created_staff_id) | ✅ | 2026-01-23 |
 | **K. STORE TASKS** |
-| K.1 | /stores/[id]/tasks | - GET store tasks | ✅ |
-| K.2 | /stores/[id]/tasks | - Start task action | ✅ |
-| K.3 | /stores/[id]/tasks | - Complete task → done_pending | ✅ |
-| K.4 | /stores/[id]/tasks | - Mark unable với reason | ✅ |
-| K.5 | /stores/[id]/tasks | - Assign to staff (S4-S2) | ✅ |
-| K.6 | /stores/[id]/tasks | - Page loads (HTTP 200) | ✅ |
+| K.1 | /stores/[id]/tasks | - GET store tasks | ✅ | 2026-01-23 |
+| K.2 | /stores/[id]/tasks | - Start task action | ✅ | 2026-01-23 |
+| K.3 | /stores/[id]/tasks | - Complete task → done_pending | ✅ | 2026-01-23 |
+| K.4 | /stores/[id]/tasks | - Mark unable với reason | ✅ | 2026-01-23 |
+| K.5 | /stores/[id]/tasks | - Assign to staff (S4-S2) | ✅ | 2026-01-23 |
+| K.6 | /stores/[id]/tasks | - Page loads (HTTP 200) | ✅ | 2026-01-23 |
 | **L. HQ CHECK** |
-| L.1 | /tasks/hq-check | - GET hq-check list | ✅ |
-| L.2 | /tasks/hq-check | - HQ Check approve → done | ✅ |
-| L.3 | /tasks/hq-check | - HQ Reject → on_progress | ✅ |
-| L.4 | /tasks/hq-check | - Page loads (HTTP 200) | ✅ |
+| L.1 | /tasks/hq-check | - GET hq-check list | ✅ | 2026-01-23 |
+| L.2 | /tasks/hq-check | - HQ Check approve → done | ✅ | 2026-01-23 |
+| L.3 | /tasks/hq-check | - HQ Reject → on_progress | ✅ | 2026-01-23 |
+| L.4 | /tasks/hq-check | - Page loads (HTTP 200) | ✅ | 2026-01-23 |
 | **M. UI/UX GENERAL** |
-| M.1-M.7 | All screens | - All pages load HTTP 200 | ✅ |
-| M.1-M.7 | All screens | - Browser UI tests (Dark mode, Loading, etc.) | 🔍 Browser |
+| M.1-M.7 | All screens | - All pages load HTTP 200 | ✅ | 2026-01-23 |
+| M.1-M.7 | All screens | - Browser UI tests (Dark mode, Loading, etc.) | 🔍 Browser | - |
+
+---
+
+**BƯỚC 3: UI/UX SCREENSHOT TEST**
+
+> **Mục đích**: Test giao diện visual của từng screen, user cung cấp screenshot để verify.
+> **Quy trình**: Chạy test case → User chụp màn hình → Đánh dấu Pass/Fail → Ghi timestamp
+
+#### N. LOGIN PAGE
+
+| # | Test Scenario | Expected UI | Screenshot | Status | Tested At |
+|---|---------------|-------------|------------|--------|-----------|
+| N.1 | Login form - Light mode | Logo, Email input, Password input, Login button hiển thị đúng | ⏳ | ⏳ | - |
+| N.2 | Login form - Dark mode | Form switch sang dark theme, colors phù hợp | ⏳ | ⏳ | - |
+| N.3 | Validation error - Empty fields | Red border, error message "Field is required" | ⏳ | ⏳ | - |
+| N.4 | Validation error - Wrong credentials | Toast/Alert hiển thị "Invalid credentials" | ⏳ | ⏳ | - |
+| N.5 | Loading state | Button disabled, spinner hiển thị khi đang login | ⏳ | ⏳ | - |
+| N.6 | Mobile responsive | Form centered, full width on mobile (<768px) | ⏳ | ⏳ | - |
+
+#### O. TASK LIST PAGE (/tasks/list)
+
+| # | Test Scenario | Expected UI | Screenshot | Status | Tested At |
+|---|---------------|-------------|------------|--------|-----------|
+| O.1 | Page layout - Light mode | Header, filters, table hiển thị đúng layout | ⏳ | ⏳ | - |
+| O.2 | Page layout - Dark mode | Colors chuyển đổi phù hợp dark theme | ⏳ | ⏳ | - |
+| O.3 | Filter accordion | Click → expand/collapse animation smooth | ⏳ | ⏳ | - |
+| O.4 | Filter chips | Selected filters hiển thị chips, X để remove | ⏳ | ⏳ | - |
+| O.5 | Department dropdown | Dropdown mở, options hiển thị đầy đủ | ⏳ | ⏳ | - |
+| O.6 | Status filter badges | Badges có màu đúng (Draft=gray, Approve=yellow, etc.) | ⏳ | ⏳ | - |
+| O.7 | Table header | Columns aligned, sortable indicators | ⏳ | ⏳ | - |
+| O.8 | Table row hover | Row highlight khi hover | ⏳ | ⏳ | - |
+| O.9 | Status badge colors | Draft(gray), Approve(yellow), Not Yet(blue), Done(green), Overdue(red) | ⏳ | ⏳ | - |
+| O.10 | Progress column | Progress bar hiển thị % với màu phù hợp | ⏳ | ⏳ | - |
+| O.11 | Unable column | Counter hiển thị số stores unable (red text) | ⏳ | ⏳ | - |
+| O.12 | Sub-tasks expand | Click arrow → sub-tasks hiện với indent | ⏳ | ⏳ | - |
+| O.13 | Sub-tasks collapse | Click again → sub-tasks ẩn, animation smooth | ⏳ | ⏳ | - |
+| O.14 | 3-dots menu | Hover row → menu icon, click → dropdown options | ⏳ | ⏳ | - |
+| O.15 | Pagination | Page numbers, Previous/Next buttons styled đúng | ⏳ | ⏳ | - |
+| O.16 | Empty state | Khi không có data → Empty illustration + message | ⏳ | ⏳ | - |
+| O.17 | Loading skeleton | Skeleton placeholders khi loading | ⏳ | ⏳ | - |
+| O.18 | History modal | Click status → modal mở, timeline UI | ⏳ | ⏳ | - |
+| O.19 | History modal steps | SUBMIT → APPROVE → DO TASK → CHECK steps | ⏳ | ⏳ | - |
+| O.20 | Mobile table scroll | Table scroll horizontal on mobile | ⏳ | ⏳ | - |
+
+#### P. TASK DETAIL PAGE (/tasks/detail)
+
+| # | Test Scenario | Expected UI | Screenshot | Status | Tested At |
+|---|---------------|-------------|------------|--------|-----------|
+| P.1 | Page header | Task name, status badge, back button | ⏳ | ⏳ | - |
+| P.2 | Info section | A.Information, B.Instructions, C.Scope cards | ⏳ | ⏳ | - |
+| P.3 | Statistics cards | 4 cards: Not Yet, Done, Unable, Avg Time - colors đúng | ⏳ | ⏳ | - |
+| P.4 | Statistics - Not Yet | Gray card, count hiển thị | ⏳ | ⏳ | - |
+| P.5 | Statistics - Done | Green card, count hiển thị | ⏳ | ⏳ | - |
+| P.6 | Statistics - Unable | Orange/Red card, count hiển thị | ⏳ | ⏳ | - |
+| P.7 | Statistics - Avg Time | Blue card, time format (Xh Xm) | ⏳ | ⏳ | - |
+| P.8 | Store progress table | Store name, status badge, assignee, actions | ⏳ | ⏳ | - |
+| P.9 | Store status badges | not_yet(gray), on_progress(blue), done_pending(yellow), done(green), unable(orange) | ⏳ | ⏳ | - |
+| P.10 | Comments section | Comment list, add comment form | ⏳ | ⏳ | - |
+| P.11 | Comment item | Avatar, name, timestamp, content, edit/delete buttons | ⏳ | ⏳ | - |
+| P.12 | Add comment form | Textarea, Submit button | ⏳ | ⏳ | - |
+| P.13 | Edit comment | Inline edit mode, Save/Cancel buttons | ⏳ | ⏳ | - |
+| P.14 | Delete comment confirm | Confirmation dialog hiển thị | ⏳ | ⏳ | - |
+| P.15 | Evidence modal | Click "View Evidence" → modal với images/files | ⏳ | ⏳ | - |
+| P.16 | Evidence gallery | Image thumbnails, click to expand | ⏳ | ⏳ | - |
+| P.17 | Dark mode | All elements switch colors properly | ⏳ | ⏳ | - |
+| P.18 | Mobile layout | Cards stack vertically on mobile | ⏳ | ⏳ | - |
+
+#### Q. ADD TASK PAGE (/tasks/new)
+
+| # | Test Scenario | Expected UI | Screenshot | Status | Tested At |
+|---|---------------|-------------|------------|--------|-----------|
+| Q.1 | Page layout | A.Information, B.Instructions, C.Scope, D.Approval sections | ⏳ | ⏳ | - |
+| Q.2 | Task name input | Text input với label, placeholder | ⏳ | ⏳ | - |
+| Q.3 | Task Type dropdown | Dropdown với options: Daily, Weekly, Monthly, etc. | ⏳ | ⏳ | - |
+| Q.4 | Date picker - Start | Calendar picker UI | ⏳ | ⏳ | - |
+| Q.5 | Date picker - End | Calendar picker UI, validation start < end | ⏳ | ⏳ | - |
+| Q.6 | Execution time input | Number input với unit selector (hours/minutes) | ⏳ | ⏳ | - |
+| Q.7 | Instructions type radio | Image / Document radio buttons | ⏳ | ⏳ | - |
+| Q.8 | Manual link input | URL input với validation | ⏳ | ⏳ | - |
+| Q.9 | Note textarea | Textarea với character count | ⏳ | ⏳ | - |
+| Q.10 | Photo upload - Empty | Upload area với icon, "Click or drag" text | ⏳ | ⏳ | - |
+| Q.11 | Photo upload - With images | Thumbnails grid, remove button mỗi ảnh | ⏳ | ⏳ | - |
+| Q.12 | Photo upload - Drag over | Highlight border khi drag file vào | ⏳ | ⏳ | - |
+| Q.13 | Photo upload - Progress | Upload progress bar | ⏳ | ⏳ | - |
+| Q.14 | Scope selector - Region | Dropdown với regions | ⏳ | ⏳ | - |
+| Q.15 | Scope selector - Zone | Dropdown filtered by region | ⏳ | ⏳ | - |
+| Q.16 | Scope selector - Area | Dropdown filtered by zone | ⏳ | ⏳ | - |
+| Q.17 | Scope selector - Store | Multi-select stores | ⏳ | ⏳ | - |
+| Q.18 | Scope - Selected stores | Chips hiển thị selected stores | ⏳ | ⏳ | - |
+| Q.19 | HQ Scope (source=todo_task) | Division → Dept → Team → User hierarchy | ⏳ | ⏳ | - |
+| Q.20 | D.Approval auto-fill | Approver name, title hiển thị tự động | ⏳ | ⏳ | - |
+| Q.21 | Save Draft button | Button styled, disabled khi invalid | ⏳ | ⏳ | - |
+| Q.22 | Submit button | Primary button styled | ⏳ | ⏳ | - |
+| Q.23 | Validation errors | Red border, error messages hiển thị | ⏳ | ⏳ | - |
+| Q.24 | Loading state | Buttons disabled, spinner khi saving | ⏳ | ⏳ | - |
+| Q.25 | source=library mode | C.Scope section ẩn | ⏳ | ⏳ | - |
+| Q.26 | Dark mode | All inputs, buttons switch theme | ⏳ | ⏳ | - |
+| Q.27 | Mobile layout | Form full width, scrollable | ⏳ | ⏳ | - |
+
+#### R. APPROVAL PAGE (/tasks/approval)
+
+| # | Test Scenario | Expected UI | Screenshot | Status | Tested At |
+|---|---------------|-------------|------------|--------|-----------|
+| R.1 | Page header | "Pending Approvals" title, count badge | ⏳ | ⏳ | - |
+| R.2 | Approval table | Task name, creator, department, period, status, actions | ⏳ | ⏳ | - |
+| R.3 | Creator avatar | Avatar circle với initial letter | ⏳ | ⏳ | - |
+| R.4 | View button | Eye icon, click → task detail | ⏳ | ⏳ | - |
+| R.5 | Approve button | Green button "Approve" | ⏳ | ⏳ | - |
+| R.6 | Reject button | Red button "Reject" | ⏳ | ⏳ | - |
+| R.7 | Reject modal | Modal với reason textarea | ⏳ | ⏳ | - |
+| R.8 | Reject validation | Error nếu reason empty | ⏳ | ⏳ | - |
+| R.9 | Processing state | Button disabled, "..." text khi processing | ⏳ | ⏳ | - |
+| R.10 | Success toast | Toast "Task approved" / "Task rejected" | ⏳ | ⏳ | - |
+| R.11 | Empty state | "No pending approvals" message | ⏳ | ⏳ | - |
+| R.12 | Non-HQ user | "Only HQ users can access" message | ⏳ | ⏳ | - |
+| R.13 | Dark mode | Theme switch properly | ⏳ | ⏳ | - |
+
+#### S. LIBRARY PAGE (/tasks/library)
+
+| # | Test Scenario | Expected UI | Screenshot | Status | Tested At |
+|---|---------------|-------------|------------|--------|-----------|
+| S.1 | Page header | "Library" title, "Add New" button | ⏳ | ⏳ | - |
+| S.2 | Department tabs/dropdown | Filter by department | ⏳ | ⏳ | - |
+| S.3 | Template table | Type, Task Name, Owner, Last Update, Status, Usage | ⏳ | ⏳ | - |
+| S.4 | Status badges | Draft, Approve, Available, Cooldown colors | ⏳ | ⏳ | - |
+| S.5 | Cooldown badge | Cyan/Ice blue color | ⏳ | ⏳ | - |
+| S.6 | Usage count | Number hiển thị | ⏳ | ⏳ | - |
+| S.7 | Row actions menu | Edit, Duplicate, Delete, View Usage, Dispatch | ⏳ | ⏳ | - |
+| S.8 | Dispatch action | Click → navigate to dispatch page | ⏳ | ⏳ | - |
+| S.9 | Override cooldown modal | Modal với reason input (cho highest grade) | ⏳ | ⏳ | - |
+| S.10 | Add New → /tasks/new | Navigate với source=library | ⏳ | ⏳ | - |
+| S.11 | Empty state | "No templates" message | ⏳ | ⏳ | - |
+| S.12 | Dark mode | Theme switch | ⏳ | ⏳ | - |
+
+#### T. DISPATCH PAGE (/tasks/library/dispatch)
+
+| # | Test Scenario | Expected UI | Screenshot | Status | Tested At |
+|---|---------------|-------------|------------|--------|-----------|
+| T.1 | Page header | Template name, back button | ⏳ | ⏳ | - |
+| T.2 | Template preview | Read-only info from template | ⏳ | ⏳ | - |
+| T.3 | Scope selector | Region → Zone → Area → Store hierarchy | ⏳ | ⏳ | - |
+| T.4 | Date range picker | Start date, End date | ⏳ | ⏳ | - |
+| T.5 | Priority selector | Dropdown/Radio for priority | ⏳ | ⏳ | - |
+| T.6 | Dispatch button | Primary button "Dispatch to Stores" | ⏳ | ⏳ | - |
+| T.7 | Confirmation | Confirm dialog trước dispatch | ⏳ | ⏳ | - |
+| T.8 | Success redirect | Redirect về library sau dispatch | ⏳ | ⏳ | - |
+| T.9 | Dark mode | Theme switch | ⏳ | ⏳ | - |
+
+#### U. TODO TASK PAGE (/tasks/todo)
+
+| # | Test Scenario | Expected UI | Screenshot | Status | Tested At |
+|---|---------------|-------------|------------|--------|-----------|
+| U.1 | Page header | "To Do Tasks" title | ⏳ | ⏳ | - |
+| U.2 | Task list | HQ→HQ tasks hiển thị | ⏳ | ⏳ | - |
+| U.3 | My Tasks filter | Filter checkbox/toggle | ⏳ | ⏳ | - |
+| U.4 | Add New button | Navigate to /tasks/new?source=todo_task | ⏳ | ⏳ | - |
+| U.5 | Task status badges | Same as Task List | ⏳ | ⏳ | - |
+| U.6 | Empty state | "No tasks" message | ⏳ | ⏳ | - |
+| U.7 | Dark mode | Theme switch | ⏳ | ⏳ | - |
+
+#### V. STORE TASKS PAGE (/stores/[id]/tasks)
+
+| # | Test Scenario | Expected UI | Screenshot | Status | Tested At |
+|---|---------------|-------------|------------|--------|-----------|
+| V.1 | Page header | Store name, task count | ⏳ | ⏳ | - |
+| V.2 | Task list | Tasks assigned to this store | ⏳ | ⏳ | - |
+| V.3 | Status badges | not_yet, on_progress, done_pending, done, unable | ⏳ | ⏳ | - |
+| V.4 | Start button | Blue button for not_yet tasks | ⏳ | ⏳ | - |
+| V.5 | Complete button | Green button for on_progress tasks | ⏳ | ⏳ | - |
+| V.6 | Unable button | Orange button với reason modal | ⏳ | ⏳ | - |
+| V.7 | Unable reason modal | Textarea required | ⏳ | ⏳ | - |
+| V.8 | Assign to staff button | For S4-S2 users | ⏳ | ⏳ | - |
+| V.9 | Staff selection modal | Dropdown list staff S1 | ⏳ | ⏳ | - |
+| V.10 | Unassign button | For assigned tasks | ⏳ | ⏳ | - |
+| V.11 | Complete modal | Notes input, evidence upload | ⏳ | ⏳ | - |
+| V.12 | Evidence upload | File/Image upload UI | ⏳ | ⏳ | - |
+| V.13 | Role-based visibility | S1 sees only assigned, S2-S4 sees all | ⏳ | ⏳ | - |
+| V.14 | Dark mode | Theme switch | ⏳ | ⏳ | - |
+
+#### W. HQ CHECK PAGE (/tasks/hq-check)
+
+| # | Test Scenario | Expected UI | Screenshot | Status | Tested At |
+|---|---------------|-------------|------------|--------|-----------|
+| W.1 | Page header | "HQ Check" title, count badge | ⏳ | ⏳ | - |
+| W.2 | Task cards | Expandable task cards | ⏳ | ⏳ | - |
+| W.3 | Expand/Collapse | Click → show store list | ⏳ | ⏳ | - |
+| W.4 | Store list | Store name, completion time, notes | ⏳ | ⏳ | - |
+| W.5 | View evidence | Link to view store's evidence | ⏳ | ⏳ | - |
+| W.6 | Checked button | Green button "Checked" | ⏳ | ⏳ | - |
+| W.7 | Reject button | Red button "Reject" | ⏳ | ⏳ | - |
+| W.8 | Reject reason modal | Textarea for reason | ⏳ | ⏳ | - |
+| W.9 | Processing state | Buttons disabled during action | ⏳ | ⏳ | - |
+| W.10 | Success feedback | Toast notification | ⏳ | ⏳ | - |
+| W.11 | Empty state | "No tasks pending check" message | ⏳ | ⏳ | - |
+| W.12 | Dark mode | Theme switch | ⏳ | ⏳ | - |
+
+#### X. GENERAL UI/UX
+
+| # | Test Scenario | Expected UI | Screenshot | Status | Tested At |
+|---|---------------|-------------|------------|--------|-----------|
+| X.1 | Navigation sidebar | All menu items visible, active state | ⏳ | ⏳ | - |
+| X.2 | Sidebar collapse | Toggle button, icons only mode | ⏳ | ⏳ | - |
+| X.3 | Dark mode toggle | Switch in header/sidebar | ⏳ | ⏳ | - |
+| X.4 | User dropdown | Avatar, name, logout option | ⏳ | ⏳ | - |
+| X.5 | Breadcrumb | Path navigation | ⏳ | ⏳ | - |
+| X.6 | Toast notifications | Success (green), Error (red), Info (blue) | ⏳ | ⏳ | - |
+| X.7 | Loading spinners | Consistent spinner design | ⏳ | ⏳ | - |
+| X.8 | Skeleton loaders | Content placeholders | ⏳ | ⏳ | - |
+| X.9 | Modal backdrop | Dark overlay, click outside to close | ⏳ | ⏳ | - |
+| X.10 | Modal animations | Fade in/out, scale animations | ⏳ | ⏳ | - |
+| X.11 | Button states | Normal, hover, active, disabled | ⏳ | ⏳ | - |
+| X.12 | Input focus states | Focus ring, border color change | ⏳ | ⏳ | - |
+| X.13 | Responsive breakpoints | Desktop (>1024), Tablet (768-1024), Mobile (<768) | ⏳ | ⏳ | - |
+| X.14 | Mobile navigation | Hamburger menu, drawer | ⏳ | ⏳ | - |
+| X.15 | Scroll behavior | Smooth scroll, sticky headers | ⏳ | ⏳ | - |
+| X.16 | Error pages | 404, 500 page designs | ⏳ | ⏳ | - |
+| X.17 | Print styles | Tables printable (if needed) | ⏳ | ⏳ | - |
+
+---
+
+**UI/UX TEST SUMMARY:**
+
+| Section | Total Tests | Passed | Failed | Pending |
+|---------|-------------|--------|--------|---------|
+| N. Login | 6 | 0 | 0 | 6 |
+| O. Task List | 20 | 0 | 0 | 20 |
+| P. Task Detail | 18 | 0 | 0 | 18 |
+| Q. Add Task | 27 | 0 | 0 | 27 |
+| R. Approval | 13 | 0 | 0 | 13 |
+| S. Library | 12 | 0 | 0 | 12 |
+| T. Dispatch | 9 | 0 | 0 | 9 |
+| U. Todo Task | 7 | 0 | 0 | 7 |
+| V. Store Tasks | 14 | 0 | 0 | 14 |
+| W. HQ Check | 12 | 0 | 0 | 12 |
+| X. General UI | 17 | 0 | 0 | 17 |
+| **TOTAL** | **155** | **0** | **0** | **155** |
+
+---
 
 **TEST ACCOUNTS:**
 
@@ -4468,10 +4706,11 @@ Request → Controller → Service → Model → Resource → Response
 │    → Step 1 CLI/Bash Tests: ✅ PASSED (2026-01-23)             │
 │    → Step 2 Manual Tests: ✅ PASSED (2026-01-23)               │
 │      54/56 tests passed, 1 bug found (BUG#1), 1 fix applied    │
+│    → Step 3 UI/UX Screenshot Tests: ⏳ PENDING (0/155 tests)   │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 
-Last Updated: 2026-01-23 (Manual Test completed)
+Last Updated: 2026-01-23 (Step 3 UI/UX Test added)
 ```
 
 ### LEGEND
