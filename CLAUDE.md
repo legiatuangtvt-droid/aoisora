@@ -4187,13 +4187,14 @@ TRIGGERS tự động tạo history entries:
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 4.1 | Deploy database changes | ⏳ | phpMyAdmin |
-| 4.2 | Deploy backend changes | ⏳ | FileZilla |
-| 4.3 | Deploy frontend changes | ⏳ | Vercel Redeploy |
-| 4.4 | Test trên production | ⏳ | All screens |
-| 4.5 | Tạo test accounts cho users | ⏳ | HQ + Store roles |
-| 4.6 | Thu thập feedback | ⏳ | Bug reports, UI/UX |
-| 4.7 | Prioritize & fix issues | ⏳ | Based on feedback |
+| 4.1 | Test toàn bộ tại LOCAL | ⏳ | Test tất cả screens, flows, APIs trước khi deploy |
+| 4.2 | Deploy database changes | ⏳ | phpMyAdmin |
+| 4.3 | Deploy backend changes | ⏳ | FileZilla |
+| 4.4 | Deploy frontend changes | ⏳ | Vercel Redeploy |
+| 4.5 | Test trên production | ⏳ | All screens |
+| 4.6 | Tạo test accounts cho users | ⏳ | HQ + Store roles |
+| 4.7 | Thu thập feedback | ⏳ | Bug reports, UI/UX |
+| 4.8 | Prioritize & fix issues | ⏳ | Based on feedback |
 
 ### PROGRESS TRACKING
 
