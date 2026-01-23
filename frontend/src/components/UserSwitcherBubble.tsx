@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { usePathname } from 'next/navigation';
 import { useUser, AppUser } from '@/contexts/UserContext';
 import { JOB_GRADE_COLORS, JOB_GRADE_TITLES, JOB_GRADE_TITLES_VI, JobGrade } from '@/types/userInfo';
 
@@ -36,7 +37,19 @@ const formatScope = (scope: string): string => {
 };
 
 export default function UserSwitcherBubble() {
+  const pathname = usePathname();
   const { currentUser, setCurrentUser, hqUsers, storeUsers, isUserSwitcherOpen, setIsUserSwitcherOpen, isLoading, error, refreshUsers } = useUser();
+
+  // Only show in development mode (same as TANSTACK devtools)
+  if (process.env.NODE_ENV !== 'development') {
+    return null;
+  }
+
+  // Hide on auth pages (login, signup, forgot-password, etc.)
+  const isAuthPage = pathname?.startsWith('/auth');
+  if (isAuthPage) {
+    return null;
+  }
 
   const currentGradeStyle = getGradeStyle(currentUser.job_grade);
 
