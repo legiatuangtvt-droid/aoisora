@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,6 +17,14 @@ export default function SignInPage() {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sessionExpiredMessage, setSessionExpiredMessage] = useState('');
+
+  // Track if initial auth check is complete (to avoid showing spinner during login)
+  const initialLoadComplete = useRef(false);
+  useEffect(() => {
+    if (!authLoading) {
+      initialLoadComplete.current = true;
+    }
+  }, [authLoading]);
 
   // Check for session expired message
   useEffect(() => {
@@ -88,8 +96,9 @@ export default function SignInPage() {
     setIsSubmitting(false);
   };
 
-  // Show loading while checking auth
-  if (authLoading) {
+  // Show loading ONLY during initial auth check (not during login)
+  // This prevents form from unmounting during login, which would lose local state (error message)
+  if (authLoading && !initialLoadComplete.current) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-sky-200 via-sky-100 to-orange-100">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600"></div>
