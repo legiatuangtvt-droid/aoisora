@@ -1150,6 +1150,101 @@ Khi implement tables mới:
 
 ---
 
+### 9.3 Department/Division Assignment Rules (User Management)
+
+> **Quan trọng**: Rule này áp dụng cho tất cả logic liên quan đến User Management và Filter by Department.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ⚠️ QUY TẮC GÁN USER VÀO DEPARTMENT/DIVISION                    │
+│                                                                 │
+│  NGUYÊN TẮC:                                                    │
+│  → User PHẢI thuộc về LEAF NODE (node cuối cùng) trong cấu trúc │
+│    tổ chức, KHÔNG được thuộc về parent/intermediate nodes      │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │  CẤU TRÚC TỔ CHỨC (Organizational Hierarchy):               ││
+│  │                                                             ││
+│  │  Department (Dept)                                          ││
+│  │  └── Division (Div) ← User PHẢI thuộc về đây nếu Dept có Div││
+│  │                                                             ││
+│  │  Ví dụ cụ thể:                                              ││
+│  │                                                             ││
+│  │  OP (Operations - dept_id=1) ← KHÔNG gán user trực tiếp     ││
+│  │  ├── PERI (dept_id=7)        ← ✅ Gán user vào đây          ││
+│  │  ├── GRO (dept_id=8)         ← ✅ Gán user vào đây          ││
+│  │  ├── Delica (dept_id=9)      ← ✅ Gán user vào đây          ││
+│  │  ├── D&D (dept_id=10)        ← ✅ Gán user vào đây          ││
+│  │  └── CS (dept_id=11)         ← ✅ Gán user vào đây          ││
+│  │                                                             ││
+│  │  Admin (dept_id=2) ← ✅ OK vì không có Div con              ││
+│  │                                                             ││
+│  └─────────────────────────────────────────────────────────────┘│
+│                                                                 │
+│  QUY TẮC CHI TIẾT:                                              │
+│                                                                 │
+│  1. NẾU Dept CÓ Divisions (children):                          │
+│     → User BẮT BUỘC phải thuộc về MỘT Division cụ thể          │
+│     → User KHÔNG ĐƯỢC thuộc trực tiếp vào Dept parent          │
+│     → Ví dụ: Staff của Operations PHẢI thuộc PERI/GRO/Delica/  │
+│              D&D/CS, KHÔNG được thuộc trực tiếp OP             │
+│                                                                 │
+│  2. NẾU Dept KHÔNG CÓ Divisions (leaf node):                   │
+│     → User có thể thuộc trực tiếp vào Dept đó                  │
+│     → Ví dụ: Staff có thể thuộc trực tiếp Admin vì Admin       │
+│              không có divisions con                            │
+│                                                                 │
+│  LÝ DO:                                                         │
+│     → Đảm bảo filter logic chính xác                           │
+│     → Sum of children = parent total                           │
+│     → Tránh "orphan users" trong parent nodes                  │
+│     → Task department được lấy từ creator.department_id        │
+│                                                                 │
+│  VALIDATION KHI TẠO/CẬP NHẬT USER:                              │
+│     → Check: Dept có children không?                           │
+│     → Nếu có: Reject assignment, yêu cầu chọn Division cụ thể  │
+│     → Nếu không: Allow assignment trực tiếp vào Dept           │
+│                                                                 │
+│  IMPACT:                                                        │
+│     → User Management: Validation khi assign department        │
+│     → Task Filter: Filter by dept_ids works correctly          │
+│     → Reports: Aggregation by department accurate              │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**SQL để kiểm tra vi phạm rule:**
+```sql
+-- Tìm users thuộc parent dept (có children) - VI PHẠM rule
+SELECT s.staff_id, s.staff_name, d.department_name, d.department_id
+FROM staff s
+JOIN departments d ON s.department_id = d.department_id
+WHERE EXISTS (
+    SELECT 1 FROM departments child
+    WHERE child.parent_id = d.department_id
+);
+-- Kết quả PHẢI = 0 rows
+```
+
+**Code validation (pseudo-code):**
+```php
+// Khi tạo/update user với department_id
+function validateDepartmentAssignment($departmentId) {
+    $dept = Department::find($departmentId);
+    $hasChildren = Department::where('parent_id', $departmentId)->exists();
+
+    if ($hasChildren) {
+        throw new ValidationException(
+            "Cannot assign user directly to '{$dept->department_name}'. " .
+            "Please select a specific division."
+        );
+    }
+    return true;
+}
+```
+
+---
+
 ### 10. Session Start (Khởi động phiên làm việc mới)
 
 **⚠️ BẮT BUỘC**: Trước khi bắt đầu code, **PHẢI** đồng bộ nhánh với remote:
