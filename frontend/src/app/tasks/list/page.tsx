@@ -846,20 +846,21 @@ export default function TaskListPage() {
                           </div>
                         </td>
                         <td className="px-4 py-3 text-sm border-r border-gray-200">
-                          <div className="flex items-center justify-start gap-2">
-                            {/* Only show expand button if task has subtasks */}
-                            {task.subTasks && task.subTasks.length > 0 ? (
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-gray-900 dark:text-white">{task.taskGroupName}</span>
+                            {/* Expand button at the END of Task Group cell */}
+                            {task.subTasks && task.subTasks.length > 0 && (
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   toggleRow(task.id);
                                 }}
-                                className="flex items-center justify-center w-5 h-5 hover:bg-gray-200 rounded transition-colors"
+                                className="flex-shrink-0 flex items-center justify-center w-6 h-6 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
                                 aria-expanded={expandedRows === task.id}
                                 aria-label={expandedRows === task.id ? 'Collapse subtasks' : 'Expand subtasks'}
                               >
                                 <svg
-                                  className={`w-4 h-4 text-gray-600 transition-transform ${
+                                  className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform ${
                                     expandedRows === task.id ? 'rotate-180' : ''
                                   }`}
                                   fill="none"
@@ -875,11 +876,7 @@ export default function TaskListPage() {
                                   />
                                 </svg>
                               </button>
-                            ) : (
-                              // Placeholder to maintain consistent alignment
-                              <div className="w-5 h-5" />
                             )}
-                            <span className="text-gray-900">{task.taskGroupName}</span>
                           </div>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-center border-r border-gray-200">
