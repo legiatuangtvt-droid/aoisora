@@ -224,11 +224,11 @@ INSERT INTO `departments` VALUES
 -- Child Divisions under OP (5)
 (7,'Perisable','PERI','Perisable Division',1,1,'Leaf','#10b981','#d1fae5',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),
 (8,'Grocery','GRO','Grocery Division',1,2,'ShoppingCart','#6366f1','#e0e7ff',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),
-(9,'Delica','DELI','Delica Division',1,3,'Utensils','#f97316','#ffedd5',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),
-(10,'D&D','DD','D&D Division',1,4,'Gift','#a855f7','#f3e8ff',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),
+(9,'Delica','Delica','Delica Division',1,3,'Utensils','#f97316','#ffedd5',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),
+(10,'D&D','D&D','D&D Division',1,4,'Gift','#a855f7','#f3e8ff',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),
 (11,'CS','CS','Customer Service Division',1,5,'Headphones','#14b8a6','#ccfbf1',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),
 -- Child Divisions under Admin (3)
-(12,'Admin Div','ADMINDIV','Admin Division',2,1,'Folder','#84cc16','#ecfccb',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),
+(12,'Admin','ADM','Admin Division',2,1,'Folder','#84cc16','#ecfccb',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),
 (13,'MMD','MMD','MMD Division',2,2,'Package','#eab308','#fef9c3',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),
 (14,'ACC','ACC','Accounting Division',2,3,'Calculator','#22c55e','#dcfce7',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),
 -- Child Divisions under Planning (3)

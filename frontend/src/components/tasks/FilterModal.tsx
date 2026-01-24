@@ -39,6 +39,28 @@ export default function FilterModal({
   );
   const [expandedSection, setExpandedSection] = useState<FilterSection>(null);
 
+  // Helper: Format division display name
+  // Show "Name (CODE)" only if code is a meaningful abbreviation (like PERI, GRO)
+  // Hide code if: empty, same as name, or just first letters of name
+  const formatDivisionName = (name: string, code: string): string => {
+    if (!code) return name;
+
+    const upperCode = code.toUpperCase();
+    const upperName = name.toUpperCase();
+
+    // Hide code if same as name (case-insensitive)
+    if (upperCode === upperName) return name;
+
+    // Hide code if it's just the first letters of name (abbreviation pattern)
+    // e.g., "Delica" with code "DELI" or "Admin" with code "ADM"
+    if (upperName.startsWith(upperCode) || upperName.replace(/[^A-Z]/g, '').startsWith(upperCode)) {
+      return name;
+    }
+
+    // Show code for meaningful abbreviations (like PERI for Perisable, GRO for Grocery)
+    return `${name} (${code})`;
+  };
+
   // Transform flat API departments to hierarchical structure
   const hierarchicalDepts = useMemo((): Department[] => {
     // Get parent departments (no parent_id)
@@ -53,7 +75,7 @@ export default function FilterModal({
         .sort((a, b) => a.sort_order - b.sort_order)
         .map((child) => ({
           id: String(child.department_id),
-          name: child.department_name,
+          name: formatDivisionName(child.department_name, child.department_code || ''),
           code: child.department_code || '',
           level: 2,
         }));
