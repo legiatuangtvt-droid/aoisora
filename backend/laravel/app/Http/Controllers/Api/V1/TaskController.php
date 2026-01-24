@@ -57,20 +57,28 @@ class TaskController extends Controller
         $effectiveUser = $this->getEffectiveUser($request);
         $effectiveStaffId = $effectiveUser ? $effectiveUser->staff_id : null;
 
-        // DRAFT ownership filter: Only show DRAFT tasks to their creator
-        // This ensures pagination accuracy (server returns only tasks user can see)
-        if ($effectiveStaffId) {
-            $query->where(function ($q) use ($effectiveStaffId) {
-                // Show: non-DRAFT tasks OR DRAFT tasks created by current user
-                $q->where('status_id', '!=', self::DRAFT_STATUS_ID)
-                  ->orWhere(function ($subQ) use ($effectiveStaffId) {
-                      $subQ->where('status_id', self::DRAFT_STATUS_ID)
-                           ->where('created_staff_id', $effectiveStaffId);
-                  });
-            });
+        // Store users (S1-S6) should NOT see DRAFT or APPROVE tasks
+        // These tasks have no store assigned yet and Store users can't take action on them
+        $permissionService = app(\App\Services\JobGradePermissionService::class);
+        if ($effectiveUser && !$permissionService->isHQGrade($effectiveUser->job_grade ?? '')) {
+            // Store user: exclude DRAFT and APPROVE status tasks
+            $query->whereNotIn('status_id', [self::DRAFT_STATUS_ID, self::APPROVE_STATUS_ID]);
         } else {
-            // No authenticated user: exclude all DRAFT tasks
-            $query->where('status_id', '!=', self::DRAFT_STATUS_ID);
+            // HQ user: apply DRAFT ownership filter
+            // Only show DRAFT tasks to their creator (ensures pagination accuracy)
+            if ($effectiveStaffId) {
+                $query->where(function ($q) use ($effectiveStaffId) {
+                    // Show: non-DRAFT tasks OR DRAFT tasks created by current user
+                    $q->where('status_id', '!=', self::DRAFT_STATUS_ID)
+                      ->orWhere(function ($subQ) use ($effectiveStaffId) {
+                          $subQ->where('status_id', self::DRAFT_STATUS_ID)
+                               ->where('created_staff_id', $effectiveStaffId);
+                      });
+                });
+            } else {
+                // No authenticated user: exclude all DRAFT tasks
+                $query->where('status_id', '!=', self::DRAFT_STATUS_ID);
+            }
         }
 
         // Eager load relationships to prevent N+1 queries (Task 2.3)

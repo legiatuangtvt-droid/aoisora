@@ -568,8 +568,12 @@ export default function TaskListPage() {
     return matchesDeptColumn && matchesStatusColumn && matchesHQCheckColumn;
   });
 
-  // Display tasks (client-side column filters applied)
-  const paginatedTasks = filteredTasks;
+  // Re-number tasks after client-side filtering to show correct sequence (1, 2, 3...)
+  // This is necessary because Store users may have APPROVE/DRAFT tasks filtered out
+  const paginatedTasks = filteredTasks.map((task, index) => ({
+    ...task,
+    no: (currentPage - 1) * itemsPerPage + index + 1,
+  }));
 
   // Calculate actual displayed count (after client-side filters)
   // This may differ from server's totalItems due to DRAFT ownership filter
