@@ -280,11 +280,8 @@ export default function TaskListPage() {
       }
 
       // Department filter from modal (supports multiple departments)
-      if (filters.departments.length === 1) {
-        // Single department - use exact filter
-        queryParams['filter[dept_id]'] = parseInt(filters.departments[0]);
-      } else if (filters.departments.length > 1) {
-        // Multiple departments - use comma-separated filter
+      // Always use dept_ids filter - filters by creator's department (staff.department_id)
+      if (filters.departments.length > 0) {
         queryParams['filter[dept_ids]'] = filters.departments.join(',');
       }
 
