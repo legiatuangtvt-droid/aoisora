@@ -84,9 +84,21 @@ function transformApiSubTasks(subTasks: ApiTask[] | undefined): SubTask[] {
 
 // Transform API Task to UI TaskGroup format
 function transformApiTaskToTaskGroup(task: ApiTask, index: number, departments: Department[]): TaskGroup {
+  // Find the department from task.dept_id (creator's department)
   const dept = departments.find(d => d.department_id === task.dept_id);
-  const deptCode = dept?.department_code || dept?.department_name?.substring(0, 3).toUpperCase() || 'N/A';
-  const deptName = dept?.department_name || '';
+
+  // If department has a parent_id, find the parent (division) and use its code
+  // This ensures we display the division (OP, Admin) instead of child department (PERI, GRO)
+  let displayDept = dept;
+  if (dept?.parent_id) {
+    const parentDept = departments.find(d => d.department_id === dept.parent_id);
+    if (parentDept) {
+      displayDept = parentDept;
+    }
+  }
+
+  const deptCode = displayDept?.department_code || displayDept?.department_name?.substring(0, 3).toUpperCase() || 'N/A';
+  const deptName = displayDept?.department_name || '';
 
   // Transform nested sub_tasks from API
   const subTasks = transformApiSubTasks(task.sub_tasks);
