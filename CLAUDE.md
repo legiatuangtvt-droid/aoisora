@@ -4527,7 +4527,7 @@ Request → Controller → Service → Model → Resource → Response
 |---|---------------|-------------|------------|--------|-----------|
 | O.1 | Page layout - Light mode | Header, filters, table hiển thị đúng layout | ✅ | ✅ | 2026-01-24 |
 | O.2 | Page layout - Dark mode | Colors chuyển đổi phù hợp dark theme | ✅ | ✅ | 2026-01-24 |
-| O.3 | Filter accordion | Click → expand/collapse, HQ Check chỉ có 2 options (Not Yet, Done) | 🔄 | 🔄 FIX | 2026-01-24 |
+| O.3 | Filter accordion | Click → expand/collapse, HQ Check chỉ có 2 options (Not Yet, Done) | ✅ | ✅ | 2026-01-24 |
 | O.4 | Filter chips | Selected filters hiển thị chips, X để remove | ⏳ | ⏳ | - |
 | O.5 | Department dropdown | Dropdown mở, options hiển thị đầy đủ | ⏳ | ⏳ | - |
 | O.6 | Status filter badges | Badges có màu đúng (Draft=gray, Approve=yellow, etc.) | ⏳ | ⏳ | - |
