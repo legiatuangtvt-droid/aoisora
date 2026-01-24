@@ -9,7 +9,7 @@ import { UserProvider } from "@/contexts/UserContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { IdleTimerProvider } from "@/contexts/IdleTimerContext";
 import AuthGuard from "@/components/auth/AuthGuard";
-import UserSwitcherBubble from "@/components/UserSwitcherBubble";
+import DevToolsPanel from "@/components/DevToolsPanel";
 import DevLogger from "@/components/DevLogger";
 import SessionWarningWrapper from "@/components/SessionWarningWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
@@ -52,7 +52,7 @@ export default function RootLayout({
                         </AuthGuard>
                       </ErrorBoundary>
                       <SessionWarningWrapper />
-                      <UserSwitcherBubble />
+                      <DevToolsPanel />
                       <DevLogger />
                     </UserProvider>
                   </LanguageProvider>

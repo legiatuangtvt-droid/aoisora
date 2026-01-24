@@ -1,7 +1,6 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { useState, ReactNode } from 'react';
 
 /**
@@ -12,6 +11,8 @@ import { useState, ReactNode } from 'react';
  * - gcTime: 5 minutes - unused data is garbage collected after 5 min
  * - refetchOnWindowFocus: false - don't refetch just because window gained focus
  * - retry: 1 - retry failed requests once
+ *
+ * Note: ReactQueryDevtools has been merged into DevToolsPanel for unified dev experience
  */
 export default function QueryProvider({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
@@ -41,9 +42,6 @@ export default function QueryProvider({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      {process.env.NODE_ENV === 'development' && (
-        <ReactQueryDevtools initialIsOpen={false} position="bottom" />
-      )}
     </QueryClientProvider>
   );
 }
