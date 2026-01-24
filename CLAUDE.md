@@ -4525,7 +4525,7 @@ Request → Controller → Service → Model → Resource → Response
 
 | # | Test Scenario | Expected UI | Screenshot | Status | Tested At |
 |---|---------------|-------------|------------|--------|-----------|
-| O.1 | Page layout - Light mode | Header, filters, table hiển thị đúng layout | ⏳ | ⏳ | - |
+| O.1 | Page layout - Light mode | Header, filters, table hiển thị đúng layout | ✅ | ✅ | 2026-01-24 |
 | O.2 | Page layout - Dark mode | Colors chuyển đổi phù hợp dark theme | ⏳ | ⏳ | - |
 | O.3 | Filter accordion | Click → expand/collapse animation smooth | ⏳ | ⏳ | - |
 | O.4 | Filter chips | Selected filters hiển thị chips, X để remove | ⏳ | ⏳ | - |
@@ -4785,12 +4785,12 @@ Request → Controller → Service → Model → Resource → Response
 │    → Step 1 CLI/Bash Tests: ✅ PASSED (2026-01-23)             │
 │    → Step 2 Manual Tests: ✅ PASSED (2026-01-23)               │
 │      54/56 tests passed, 1 bug found (BUG#1), 1 fix applied    │
-│    → Step 3 UI/UX Screenshot Tests: 🔄 IN PROGRESS (3/155)     │
-│      N.1 ✅ (typo fixes), N.2 N/A, N.3 ✅ (button disable)     │
+│    → Step 3 UI/UX Screenshot Tests: 🔄 IN PROGRESS (4/155)     │
+│      N.1-N.3 ✅, O.1 ✅ (Task List Light mode)                 │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 
-Last Updated: 2026-01-24 (Step 3 UI/UX Test - N.3 completed)
+Last Updated: 2026-01-24 (Step 3 UI/UX Test - O.1 completed)
 ```
 
 ### LEGEND
