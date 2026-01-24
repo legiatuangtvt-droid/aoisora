@@ -157,14 +157,13 @@ export function CreatorAvatar({
                 )}
               </div>
 
-              {/* Job Grade Badge - positioned at bottom-right */}
+              {/* Job Grade Badge - positioned at bottom-right (32x19px per Figma) */}
               {jobGrade && (
                 <span
                   className="
                     absolute -bottom-0.5 -right-1
                     flex items-center justify-center
-                    min-w-[28px] h-[17px]
-                    px-2
+                    w-[32px] h-[19px]
                     text-[10px] font-bold text-white
                     rounded-full
                     border-2 border-white dark:border-gray-800
