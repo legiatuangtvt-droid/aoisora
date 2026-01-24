@@ -943,8 +943,7 @@ export default function TaskListPage() {
                               <td className="px-4 py-2 text-center border-r border-gray-200"></td>
                               <td className="px-4 py-2 border-r border-gray-200"></td>
                               <td className="px-4 py-2 text-sm text-gray-700 border-r border-gray-200">
-                                <div className="pl-8 flex items-start gap-2">
-                                  <span className="text-gray-400">•</span>
+                                <div className="pl-8">
                                   <span>
                                     {subTask.name}
                                     {subTask.assignee && (
