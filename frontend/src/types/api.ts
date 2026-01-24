@@ -73,12 +73,20 @@ export interface Staff {
   phone: string | null;
   store_id: number | null;
   department_id: number | null;
+  job_grade?: string | null;  // Optional - may not exist in all contexts
   role: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
   store?: Store;
   department?: Department;
+}
+
+// Minimal staff info returned in list views (from TaskListResource)
+export interface StaffSummary {
+  staff_id: number;
+  staff_name: string;
+  job_grade: string | null;
 }
 
 export interface StaffCreate {
@@ -196,6 +204,8 @@ export interface Task {
   do_staff?: Staff;
   created_staff?: Staff;
   approver?: Staff;
+  // API response uses "createdBy" (from TaskListResource)
+  createdBy?: StaffSummary;
   checklists?: TaskCheckList[];
   // Nested sub-tasks (recursive structure, max 5 levels)
   sub_tasks?: Task[];

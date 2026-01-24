@@ -28,12 +28,22 @@ export interface SubTask {
   completedAt?: string;
 }
 
+// Creator info for display in task list
+export interface TaskCreator {
+  staff_id: number;
+  staff_name: string;
+  job_grade: string | null;
+  department_name?: string;
+  department_code?: string;
+}
+
 // Task Group Interface
 export interface TaskGroup {
   id: string;
   no: number;
   dept: string;
   deptId: number | null;  // Department ID for filtering
+  deptName?: string;      // Full department name for creator popup
   taskGroupName: string;
   taskType?: TaskType;
   startDate: string;
@@ -48,6 +58,7 @@ export interface TaskGroup {
   subTasks?: SubTask[];
   isExpanded?: boolean;
   createdStaffId?: number | null;  // Staff ID who created the task (for DRAFT filtering)
+  creator?: TaskCreator | null;     // Creator info for avatar/popup display
 }
 
 // Filter Interface

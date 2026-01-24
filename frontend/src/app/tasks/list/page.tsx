@@ -3,7 +3,8 @@
 import * as React from 'react';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { TaskGroup, DateMode, TaskFilters, TaskStatus, HQCheckStatus, SubTask } from '@/types/tasks';
+import { TaskGroup, DateMode, TaskFilters, TaskStatus, HQCheckStatus, SubTask, TaskCreator } from '@/types/tasks';
+import { CreatorAvatar } from '@/components/ui/CreatorAvatar';
 import { Task as ApiTask, Department } from '@/types/api';
 import { getTasks, getDepartments, getTaskApprovalHistory, pauseTask, DraftInfo, PaginatedTaskResponse, TaskQueryParamsExtended } from '@/lib/api';
 import StatusPill from '@/components/ui/StatusPill';
@@ -85,6 +86,7 @@ function transformApiSubTasks(subTasks: ApiTask[] | undefined): SubTask[] {
 function transformApiTaskToTaskGroup(task: ApiTask, index: number, departments: Department[]): TaskGroup {
   const dept = departments.find(d => d.department_id === task.dept_id);
   const deptCode = dept?.department_code || dept?.department_name?.substring(0, 3).toUpperCase() || 'N/A';
+  const deptName = dept?.department_name || '';
 
   // Transform nested sub_tasks from API
   const subTasks = transformApiSubTasks(task.sub_tasks);
@@ -114,11 +116,21 @@ function transformApiTaskToTaskGroup(task: ApiTask, index: number, departments: 
     ? task.calculated_status.toUpperCase() as TaskGroup['status']
     : STATUS_MAP[task.status_id || 7] || 'NOT_YET';
 
+  // Extract creator info from API response (createdBy field from TaskListResource)
+  const creator = task.createdBy ? {
+    staff_id: task.createdBy.staff_id,
+    staff_name: task.createdBy.staff_name,
+    job_grade: task.createdBy.job_grade,
+    department_name: deptName,
+    department_code: deptCode,
+  } : null;
+
   return {
     id: task.task_id.toString(),
     no: index + 1,
     dept: deptCode,
     deptId: task.dept_id,
+    deptName: deptName,
     taskGroupName: task.task_name,
     taskType: undefined,
     startDate: formatDateForUI(task.start_date),
@@ -132,6 +144,7 @@ function transformApiTaskToTaskGroup(task: ApiTask, index: number, departments: 
     hqCheck: HQ_CHECK_MAP[task.status_id || 7] || 'NOT_YET',
     subTasks: subTasks,
     createdStaffId: task.created_staff_id,
+    creator: creator,
   };
 }
 
@@ -822,13 +835,21 @@ export default function TaskListPage() {
                           {task.no}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm border-r border-gray-200">
-                          <div className="flex items-center justify-start gap-2">
-                            <div className="w-5 h-5 rounded-full bg-gray-700 flex items-center justify-center">
-                              <span className="text-[10px] text-white font-bold">
-                                {task.dept.charAt(0)}
-                              </span>
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <div className="w-5 h-5 rounded-full bg-gray-700 flex items-center justify-center">
+                                <span className="text-[10px] text-white font-bold">
+                                  {task.dept.charAt(0)}
+                                </span>
+                              </div>
+                              <span className="font-medium text-gray-900 dark:text-white">{task.dept}</span>
                             </div>
-                            <span className="font-medium text-gray-900">{task.dept}</span>
+                            {task.creator && (
+                              <CreatorAvatar
+                                creator={task.creator}
+                                size="sm"
+                              />
+                            )}
                           </div>
                         </td>
                         <td className="px-4 py-3 text-sm border-r border-gray-200">
