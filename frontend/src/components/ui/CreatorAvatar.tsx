@@ -140,8 +140,8 @@ export function CreatorAvatar({
           <div className="flex items-center gap-3">
             {/* Avatar with Job Grade Badge */}
             <div className="relative flex-shrink-0">
-              {/* Avatar */}
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center text-white font-semibold text-base overflow-hidden">
+              {/* Avatar - 40x40px per Figma */}
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center text-white font-semibold text-sm overflow-hidden">
                 {creator.avatar_url ? (
                   <img
                     src={creator.avatar_url}
