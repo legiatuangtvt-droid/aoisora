@@ -867,9 +867,11 @@ class TaskController extends Controller
         $bySource = [];
 
         foreach ($sources as $source) {
+            // Only count parent tasks (not sub-tasks) - business rule applies to parent tasks only
             $count = Task::whereIn('status_id', [self::DRAFT_STATUS_ID, self::APPROVE_STATUS_ID])
                 ->where('created_staff_id', $staffId)
                 ->where('source', $source)
+                ->whereNull('parent_task_id')  // Only parent tasks count toward limit
                 ->count();
 
             $bySource[$source] = [
@@ -922,8 +924,10 @@ class TaskController extends Controller
         $warningStartDate = now()->subDays($staleDays - $warningDays); // 25 days old
         $warningEndDate = now()->subDays($staleDays - 1); // 29 days old
 
+        // Only show expiring parent tasks (not sub-tasks)
         $expiringDrafts = Task::where('status_id', self::DRAFT_STATUS_ID)
             ->where('created_staff_id', $staffId)
+            ->whereNull('parent_task_id')  // Only parent tasks
             ->whereBetween('updated_at', [$warningEndDate, $warningStartDate])
             ->get()
             ->map(function ($task) use ($staleDays) {
@@ -951,9 +955,11 @@ class TaskController extends Controller
     private function checkDraftLimit(int $staffId, string $source = Task::SOURCE_TASK_LIST): array
     {
         // Count drafts AND pending approval tasks (both count toward limit)
+        // Only count parent tasks (not sub-tasks) - business rule applies to parent tasks only
         $currentDraftCount = Task::whereIn('status_id', [self::DRAFT_STATUS_ID, self::APPROVE_STATUS_ID])
             ->where('created_staff_id', $staffId)
             ->where('source', $source)
+            ->whereNull('parent_task_id')  // Only parent tasks count toward limit
             ->count();
 
         $sourceLabel = $this->getSourceLabel($source);
