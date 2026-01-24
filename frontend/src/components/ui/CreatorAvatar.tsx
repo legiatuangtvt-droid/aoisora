@@ -161,15 +161,15 @@ export function CreatorAvatar({
               {jobGrade && (
                 <span
                   className="
-                    absolute -bottom-1 -right-1
-                    px-1.5 py-0.5
-                    bg-teal-100 text-teal-700
-                    dark:bg-teal-900/50 dark:text-teal-300
-                    text-[10px] font-bold
-                    rounded
-                    border border-white dark:border-gray-800
-                    shadow-sm
+                    absolute -bottom-0.5 -right-1
+                    flex items-center justify-center
+                    min-w-[28px] h-[17px]
+                    px-2
+                    text-[10px] font-bold text-white
+                    rounded-full
+                    border-2 border-white dark:border-gray-800
                   "
+                  style={{ backgroundColor: '#22A6A1' }}
                 >
                   {jobGrade}
                 </span>
