@@ -157,11 +157,11 @@ export function CreatorAvatar({
                 )}
               </div>
 
-              {/* Job Grade Badge - positioned at bottom-left */}
+              {/* Job Grade Badge - positioned at bottom-right */}
               {jobGrade && (
                 <span
                   className="
-                    absolute -bottom-1 -left-1
+                    absolute -bottom-1 -right-1
                     px-1.5 py-0.5
                     bg-teal-100 text-teal-700
                     dark:bg-teal-900/50 dark:text-teal-300
