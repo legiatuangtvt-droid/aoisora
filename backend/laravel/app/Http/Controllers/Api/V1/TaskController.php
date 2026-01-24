@@ -65,20 +65,30 @@ class TaskController extends Controller
             // Store user: exclude DRAFT and APPROVE status tasks
             $query->whereNotIn('status_id', [self::DRAFT_STATUS_ID, self::APPROVE_STATUS_ID]);
         } else {
-            // HQ user: apply DRAFT ownership filter
-            // Only show DRAFT tasks to their creator (ensures pagination accuracy)
+            // HQ user: apply DRAFT and APPROVE ownership filter
+            // - DRAFT tasks: Only show to their creator
+            // - APPROVE tasks: Only show to creator OR approver
             if ($effectiveStaffId) {
                 $query->where(function ($q) use ($effectiveStaffId) {
-                    // Show: non-DRAFT tasks OR DRAFT tasks created by current user
-                    $q->where('status_id', '!=', self::DRAFT_STATUS_ID)
+                    // Show tasks that are NOT DRAFT and NOT APPROVE (other statuses visible to all HQ)
+                    $q->whereNotIn('status_id', [self::DRAFT_STATUS_ID, self::APPROVE_STATUS_ID])
+                      // OR DRAFT tasks created by current user
                       ->orWhere(function ($subQ) use ($effectiveStaffId) {
                           $subQ->where('status_id', self::DRAFT_STATUS_ID)
                                ->where('created_staff_id', $effectiveStaffId);
+                      })
+                      // OR APPROVE tasks where current user is creator OR approver
+                      ->orWhere(function ($subQ) use ($effectiveStaffId) {
+                          $subQ->where('status_id', self::APPROVE_STATUS_ID)
+                               ->where(function ($innerQ) use ($effectiveStaffId) {
+                                   $innerQ->where('created_staff_id', $effectiveStaffId)
+                                          ->orWhere('approver_id', $effectiveStaffId);
+                               });
                       });
                 });
             } else {
-                // No authenticated user: exclude all DRAFT tasks
-                $query->where('status_id', '!=', self::DRAFT_STATUS_ID);
+                // No authenticated user: exclude all DRAFT and APPROVE tasks
+                $query->whereNotIn('status_id', [self::DRAFT_STATUS_ID, self::APPROVE_STATUS_ID]);
             }
         }
 
