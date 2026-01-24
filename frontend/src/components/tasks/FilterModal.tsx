@@ -40,24 +40,19 @@ export default function FilterModal({
   const [expandedSection, setExpandedSection] = useState<FilterSection>(null);
 
   // Helper: Format division display name
-  // Show "Name (CODE)" only if code is a meaningful abbreviation (like PERI, GRO)
-  // Hide code if: empty, same as name, or just first letters of name
+  // Show "Name (CODE)" for meaningful abbreviations (like PERI, GRO)
+  // Hide code only if it's exactly the same as name (like Delica, D&D, CS)
   const formatDivisionName = (name: string, code: string): string => {
     if (!code) return name;
 
-    const upperCode = code.toUpperCase();
-    const upperName = name.toUpperCase();
+    // Only hide code if it's exactly the same as name (case-insensitive)
+    // Examples: "Delica" with code "Delica" → show "Delica"
+    //           "D&D" with code "D&D" → show "D&D"
+    if (code.toUpperCase() === name.toUpperCase()) return name;
 
-    // Hide code if same as name (case-insensitive)
-    if (upperCode === upperName) return name;
-
-    // Hide code if it's just the first letters of name (abbreviation pattern)
-    // e.g., "Delica" with code "DELI" or "Admin" with code "ADM"
-    if (upperName.startsWith(upperCode) || upperName.replace(/[^A-Z]/g, '').startsWith(upperCode)) {
-      return name;
-    }
-
-    // Show code for meaningful abbreviations (like PERI for Perisable, GRO for Grocery)
+    // Show code for all other cases
+    // Examples: "Perisable" with code "PERI" → show "Perisable (PERI)"
+    //           "Grocery" with code "GRO" → show "Grocery (GRO)"
     return `${name} (${code})`;
   };
 
