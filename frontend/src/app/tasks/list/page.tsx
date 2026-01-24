@@ -599,10 +599,10 @@ export default function TaskListPage() {
 
   return (
     <div className="bg-white dark:bg-gray-900">
-      <div className="p-8">
+      <div className="p-6">
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-6">
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold text-gray-900">List tasks</h1>
           {/* WebSocket connection indicator */}
           <div className="flex items-center gap-2 text-sm">
@@ -657,7 +657,7 @@ export default function TaskListPage() {
         )}
 
         {/* Date Display & Actions */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
           {/* Date Picker */}
           <DatePicker
             dateMode={dateMode}
@@ -758,21 +758,21 @@ export default function TaskListPage() {
           title="Failed to load tasks"
           message={error}
           onRetry={() => fetchTasks(departments)}
-          className="mb-6"
+          className="mb-4"
         />
       )}
 
       {/* Body - Table Container */}
       {!isLoading && !error && (
-        <div className="border border-gray-200 rounded-lg mb-6 overflow-hidden">
+        <div className="border border-gray-200 rounded-lg mb-4 overflow-hidden">
           <ResponsiveTable>
           <table className="w-full min-w-[800px]">
             <thead className="bg-pink-50">
                 <tr>
-                  <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
+                  <th scope="col" className="px-4 py-2.5 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
                     No
                   </th>
-                  <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
+                  <th scope="col" className="px-4 py-2.5 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
                     <div className="flex items-center justify-center gap-1">
                       <span>Dept</span>
                       <ColumnFilterDropdown
@@ -783,19 +783,19 @@ export default function TaskListPage() {
                       />
                     </div>
                   </th>
-                  <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
+                  <th scope="col" className="px-4 py-2.5 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
                     Task Group
                   </th>
-                  <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
+                  <th scope="col" className="px-4 py-2.5 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
                     Start → End
                   </th>
-                  <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
+                  <th scope="col" className="px-4 py-2.5 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
                     Progress
                   </th>
-                  <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
+                  <th scope="col" className="px-4 py-2.5 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
                     Unable
                   </th>
-                  <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
+                  <th scope="col" className="px-4 py-2.5 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
                     <div className="flex items-center justify-center gap-1">
                       <span>Status</span>
                       <ColumnFilterDropdown
@@ -806,7 +806,7 @@ export default function TaskListPage() {
                       />
                     </div>
                   </th>
-                  <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-gray-700 bg-pink-50">
+                  <th scope="col" className="px-4 py-2.5 text-center text-xs font-semibold text-gray-700 bg-pink-50">
                     <div className="flex items-center justify-center gap-1">
                       <span>HQ Check</span>
                       <ColumnFilterDropdown
@@ -831,10 +831,10 @@ export default function TaskListPage() {
                         style={{ animationDelay: `${index * 30}ms`, animationFillMode: 'both' }}
                         onClick={() => handleRowClick(task)}
                       >
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-center border-r border-gray-200">
+                        <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-900 text-center border-r border-gray-200">
                           {task.no}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm border-r border-gray-200">
+                        <td className="px-4 py-2.5 whitespace-nowrap text-sm border-r border-gray-200">
                           <div className="flex items-center justify-between gap-2">
                             <span className="font-medium text-gray-900 dark:text-white">{task.dept}</span>
                             {task.creator && (
@@ -845,7 +845,7 @@ export default function TaskListPage() {
                             )}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-sm border-r border-gray-200">
+                        <td className="px-4 py-2.5 text-sm border-r border-gray-200">
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-gray-900 dark:text-white">{task.taskGroupName}</span>
                             {/* Expand button at the END of Task Group cell */}
@@ -879,22 +879,22 @@ export default function TaskListPage() {
                             )}
                           </div>
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-center border-r border-gray-200">
+                        <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-900 text-center border-r border-gray-200">
                           {task.startDate} → {task.endDate}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-center border-r border-gray-200">
+                        <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-900 text-center border-r border-gray-200">
                           {task.progress.completed}/{task.progress.total}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-center border-r border-gray-200">
+                        <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-900 text-center border-r border-gray-200">
                           {task.unable}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm border-r border-gray-200">
+                        <td className="px-4 py-2.5 whitespace-nowrap text-sm border-r border-gray-200">
                           <div className="flex items-center justify-center">
                             <StatusPill status={task.status} />
                           </div>
                         </td>
                         {/* HQ Check + Action Menu */}
-                        <td className="px-4 py-3 whitespace-nowrap text-sm">
+                        <td className="px-4 py-2.5 whitespace-nowrap text-sm">
                           <div className="relative flex items-center justify-center">
                             <StatusPill status={task.hqCheck} />
                             {/* 3-dots Action Menu - positioned with margin from StatusPill */}
@@ -974,7 +974,7 @@ export default function TaskListPage() {
           </ResponsiveTable>
 
           {/* Pagination */}
-          <div className="bg-white px-4 py-3 border-t border-gray-200">
+          <div className="bg-white px-4 py-2.5 border-t border-gray-200">
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-600">
                 {displayedCount !== totalItems ? (
