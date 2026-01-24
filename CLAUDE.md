@@ -793,6 +793,11 @@ MYSQLD="D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysqld.exe"
 │  4. DEFAULT PASSWORD: password                                  │
 │     → Tất cả users có password = "password"                    │
 │     → Hash: $2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/...    │
+│                                                                 │
+│  5. VIETNAMESE ENCODING (UTF-8):                                │
+│     → File SQL chứa tiếng Việt PHẢI import với UTF-8           │
+│     → Dùng flag: --default-character-set=utf8mb4               │
+│     → Nếu không: ký tự tiếng Việt sẽ bị lỗi font (garbled)     │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -813,9 +818,13 @@ mysqld --defaults-file="D:\devtool\laragon\data\mysql\my.ini"
 ```
 
 **Import/Reset Database (Local):**
+
+> ⚠️ **QUAN TRỌNG - Vietnamese Encoding**: File SQL chứa tiếng Việt **BẮT BUỘC** phải import với flag `--default-character-set=utf8mb4`. Nếu không, các ký tự tiếng Việt sẽ bị lỗi font (garbled characters).
+
 ```bash
 cd "D:\Project\Aura Web"
-"D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysql.exe" -uroot auraorie68aa_aoisora < deploy/full_reset.sql
+# Import với UTF-8 encoding cho tiếng Việt
+"D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysql.exe" -uroot --default-character-set=utf8mb4 auraorie68aa_aoisora < deploy/full_reset.sql
 ```
 
 **Import/Reset Database (Production - phpMyAdmin):**
