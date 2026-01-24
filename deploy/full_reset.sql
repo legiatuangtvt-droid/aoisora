@@ -16,6 +16,16 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
+-- Current Database: `auraorie68aa_aoisora`
+--
+
+/*!40000 DROP DATABASE IF EXISTS `auraorie68aa_aoisora`*/;
+
+CREATE DATABASE /*!32312 IF NOT EXISTS*/ `auraorie68aa_aoisora` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
+
+USE `auraorie68aa_aoisora`;
+
+--
 -- Table structure for table `areas`
 --
 
@@ -24,10 +34,10 @@ DROP TABLE IF EXISTS `areas`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `areas` (
   `area_id` int NOT NULL AUTO_INCREMENT,
-  `area_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `area_code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `area_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `area_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `zone_id` int NOT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `is_active` tinyint(1) DEFAULT '1',
   `sort_order` int DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
@@ -58,8 +68,8 @@ DROP TABLE IF EXISTS `check_lists`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `check_lists` (
   `check_list_id` int NOT NULL AUTO_INCREMENT,
-  `check_list_name` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci,
+  `check_list_name` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `is_active` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`check_list_id`)
@@ -85,10 +95,10 @@ DROP TABLE IF EXISTS `code_master`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `code_master` (
   `code_master_id` int NOT NULL AUTO_INCREMENT,
-  `code_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci,
+  `code_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `sort_order` int DEFAULT '0',
   `is_active` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
@@ -119,14 +129,14 @@ CREATE TABLE `daily_schedule_tasks` (
   `staff_id` int DEFAULT NULL,
   `store_id` int DEFAULT NULL,
   `schedule_date` date NOT NULL,
-  `group_id` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `task_code` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `task_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `group_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `task_code` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `task_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `start_time` time NOT NULL,
   `end_time` time NOT NULL,
   `status` int DEFAULT '1',
   `completed_at` timestamp NULL DEFAULT NULL,
-  `notes` text COLLATE utf8mb4_unicode_ci,
+  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`schedule_task_id`),
@@ -158,8 +168,8 @@ DROP TABLE IF EXISTS `daily_templates`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `daily_templates` (
   `template_id` int NOT NULL AUTO_INCREMENT,
-  `template_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci,
+  `template_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `template_data` json DEFAULT NULL,
   `applied_stores` json DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT '1',
@@ -187,14 +197,14 @@ DROP TABLE IF EXISTS `departments`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `departments` (
   `department_id` int NOT NULL AUTO_INCREMENT,
-  `department_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `department_code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci,
+  `department_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `department_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `parent_id` int DEFAULT NULL,
   `sort_order` int DEFAULT '0',
-  `icon` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `icon_color` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `icon_bg` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `icon` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `icon_color` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `icon_bg` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -207,34 +217,11 @@ CREATE TABLE `departments` (
 
 --
 -- Dumping data for table `departments`
--- Structure: 6 parent departments (OP, Admin, Control, Improvement, Planning, HR)
--- with child divisions under OP (5), Admin (3), and Planning (3)
 --
 
 LOCK TABLES `departments` WRITE;
 /*!40000 ALTER TABLE `departments` DISABLE KEYS */;
-INSERT INTO `departments` VALUES
--- Parent Departments (6)
-(1,'OP','OP','Operation Department',NULL,1,'Settings','#3b82f6','#dbeafe',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),
-(2,'Admin','ADMIN','Administration Department',NULL,2,'Building','#22c55e','#dcfce7',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),
-(3,'Control','CTRL','Control Department',NULL,3,'Shield','#f59e0b','#fef3c7',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),
-(4,'Improvement','IMP','Improvement Department',NULL,4,'TrendingUp','#8b5cf6','#ede9fe',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),
-(5,'Planning','PLAN','Planning Department',NULL,5,'Calendar','#ec4899','#fce7f3',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),
-(6,'HR','HR','Human Resources Department',NULL,6,'Users','#06b6d4','#cffafe',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),
--- Child Divisions under OP (5)
-(7,'Perisable','PERI','Perisable Division',1,1,'Leaf','#10b981','#d1fae5',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),
-(8,'Grocery','GRO','Grocery Division',1,2,'ShoppingCart','#6366f1','#e0e7ff',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),
-(9,'Delica','Delica','Delica Division',1,3,'Utensils','#f97316','#ffedd5',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),
-(10,'D&D','D&D','D&D Division',1,4,'Gift','#a855f7','#f3e8ff',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),
-(11,'CS','CS','Customer Service Division',1,5,'Headphones','#14b8a6','#ccfbf1',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),
--- Child Divisions under Admin (3)
-(12,'Admin','ADM','Admin Division',2,1,'Folder','#84cc16','#ecfccb',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),
-(13,'MMD','MMD','MMD Division',2,2,'Package','#eab308','#fef9c3',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),
-(14,'ACC','ACC','Accounting Division',2,3,'Calculator','#22c55e','#dcfce7',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),
--- Child Divisions under Planning (3)
-(15,'MKT','MKT','Marketing Division',5,1,'Megaphone','#ec4899','#fce7f3',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),
-(16,'SPA','SPA','SPA Division',5,2,'Sparkles','#f472b6','#fce7f3',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),
-(17,'ORD','ORD','Order Division',5,3,'ClipboardList','#fb923c','#fed7aa',1,'2026-01-24 00:00:00','2026-01-24 00:00:00');
+INSERT INTO `departments` VALUES (1,'OP','OP','Operation Department',NULL,1,'Settings','#3b82f6','#dbeafe',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),(2,'Admin','ADMIN','Administration Department',NULL,2,'Building','#22c55e','#dcfce7',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),(3,'Control','CTRL','Control Department',NULL,3,'Shield','#f59e0b','#fef3c7',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),(4,'Improvement','IMP','Improvement Department',NULL,4,'TrendingUp','#8b5cf6','#ede9fe',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),(5,'Planning','PLAN','Planning Department',NULL,5,'Calendar','#ec4899','#fce7f3',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),(6,'HR','HR','Human Resources Department',NULL,6,'Users','#06b6d4','#cffafe',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),(7,'Perisable','PERI','Perisable Division',1,1,'Leaf','#10b981','#d1fae5',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),(8,'Grocery','GRO','Grocery Division',1,2,'ShoppingCart','#6366f1','#e0e7ff',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),(9,'Delica','Delica','Delica Division',1,3,'Utensils','#f97316','#ffedd5',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),(10,'D&D','D&D','D&D Division',1,4,'Gift','#a855f7','#f3e8ff',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),(11,'CS','CS','Customer Service Division',1,5,'Headphones','#14b8a6','#ccfbf1',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),(12,'Admin','ADM','Admin Division',2,1,'Folder','#84cc16','#ecfccb',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),(13,'MMD','MMD','MMD Division',2,2,'Package','#eab308','#fef9c3',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),(14,'ACC','ACC','Accounting Division',2,3,'Calculator','#22c55e','#dcfce7',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),(15,'MKT','MKT','Marketing Division',5,1,'Megaphone','#ec4899','#fce7f3',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),(16,'SPA','SPA','SPA Division',5,2,'Sparkles','#f472b6','#fce7f3',1,'2026-01-24 00:00:00','2026-01-24 00:00:00'),(17,'ORD','ORD','Order Division',5,3,'ClipboardList','#fb923c','#fed7aa',1,'2026-01-24 00:00:00','2026-01-24 00:00:00');
 /*!40000 ALTER TABLE `departments` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -248,10 +235,10 @@ DROP TABLE IF EXISTS `manual_documents`;
 CREATE TABLE `manual_documents` (
   `document_id` int NOT NULL AUTO_INCREMENT,
   `folder_id` int DEFAULT NULL,
-  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci,
-  `version` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '1.0',
-  `status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'draft',
+  `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `version` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '1.0',
+  `status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'draft',
   `tags` json DEFAULT NULL,
   `created_by` int DEFAULT NULL,
   `updated_by` int DEFAULT NULL,
@@ -287,10 +274,10 @@ DROP TABLE IF EXISTS `manual_folders`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `manual_folders` (
   `folder_id` int NOT NULL AUTO_INCREMENT,
-  `folder_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `folder_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `parent_id` int DEFAULT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci,
-  `icon` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `icon` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `sort_order` int DEFAULT '0',
   `display_order` int DEFAULT '0',
   `is_active` tinyint(1) DEFAULT '1',
@@ -323,12 +310,12 @@ CREATE TABLE `manual_media` (
   `media_id` int NOT NULL AUTO_INCREMENT,
   `step_id` int DEFAULT NULL,
   `document_id` int DEFAULT NULL,
-  `media_type` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `file_path` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `file_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `media_type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `file_path` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `file_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `file_size` int DEFAULT NULL,
-  `mime_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `alt_text` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `mime_type` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `alt_text` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `sort_order` int DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`media_id`),
@@ -359,10 +346,10 @@ CREATE TABLE `manual_steps` (
   `step_id` int NOT NULL AUTO_INCREMENT,
   `document_id` int DEFAULT NULL,
   `step_number` int NOT NULL,
-  `title` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `content` text COLLATE utf8mb4_unicode_ci,
-  `tips` text COLLATE utf8mb4_unicode_ci,
-  `warnings` text COLLATE utf8mb4_unicode_ci,
+  `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `tips` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `warnings` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`step_id`),
@@ -419,9 +406,9 @@ DROP TABLE IF EXISTS `manuals`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `manuals` (
   `manual_id` int NOT NULL AUTO_INCREMENT,
-  `manual_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `manual_url` text COLLATE utf8mb4_unicode_ci,
-  `description` text COLLATE utf8mb4_unicode_ci,
+  `manual_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `manual_url` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`manual_id`)
@@ -448,10 +435,10 @@ CREATE TABLE `notifications` (
   `notification_id` int NOT NULL AUTO_INCREMENT,
   `recipient_staff_id` int DEFAULT NULL,
   `sender_staff_id` int DEFAULT NULL,
-  `notification_type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `message` text COLLATE utf8mb4_unicode_ci,
-  `link_url` text COLLATE utf8mb4_unicode_ci,
+  `notification_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `message` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `link_url` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `is_read` tinyint(1) DEFAULT '0',
   `read_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
@@ -481,8 +468,8 @@ DROP TABLE IF EXISTS `password_reset_tokens`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `password_reset_tokens` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `email` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `token` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `token` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `used` tinyint(1) DEFAULT '0',
   `is_valid` tinyint(1) DEFAULT '1',
   `expires_at` timestamp NOT NULL,
@@ -511,11 +498,11 @@ DROP TABLE IF EXISTS `personal_access_tokens`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `personal_access_tokens` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `tokenable_type` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tokenable_type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `tokenable_id` bigint unsigned NOT NULL,
-  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `token` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `abilities` text COLLATE utf8mb4_unicode_ci,
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `token` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `abilities` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `last_used_at` timestamp NULL DEFAULT NULL,
   `expires_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
@@ -523,7 +510,7 @@ CREATE TABLE `personal_access_tokens` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `token` (`token`),
   KEY `idx_personal_access_tokens_tokenable` (`tokenable_type`,`tokenable_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -532,7 +519,7 @@ CREATE TABLE `personal_access_tokens` (
 
 LOCK TABLES `personal_access_tokens` WRITE;
 /*!40000 ALTER TABLE `personal_access_tokens` DISABLE KEYS */;
-INSERT INTO `personal_access_tokens` VALUES (1,'App\\Models\\Staff',1,'access_token','8770a064210a1a7f12ec36265f2340cd7be3b2a42cc8699902c48e330c0e8016','[\"*\"]','2026-01-21 19:53:56','2026-01-21 20:05:03','2026-01-21 19:50:03','2026-01-21 19:53:56');
+INSERT INTO `personal_access_tokens` VALUES (1,'App\\Models\\Staff',1,'access_token','8770a064210a1a7f12ec36265f2340cd7be3b2a42cc8699902c48e330c0e8016','[\"*\"]','2026-01-21 19:53:56','2026-01-21 20:05:03','2026-01-21 19:50:03','2026-01-21 19:53:56'),(2,'App\\Models\\Staff',1,'access_token','cda396d47386d0fc65489157d0cb2e9fe2e60d51716455bd3bff763475064009','[\"*\"]','2026-01-24 07:12:07','2026-01-24 07:13:01','2026-01-24 06:58:01','2026-01-24 07:12:07');
 /*!40000 ALTER TABLE `personal_access_tokens` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -546,8 +533,8 @@ DROP TABLE IF EXISTS `refresh_tokens`;
 CREATE TABLE `refresh_tokens` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `staff_id` int NOT NULL,
-  `token_hash` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `family_id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `token_hash` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `family_id` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `expires_at` timestamp NOT NULL,
   `revoked_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
@@ -557,7 +544,7 @@ CREATE TABLE `refresh_tokens` (
   KEY `idx_family_id` (`family_id`),
   KEY `idx_expires_at` (`expires_at`),
   CONSTRAINT `fk_refresh_tokens_staff` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`staff_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -566,7 +553,7 @@ CREATE TABLE `refresh_tokens` (
 
 LOCK TABLES `refresh_tokens` WRITE;
 /*!40000 ALTER TABLE `refresh_tokens` DISABLE KEYS */;
-INSERT INTO `refresh_tokens` VALUES (1,1,'195fd0248299338040750148d0c49f77495cc924d9dc3831295213ab7a434955','cfbf82ea-6aca-4f99-b97d-728156437f95','2026-01-28 19:50:03',NULL,'2026-01-22 02:50:03');
+INSERT INTO `refresh_tokens` VALUES (1,1,'195fd0248299338040750148d0c49f77495cc924d9dc3831295213ab7a434955','cfbf82ea-6aca-4f99-b97d-728156437f95','2026-01-28 19:50:03',NULL,'2026-01-22 02:50:03'),(2,1,'625008c5ca4d4296dc6176e7d170b5e1f333d02ef0392d65285f6fdf2c8d52e4','dc7d0904-f8bb-47e8-8dc7-75f3449f1b2d','2026-01-31 06:58:01',NULL,'2026-01-24 13:58:01');
 /*!40000 ALTER TABLE `refresh_tokens` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -579,9 +566,9 @@ DROP TABLE IF EXISTS `regions`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `regions` (
   `region_id` int NOT NULL AUTO_INCREMENT,
-  `region_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `region_code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci,
+  `region_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `region_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `is_active` tinyint(1) DEFAULT '1',
   `sort_order` int DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
@@ -614,8 +601,8 @@ CREATE TABLE `shift_assignments` (
   `store_id` int DEFAULT NULL,
   `shift_date` date NOT NULL,
   `shift_code_id` int DEFAULT NULL,
-  `status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'assigned',
-  `notes` text COLLATE utf8mb4_unicode_ci,
+  `status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'assigned',
+  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `assigned_by` int DEFAULT NULL,
   `assigned_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`assignment_id`),
@@ -650,14 +637,14 @@ DROP TABLE IF EXISTS `shift_codes`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `shift_codes` (
   `shift_code_id` int NOT NULL AUTO_INCREMENT,
-  `shift_code` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `shift_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `shift_code` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `shift_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `start_time` time NOT NULL,
   `end_time` time NOT NULL,
   `total_hours` decimal(4,2) DEFAULT '8.00',
-  `shift_type` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'regular',
+  `shift_type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'regular',
   `break_minutes` int DEFAULT '60',
-  `color_code` varchar(7) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `color_code` varchar(7) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -685,8 +672,8 @@ DROP TABLE IF EXISTS `shift_templates`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `shift_templates` (
   `template_id` int NOT NULL AUTO_INCREMENT,
-  `template_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci,
+  `template_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `shift_pattern` json DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
@@ -713,27 +700,27 @@ DROP TABLE IF EXISTS `staff`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `staff` (
   `staff_id` int NOT NULL AUTO_INCREMENT,
-  `staff_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `staff_code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `username` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `email` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `google_id` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `phone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `staff_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `staff_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `username` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `google_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `phone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `store_id` int DEFAULT NULL,
   `region_id` int DEFAULT NULL,
   `zone_id` int DEFAULT NULL,
   `area_id` int DEFAULT NULL,
   `department_id` int DEFAULT NULL,
-  `team_id` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `role` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'STAFF',
-  `position` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `job_grade` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `sap_code` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `avatar_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `team_id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `role` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'STAFF',
+  `position` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `job_grade` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `sap_code` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `avatar_url` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `line_manager_id` int DEFAULT NULL,
   `joining_date` date DEFAULT NULL,
-  `password_hash` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'active',
+  `password_hash` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'active',
   `is_active` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -767,7 +754,7 @@ CREATE TABLE `staff` (
 
 LOCK TABLES `staff` WRITE;
 /*!40000 ALTER TABLE `staff` DISABLE KEYS */;
-INSERT INTO `staff` VALUES (1,'Admin User','ADMIN001','admin','admin@aoisora.vn',NULL,'0901234567',NULL,NULL,NULL,NULL,1,'OPE-STORE','ADMIN','System Administrator','G9','SAP001',NULL,NULL,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(2,'Trần Văn G8','G8001','g8user','g8@aoisora.vn',NULL,'0901234580',NULL,NULL,NULL,NULL,1,'OPE-QC','MANAGER','Senior Manager','G8','SAP010',NULL,1,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(3,'Nguyễn Thị G7','G7001','g7user','g7@aoisora.vn',NULL,'0901234581',NULL,NULL,NULL,NULL,1,'OPE-QC','MANAGER','Area Manager','G7','SAP011',NULL,1,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(4,'Nguyễn Văn Manager','MGR001','manager','manager@aoisora.vn',NULL,'0901234568',NULL,NULL,NULL,NULL,1,'OPE-STORE','MANAGER','Store Manager','G6','SAP002',NULL,1,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(5,'Lê Văn G5','G5001','g5user','g5@aoisora.vn',NULL,'0901234582',NULL,NULL,NULL,NULL,1,'OPE-QC','STAFF','Team Lead','G5','SAP012',NULL,2,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(6,'Phạm Văn G4','G4001','g4user','g4@aoisora.vn',NULL,'0901234583',NULL,NULL,NULL,NULL,1,'OPE-QC','STAFF','Senior Staff','G4','SAP013',NULL,2,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(7,'Trần Thị Staff','STF001','staff1','staff1@aoisora.vn',NULL,'0901234569',NULL,NULL,NULL,NULL,1,'OPE-STORE','STAFF','Sales Staff','G3','SAP003',NULL,4,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(8,'Hoàng Văn G2','G2001','g2user','g2@aoisora.vn',NULL,'0901234584',NULL,NULL,NULL,NULL,1,'OPE-QC','STAFF','Junior Staff','G2','SAP014',NULL,4,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(9,'Lê Văn QC','QC001','qc1','qc1@aoisora.vn',NULL,'0901234570',NULL,NULL,NULL,NULL,1,'OPE-QC','STAFF','QC Staff','G3','SAP004',NULL,4,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(10,'Phạm Thị Account','ACC001','acc1','acc1@aoisora.vn',NULL,'0901234571',NULL,NULL,NULL,NULL,2,'ACC-AP','STAFF','Accountant','G3','SAP005',NULL,4,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(11,'Nguyễn Văn Store1','S3-001','s3store1','s3store1@aoisora.vn',NULL,'0901111001',NULL,NULL,NULL,NULL,1,'OPE-STORE','MANAGER','Store Leader','S3','SAP101',NULL,NULL,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(12,'Trần Thị Store2','S3-002','s3store2','s3store2@aoisora.vn',NULL,'0901111002',NULL,NULL,NULL,NULL,1,'OPE-STORE','MANAGER','Store Leader','S3','SAP102',NULL,NULL,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(13,'Lê Văn Store3','S3-003','s3store3','s3store3@aoisora.vn',NULL,'0901111003',NULL,NULL,NULL,NULL,1,'OPE-STORE','MANAGER','Store Leader','S3','SAP103',NULL,NULL,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(14,'Phạm Thị Store4','S3-004','s3store4','s3store4@aoisora.vn',NULL,'0901111004',NULL,NULL,NULL,NULL,1,'OPE-STORE','MANAGER','Store Leader','S3','SAP104',NULL,NULL,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(15,'Hoàng Văn Store5','S3-005','s3store5','s3store5@aoisora.vn',NULL,'0901111005',NULL,NULL,NULL,NULL,1,'OPE-STORE','MANAGER','Store Leader','S3','SAP105',NULL,NULL,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(16,'Nguyễn Văn Store6','S3-006','s3store6','s3store6@aoisora.vn',NULL,'0901111006',NULL,NULL,NULL,NULL,1,'OPE-STORE','MANAGER','Store Leader','S3','SAP106',NULL,NULL,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(17,'Trần Thị Store7','S3-007','s3store7','s3store7@aoisora.vn',NULL,'0901111007',NULL,NULL,NULL,NULL,1,'OPE-STORE','MANAGER','Store Leader','S3','SAP107',NULL,NULL,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(18,'Lê Văn Store8','S3-008','s3store8','s3store8@aoisora.vn',NULL,'0901111008',NULL,NULL,NULL,NULL,1,'OPE-STORE','MANAGER','Store Leader','S3','SAP108',NULL,NULL,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(19,'Phạm Thị Store9','S3-009','s3store9','s3store9@aoisora.vn',NULL,'0901111009',NULL,NULL,NULL,NULL,1,'OPE-STORE','MANAGER','Store Leader','S3','SAP109',NULL,NULL,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(20,'Hoàng Văn Store10','S3-010','s3store10','s3store10@aoisora.vn',NULL,'0901111010',NULL,NULL,NULL,NULL,1,'OPE-STORE','MANAGER','Store Leader','S3','SAP110',NULL,NULL,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(21,'Nguyễn Văn Store11','S3-011','s3store11','s3store11@aoisora.vn',NULL,'0901111011',NULL,NULL,NULL,NULL,1,'OPE-STORE','MANAGER','Store Leader','S3','SAP111',NULL,NULL,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(22,'Trần Thị Store12','S3-012','s3store12','s3store12@aoisora.vn',NULL,'0901111012',NULL,NULL,NULL,NULL,1,'OPE-STORE','MANAGER','Store Leader','S3','SAP112',NULL,NULL,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(23,'Lê Văn Store13','S3-013','s3store13','s3store13@aoisora.vn',NULL,'0901111013',NULL,NULL,NULL,NULL,1,'OPE-STORE','MANAGER','Store Leader','S3','SAP113',NULL,NULL,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-22 01:42:52');
+INSERT INTO `staff` VALUES (1,'Admin User','ADMIN001','admin','admin@aoisora.vn',NULL,'0901234567',NULL,NULL,NULL,NULL,1,'OPE-STORE','ADMIN','System Administrator','G9','SAP001',NULL,NULL,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(2,'Trần Văn G8','G8001','g8user','g8@aoisora.vn',NULL,'0901234580',NULL,NULL,NULL,NULL,7,'OPE-QC','MANAGER','Senior Manager','G8','SAP010',NULL,1,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-24 14:19:03'),(3,'Nguyễn Thị G7','G7001','g7user','g7@aoisora.vn',NULL,'0901234581',NULL,NULL,NULL,NULL,7,'OPE-QC','MANAGER','Area Manager','G7','SAP011',NULL,1,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-24 14:19:03'),(4,'Nguyễn Văn Manager','MGR001','manager','manager@aoisora.vn',NULL,'0901234568',NULL,NULL,NULL,NULL,8,'OPE-STORE','MANAGER','Store Manager','G6','SAP002',NULL,1,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-24 14:19:03'),(5,'Lê Văn G5','G5001','g5user','g5@aoisora.vn',NULL,'0901234582',NULL,NULL,NULL,NULL,8,'OPE-QC','STAFF','Team Lead','G5','SAP012',NULL,2,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-24 14:19:03'),(6,'Phạm Văn G4','G4001','g4user','g4@aoisora.vn',NULL,'0901234583',NULL,NULL,NULL,NULL,9,'OPE-QC','STAFF','Senior Staff','G4','SAP013',NULL,2,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-24 14:19:03'),(7,'Trần Thị Staff','STF001','staff1','staff1@aoisora.vn',NULL,'0901234569',NULL,NULL,NULL,NULL,10,'OPE-STORE','STAFF','Sales Staff','G3','SAP003',NULL,4,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-24 14:19:03'),(8,'Hoàng Văn G2','G2001','g2user','g2@aoisora.vn',NULL,'0901234584',NULL,NULL,NULL,NULL,11,'OPE-QC','STAFF','Junior Staff','G2','SAP014',NULL,4,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-24 14:19:03'),(9,'Lê Văn QC','QC001','qc1','qc1@aoisora.vn',NULL,'0901234570',NULL,NULL,NULL,NULL,11,'OPE-QC','STAFF','QC Staff','G3','SAP004',NULL,4,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-24 14:19:03'),(10,'Phạm Thị Account','ACC001','acc1','acc1@aoisora.vn',NULL,'0901234571',NULL,NULL,NULL,NULL,12,'ACC-AP','STAFF','Accountant','G3','SAP005',NULL,4,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-24 14:19:03'),(11,'Nguyễn Văn Store1','S3-001','s3store1','s3store1@aoisora.vn',NULL,'0901111001',NULL,NULL,NULL,NULL,12,'OPE-STORE','MANAGER','Store Leader','S3','SAP101',NULL,NULL,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-24 14:19:03'),(12,'Trần Thị Store2','S3-002','s3store2','s3store2@aoisora.vn',NULL,'0901111002',NULL,NULL,NULL,NULL,13,'OPE-STORE','MANAGER','Store Leader','S3','SAP102',NULL,NULL,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-24 14:19:03'),(13,'Lê Văn Store3','S3-003','s3store3','s3store3@aoisora.vn',NULL,'0901111003',NULL,NULL,NULL,NULL,13,'OPE-STORE','MANAGER','Store Leader','S3','SAP103',NULL,NULL,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-24 14:19:03'),(14,'Phạm Thị Store4','S3-004','s3store4','s3store4@aoisora.vn',NULL,'0901111004',NULL,NULL,NULL,NULL,14,'OPE-STORE','MANAGER','Store Leader','S3','SAP104',NULL,NULL,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-24 14:19:03'),(15,'Hoàng Văn Store5','S3-005','s3store5','s3store5@aoisora.vn',NULL,'0901111005',NULL,NULL,NULL,NULL,14,'OPE-STORE','MANAGER','Store Leader','S3','SAP105',NULL,NULL,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-24 14:19:03'),(16,'Nguyễn Văn Store6','S3-006','s3store6','s3store6@aoisora.vn',NULL,'0901111006',NULL,NULL,NULL,NULL,1,'OPE-STORE','MANAGER','Store Leader','S3','SAP106',NULL,NULL,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(17,'Trần Thị Store7','S3-007','s3store7','s3store7@aoisora.vn',NULL,'0901111007',NULL,NULL,NULL,NULL,1,'OPE-STORE','MANAGER','Store Leader','S3','SAP107',NULL,NULL,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(18,'Lê Văn Store8','S3-008','s3store8','s3store8@aoisora.vn',NULL,'0901111008',NULL,NULL,NULL,NULL,1,'OPE-STORE','MANAGER','Store Leader','S3','SAP108',NULL,NULL,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(19,'Phạm Thị Store9','S3-009','s3store9','s3store9@aoisora.vn',NULL,'0901111009',NULL,NULL,NULL,NULL,1,'OPE-STORE','MANAGER','Store Leader','S3','SAP109',NULL,NULL,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(20,'Hoàng Văn Store10','S3-010','s3store10','s3store10@aoisora.vn',NULL,'0901111010',NULL,NULL,NULL,NULL,1,'OPE-STORE','MANAGER','Store Leader','S3','SAP110',NULL,NULL,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(21,'Nguyễn Văn Store11','S3-011','s3store11','s3store11@aoisora.vn',NULL,'0901111011',NULL,NULL,NULL,NULL,1,'OPE-STORE','MANAGER','Store Leader','S3','SAP111',NULL,NULL,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(22,'Trần Thị Store12','S3-012','s3store12','s3store12@aoisora.vn',NULL,'0901111012',NULL,NULL,NULL,NULL,1,'OPE-STORE','MANAGER','Store Leader','S3','SAP112',NULL,NULL,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(23,'Lê Văn Store13','S3-013','s3store13','s3store13@aoisora.vn',NULL,'0901111013',NULL,NULL,NULL,NULL,1,'OPE-STORE','MANAGER','Store Leader','S3','SAP113',NULL,NULL,NULL,'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','active',1,'2026-01-22 01:42:52','2026-01-22 01:42:52');
 /*!40000 ALTER TABLE `staff` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -781,14 +768,14 @@ DROP TABLE IF EXISTS `staff_assignments`;
 CREATE TABLE `staff_assignments` (
   `assignment_id` int NOT NULL AUTO_INCREMENT,
   `staff_id` int NOT NULL,
-  `assignment_type` enum('primary','acting') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'primary',
-  `scope_type` enum('region','zone','area','store') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `assignment_type` enum('primary','acting') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'primary',
+  `scope_type` enum('region','zone','area','store') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `scope_id` int NOT NULL,
-  `effective_grade` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `effective_grade` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `start_date` date DEFAULT NULL,
   `end_date` date DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT '1',
-  `notes` text COLLATE utf8mb4_unicode_ci,
+  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created_by` int DEFAULT NULL,
@@ -819,17 +806,17 @@ DROP TABLE IF EXISTS `stores`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `stores` (
   `store_id` int NOT NULL AUTO_INCREMENT,
-  `store_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `store_code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `store_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `store_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `region_id` int DEFAULT NULL,
   `area_id` int DEFAULT NULL,
-  `address` text COLLATE utf8mb4_unicode_ci,
-  `phone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `email` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `address` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `phone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT '1',
   `sort_order` int DEFAULT '0',
   `manager_id` int DEFAULT NULL,
-  `status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'active',
+  `status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'active',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`store_id`),
@@ -854,6 +841,49 @@ INSERT INTO `stores` VALUES (1,'AEON Mall Long Biên','HN-LB-001',1,1,'Số 27 C
 UNLOCK TABLES;
 
 --
+-- Table structure for table `task_approval_history`
+--
+
+DROP TABLE IF EXISTS `task_approval_history`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `task_approval_history` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `task_id` int NOT NULL,
+  `round_number` tinyint unsigned DEFAULT '1',
+  `step_number` tinyint unsigned NOT NULL,
+  `step_name` enum('SUBMIT','APPROVE','DO_TASK','CHECK') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `step_status` enum('submitted','done','in_process','rejected','pending') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+  `assigned_to_type` enum('user','stores','team') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `assigned_to_id` bigint unsigned DEFAULT NULL,
+  `assigned_to_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `assigned_to_count` int unsigned DEFAULT NULL,
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
+  `actual_start_at` timestamp NULL DEFAULT NULL,
+  `actual_end_at` timestamp NULL DEFAULT NULL,
+  `progress_done` int unsigned DEFAULT '0',
+  `progress_total` int unsigned DEFAULT '0',
+  `comment` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_task_round` (`task_id`,`round_number`),
+  KEY `idx_task_step` (`task_id`,`step_number`),
+  CONSTRAINT `fk_task_approval_history_task` FOREIGN KEY (`task_id`) REFERENCES `tasks` (`task_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `task_approval_history`
+--
+
+LOCK TABLES `task_approval_history` WRITE;
+/*!40000 ALTER TABLE `task_approval_history` DISABLE KEYS */;
+/*!40000 ALTER TABLE `task_approval_history` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `task_check_list`
 --
 
@@ -867,7 +897,7 @@ CREATE TABLE `task_check_list` (
   `check_status` tinyint(1) DEFAULT '0',
   `completed_at` timestamp NULL DEFAULT NULL,
   `completed_by` int DEFAULT NULL,
-  `notes` text COLLATE utf8mb4_unicode_ci,
+  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   PRIMARY KEY (`id`),
   UNIQUE KEY `task_check_list_unique` (`task_id`,`check_list_id`),
   KEY `fk_task_check_list_checklist` (`check_list_id`),
@@ -900,7 +930,7 @@ CREATE TABLE `task_comments` (
   `store_result_id` int DEFAULT NULL,
   `staff_result_id` int DEFAULT NULL,
   `user_id` int DEFAULT NULL,
-  `content` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`comment_id`),
@@ -925,6 +955,44 @@ LOCK TABLES `task_comments` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `task_execution_logs`
+--
+
+DROP TABLE IF EXISTS `task_execution_logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `task_execution_logs` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `task_store_assignment_id` bigint unsigned NOT NULL COMMENT 'FK to task_store_assignments',
+  `action` enum('dispatched','assigned_to_staff','reassigned','unassigned','started','completed','marked_unable','hq_checked','hq_rejected') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Type of action performed',
+  `performed_by` int NOT NULL COMMENT 'Staff ID who performed this action',
+  `performed_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'When action was performed',
+  `old_status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Previous status before action',
+  `new_status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'New status after action',
+  `target_staff_id` int DEFAULT NULL COMMENT 'For assign/reassign: the staff being assigned',
+  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT 'Additional notes, reasons, etc.',
+  PRIMARY KEY (`id`),
+  KEY `idx_log_assignment` (`task_store_assignment_id`),
+  KEY `idx_log_performed_at` (`performed_at`),
+  KEY `idx_log_action` (`action`),
+  KEY `idx_log_performed_by` (`performed_by`),
+  KEY `fk_log_target_staff` (`target_staff_id`),
+  CONSTRAINT `fk_log_assignment` FOREIGN KEY (`task_store_assignment_id`) REFERENCES `task_store_assignments` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_log_performed_by` FOREIGN KEY (`performed_by`) REFERENCES `staff` (`staff_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_log_target_staff` FOREIGN KEY (`target_staff_id`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `task_execution_logs`
+--
+
+LOCK TABLES `task_execution_logs` WRITE;
+/*!40000 ALTER TABLE `task_execution_logs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `task_execution_logs` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `task_groups`
 --
 
@@ -932,14 +1000,14 @@ DROP TABLE IF EXISTS `task_groups`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `task_groups` (
-  `group_id` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `group_code` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `group_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `group_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `group_code` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `group_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `priority` int DEFAULT '50',
   `sort_order` int DEFAULT '0',
-  `color_bg` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '#f3f4f6',
-  `color_text` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '#374151',
-  `color_border` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '#9ca3af',
+  `color_bg` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '#f3f4f6',
+  `color_text` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '#374151',
+  `color_border` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '#9ca3af',
   `is_active` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -969,9 +1037,9 @@ CREATE TABLE `task_images` (
   `task_id` int DEFAULT NULL,
   `store_result_id` int DEFAULT NULL,
   `staff_result_id` int DEFAULT NULL,
-  `title` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `image_url` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `thumbnail_url` text COLLATE utf8mb4_unicode_ci,
+  `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `image_url` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `thumbnail_url` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `uploaded_by_id` int DEFAULT NULL,
   `is_completed` tinyint(1) DEFAULT '0',
   `uploaded_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
@@ -998,8 +1066,6 @@ UNLOCK TABLES;
 
 --
 -- Table structure for table `task_library`
--- Redesigned per CLAUDE.md Section 12.0 & 12.3
--- Library stores task templates (from Task List auto-save or direct creation)
 --
 
 DROP TABLE IF EXISTS `task_library`;
@@ -1007,50 +1073,40 @@ DROP TABLE IF EXISTS `task_library`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `task_library` (
   `task_library_id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  -- Source tracking
-  `source` enum('task_list','library') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'task_list' COMMENT 'task_list=auto-saved when task approved, library=created directly',
-  `status` enum('draft','approve','available','cooldown') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'available' COMMENT 'draft/approve only for direct Library creation (Flow 2)',
-  -- A. Information Section
-  `task_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `task_description` text COLLATE utf8mb4_unicode_ci,
+  `source` enum('task_list','library') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'task_list' COMMENT 'task_list=auto-saved when task approved, library=created directly',
+  `status` enum('draft','approve','available','cooldown') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'available' COMMENT 'draft/approve only for direct Library creation (Flow 2)',
+  `task_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `task_description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `task_type_id` int DEFAULT NULL COMMENT 'FK to code_master',
   `response_type_id` int DEFAULT NULL COMMENT 'FK to code_master',
   `response_num` int DEFAULT NULL,
   `is_repeat` tinyint(1) DEFAULT '0',
   `repeat_config` json DEFAULT NULL,
   `dept_id` int DEFAULT NULL COMMENT 'FK to departments',
-  -- B. Instructions Section
-  `task_instruction_type` enum('image','document') COLLATE utf8mb4_unicode_ci DEFAULT 'image',
-  `manual_link` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `task_instruction_type` enum('image','document') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'image',
+  `manual_link` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `photo_guidelines` json DEFAULT NULL,
   `manual_id` int DEFAULT NULL COMMENT 'FK to manual_documents',
-  `comment` text COLLATE utf8mb4_unicode_ci,
+  `comment` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `attachments` json DEFAULT NULL,
-  -- Creator & Approval
   `created_staff_id` int DEFAULT NULL,
   `approver_id` int DEFAULT NULL,
   `submitted_at` timestamp NULL DEFAULT NULL,
   `approved_at` timestamp NULL DEFAULT NULL,
-  -- Rejection tracking
   `rejection_count` int DEFAULT '0',
   `has_changes_since_rejection` tinyint(1) DEFAULT '0',
-  `last_rejection_reason` text COLLATE utf8mb4_unicode_ci,
+  `last_rejection_reason` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `last_rejected_at` timestamp NULL DEFAULT NULL,
   `last_rejected_by` int DEFAULT NULL,
-  -- Dispatch tracking
   `dispatch_count` int DEFAULT '0',
   `last_dispatched_at` timestamp NULL DEFAULT NULL,
   `last_dispatched_by` int DEFAULT NULL,
-  -- Cooldown mechanism
   `cooldown_until` timestamp NULL DEFAULT NULL,
   `cooldown_triggered_by` int DEFAULT NULL,
   `cooldown_triggered_at` timestamp NULL DEFAULT NULL,
-  -- Issue tracking
   `had_issues` tinyint(1) DEFAULT '0',
-  `issues_note` text COLLATE utf8mb4_unicode_ci,
-  -- Link to original task
+  `issues_note` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `original_task_id` int DEFAULT NULL,
-  -- Audit timestamps
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`task_library_id`),
@@ -1081,7 +1137,7 @@ CREATE TABLE `task_library` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `task_library` (empty - templates created at runtime)
+-- Dumping data for table `task_library`
 --
 
 LOCK TABLES `task_library` WRITE;
@@ -1131,9 +1187,9 @@ CREATE TABLE `task_staff_results` (
   `task_id` int DEFAULT NULL,
   `staff_id` int DEFAULT NULL,
   `store_id` int DEFAULT NULL,
-  `status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'not_started',
+  `status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'not_started',
   `progress` int DEFAULT '0',
-  `progress_text` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `progress_text` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`result_id`),
@@ -1156,6 +1212,62 @@ LOCK TABLES `task_staff_results` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `task_store_assignments`
+--
+
+DROP TABLE IF EXISTS `task_store_assignments`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `task_store_assignments` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `task_id` int NOT NULL,
+  `store_id` int NOT NULL,
+  `status` enum('not_yet','on_progress','done_pending','done','unable') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'not_yet' COMMENT 'Store execution status',
+  `assigned_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'When HQ dispatched task to store',
+  `started_at` timestamp NULL DEFAULT NULL COMMENT 'When store started working on task',
+  `completed_at` timestamp NULL DEFAULT NULL COMMENT 'When store marked done/unable',
+  `assigned_by` int DEFAULT NULL COMMENT 'HQ staff who dispatched task to store',
+  `assigned_to_staff` int DEFAULT NULL COMMENT 'Staff (S1) assigned by Store Leader',
+  `assigned_to_at` timestamp NULL DEFAULT NULL COMMENT 'When Store Leader assigned to staff',
+  `started_by` int DEFAULT NULL COMMENT 'Store user who started',
+  `completed_by` int DEFAULT NULL COMMENT 'Store user who completed/marked unable',
+  `checked_by` int DEFAULT NULL COMMENT 'HQ staff who verified completion',
+  `checked_at` timestamp NULL DEFAULT NULL COMMENT 'When HQ verified completion',
+  `check_notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT 'Notes from HQ checker',
+  `unable_reason` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT 'Required reason when status=unable',
+  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT 'General notes',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_task_store` (`task_id`,`store_id`),
+  KEY `idx_task_status` (`task_id`,`status`),
+  KEY `idx_store_status` (`store_id`,`status`),
+  KEY `idx_assigned_staff` (`assigned_to_staff`),
+  KEY `idx_status` (`status`),
+  KEY `fk_tsa_assigned_by` (`assigned_by`),
+  KEY `fk_tsa_started_by` (`started_by`),
+  KEY `fk_tsa_completed_by` (`completed_by`),
+  KEY `fk_tsa_checked_by` (`checked_by`),
+  CONSTRAINT `fk_tsa_assigned_by` FOREIGN KEY (`assigned_by`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_tsa_assigned_to_staff` FOREIGN KEY (`assigned_to_staff`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_tsa_checked_by` FOREIGN KEY (`checked_by`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_tsa_completed_by` FOREIGN KEY (`completed_by`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_tsa_started_by` FOREIGN KEY (`started_by`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_tsa_store` FOREIGN KEY (`store_id`) REFERENCES `stores` (`store_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_tsa_task` FOREIGN KEY (`task_id`) REFERENCES `tasks` (`task_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `task_store_assignments`
+--
+
+LOCK TABLES `task_store_assignments` WRITE;
+/*!40000 ALTER TABLE `task_store_assignments` DISABLE KEYS */;
+/*!40000 ALTER TABLE `task_store_assignments` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `task_store_results`
 --
 
@@ -1166,7 +1278,7 @@ CREATE TABLE `task_store_results` (
   `result_id` int NOT NULL AUTO_INCREMENT,
   `task_id` int DEFAULT NULL,
   `store_id` int DEFAULT NULL,
-  `status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'not_started',
+  `status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'not_started',
   `start_time` timestamp NULL DEFAULT NULL,
   `completed_time` timestamp NULL DEFAULT NULL,
   `completed_by_id` int DEFAULT NULL,
@@ -1202,13 +1314,13 @@ CREATE TABLE `task_workflow_steps` (
   `step_id` int NOT NULL AUTO_INCREMENT,
   `task_id` int DEFAULT NULL,
   `step_number` int NOT NULL,
-  `step_name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+  `step_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
   `assignee_id` int DEFAULT NULL,
-  `skip_info` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `skip_info` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `start_date` date DEFAULT NULL,
   `end_date` date DEFAULT NULL,
-  `comment` text COLLATE utf8mb4_unicode_ci,
+  `comment` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `completed_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -1240,12 +1352,12 @@ CREATE TABLE `tasks` (
   `task_id` int NOT NULL AUTO_INCREMENT,
   `parent_task_id` int DEFAULT NULL,
   `task_level` tinyint DEFAULT '1',
-  `source` enum('task_list','library','todo_task') COLLATE utf8mb4_unicode_ci DEFAULT 'task_list',
-  `receiver_type` enum('store','hq_user') COLLATE utf8mb4_unicode_ci DEFAULT 'store',
-  `task_name` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `task_description` text COLLATE utf8mb4_unicode_ci,
-  `task_instruction_type` enum('image','document') COLLATE utf8mb4_unicode_ci DEFAULT 'image' COMMENT 'Type determines required fields: image=photo_guidelines, document=note',
-  `manual_link` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Direct URL link to manual/instruction document',
+  `source` enum('task_list','library','todo_task') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'task_list',
+  `receiver_type` enum('store','hq_user') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'store',
+  `task_name` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `task_description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `task_instruction_type` enum('image','document') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'image' COMMENT 'Type determines required fields: image=photo_guidelines, document=note',
+  `manual_link` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Direct URL link to manual/instruction document',
   `photo_guidelines` json DEFAULT NULL COMMENT 'Array of photo URLs for task instructions (when type=image)',
   `manual_id` int DEFAULT NULL,
   `task_type_id` int DEFAULT NULL,
@@ -1258,19 +1370,19 @@ CREATE TABLE `tasks` (
   `assigned_staff_id` int DEFAULT NULL,
   `do_staff_id` int DEFAULT NULL,
   `status_id` int DEFAULT NULL,
-  `priority` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'normal',
+  `priority` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'normal',
   `start_date` date DEFAULT NULL,
   `end_date` date DEFAULT NULL,
   `start_time` time DEFAULT NULL,
   `due_datetime` timestamp NULL DEFAULT NULL,
   `completed_time` timestamp NULL DEFAULT NULL,
-  `comment` text COLLATE utf8mb4_unicode_ci,
+  `comment` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `attachments` json DEFAULT NULL,
   `created_staff_id` int DEFAULT NULL,
   `approver_id` int DEFAULT NULL,
   `rejection_count` int DEFAULT '0',
   `has_changes_since_rejection` tinyint(1) DEFAULT '0',
-  `last_rejection_reason` text COLLATE utf8mb4_unicode_ci,
+  `last_rejection_reason` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `last_rejected_at` timestamp NULL DEFAULT NULL,
   `last_rejected_by` int DEFAULT NULL,
   `library_task_id` bigint unsigned DEFAULT NULL COMMENT 'FK to task_library for tasks created from templates',
@@ -1310,14 +1422,14 @@ CREATE TABLE `tasks` (
   CONSTRAINT `fk_tasks_dept` FOREIGN KEY (`dept_id`) REFERENCES `departments` (`department_id`) ON DELETE SET NULL,
   CONSTRAINT `fk_tasks_do_staff` FOREIGN KEY (`do_staff_id`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL,
   CONSTRAINT `fk_tasks_last_rejected_by` FOREIGN KEY (`last_rejected_by`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_tasks_library` FOREIGN KEY (`library_task_id`) REFERENCES `task_library` (`task_library_id`) ON DELETE SET NULL,
   CONSTRAINT `fk_tasks_manual` FOREIGN KEY (`manual_id`) REFERENCES `manuals` (`manual_id`) ON DELETE SET NULL,
   CONSTRAINT `fk_tasks_parent` FOREIGN KEY (`parent_task_id`) REFERENCES `tasks` (`task_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_tasks_paused_by` FOREIGN KEY (`paused_by`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL,
   CONSTRAINT `fk_tasks_response_type` FOREIGN KEY (`response_type_id`) REFERENCES `code_master` (`code_master_id`),
   CONSTRAINT `fk_tasks_status` FOREIGN KEY (`status_id`) REFERENCES `code_master` (`code_master_id`),
-  CONSTRAINT `fk_tasks_task_type` FOREIGN KEY (`task_type_id`) REFERENCES `code_master` (`code_master_id`),
-  CONSTRAINT `fk_tasks_paused_by` FOREIGN KEY (`paused_by`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_tasks_library` FOREIGN KEY (`library_task_id`) REFERENCES `task_library` (`task_library_id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=91 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  CONSTRAINT `fk_tasks_task_type` FOREIGN KEY (`task_type_id`) REFERENCES `code_master` (`code_master_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=110 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1326,138 +1438,9 @@ CREATE TABLE `tasks` (
 
 LOCK TABLES `tasks` WRITE;
 /*!40000 ALTER TABLE `tasks` DISABLE KEYS */;
-INSERT INTO `tasks` (`task_id`,`parent_task_id`,`task_level`,`source`,`receiver_type`,`task_name`,`task_description`,`manual_id`,`task_type_id`,`response_type_id`,`response_num`,`is_repeat`,`repeat_config`,`dept_id`,`assigned_store_id`,`assigned_staff_id`,`do_staff_id`,`status_id`,`priority`,`start_date`,`end_date`,`start_time`,`due_datetime`,`completed_time`,`comment`,`attachments`,`created_staff_id`,`approver_id`,`rejection_count`,`has_changes_since_rejection`,`last_rejection_reason`,`last_rejected_at`,`last_rejected_by`,`library_task_id`,`submitted_at`,`approved_at`,`created_at`,`updated_at`) VALUES (1,NULL,1,'task_list','store','Lập kế hoạch kiểm kê Q1','Lên kế hoạch kiểm kê hàng hóa quý 1',NULL,1,5,NULL,0,NULL,1,NULL,NULL,NULL,12,'normal','2026-01-29','2026-02-05',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(2,NULL,1,'task_list','store','Chuẩn bị báo cáo tài chính','Draft báo cáo tài chính cuối năm',NULL,1,6,NULL,0,NULL,2,NULL,NULL,NULL,12,'high','2026-01-27','2026-02-03',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(3,NULL,1,'task_list','store','Kế hoạch training Q2','Lập kế hoạch đào tạo nhân viên Q2',NULL,3,6,NULL,0,NULL,6,NULL,NULL,NULL,12,'normal','2026-02-01','2026-02-21',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(4,NULL,1,'task_list','store','Đề xuất cải tiến quy trình','Đề xuất cải tiến quy trình vận hành',NULL,1,6,NULL,0,NULL,1,NULL,NULL,NULL,12,'normal','2026-01-25','2026-02-01',NULL,NULL,NULL,NULL,NULL,4,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(5,NULL,1,'task_list','store','Thiết kế layout mới','Thiết kế layout kệ hàng mới cho Q2',NULL,2,4,NULL,0,NULL,1,NULL,NULL,NULL,12,'normal','2026-02-06','2026-02-16',NULL,NULL,NULL,NULL,NULL,5,4,0,0,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(6,NULL,1,'task_list','store','Kế hoạch khuyến mãi Tết','Lên kế hoạch chương trình khuyến mãi Tết',NULL,2,4,NULL,0,NULL,1,NULL,NULL,NULL,12,'high','2026-02-11','2026-02-26',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(7,NULL,1,'task_list','store','Đánh giá nhà cung cấp','Đánh giá và xếp hạng nhà cung cấp',NULL,1,5,NULL,0,NULL,1,NULL,NULL,NULL,12,'normal','2026-01-30','2026-02-06',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(8,NULL,1,'task_list','store','Kế hoạch bảo trì thiết bị','Lập kế hoạch bảo trì thiết bị định kỳ',NULL,3,5,NULL,0,NULL,4,NULL,NULL,NULL,12,'normal','2026-02-03','2026-02-11',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(9,NULL,1,'library','store','Cập nhật manual POS','Cập nhật hướng dẫn sử dụng POS mới',NULL,3,6,NULL,0,NULL,4,NULL,NULL,NULL,12,'normal',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(10,NULL,1,'library','store','Template kiểm tra an toàn','Tạo template kiểm tra an toàn lao động',NULL,3,5,NULL,0,NULL,1,NULL,NULL,NULL,12,'high',NULL,NULL,NULL,NULL,NULL,NULL,NULL,4,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(11,NULL,1,'task_list','store','Kiểm kê kho tháng 1','Kiểm kê hàng hóa trong kho tháng 1',NULL,1,5,NULL,0,NULL,1,NULL,NULL,NULL,13,'high','2026-01-24','2026-01-27',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(12,NULL,1,'task_list','store','Sắp xếp kệ Tết','Sắp xếp kệ hàng cho mùa Tết',NULL,2,4,NULL,0,NULL,1,NULL,NULL,NULL,13,'urgent','2026-01-23','2026-01-29',NULL,NULL,NULL,NULL,NULL,7,2,0,0,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(13,NULL,1,'task_list','store','Kiểm tra PCCC tháng 1','Kiểm tra thiết bị PCCC định kỳ',NULL,3,5,NULL,0,NULL,1,NULL,NULL,NULL,13,'high','2026-01-25','2026-01-26',NULL,NULL,NULL,NULL,NULL,6,2,0,0,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(14,NULL,1,'task_list','store','Báo cáo hiệu suất tuần','Báo cáo hiệu suất làm việc tuần qua',NULL,1,6,NULL,0,NULL,1,NULL,NULL,NULL,13,'normal','2026-01-22','2026-01-23',NULL,NULL,NULL,NULL,NULL,5,4,0,0,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(15,NULL,1,'task_list','store','Training POS mới','Đào tạo sử dụng hệ thống POS mới',NULL,3,6,NULL,0,NULL,4,NULL,NULL,NULL,13,'normal','2026-01-27','2026-02-01',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(16,NULL,1,'task_list','store','Kế hoạch nhân sự Q1','Lên kế hoạch nhân sự quý 1',NULL,1,6,NULL,0,NULL,6,NULL,NULL,NULL,13,'high','2026-01-29','2026-02-12',NULL,NULL,NULL,NULL,NULL,4,1,0,0,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(17,NULL,1,'library','store','Template vệ sinh cửa hàng','Tạo template checklist vệ sinh',NULL,3,5,NULL,0,NULL,1,NULL,NULL,NULL,13,'normal',NULL,NULL,NULL,NULL,NULL,NULL,NULL,5,4,0,0,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(18,NULL,1,'library','store','Template kiểm tra chất lượng','Tạo template kiểm tra chất lượng SP',NULL,3,5,NULL,0,NULL,1,NULL,NULL,NULL,13,'normal',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(19,NULL,1,'task_list','store','Vệ sinh kệ hàng khu A','Vệ sinh và sắp xếp kệ hàng khu A',NULL,2,4,NULL,0,NULL,1,NULL,7,NULL,7,'normal','2026-01-22','2026-01-24',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(20,NULL,1,'task_list','store','Kiểm tra hạn sử dụng','Kiểm tra hạn sử dụng SP khu thực phẩm',NULL,3,5,NULL,0,NULL,1,NULL,9,NULL,7,'high','2026-01-22','2026-01-22',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(21,NULL,1,'task_list','store','Bổ sung hàng lên kệ','Bổ sung hàng từ kho lên kệ trưng bày',NULL,2,4,NULL,0,NULL,1,NULL,7,NULL,7,'normal','2026-01-22','2026-01-23',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(22,NULL,1,'task_list','store','Kiểm tra giá niêm yết','Kiểm tra và cập nhật giá niêm yết',NULL,1,5,NULL,0,NULL,1,NULL,10,NULL,7,'normal','2026-01-22','2026-01-23',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(23,NULL,1,'task_list','store','Vệ sinh khu POS','Vệ sinh khu vực thu ngân',NULL,2,4,NULL,0,NULL,1,NULL,7,NULL,7,'normal','2026-01-22','2026-01-22',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(24,NULL,1,'task_list','store','Kiểm tra máy lạnh','Kiểm tra hoạt động máy lạnh',NULL,3,5,NULL,0,NULL,4,NULL,9,NULL,7,'high','2026-01-23','2026-01-24',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(25,NULL,1,'task_list','store','Setup khuyến mãi tuần','Setup bảng giá khuyến mãi tuần',NULL,2,4,NULL,0,NULL,1,NULL,7,NULL,7,'normal','2026-01-22','2026-01-25',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(26,NULL,1,'task_list','store','Kiểm tra vệ sinh thực phẩm','Kiểm tra vệ sinh khu thực phẩm tươi',NULL,3,5,NULL,0,NULL,1,NULL,9,NULL,7,'urgent','2026-01-22','2026-01-22',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(27,NULL,1,'task_list','store','Nhận hàng nhập kho','Nhận và kiểm tra hàng nhập kho',NULL,1,5,NULL,0,NULL,1,NULL,10,NULL,7,'high','2026-01-23','2026-01-23',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(28,NULL,1,'task_list','store','Kiểm tra đèn chiếu sáng','Kiểm tra hệ thống đèn chiếu sáng',NULL,3,5,NULL,0,NULL,4,NULL,9,NULL,7,'normal','2026-01-24','2026-01-25',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(29,NULL,1,'task_list','store','Sắp xếp kho hàng','Sắp xếp và tổ chức lại kho hàng',NULL,2,4,NULL,0,NULL,1,NULL,7,NULL,7,'normal','2026-01-23','2026-01-26',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(30,NULL,1,'task_list','store','Chuẩn bị họp đầu tuần','Chuẩn bị nội dung họp đầu tuần',NULL,3,6,NULL,0,NULL,1,NULL,4,NULL,7,'normal','2026-01-25','2026-01-25',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(31,NULL,1,'task_list','store','Kiểm kê hàng tồn','Kiểm kê hàng tồn kho cuối tuần',NULL,1,5,NULL,0,NULL,1,NULL,7,7,8,'high','2026-01-20','2026-01-23',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-19 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(32,NULL,1,'task_list','store','Sắp xếp kệ khuyến mãi','Sắp xếp kệ hàng khuyến mãi tháng',NULL,2,4,NULL,0,NULL,1,NULL,7,7,8,'normal','2026-01-21','2026-01-24',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-20 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(33,NULL,1,'task_list','store','Training nhân viên mới','Đào tạo quy trình cho NV mới',NULL,3,6,NULL,0,NULL,6,NULL,4,4,8,'normal','2026-01-19','2026-01-26',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-18 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(34,NULL,1,'task_list','store','Kiểm tra chất lượng SP','Kiểm tra chất lượng sản phẩm nhập',NULL,3,5,NULL,0,NULL,1,NULL,9,9,8,'high','2026-01-22','2026-01-23',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-21 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(35,NULL,1,'task_list','store','Cập nhật bảng giá','Cập nhật bảng giá cho tuần mới',NULL,1,4,NULL,0,NULL,1,NULL,7,7,8,'normal','2026-01-21','2026-01-22',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-20 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(36,NULL,1,'task_list','store','Vệ sinh tổng thể','Vệ sinh tổng thể cửa hàng',NULL,2,4,NULL,0,NULL,1,NULL,10,10,8,'normal','2026-01-20','2026-01-22',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-19 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(37,NULL,1,'task_list','store','Kiểm tra camera','Kiểm tra hệ thống camera an ninh',NULL,3,5,NULL,0,NULL,4,NULL,9,9,8,'high','2026-01-21','2026-01-23',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-20 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(38,NULL,1,'task_list','store','Chuẩn bị event cuối tuần','Chuẩn bị cho event khuyến mãi',NULL,2,4,NULL,0,NULL,1,NULL,7,7,8,'urgent','2026-01-22','2026-01-24',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-21 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(39,NULL,1,'task_list','store','Báo cáo doanh thu ngày','Tổng hợp báo cáo doanh thu ngày',NULL,1,6,NULL,0,NULL,2,NULL,10,10,8,'normal','2026-01-21','2026-01-22',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-21 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(40,NULL,1,'task_list','store','Kiểm kê tài sản','Kiểm kê tài sản cố định',NULL,1,5,NULL,0,NULL,2,NULL,10,10,8,'normal','2026-01-18','2026-01-25',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-17 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(41,NULL,1,'task_list','store','Sắp xếp khu vực mới','Sắp xếp khu vực bán hàng mới',NULL,2,4,NULL,0,NULL,1,NULL,7,7,8,'normal','2026-01-20','2026-01-23',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-19 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(42,NULL,1,'task_list','store','Chuẩn bị tài liệu họp','Chuẩn bị tài liệu cho cuộc họp',NULL,3,6,NULL,0,NULL,1,NULL,4,4,8,'high','2026-01-21','2026-01-22',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-20 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(43,NULL,1,'task_list','store','Kiểm tra hệ thống điện','Kiểm tra an toàn hệ thống điện',NULL,3,5,NULL,0,NULL,4,NULL,9,9,8,'high','2026-01-21','2026-01-23',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-20 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(44,NULL,1,'task_list','store','Update menu display','Cập nhật menu hiển thị điện tử',NULL,2,4,NULL,0,NULL,4,NULL,9,9,8,'normal','2026-01-20','2026-01-23',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-19 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(45,NULL,1,'task_list','store','Kiểm tra máy POS','Kiểm tra hoạt động máy POS',NULL,3,5,NULL,0,NULL,4,NULL,9,9,8,'high','2026-01-22','2026-01-23',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(46,NULL,1,'task_list','store','Kiểm kê cuối tháng 12','Kiểm kê hàng hóa cuối tháng 12',NULL,1,5,NULL,0,NULL,1,NULL,7,7,9,'high','2026-01-12','2026-01-15',NULL,NULL,'2026-01-15 01:42:52',NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-11 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(47,NULL,1,'task_list','store','Báo cáo doanh thu tuần 52','Báo cáo doanh thu tuần cuối năm',NULL,1,6,NULL,0,NULL,2,NULL,10,10,9,'normal','2026-01-08','2026-01-12',NULL,NULL,'2026-01-12 01:42:52',NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-07 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(48,NULL,1,'task_list','store','Vệ sinh đón năm mới','Vệ sinh tổng thể đón năm mới',NULL,2,4,NULL,0,NULL,1,NULL,7,7,9,'high','2026-01-14','2026-01-17',NULL,NULL,'2026-01-17 01:42:52',NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-13 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(49,NULL,1,'task_list','store','Training cuối năm','Đào tạo tổng kết cuối năm',NULL,3,6,NULL,0,NULL,6,NULL,4,4,9,'normal','2026-01-10','2026-01-14',NULL,NULL,'2026-01-14 01:42:52',NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-09 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(50,NULL,1,'task_list','store','Kiểm tra PCCC tháng 12','Kiểm tra thiết bị PCCC',NULL,3,5,NULL,0,NULL,1,NULL,9,9,9,'high','2026-01-07','2026-01-10',NULL,NULL,'2026-01-10 01:42:52',NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-06 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(51,NULL,1,'task_list','store','Đánh giá hiệu suất Q4','Đánh giá hiệu suất quý 4',NULL,1,6,NULL,0,NULL,6,NULL,4,4,9,'high','2026-01-02','2026-01-07',NULL,NULL,'2026-01-07 01:42:52',NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-01 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(52,NULL,1,'task_list','store','Kiểm kê tài sản Q4','Kiểm kê tài sản cố định Q4',NULL,1,5,NULL,0,NULL,2,NULL,10,10,9,'normal','2026-01-04','2026-01-09',NULL,NULL,'2026-01-09 01:42:52',NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-03 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(53,NULL,1,'task_list','store','Sắp xếp kho cuối năm','Tổng vệ sinh và sắp xếp kho',NULL,2,4,NULL,0,NULL,1,NULL,7,7,9,'normal','2026-01-13','2026-01-16',NULL,NULL,'2026-01-16 01:42:52',NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-12 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(54,NULL,1,'task_list','store','Backup dữ liệu cuối năm','Backup toàn bộ dữ liệu',NULL,3,5,NULL,0,NULL,4,NULL,9,9,9,'urgent','2026-01-15','2026-01-17',NULL,NULL,'2026-01-17 01:42:52',NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-14 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(55,NULL,1,'task_list','store','Chuẩn bị event năm mới','Chuẩn bị cho event năm mới',NULL,2,4,NULL,0,NULL,1,NULL,7,7,9,'high','2026-01-16','2026-01-19',NULL,NULL,'2026-01-19 01:42:52',NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-15 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(56,NULL,1,'task_list','store','Báo cáo tồn kho quá hạn','Báo cáo tồn kho chưa hoàn thành',NULL,1,6,NULL,0,NULL,1,NULL,7,7,10,'high','2026-01-12','2026-01-17',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-11 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(57,NULL,1,'task_list','store','Kiểm tra camera quá hạn','Kiểm tra camera đã quá hạn',NULL,3,5,NULL,0,NULL,4,NULL,9,NULL,10,'urgent','2026-01-15','2026-01-19',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-14 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(58,NULL,1,'task_list','store','Vệ sinh khu B quá hạn','Vệ sinh khu B chưa hoàn thành',NULL,2,4,NULL,0,NULL,1,NULL,7,7,10,'normal','2026-01-17','2026-01-20',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-16 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(59,NULL,1,'task_list','store','Update giá quá hạn','Cập nhật giá chưa hoàn thành',NULL,1,4,NULL,0,NULL,1,NULL,10,10,10,'high','2026-01-18','2026-01-21',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-17 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(60,NULL,1,'task_list','store','Báo cáo tuần quá hạn','Báo cáo tuần chưa nộp',NULL,1,6,NULL,0,NULL,2,NULL,10,NULL,10,'normal','2026-01-16','2026-01-20',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-15 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(61,NULL,1,'task_list','store','Kiểm tra hệ thống nước','Kiểm tra hệ thống cấp nước trong store',NULL,3,5,NULL,0,NULL,1,NULL,7,NULL,7,'normal','2026-01-22','2026-01-24',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(62,NULL,1,'task_list','store','Sắp xếp khu vực C','Sắp xếp lại kệ hàng khu vực C',NULL,2,4,NULL,0,NULL,1,NULL,7,NULL,7,'normal','2026-01-22','2026-01-23',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(63,NULL,1,'task_list','store','Kiểm tra hàng tồn khu A','Kiểm tra và báo cáo hàng tồn khu A',NULL,1,5,NULL,0,NULL,1,NULL,9,NULL,7,'high','2026-01-22','2026-01-23',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(64,NULL,1,'task_list','store','Vệ sinh khu thực phẩm tươi','Vệ sinh khu vực thực phẩm tươi sống',NULL,2,4,NULL,0,NULL,1,NULL,7,NULL,7,'urgent','2026-01-22','2026-01-22',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(65,NULL,1,'task_list','store','Cập nhật bảng giá mới','Cập nhật bảng giá sản phẩm mới',NULL,1,4,NULL,0,NULL,1,NULL,10,NULL,7,'normal','2026-01-23','2026-01-24',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(66,NULL,1,'task_list','store','Kiểm tra thiết bị làm lạnh','Kiểm tra tủ đông và tủ mát',NULL,3,5,NULL,0,NULL,1,NULL,9,NULL,7,'high','2026-01-22','2026-01-23',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(67,NULL,1,'task_list','store','Nhận hàng từ kho trung tâm','Nhận và kiểm tra hàng từ kho',NULL,1,5,NULL,0,NULL,1,NULL,10,NULL,7,'normal','2026-01-23','2026-01-23',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(68,NULL,1,'task_list','store','Báo cáo tình trạng kệ hàng','Báo cáo kệ hàng cần sửa chữa',NULL,1,6,NULL,0,NULL,1,NULL,7,NULL,7,'normal','2026-01-22','2026-01-25',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(69,NULL,1,'task_list','store','Setup khu vực khuyến mãi mới','Thiết lập khu vực khuyến mãi đặc biệt',NULL,2,4,NULL,0,NULL,1,NULL,7,NULL,7,'high','2026-01-24','2026-01-26',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(70,NULL,1,'task_list','store','Kiểm tra an ninh đêm','Kiểm tra camera và thiết bị an ninh',NULL,3,5,NULL,0,NULL,1,NULL,9,NULL,7,'normal','2026-01-23','2026-01-24',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(71,NULL,1,'task_list','store','Tổng vệ sinh cuối tuần','Vệ sinh toàn bộ cửa hàng',NULL,2,4,NULL,0,NULL,1,NULL,7,7,8,'high','2026-01-21','2026-01-23',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-20 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(72,NULL,1,'task_list','store','Kiểm kê hàng nhập mới','Kiểm kê lô hàng mới nhập',NULL,1,5,NULL,0,NULL,1,NULL,9,9,8,'normal','2026-01-20','2026-01-23',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-19 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(73,NULL,1,'task_list','store','Sắp xếp hàng theo FIFO','Sắp xếp lại hàng theo nguyên tắc FIFO',NULL,2,4,NULL,0,NULL,1,NULL,10,10,8,'high','2026-01-21','2026-01-22',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-20 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(74,NULL,1,'task_list','store','Chuẩn bị khuyến mãi tuần mới','Setup chương trình KM tuần mới',NULL,2,4,NULL,0,NULL,1,NULL,7,7,8,'normal','2026-01-20','2026-01-24',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-19 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(75,NULL,1,'task_list','store','Kiểm tra chất lượng rau củ','Kiểm tra độ tươi rau củ quả',NULL,3,5,NULL,0,NULL,1,NULL,9,9,8,'urgent','2026-01-22','2026-01-22',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(76,NULL,1,'task_list','store','Báo cáo doanh số realtime','Cập nhật báo cáo doanh số',NULL,1,6,NULL,0,NULL,2,NULL,10,10,8,'normal','2026-01-21','2026-01-22',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-20 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(77,NULL,1,'task_list','store','Kiểm tra hệ thống POS','Kiểm tra và test hệ thống POS',NULL,3,5,NULL,0,NULL,4,NULL,9,9,8,'high','2026-01-21','2026-01-23',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-20 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(78,NULL,1,'task_list','store','Vệ sinh khu vực khách hàng','Vệ sinh khu ngồi và toilet',NULL,2,4,NULL,0,NULL,1,NULL,7,7,8,'normal','2026-01-20','2026-01-22',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-19 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(79,NULL,1,'task_list','store','Sắp xếp khu Delica','Sắp xếp khu bán đồ ăn sẵn',NULL,2,4,NULL,0,NULL,1,NULL,7,7,8,'normal','2026-01-21','2026-01-23',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-20 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(80,NULL,1,'task_list','store','Kiểm tra máy tính tiền','Kiểm tra hoạt động máy tính tiền',NULL,3,5,NULL,0,NULL,4,NULL,9,9,8,'high','2026-01-22','2026-01-23',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(81,NULL,1,'task_list','store','Kiểm kê hàng tháng 12 tuần 4','Kiểm kê hàng tuần 4 tháng 12',NULL,1,5,NULL,0,NULL,1,NULL,7,7,9,'high','2026-01-10','2026-01-13',NULL,NULL,'2026-01-13 01:42:52',NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-09 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(82,NULL,1,'task_list','store','Vệ sinh kho cuối năm','Tổng vệ sinh kho trước năm mới',NULL,2,4,NULL,0,NULL,1,NULL,7,7,9,'normal','2026-01-14','2026-01-17',NULL,NULL,'2026-01-17 01:42:52',NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-13 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(83,NULL,1,'task_list','store','Training an toàn thực phẩm','Đào tạo ATTP cho nhân viên',NULL,3,6,NULL,0,NULL,6,NULL,4,4,9,'high','2026-01-12','2026-01-15',NULL,NULL,'2026-01-15 01:42:52',NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-11 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(84,NULL,1,'task_list','store','Báo cáo chi phí tháng 12','Báo cáo chi phí vận hành tháng 12',NULL,1,6,NULL,0,NULL,2,NULL,10,10,9,'normal','2026-01-08','2026-01-12',NULL,NULL,'2026-01-12 01:42:52',NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-07 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(85,NULL,1,'task_list','store','Kiểm tra PCCC cuối năm','Kiểm tra thiết bị PCCC trước năm mới',NULL,3,5,NULL,0,NULL,1,NULL,9,9,9,'urgent','2026-01-16','2026-01-18',NULL,NULL,'2026-01-18 01:42:52',NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-15 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(86,NULL,1,'task_list','store','Báo cáo tồn kho tuần trước','Báo cáo tồn kho chưa nộp',NULL,1,6,NULL,0,NULL,1,NULL,7,7,10,'high','2026-01-14','2026-01-18',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-13 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(87,NULL,1,'task_list','store','Kiểm tra máy lạnh khu B','Kiểm tra máy lạnh đã quá hạn',NULL,3,5,NULL,0,NULL,4,NULL,9,NULL,10,'urgent','2026-01-16','2026-01-20',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-15 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(88,NULL,1,'task_list','store','Vệ sinh khu D quá hạn','Vệ sinh khu D chưa hoàn thành',NULL,2,4,NULL,0,NULL,1,NULL,7,7,10,'normal','2026-01-17','2026-01-21',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-16 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(89,NULL,1,'task_list','store','Cập nhật giá khu Fresh','Cập nhật giá chưa hoàn thành',NULL,1,4,NULL,0,NULL,1,NULL,10,10,10,'high','2026-01-18','2026-01-21',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-17 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(90,NULL,1,'task_list','store','Báo cáo nhân sự quá hạn','Báo cáo nhân sự tuần chưa nộp',NULL,1,6,NULL,0,NULL,6,NULL,4,NULL,10,'normal','2026-01-15','2026-01-19',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-14 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(91,1,2,'task_list','store','Chuẩn bị danh sách kiểm kê','Chuẩn bị danh sách hàng hóa cần kiểm kê',NULL,1,5,NULL,0,NULL,1,NULL,NULL,NULL,12,'normal','2026-01-29','2026-02-05',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(92,1,2,'task_list','store','Phân công nhân sự kiểm kê','Phân công người thực hiện kiểm kê',NULL,1,5,NULL,0,NULL,1,NULL,NULL,NULL,12,'normal','2026-01-29','2026-02-05',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(93,91,3,'task_list','store','Liệt kê danh mục hàng hóa','Liệt kê chi tiết các danh mục cần kiểm kê',NULL,1,5,NULL,0,NULL,1,NULL,NULL,NULL,12,'normal','2026-01-29','2026-02-05',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(94,91,3,'task_list','store','Xác định vị trí kệ hàng','Xác định vị trí kệ cần kiểm kê',NULL,1,5,NULL,0,NULL,1,NULL,NULL,NULL,12,'normal','2026-01-29','2026-02-05',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(95,92,3,'task_list','store','Chia ca kiểm kê','Phân chia ca làm việc kiểm kê',NULL,1,5,NULL,0,NULL,1,NULL,NULL,NULL,12,'normal','2026-01-29','2026-02-05',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(96,92,3,'task_list','store','Training nhân viên kiểm kê','Đào tạo nhân viên cách kiểm kê',NULL,1,5,NULL,0,NULL,1,NULL,NULL,NULL,12,'normal','2026-01-29','2026-02-05',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(97,93,4,'task_list','store','Thu thập data từ hệ thống','Lấy dữ liệu tồn kho từ hệ thống',NULL,1,5,NULL,0,NULL,1,NULL,NULL,NULL,12,'normal','2026-01-29','2026-02-05',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(98,93,4,'task_list','store','In phiếu kiểm kê','In các phiếu kiểm kê hàng hóa',NULL,1,5,NULL,0,NULL,1,NULL,NULL,NULL,12,'normal','2026-01-29','2026-02-05',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(99,95,4,'task_list','store','Lập lịch theo ca','Lập lịch chi tiết cho từng ca',NULL,1,5,NULL,0,NULL,1,NULL,NULL,NULL,12,'normal','2026-01-29','2026-02-05',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(100,97,5,'task_list','store','Export data từ POS','Xuất dữ liệu từ hệ thống POS',NULL,1,5,NULL,0,NULL,1,NULL,NULL,NULL,12,'normal','2026-01-29','2026-02-05',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(101,11,2,'task_list','store','Kiểm kê khu thực phẩm','Kiểm kê hàng hóa khu thực phẩm',NULL,1,5,NULL,0,NULL,1,NULL,NULL,NULL,13,'high','2026-01-24','2026-01-27',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(102,11,2,'task_list','store','Kiểm kê khu hóa mỹ phẩm','Kiểm kê hàng hóa khu hóa mỹ phẩm',NULL,1,5,NULL,0,NULL,1,NULL,NULL,NULL,13,'high','2026-01-24','2026-01-27',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(103,11,2,'task_list','store','Kiểm kê khu đồ gia dụng','Kiểm kê hàng hóa khu đồ gia dụng',NULL,1,5,NULL,0,NULL,1,NULL,NULL,NULL,13,'high','2026-01-24','2026-01-27',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(104,31,2,'task_list','store','Kiểm kê hàng thực phẩm tươi','Kiểm kê khu vực thực phẩm tươi sống',NULL,1,5,NULL,0,NULL,1,NULL,7,7,8,'high','2026-01-20','2026-01-23',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-19 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(105,31,2,'task_list','store','Kiểm kê hàng khô','Kiểm kê khu vực hàng khô',NULL,1,5,NULL,0,NULL,1,NULL,7,7,8,'high','2026-01-20','2026-01-23',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-19 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(106,104,3,'task_list','store','Đếm rau củ quả','Kiểm đếm số lượng rau củ quả',NULL,1,5,NULL,0,NULL,1,NULL,7,7,8,'high','2026-01-20','2026-01-23',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-19 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(107,104,3,'task_list','store','Đếm thịt cá','Kiểm đếm số lượng thịt cá',NULL,1,5,NULL,0,NULL,1,NULL,7,7,8,'high','2026-01-20','2026-01-23',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-19 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(108,105,3,'task_list','store','Đếm gạo/mì/nui','Kiểm đếm số lượng gạo mì nui',NULL,1,5,NULL,0,NULL,1,NULL,7,7,8,'high','2026-01-20','2026-01-23',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-19 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52'),(109,105,3,'task_list','store','Đếm đồ hộp','Kiểm đếm số lượng đồ hộp',NULL,1,5,NULL,0,NULL,1,NULL,7,7,8,'high','2026-01-20','2026-01-23',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-19 01:42:52','2026-01-22 01:42:52','2026-01-22 01:42:52');
+INSERT INTO `tasks` VALUES (1,NULL,1,'task_list','store','Lập kế hoạch kiểm kê Q1','Lên kế hoạch kiểm kê hàng hóa quý 1','image',NULL,NULL,NULL,1,5,NULL,0,NULL,1,NULL,NULL,NULL,12,'normal','2026-01-29','2026-02-05',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(2,NULL,1,'task_list','store','Chuẩn bị báo cáo tài chính','Draft báo cáo tài chính cuối năm','image',NULL,NULL,NULL,1,6,NULL,0,NULL,2,NULL,NULL,NULL,12,'high','2026-01-27','2026-02-03',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(3,NULL,1,'task_list','store','Kế hoạch training Q2','Lập kế hoạch đào tạo nhân viên Q2','image',NULL,NULL,NULL,3,6,NULL,0,NULL,6,NULL,NULL,NULL,12,'normal','2026-02-01','2026-02-21',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(4,NULL,1,'task_list','store','Đề xuất cải tiến quy trình','Đề xuất cải tiến quy trình vận hành','image',NULL,NULL,NULL,1,6,NULL,0,NULL,1,NULL,NULL,NULL,12,'normal','2026-01-25','2026-02-01',NULL,NULL,NULL,NULL,NULL,4,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(5,NULL,1,'task_list','store','Thiết kế layout mới','Thiết kế layout kệ hàng mới cho Q2','image',NULL,NULL,NULL,2,4,NULL,0,NULL,1,NULL,NULL,NULL,12,'normal','2026-02-06','2026-02-16',NULL,NULL,NULL,NULL,NULL,5,4,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(6,NULL,1,'task_list','store','Kế hoạch khuyến mãi Tết','Lên kế hoạch chương trình khuyến mãi Tết','image',NULL,NULL,NULL,2,4,NULL,0,NULL,1,NULL,NULL,NULL,12,'high','2026-02-11','2026-02-26',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(7,NULL,1,'task_list','store','Đánh giá nhà cung cấp','Đánh giá và xếp hạng nhà cung cấp','image',NULL,NULL,NULL,1,5,NULL,0,NULL,1,NULL,NULL,NULL,12,'normal','2026-01-30','2026-02-06',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(8,NULL,1,'task_list','store','Kế hoạch bảo trì thiết bị','Lập kế hoạch bảo trì thiết bị định kỳ','image',NULL,NULL,NULL,3,5,NULL,0,NULL,4,NULL,NULL,NULL,12,'normal','2026-02-03','2026-02-11',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(9,NULL,1,'library','store','Cập nhật manual POS','Cập nhật hướng dẫn sử dụng POS mới','image',NULL,NULL,NULL,3,6,NULL,0,NULL,4,NULL,NULL,NULL,12,'normal',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(10,NULL,1,'library','store','Template kiểm tra an toàn','Tạo template kiểm tra an toàn lao động','image',NULL,NULL,NULL,3,5,NULL,0,NULL,1,NULL,NULL,NULL,12,'high',NULL,NULL,NULL,NULL,NULL,NULL,NULL,4,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(11,NULL,1,'task_list','store','Kiểm kê kho tháng 1','Kiểm kê hàng hóa trong kho tháng 1','image',NULL,NULL,NULL,1,5,NULL,0,NULL,1,NULL,NULL,NULL,13,'high','2026-01-24','2026-01-27',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(12,NULL,1,'task_list','store','Sắp xếp kệ Tết','Sắp xếp kệ hàng cho mùa Tết','image',NULL,NULL,NULL,2,4,NULL,0,NULL,1,NULL,NULL,NULL,13,'urgent','2026-01-23','2026-01-29',NULL,NULL,NULL,NULL,NULL,7,2,0,0,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(13,NULL,1,'task_list','store','Kiểm tra PCCC tháng 1','Kiểm tra thiết bị PCCC định kỳ','image',NULL,NULL,NULL,3,5,NULL,0,NULL,1,NULL,NULL,NULL,13,'high','2026-01-25','2026-01-26',NULL,NULL,NULL,NULL,NULL,6,2,0,0,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(14,NULL,1,'task_list','store','Báo cáo hiệu suất tuần','Báo cáo hiệu suất làm việc tuần qua','image',NULL,NULL,NULL,1,6,NULL,0,NULL,1,NULL,NULL,NULL,13,'normal','2026-01-22','2026-01-23',NULL,NULL,NULL,NULL,NULL,5,4,0,0,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(15,NULL,1,'task_list','store','Training POS mới','Đào tạo sử dụng hệ thống POS mới','image',NULL,NULL,NULL,3,6,NULL,0,NULL,4,NULL,NULL,NULL,13,'normal','2026-01-27','2026-02-01',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(16,NULL,1,'task_list','store','Kế hoạch nhân sự Q1','Lên kế hoạch nhân sự quý 1','image',NULL,NULL,NULL,1,6,NULL,0,NULL,6,NULL,NULL,NULL,13,'high','2026-01-29','2026-02-12',NULL,NULL,NULL,NULL,NULL,4,1,0,0,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(17,NULL,1,'library','store','Template vệ sinh cửa hàng','Tạo template checklist vệ sinh','image',NULL,NULL,NULL,3,5,NULL,0,NULL,1,NULL,NULL,NULL,13,'normal',NULL,NULL,NULL,NULL,NULL,NULL,NULL,5,4,0,0,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(18,NULL,1,'library','store','Template kiểm tra chất lượng','Tạo template kiểm tra chất lượng SP','image',NULL,NULL,NULL,3,5,NULL,0,NULL,1,NULL,NULL,NULL,13,'normal',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(19,NULL,1,'task_list','store','Vệ sinh kệ hàng khu A','Vệ sinh và sắp xếp kệ hàng khu A','image',NULL,NULL,NULL,2,4,NULL,0,NULL,1,NULL,7,NULL,7,'normal','2026-01-22','2026-01-24',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(20,NULL,1,'task_list','store','Kiểm tra hạn sử dụng','Kiểm tra hạn sử dụng SP khu thực phẩm','image',NULL,NULL,NULL,3,5,NULL,0,NULL,1,NULL,9,NULL,7,'high','2026-01-22','2026-01-22',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(21,NULL,1,'task_list','store','Bổ sung hàng lên kệ','Bổ sung hàng từ kho lên kệ trưng bày','image',NULL,NULL,NULL,2,4,NULL,0,NULL,1,NULL,7,NULL,7,'normal','2026-01-22','2026-01-23',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(22,NULL,1,'task_list','store','Kiểm tra giá niêm yết','Kiểm tra và cập nhật giá niêm yết','image',NULL,NULL,NULL,1,5,NULL,0,NULL,1,NULL,10,NULL,7,'normal','2026-01-22','2026-01-23',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(23,NULL,1,'task_list','store','Vệ sinh khu POS','Vệ sinh khu vực thu ngân','image',NULL,NULL,NULL,2,4,NULL,0,NULL,1,NULL,7,NULL,7,'normal','2026-01-22','2026-01-22',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(24,NULL,1,'task_list','store','Kiểm tra máy lạnh','Kiểm tra hoạt động máy lạnh','image',NULL,NULL,NULL,3,5,NULL,0,NULL,4,NULL,9,NULL,7,'high','2026-01-23','2026-01-24',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(25,NULL,1,'task_list','store','Setup khuyến mãi tuần','Setup bảng giá khuyến mãi tuần','image',NULL,NULL,NULL,2,4,NULL,0,NULL,1,NULL,7,NULL,7,'normal','2026-01-22','2026-01-25',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(26,NULL,1,'task_list','store','Kiểm tra vệ sinh thực phẩm','Kiểm tra vệ sinh khu thực phẩm tươi','image',NULL,NULL,NULL,3,5,NULL,0,NULL,1,NULL,9,NULL,7,'urgent','2026-01-22','2026-01-22',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(27,NULL,1,'task_list','store','Nhận hàng nhập kho','Nhận và kiểm tra hàng nhập kho','image',NULL,NULL,NULL,1,5,NULL,0,NULL,1,NULL,10,NULL,7,'high','2026-01-23','2026-01-23',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(28,NULL,1,'task_list','store','Kiểm tra đèn chiếu sáng','Kiểm tra hệ thống đèn chiếu sáng','image',NULL,NULL,NULL,3,5,NULL,0,NULL,4,NULL,9,NULL,7,'normal','2026-01-24','2026-01-25',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(29,NULL,1,'task_list','store','Sắp xếp kho hàng','Sắp xếp và tổ chức lại kho hàng','image',NULL,NULL,NULL,2,4,NULL,0,NULL,1,NULL,7,NULL,7,'normal','2026-01-23','2026-01-26',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(30,NULL,1,'task_list','store','Chuẩn bị họp đầu tuần','Chuẩn bị nội dung họp đầu tuần','image',NULL,NULL,NULL,3,6,NULL,0,NULL,1,NULL,4,NULL,7,'normal','2026-01-25','2026-01-25',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(31,NULL,1,'task_list','store','Kiểm kê hàng tồn','Kiểm kê hàng tồn kho cuối tuần','image',NULL,NULL,NULL,1,5,NULL,0,NULL,1,NULL,7,7,8,'high','2026-01-20','2026-01-23',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-19 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(32,NULL,1,'task_list','store','Sắp xếp kệ khuyến mãi','Sắp xếp kệ hàng khuyến mãi tháng','image',NULL,NULL,NULL,2,4,NULL,0,NULL,1,NULL,7,7,8,'normal','2026-01-21','2026-01-24',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-20 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(33,NULL,1,'task_list','store','Training nhân viên mới','Đào tạo quy trình cho NV mới','image',NULL,NULL,NULL,3,6,NULL,0,NULL,6,NULL,4,4,8,'normal','2026-01-19','2026-01-26',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-18 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(34,NULL,1,'task_list','store','Kiểm tra chất lượng SP','Kiểm tra chất lượng sản phẩm nhập','image',NULL,NULL,NULL,3,5,NULL,0,NULL,1,NULL,9,9,8,'high','2026-01-22','2026-01-23',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-21 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(35,NULL,1,'task_list','store','Cập nhật bảng giá','Cập nhật bảng giá cho tuần mới','image',NULL,NULL,NULL,1,4,NULL,0,NULL,1,NULL,7,7,8,'normal','2026-01-21','2026-01-22',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-20 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(36,NULL,1,'task_list','store','Vệ sinh tổng thể','Vệ sinh tổng thể cửa hàng','image',NULL,NULL,NULL,2,4,NULL,0,NULL,1,NULL,10,10,8,'normal','2026-01-20','2026-01-22',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-19 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(37,NULL,1,'task_list','store','Kiểm tra camera','Kiểm tra hệ thống camera an ninh','image',NULL,NULL,NULL,3,5,NULL,0,NULL,4,NULL,9,9,8,'high','2026-01-21','2026-01-23',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-20 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(38,NULL,1,'task_list','store','Chuẩn bị event cuối tuần','Chuẩn bị cho event khuyến mãi','image',NULL,NULL,NULL,2,4,NULL,0,NULL,1,NULL,7,7,8,'urgent','2026-01-22','2026-01-24',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-21 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(39,NULL,1,'task_list','store','Báo cáo doanh thu ngày','Tổng hợp báo cáo doanh thu ngày','image',NULL,NULL,NULL,1,6,NULL,0,NULL,2,NULL,10,10,8,'normal','2026-01-21','2026-01-22',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-21 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(40,NULL,1,'task_list','store','Kiểm kê tài sản','Kiểm kê tài sản cố định','image',NULL,NULL,NULL,1,5,NULL,0,NULL,2,NULL,10,10,8,'normal','2026-01-18','2026-01-25',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-17 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(41,NULL,1,'task_list','store','Sắp xếp khu vực mới','Sắp xếp khu vực bán hàng mới','image',NULL,NULL,NULL,2,4,NULL,0,NULL,1,NULL,7,7,8,'normal','2026-01-20','2026-01-23',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-19 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(42,NULL,1,'task_list','store','Chuẩn bị tài liệu họp','Chuẩn bị tài liệu cho cuộc họp','image',NULL,NULL,NULL,3,6,NULL,0,NULL,1,NULL,4,4,8,'high','2026-01-21','2026-01-22',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-20 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(43,NULL,1,'task_list','store','Kiểm tra hệ thống điện','Kiểm tra an toàn hệ thống điện','image',NULL,NULL,NULL,3,5,NULL,0,NULL,4,NULL,9,9,8,'high','2026-01-21','2026-01-23',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-20 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(44,NULL,1,'task_list','store','Update menu display','Cập nhật menu hiển thị điện tử','image',NULL,NULL,NULL,2,4,NULL,0,NULL,4,NULL,9,9,8,'normal','2026-01-20','2026-01-23',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-19 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(45,NULL,1,'task_list','store','Kiểm tra máy POS','Kiểm tra hoạt động máy POS','image',NULL,NULL,NULL,3,5,NULL,0,NULL,4,NULL,9,9,8,'high','2026-01-22','2026-01-23',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(46,NULL,1,'task_list','store','Kiểm kê cuối tháng 12','Kiểm kê hàng hóa cuối tháng 12','image',NULL,NULL,NULL,1,5,NULL,0,NULL,1,NULL,7,7,9,'high','2026-01-12','2026-01-15',NULL,NULL,'2026-01-15 01:42:52',NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-11 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(47,NULL,1,'task_list','store','Báo cáo doanh thu tuần 52','Báo cáo doanh thu tuần cuối năm','image',NULL,NULL,NULL,1,6,NULL,0,NULL,2,NULL,10,10,9,'normal','2026-01-08','2026-01-12',NULL,NULL,'2026-01-12 01:42:52',NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-07 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(48,NULL,1,'task_list','store','Vệ sinh đón năm mới','Vệ sinh tổng thể đón năm mới','image',NULL,NULL,NULL,2,4,NULL,0,NULL,1,NULL,7,7,9,'high','2026-01-14','2026-01-17',NULL,NULL,'2026-01-17 01:42:52',NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-13 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(49,NULL,1,'task_list','store','Training cuối năm','Đào tạo tổng kết cuối năm','image',NULL,NULL,NULL,3,6,NULL,0,NULL,6,NULL,4,4,9,'normal','2026-01-10','2026-01-14',NULL,NULL,'2026-01-14 01:42:52',NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-09 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(50,NULL,1,'task_list','store','Kiểm tra PCCC tháng 12','Kiểm tra thiết bị PCCC','image',NULL,NULL,NULL,3,5,NULL,0,NULL,1,NULL,9,9,9,'high','2026-01-07','2026-01-10',NULL,NULL,'2026-01-10 01:42:52',NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-06 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(51,NULL,1,'task_list','store','Đánh giá hiệu suất Q4','Đánh giá hiệu suất quý 4','image',NULL,NULL,NULL,1,6,NULL,0,NULL,6,NULL,4,4,9,'high','2026-01-02','2026-01-07',NULL,NULL,'2026-01-07 01:42:52',NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-01 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(52,NULL,1,'task_list','store','Kiểm kê tài sản Q4','Kiểm kê tài sản cố định Q4','image',NULL,NULL,NULL,1,5,NULL,0,NULL,2,NULL,10,10,9,'normal','2026-01-04','2026-01-09',NULL,NULL,'2026-01-09 01:42:52',NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-03 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(53,NULL,1,'task_list','store','Sắp xếp kho cuối năm','Tổng vệ sinh và sắp xếp kho','image',NULL,NULL,NULL,2,4,NULL,0,NULL,1,NULL,7,7,9,'normal','2026-01-13','2026-01-16',NULL,NULL,'2026-01-16 01:42:52',NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-12 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(54,NULL,1,'task_list','store','Backup dữ liệu cuối năm','Backup toàn bộ dữ liệu','image',NULL,NULL,NULL,3,5,NULL,0,NULL,4,NULL,9,9,9,'urgent','2026-01-15','2026-01-17',NULL,NULL,'2026-01-17 01:42:52',NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-14 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(55,NULL,1,'task_list','store','Chuẩn bị event năm mới','Chuẩn bị cho event năm mới','image',NULL,NULL,NULL,2,4,NULL,0,NULL,1,NULL,7,7,9,'high','2026-01-16','2026-01-19',NULL,NULL,'2026-01-19 01:42:52',NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-15 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(56,NULL,1,'task_list','store','Báo cáo tồn kho quá hạn','Báo cáo tồn kho chưa hoàn thành','image',NULL,NULL,NULL,1,6,NULL,0,NULL,1,NULL,7,7,10,'high','2026-01-12','2026-01-17',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-11 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(57,NULL,1,'task_list','store','Kiểm tra camera quá hạn','Kiểm tra camera đã quá hạn','image',NULL,NULL,NULL,3,5,NULL,0,NULL,4,NULL,9,NULL,10,'urgent','2026-01-15','2026-01-19',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-14 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(58,NULL,1,'task_list','store','Vệ sinh khu B quá hạn','Vệ sinh khu B chưa hoàn thành','image',NULL,NULL,NULL,2,4,NULL,0,NULL,1,NULL,7,7,10,'normal','2026-01-17','2026-01-20',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-16 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(59,NULL,1,'task_list','store','Update giá quá hạn','Cập nhật giá chưa hoàn thành','image',NULL,NULL,NULL,1,4,NULL,0,NULL,1,NULL,10,10,10,'high','2026-01-18','2026-01-21',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-17 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(60,NULL,1,'task_list','store','Báo cáo tuần quá hạn','Báo cáo tuần chưa nộp','image',NULL,NULL,NULL,1,6,NULL,0,NULL,2,NULL,10,NULL,10,'normal','2026-01-16','2026-01-20',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-15 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(61,NULL,1,'task_list','store','Kiểm tra hệ thống nước','Kiểm tra hệ thống cấp nước trong store','image',NULL,NULL,NULL,3,5,NULL,0,NULL,1,NULL,7,NULL,7,'normal','2026-01-22','2026-01-24',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(62,NULL,1,'task_list','store','Sắp xếp khu vực C','Sắp xếp lại kệ hàng khu vực C','image',NULL,NULL,NULL,2,4,NULL,0,NULL,1,NULL,7,NULL,7,'normal','2026-01-22','2026-01-23',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(63,NULL,1,'task_list','store','Kiểm tra hàng tồn khu A','Kiểm tra và báo cáo hàng tồn khu A','image',NULL,NULL,NULL,1,5,NULL,0,NULL,1,NULL,9,NULL,7,'high','2026-01-22','2026-01-23',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(64,NULL,1,'task_list','store','Vệ sinh khu thực phẩm tươi','Vệ sinh khu vực thực phẩm tươi sống','image',NULL,NULL,NULL,2,4,NULL,0,NULL,1,NULL,7,NULL,7,'urgent','2026-01-22','2026-01-22',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(65,NULL,1,'task_list','store','Cập nhật bảng giá mới','Cập nhật bảng giá sản phẩm mới','image',NULL,NULL,NULL,1,4,NULL,0,NULL,1,NULL,10,NULL,7,'normal','2026-01-23','2026-01-24',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(66,NULL,1,'task_list','store','Kiểm tra thiết bị làm lạnh','Kiểm tra tủ đông và tủ mát','image',NULL,NULL,NULL,3,5,NULL,0,NULL,1,NULL,9,NULL,7,'high','2026-01-22','2026-01-23',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(67,NULL,1,'task_list','store','Nhận hàng từ kho trung tâm','Nhận và kiểm tra hàng từ kho','image',NULL,NULL,NULL,1,5,NULL,0,NULL,1,NULL,10,NULL,7,'normal','2026-01-23','2026-01-23',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(68,NULL,1,'task_list','store','Báo cáo tình trạng kệ hàng','Báo cáo kệ hàng cần sửa chữa','image',NULL,NULL,NULL,1,6,NULL,0,NULL,1,NULL,7,NULL,7,'normal','2026-01-22','2026-01-25',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(69,NULL,1,'task_list','store','Setup khu vực khuyến mãi mới','Thiết lập khu vực khuyến mãi đặc biệt','image',NULL,NULL,NULL,2,4,NULL,0,NULL,1,NULL,7,NULL,7,'high','2026-01-24','2026-01-26',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(70,NULL,1,'task_list','store','Kiểm tra an ninh đêm','Kiểm tra camera và thiết bị an ninh','image',NULL,NULL,NULL,3,5,NULL,0,NULL,1,NULL,9,NULL,7,'normal','2026-01-23','2026-01-24',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(71,NULL,1,'task_list','store','Tổng vệ sinh cuối tuần','Vệ sinh toàn bộ cửa hàng','image',NULL,NULL,NULL,2,4,NULL,0,NULL,1,NULL,7,7,8,'high','2026-01-21','2026-01-23',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-20 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(72,NULL,1,'task_list','store','Kiểm kê hàng nhập mới','Kiểm kê lô hàng mới nhập','image',NULL,NULL,NULL,1,5,NULL,0,NULL,1,NULL,9,9,8,'normal','2026-01-20','2026-01-23',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-19 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(73,NULL,1,'task_list','store','Sắp xếp hàng theo FIFO','Sắp xếp lại hàng theo nguyên tắc FIFO','image',NULL,NULL,NULL,2,4,NULL,0,NULL,1,NULL,10,10,8,'high','2026-01-21','2026-01-22',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-20 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(74,NULL,1,'task_list','store','Chuẩn bị khuyến mãi tuần mới','Setup chương trình KM tuần mới','image',NULL,NULL,NULL,2,4,NULL,0,NULL,1,NULL,7,7,8,'normal','2026-01-20','2026-01-24',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-19 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(75,NULL,1,'task_list','store','Kiểm tra chất lượng rau củ','Kiểm tra độ tươi rau củ quả','image',NULL,NULL,NULL,3,5,NULL,0,NULL,1,NULL,9,9,8,'urgent','2026-01-22','2026-01-22',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(76,NULL,1,'task_list','store','Báo cáo doanh số realtime','Cập nhật báo cáo doanh số','image',NULL,NULL,NULL,1,6,NULL,0,NULL,2,NULL,10,10,8,'normal','2026-01-21','2026-01-22',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-20 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(77,NULL,1,'task_list','store','Kiểm tra hệ thống POS','Kiểm tra và test hệ thống POS','image',NULL,NULL,NULL,3,5,NULL,0,NULL,4,NULL,9,9,8,'high','2026-01-21','2026-01-23',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-20 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(78,NULL,1,'task_list','store','Vệ sinh khu vực khách hàng','Vệ sinh khu ngồi và toilet','image',NULL,NULL,NULL,2,4,NULL,0,NULL,1,NULL,7,7,8,'normal','2026-01-20','2026-01-22',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-19 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(79,NULL,1,'task_list','store','Sắp xếp khu Delica','Sắp xếp khu bán đồ ăn sẵn','image',NULL,NULL,NULL,2,4,NULL,0,NULL,1,NULL,7,7,8,'normal','2026-01-21','2026-01-23',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-20 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(80,NULL,1,'task_list','store','Kiểm tra máy tính tiền','Kiểm tra hoạt động máy tính tiền','image',NULL,NULL,NULL,3,5,NULL,0,NULL,4,NULL,9,9,8,'high','2026-01-22','2026-01-23',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(81,NULL,1,'task_list','store','Kiểm kê hàng tháng 12 tuần 4','Kiểm kê hàng tuần 4 tháng 12','image',NULL,NULL,NULL,1,5,NULL,0,NULL,1,NULL,7,7,9,'high','2026-01-10','2026-01-13',NULL,NULL,'2026-01-13 01:42:52',NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-09 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(82,NULL,1,'task_list','store','Vệ sinh kho cuối năm','Tổng vệ sinh kho trước năm mới','image',NULL,NULL,NULL,2,4,NULL,0,NULL,1,NULL,7,7,9,'normal','2026-01-14','2026-01-17',NULL,NULL,'2026-01-17 01:42:52',NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-13 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(83,NULL,1,'task_list','store','Training an toàn thực phẩm','Đào tạo ATTP cho nhân viên','image',NULL,NULL,NULL,3,6,NULL,0,NULL,6,NULL,4,4,9,'high','2026-01-12','2026-01-15',NULL,NULL,'2026-01-15 01:42:52',NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-11 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(84,NULL,1,'task_list','store','Báo cáo chi phí tháng 12','Báo cáo chi phí vận hành tháng 12','image',NULL,NULL,NULL,1,6,NULL,0,NULL,2,NULL,10,10,9,'normal','2026-01-08','2026-01-12',NULL,NULL,'2026-01-12 01:42:52',NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-07 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(85,NULL,1,'task_list','store','Kiểm tra PCCC cuối năm','Kiểm tra thiết bị PCCC trước năm mới','image',NULL,NULL,NULL,3,5,NULL,0,NULL,1,NULL,9,9,9,'urgent','2026-01-16','2026-01-18',NULL,NULL,'2026-01-18 01:42:52',NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-15 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(86,NULL,1,'task_list','store','Báo cáo tồn kho tuần trước','Báo cáo tồn kho chưa nộp','image',NULL,NULL,NULL,1,6,NULL,0,NULL,1,NULL,7,7,10,'high','2026-01-14','2026-01-18',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-13 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(87,NULL,1,'task_list','store','Kiểm tra máy lạnh khu B','Kiểm tra máy lạnh đã quá hạn','image',NULL,NULL,NULL,3,5,NULL,0,NULL,4,NULL,9,NULL,10,'urgent','2026-01-16','2026-01-20',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-15 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(88,NULL,1,'task_list','store','Vệ sinh khu D quá hạn','Vệ sinh khu D chưa hoàn thành','image',NULL,NULL,NULL,2,4,NULL,0,NULL,1,NULL,7,7,10,'normal','2026-01-17','2026-01-21',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-16 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(89,NULL,1,'task_list','store','Cập nhật giá khu Fresh','Cập nhật giá chưa hoàn thành','image',NULL,NULL,NULL,1,4,NULL,0,NULL,1,NULL,10,10,10,'high','2026-01-18','2026-01-21',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-17 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(90,NULL,1,'task_list','store','Báo cáo nhân sự quá hạn','Báo cáo nhân sự tuần chưa nộp','image',NULL,NULL,NULL,1,6,NULL,0,NULL,6,NULL,4,NULL,10,'normal','2026-01-15','2026-01-19',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-14 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(91,1,2,'task_list','store','Chuẩn bị danh sách kiểm kê','Chuẩn bị danh sách hàng hóa cần kiểm kê','image',NULL,NULL,NULL,1,5,NULL,0,NULL,1,NULL,NULL,NULL,12,'normal','2026-01-29','2026-02-05',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(92,1,2,'task_list','store','Phân công nhân sự kiểm kê','Phân công người thực hiện kiểm kê','image',NULL,NULL,NULL,1,5,NULL,0,NULL,1,NULL,NULL,NULL,12,'normal','2026-01-29','2026-02-05',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(93,91,3,'task_list','store','Liệt kê danh mục hàng hóa','Liệt kê chi tiết các danh mục cần kiểm kê','image',NULL,NULL,NULL,1,5,NULL,0,NULL,1,NULL,NULL,NULL,12,'normal','2026-01-29','2026-02-05',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(94,91,3,'task_list','store','Xác định vị trí kệ hàng','Xác định vị trí kệ cần kiểm kê','image',NULL,NULL,NULL,1,5,NULL,0,NULL,1,NULL,NULL,NULL,12,'normal','2026-01-29','2026-02-05',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(95,92,3,'task_list','store','Chia ca kiểm kê','Phân chia ca làm việc kiểm kê','image',NULL,NULL,NULL,1,5,NULL,0,NULL,1,NULL,NULL,NULL,12,'normal','2026-01-29','2026-02-05',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(96,92,3,'task_list','store','Training nhân viên kiểm kê','Đào tạo nhân viên cách kiểm kê','image',NULL,NULL,NULL,1,5,NULL,0,NULL,1,NULL,NULL,NULL,12,'normal','2026-01-29','2026-02-05',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(97,93,4,'task_list','store','Thu thập data từ hệ thống','Lấy dữ liệu tồn kho từ hệ thống','image',NULL,NULL,NULL,1,5,NULL,0,NULL,1,NULL,NULL,NULL,12,'normal','2026-01-29','2026-02-05',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(98,93,4,'task_list','store','In phiếu kiểm kê','In các phiếu kiểm kê hàng hóa','image',NULL,NULL,NULL,1,5,NULL,0,NULL,1,NULL,NULL,NULL,12,'normal','2026-01-29','2026-02-05',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(99,95,4,'task_list','store','Lập lịch theo ca','Lập lịch chi tiết cho từng ca','image',NULL,NULL,NULL,1,5,NULL,0,NULL,1,NULL,NULL,NULL,12,'normal','2026-01-29','2026-02-05',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(100,97,5,'task_list','store','Export data từ POS','Xuất dữ liệu từ hệ thống POS','image',NULL,NULL,NULL,1,5,NULL,0,NULL,1,NULL,NULL,NULL,12,'normal','2026-01-29','2026-02-05',NULL,NULL,NULL,NULL,NULL,1,1,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(101,11,2,'task_list','store','Kiểm kê khu thực phẩm','Kiểm kê hàng hóa khu thực phẩm','image',NULL,NULL,NULL,1,5,NULL,0,NULL,1,NULL,NULL,NULL,13,'high','2026-01-24','2026-01-27',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(102,11,2,'task_list','store','Kiểm kê khu hóa mỹ phẩm','Kiểm kê hàng hóa khu hóa mỹ phẩm','image',NULL,NULL,NULL,1,5,NULL,0,NULL,1,NULL,NULL,NULL,13,'high','2026-01-24','2026-01-27',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(103,11,2,'task_list','store','Kiểm kê khu đồ gia dụng','Kiểm kê hàng hóa khu đồ gia dụng','image',NULL,NULL,NULL,1,5,NULL,0,NULL,1,NULL,NULL,NULL,13,'high','2026-01-24','2026-01-27',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,'2026-01-22 01:42:52',NULL,NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(104,31,2,'task_list','store','Kiểm kê hàng thực phẩm tươi','Kiểm kê khu vực thực phẩm tươi sống','image',NULL,NULL,NULL,1,5,NULL,0,NULL,1,NULL,7,7,8,'high','2026-01-20','2026-01-23',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-19 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(105,31,2,'task_list','store','Kiểm kê hàng khô','Kiểm kê khu vực hàng khô','image',NULL,NULL,NULL,1,5,NULL,0,NULL,1,NULL,7,7,8,'high','2026-01-20','2026-01-23',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-19 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(106,104,3,'task_list','store','Đếm rau củ quả','Kiểm đếm số lượng rau củ quả','image',NULL,NULL,NULL,1,5,NULL,0,NULL,1,NULL,7,7,8,'high','2026-01-20','2026-01-23',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-19 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(107,104,3,'task_list','store','Đếm thịt cá','Kiểm đếm số lượng thịt cá','image',NULL,NULL,NULL,1,5,NULL,0,NULL,1,NULL,7,7,8,'high','2026-01-20','2026-01-23',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-19 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(108,105,3,'task_list','store','Đếm gạo/mì/nui','Kiểm đếm số lượng gạo mì nui','image',NULL,NULL,NULL,1,5,NULL,0,NULL,1,NULL,7,7,8,'high','2026-01-20','2026-01-23',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-19 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52'),(109,105,3,'task_list','store','Đếm đồ hộp','Kiểm đếm số lượng đồ hộp','image',NULL,NULL,NULL,1,5,NULL,0,NULL,1,NULL,7,7,8,'high','2026-01-20','2026-01-23',NULL,NULL,NULL,NULL,NULL,2,1,0,0,NULL,NULL,NULL,NULL,NULL,'2026-01-19 01:42:52',NULL,NULL,NULL,'2026-01-22 01:42:52','2026-01-22 01:42:52');
 /*!40000 ALTER TABLE `tasks` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `task_store_assignments`
---
-
-DROP TABLE IF EXISTS `task_store_assignments`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `task_store_assignments` (
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `task_id` int NOT NULL,
-  `store_id` int NOT NULL,
-  `status` enum('not_yet','on_progress','done_pending','done','unable') COLLATE utf8mb4_unicode_ci DEFAULT 'not_yet' COMMENT 'Store execution status',
-  `assigned_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'When HQ dispatched task to store',
-  `started_at` timestamp NULL DEFAULT NULL COMMENT 'When store started working on task',
-  `completed_at` timestamp NULL DEFAULT NULL COMMENT 'When store marked done/unable',
-  `assigned_by` int DEFAULT NULL COMMENT 'HQ staff who dispatched task to store',
-  `assigned_to_staff` int DEFAULT NULL COMMENT 'Staff (S1) assigned by Store Leader',
-  `assigned_to_at` timestamp NULL DEFAULT NULL COMMENT 'When Store Leader assigned to staff',
-  `started_by` int DEFAULT NULL COMMENT 'Store user who started',
-  `completed_by` int DEFAULT NULL COMMENT 'Store user who completed/marked unable',
-  `checked_by` int DEFAULT NULL COMMENT 'HQ staff who verified completion',
-  `checked_at` timestamp NULL DEFAULT NULL COMMENT 'When HQ verified completion',
-  `check_notes` text COLLATE utf8mb4_unicode_ci COMMENT 'Notes from HQ checker',
-  `unable_reason` text COLLATE utf8mb4_unicode_ci COMMENT 'Required reason when status=unable',
-  `notes` text COLLATE utf8mb4_unicode_ci COMMENT 'General notes',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `unique_task_store` (`task_id`,`store_id`),
-  KEY `idx_task_status` (`task_id`,`status`),
-  KEY `idx_store_status` (`store_id`,`status`),
-  KEY `idx_assigned_staff` (`assigned_to_staff`),
-  KEY `idx_status` (`status`),
-  KEY `fk_tsa_assigned_by` (`assigned_by`),
-  KEY `fk_tsa_started_by` (`started_by`),
-  KEY `fk_tsa_completed_by` (`completed_by`),
-  KEY `fk_tsa_checked_by` (`checked_by`),
-  CONSTRAINT `fk_tsa_task` FOREIGN KEY (`task_id`) REFERENCES `tasks` (`task_id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_tsa_store` FOREIGN KEY (`store_id`) REFERENCES `stores` (`store_id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_tsa_assigned_by` FOREIGN KEY (`assigned_by`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_tsa_assigned_to_staff` FOREIGN KEY (`assigned_to_staff`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_tsa_started_by` FOREIGN KEY (`started_by`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_tsa_completed_by` FOREIGN KEY (`completed_by`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_tsa_checked_by` FOREIGN KEY (`checked_by`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `task_store_assignments`
---
-
-LOCK TABLES `task_store_assignments` WRITE;
-/*!40000 ALTER TABLE `task_store_assignments` DISABLE KEYS */;
-/*!40000 ALTER TABLE `task_store_assignments` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `task_execution_logs`
--- Tracks all actions on store assignments (per CLAUDE.md Section 12.5)
---
-
-DROP TABLE IF EXISTS `task_execution_logs`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `task_execution_logs` (
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `task_store_assignment_id` bigint unsigned NOT NULL COMMENT 'FK to task_store_assignments',
-  `action` enum('dispatched','assigned_to_staff','reassigned','unassigned','started','completed','marked_unable','hq_checked','hq_rejected') COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Type of action performed',
-  `performed_by` int NOT NULL COMMENT 'Staff ID who performed this action',
-  `performed_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'When action was performed',
-  `old_status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Previous status before action',
-  `new_status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'New status after action',
-  `target_staff_id` int DEFAULT NULL COMMENT 'For assign/reassign: the staff being assigned',
-  `notes` text COLLATE utf8mb4_unicode_ci COMMENT 'Additional notes, reasons, etc.',
-  PRIMARY KEY (`id`),
-  KEY `idx_log_assignment` (`task_store_assignment_id`),
-  KEY `idx_log_performed_at` (`performed_at`),
-  KEY `idx_log_action` (`action`),
-  KEY `idx_log_performed_by` (`performed_by`),
-  KEY `fk_log_target_staff` (`target_staff_id`),
-  CONSTRAINT `fk_log_assignment` FOREIGN KEY (`task_store_assignment_id`) REFERENCES `task_store_assignments` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_log_performed_by` FOREIGN KEY (`performed_by`) REFERENCES `staff` (`staff_id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_log_target_staff` FOREIGN KEY (`target_staff_id`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `task_execution_logs`
---
-
-LOCK TABLES `task_execution_logs` WRITE;
-/*!40000 ALTER TABLE `task_execution_logs` DISABLE KEYS */;
-/*!40000 ALTER TABLE `task_execution_logs` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `task_approval_history`
---
-
-DROP TABLE IF EXISTS `task_approval_history`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `task_approval_history` (
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `task_id` int NOT NULL,
-  `round_number` tinyint unsigned DEFAULT '1',
-  `step_number` tinyint unsigned NOT NULL,
-  `step_name` enum('SUBMIT','APPROVE','DO_TASK','CHECK') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `step_status` enum('submitted','done','in_process','rejected','pending') COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
-  `assigned_to_type` enum('user','stores','team') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `assigned_to_id` bigint unsigned DEFAULT NULL,
-  `assigned_to_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `assigned_to_count` int unsigned DEFAULT NULL,
-  `start_date` date DEFAULT NULL,
-  `end_date` date DEFAULT NULL,
-  `actual_start_at` timestamp NULL DEFAULT NULL,
-  `actual_end_at` timestamp NULL DEFAULT NULL,
-  `progress_done` int unsigned DEFAULT '0',
-  `progress_total` int unsigned DEFAULT '0',
-  `comment` text COLLATE utf8mb4_unicode_ci,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_task_round` (`task_id`,`round_number`),
-  KEY `idx_task_step` (`task_id`,`step_number`),
-  CONSTRAINT `fk_task_approval_history_task` FOREIGN KEY (`task_id`) REFERENCES `tasks` (`task_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Table structure for table `teams`
@@ -1467,12 +1450,12 @@ DROP TABLE IF EXISTS `teams`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `teams` (
-  `team_id` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `team_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `team_id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `team_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `department_id` int DEFAULT NULL,
-  `icon` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `icon_color` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `icon_bg` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `icon` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `icon_color` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `icon_bg` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `sort_order` int DEFAULT '0',
   `is_active` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1547,10 +1530,10 @@ DROP TABLE IF EXISTS `zones`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `zones` (
   `zone_id` int NOT NULL AUTO_INCREMENT,
-  `zone_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `zone_code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `zone_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `zone_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `region_id` int NOT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `is_active` tinyint(1) DEFAULT '1',
   `sort_order` int DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1573,8 +1556,18 @@ INSERT INTO `zones` VALUES (1,'Hanoi','HN',1,'Khu vực Hà Nội và vùng ph�
 UNLOCK TABLES;
 
 --
+-- Dumping events for database 'auraorie68aa_aoisora'
+--
+
+--
 -- Dumping routines for database 'auraorie68aa_aoisora'
 --
+
+--
+-- Current Database: `auraorie68aa_aoisora`
+--
+
+USE `auraorie68aa_aoisora`;
 
 --
 -- Final view structure for view `v_scope_managers`
@@ -1621,4 +1614,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-01-22 10:03:58
+-- Dump completed on 2026-01-24 21:21:37

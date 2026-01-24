@@ -93,20 +93,29 @@ class TaskController extends Controller
         }
 
         // Eager load relationships to prevent N+1 queries (Task 2.3)
+        // Note: Task's department is derived from creator's department, not tasks.dept_id
         $query->with([
             'status:code_master_id,name,code',
-            'department:department_id,department_code,department_name',
+            'department:department_id,department_code,department_name', // Legacy: kept for backward compatibility
             'taskType:code_master_id,name,code',
-            'createdBy:staff_id,staff_name,job_grade',
+            'createdBy:staff_id,staff_name,job_grade,department_id',
+            'createdBy.department:department_id,department_code,department_name,parent_id',
             'approver:staff_id,staff_name,job_grade',
         ]);
 
         $tasks = QueryBuilder::for($query)
             ->allowedFilters([
                 AllowedFilter::exact('assigned_store_id'),
+                // Legacy: filter by tasks.dept_id (kept for backward compatibility)
                 AllowedFilter::exact('dept_id'),
-                // Multi-department filter (array or comma-separated department IDs)
-                AllowedFilter::callback('dept_ids', fn ($query, $value) => $query->whereIn('dept_id', is_array($value) ? $value : explode(',', $value))),
+                // Multi-department filter - filter by CREATOR's department (staff.department_id)
+                // Task's department is derived from the creator, not stored directly on task
+                AllowedFilter::callback('dept_ids', function ($query, $value) {
+                    $deptIds = is_array($value) ? $value : explode(',', $value);
+                    $query->whereHas('createdBy', function ($q) use ($deptIds) {
+                        $q->whereIn('department_id', $deptIds);
+                    });
+                }),
                 AllowedFilter::exact('assigned_staff_id'),
                 AllowedFilter::exact('created_staff_id'),
                 AllowedFilter::exact('status_id'),

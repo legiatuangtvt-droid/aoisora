@@ -46,14 +46,22 @@ class TaskListResource extends JsonResource
                 ];
             }),
 
-            // Department
-            'dept_id' => $this->dept_id,
-            'department' => $this->whenLoaded('department', function () {
-                return [
-                    'department_id' => $this->department->department_id,
-                    'department_code' => $this->department->department_code,
-                    'department_name' => $this->department->department_name,
-                ];
+            // Department - derived from creator's department (not from tasks.dept_id)
+            // This ensures consistent department filtering and display
+            'dept_id' => $this->whenLoaded('createdBy', function () {
+                return $this->createdBy->department_id;
+            }, $this->dept_id), // Fallback to tasks.dept_id for backward compatibility
+            'department' => $this->whenLoaded('createdBy', function () {
+                if ($this->createdBy->relationLoaded('department') && $this->createdBy->department) {
+                    $dept = $this->createdBy->department;
+                    return [
+                        'department_id' => $dept->department_id,
+                        'department_code' => $dept->department_code,
+                        'department_name' => $dept->department_name,
+                        'parent_id' => $dept->parent_id,
+                    ];
+                }
+                return null;
             }),
 
             // Task type (frequency: daily, weekly, monthly, etc.)
@@ -80,6 +88,7 @@ class TaskListResource extends JsonResource
                     'staff_id' => $this->createdBy->staff_id,
                     'staff_name' => $this->createdBy->staff_name,
                     'job_grade' => $this->createdBy->job_grade,
+                    'department_id' => $this->createdBy->department_id,
                 ];
             }),
 
