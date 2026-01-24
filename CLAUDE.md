@@ -4527,7 +4527,7 @@ Request → Controller → Service → Model → Resource → Response
 |---|---------------|-------------|------------|--------|-----------|
 | O.1 | Page layout - Light mode | Header, filters, table hiển thị đúng layout | ✅ | ✅ | 2026-01-24 |
 | O.2 | Page layout - Dark mode | Colors chuyển đổi phù hợp dark theme | ✅ | ✅ | 2026-01-24 |
-| O.3 | Filter accordion | Click → expand/collapse animation smooth | ⏳ | ⏳ | - |
+| O.3 | Filter accordion | Click → expand/collapse animation smooth | ✅ | ✅ | 2026-01-24 |
 | O.4 | Filter chips | Selected filters hiển thị chips, X để remove | ⏳ | ⏳ | - |
 | O.5 | Department dropdown | Dropdown mở, options hiển thị đầy đủ | ⏳ | ⏳ | - |
 | O.6 | Status filter badges | Badges có màu đúng (Draft=gray, Approve=yellow, etc.) | ⏳ | ⏳ | - |
@@ -4785,12 +4785,12 @@ Request → Controller → Service → Model → Resource → Response
 │    → Step 1 CLI/Bash Tests: ✅ PASSED (2026-01-23)             │
 │    → Step 2 Manual Tests: ✅ PASSED (2026-01-23)               │
 │      54/56 tests passed, 1 bug found (BUG#1), 1 fix applied    │
-│    → Step 3 UI/UX Screenshot Tests: 🔄 IN PROGRESS (5/155)     │
-│      N.1-N.6 ✅, O.1 ✅, O.2 ✅ (Task List Dark mode)          │
+│    → Step 3 UI/UX Screenshot Tests: 🔄 IN PROGRESS (6/155)     │
+│      N.1-N.6 ✅, O.1-O.3 ✅ (Filter accordion)                 │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 
-Last Updated: 2026-01-24 (Step 3 UI/UX Test - O.2 completed)
+Last Updated: 2026-01-24 (Step 3 UI/UX Test - O.3 completed)
 ```
 
 ### LEGEND
