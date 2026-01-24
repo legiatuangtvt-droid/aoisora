@@ -836,14 +836,7 @@ export default function TaskListPage() {
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm border-r border-gray-200">
                           <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-2">
-                              <div className="w-5 h-5 rounded-full bg-gray-700 flex items-center justify-center">
-                                <span className="text-[10px] text-white font-bold">
-                                  {task.dept.charAt(0)}
-                                </span>
-                              </div>
-                              <span className="font-medium text-gray-900 dark:text-white">{task.dept}</span>
-                            </div>
+                            <span className="font-medium text-gray-900 dark:text-white">{task.dept}</span>
                             {task.creator && (
                               <CreatorAvatar
                                 creator={task.creator}
