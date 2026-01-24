@@ -8,6 +8,7 @@ interface CreatorInfo {
   job_grade: string | null;
   department_name?: string;
   department_code?: string;
+  avatar_url?: string;
 }
 
 interface CreatorAvatarProps {
@@ -20,8 +21,9 @@ interface CreatorAvatarProps {
  * CreatorAvatar - Avatar component with hover popup showing creator info
  *
  * Features:
- * - Shows avatar with initial letter
- * - Hover popup displays: name, job grade badge, department
+ * - Shows avatar with initial letter (or image if available)
+ * - Hover popup displays: avatar with job grade badge, name, department
+ * - Job grade badge positioned at bottom-left of avatar
  * - Responsive positioning (popup flips if near edge)
  */
 export function CreatorAvatar({
@@ -32,9 +34,8 @@ export function CreatorAvatar({
   const [isHovered, setIsHovered] = useState(false);
   const [popupPosition, setPopupPosition] = useState<"left" | "right">("right");
   const containerRef = useRef<HTMLDivElement>(null);
-  const popupRef = useRef<HTMLDivElement>(null);
 
-  // Size mappings
+  // Size mappings for trigger avatar
   const sizeClasses = {
     sm: "w-6 h-6 text-[10px]",
     md: "w-8 h-8 text-xs",
@@ -47,7 +48,7 @@ export function CreatorAvatar({
       const rect = containerRef.current.getBoundingClientRect();
       const windowWidth = window.innerWidth;
       // If popup would overflow right side, show on left
-      if (rect.right + 200 > windowWidth) {
+      if (rect.right + 250 > windowWidth) {
         setPopupPosition("left");
       } else {
         setPopupPosition("right");
@@ -87,8 +88,6 @@ export function CreatorAvatar({
   };
 
   const jobGrade = formatJobGrade(creator.job_grade);
-  const isHQGrade = jobGrade.startsWith("G");
-  const isStoreGrade = jobGrade.startsWith("S");
 
   return (
     <div
@@ -97,87 +96,96 @@ export function CreatorAvatar({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Avatar Circle */}
+      {/* Trigger Avatar Circle */}
       <div
         className={`
           ${sizeClasses[size]}
-          rounded-full bg-gradient-to-br from-blue-500 to-blue-600
+          rounded-full bg-gradient-to-br from-gray-400 to-gray-500
           flex items-center justify-center
           text-white font-semibold
           cursor-pointer
           transition-transform duration-200
           hover:scale-110
           shadow-sm
+          overflow-hidden
         `}
         title={creator.staff_name}
       >
-        {getInitials(creator.staff_name)}
+        {creator.avatar_url ? (
+          <img
+            src={creator.avatar_url}
+            alt={creator.staff_name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          getInitials(creator.staff_name)
+        )}
       </div>
 
       {/* Hover Popup */}
       {isHovered && (
         <div
-          ref={popupRef}
           className={`
             absolute z-50
             ${popupPosition === "right" ? "left-full ml-2" : "right-full mr-2"}
             top-1/2 -translate-y-1/2
             bg-white dark:bg-gray-800
-            rounded-lg shadow-lg
+            rounded-xl shadow-lg
             border border-gray-200 dark:border-gray-700
-            p-3 min-w-[200px]
-            animate-in fade-in-0 zoom-in-95 duration-200
+            px-4 py-3
+            min-w-[220px]
+            animate-in fade-in-0 zoom-in-95 duration-150
           `}
         >
-          {/* Arrow pointer */}
-          <div
-            className={`
-              absolute top-1/2 -translate-y-1/2
-              ${popupPosition === "right" ? "-left-2" : "-right-2"}
-              w-0 h-0
-              border-y-[6px] border-y-transparent
-              ${
-                popupPosition === "right"
-                  ? "border-r-[8px] border-r-white dark:border-r-gray-800"
-                  : "border-l-[8px] border-l-white dark:border-l-gray-800"
-              }
-            `}
-          />
-
-          <div className="flex items-start gap-3">
-            {/* Larger avatar in popup */}
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
-              {getInitials(creator.staff_name)}
-            </div>
-
-            <div className="flex-1 min-w-0">
-              {/* Name */}
-              <div className="font-medium text-gray-900 dark:text-white text-sm truncate">
-                {creator.staff_name}
+          <div className="flex items-center gap-3">
+            {/* Avatar with Job Grade Badge */}
+            <div className="relative flex-shrink-0">
+              {/* Avatar */}
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center text-white font-semibold text-base overflow-hidden">
+                {creator.avatar_url ? (
+                  <img
+                    src={creator.avatar_url}
+                    alt={creator.staff_name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-300 flex items-center justify-center">
+                    <svg className="w-7 h-7 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                  </div>
+                )}
               </div>
 
-              {/* Job Grade Badge */}
+              {/* Job Grade Badge - positioned at bottom-left */}
               {jobGrade && (
                 <span
-                  className={`
-                    inline-flex items-center px-2 py-0.5 mt-1
-                    rounded-full text-xs font-semibold
-                    ${
-                      isHQGrade
-                        ? "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300"
-                        : isStoreGrade
-                          ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                          : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
-                    }
-                  `}
+                  className="
+                    absolute -bottom-1 -left-1
+                    px-1.5 py-0.5
+                    bg-teal-100 text-teal-700
+                    dark:bg-teal-900/50 dark:text-teal-300
+                    text-[10px] font-bold
+                    rounded
+                    border border-white dark:border-gray-800
+                    shadow-sm
+                  "
                 >
                   {jobGrade}
                 </span>
               )}
+            </div>
+
+            {/* Name and Department */}
+            <div className="flex-1 min-w-0">
+              {/* Name */}
+              <div className="font-semibold text-gray-900 dark:text-white text-sm leading-tight">
+                {creator.staff_name}
+              </div>
 
               {/* Department */}
               {getDepartmentDisplay() && (
-                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 leading-tight">
                   {getDepartmentDisplay()}
                 </div>
               )}
