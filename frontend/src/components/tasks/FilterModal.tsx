@@ -21,6 +21,10 @@ interface FilterModalProps {
 const HQ_STATUS_OPTIONS: TaskStatus[] = ['APPROVE', 'DRAFT', 'OVERDUE', 'NOT_YET', 'ON_PROGRESS', 'DONE'];
 const STORE_STATUS_OPTIONS: TaskStatus[] = ['OVERDUE', 'NOT_YET', 'ON_PROGRESS', 'DONE'];
 
+// HQ Check options - only 2 statuses (different from Task Status)
+// NOT_YET = chưa kiểm tra, DONE = đã kiểm tra xong
+const HQ_CHECK_OPTIONS: HQCheckStatus[] = ['NOT_YET', 'DONE'];
+
 export default function FilterModal({
   isOpen,
   onClose,
@@ -375,7 +379,7 @@ export default function FilterModal({
             {expandedSection === 'hqCheck' && (
               <div className="px-6 pb-4 pt-3 animate-fade-in-down">
                 <div className="flex flex-wrap gap-2">
-              {(isHQUser ? HQ_STATUS_OPTIONS : STORE_STATUS_OPTIONS).map((hqCheck) => (
+              {HQ_CHECK_OPTIONS.map((hqCheck) => (
                 <button
                   key={hqCheck}
                   onClick={() => handleHQCheckToggle(hqCheck)}
@@ -385,7 +389,7 @@ export default function FilterModal({
                       : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                   }`}
                 >
-                  {hqCheck === 'NOT_YET' ? 'Not Yet' : hqCheck === 'ON_PROGRESS' ? 'On Progress' : hqCheck.charAt(0) + hqCheck.slice(1).toLowerCase()}
+                  {hqCheck === 'NOT_YET' ? 'Not Yet' : 'Done'}
                 </button>
               ))}
                 </div>
