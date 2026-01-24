@@ -105,13 +105,13 @@ class TaskController extends Controller
             ->allowedFilters([
                 AllowedFilter::exact('assigned_store_id'),
                 AllowedFilter::exact('dept_id'),
-                // Multi-department filter (comma-separated department IDs)
-                AllowedFilter::callback('dept_ids', fn ($query, $value) => $query->whereIn('dept_id', explode(',', $value))),
+                // Multi-department filter (array or comma-separated department IDs)
+                AllowedFilter::callback('dept_ids', fn ($query, $value) => $query->whereIn('dept_id', is_array($value) ? $value : explode(',', $value))),
                 AllowedFilter::exact('assigned_staff_id'),
                 AllowedFilter::exact('created_staff_id'),
                 AllowedFilter::exact('status_id'),
-                // Multi-status filter (comma-separated status IDs, e.g., "12,13" for DRAFT and APPROVE)
-                AllowedFilter::callback('status_ids', fn ($query, $value) => $query->whereIn('status_id', explode(',', $value))),
+                // Multi-status filter (array or comma-separated status IDs)
+                AllowedFilter::callback('status_ids', fn ($query, $value) => $query->whereIn('status_id', is_array($value) ? $value : explode(',', $value))),
                 AllowedFilter::exact('priority'),
                 AllowedFilter::exact('source'),
                 AllowedFilter::exact('receiver_type'),
