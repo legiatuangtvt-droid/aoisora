@@ -27,10 +27,11 @@ class TaskController extends Controller
      */
     const NOT_YET_STATUS_ID = 7;       // Task dispatched, not started
     const ON_PROGRESS_STATUS_ID = 8;   // Task in progress
-    const DRAFT_STATUS_ID = 12;
+    const DONE_STATUS_ID = 9;          // Task completed
+    const OVERDUE_STATUS_ID = 10;      // Task overdue
+    const REJECT_STATUS_ID = 11;       // Rejected (not used directly, tasks go back to DRAFT)
+    const DRAFT_STATUS_ID = 12;        // Draft status
     const APPROVE_STATUS_ID = 13;      // Pending approval
-    const APPROVED_STATUS_ID = 14;     // Approved
-    const REJECTED_STATUS_ID = 15;     // Rejected (transitions back to draft)
 
     /**
      * Maximum number of drafts allowed per HQ user
@@ -175,13 +176,17 @@ class TaskController extends Controller
             ])
             ->allowedSorts(['task_id', 'task_name', 'end_date', 'start_date', 'created_at']);
 
-        // Default sort: APPROVE → DRAFT → others (by status priority), then by task_id
-        // This ensures DRAFT and APPROVE tasks always appear first in pagination
+        // Default sort: APPROVE → DRAFT → OVERDUE → NOT_YET → ON_PROGRESS → DONE
+        // Status is already stored in status_id column, so we use simple CASE ordering
         if (!$request->has('sort')) {
-            $tasks = $tasks->orderByRaw("CASE
-                WHEN status_id = " . self::APPROVE_STATUS_ID . " THEN 1
-                WHEN status_id = " . self::DRAFT_STATUS_ID . " THEN 2
-                ELSE 3
+            $tasks = $tasks->orderByRaw("CASE status_id
+                WHEN " . self::APPROVE_STATUS_ID . " THEN 1
+                WHEN " . self::DRAFT_STATUS_ID . " THEN 2
+                WHEN " . self::OVERDUE_STATUS_ID . " THEN 3
+                WHEN " . self::NOT_YET_STATUS_ID . " THEN 4
+                WHEN " . self::ON_PROGRESS_STATUS_ID . " THEN 5
+                WHEN " . self::DONE_STATUS_ID . " THEN 6
+                ELSE 7
             END")
             ->orderBy('task_id', 'desc');
         }
@@ -1251,9 +1256,9 @@ class TaskController extends Controller
             'comment' => 'nullable|string|max:1000',
         ]);
 
-        // Update task
+        // Update task - set to NOT_YET (dispatched to stores)
         $task->update([
-            'status_id' => self::APPROVED_STATUS_ID,
+            'status_id' => self::NOT_YET_STATUS_ID,
             'approved_at' => Carbon::now(),
             'comment' => $request->input('comment'),
         ]);
@@ -1496,9 +1501,10 @@ class TaskController extends Controller
 
         // Step 2: APPROVE
         $approveStatus = 'pending';
+        $dispatchedStatuses = [self::NOT_YET_STATUS_ID, self::ON_PROGRESS_STATUS_ID, self::DONE_STATUS_ID, self::OVERDUE_STATUS_ID];
         if ($task->status_id === self::APPROVE_STATUS_ID) {
             $approveStatus = 'in_process';
-        } elseif ($task->status_id === self::APPROVED_STATUS_ID) {
+        } elseif (in_array($task->status_id, $dispatchedStatuses)) {
             $approveStatus = 'done';
         } elseif ($task->rejection_count > 0 && $task->status_id === self::DRAFT_STATUS_ID) {
             $approveStatus = 'rejected';
@@ -1520,8 +1526,8 @@ class TaskController extends Controller
             'comment' => $task->last_rejection_reason,
         ]);
 
-        // Step 3: DO_TASK (only if approved)
-        if ($task->status_id === self::APPROVED_STATUS_ID) {
+        // Step 3: DO_TASK (only if dispatched - task has been approved and sent to stores)
+        if (in_array($task->status_id, $dispatchedStatuses)) {
             // TODO: Calculate actual store progress when store assignment is implemented
             $doTaskStatus = $task->completed_time ? 'done' : 'in_process';
 
