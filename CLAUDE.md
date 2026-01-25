@@ -4631,7 +4631,7 @@ Request → Controller → Service → Model → Resource → Response
 | O.9 | Status badge colors | Approve(pink), Draft(gray), Not Yet(yellow) - colors match design | ✅ | ✅ | 2026-01-25 |
 | O.10 | Progress column | done/total counter format (0/1, 0/3) - matches design | ✅ | ✅ | 2026-01-25 |
 | O.11 | Unable column | Counter hiển thị số stores unable (no red - matches design) | ✅ | ✅ | 2026-01-25 |
-| O.12 | Sub-tasks expand | Click arrow → sub-tasks hiện với indent | ⏳ | ⏳ | - |
+| O.12 | Sub-tasks expand | Click arrow → sub-tasks hiện với indent, columns aligned | ✅ | ✅ FIX | 2026-01-25 |
 | O.13 | Sub-tasks collapse | Click again → sub-tasks ẩn, animation smooth | ⏳ | ⏳ | - |
 | O.14 | 3-dots menu | Hover row → menu icon, click → dropdown options | ⏳ | ⏳ | - |
 | O.15 | Pagination | Page numbers, Previous/Next buttons styled đúng | ⏳ | ⏳ | - |
@@ -4640,6 +4640,11 @@ Request → Controller → Service → Model → Resource → Response
 | O.18 | History modal | Click status → modal mở, timeline UI | ⏳ | ⏳ | - |
 | O.19 | History modal steps | SUBMIT → APPROVE → DO TASK → CHECK steps | ⏳ | ⏳ | - |
 | O.20 | Mobile table scroll | Table scroll horizontal on mobile | ⏳ | ⏳ | - |
+
+**O.12 Fix Details (2026-01-25):**
+- **Issue:** Sub-task rows missing HQ Check column td element (7 columns instead of 8)
+- **Fix:** Added empty td for HQ Check column in sub-task rows
+- **File:** `frontend/src/app/tasks/list/page.tsx` (line 971)
 
 #### P. TASK DETAIL PAGE (/tasks/detail)
 
@@ -4822,7 +4827,7 @@ Request → Controller → Service → Model → Resource → Response
 | Section | Total Tests | Passed | Failed | N/A | Pending |
 |---------|-------------|--------|--------|-----|---------|
 | N. Login | 6 | 2 | 0 | 1 | 3 |
-| O. Task List | 20 | 11 | 0 | 0 | 9 |
+| O. Task List | 20 | 12 | 0 | 0 | 8 |
 | P. Task Detail | 18 | 0 | 0 | 0 | 18 |
 | Q. Add Task | 27 | 0 | 0 | 0 | 27 |
 | R. Approval | 13 | 0 | 0 | 0 | 13 |
@@ -4832,7 +4837,7 @@ Request → Controller → Service → Model → Resource → Response
 | V. Store Tasks | 14 | 0 | 0 | 0 | 14 |
 | W. HQ Check | 12 | 0 | 0 | 0 | 12 |
 | X. General UI | 17 | 0 | 0 | 0 | 17 |
-| **TOTAL** | **155** | **13** | **0** | **1** | **141** |
+| **TOTAL** | **155** | **14** | **0** | **1** | **140** |
 
 ---
 
@@ -4880,12 +4885,12 @@ Request → Controller → Service → Model → Resource → Response
 │    → Step 1 CLI/Bash Tests: ✅ PASSED (2026-01-23)             │
 │    → Step 2 Manual Tests: ✅ PASSED (2026-01-23)               │
 │      54/56 tests passed, 1 bug found (BUG#1), 1 fix applied    │
-│    → Step 3 UI/UX Screenshot Tests: 🔄 IN PROGRESS (13/155)    │
-│      N.1-N.6 ✅, O.1-O.11 ✅                                    │
+│    → Step 3 UI/UX Screenshot Tests: 🔄 IN PROGRESS (14/155)    │
+│      N.1-N.6 ✅, O.1-O.12 ✅                                    │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 
-Last Updated: 2026-01-25 (Step 3 UI/UX Test - O.11 passed)
+Last Updated: 2026-01-25 (Step 3 UI/UX Test - O.12 passed)
 ```
 
 ### LEGEND

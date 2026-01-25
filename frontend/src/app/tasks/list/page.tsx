@@ -963,11 +963,12 @@ export default function TaskListPage() {
                               <td className="px-4 py-2 text-sm text-gray-500 text-center border-r border-gray-200">{task.startDate} → {task.endDate}</td>
                               <td className="px-4 py-2 text-center border-r border-gray-200"></td>
                               <td className="px-4 py-2 text-center border-r border-gray-200"></td>
-                              <td className="px-4 py-2">
+                              <td className="px-4 py-2 border-r border-gray-200">
                                 <div className="flex items-center justify-center">
                                   <StatusPill status={subTask.status} />
                                 </div>
                               </td>
+                              <td className="px-4 py-2"></td>
                             </tr>
                           ))}
                         </>
