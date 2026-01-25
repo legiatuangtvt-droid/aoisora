@@ -21,9 +21,26 @@ interface FilterModalProps {
 const HQ_STATUS_OPTIONS: TaskStatus[] = ['APPROVE', 'DRAFT', 'OVERDUE', 'NOT_YET', 'ON_PROGRESS', 'DONE'];
 const STORE_STATUS_OPTIONS: TaskStatus[] = ['OVERDUE', 'NOT_YET', 'ON_PROGRESS', 'DONE'];
 
+// Status color config for filter badges (selected state)
+// Matches the status column badges: light background, dark text, dot prefix
+const STATUS_COLORS: Record<TaskStatus, { bg: string; text: string }> = {
+  APPROVE: { bg: 'bg-purple-100', text: 'text-purple-700' },
+  DRAFT: { bg: 'bg-gray-100', text: 'text-gray-700' },
+  OVERDUE: { bg: 'bg-red-100', text: 'text-red-700' },
+  NOT_YET: { bg: 'bg-yellow-100', text: 'text-yellow-700' },
+  ON_PROGRESS: { bg: 'bg-blue-100', text: 'text-blue-700' },
+  DONE: { bg: 'bg-green-100', text: 'text-green-700' },
+};
+
 // HQ Check options - only 2 statuses (different from Task Status)
 // NOT_YET = chưa kiểm tra, DONE = đã kiểm tra xong
 const HQ_CHECK_OPTIONS: HQCheckStatus[] = ['NOT_YET', 'DONE'];
+
+// HQ Check color config for filter badges (selected state)
+const HQ_CHECK_COLORS: Record<HQCheckStatus, { bg: string; text: string }> = {
+  NOT_YET: { bg: 'bg-yellow-100', text: 'text-yellow-700' },
+  DONE: { bg: 'bg-green-100', text: 'text-green-700' },
+};
 
 export default function FilterModal({
   isOpen,
@@ -344,19 +361,23 @@ export default function FilterModal({
             {expandedSection === 'status' && (
               <div className="px-6 pb-4 pt-3 animate-fade-in-down">
                 <div className="flex flex-wrap gap-2">
-              {(isHQUser ? HQ_STATUS_OPTIONS : STORE_STATUS_OPTIONS).map((status) => (
-                <button
-                  key={status}
-                  onClick={() => handleStatusToggle(status)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 transform hover:scale-105 ${
-                    localFilters.status.includes(status)
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  {status === 'NOT_YET' ? 'Not Yet' : status === 'ON_PROGRESS' ? 'On Progress' : status.charAt(0) + status.slice(1).toLowerCase()}
-                </button>
-              ))}
+              {(isHQUser ? HQ_STATUS_OPTIONS : STORE_STATUS_OPTIONS).map((status) => {
+                const colors = STATUS_COLORS[status];
+                return (
+                  <button
+                    key={status}
+                    onClick={() => handleStatusToggle(status)}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 transform hover:scale-105 ${
+                      localFilters.status.includes(status)
+                        ? `${colors.bg} ${colors.text}`
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
+                    {status === 'NOT_YET' ? 'Not Yet' : status === 'ON_PROGRESS' ? 'On Progress' : status.charAt(0) + status.slice(1).toLowerCase()}
+                  </button>
+                );
+              })}
                 </div>
               </div>
             )}
@@ -396,19 +417,23 @@ export default function FilterModal({
             {expandedSection === 'hqCheck' && (
               <div className="px-6 pb-4 pt-3 animate-fade-in-down">
                 <div className="flex flex-wrap gap-2">
-              {HQ_CHECK_OPTIONS.map((hqCheck) => (
-                <button
-                  key={hqCheck}
-                  onClick={() => handleHQCheckToggle(hqCheck)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 transform hover:scale-105 ${
-                    localFilters.hqCheck.includes(hqCheck)
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  {hqCheck === 'NOT_YET' ? 'Not Yet' : 'Done'}
-                </button>
-              ))}
+              {HQ_CHECK_OPTIONS.map((hqCheck) => {
+                const colors = HQ_CHECK_COLORS[hqCheck];
+                return (
+                  <button
+                    key={hqCheck}
+                    onClick={() => handleHQCheckToggle(hqCheck)}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 transform hover:scale-105 ${
+                      localFilters.hqCheck.includes(hqCheck)
+                        ? `${colors.bg} ${colors.text}`
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
+                    {hqCheck === 'NOT_YET' ? 'Not Yet' : 'Done'}
+                  </button>
+                );
+              })}
                 </div>
               </div>
             )}
