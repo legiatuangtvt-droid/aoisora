@@ -150,24 +150,26 @@ Hiển thị chi tiết task từ HQ, bao gồm:
 | Q4 | Like feature có cần không? | A) Có<br>B) Không - bỏ | ❓ Tùy business |
 | Q5 | Images lưu ở đâu? | A) Bảng task_images<br>B) Field trong assignments<br>C) Bảng task_evidence | Cần design |
 
-### 5.2 Parent-Child Task Logic (MỚI CẬP NHẬT)
+### 5.2 Task Level Hierarchy Logic (MỚI CẬP NHẬT)
 
 > ⚠️ **LOGIC QUAN TRỌNG ĐÃ XÁC NHẬN:**
+>
+> **Quy ước thuật ngữ:** Không dùng "sub-task" để tránh nhầm lẫn. Thay vào đó dùng **Task Level 1, 2, 3, 4, 5**.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  QUY TẮC PARENT-CHILD TASK                                      │
+│  QUY TẮC TASK HIERARCHY (Level 1 → 5)                           │
 │                                                                 │
-│  1. NẾU TASK CÓ SUB-TASKS (task con):                           │
+│  1. NẾU TASK CÓ CHILD TASKS (Task Level thấp hơn):              │
 │     → Task cha KHÔNG CÓ NỘI DUNG cần confirm                    │
 │     → Task cha KHÔNG hiển thị Store Result Cards                │
-│     → Task cha chỉ hiển thị danh sách sub-tasks                 │
+│     → Task cha chỉ hiển thị danh sách child tasks               │
 │                                                                 │
 │  2. STATUS CỦA TASK CHA:                                        │
-│     → Được TỔNG HỢP từ status của tất cả task con               │
+│     → Được TỔNG HỢP từ status của tất cả child tasks            │
 │     → Không tính toán từ store assignments trực tiếp            │
 │                                                                 │
-│  3. CHỈ TASK LÁ (không có con) mới có:                          │
+│  3. CHỈ TASK LÁ (Level cuối, không có con) mới có:              │
 │     → Store assignments                                         │
 │     → Store Result Cards                                        │
 │     → HQ Check actions                                          │
@@ -179,22 +181,22 @@ Hiển thị chi tiết task từ HQ, bao gồm:
 **Ví dụ cụ thể:**
 
 ```
-Task Level 1: "Kiểm kê Q1" (PARENT)
-├── Status: Tổng hợp từ 3 sub-tasks
+Task Level 1: "Kiểm kê Q1" (có child tasks)
+├── Status: Tổng hợp từ 3 Task Level 2
 ├── Không có Store Cards
-├── Hiển thị: Danh sách 3 sub-tasks với progress
+├── Hiển thị: Danh sách 3 Task Level 2 với progress
 │
-├── Task Level 2: "Kiểm kê Thực phẩm" (CHILD - có stores)
+├── Task Level 2: "Kiểm kê Thực phẩm" (LEAF - có stores)
 │   ├── Status: Tính từ store assignments
 │   ├── Store Cards: 50 stores
 │   └── HQ Check: Có
 │
-├── Task Level 2: "Kiểm kê Điện máy" (CHILD - có stores)
+├── Task Level 2: "Kiểm kê Điện máy" (LEAF - có stores)
 │   ├── Status: Tính từ store assignments
 │   ├── Store Cards: 50 stores
 │   └── HQ Check: Có
 │
-└── Task Level 2: "Kiểm kê Thời trang" (CHILD - có stores)
+└── Task Level 2: "Kiểm kê Thời trang" (LEAF - có stores)
     ├── Status: Tính từ store assignments
     ├── Store Cards: 50 stores
     └── HQ Check: Có
@@ -204,19 +206,19 @@ Task Level 1: "Kiểm kê Q1" (PARENT)
 
 | Điều kiện | Status Task Cha |
 |-----------|-----------------|
-| Tất cả sub-tasks = `not_yet` | `not_yet` |
-| Ít nhất 1 sub-task = `on_progress` | `on_progress` |
-| Tất cả sub-tasks = `done` hoặc `unable` | `done` |
-| Ít nhất 1 sub-task = `overdue` | `overdue` |
+| Tất cả child tasks = `not_yet` | `not_yet` |
+| Ít nhất 1 child task = `on_progress` | `on_progress` |
+| Tất cả child tasks = `done` hoặc `unable` | `done` |
+| Ít nhất 1 child task = `overdue` | `overdue` |
 
 **UI Impact:**
 
-| View | Task có sub-tasks | Task không có sub-tasks (leaf) |
-|------|-------------------|--------------------------------|
+| View | Task có child tasks | Task không có child tasks (leaf) |
+|------|---------------------|----------------------------------|
 | Task Header | ✅ Hiển thị | ✅ Hiển thị |
-| Statistics Cards | ❌ Ẩn (hoặc tổng hợp từ sub-tasks) | ✅ Hiển thị từ stores |
+| Statistics Cards | ❌ Ẩn (hoặc tổng hợp từ child tasks) | ✅ Hiển thị từ stores |
 | Store Result Cards | ❌ Ẩn | ✅ Hiển thị |
-| Sub-tasks List | ✅ Hiển thị danh sách | ❌ Ẩn |
+| Child Tasks List | ✅ Hiển thị danh sách | ❌ Ẩn |
 | HQ Check Actions | ❌ Không có | ✅ Có |
 | Comments | ✅ Có thể có (cấp task) | ✅ Có (cấp task + store) |
 
@@ -229,7 +231,7 @@ Task Level 1: "Kiểm kê Q1" (PARENT)
 | T3 | Real-time updates cho comments? | WebSocket hay polling? |
 | T4 | Workflow steps format? | Round tabs có cần không? |
 | T5 | API cho parent task detail? | Cần endpoint riêng hay cùng /tasks/{id}? |
-| T6 | Eager loading sub-tasks? | Load bao nhiêu levels? (Level 1 → 5) |
+| T6 | Eager loading child tasks? | Load bao nhiêu levels? (Level 1 → 5) |
 
 ---
 
