@@ -1461,6 +1461,12 @@ backend/laravel/  →  public_html/laravel/
 │     → LUÔN deploy đến project "aoisora", không phải "frontend"  │
 │     → Redeploy tạo bản deployment MỚI (bản cũ vẫn còn)          │
 │     → Có thể Rollback: Click bản cũ → "Promote to Production"   │
+│                                                                 │
+│  ⚠️ QUAN TRỌNG - LUÔN DEPLOY ĐẦY ĐỦ:                             │
+│     → Khi deploy, LUÔN deploy cả 3 thành phần: DB + BE + FE     │
+│     → Bất kể có thay đổi so với lần deploy trước hay không      │
+│     → Mục đích: Đảm bảo đồng bộ hoàn toàn giữa local và server  │
+│     → Tránh lỗi do version mismatch giữa các thành phần         │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -4985,8 +4991,8 @@ Request → Controller → Service → Model → Resource → Response
 | O.15 | Pagination | "Showing X of Y (Page N of M)", page numbers 1-4, < > arrows, current highlighted | ✅ | ✅ PASSED | 2026-01-25 |
 | O.16 | Empty state | Search "xyzabc123" → "No tasks found" message, Total: 0 tasks | ✅ | ✅ PASSED | 2026-01-25 |
 | O.17 | Loading skeleton | Skeleton rows displayed during loading (⚠️ layout could match table columns better) | ✅ | ✅ PASSED | 2026-01-25 |
-| O.18 | History modal | Click status → modal mở với timeline (SUBMIT→APPROVE→DO TASK→CHECK steps) | ⏳ | ⏳ | - |
-| O.19 | Mobile responsive | Resize <768px → table scroll horizontal, layout adapts | ⏳ | ⏳ | - |
+| O.18 | History modal | Click status → modal mở với timeline (SUBMIT→APPROVE→DO TASK→CHECK steps) | ✅ | ✅ PASSED | 2026-01-25 |
+| O.19 | Mobile responsive | Resize <768px → table scroll horizontal, layout adapts | ✅ | ✅ PASSED | 2026-01-25 |
 
 **O.12 Fix Details (2026-01-25):**
 - **Issue:** Sub-task rows missing HQ Check column td element (7 columns instead of 8)
