@@ -1,13 +1,28 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 
+// Component that uses useSearchParams - must be wrapped in Suspense
+function SessionExpiredHandler({ onMessage }: { onMessage: (msg: string) => void }) {
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const expired = searchParams.get('expired');
+    const message = searchParams.get('message');
+
+    if (expired === 'true' && message) {
+      onMessage(decodeURIComponent(message));
+    }
+  }, [searchParams, onMessage]);
+
+  return null;
+}
+
 export default function SignInPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { login, loginWithGoogle, isAuthenticated, isLoading: authLoading } = useAuth();
 
   const [emailOrPhone, setEmailOrPhone] = useState('');
@@ -25,16 +40,6 @@ export default function SignInPage() {
       initialLoadComplete.current = true;
     }
   }, [authLoading]);
-
-  // Check for session expired message
-  useEffect(() => {
-    const expired = searchParams.get('expired');
-    const message = searchParams.get('message');
-
-    if (expired === 'true' && message) {
-      setSessionExpiredMessage(decodeURIComponent(message));
-    }
-  }, [searchParams]);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -108,6 +113,10 @@ export default function SignInPage() {
 
   return (
     <main className="min-h-screen relative overflow-hidden">
+      {/* Handle session expired message from URL params */}
+      <Suspense fallback={null}>
+        <SessionExpiredHandler onMessage={setSessionExpiredMessage} />
+      </Suspense>
       {/* Background with gradient sky and clouds */}
       <div
         className="absolute inset-0 bg-gradient-to-b from-sky-300 via-sky-200 to-orange-200"
