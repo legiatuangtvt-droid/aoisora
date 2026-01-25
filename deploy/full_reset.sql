@@ -510,7 +510,7 @@ CREATE TABLE `personal_access_tokens` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `token` (`token`),
   KEY `idx_personal_access_tokens_tokenable` (`tokenable_type`,`tokenable_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -519,7 +519,7 @@ CREATE TABLE `personal_access_tokens` (
 
 LOCK TABLES `personal_access_tokens` WRITE;
 /*!40000 ALTER TABLE `personal_access_tokens` DISABLE KEYS */;
-INSERT INTO `personal_access_tokens` VALUES (1,'App\\Models\\Staff',1,'access_token','8770a064210a1a7f12ec36265f2340cd7be3b2a42cc8699902c48e330c0e8016','[\"*\"]','2026-01-21 19:53:56','2026-01-21 20:05:03','2026-01-21 19:50:03','2026-01-21 19:53:56'),(2,'App\\Models\\Staff',1,'access_token','cda396d47386d0fc65489157d0cb2e9fe2e60d51716455bd3bff763475064009','[\"*\"]','2026-01-24 07:12:07','2026-01-24 07:13:01','2026-01-24 06:58:01','2026-01-24 07:12:07'),(3,'App\\Models\\Staff',1,'access_token','9e62a349e71b06ba2eb45271f12f2b0eb2591f2b31e2e8080bffa727af93d1b1','[\"*\"]','2026-01-24 07:32:08','2026-01-24 07:37:35','2026-01-24 07:22:35','2026-01-24 07:32:08'),(4,'App\\Models\\Staff',1,'access_token','0b07e31d492d20a5d1c52969f4f52834464997b3b599c0edc7c57b4d5bb89a9b','[\"*\"]','2026-01-24 07:56:15','2026-01-24 08:08:18','2026-01-24 07:53:18','2026-01-24 07:56:15');
+INSERT INTO `personal_access_tokens` VALUES (15,'App\\Models\\Staff',1,'access_token','38d36324eb14f46fb618ec8809bdeb8ab5b62bca15b3dc3e095a61ba6e7f0d46','[\"*\"]','2026-01-25 00:02:43','2026-01-25 00:12:44','2026-01-24 23:57:44','2026-01-25 00:02:43'),(16,'App\\Models\\Staff',1,'access_token','2ae47c402283a34ba5879517549dc231b1e4f4cc7ca7ced5e5ec324b67e02c97','[\"*\"]','2026-01-25 00:43:57','2026-01-25 00:58:52','2026-01-25 00:43:52','2026-01-25 00:43:57');
 /*!40000 ALTER TABLE `personal_access_tokens` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -544,7 +544,7 @@ CREATE TABLE `refresh_tokens` (
   KEY `idx_family_id` (`family_id`),
   KEY `idx_expires_at` (`expires_at`),
   CONSTRAINT `fk_refresh_tokens_staff` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`staff_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -553,7 +553,7 @@ CREATE TABLE `refresh_tokens` (
 
 LOCK TABLES `refresh_tokens` WRITE;
 /*!40000 ALTER TABLE `refresh_tokens` DISABLE KEYS */;
-INSERT INTO `refresh_tokens` VALUES (1,1,'195fd0248299338040750148d0c49f77495cc924d9dc3831295213ab7a434955','cfbf82ea-6aca-4f99-b97d-728156437f95','2026-01-28 19:50:03',NULL,'2026-01-22 02:50:03'),(2,1,'625008c5ca4d4296dc6176e7d170b5e1f333d02ef0392d65285f6fdf2c8d52e4','dc7d0904-f8bb-47e8-8dc7-75f3449f1b2d','2026-01-31 06:58:01',NULL,'2026-01-24 13:58:01'),(3,1,'bdb37e623fc283f46c5366e6382d9d514c013faa97b95cb45237f86b605c61b5','eee1349a-6435-4401-8aa6-5846e11db1cc','2026-01-31 07:22:35',NULL,'2026-01-24 14:22:35'),(4,1,'1186ae7322a92e673a0c0cec02f2f11150381e0d1dae9a37dcbbe8aaf5e43fae','f0a1d239-3271-4f68-84e4-f13d25631af8','2026-01-31 07:53:18',NULL,'2026-01-24 14:53:18');
+INSERT INTO `refresh_tokens` VALUES (1,1,'195fd0248299338040750148d0c49f77495cc924d9dc3831295213ab7a434955','cfbf82ea-6aca-4f99-b97d-728156437f95','2026-01-28 19:50:03',NULL,'2026-01-22 02:50:03'),(2,1,'625008c5ca4d4296dc6176e7d170b5e1f333d02ef0392d65285f6fdf2c8d52e4','dc7d0904-f8bb-47e8-8dc7-75f3449f1b2d','2026-01-31 06:58:01',NULL,'2026-01-24 13:58:01'),(3,1,'bdb37e623fc283f46c5366e6382d9d514c013faa97b95cb45237f86b605c61b5','eee1349a-6435-4401-8aa6-5846e11db1cc','2026-01-31 07:22:35',NULL,'2026-01-24 14:22:35'),(4,1,'1186ae7322a92e673a0c0cec02f2f11150381e0d1dae9a37dcbbe8aaf5e43fae','f0a1d239-3271-4f68-84e4-f13d25631af8','2026-01-31 07:53:18',NULL,'2026-01-24 14:53:18'),(5,1,'021c1474de90cbe7e3133d3b7aab4a1dc5227e7adb6973caaefd73b9e1f9561a','e81714fa-66bc-4ea4-9237-e08deac34baf','2026-01-31 08:07:03',NULL,'2026-01-24 15:07:03'),(6,1,'f53e28743ecf6fcc99d3a15bf2d99387768dc5cb0f18721efd2df74b4343e804','0bf6debe-f20e-4532-8519-3713d3447101','2026-01-31 08:07:32',NULL,'2026-01-24 15:07:32'),(7,1,'a7e3f131221f0db9597c1bdb3488ddfd4933d4eec949b00f770153abe8ec8552','2b5c15da-f64f-47cd-92ef-aa67cccae976','2026-01-31 08:07:39',NULL,'2026-01-24 15:07:39'),(8,1,'a0ff7c45df251be9c6b824b3c22fde586f25a771fa931c13e5528342de311f8b','30956bb3-0e42-450a-8a8c-f1b528d5ee95','2026-01-31 08:07:47',NULL,'2026-01-24 15:07:47'),(9,1,'c3d818c373fd7782c30ee29b55ae2cfecea1852128e4d44a3442d118e62f642d','8eea07e4-3e01-48c3-9208-3f887deedbb0','2026-01-31 16:36:31',NULL,'2026-01-24 23:36:31'),(10,1,'d71585bf20263647e049dcdefbc92a722b89abdc422d57e44c0e0de652e11e79','d76b197a-2b63-45f3-b235-4b0618e91cd8','2026-01-31 19:30:46',NULL,'2026-01-25 02:30:46'),(11,1,'570341a9897dcf63bad5aa364653165e33edb18c49d603d2bf2ef8f0036c0b5f','731950bb-bb34-4e31-ac0d-6073fd069d9f','2026-01-31 20:28:47',NULL,'2026-01-25 03:28:47'),(12,1,'cf4125ba951dcba157cac4d02478139649d4c1ee0b9ecfdfac59088fd2ce6a1f','c151bf07-a22c-432a-b022-bdf398096bcc','2026-01-31 20:44:40','2026-01-24 21:18:30','2026-01-25 03:44:40'),(13,1,'c45a56fa1dcbbb6b26b1508255d8dcd070f7b5de1fed6eedef4bc7caa5197e9f','c151bf07-a22c-432a-b022-bdf398096bcc','2026-01-31 21:18:30',NULL,'2026-01-25 04:18:30'),(14,1,'cadfabdea7196667d0d09b5061122b4ef12bbc5e68fe4c119ba262a7f1c785a6','8b058220-f8cc-4bdb-b667-6ddee8d6e8ff','2026-01-31 22:35:29','2026-01-24 23:57:44','2026-01-25 05:35:29'),(15,1,'40529bfd4504c0604ebcea58eb0b7629aa99631ecbb3a6923ab203ac7a298e0d','8b058220-f8cc-4bdb-b667-6ddee8d6e8ff','2026-01-31 23:57:44',NULL,'2026-01-25 06:57:44'),(16,1,'c1b6d921106ab78b9a6068032b1e0f97969641e45ab823b8a9c31935009d8ded','83264852-fe3c-4dfe-9417-294d21af3215','2026-02-01 00:43:52',NULL,'2026-01-25 07:43:52');
 /*!40000 ALTER TABLE `refresh_tokens` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -871,7 +871,7 @@ CREATE TABLE `task_approval_history` (
   KEY `idx_task_round` (`task_id`,`round_number`),
   KEY `idx_task_step` (`task_id`,`step_number`),
   CONSTRAINT `fk_task_approval_history_task` FOREIGN KEY (`task_id`) REFERENCES `tasks` (`task_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -880,6 +880,7 @@ CREATE TABLE `task_approval_history` (
 
 LOCK TABLES `task_approval_history` WRITE;
 /*!40000 ALTER TABLE `task_approval_history` DISABLE KEYS */;
+INSERT INTO `task_approval_history` VALUES (1,18,1,1,'SUBMIT','submitted','user',1,' ',NULL,'2026-01-22','2026-01-22','2026-01-22 01:42:52','2026-01-22 01:42:52',0,0,NULL,'2026-01-24 23:57:45','2026-01-24 23:57:45'),(2,18,1,2,'APPROVE','in_process','user',1,' ',NULL,'2026-01-22',NULL,'2026-01-22 01:42:52',NULL,0,0,NULL,'2026-01-24 23:57:45','2026-01-24 23:57:45'),(3,15,1,1,'SUBMIT','submitted','user',1,' ',NULL,'2026-01-22','2026-01-22','2026-01-22 01:42:52','2026-01-22 01:42:52',0,0,NULL,'2026-01-24 23:57:52','2026-01-24 23:57:52'),(4,15,1,2,'APPROVE','in_process','user',1,' ',NULL,'2026-01-22',NULL,'2026-01-22 01:42:52',NULL,0,0,NULL,'2026-01-24 23:57:52','2026-01-24 23:57:52');
 /*!40000 ALTER TABLE `task_approval_history` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1581,7 +1582,7 @@ USE `auraorie68aa_aoisora`;
 /*!50001 SET character_set_results     = utf8mb4 */;
 /*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013  SQL SECURITY DEFINER */
 /*!50001 VIEW `v_scope_managers` AS select `sa`.`scope_type` AS `scope_type`,`sa`.`scope_id` AS `scope_id`,`sa`.`staff_id` AS `staff_id`,`s`.`staff_name` AS `staff_name`,`s`.`staff_code` AS `staff_code`,coalesce(`sa`.`effective_grade`,`s`.`job_grade`) AS `effective_grade`,`sa`.`assignment_type` AS `assignment_type`,(case `sa`.`scope_type` when 'region' then `r`.`region_name` when 'zone' then `z`.`zone_name` when 'area' then `a`.`area_name` when 'store' then `st`.`store_name` end) AS `scope_name` from (((((`staff_assignments` `sa` join `staff` `s` on((`sa`.`staff_id` = `s`.`staff_id`))) left join `regions` `r` on(((`sa`.`scope_type` = 'region') and (`sa`.`scope_id` = `r`.`region_id`)))) left join `zones` `z` on(((`sa`.`scope_type` = 'zone') and (`sa`.`scope_id` = `z`.`zone_id`)))) left join `areas` `a` on(((`sa`.`scope_type` = 'area') and (`sa`.`scope_id` = `a`.`area_id`)))) left join `stores` `st` on(((`sa`.`scope_type` = 'store') and (`sa`.`scope_id` = `st`.`store_id`)))) where ((`sa`.`is_active` = 1) and ((`sa`.`end_date` is null) or (`sa`.`end_date` >= curdate()))) order by `sa`.`scope_type`,`sa`.`scope_id`,(case `sa`.`assignment_type` when 'primary' then 1 else 2 end) */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -1599,7 +1600,7 @@ USE `auraorie68aa_aoisora`;
 /*!50001 SET character_set_results     = utf8mb4 */;
 /*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013  SQL SECURITY DEFINER */
 /*!50001 VIEW `v_staff_all_assignments` AS select `sa`.`assignment_id` AS `assignment_id`,`sa`.`staff_id` AS `staff_id`,`s`.`staff_name` AS `staff_name`,`s`.`staff_code` AS `staff_code`,`s`.`job_grade` AS `primary_grade`,`sa`.`effective_grade` AS `effective_grade`,coalesce(`sa`.`effective_grade`,`s`.`job_grade`) AS `working_grade`,`sa`.`assignment_type` AS `assignment_type`,`sa`.`scope_type` AS `scope_type`,`sa`.`scope_id` AS `scope_id`,(case `sa`.`scope_type` when 'region' then `r`.`region_name` when 'zone' then `z`.`zone_name` when 'area' then `a`.`area_name` when 'store' then `st`.`store_name` end) AS `scope_name`,`sa`.`start_date` AS `start_date`,`sa`.`end_date` AS `end_date`,`sa`.`is_active` AS `is_active`,`sa`.`notes` AS `notes` from (((((`staff_assignments` `sa` join `staff` `s` on((`sa`.`staff_id` = `s`.`staff_id`))) left join `regions` `r` on(((`sa`.`scope_type` = 'region') and (`sa`.`scope_id` = `r`.`region_id`)))) left join `zones` `z` on(((`sa`.`scope_type` = 'zone') and (`sa`.`scope_id` = `z`.`zone_id`)))) left join `areas` `a` on(((`sa`.`scope_type` = 'area') and (`sa`.`scope_id` = `a`.`area_id`)))) left join `stores` `st` on(((`sa`.`scope_type` = 'store') and (`sa`.`scope_id` = `st`.`store_id`)))) where ((`sa`.`is_active` = 1) and ((`sa`.`end_date` is null) or (`sa`.`end_date` >= curdate()))) */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -1614,4 +1615,4 @@ USE `auraorie68aa_aoisora`;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-01-24 22:05:46
+-- Dump completed on 2026-01-25 15:44:55
