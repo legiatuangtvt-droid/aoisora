@@ -4632,7 +4632,7 @@ Request → Controller → Service → Model → Resource → Response
 | O.10 | Progress column | done/total counter format (0/1, 0/3) - matches design | ✅ | ✅ | 2026-01-25 |
 | O.11 | Unable column | Counter hiển thị số stores unable (no red - matches design) | ✅ | ✅ | 2026-01-25 |
 | O.12 | Sub-tasks expand | Click arrow → sub-tasks hiện với indent, columns aligned | ✅ | ✅ FIX | 2026-01-25 |
-| O.13 | Sub-tasks collapse | Click again → sub-tasks ẩn, animation smooth | ⏳ | ⏳ | - |
+| O.13 | Sub-tasks collapse | Click again → sub-tasks ẩn, arrow changes direction | ✅ | ✅ | 2026-01-25 |
 | O.14 | 3-dots menu | Hover row → menu icon, click → dropdown options | ⏳ | ⏳ | - |
 | O.15 | Pagination | Page numbers, Previous/Next buttons styled đúng | ⏳ | ⏳ | - |
 | O.16 | Empty state | Khi không có data → Empty illustration + message | ⏳ | ⏳ | - |
@@ -4827,7 +4827,7 @@ Request → Controller → Service → Model → Resource → Response
 | Section | Total Tests | Passed | Failed | N/A | Pending |
 |---------|-------------|--------|--------|-----|---------|
 | N. Login | 6 | 2 | 0 | 1 | 3 |
-| O. Task List | 20 | 12 | 0 | 0 | 8 |
+| O. Task List | 20 | 13 | 0 | 0 | 7 |
 | P. Task Detail | 18 | 0 | 0 | 0 | 18 |
 | Q. Add Task | 27 | 0 | 0 | 0 | 27 |
 | R. Approval | 13 | 0 | 0 | 0 | 13 |
@@ -4837,7 +4837,7 @@ Request → Controller → Service → Model → Resource → Response
 | V. Store Tasks | 14 | 0 | 0 | 0 | 14 |
 | W. HQ Check | 12 | 0 | 0 | 0 | 12 |
 | X. General UI | 17 | 0 | 0 | 0 | 17 |
-| **TOTAL** | **155** | **14** | **0** | **1** | **140** |
+| **TOTAL** | **155** | **15** | **0** | **1** | **139** |
 
 ---
 
@@ -4885,12 +4885,12 @@ Request → Controller → Service → Model → Resource → Response
 │    → Step 1 CLI/Bash Tests: ✅ PASSED (2026-01-23)             │
 │    → Step 2 Manual Tests: ✅ PASSED (2026-01-23)               │
 │      54/56 tests passed, 1 bug found (BUG#1), 1 fix applied    │
-│    → Step 3 UI/UX Screenshot Tests: 🔄 IN PROGRESS (14/155)    │
-│      N.1-N.6 ✅, O.1-O.12 ✅                                    │
+│    → Step 3 UI/UX Screenshot Tests: 🔄 IN PROGRESS (15/155)    │
+│      N.1-N.6 ✅, O.1-O.13 ✅                                    │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 
-Last Updated: 2026-01-25 (Step 3 UI/UX Test - O.12 passed)
+Last Updated: 2026-01-25 (Step 3 UI/UX Test - O.13 passed)
 ```
 
 ### LEGEND
