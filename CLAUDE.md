@@ -2890,7 +2890,7 @@ STORE STATUS:
 │                                                     ▼                  ▼        │
 │                                              ┌──────────────┐   ┌──────────────┐│
 │                                              │   NOT_YET    │   │ ON_PROGRESS  ││
-│                                              │   🟡 Yellow  │   │   🔵 Blue    ││
+│                                              │  🟡 Yellow  │   │   🔵 Blue    ││
 │                                              └──────────────┘   └──────────────┘│
 │                                                                 (mix not_yet    │
 │                                                                  + done/unable) │
