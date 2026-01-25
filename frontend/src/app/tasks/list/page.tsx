@@ -927,7 +927,16 @@ export default function TaskListPage() {
                         </td>
                         <td className="px-4 py-2.5 whitespace-nowrap text-sm border-r border-gray-200">
                           <div className="flex items-center justify-center">
-                            <StatusPill status={task.status} />
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewApprovalHistory(task.id);
+                              }}
+                              className="cursor-pointer hover:opacity-80 transition-opacity"
+                              title="View approval history"
+                            >
+                              <StatusPill status={task.status} />
+                            </button>
                           </div>
                         </td>
                         {/* HQ Check + Action Menu */}
@@ -1000,7 +1009,16 @@ export default function TaskListPage() {
                               {/* Unable cell removed - merged with parent row via rowSpan */}
                               <td className="px-4 py-2 border-r border-gray-200">
                                 <div className="flex items-center justify-center">
-                                  <StatusPill status={subTask.status} />
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleViewApprovalHistory(subTask.id);
+                                    }}
+                                    className="cursor-pointer hover:opacity-80 transition-opacity"
+                                    title="View approval history"
+                                  >
+                                    <StatusPill status={subTask.status} />
+                                  </button>
                                 </div>
                               </td>
                               <td className="px-4 py-2">
