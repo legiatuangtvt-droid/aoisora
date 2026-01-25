@@ -178,29 +178,55 @@ Hiển thị chi tiết task từ HQ, bao gồm:
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-**Ví dụ cụ thể:**
+**Ví dụ 1 - Đơn giản (Level 1 → Level 2 là LEAF):**
 
 ```
-Task Level 1: "Kiểm kê Q1" (có child tasks)
+Task Level 1: "Kiểm kê Q1" (PARENT - có child tasks)
+├── UI: Danh sách child tasks, KHÔNG có Store Cards
 ├── Status: Tổng hợp từ 3 Task Level 2
-├── Không có Store Cards
-├── Hiển thị: Danh sách 3 Task Level 2 với progress
 │
-├── Task Level 2: "Kiểm kê Thực phẩm" (LEAF - có stores)
+├── Task Level 2: "Kiểm kê Thực phẩm" (LEAF - không có con)
+│   ├── UI: Store Cards, HQ Check
 │   ├── Status: Tính từ store assignments
-│   ├── Store Cards: 50 stores
-│   └── HQ Check: Có
+│   └── Store Cards: 50 stores
 │
-├── Task Level 2: "Kiểm kê Điện máy" (LEAF - có stores)
-│   ├── Status: Tính từ store assignments
-│   ├── Store Cards: 50 stores
-│   └── HQ Check: Có
+├── Task Level 2: "Kiểm kê Điện máy" (LEAF)
+│   └── Store Cards: 50 stores
 │
-└── Task Level 2: "Kiểm kê Thời trang" (LEAF - có stores)
-    ├── Status: Tính từ store assignments
-    ├── Store Cards: 50 stores
-    └── HQ Check: Có
+└── Task Level 2: "Kiểm kê Thời trang" (LEAF)
+    └── Store Cards: 50 stores
 ```
+
+**Ví dụ 2 - Phức tạp (Level 2 cũng là PARENT có Level 3):**
+
+```
+Task Level 1: "Kiểm kê Q1" (PARENT)
+├── UI: Danh sách 3 Task Level 2
+├── Status: Tổng hợp từ 3 Task Level 2
+│
+├── Task Level 2: "Kiểm kê Thực phẩm" (PARENT - có child Level 3!)
+│   ├── UI: Danh sách child tasks, KHÔNG có Store Cards
+│   ├── Status: Tổng hợp từ 2 Task Level 3
+│   │
+│   ├── Task Level 3: "Kiểm kê Rau củ" (LEAF)
+│   │   ├── UI: Store Cards, HQ Check
+│   │   └── Store Cards: 25 stores
+│   │
+│   └── Task Level 3: "Kiểm kê Hải sản" (LEAF)
+│       ├── UI: Store Cards, HQ Check
+│       └── Store Cards: 25 stores
+│
+├── Task Level 2: "Kiểm kê Điện máy" (LEAF - không có con)
+│   ├── UI: Store Cards, HQ Check
+│   └── Store Cards: 50 stores
+│
+└── Task Level 2: "Kiểm kê Thời trang" (LEAF)
+    └── Store Cards: 50 stores
+```
+
+> **QUY TẮC VÀNG:** UI được quyết định bởi việc task CÓ CHILD hay KHÔNG, không phải bởi Level.
+> - Có child tasks → UI Parent (danh sách child, không có Store Cards)
+> - Không có child → UI Leaf (Store Cards, HQ Check)
 
 **Cách tính Status của Task Cha:**
 
@@ -211,16 +237,31 @@ Task Level 1: "Kiểm kê Q1" (có child tasks)
 | Tất cả child tasks = `done` hoặc `unable` | `done` |
 | Ít nhất 1 child task = `overdue` | `overdue` |
 
-**UI Impact:**
+**UI Impact (áp dụng cho MỌI level):**
 
-| View | Task có child tasks | Task không có child tasks (leaf) |
-|------|---------------------|----------------------------------|
+> ⚠️ **Lưu ý:** Bảng này áp dụng cho task ở BẤT KỲ level nào (1, 2, 3, 4, 5).
+> UI được quyết định bởi việc task có child hay không, KHÔNG phải bởi level của task.
+
+| View | Task có child tasks (PARENT) | Task không có child (LEAF) |
+|------|------------------------------|----------------------------|
 | Task Header | ✅ Hiển thị | ✅ Hiển thị |
-| Statistics Cards | ❌ Ẩn (hoặc tổng hợp từ child tasks) | ✅ Hiển thị từ stores |
+| Statistics Cards | ❌ Ẩn (hoặc tổng hợp) | ✅ Hiển thị từ stores |
 | Store Result Cards | ❌ Ẩn | ✅ Hiển thị |
 | Child Tasks List | ✅ Hiển thị danh sách | ❌ Ẩn |
 | HQ Check Actions | ❌ Không có | ✅ Có |
-| Comments | ✅ Có thể có (cấp task) | ✅ Có (cấp task + store) |
+| Comments | ✅ Có (cấp task) | ✅ Có (cấp task + store) |
+| Breadcrumb | ✅ Cho phép navigate lên parent | ✅ Cho phép navigate lên parent |
+
+**Navigation Flow:**
+
+```
+/tasks/1 (Level 1 - PARENT)
+    ↓ Click child task
+/tasks/2 (Level 2 - có thể là PARENT hoặc LEAF)
+    ↓ Click child task (nếu là PARENT)
+/tasks/5 (Level 3 - LEAF)
+    → Hiển thị Store Cards, HQ Check
+```
 
 ### 5.3 Technical
 
