@@ -4795,7 +4795,7 @@ Request → Controller → Service → Model → Resource → Response
 | O.14 | 3-dots menu | Hover row → 3-dots icon, click → dropdown (View Approval History, Pause Task) | ✅ | ✅ PASSED | 2026-01-25 |
 | O.15 | Pagination | "Showing X of Y (Page N of M)", page numbers 1-4, < > arrows, current highlighted | ✅ | ✅ PASSED | 2026-01-25 |
 | O.16 | Empty state | Search "xyzabc123" → "No tasks found" message, Total: 0 tasks | ✅ | ✅ PASSED | 2026-01-25 |
-| O.17 | Loading skeleton | Skeleton placeholders khi page loading | ⏳ | ⏳ | - |
+| O.17 | Loading skeleton | Skeleton rows displayed during loading (⚠️ layout could match table columns better) | ✅ | ✅ PASSED | 2026-01-25 |
 | O.18 | History modal | Click status → modal mở với timeline (SUBMIT→APPROVE→DO TASK→CHECK steps) | ⏳ | ⏳ | - |
 | O.19 | Mobile responsive | Resize <768px → table scroll horizontal, layout adapts | ⏳ | ⏳ | - |
 
@@ -4803,6 +4803,10 @@ Request → Controller → Service → Model → Resource → Response
 - **Issue:** Sub-task rows missing HQ Check column td element (7 columns instead of 8)
 - **Fix:** Added empty td for HQ Check column in sub-task rows
 - **File:** `frontend/src/app/tasks/list/page.tsx` (line 971)
+
+**O.17 Note (Future Enhancement):**
+- Skeleton layout hiện tại là generic rows
+- Có thể cải thiện: skeleton columns khớp với table columns thật (No, Dept, Task Group, etc.)
 
 #### P. TASK DETAIL PAGE (/tasks/detail)
 
@@ -4985,7 +4989,7 @@ Request → Controller → Service → Model → Resource → Response
 | Section | Total Tests | Passed | Failed | N/A | Pending |
 |---------|-------------|--------|--------|-----|---------|
 | N. Login | 6 | 2 | 0 | 1 | 3 |
-| O. Task List | 19 | 16 | 0 | 0 | 3 |
+| O. Task List | 19 | 17 | 0 | 0 | 2 |
 | P. Task Detail | 18 | 0 | 0 | 0 | 18 |
 | Q. Add Task | 27 | 0 | 0 | 0 | 27 |
 | R. Approval | 13 | 0 | 0 | 0 | 13 |
@@ -4995,7 +4999,7 @@ Request → Controller → Service → Model → Resource → Response
 | V. Store Tasks | 14 | 0 | 0 | 0 | 14 |
 | W. HQ Check | 12 | 0 | 0 | 0 | 12 |
 | X. General UI | 17 | 0 | 0 | 0 | 17 |
-| **TOTAL** | **154** | **18** | **0** | **1** | **135** |
+| **TOTAL** | **154** | **19** | **0** | **1** | **134** |
 
 ---
 
