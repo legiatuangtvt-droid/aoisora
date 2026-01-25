@@ -111,37 +111,52 @@ export function TodoTaskPageSkeleton() {
   );
 }
 
-// Skeleton for Task List page
+// Skeleton for Task List page - only table body (header/controls already visible)
 export function TaskListPageSkeleton() {
   return (
-    <div className="space-y-6 animate-pulse">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <Skeleton height={32} width={200} />
-        <div className="flex gap-4">
-          <Skeleton height={40} width={120} className="rounded-lg" />
-          <Skeleton height={40} width={120} className="rounded-lg" />
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50 dark:bg-gray-700">
-            <tr>
-              {Array.from({ length: 5 }).map((_, i) => (
-                <th key={i} className="px-4 py-3">
-                  <Skeleton height={20} />
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {Array.from({ length: 8 }).map((_, i) => (
-              <TableRowSkeleton key={i} columns={5} />
-            ))}
-          </tbody>
-        </table>
+    <div className="animate-pulse">
+      {/* Table body skeleton only - header row is already rendered */}
+      <div className="space-y-0">
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div
+            key={i}
+            className="flex items-center border-b border-gray-100 dark:border-gray-700 py-3 px-4"
+          >
+            {/* No column */}
+            <div className="w-12 flex-shrink-0">
+              <Skeleton height={16} width={20} />
+            </div>
+            {/* Dept + Avatar column */}
+            <div className="w-24 flex-shrink-0 flex items-center gap-2">
+              <Skeleton height={16} width={32} />
+              <Skeleton variant="circular" width={28} height={28} />
+            </div>
+            {/* Task Group Name - flexible width */}
+            <div className="flex-1 px-4">
+              <Skeleton height={16} className="w-3/4" />
+            </div>
+            {/* Start→End */}
+            <div className="w-32 flex-shrink-0 text-center">
+              <Skeleton height={16} width={90} className="mx-auto" />
+            </div>
+            {/* Progress */}
+            <div className="w-20 flex-shrink-0 text-center">
+              <Skeleton height={16} width={40} className="mx-auto" />
+            </div>
+            {/* Unable */}
+            <div className="w-16 flex-shrink-0 text-center">
+              <Skeleton height={16} width={24} className="mx-auto" />
+            </div>
+            {/* Status pill */}
+            <div className="w-24 flex-shrink-0 flex justify-center">
+              <Skeleton height={24} width={70} className="rounded-full" />
+            </div>
+            {/* HQ Check pill */}
+            <div className="w-28 flex-shrink-0 flex justify-center">
+              <Skeleton height={24} width={65} className="rounded-full" />
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
