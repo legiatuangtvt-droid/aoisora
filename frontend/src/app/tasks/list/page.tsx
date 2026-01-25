@@ -32,16 +32,10 @@ const STATUS_MAP: Record<number, TaskStatus> = {
   13: 'APPROVE',     // Approve - đang chờ HQ phê duyệt
 };
 
-// Map API status_id to HQ Check status
-const HQ_CHECK_MAP: Record<number, HQCheckStatus> = {
-  7: 'NOT_YET',
-  8: 'ON_PROGRESS',
-  9: 'DONE',
-  10: 'OVERDUE',
-  11: 'REJECT',
-  12: 'DRAFT',
-  13: 'APPROVE',
-};
+// HQ Check only has 2 statuses: NOT_YET or DONE
+// Logic: Task DONE → HQ Check = DONE, otherwise → NOT_YET
+// Note: DRAFT/APPROVE tasks haven't been dispatched yet, so HQ Check = NOT_YET (or could be hidden)
+const HQ_CHECK_OPTIONS: HQCheckStatus[] = ['NOT_YET', 'DONE'];
 
 // Status options theo loại user
 // HQ users (G2-G9): Xem tất cả 6 status - thứ tự: APPROVE → DRAFT → OVERDUE → NOT_YET → ON_PROGRESS → DONE
@@ -153,7 +147,8 @@ function transformApiTaskToTaskGroup(task: ApiTask, index: number, departments: 
     },
     unable: unableCount,
     status: taskStatus,
-    hqCheck: HQ_CHECK_MAP[task.status_id || 7] || 'NOT_YET',
+    // HQ Check: DONE if task is completed (status_id=9), otherwise NOT_YET
+    hqCheck: task.status_id === 9 ? 'DONE' : 'NOT_YET',
     subTasks: subTasks,
     createdStaffId: task.created_staff_id,
     creator: creator,
@@ -399,7 +394,8 @@ export default function TaskListPage() {
   // HQ users: APPROVE → DRAFT → OVERDUE → NOT_YET → ON_PROGRESS → DONE
   // Store users: OVERDUE → NOT_YET → ON_PROGRESS → DONE
   const statusOptions = isHQ ? HQ_STATUS_OPTIONS : STORE_STATUS_OPTIONS;
-  const hqCheckOptions = isHQ ? HQ_STATUS_OPTIONS : STORE_STATUS_OPTIONS;
+  // HQ Check column only has 2 options: NOT_YET or DONE (for both HQ and Store users)
+  const hqCheckOptions = HQ_CHECK_OPTIONS;
 
   // Toggle accordion
   const toggleRow = (taskId: string) => {
@@ -583,9 +579,10 @@ export default function TaskListPage() {
     const matchesStatusColumn =
       statusColumnFilter.length === 0 || statusColumnFilter.includes(task.status);
 
-    // HQ Check column filter
+    // HQ Check filter - combine modal filter (filters.hqCheck) and column filter (hqCheckColumnFilter)
+    const combinedHQCheckFilter = [...new Set([...filters.hqCheck, ...hqCheckColumnFilter])];
     const matchesHQCheckColumn =
-      hqCheckColumnFilter.length === 0 || hqCheckColumnFilter.includes(task.hqCheck);
+      combinedHQCheckFilter.length === 0 || combinedHQCheckFilter.includes(task.hqCheck);
 
     return matchesDeptColumn && matchesStatusColumn && matchesHQCheckColumn;
   });
