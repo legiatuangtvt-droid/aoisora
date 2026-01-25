@@ -4792,7 +4792,7 @@ Request → Controller → Service → Model → Resource → Response
 | O.11 | Unable column | Counter hiển thị số stores unable (no red - matches design) | ✅ | ✅ | 2026-01-25 |
 | O.12 | Sub-tasks expand | Click arrow → sub-tasks hiện với indent, columns aligned | ✅ | ✅ FIX | 2026-01-25 |
 | O.13 | Sub-tasks collapse | Click again → sub-tasks ẩn, arrow changes direction | ✅ | ✅ | 2026-01-25 |
-| O.14 | 3-dots menu | Hover row → menu icon, click → dropdown options | ⏳ | ⏳ | - |
+| O.14 | 3-dots menu | Hover row → 3-dots icon, click → dropdown (View Approval History, Pause Task) | ✅ | ✅ PASSED | 2026-01-25 |
 | O.15 | Pagination | Page numbers, Previous/Next buttons styled đúng | ⏳ | ⏳ | - |
 | O.16 | Empty state | Khi không có data → Empty illustration + message | ⏳ | ⏳ | - |
 | O.17 | Loading skeleton | Skeleton placeholders khi loading | ⏳ | ⏳ | - |
@@ -4986,7 +4986,7 @@ Request → Controller → Service → Model → Resource → Response
 | Section | Total Tests | Passed | Failed | N/A | Pending |
 |---------|-------------|--------|--------|-----|---------|
 | N. Login | 6 | 2 | 0 | 1 | 3 |
-| O. Task List | 20 | 13 | 0 | 0 | 7 |
+| O. Task List | 20 | 14 | 0 | 0 | 6 |
 | P. Task Detail | 18 | 0 | 0 | 0 | 18 |
 | Q. Add Task | 27 | 0 | 0 | 0 | 27 |
 | R. Approval | 13 | 0 | 0 | 0 | 13 |
@@ -4996,7 +4996,7 @@ Request → Controller → Service → Model → Resource → Response
 | V. Store Tasks | 14 | 0 | 0 | 0 | 14 |
 | W. HQ Check | 12 | 0 | 0 | 0 | 12 |
 | X. General UI | 17 | 0 | 0 | 0 | 17 |
-| **TOTAL** | **155** | **15** | **0** | **1** | **139** |
+| **TOTAL** | **155** | **16** | **0** | **1** | **138** |
 
 ---
 
