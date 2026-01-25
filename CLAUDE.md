@@ -4628,7 +4628,7 @@ Request → Controller → Service → Model → Resource → Response
 | O.6 | Status filter badges | Badges có màu đúng (Draft=gray, Approve=yellow, etc.) | ✅ | ✅ | 2026-01-25 |
 | O.7 | Table header | Columns aligned, filter icons on Dept/Status/HQ Check (sort N/A - not in design) | ✅ | ✅ | 2026-01-25 |
 | O.8 | Table row hover | hover:bg-gray-50 (subtle) + 3-dots menu appears on hover | ✅ | ✅ | 2026-01-25 |
-| O.9 | Status badge colors | Draft(gray), Approve(yellow), Not Yet(blue), Done(green), Overdue(red) | ⏳ | ⏳ | - |
+| O.9 | Status badge colors | Approve(pink), Draft(gray), Not Yet(yellow) - colors match design | ✅ | ✅ | 2026-01-25 |
 | O.10 | Progress column | Progress bar hiển thị % với màu phù hợp | ⏳ | ⏳ | - |
 | O.11 | Unable column | Counter hiển thị số stores unable (red text) | ⏳ | ⏳ | - |
 | O.12 | Sub-tasks expand | Click arrow → sub-tasks hiện với indent | ⏳ | ⏳ | - |
@@ -4822,7 +4822,7 @@ Request → Controller → Service → Model → Resource → Response
 | Section | Total Tests | Passed | Failed | N/A | Pending |
 |---------|-------------|--------|--------|-----|---------|
 | N. Login | 6 | 2 | 0 | 1 | 3 |
-| O. Task List | 20 | 8 | 0 | 0 | 12 |
+| O. Task List | 20 | 9 | 0 | 0 | 11 |
 | P. Task Detail | 18 | 0 | 0 | 0 | 18 |
 | Q. Add Task | 27 | 0 | 0 | 0 | 27 |
 | R. Approval | 13 | 0 | 0 | 0 | 13 |
@@ -4832,7 +4832,7 @@ Request → Controller → Service → Model → Resource → Response
 | V. Store Tasks | 14 | 0 | 0 | 0 | 14 |
 | W. HQ Check | 12 | 0 | 0 | 0 | 12 |
 | X. General UI | 17 | 0 | 0 | 0 | 17 |
-| **TOTAL** | **155** | **10** | **0** | **1** | **144** |
+| **TOTAL** | **155** | **11** | **0** | **1** | **143** |
 
 ---
 
@@ -4880,12 +4880,12 @@ Request → Controller → Service → Model → Resource → Response
 │    → Step 1 CLI/Bash Tests: ✅ PASSED (2026-01-23)             │
 │    → Step 2 Manual Tests: ✅ PASSED (2026-01-23)               │
 │      54/56 tests passed, 1 bug found (BUG#1), 1 fix applied    │
-│    → Step 3 UI/UX Screenshot Tests: 🔄 IN PROGRESS (10/155)    │
-│      N.1-N.6 ✅, O.1-O.8 ✅                                     │
+│    → Step 3 UI/UX Screenshot Tests: 🔄 IN PROGRESS (11/155)    │
+│      N.1-N.6 ✅, O.1-O.9 ✅                                     │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 
-Last Updated: 2026-01-25 (Step 3 UI/UX Test - O.8 passed)
+Last Updated: 2026-01-25 (Step 3 UI/UX Test - O.9 passed)
 ```
 
 ### LEGEND
