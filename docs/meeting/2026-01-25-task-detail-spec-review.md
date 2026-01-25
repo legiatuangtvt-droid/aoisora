@@ -150,7 +150,77 @@ Hiển thị chi tiết task từ HQ, bao gồm:
 | Q4 | Like feature có cần không? | A) Có<br>B) Không - bỏ | ❓ Tùy business |
 | Q5 | Images lưu ở đâu? | A) Bảng task_images<br>B) Field trong assignments<br>C) Bảng task_evidence | Cần design |
 
-### 5.2 Technical
+### 5.2 Parent-Child Task Logic (MỚI CẬP NHẬT)
+
+> ⚠️ **LOGIC QUAN TRỌNG ĐÃ XÁC NHẬN:**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  QUY TẮC PARENT-CHILD TASK                                      │
+│                                                                 │
+│  1. NẾU TASK CÓ SUB-TASKS (task con):                           │
+│     → Task cha KHÔNG CÓ NỘI DUNG cần confirm                    │
+│     → Task cha KHÔNG hiển thị Store Result Cards                │
+│     → Task cha chỉ hiển thị danh sách sub-tasks                 │
+│                                                                 │
+│  2. STATUS CỦA TASK CHA:                                        │
+│     → Được TỔNG HỢP từ status của tất cả task con               │
+│     → Không tính toán từ store assignments trực tiếp            │
+│                                                                 │
+│  3. CHỈ TASK LÁ (không có con) mới có:                          │
+│     → Store assignments                                         │
+│     → Store Result Cards                                        │
+│     → HQ Check actions                                          │
+│     → Evidence uploads                                          │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Ví dụ cụ thể:**
+
+```
+Task Level 1: "Kiểm kê Q1" (PARENT)
+├── Status: Tổng hợp từ 3 sub-tasks
+├── Không có Store Cards
+├── Hiển thị: Danh sách 3 sub-tasks với progress
+│
+├── Task Level 2: "Kiểm kê Thực phẩm" (CHILD - có stores)
+│   ├── Status: Tính từ store assignments
+│   ├── Store Cards: 50 stores
+│   └── HQ Check: Có
+│
+├── Task Level 2: "Kiểm kê Điện máy" (CHILD - có stores)
+│   ├── Status: Tính từ store assignments
+│   ├── Store Cards: 50 stores
+│   └── HQ Check: Có
+│
+└── Task Level 2: "Kiểm kê Thời trang" (CHILD - có stores)
+    ├── Status: Tính từ store assignments
+    ├── Store Cards: 50 stores
+    └── HQ Check: Có
+```
+
+**Cách tính Status của Task Cha:**
+
+| Điều kiện | Status Task Cha |
+|-----------|-----------------|
+| Tất cả sub-tasks = `not_yet` | `not_yet` |
+| Ít nhất 1 sub-task = `on_progress` | `on_progress` |
+| Tất cả sub-tasks = `done` hoặc `unable` | `done` |
+| Ít nhất 1 sub-task = `overdue` | `overdue` |
+
+**UI Impact:**
+
+| View | Task có sub-tasks | Task không có sub-tasks (leaf) |
+|------|-------------------|--------------------------------|
+| Task Header | ✅ Hiển thị | ✅ Hiển thị |
+| Statistics Cards | ❌ Ẩn (hoặc tổng hợp từ sub-tasks) | ✅ Hiển thị từ stores |
+| Store Result Cards | ❌ Ẩn | ✅ Hiển thị |
+| Sub-tasks List | ✅ Hiển thị danh sách | ❌ Ẩn |
+| HQ Check Actions | ❌ Không có | ✅ Có |
+| Comments | ✅ Có thể có (cấp task) | ✅ Có (cấp task + store) |
+
+### 5.3 Technical
 
 | # | Câu hỏi | Notes |
 |---|---------|-------|
@@ -158,6 +228,8 @@ Hiển thị chi tiết task từ HQ, bao gồm:
 | T2 | Image upload limit? | Max size, count per store |
 | T3 | Real-time updates cho comments? | WebSocket hay polling? |
 | T4 | Workflow steps format? | Round tabs có cần không? |
+| T5 | API cho parent task detail? | Cần endpoint riêng hay cùng /tasks/{id}? |
+| T6 | Eager loading sub-tasks? | Load bao nhiêu levels? (Level 1 → 5) |
 
 ---
 
@@ -220,6 +292,97 @@ CREATE TABLE task_store_evidence (
 );
 ```
 
+### 6.4 Parent-Child Task Display Logic (MỚI)
+
+**Đề xuất UI cho Task Detail khi có sub-tasks:**
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ TASK DETAIL - PARENT TASK (có sub-tasks)                                    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ TASK HEADER                                                                 │
+│ ┌─────────────────────────────────────────┬───────────────────────────────┐ │
+│ │ [Task Level 1]                          │     📊 TỔNG HỢP               │ │
+│ │ Kiểm kê Q1 2026                         │  Sub-tasks: 3                 │ │
+│ │ 01 Jan - 31 Mar | HQ Check: D097        │  Completed: 1/3               │ │
+│ │                                         │  Progress: 33%                │ │
+│ └─────────────────────────────────────────┴───────────────────────────────┘ │
+│                                                                             │
+│ ⚠️ KHÔNG CÓ Store Cards (vì task cha không giao trực tiếp cho stores)       │
+│                                                                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ SUB-TASKS LIST                                                              │
+│ ┌─────────────────────────────────────────────────────────────────────────┐ │
+│ │ #  │ Sub-task Name        │ Status      │ Progress │ Stores │ Actions  │ │
+│ ├────┼──────────────────────┼─────────────┼──────────┼────────┼──────────┤ │
+│ │ 1  │ Kiểm kê Thực phẩm    │ ✅ Done     │ 50/50    │ 50     │ [View]   │ │
+│ │ 2  │ Kiểm kê Điện máy     │ 🔵 Progress │ 30/50    │ 50     │ [View]   │ │
+│ │ 3  │ Kiểm kê Thời trang   │ ⚪ Not Yet  │ 0/50     │ 50     │ [View]   │ │
+│ └─────────────────────────────────────────────────────────────────────────┘ │
+│                                                                             │
+│ Click [View] → Navigate to /tasks/{sub_task_id} để xem Store Cards          │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Đề xuất UI cho Task Detail khi KHÔNG có sub-tasks (leaf task):**
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ TASK DETAIL - LEAF TASK (không có sub-tasks)                                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ TASK HEADER                                                                 │
+│ ┌─────────────────────────────────────────┬───────────────────────────────┐ │
+│ │ [Task Level 2]                          │ [Not Started] [Done] [Unable] │ │
+│ │ Kiểm kê Thực phẩm                       │ [Avg Time: 2.5h]              │ │
+│ │ 01 Jan - 31 Jan | HQ Check: D097-01     │     (Statistics Cards)        │ │
+│ │ Task type: Image | Manual link          │                               │ │
+│ └─────────────────────────────────────────┴───────────────────────────────┘ │
+│                                                                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ FILTER BAR + STORE RESULT CARDS (như thiết kế hiện tại)                     │
+│                                                                             │
+│ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐                             │
+│ │ Store Card  │ │ Store Card  │ │ Store Card  │ ...                         │
+│ │ - Images    │ │ - Images    │ │ - Images    │                             │
+│ │ - Comments  │ │ - Comments  │ │ - Comments  │                             │
+│ │ - HQ Check  │ │ - HQ Check  │ │ - HQ Check  │                             │
+│ └─────────────┘ └─────────────┘ └─────────────┘                             │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**API Response Structure:**
+
+```typescript
+// GET /api/v1/tasks/{id}
+interface TaskDetailResponse {
+  id: number;
+  name: string;
+  level: number;
+  status: TaskStatus;
+
+  // Nếu có sub-tasks
+  has_sub_tasks: boolean;
+  sub_tasks?: SubTaskSummary[];  // Chỉ có nếu has_sub_tasks = true
+
+  // Nếu KHÔNG có sub-tasks (leaf task)
+  store_progress?: StoreProgress;  // Chỉ có nếu has_sub_tasks = false
+  statistics?: TaskStatistics;     // Chỉ có nếu has_sub_tasks = false
+}
+
+interface SubTaskSummary {
+  id: number;
+  name: string;
+  level: number;
+  status: TaskStatus;
+  progress: { done: number; total: number };
+  store_count: number;
+}
+```
+
 ---
 
 ## 7. IMPLEMENTATION PRIORITY
@@ -258,8 +421,10 @@ CREATE TABLE task_store_evidence (
 | 1 | Confirm status mapping | Dev Team | - |
 | 2 | Confirm Like feature cần không | Product | - |
 | 3 | Design evidence schema | Dev Team | - |
-| 4 | Update spec sau meeting | Claude | - |
-| 5 | Implement Phase 1 | Dev Team | - |
+| 4 | ✅ Confirm Parent-Child task logic | Product | Done |
+| 5 | Update spec sau meeting | Claude | - |
+| 6 | Implement Phase 1 | Dev Team | - |
+| 7 | Update API response cho parent tasks | Dev Team | - |
 
 ---
 
