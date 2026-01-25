@@ -30,6 +30,7 @@ const STATUS_COLORS: Record<TaskStatus, { bg: string; text: string }> = {
   NOT_YET: { bg: 'bg-yellow-100', text: 'text-yellow-700' },
   ON_PROGRESS: { bg: 'bg-blue-100', text: 'text-blue-700' },
   DONE: { bg: 'bg-green-100', text: 'text-green-700' },
+  REJECT: { bg: 'bg-red-100', text: 'text-red-700' },
 };
 
 // HQ Check options - only 2 statuses (different from Task Status)
@@ -37,7 +38,8 @@ const STATUS_COLORS: Record<TaskStatus, { bg: string; text: string }> = {
 const HQ_CHECK_OPTIONS: HQCheckStatus[] = ['NOT_YET', 'DONE'];
 
 // HQ Check color config for filter badges (selected state)
-const HQ_CHECK_COLORS: Record<HQCheckStatus, { bg: string; text: string }> = {
+// Only includes the 2 statuses used in HQ Check filter
+const HQ_CHECK_COLORS: Partial<Record<HQCheckStatus, { bg: string; text: string }>> = {
   NOT_YET: { bg: 'bg-yellow-100', text: 'text-yellow-700' },
   DONE: { bg: 'bg-green-100', text: 'text-green-700' },
 };
@@ -418,7 +420,7 @@ export default function FilterModal({
               <div className="px-6 pb-4 pt-3 animate-fade-in-down">
                 <div className="flex flex-wrap gap-2">
               {HQ_CHECK_OPTIONS.map((hqCheck) => {
-                const colors = HQ_CHECK_COLORS[hqCheck];
+                const colors = HQ_CHECK_COLORS[hqCheck] || { bg: 'bg-gray-100', text: 'text-gray-700' };
                 return (
                   <button
                     key={hqCheck}

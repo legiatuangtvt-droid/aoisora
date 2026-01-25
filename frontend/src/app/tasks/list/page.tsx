@@ -65,15 +65,43 @@ const formatDateForUI = (dateStr: string | null): string => {
 function transformApiSubTasks(subTasks: ApiTask[] | undefined): SubTask[] {
   if (!subTasks || subTasks.length === 0) return [];
 
-  return subTasks.map((subTask) => ({
-    id: subTask.task_id.toString(),
-    name: subTask.task_name,
-    status: STATUS_MAP[subTask.status_id || 7] || 'NOT_YET',
-    assignee: subTask.assigned_staff?.staff_name || undefined,
-    completedAt: subTask.completed_time || undefined,
-    // Note: UI SubTask interface doesn't support nested sub_tasks currently
-    // If needed, extend SubTask interface to support recursive structure
-  }));
+  return subTasks.map((subTask) => {
+    // Calculate progress from store_progress (if available)
+    let progressCompleted = 0;
+    let progressTotal = 1;
+    let unableCount = 0;
+
+    if (subTask.store_progress && subTask.store_progress.total > 0) {
+      progressTotal = subTask.store_progress.total;
+      progressCompleted = subTask.store_progress.completed_count;
+      unableCount = subTask.store_progress.unable;
+    } else {
+      // Fallback: use task's own status
+      progressCompleted = subTask.status_id === 9 ? 1 : 0;
+    }
+
+    // Use calculated_status from API if available
+    const taskStatus = subTask.calculated_status
+      ? subTask.calculated_status.toUpperCase() as SubTask['status']
+      : STATUS_MAP[subTask.status_id || 7] || 'NOT_YET';
+
+    return {
+      id: subTask.task_id.toString(),
+      name: subTask.task_name,
+      status: taskStatus,
+      assignee: subTask.assigned_staff?.staff_name || undefined,
+      completedAt: subTask.completed_time || undefined,
+      startDate: formatDateForUI(subTask.start_date),
+      endDate: formatDateForUI(subTask.end_date),
+      progress: {
+        completed: progressCompleted,
+        total: progressTotal,
+      },
+      unable: unableCount,
+      // HQ Check: DONE if task is completed, otherwise NOT_YET
+      hqCheck: subTask.status_id === 9 ? 'DONE' : 'NOT_YET',
+    };
+  });
 }
 
 // Transform API Task to UI TaskGroup format
@@ -891,7 +919,10 @@ export default function TaskListPage() {
                         <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-900 text-center border-r border-gray-200">
                           {task.progress.completed}/{task.progress.total}
                         </td>
-                        <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-900 text-center border-r border-gray-200">
+                        <td
+                          className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-900 text-center border-r border-gray-200"
+                          rowSpan={expandedRows === task.id && task.subTasks && task.subTasks.length > 0 ? 1 + task.subTasks.length : 1}
+                        >
                           {task.unable}
                         </td>
                         <td className="px-4 py-2.5 whitespace-nowrap text-sm border-r border-gray-200">
@@ -948,27 +979,37 @@ export default function TaskListPage() {
                             >
                               <td className="px-4 py-2 text-center border-r border-gray-200"></td>
                               <td className="px-4 py-2 border-r border-gray-200"></td>
-                              <td className="px-4 py-2 text-sm text-gray-700 border-r border-gray-200">
+                              <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200">
                                 <div className="pl-8">
                                   <span>
                                     {subTask.name}
                                     {subTask.assignee && (
-                                      <span className="ml-2 text-gray-500 text-xs">
+                                      <span className="ml-2 text-gray-500 dark:text-gray-400 text-xs">
                                         ({subTask.assignee})
                                       </span>
                                     )}
                                   </span>
                                 </div>
                               </td>
-                              <td className="px-4 py-2 text-sm text-gray-500 text-center border-r border-gray-200">{task.startDate} → {task.endDate}</td>
-                              <td className="px-4 py-2 text-center border-r border-gray-200"></td>
-                              <td className="px-4 py-2 text-center border-r border-gray-200"></td>
+                              <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 text-center border-r border-gray-200">
+                                {subTask.startDate} → {subTask.endDate}
+                              </td>
+                              <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 text-center border-r border-gray-200">
+                                {subTask.progress ? `${subTask.progress.completed}/${subTask.progress.total}` : '-'}
+                              </td>
+                              {/* Unable cell removed - merged with parent row via rowSpan */}
                               <td className="px-4 py-2 border-r border-gray-200">
                                 <div className="flex items-center justify-center">
                                   <StatusPill status={subTask.status} />
                                 </div>
                               </td>
-                              <td className="px-4 py-2"></td>
+                              <td className="px-4 py-2">
+                                {subTask.hqCheck && (
+                                  <div className="flex items-center justify-center">
+                                    <StatusPill status={subTask.hqCheck} />
+                                  </div>
+                                )}
+                              </td>
                             </tr>
                           ))}
                         </>

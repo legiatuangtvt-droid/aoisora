@@ -26,6 +26,15 @@ export interface SubTask {
   status: TaskStatus;
   assignee?: string;
   completedAt?: string;
+  // Added for parent-child aggregation (Option B)
+  startDate?: string;
+  endDate?: string;
+  progress?: {
+    completed: number;
+    total: number;
+  };
+  unable?: number;
+  hqCheck?: HQCheckStatus;
 }
 
 // Creator info for display in task list
