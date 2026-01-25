@@ -1429,19 +1429,36 @@ backend/laravel/  →  public_html/laravel/
 │       → Test các API endpoints đã thay đổi                      │
 │       → Đảm bảo BE hoạt động trước khi deploy FE                │
 │                                                                 │
-│  ☐ 6. DEPLOY FRONTEND (Vercel - Thủ công)                       │
-│       → Vào Vercel Dashboard: vercel.com                        │
-│       → Project: aoisora                                        │
-│       → Tab: Deployments                                        │
-│       → Click vào deployment có tag "Current"                   │
-│       → Click "..." (3 chấm) → "Redeploy"                       │
-│       → Vercel sẽ build từ code mới nhất trên GitHub            │
+│  ☐ 6. DEPLOY FRONTEND (Vercel CLI - Khuyến nghị)                │
+│       ⚠️ QUAN TRỌNG: Có 2 Vercel projects khác nhau:            │
+│       • "aoisora" → domain aoisora.auraorientalis.vn (DÙNG CÁI NÀY)│
+│       • "frontend" → URL vercel.app riêng (KHÔNG DÙNG)          │
+│                                                                 │
+│       CÁCH 1: Vercel CLI (Khuyến nghị - nhanh hơn)              │
+│       ─────────────────────────────────────────────────────     │
+│       # Bước 1: Login (chỉ cần 1 lần)                           │
+│       cd frontend && npx vercel login                           │
+│       → Mở browser, đăng nhập Vercel                            │
+│                                                                 │
+│       # Bước 2: Link project (chỉ cần 1 lần)                    │
+│       npx vercel link                                           │
+│       → Chọn project "aoisora" (KHÔNG chọn "frontend")          │
+│                                                                 │
+│       # Bước 3: Deploy production                               │
+│       npx vercel --prod --yes                                   │
+│       → Build và deploy lên production                          │
+│                                                                 │
+│       CÁCH 2: Vercel Dashboard (Backup)                         │
+│       ─────────────────────────────────────────────────────     │
+│       → Vào vercel.com → Project: aoisora                       │
+│       → Tab: Deployments → Click "..." → "Redeploy"             │
 │                                                                 │
 │  ☐ 7. TEST TOÀN BỘ PRODUCTION                                   │
 │       → https://aoisora.auraorientalis.vn                       │
 │       → Test các tính năng đã thay đổi                          │
 │                                                                 │
 │  📌 LƯU Ý:                                                       │
+│     → LUÔN deploy đến project "aoisora", không phải "frontend"  │
 │     → Redeploy tạo bản deployment MỚI (bản cũ vẫn còn)          │
 │     → Có thể Rollback: Click bản cũ → "Promote to Production"   │
 └─────────────────────────────────────────────────────────────────┘

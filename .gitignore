@@ -63,3 +63,6 @@ __pycache__/
 *.pyo
 *.pyd
 deploy/laravel/.env
+
+.vercel
+.env*.local
