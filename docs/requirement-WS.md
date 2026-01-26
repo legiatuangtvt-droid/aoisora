@@ -583,22 +583,26 @@ Hệ thống được thiết kế để chuẩn hóa và tối ưu hóa việc 
 
 ### 4.1 Matrix phân quyền theo chức năng
 
-| Chức năng | G9 | G8 | G7 | G6 | G5 | G4 | G3 | G2 | S7-S5 | S4-S2 | S1 |
-|-----------|----|----|----|----|----|----|----|----|-------|-------|-----|
-| Tạo Task | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Duyệt Task | ✅ | ✅ | ✅ | ✅ | ✅ | ✅* | ✅* | ❌ | ❌ | ❌ | ❌ |
-| Xem Task List (HQ) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Xem Store Tasks | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅** | ✅ | ✅*** |
-| Giao việc cho S1 | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| Thực hiện Task | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅*** |
-| HQ Check | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Override Cooldown | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Pause Task | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+```
+┌─────────────────────┬────┬────┬────┬────┬────┬────┬────┬────┬───────┬───────┬───────┐
+│      Chức năng      │ G9 │ G8 │ G7 │ G6 │ G5 │ G4 │ G3 │ G2 │ S7-S5 │ S4-S2 │  S1   │
+├─────────────────────┼────┼────┼────┼────┼────┼────┼────┼────┼───────┼───────┼───────┤
+│ Tạo Task            │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │  ❌   │  ❌   │  ❌   │
+│ Duyệt Task          │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │ ✅*│ ✅*│ ❌ │  ❌   │  ❌   │  ❌   │
+│ Xem Task List (HQ)  │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │  ❌   │  ❌   │  ❌   │
+│ Xem Store Tasks     │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │ ✅** │  ✅   │ ✅***│
+│ Giao việc cho S1    │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │  ❌   │  ✅   │  ❌   │
+│ Thực hiện Task      │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │  ❌   │  ✅   │ ✅***│
+│ HQ Check            │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │  ❌   │  ❌   │  ❌   │
+│ Override Cooldown   │ ✅ │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │  ❌   │  ❌   │  ❌   │
+│ Pause Task          │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │ ❌ │ ❌ │ ❌ │  ❌   │  ❌   │  ❌   │
+└─────────────────────┴────┴────┴────┴────┴────┴────┴────┴────┴───────┴───────┴───────┘
 
-**Ghi chú:**
-- *Duyệt task của cấp dưới trực tiếp
-- **Xem tasks trong scope quản lý (Region/Zone/Area)
-- ***Chỉ tasks được assign cho họ
+Ghi chú:
+  * Duyệt task của cấp dưới trực tiếp
+ ** Xem tasks trong scope quản lý (Region/Zone/Area)
+*** Chỉ tasks được assign cho họ
+```
 
 ### 4.2 Logic xác định Approver
 
