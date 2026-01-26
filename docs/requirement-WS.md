@@ -592,7 +592,7 @@ Hệ thống được thiết kế để chuẩn hóa và tối ưu hóa việc 
 │ Xem Task List       │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │ ✅** │  ✅   │ ✅***│
 │ Giao việc cho S1    │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │  ❌   │  ✅   │  ❌   │
 │ Thực hiện Task      │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │  ❌   │  ✅   │ ✅***│
-│ HQ Check            │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │  ❌   │  ❌   │  ❌   │
+│ HQ Check            │ ✅†│ ✅†│ ✅†│ ✅†│ ✅†│ ✅†│ ✅†│ ✅†│  ❌   │  ❌   │  ❌   │
 │ Override Cooldown   │ ✅ │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │  ❌   │  ❌   │  ❌   │
 │ Pause Task          │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │ ❌ │ ❌ │ ❌ │  ❌   │  ❌   │  ❌   │
 └─────────────────────┴────┴────┴────┴────┴────┴────┴────┴────┴───────┴───────┴───────┘
@@ -601,6 +601,7 @@ Ghi chú:
   * Duyệt task của cấp dưới trực tiếp
  ** Xem tasks trong scope quản lý (Region/Zone/Area)
 *** Chỉ tasks được assign cho họ
+  † Chỉ check được task của dept mình (task do creator thuộc dept mình)
 ```
 
 ### 4.2 Logic xác định Approver
