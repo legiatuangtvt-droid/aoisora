@@ -594,7 +594,7 @@ Hệ thống được thiết kế để chuẩn hóa và tối ưu hóa việc 
 │ Thực hiện Task      │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │  ❌   │  ✅   │ ✅***│
 │ HQ Check            │ ✅†│ ✅†│ ✅†│ ✅†│ ✅†│ ✅†│ ✅†│ ✅†│  ❌   │  ❌   │  ❌   │
 │ Override Cooldown   │ ✅‡│ ✅‡│ ✅‡│ ✅‡│ ✅‡│ ✅‡│ ✅‡│ ❌ │  ❌   │  ❌   │  ❌   │
-│ Pause Task          │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │ ❌ │ ❌ │ ❌ │  ❌   │  ❌   │  ❌   │
+│ Pause Task          │ ✅‡│ ✅‡│ ✅‡│ ✅‡│ ✅‡│ ✅‡│ ✅‡│ ❌ │  ❌   │  ❌   │  ❌   │
 └─────────────────────┴────┴────┴────┴────┴────┴────┴────┴────┴───────┴───────┴───────┘
 
 Ghi chú:
@@ -602,7 +602,7 @@ Ghi chú:
  ** Xem tasks trong scope quản lý (Region/Zone/Area)
 *** Chỉ tasks được assign cho họ
   † Chỉ check được task của dept mình (task do creator thuộc dept mình tạo)
-  ‡ Chỉ override cooldown cho task mà mình là approver
+  ‡ Chỉ cho task mà mình là approver (Override Cooldown, Pause Task)
 ```
 
 ### 4.2 Logic xác định Approver
