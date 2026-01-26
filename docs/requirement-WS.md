@@ -573,7 +573,9 @@ Hệ thống được thiết kế để chuẩn hóa và tối ưu hóa việc 
 | 3 | S2-S4 | Store Leader | Đăng nhập → Nhận notification → Task List (Store view) → Task Detail → Assign cho Staff hoặc tự làm | Login, Task List, Task Detail |
 | 4 | S1 | Store Staff | Đăng nhập → Nhận notification → Task List (Staff view) → Task Detail → Upload evidence → Mark Done | Login, Task List, Task Detail |
 | 5 | G2-G9 | HQ Checker | Đăng nhập → Nhận notification → Task List (HQ Check filter) → Task Detail → Xem evidence → Checked/Reject | Login, Task List, Task Detail |
-| 6 | G2-G9 | HQ User | Đăng nhập → Library → Chọn template → Add New → Chọn Scope → Gửi | Login, Library, Add New |
+| 6 | G2-G9 | HQ Creator | Đăng nhập → Library → Add New → Điền thông tin template → Submit | Login, Library, Add New |
+| 7 | G3-G9 | HQ Approver | Đăng nhập → Nhận notification → Library → Add New (Approval mode) → Review → Approve → Available | Login, Library, Add New |
+| 8 | G2-G9 | HQ User | Đăng nhập → Library → Chọn template (Available) → Add New → Chọn Scope → Gửi | Login, Library, Add New |
 
 ---
 
