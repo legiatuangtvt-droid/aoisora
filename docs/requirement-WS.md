@@ -614,16 +614,16 @@ Ghi chú:
 ┌─────────────────────────────────────────────────────────────────┐
 │  APPROVER LOOKUP ALGORITHM                                      │
 │                                                                 │
-│  Cấu trúc tổ chức: Department (lớn) > Division (nhỏ)           │
-│  Ví dụ: OP (Department) > PERI, GRO, Delica... (Divisions)     │
+│  Cấu trúc tổ chức: Department (lớn) > Division (nhỏ)            │
+│  Ví dụ: OP (Department) > PERI, GRO, Delica... (Divisions)      │
 │                                                                 │
-│  1. Lấy division_id, department_id, job_grade của Creator      │
+│  1. Lấy division_id, department_id, job_grade của Creator       │
 │  2. Tìm user trong CÙNG DIVISION có job_grade > Creator         │
-│     → Nếu tìm thấy: Chọn người có MIN(job_grade) = Approver    │
+│     → Nếu tìm thấy: Chọn người có MIN(job_grade) = Approver     │
 │  3. Nếu KHÔNG tìm thấy trong Division:                          │
 │     → Tìm trong CÙNG DEPARTMENT có job_grade > Creator          │
-│     → Nếu tìm thấy: Chọn người có MIN(job_grade) = Approver    │
-│  4. FALLBACK: System Admin hoặc designated approval account    │
+│     → Nếu tìm thấy: Chọn người có MIN(job_grade) = Approver     │
+│  4. FALLBACK: System Admin hoặc designated approval account     │
 │                                                                 │
 │  VÍ DỤ:                                                         │
 │  • G2 (PERI) tạo task, PERI có G3 → Approver = G3               │
@@ -640,26 +640,35 @@ Ghi chú:
 
 ### 5.1 Screen List
 
+> **Screen Code Naming Convention:**
+> - `CMN-XXX`: Common/Shared screens (dùng chung cho tất cả modules)
+> - `WS-XXX`: WS Module screens (Task from HQ)
+> - `DWS-XXX`: DWS Module screens (Dispatch Work Schedule) - *future*
+> - `MNL-XXX`: Manual Module screens - *future*
+> - `FAQ-XXX`: FAQ Module screens - *future*
+> - `QC-XXX`: Check Quality Module screens - *future*
+> - `TRN-XXX`: Training Module screens - *future*
+
 | # | Screen Code | Screen Name | Route | Mô tả | Người dùng |
 |---|-------------|-------------|-------|-------|------------|
-| 1 | SCR-001 | Login | /auth/signin | Đăng nhập hệ thống | All |
-| 2 | SCR-002 | Task List | /tasks/list | Danh sách task với filter, search, pagination | HQ + Store |
-| 3 | SCR-003 | Task Detail | /tasks/detail | Chi tiết task, statistics, store progress | HQ + Store |
-| 4 | SCR-004 | Add Task | /tasks/new | Tạo/sửa task (3 flows) | HQ (G2-G9) |
-| 5 | SCR-005 | Approval | /tasks/approval | Danh sách task chờ duyệt | HQ (Approver) |
-| 6 | SCR-006 | Library | /tasks/library | Quản lý task templates | HQ |
-| 7 | SCR-007 | Dispatch | /tasks/library/dispatch | Gửi template đến stores | HQ |
-| 8 | SCR-008 | To Do Task | /tasks/todo | Task HQ giao cho HQ | HQ |
-| 9 | SCR-009 | Store Tasks | /stores/[id]/tasks | Task của store | Store (S1-S7) |
-| 10 | SCR-010 | HQ Check | /tasks/hq-check | Xác nhận kết quả store | HQ |
-| 11 | SCR-011 | User Info | /tasks/info | Thông tin cá nhân | All |
-| 12 | SCR-012 | Store Info | /tasks/store-info | Thông tin store | Store |
-| 13 | SCR-013 | Messages | /tasks/messages | Tin nhắn/comment | All |
-| 14 | SCR-014 | Report | /tasks/report | Báo cáo thống kê | HQ |
+| 1 | CMN-001 | Login | /auth/signin | Đăng nhập hệ thống | All |
+| 2 | WS-001 | Task List | /tasks/list | Danh sách task với filter, search, pagination | HQ + Store |
+| 3 | WS-002 | Task Detail | /tasks/detail | Chi tiết task, statistics, store progress | HQ + Store |
+| 4 | WS-003 | Add Task | /tasks/new | Tạo/sửa task (3 flows) | HQ (G2-G9) |
+| 5 | WS-004 | Approval | /tasks/approval | Danh sách task chờ duyệt | HQ (Approver) |
+| 6 | WS-005 | Library | /tasks/library | Quản lý task templates | HQ |
+| 7 | WS-006 | Dispatch | /tasks/library/dispatch | Gửi template đến stores | HQ |
+| 8 | WS-007 | To Do Task | /tasks/todo | Task HQ giao cho HQ | HQ |
+| 9 | WS-008 | Store Tasks | /stores/[id]/tasks | Task của store | Store (S1-S7) |
+| 10 | WS-009 | HQ Check | /tasks/hq-check | Xác nhận kết quả store | HQ |
+| 11 | WS-010 | User Info | /tasks/info | Thông tin cá nhân | All |
+| 12 | WS-011 | Store Info | /tasks/store-info | Thông tin store | Store |
+| 13 | WS-012 | Messages | /tasks/messages | Tin nhắn/comment | All |
+| 14 | WS-013 | Report | /tasks/report | Báo cáo thống kê | HQ |
 
 ### 5.2 Screen Details Summary
 
-#### SCR-002: Task List
+#### WS-001: Task List
 
 | Thành phần | Mô tả |
 |------------|-------|
@@ -669,7 +678,7 @@ Ghi chú:
 | **Features** | Expand/collapse sub-tasks, Click status → History modal, 3-dots menu |
 | **Pagination** | Page selector, items per page |
 
-#### SCR-004: Add Task
+#### WS-003: Add Task
 
 | Section | Thành phần |
 |---------|------------|
@@ -679,7 +688,7 @@ Ghi chú:
 | **D. Approval Process** | Auto-display approver info |
 | **Actions** | Save as Draft, Submit |
 
-#### SCR-009: Store Tasks
+#### WS-008: Store Tasks
 
 | Thành phần | Mô tả |
 |------------|-------|
