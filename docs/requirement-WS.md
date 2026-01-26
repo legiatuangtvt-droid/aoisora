@@ -649,22 +649,24 @@ Ghi chú:
 > - `QC-XXX`: Check Quality Module screens - *future*
 > - `TRN-XXX`: Training Module screens - *future*
 
-| #  | Screen Code | Screen Name | Route              | Mô tả                                         | Người dùng    |
-|----|-------------|-------------|--------------------|-----------------------------------------------|---------------|
-| 1  | CMN-001     | Login       | /auth/signin       | Đăng nhập hệ thống                            | All           |
-| 2  | WS-001      | Task List   | /tasks/list        | Danh sách task với filter, search, pagination | HQ + Store    |
-| 3  | WS-002      | Task Detail | /tasks/detail      | Chi tiết task, statistics, store progress     | HQ + Store    |
-| 4  | WS-003      | Add Task    | /tasks/new         | Tạo/sửa task (3 flows)                        | HQ (Creator)  |
-| 5  | WS-004      | Library     | /tasks/library     | Quản lý task templates                        | HQ            |
-| 6  | WS-005      | To Do Task  | /tasks/todo        | Task HQ giao cho HQ                           | HQ            |
-| 7  | WS-006      | Store Tasks | /stores/[id]/tasks | Task của store                                | Store (S1-S7) |
-| 8  | WS-007      | HQ Check    | /tasks/hq-check    | Xác nhận kết quả store                        | HQ            |
-| 9  | WS-008      | User Info   | /tasks/info        | Thông tin cá nhân                             | All           |
-| 10 | WS-009      | Store Info  | /tasks/store-info  | Thông tin store                               | Store         |
-| 11 | WS-010      | Messages    | /tasks/messages    | Tin nhắn/comment                              | All           |
-| 12 | WS-011      | Report      | /tasks/report      | Báo cáo thống kê                              | HQ            |
+| #  | Screen Code | Screen Name | Route           | Platform  | Mô tả                              | Người dùng    |
+|----|-------------|-------------|-----------------|-----------|------------------------------------| --------------|
+| 1  | CMN-001     | Login       | /auth/signin    | Web + iOS | Đăng nhập hệ thống                 | All           |
+| 2  | WS-001      | Task List   | /tasks/list     | Web       | Danh sách task (HQ view)           | HQ            |
+| 3  | WS-002      | Task Detail | /tasks/detail   | Web + iOS | Chi tiết task, store progress      | HQ + Store    |
+| 4  | WS-003      | Add Task    | /tasks/new      | Web       | Tạo/sửa task (3 flows)             | HQ (Creator)  |
+| 5  | WS-004      | Library     | /tasks/library  | Web       | Quản lý task templates             | HQ            |
+| 6  | WS-005      | To Do Task  | /tasks/todo     | Web       | Task HQ giao cho HQ                | HQ            |
+| 7  | WS-006      | Store Tasks | -               | iOS       | Danh sách task (Store view)        | Store (S1-S7) |
+| 8  | WS-007      | HQ Check    | /tasks/hq-check | Web       | Xác nhận kết quả store             | HQ            |
+| 9  | WS-008      | User Info   | /tasks/info     | Web + iOS | Thông tin cá nhân                  | All           |
+| 10 | WS-009      | Store Info  | -               | iOS       | Thông tin store                    | Store         |
+| 11 | WS-010      | Messages    | /tasks/messages | Web + iOS | Tin nhắn/comment                   | All           |
+| 12 | WS-011      | Report      | /tasks/report   | Web       | Báo cáo thống kê                   | HQ            |
 
 > **Note**:
+> - **Platform**: `Web` = HQ Web App (Desktop/Laptop), `iOS` = Store Native iOS App (iPad), `Web + iOS` = cả 2 platforms
+> - Route = `-` cho iOS screens vì native app không dùng URL routing
 > - Task chờ duyệt (Approval) được hiển thị tại **Task List** với filter `status = Approve`, không phải screen riêng.
 > - Dispatch template được thực hiện tại screen **Add Task** (từ Library chọn template → Add Task → chọn Scope → Submit), không phải screen riêng.
 
