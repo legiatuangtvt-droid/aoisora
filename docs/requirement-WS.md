@@ -656,11 +656,11 @@ Ghi chú:
 | 3  | WS-002      | Task Detail | /tasks/detail   | Web + iOS | Chi tiết task, HQ Check, progress  | HQ + Store    |
 | 4  | WS-003      | Add Task    | /tasks/new      | Web       | Tạo/sửa task (3 flows)             | HQ (Creator)  |
 | 5  | WS-004      | Library     | /tasks/library  | Web       | Quản lý task templates             | HQ            |
-| 6  | WS-005      | To Do Task  | /tasks/todo     | Web       | Task HQ giao cho HQ                | HQ            |
-| 7  | WS-006      | User Info   | /tasks/info     | Web + iOS | Thông tin cá nhân                  | All           |
-| 8  | WS-007      | Store Info  | -               | iOS       | Thông tin store                    | Store         |
-| 9  | WS-008      | Messages    | /tasks/messages | Web + iOS | Tin nhắn/comment                   | All           |
-| 10 | WS-009      | Report      | /tasks/report   | Web       | Báo cáo thống kê                   | HQ            |
+| 6  | WS-005      | To Do Task  | /tasks/todo       | Web       | Task HQ giao cho HQ                | HQ            |
+| 7  | WS-006      | User Info   | /tasks/info       | Web       | Quản lý cơ cấu nhân sự (Dept)      | HQ            |
+| 8  | WS-007      | Store Info  | /tasks/store-info | Web       | Quản lý cơ cấu stores (Region)     | HQ            |
+| 9  | WS-008      | Messages    | /tasks/messages   | Web + iOS | Tin nhắn/comment                   | All           |
+| 10 | WS-009      | Report      | /tasks/report     | Web       | Báo cáo thống kê                   | HQ            |
 
 > **Note**:
 > - **Platform**: `Web` = HQ Web App (Desktop/Laptop), `iOS` = Store Native iOS App (iPad), `Web + iOS` = cả 2 platforms
