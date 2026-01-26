@@ -277,7 +277,8 @@ Hệ thống được thiết kế để chuẩn hóa và tối ưu hóa việc 
 │                          ┌────────────┴────────────┐                                       │
 │                          ▼                         ▼                                       │
 │                    Tất cả stores             Có bất kỳ store                               │
-│                        = done                  = overdue                                   │
+│                   = done hoặc unable           = overdue                                   │
+│                  (unable đếm riêng)                │                                       │
 │                          │                         │                                       │
 │                          ▼                         ▼                                       │
 │                     ┌──────────┐              ┌──────────┐                                 │
@@ -398,7 +399,7 @@ Hệ thống được thiết kế để chuẩn hóa và tối ưu hóa việc 
 │  │ NOT YET             │ Có BẤT KỲ receiver = not_yet, VÀ không có overdue      │          │
 │  │ ON PROGRESS         │ ÍT NHẤT 1 receiver = on_progress/done_pending,         │          │
 │  │                     │ VÀ không có overdue, VÀ không có not_yet               │          │
-│  │ DONE                │ TẤT CẢ receivers = done (confirmed) HOẶC unable        │          │
+│  │ DONE                │ TẤT CẢ receivers = done hoặc unable (unable đếm riêng)  │          │
 │  └─────────────────────┴────────────────────────────────────────────────────────┘          │
 │                                                                                            │
 │  📌 VÍ DỤ (Task giao cho 3 receivers: A, B, C):                                            │
@@ -488,7 +489,7 @@ Hệ thống được thiết kế để chuẩn hóa và tối ưu hóa việc 
 │      → "Reject": receiver status = on_progress (yêu cầu làm lại)                           │
 │    • AUTO CONFIRM: Nếu today > end_date mà status = done_pending                           │
 │      → System tự động chuyển done_pending → done (lỗi HQ không check kịp)                  │
-│    • Khi TẤT CẢ receivers = done hoặc unable → TASK = DONE                                 │
+│    • Khi TẤT CẢ receivers = done hoặc unable → TASK = DONE (unable đếm riêng)              │
 │    • Nếu có BẤT KỲ receiver = overdue → TASK = OVERDUE                                     │
 │                                                                                            │
 │  ══════════════════════════════════════════════════════════════════════════════════════════│
