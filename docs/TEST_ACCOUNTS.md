@@ -8,11 +8,11 @@
 
 ## Tổng quan
 
-| Loại            | Grades | Số lượng | Ghi chú              |
-|-----------------|--------|----------|----------------------|
-| **HQ Users**    | G2-G9  | 10       | Văn phòng trung tâm  |
-| **Store Users** | S1-S7  | 38       | Nhân viên cửa hàng   |
-| **TOTAL**       | -      | **48**   | -                    |
+| Loại            | Grades | Số lượng | Ghi chú                           |
+|-----------------|--------|----------|-----------------------------------|
+| **HQ Users**    | G2-G9  | 39       | Văn phòng trung tâm (10 cũ + 29 mới) |
+| **Store Users** | S1-S7  | 38       | Nhân viên cửa hàng                |
+| **TOTAL**       | -      | **77**   | -                                 |
 
 ---
 
@@ -21,18 +21,122 @@
 > HQ = Headquarters (Văn phòng trung tâm)
 > Grade cao hơn = Quyền hạn cao hơn (G9 > G8 > ... > G2)
 
-| #  | Staff ID | Username         | Email                         | Full Name            | Grade | Department | Role           |
-|----|----------|------------------|-------------------------------|----------------------|-------|------------|----------------|
-| 1  | 1        | admin            | admin@aoisora.vn              | Admin User           | G9    | Admin      | System Admin   |
-| 2  | 2        | yoshinaga        | yoshinaga@aoisora.vn          | Yoshinaga            | G8    | Operations | Director       |
-| 3  | 3        | nguyen.manager   | nguyen.manager@aoisora.vn     | Nguyen Van Manager   | G7    | Operations | Senior Manager |
-| 4  | 4        | tran.supervisor  | tran.supervisor@aoisora.vn    | Tran Thi Supervisor  | G6    | PERI       | Supervisor     |
-| 5  | 5        | le.leader        | le.leader@aoisora.vn          | Le Van Leader        | G5    | GRO        | Team Leader    |
-| 6  | 6        | pham.senior      | pham.senior@aoisora.vn        | Pham Thi Senior      | G4    | Delica     | Senior Staff   |
-| 7  | 7        | hoang.staff      | hoang.staff@aoisora.vn        | Hoang Van Staff      | G3    | D&D        | Staff          |
-| 8  | 8        | vu.junior        | vu.junior@aoisora.vn          | Vu Thi Junior        | G2    | CS         | Junior Staff   |
-| 9  | 9        | do.analyst       | do.analyst@aoisora.vn         | Do Van Analyst       | G3    | Admin      | Analyst        |
-| 10 | 10       | ngo.coordinator  | ngo.coordinator@aoisora.vn    | Ngo Thi Coordinator  | G4    | Operations | Coordinator    |
+### Organizational Structure (Cơ cấu tổ chức)
+
+```
+                            ┌─────────────────────┐
+                            │   CEO (G9) - #49    │
+                            │   ceo@aoisora.vn    │
+                            └──────────┬──────────┘
+                                       │
+              ┌────────────────────────┼────────────────────────┐
+              │                        │                        │
+    ┌─────────┴─────────┐    ┌────────┴────────┐    ┌─────────┴─────────┐
+    │  OP Division (G8) │    │ Admin Div (G7)  │    │  Legacy Users     │
+    │  op.head - #50    │    │ admin.head - #51│    │  (staff_id 1-10)  │
+    └─────────┬─────────┘    └────────┬────────┘    └───────────────────┘
+              │                       │
+    ┌─────────┼─────────┬─────────┬───┴───┐
+    │         │         │         │       │
+┌───┴───┐ ┌───┴───┐ ┌───┴───┐ ┌───┴───┐ ┌─┴─┐
+│ PERI  │ │  GRO  │ │ DELI* │ │  D&D  │ │CS │ ← Under OP Division
+│(dept7)│ │(dept8)│ │(dept9)│ │(dept10│ │11 │
+│G6→G2  │ │G6→G2  │ │G5→G2  │ │G5→G2  │ │G5→│
+└───────┘ └───────┘ └───────┘ └───────┘ └───┘
+
+*DELI không có G6 để test trường hợp "skip-grade" approval
+```
+
+### NEW HQ Users - Organizational Hierarchy (29 users, ID 49-77)
+
+#### Level 1: CEO (G9)
+
+| #  | ID | Username   | Email              | Full Name    | Grade | Dept | Line Manager |
+|----|----|-----------|--------------------|--------------|-------|------|--------------|
+| 1  | 49 | ceo       | ceo@aoisora.vn     | CEO Nguyen   | G9    | -    | -            |
+
+#### Level 2: Division Heads (G8-G7)
+
+| #  | ID | Username    | Email                   | Full Name           | Grade | Dept  | Line Manager |
+|----|----|-----------  |-------------------------|---------------------|-------|-------|--------------|
+| 2  | 50 | op.head     | op.head@aoisora.vn      | OP Division Head    | G8    | OP    | ceo          |
+| 3  | 51 | admin.head  | admin.head@aoisora.vn   | Admin Division Head | G7    | Admin | ceo          |
+
+#### Level 3-6: PERISABLE Department (Full hierarchy G6→G2)
+
+| #  | ID | Username      | Email                      | Full Name       | Grade | Dept | Line Manager |
+|----|----|--------------  |---------------------------|-----------------|-------|------|--------------|
+| 4  | 52 | peri.head     | peri.head@aoisora.vn      | PERI Dept Head  | G6    | PERI | op.head      |
+| 5  | 53 | peri.lead     | peri.lead@aoisora.vn      | PERI Team Lead  | G5    | PERI | peri.head    |
+| 6  | 54 | peri.senior1  | peri.senior1@aoisora.vn   | PERI Senior 1   | G4    | PERI | peri.lead    |
+| 7  | 55 | peri.staff1   | peri.staff1@aoisora.vn    | PERI Staff 1    | G3    | PERI | peri.senior1 |
+| 8  | 56 | peri.junior1  | peri.junior1@aoisora.vn   | PERI Junior 1   | G2    | PERI | peri.staff1  |
+
+#### Level 3-6: GROCERY Department (Full hierarchy G6→G2)
+
+| #  | ID | Username     | Email                     | Full Name      | Grade | Dept | Line Manager |
+|----|----|------------- |---------------------------|----------------|-------|------|--------------|
+| 9  | 57 | gro.head     | gro.head@aoisora.vn       | GRO Dept Head  | G6    | GRO  | op.head      |
+| 10 | 58 | gro.lead     | gro.lead@aoisora.vn       | GRO Team Lead  | G5    | GRO  | gro.head     |
+| 11 | 59 | gro.senior1  | gro.senior1@aoisora.vn    | GRO Senior 1   | G4    | GRO  | gro.lead     |
+| 12 | 60 | gro.staff1   | gro.staff1@aoisora.vn     | GRO Staff 1    | G3    | GRO  | gro.senior1  |
+| 13 | 61 | gro.junior1  | gro.junior1@aoisora.vn    | GRO Junior 1   | G2    | GRO  | gro.staff1   |
+
+#### Level 3-6: DELICA Department (NO G6 - Skip Grade Test)
+
+| #  | ID | Username      | Email                     | Full Name       | Grade | Dept   | Line Manager |
+|----|----|--------------  |--------------------------|-----------------|-------|--------|--------------|
+| 14 | 62 | deli.lead     | deli.lead@aoisora.vn     | DELI Team Lead  | G5    | Delica | **op.head**  |
+| 15 | 63 | deli.senior1  | deli.senior1@aoisora.vn  | DELI Senior 1   | G4    | Delica | deli.lead    |
+| 16 | 64 | deli.staff1   | deli.staff1@aoisora.vn   | DELI Staff 1    | G3    | Delica | deli.senior1 |
+| 17 | 65 | deli.junior1  | deli.junior1@aoisora.vn  | DELI Junior 1   | G2    | Delica | deli.staff1  |
+
+> **Note**: Delica không có G6 Dept Head. Team Lead (G5) báo cáo trực tiếp cho OP Division Head (G8).
+> Dùng để test trường hợp approval skip grades.
+
+#### Level 3-6: D&D Department (G5→G2)
+
+| #  | ID | Username     | Email                    | Full Name      | Grade | Dept | Line Manager |
+|----|----|------------- |--------------------------|----------------|-------|------|--------------|
+| 18 | 66 | dnd.lead     | dnd.lead@aoisora.vn      | DND Team Lead  | G5    | D&D  | op.head      |
+| 19 | 67 | dnd.senior1  | dnd.senior1@aoisora.vn   | DND Senior 1   | G4    | D&D  | dnd.lead     |
+| 20 | 68 | dnd.staff1   | dnd.staff1@aoisora.vn    | DND Staff 1    | G3    | D&D  | dnd.senior1  |
+| 21 | 69 | dnd.junior1  | dnd.junior1@aoisora.vn   | DND Junior 1   | G2    | D&D  | dnd.staff1   |
+
+#### Level 3-6: CS Department (G5→G2)
+
+| #  | ID | Username    | Email                   | Full Name     | Grade | Dept | Line Manager |
+|----|----|-----------  |-------------------------|---------------|-------|------|--------------|
+| 22 | 70 | cs.lead     | cs.lead@aoisora.vn      | CS Team Lead  | G5    | CS   | op.head      |
+| 23 | 71 | cs.senior1  | cs.senior1@aoisora.vn   | CS Senior 1   | G4    | CS   | cs.lead      |
+| 24 | 72 | cs.staff1   | cs.staff1@aoisora.vn    | CS Staff 1    | G3    | CS   | cs.senior1   |
+| 25 | 73 | cs.junior1  | cs.junior1@aoisora.vn   | CS Junior 1   | G2    | CS   | cs.staff1    |
+
+#### Level 3-6: ADMIN Department (Under Admin Division, G5→G2)
+
+| #  | ID | Username     | Email                    | Full Name      | Grade | Dept  | Line Manager |
+|----|----|------------- |--------------------------|----------------|-------|-------|--------------|
+| 26 | 74 | adm.lead     | adm.lead@aoisora.vn      | ADM Team Lead  | G5    | Admin | admin.head   |
+| 27 | 75 | adm.senior1  | adm.senior1@aoisora.vn   | ADM Senior 1   | G4    | Admin | adm.lead     |
+| 28 | 76 | adm.staff1   | adm.staff1@aoisora.vn    | ADM Staff 1    | G3    | Admin | adm.senior1  |
+| 29 | 77 | adm.junior1  | adm.junior1@aoisora.vn   | ADM Junior 1   | G2    | Admin | adm.staff1   |
+
+### Legacy HQ Users (10 users, ID 1-10)
+
+> Các users cũ giữ nguyên để tương thích với dữ liệu test hiện có.
+
+| #  | ID | Username        | Email                        | Full Name           | Grade | Dept       | Role           |
+|----|----|-----------------|------------------------------|---------------------|-------|------------|----------------|
+| 30 | 1  | admin           | admin@aoisora.vn             | Admin User          | G9    | Perisable  | System Admin   |
+| 31 | 2  | yoshinaga       | yoshinaga@aoisora.vn         | Yoshinaga           | G8    | Perisable  | Director       |
+| 32 | 3  | nguyen.manager  | nguyen.manager@aoisora.vn    | Nguyen Van Manager  | G7    | Perisable  | Senior Manager |
+| 33 | 4  | tran.supervisor | tran.supervisor@aoisora.vn   | Tran Thi Supervisor | G6    | Grocery    | Supervisor     |
+| 34 | 5  | le.leader       | le.leader@aoisora.vn         | Le Van Leader       | G5    | Grocery    | Team Leader    |
+| 35 | 6  | pham.senior     | pham.senior@aoisora.vn       | Pham Thi Senior     | G4    | Delica     | Senior Staff   |
+| 36 | 7  | hoang.staff     | hoang.staff@aoisora.vn       | Hoang Van Staff     | G3    | D&D        | Staff          |
+| 37 | 8  | vu.junior       | vu.junior@aoisora.vn         | Vu Thi Junior       | G2    | CS         | Junior Staff   |
+| 38 | 9  | do.analyst      | do.analyst@aoisora.vn        | Do Van Analyst      | G3    | Admin      | Analyst        |
+| 39 | 10 | ngo.coordinator | ngo.coordinator@aoisora.vn   | Ngo Thi Coordinator | G4    | Perisable  | Coordinator    |
 
 ### HQ Permissions by Grade
 
@@ -147,29 +251,44 @@
 
 ## Quick Login Reference
 
-### Recommended Test Accounts
+### Recommended Test Accounts - Approval Flow
+
+| Mục đích test                    | Username       | Password | Grade | Department |
+|----------------------------------|----------------|----------|-------|------------|
+| **CEO - Approve All**            | ceo            | password | G9    | -          |
+| **Division Head - OP**           | op.head        | password | G8    | OP         |
+| **Division Head - Admin**        | admin.head     | password | G7    | Admin      |
+| **Dept Head - PERI**             | peri.head      | password | G6    | Perisable  |
+| **Team Lead - PERI**             | peri.lead      | password | G5    | Perisable  |
+| **Senior - PERI**                | peri.senior1   | password | G4    | Perisable  |
+| **Staff - PERI**                 | peri.staff1    | password | G3    | Perisable  |
+| **Junior - PERI**                | peri.junior1   | password | G2    | Perisable  |
+| **Team Lead - DELI (Skip G6)**   | deli.lead      | password | G5    | Delica     |
+
+### Test Scenarios - Approval Chain
+
+| Scenario                        | Creator        | Expected Approver | Notes                           |
+|---------------------------------|----------------|-------------------|--------------------------------|
+| G2 → G3 (Normal)                | peri.junior1   | peri.staff1       | Junior → Staff                  |
+| G3 → G4 (Normal)                | peri.staff1    | peri.senior1      | Staff → Senior                  |
+| G4 → G5 (Normal)                | peri.senior1   | peri.lead         | Senior → Team Lead              |
+| G5 → G6 (Normal)                | peri.lead      | peri.head         | Team Lead → Dept Head           |
+| G6 → G8 (Normal)                | peri.head      | op.head           | Dept Head → Division Head       |
+| G5 → G8 (Skip G6)               | deli.lead      | op.head           | Team Lead → Division Head       |
+| G8 → G9 (Normal)                | op.head        | ceo               | Division Head → CEO             |
+| Cross-Division (Admin)          | adm.staff1     | adm.senior1       | Uses Admin hierarchy            |
+
+### Legacy Test Accounts (Compatibility)
 
 | Mục đích test         | Username     | Password | Grade |
 |-----------------------|--------------|----------|-------|
-| **Full Admin Access** | admin        | password | G9    |
+| **System Admin**      | admin        | password | G9    |
 | **HQ Task Creator**   | hoang.staff  | password | G3    |
 | **HQ Approver**       | le.leader    | password | G5    |
 | **Store Leader**      | store.lead1  | password | S3    |
 | **Store Staff**       | staff.peri1  | password | S1    |
 | **Region Manager**    | region.north | password | S7    |
 | **Zone Manager**      | zone.hanoi   | password | S6    |
-
-### Test Scenarios
-
-| Scenario               | Login as              | Then do                          |
-|------------------------|-----------------------|----------------------------------|
-| Create & Submit Task   | hoang.staff (G3)      | Add Task -> Submit               |
-| Approve Task           | le.leader (G5)        | Approval page -> Approve/Reject  |
-| View Store Tasks       | store.lead1 (S3)      | Store Tasks page                 |
-| Execute Task as Staff  | staff.peri1 (S1)      | My Tasks -> Start -> Complete    |
-| HQ Check               | tran.supervisor (G6)  | HQ Check page -> Check/Reject    |
-| Dispatch from Library  | pham.senior (G4)      | Library -> Dispatch              |
-| View Region Report     | region.north (S7)     | Reports page                     |
 
 ---
 
@@ -195,19 +314,30 @@ $2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi
 
 ## Notes
 
-1. **is_hq Field**:
-   - HQ users (G2-G9): `is_hq = 1`
-   - Store users (S1-S7): `is_hq = 0`
+1. **HQ vs Store Users**:
+   - HQ users: job_grade starts with "G" (G2-G9)
+   - Store users: job_grade starts with "S" (S1-S7)
+   - No `is_hq` column in database, determined by job_grade prefix
 
-2. **Store Assignment**:
+2. **Line Manager (Approval Chain)**:
+   - `line_manager_id` column defines approval hierarchy
+   - Approver = direct line manager with higher grade
+   - If no line manager in same dept → escalate to division head
+
+3. **Skip-Grade Scenario (Delica)**:
+   - Delica department has no G6 (Dept Head)
+   - G5 Team Lead reports directly to G8 Division Head
+   - Used to test approval when intermediate grades missing
+
+4. **Store Assignment**:
    - S3 users được gán trực tiếp vào 1 store
    - S4 users quản lý nhiều stores
    - S5-S7 users quản lý theo hierarchy (Area/Zone/Region)
 
-3. **Department Assignment**:
-   - HQ users thuộc về departments: Admin, Operations, PERI, GRO, Delica, D&D, CS
+5. **Department Assignment**:
+   - HQ users thuộc về departments: OP, Admin, Perisable, Grocery, Delica, D&D, CS
    - Store users (S1) có thể thuộc divisions trong store: PERI, GRO, Delica, CS
 
-4. **Login Method**:
+6. **Login Method**:
    - Có thể login bằng username hoặc email
    - Frontend form: Email/Phone field
