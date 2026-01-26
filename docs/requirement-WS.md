@@ -772,65 +772,65 @@ Ghi chú:
 
 ### 10.1 Authentication
 
-| # | Test Case | Kịch bản | Expected |
-|---|-----------|----------|----------|
-| 1 | Login success | Nhập đúng username/password | Redirect to dashboard |
-| 2 | Login fail | Nhập sai password | Hiển thị error message |
-| 3 | Logout | Click logout | Redirect to login, token invalid |
+| #  | Test Case            | Kịch bản                            | Expected                             |
+|----|----------------------|-------------------------------------|--------------------------------------|
+| 1  | Login success        | Nhập đúng username/password         | Redirect to dashboard                |
+| 2  | Login fail           | Nhập sai password                   | Hiển thị error message               |
+| 3  | Logout               | Click logout                        | Redirect to login, token invalid     |
 
 ### 10.2 Task Creation
 
-| # | Test Case | Kịch bản | Expected |
-|---|-----------|----------|----------|
-| 1 | Create draft | Điền Task Name, click Save Draft | Task saved với status=draft |
-| 2 | Draft limit | Tạo draft thứ 6 | Hiển thị error "Draft limit reached" |
-| 3 | Submit task | Điền đầy đủ, click Submit | Task chuyển status=approve |
-| 4 | Validation error | Submit thiếu required fields | Hiển thị validation errors |
+| #  | Test Case            | Kịch bản                            | Expected                             |
+|----|----------------------|-------------------------------------|--------------------------------------|
+| 1  | Create draft         | Điền Task Name, click Save Draft    | Task saved với status=draft          |
+| 2  | Draft limit          | Tạo draft thứ 6                     | Hiển thị error "Draft limit reached" |
+| 3  | Submit task          | Điền đầy đủ, click Submit           | Task chuyển status=approve           |
+| 4  | Validation error     | Submit thiếu required fields        | Hiển thị validation errors           |
 
 ### 10.3 Approval Flow
 
-| # | Test Case | Kịch bản | Expected |
-|---|-----------|----------|----------|
-| 1 | Approve task | Approver click Approve | Task status=not_yet, gửi về stores |
-| 2 | Reject task | Approver click Reject, nhập reason | Task status=draft, notify creator |
-| 3 | Reject 3 times | Reject lần thứ 3 | Task bị khóa, chỉ có thể xóa |
+| #  | Test Case            | Kịch bản                            | Expected                             |
+|----|----------------------|-------------------------------------|--------------------------------------|
+| 1  | Approve task         | Approver click Approve              | Task status=not_yet, gửi về stores   |
+| 2  | Reject task          | Approver click Reject, nhập reason  | Task status=draft, notify creator    |
+| 3  | Reject 3 times       | Reject lần thứ 3                    | Task bị khóa, chỉ có thể xóa         |
 
 ### 10.4 Store Execution
 
-| # | Test Case | Kịch bản | Expected |
-|---|-----------|----------|----------|
-| 1 | Start task | Store click Start | Store status=on_progress |
-| 2 | Complete task | Upload evidence, click Complete | Store status=done_pending |
-| 3 | Mark unable | Click Unable, nhập reason | Store status=unable |
-| 4 | Assign to staff | S3 assign task cho S1 | S1 thấy task trong My Tasks |
+| #  | Test Case            | Kịch bản                            | Expected                             |
+|----|----------------------|-------------------------------------|--------------------------------------|
+| 1  | Start task           | Store click Start                   | Store status=on_progress             |
+| 2  | Complete task        | Upload evidence, click Complete     | Store status=done_pending            |
+| 3  | Mark unable          | Click Unable, nhập reason           | Store status=unable                  |
+| 4  | Assign to staff      | S3 assign task cho S1               | S1 thấy task trong My Tasks          |
 
 ### 10.5 HQ Check
 
-| # | Test Case | Kịch bản | Expected |
-|---|-----------|----------|----------|
-| 1 | HQ Check OK | HQ click Checked | Store status=done |
-| 2 | HQ Reject | HQ click Reject, nhập reason | Store status=on_progress |
-| 3 | Auto confirm | Task overdue + done_pending | Store status=done (auto) |
+| #  | Test Case            | Kịch bản                            | Expected                             |
+|----|----------------------|-------------------------------------|--------------------------------------|
+| 1  | HQ Check OK          | HQ click Checked                    | Store status=done                    |
+| 2  | HQ Reject            | HQ click Reject, nhập reason        | Store status=on_progress             |
+| 3  | Auto confirm         | Task overdue + done_pending         | Store status=done (auto)             |
 
 ---
 
 ## 11. RELATED DOCUMENTS
 
-| Document | Path | Mô tả |
-|----------|------|-------|
-| Basic Specs | docs/specs/basic/ | Tổng quan từng screen |
-| Detail Specs | docs/specs/detail/ | Chi tiết kỹ thuật |
-| API Specs | docs/specs/api/ | API contracts |
-| Database Design | docs/database/ | Schema design |
-| Deployment Guide | docs/06-deployment/ | Hướng dẫn deploy |
+| Document             | Path                   | Mô tả                    |
+|----------------------|------------------------|--------------------------|
+| Basic Specs          | docs/specs/basic/      | Tổng quan từng screen    |
+| Detail Specs         | docs/specs/detail/     | Chi tiết kỹ thuật        |
+| API Specs            | docs/specs/api/        | API contracts            |
+| Database Design      | docs/database/         | Schema design            |
+| Deployment Guide     | docs/06-deployment/    | Hướng dẫn deploy         |
 
 ---
 
 ## 12. CHANGELOG
 
-| Date | Version | Changes | Author |
-|------|---------|---------|--------|
-| 2026-01-26 | 1.0 | Initial requirement document | Claude Code |
+| Date         | Version | Changes                              | Author       |
+|--------------|---------|--------------------------------------|--------------|
+| 2026-01-26   | 1.0     | Initial requirement document         | Claude Code  |
 
 ---
 
