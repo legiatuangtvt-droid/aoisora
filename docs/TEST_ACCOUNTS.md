@@ -351,47 +351,47 @@ $2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi
 
 ### HQ Users (39 users) - Sorted by Grade
 
-| #  | Username     | Grade | Dept  | Division  | Position                | Role            | Line Manager |
-|----|--------------|-------|-------|-----------|-------------------------|-----------------|--------------|
-| 1  | admin        | G9    | -     | -         | System Administrator    | ADMIN           | -            |
-| 2  | ceo          | G9    | -     | -         | Chief Executive Officer | CEO             | -            |
-| 3  | g8user       | G8    | -     | -         | Senior Manager          | MANAGER         | admin        |
-| 4  | op.head      | G8    | -     | -         | OP Division Head        | Division Head   | ceo          |
-| 5  | g7user       | G7    | -     | -         | Area Manager            | MANAGER         | admin        |
-| 6  | admin.head   | G7    | -     | -         | Admin Division Head     | Division Head   | ceo          |
-| 7  | manager      | G6    | -     | -         | Store Manager           | MANAGER         | admin        |
-| 8  | peri.head    | G6    | -     | -         | PERI Department Head    | Department Head | op.head      |
-| 9  | gro.head     | G6    | -     | -         | GRO Department Head     | Department Head | op.head      |
-| 10 | g5user       | G5    | -     | -         | Team Lead               | STAFF           | g8user       |
-| 11 | peri.lead    | G5    | -     | -         | PERI Team Leader        | Team Leader     | peri.head    |
-| 12 | gro.lead     | G5    | -     | -         | GRO Team Leader         | Team Leader     | gro.head     |
-| 13 | deli.lead    | G5    | -     | -         | DELI Team Leader        | Team Leader     | op.head      |
-| 14 | dnd.lead     | G5    | -     | -         | D&D Team Leader         | Team Leader     | op.head      |
-| 15 | cs.lead      | G5    | -     | -         | CS Team Leader          | Team Leader     | op.head      |
-| 16 | adm.lead     | G5    | -     | -         | Admin Team Leader       | Team Leader     | admin.head   |
-| 17 | g4user       | G4    | OP    | Delica    | Senior Staff            | STAFF           | g8user       |
-| 18 | peri.senior1 | G4    | OP    | Perisable | Senior Staff            | Senior          | peri.lead    |
-| 19 | gro.senior1  | G4    | OP    | Grocery   | Senior Staff            | Senior          | gro.lead     |
-| 20 | deli.senior1 | G4    | OP    | Delica    | Senior Staff            | Senior          | deli.lead    |
-| 21 | dnd.senior1  | G4    | OP    | D&D       | Senior Staff            | Senior          | dnd.lead     |
-| 22 | cs.senior1   | G4    | OP    | CS        | Senior Staff            | Senior          | cs.lead      |
-| 23 | adm.senior1  | G4    | Admin | Admin     | Senior Staff            | Senior          | adm.lead     |
-| 24 | staff1       | G3    | OP    | D&D       | Sales Staff             | STAFF           | manager      |
-| 25 | qc1          | G3    | OP    | CS        | QC Staff                | STAFF           | manager      |
-| 26 | acc1         | G3    | Admin | Admin     | Accountant              | STAFF           | manager      |
-| 27 | peri.staff1  | G3    | OP    | Perisable | Staff                   | Staff           | peri.senior1 |
-| 28 | gro.staff1   | G3    | OP    | Grocery   | Staff                   | Staff           | gro.senior1  |
-| 29 | deli.staff1  | G3    | OP    | Delica    | Staff                   | Staff           | deli.senior1 |
-| 30 | dnd.staff1   | G3    | OP    | D&D       | Staff                   | Staff           | dnd.senior1  |
-| 31 | cs.staff1    | G3    | OP    | CS        | Staff                   | Staff           | cs.senior1   |
-| 32 | adm.staff1   | G3    | Admin | Admin     | Staff                   | Staff           | adm.senior1  |
-| 33 | g2user       | G2    | OP    | CS        | Junior Staff            | STAFF           | manager      |
-| 34 | peri.junior1 | G2    | OP    | Perisable | Junior Staff            | Junior          | peri.staff1  |
-| 35 | gro.junior1  | G2    | OP    | Grocery   | Junior Staff            | Junior          | gro.staff1   |
-| 36 | deli.junior1 | G2    | OP    | Delica    | Junior Staff            | Junior          | deli.staff1  |
-| 37 | dnd.junior1  | G2    | OP    | D&D       | Junior Staff            | Junior          | dnd.staff1   |
-| 38 | cs.junior1   | G2    | OP    | CS        | Junior Staff            | Junior          | cs.staff1    |
-| 39 | adm.junior1  | G2    | Admin | Admin     | Junior Staff            | Junior          | adm.staff1   |
+| #  | Username     | Grade | Dept  | Division  | Position                    | Role            | Line Manager |
+|----|--------------|-------|-------|-----------|-----------------------------| ----------------|--------------|
+| 1  | admin        | G9    | -     | -         | GD - System Admin           | ADMIN           | -            |
+| 2  | ceo          | G9    | -     | -         | GD - CEO                    | CEO             | -            |
+| 3  | g8user       | G8    | -     | -         | CCO                         | MANAGER         | admin        |
+| 4  | op.head      | G8    | -     | -         | CCO - OP Division           | Division Head   | ceo          |
+| 5  | g7user       | G7    | -     | -         | Senior General Manager      | MANAGER         | admin        |
+| 6  | admin.head   | G7    | -     | -         | Senior GM - Admin Division  | Division Head   | ceo          |
+| 7  | manager      | G6    | -     | -         | General Manager             | MANAGER         | admin        |
+| 8  | peri.head    | G6    | -     | -         | GM - PERI Department        | Department Head | op.head      |
+| 9  | gro.head     | G6    | -     | -         | GM - GRO Department         | Department Head | op.head      |
+| 10 | g5user       | G5    | -     | -         | Manager                     | STAFF           | g8user       |
+| 11 | peri.lead    | G5    | -     | -         | Manager - PERI              | Team Leader     | peri.head    |
+| 12 | gro.lead     | G5    | -     | -         | Manager - GRO               | Team Leader     | gro.head     |
+| 13 | deli.lead    | G5    | -     | -         | Manager - DELI              | Team Leader     | op.head      |
+| 14 | dnd.lead     | G5    | -     | -         | Manager - D&D               | Team Leader     | op.head      |
+| 15 | cs.lead      | G5    | -     | -         | Manager - CS                | Team Leader     | op.head      |
+| 16 | adm.lead     | G5    | -     | -         | Manager - Admin             | Team Leader     | admin.head   |
+| 17 | g4user       | G4    | OP    | Delica    | Deputy Manager              | STAFF           | g8user       |
+| 18 | peri.senior1 | G4    | OP    | Perisable | Deputy Manager              | Senior          | peri.lead    |
+| 19 | gro.senior1  | G4    | OP    | Grocery   | Deputy Manager              | Senior          | gro.lead     |
+| 20 | deli.senior1 | G4    | OP    | Delica    | Deputy Manager              | Senior          | deli.lead    |
+| 21 | dnd.senior1  | G4    | OP    | D&D       | Deputy Manager              | Senior          | dnd.lead     |
+| 22 | cs.senior1   | G4    | OP    | CS        | Deputy Manager              | Senior          | cs.lead      |
+| 23 | adm.senior1  | G4    | Admin | Admin     | Deputy Manager              | Senior          | adm.lead     |
+| 24 | staff1       | G3    | OP    | D&D       | Executive                   | STAFF           | manager      |
+| 25 | qc1          | G3    | OP    | CS        | Executive                   | STAFF           | manager      |
+| 26 | acc1         | G3    | Admin | Admin     | Executive                   | STAFF           | manager      |
+| 27 | peri.staff1  | G3    | OP    | Perisable | Executive                   | Staff           | peri.senior1 |
+| 28 | gro.staff1   | G3    | OP    | Grocery   | Executive                   | Staff           | gro.senior1  |
+| 29 | deli.staff1  | G3    | OP    | Delica    | Executive                   | Staff           | deli.senior1 |
+| 30 | dnd.staff1   | G3    | OP    | D&D       | Executive                   | Staff           | dnd.senior1  |
+| 31 | cs.staff1    | G3    | OP    | CS        | Executive                   | Staff           | cs.senior1   |
+| 32 | adm.staff1   | G3    | Admin | Admin     | Executive                   | Staff           | adm.senior1  |
+| 33 | g2user       | G2    | OP    | CS        | Officer                     | STAFF           | manager      |
+| 34 | peri.junior1 | G2    | OP    | Perisable | Officer                     | Junior          | peri.staff1  |
+| 35 | gro.junior1  | G2    | OP    | Grocery   | Officer                     | Junior          | gro.staff1   |
+| 36 | deli.junior1 | G2    | OP    | Delica    | Officer                     | Junior          | deli.staff1  |
+| 37 | dnd.junior1  | G2    | OP    | D&D       | Officer                     | Junior          | dnd.staff1   |
+| 38 | cs.junior1   | G2    | OP    | CS        | Officer                     | Junior          | cs.staff1    |
+| 39 | adm.junior1  | G2    | Admin | Admin     | Officer                     | Junior          | adm.staff1   |
 
 ### Store Users (38 users) - Sorted by Grade
 
@@ -458,16 +458,16 @@ $2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi
 > **Note**: G5-G9 là các cấp bậc lãnh đạo, KHÔNG thuộc Dept/Division cụ thể nào.
 > Chỉ G2-G4 (Staff level) mới được gán vào Dept/Division.
 
-| Grade           | Type  | Count  | Description                          |
-|-----------------|-------|--------|--------------------------------------|
-| G9              | HQ    | 2      | CEO, System Admin (Leadership)       |
-| G8              | HQ    | 2      | Division Heads (Leadership)          |
-| G7              | HQ    | 2      | Division Heads (Leadership)          |
-| G6              | HQ    | 3      | Department Heads (Leadership)        |
-| G5              | HQ    | 7      | Team Leaders (Leadership)            |
-| G4              | HQ    | 7      | Senior Staff → Dept/Division         |
-| G3              | HQ    | 9      | Staff → Dept/Division                |
-| G2              | HQ    | 7      | Junior Staff → Dept/Division         |
+| Grade | Position                | Type  | Count | Description                    |
+|-------|-------------------------|-------|-------|--------------------------------|
+| G9    | GD (General Director)   | HQ    | 2     | CEO, System Admin (Leadership) |
+| G8    | CCO                     | HQ    | 2     | Division Heads (Leadership)    |
+| G7    | Senior General Manager  | HQ    | 2     | Division Heads (Leadership)    |
+| G6    | General Manager         | HQ    | 3     | Department Heads (Leadership)  |
+| G5    | Manager                 | HQ    | 7     | Team Leaders (Leadership)      |
+| G4    | Deputy Manager          | HQ    | 7     | Senior Staff → Dept/Division   |
+| G3    | Executive               | HQ    | 9     | Staff → Dept/Division          |
+| G2    | Officer                 | HQ    | 7     | Junior Staff → Dept/Division   |
 | **HQ Total**    | -     | **39** | -                        |
 | S7              | Store | 3      | Region Managers          |
 | S6              | Store | 6      | Zone Managers            |
