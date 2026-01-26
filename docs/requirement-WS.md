@@ -748,23 +748,23 @@ Ghi chú:
 
 ### 9.1 Add Task - Save as Draft
 
-| Field | Validation |
-|-------|------------|
-| Task Name | Required, not empty |
+| Field                | Validation                                                   |
+|----------------------|--------------------------------------------------------------|
+| Task Name            | Required, not empty                                          |
 
 ### 9.2 Add Task - Submit
 
-| Section | Field | Validation |
-|---------|-------|------------|
-| A. Information | Task Name | Required |
-| A. Information | Task Type | Required |
-| A. Information | Applicable Period | Required (Flow 1, 3), Hidden (Flow 2) |
-| A. Information | RE Time | Required |
-| B. Instructions | Instruction Type | Required (Image/Document) |
-| B. Instructions | Manual Link | Required, valid URL |
-| B. Instructions | Note | Required if Type=Document |
-| B. Instructions | Photo Guidelines | Min 1 photo if Type=Image, max 20, JPG/PNG, max 5MB |
-| C. Scope | Store/HQ Selection | Required (Flow 1, 3), Hidden (Flow 2) |
+| Section              | Field                | Validation                                                   |
+|----------------------|----------------------|--------------------------------------------------------------|
+| A. Information       | Task Name            | Required                                                     |
+| A. Information       | Task Type            | Required                                                     |
+| A. Information       | Applicable Period    | Required (Flow 1, 3), Hidden (Flow 2)                        |
+| A. Information       | RE Time              | Required                                                     |
+| B. Instructions      | Instruction Type     | Required (Image/Document)                                    |
+| B. Instructions      | Manual Link          | Required, valid URL                                          |
+| B. Instructions      | Note                 | Required if Type=Document                                    |
+| B. Instructions      | Photo Guidelines     | Min 1 photo if Type=Image, max 20, JPG/PNG, max 5MB          |
+| C. Scope             | Store/HQ Selection   | Required (Flow 1, 3), Hidden (Flow 2)                        |
 
 ---
 
