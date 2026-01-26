@@ -584,25 +584,28 @@ Hệ thống được thiết kế để chuẩn hóa và tối ưu hóa việc 
 ### 4.1 Matrix phân quyền theo chức năng
 
 ```
-┌─────────────────────┬────┬────┬────┬────┬────┬────┬────┬────┬───────┬───────┬───────┐
-│      Chức năng      │ G9 │ G8 │ G7 │ G6 │ G5 │ G4 │ G3 │ G2 │ S7-S5 │ S4-S2 │  S1   │
-├─────────────────────┼────┼────┼────┼────┼────┼────┼────┼────┼───────┼───────┼───────┤
-│ Tạo Task            │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │  ❌   │  ❌   │  ❌   │
-│ Duyệt Task          │ ✅*│ ✅*│ ✅*│ ✅*│ ✅*│ ✅*│ ✅*│ ❌ │  ❌   │  ❌   │  ❌   │
-│ Xem Task List       │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │ ✅ │ ✅** │  ✅   │ ✅***│
-│ Giao việc cho S1    │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │  ❌   │  ✅   │  ❌   │
-│ Thực hiện Task      │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │ ❌ │  ❌   │  ✅   │ ✅***│
-│ HQ Check            │ ✅†│ ✅†│ ✅†│ ✅†│ ✅†│ ✅†│ ✅†│ ✅†│  ❌   │  ❌   │  ❌   │
-│ Override Cooldown   │ ✅‡│ ✅‡│ ✅‡│ ✅‡│ ✅‡│ ✅‡│ ✅‡│ ❌ │  ❌   │  ❌   │  ❌   │
-│ Pause Task          │ ✅‡│ ✅‡│ ✅‡│ ✅‡│ ✅‡│ ✅‡│ ✅‡│ ❌ │  ❌   │  ❌   │  ❌   │
-└─────────────────────┴────┴────┴────┴────┴────┴────┴────┴────┴───────┴───────┴───────┘
+┌─────────────────────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬───────┬───────┬───────┐
+│      Chức năng      │ G9  │ G8  │ G7  │ G6  │ G5  │ G4  │ G3  │ G2  │ S7-S5 │ S4-S2 │  S1   │
+├─────────────────────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼───────┼───────┼───────┤
+│ Tạo Task            │  Y  │  Y  │  Y  │  Y  │  Y  │  Y  │  Y  │  Y  │   -   │   -   │   -   │
+│ Duyệt Task [1]      │  Y  │  Y  │  Y  │  Y  │  Y  │  Y  │  Y  │  -  │   -   │   -   │   -   │
+│ Xem Task List [2]   │  Y  │  Y  │  Y  │  Y  │  Y  │  Y  │  Y  │  Y  │   Y   │   Y   │   Y   │
+│ Giao việc cho S1    │  -  │  -  │  -  │  -  │  -  │  -  │  -  │  -  │   -   │   Y   │   -   │
+│ Thực hiện Task [3]  │  -  │  -  │  -  │  -  │  -  │  -  │  -  │  -  │   -   │   Y   │   Y   │
+│ HQ Check [4]        │  Y  │  Y  │  Y  │  Y  │  Y  │  Y  │  Y  │  Y  │   -   │   -   │   -   │
+│ Override Cooldown[5]│  Y  │  Y  │  Y  │  Y  │  Y  │  Y  │  Y  │  -  │   -   │   -   │   -   │
+│ Pause Task [5]      │  Y  │  Y  │  Y  │  Y  │  Y  │  Y  │  Y  │  -  │   -   │   -   │   -   │
+└─────────────────────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴───────┴───────┴───────┘
+
+Legend: Y = Có quyền | - = Không có quyền
 
 Ghi chú:
-  * Duyệt task của cấp dưới trực tiếp
- ** Xem tasks trong scope quản lý (Region/Zone/Area)
-*** Chỉ tasks được assign cho họ
-  † Chỉ check được task của dept mình (task do creator thuộc dept mình tạo)
-  ‡ Chỉ cho task mà mình là approver (Override Cooldown, Pause Task)
+  [1] Duyệt task của cấp dưới trực tiếp
+  [2] S7-S5: Xem tasks trong scope quản lý (Region/Zone/Area)
+      S1: Chỉ xem tasks được assign cho họ
+  [3] S1: Chỉ thực hiện tasks được assign cho họ
+  [4] Chỉ check được task của dept mình (task do creator thuộc dept mình tạo)
+  [5] Chỉ cho task mà mình là approver
 ```
 
 ### 4.2 Logic xác định Approver
