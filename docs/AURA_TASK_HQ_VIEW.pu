@@ -1,0 +1,97 @@
+@startuml AURA_Task_HQ_View
+
+title AURA - Task Status (HQ View)\nTrang thai tong the - Auto Calculate from Store Status\nUpdated per Customer Spec
+
+skinparam backgroundColor #FEFEFE
+
+package "TASK STATUS - HQ Level (AUTO CALCULATED)" {
+
+    object "NOT_YET" as notyet #FFCDD2 {
+        condition = "ALL(stores.status = 'not_yet')"
+        description = "Tat ca stores chua bat dau"
+        example = "30 stores: 30 not_yet"
+    }
+
+    object "ON_PROGRESS" as progress #FFF9C4 {
+        condition = "ANY(stores.status IN ['on_progress', 'done_pending'])"
+        description = "It nhat 1 store dang lam hoac cho check"
+        example = "30 stores: 20 not_yet, 10 on_progress"
+    }
+
+    object "OVERDUE" as overdue #FFAB91 {
+        condition = "ANY(stores.status = 'overdue')"
+        description = "Co bat ky store nao qua han"
+        example = "30 stores: 20 done, 8 progress, 2 overdue"
+    }
+
+    object "DONE" as done #C8E6C9 {
+        condition = "ALL(stores.status IN ['done', 'unable'])"
+        description = "Tat ca stores da xong hoac unable"
+        example = "30 stores: 28 done, 2 unable"
+    }
+}
+
+package "STORE STATUS - Store Level (MANUAL)" {
+
+    object "not_yet" as s_notyet #FFCDD2 {
+        description = "Chua bat dau"
+    }
+
+    object "on_progress" as s_progress #FFF9C4 {
+        description = "Dang thuc hien"
+    }
+
+    object "done_pending" as s_pending #FFE4B5 {
+        description = "Cho HQ kiem tra"
+    }
+
+    object "overdue" as s_overdue #FFAB91 {
+        description = "Qua han (terminal)"
+    }
+
+    object "unable" as s_unable #D3D3D3 {
+        description = "Khong the lam"
+    }
+
+    object "done" as s_done #C8E6C9 {
+        description = "Hoan thanh (HQ verified)"
+    }
+}
+
+note as N1
+    **CALCULATION PRIORITY:**
+    1. Check if ANY store = overdue → OVERDUE
+    2. Check if ALL stores = done/unable → DONE
+    3. Check if ANY store = on_progress/done_pending → ON_PROGRESS
+    4. Else → NOT_YET
+end note
+
+note as N2
+    **HQ CHECK Process:**
+    Store: on_progress → done_pending
+    HQ: done_pending → done (Approved)
+    HQ: done_pending → on_progress (Rejected)
+end note
+
+note as N3 #FFCCCC
+    **AUTO RULE KHI OVERDUE:**
+    Khi task qua han (deadline < today):
+    * done_pending → **done** (auto, khong can HQ check)
+    * on_progress → **overdue** (terminal - khong the lam tiep)
+    * HQ Check → **Done** (auto)
+end note
+
+notyet --> progress : 1 store bat dau lam
+progress --> done : Tat ca store done/unable
+notyet -[#red]-> overdue : Co store qua deadline
+progress -[#red]-> overdue : Co store qua deadline
+
+s_notyet --> s_progress
+s_progress --> s_pending
+s_pending --> s_done : HQ Checked
+s_pending --> s_progress : HQ Reject
+s_progress --> s_overdue
+s_notyet --> s_unable
+s_progress --> s_unable
+
+@enduml

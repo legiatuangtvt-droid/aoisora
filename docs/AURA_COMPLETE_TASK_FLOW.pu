@@ -1,0 +1,175 @@
+@startuml AURA_Complete_Task_Flow
+
+title AURA WS - Complete Task Flow\nUser → Screen → Action → Status
+
+|HQ Creator|
+|Manager (Auto Approver)|
+|HQ User (same team/dept)|
+|Store Staff|
+|System|
+
+|HQ Creator|
+start
+
+if (Entry point?) then (SCR_TASK_LIST)
+    :Click **[Add New]**;
+    note right: **Flow 1**
+else (SCR_TASK_LIBRARY)
+    :Click **[Add New]**;
+    note right: **Flow 2**
+endif
+
+:=== SCR_TASK_ADD ===;
+:Nhập thông tin task;
+note right
+  **Approver = Tự động**
+  Sếp của HQ Creator (từ DB)
+end note
+
+if (Action?) then ([Save Draft])
+    :Status = **DRAFT**]
+    stop
+else ([Submit])
+    :Status = **APPROVE**]
+    :Notify → Manager;
+endif
+
+|Manager (Auto Approver)|
+:=== SCR_TASK_DETAIL ===;
+
+if (Review?) then ([Reject])
+    :Status = **DRAFT**]
+    |HQ Creator|
+    :Sửa và Submit lại;
+    stop
+else ([Approve])
+endif
+
+|System|
+if (Task từ đâu?) then (Flow 1: Task List)
+    :Status = **NOT_YET**]
+    :+ Lưu Library = **AVAILABLE**]
+    :Notify → Store Staff;
+else (Flow 2: Library)
+    :Status = **AVAILABLE**]
+endif
+
+|HQ User (same team/dept)|
+if (Dispatch Flow 2?) then (Yes)
+    :Click **[Assign to Store(s)]**;
+    :Status = **NOT_YET**]
+    :Notify → Store Staff;
+else (Chưa)
+    stop
+endif
+
+|Store Staff|
+:=== SCR_TASK_LIST ===;
+:Click → **SCR_TASK_DETAIL**;
+
+:Click **[Start]**;
+:Store = **on_progress**]
+
+|System|
+:Status = **IN PROGRESS**]
+
+|Store Staff|
+:Thực hiện công việc;
+
+|System|
+if (Deadline passed?) then (Yes)
+    :Store on_progress → **overdue** (terminal)]
+    note right #FFCCCC
+      **AUTO khi Overdue:**
+      * on_progress → overdue (terminal)
+      * done_pending → done (auto)
+      * overdue không thể làm tiếp
+    end note
+    :Store done_pending → **done** (auto)]
+    :Status = **OVERDUE**]
+    :HQ Check = **Done** (auto)]
+    stop
+else (No - còn hạn)
+endif
+
+|Store Staff|
+if (Kết quả?) then ([Unable])
+    :Store loại khỏi count;
+    |Manager (Auto Approver)|
+    if (HQ?) then ([Accept])
+        :Excluded;
+    else ([Reject])
+        :Store = **on_progress**]
+    endif
+
+else ([Complete])
+    :Store = **done_pending**]
+
+    |System|
+    :HQ Check = **Not Yet**]
+
+    |Manager (Auto Approver)|
+    :=== SCR_TASK_DETAIL ===;
+    :Kiểm tra kết quả store;
+
+    if (Check?) then ([Reject])
+        :Store = **on_progress**]
+    else ([Checked])
+        :Store = **done**]
+    endif
+
+    |System|
+    if (No more done_pending?) then (Yes)
+        :HQ Check = **Done**]
+    else (Still has)
+        :HQ Check = **Not Yet**]
+    endif
+endif
+
+|System|
+:=== CALCULATE TASK STATUS ===;
+
+if (Any store overdue?) then (Yes)
+    :Status = **OVERDUE**]
+elseif (Any store not_yet?) then (Yes)
+    :Status = **NOT YET**]
+elseif (Any store on_progress/done_pending?) then (Yes)
+    :Status = **IN PROGRESS**]
+else (All done/excluded)
+    :Status = **DONE**]
+endif
+
+stop
+
+legend bottom
+**2 CỘT STATUS**
+|= Cột |= Giá trị |= Logic |
+| **Status** | Draft → Approve → Available → Not Yet → In Progress → Overdue → Done | Priority thấp nhất |
+| **HQ Check** | Not Yet / Done | Any done_pending → Not Yet |
+
+**TASK STATUS PRIORITY**
+|= Priority |= Status |
+| 1 (cao nhất) | Overdue |
+| 2 | Not Yet |
+| 3 | In Progress |
+| 4 (thấp nhất) | Done |
+
+**HQ CHECK STATUS**
+|= Condition |= HQ Check |
+| Any store = done_pending | **Not Yet** |
+| No done_pending (all checked or overdue) | **Done** |
+
+**AUTO RULE KHI OVERDUE**
+|= Khi task Overdue |= Action |
+| Store = done_pending | → Auto chuyển **done** (không cần HQ check) |
+| Store = on_progress | → Chuyển **overdue** (terminal - không thể làm tiếp) |
+| HQ Check | → Auto chuyển **Done** |
+
+**TERMINAL STATES (Store)**
+|= Status |= Mô tả |
+| done | Đã hoàn thành |
+| unable | Không thể làm |
+| overdue | Quá hạn - kết thúc |
+end legend
+
+@enduml

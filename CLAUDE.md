@@ -1615,27 +1615,27 @@ Chi tiết: `docs/06-deployment/DEPLOY-PA-VIETNAM-HOSTING.md`
 │       FLOW 1                     FLOW 2                     FLOW 3                         │
 │    (Task HQ→Store)           (Template Task)             (Task HQ→HQ)                      │
 │  ┌─────────────────────┐    ┌─────────────────────┐    ┌─────────────────────┐             │
-│  │  Button Add New     │    │  Button Add New     │    │  Button Add New     │             │
+│  │  Button Add New     │    │  Button Add New     │    │  Button Add New     │             │ Screen: Add Task; User: S2-S9 (Creator)
 │  │  tại Task List      │    │  tại Library Task   │    │  tại To do Task     │             │
 │  └──────────┬──────────┘    └──────────┬──────────┘    └──────────┬──────────┘             │
 │             └──────────────────────────┼──────────────────────────┘                        │
 │                                        ▼                                                   │
 │                          ┌──────────────────────────┐                                      │
-│                          │     SCREEN: ADD TASK     │                                      │
+│                          │     SCREEN: ADD TASK     │                                      │ Screen: Add Task; User: S2-S9 (Creator)
 │                          │  (Cùng 1 screen cho cả   │                                      │
 │                          │   3 flows, khác params)  │                                      │
 │                          └────────────┬─────────────┘                                      │
 │                    ┌──────────────────┼──────────────────┐                                 │
 │                    │                  │                  │                                 │
-│                 [Cancel]              │            [Save as Draft]                         │
+│                 [Cancel]              │            [Save as Draft]                         │ Screen: Add Task; User: S2-S9 (Creator)
 │                    │                  │                  │                                 │
 │                    ▼                  │                  ▼                                 │
 │               (Hủy, không             ▼            ┌───────────┐                           │
-│                 tạo task)         [Submit]◄────────│   DRAFT   │◄──────────┐               │
+│                 tạo task)         [Submit]◄────────│   DRAFT   │◄──────────┐               │ Screen: Add Task; User: S2-S9 (Creator)
 │                                       │            └───────────┘           │               │
 │                                       ▼                  ▲                 │               │
 │                                 ┌───────────┐            │                 │               │
-│                                 │  APPROVE  ├─ [Reject] ─┘                 │               │
+│                                 │  APPROVE  ├─ [Reject] ─┘                 │               │ Screen: Add Task; User: S2-S9 (Approver)
 │                                 └─────┬─────┘                              │               │
 │                                   Approved                                 │               │
 │             ┌─────────────────────────┼─────────────────────────┐          │               │
@@ -1646,7 +1646,7 @@ Chi tiết: `docs/06-deployment/DEPLOY-PA-VIETNAM-HOSTING.md`
 │             │                         ▼                         │          │               │
 │             │                   ┌───────────┐                   │          │               │
 │             ├─── Lưu Library ──►│ AVAILABLE │◄── Lưu Library ───┤          │               │
-│             │                   └─────┬─────┘                   │          │               │
+│             │                   └─────┬─────┘                   │          │               │ Screen: Add Task; User: S2-S9 (Same team/dept)
 │             │                     (dispatch)                    │          │               │
 │             │                         │                         │          │               │
 │             └──────── Gửi Stores ────►┼◄───── Gửi Dep/Team ─────┘          │               │

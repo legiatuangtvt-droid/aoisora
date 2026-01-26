@@ -1,0 +1,113 @@
+@startuml AURA_Store_Status_Transitions
+
+title AURA - Store Status Transitions\n(Luong chuyen trang thai tai Store)\nUpdated per Customer Spec
+
+skinparam backgroundColor #FEFEFE
+skinparam state {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+    ArrowColor #1976D2
+}
+
+state "NOT_YET" as notyet #FFCDD2
+state "ON_PROGRESS" as progress #FFF9C4
+state "DONE_PENDING" as pending #FFE4B5
+state "OVERDUE" as overdue #FFAB91
+state "UNABLE" as unable #D3D3D3
+state "DONE" as done #C8E6C9
+
+state "HQ CHECK" as hqcheck #E6E6FA
+
+[*] --> notyet : Task duoc assign
+
+notyet --> progress : Bat dau lam
+notyet --> unable : Khong the lam\nngay tu dau
+
+progress --> pending : Hoan thanh,\ncho HQ kiem tra
+progress --> unable : Khong the hoan thanh
+progress -[#red]-> overdue : Deadline Passed\n(Auto by system)
+pending -[#red]-> done : Deadline Passed\n(Auto - khong can HQ check)
+
+pending --> hqcheck : Submit for check
+
+hqcheck --> done : Checked (Approved)
+hqcheck --> progress : Reject\n(Yeu cau lam lai)
+
+done --> [*]
+unable --> [*]
+overdue --> [*]
+
+note right of notyet
+    Default khi task duoc assign
+    Store chua bat dau
+end note
+
+note right of progress
+    Store dang thuc hien
+    Chua hoan thanh
+end note
+
+note right of pending
+    **DONE_PENDING**
+    Store da hoan thanh
+    Cho HQ kiem tra/verify
+end note
+
+note right of hqcheck
+    **HQ CHECK**
+    HQ xem xet ket qua
+    * Checked → done
+    * Reject → on_progress
+end note
+
+note right of overdue
+    Qua han (deadline < today)
+    Trang thai ket thuc (terminal)
+end note
+
+note right of unable
+    Khong the thuc hien
+    (Tu dau hoac giua chung)
+end note
+
+note right of done
+    Da hoan thanh
+    HQ da verify
+end note
+
+note as N1 #CCFFCC
+    **STORE STATUS FLOW:**
+    1. not_yet → on_progress (Bat dau lam)
+    2. on_progress → done_pending (Hoan thanh, cho check)
+    3. done_pending → HQ CHECK → done (Verified)
+    4. HQ CHECK → Reject → on_progress (Lam lai)
+    5. on_progress → overdue (Qua han - terminal)
+    6. not_yet/on_progress → unable (Khong the lam)
+    7. done_pending → done (Auto khi overdue)
+end note
+
+note as N2 #FFCCCC
+    **FORBIDDEN TRANSITIONS (Terminal States):**
+    * done → ANY (Da hoan thanh, khong the doi)
+    * unable → ANY (Da ket thuc, khong the doi)
+    * overdue → ANY (Da qua han, khong the doi)
+end note
+
+note as N3 #FFFFCC
+    **AUTO RULE KHI OVERDUE:**
+    Khi deadline < today:
+    * on_progress → overdue (auto)
+    * done_pending → done (auto, KHONG can HQ check)
+end note
+
+legend bottom
+    |= Store Status |= Mô tả |
+    | not_yet | Chưa bắt đầu |
+    | on_progress | Đang thực hiện |
+    | done_pending | Hoàn thành, chờ HQ check |
+    | overdue | Quá hạn |
+    | unable | Không thể thực hiện |
+    | done | Đã hoàn thành (HQ verified) |
+end legend
+
+@enduml
