@@ -570,8 +570,8 @@ Hệ thống được thiết kế để chuẩn hóa và tối ưu hóa việc 
 |---|-------|----------|----------|-------------------|
 | 1 | G2-G9 | HQ Creator | Đăng nhập → Task List → Add New → Điền thông tin → Chọn Stores → Submit | Login, Task List, Add Task |
 | 2 | G3-G9 | HQ Approver | Đăng nhập → Nhận notification → Task List → Add Task (Approval mode) → Review → Approve/Reject | Login, Task List, Add Task |
-| 3 | S2-S4 | Store Leader | Đăng nhập → Nhận notification → Store Tasks → Xem chi tiết → Assign cho Staff hoặc tự làm | Login, Store Tasks |
-| 4 | S1 | Store Staff | Đăng nhập → Xem "My Tasks" → Thực hiện → Upload evidence → Mark Done | Login, Store Tasks |
+| 3 | S2-S4 | Store Leader | Đăng nhập → Nhận notification → Task List (Store view) → Xem chi tiết → Assign cho Staff hoặc tự làm | Login, Task List |
+| 4 | S1 | Store Staff | Đăng nhập → Task List (My Tasks) → Thực hiện → Upload evidence → Mark Done | Login, Task List |
 | 5 | G2-G9 | HQ Checker | Đăng nhập → HQ Check screen → Xem evidence → Checked/Reject | Login, HQ Check |
 | 6 | G2-G9 | HQ User | Đăng nhập → Library → Chọn template → Dispatch → Chọn Scope → Gửi | Login, Library, Dispatch |
 
