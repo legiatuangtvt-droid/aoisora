@@ -351,110 +351,110 @@ $2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi
 
 ### HQ Users (39 users) - Sorted by Grade
 
-| # | ID | Username | Email | Full Name | Grade | Department | Position | Role | Line Manager |
-|---|-----|----------|-------|-----------|-------|------------|----------|------|--------------|
-| 1 | 1 | admin | admin@aoisora.vn | Admin User | G9 | Perisable | System Administrator | ADMIN | - |
-| 2 | 49 | ceo | ceo@aoisora.vn | CEO Nguyen | G9 | - | Chief Executive Officer | CEO | - |
-| 3 | 2 | g8user | g8@aoisora.vn | Trần Văn G8 | G8 | Perisable | Senior Manager | MANAGER | admin |
-| 4 | 50 | op.head | op.head@aoisora.vn | OP Division Head | G8 | OP | Division Head | Division Head | ceo |
-| 5 | 3 | g7user | g7@aoisora.vn | Nguyễn Thị G7 | G7 | Perisable | Area Manager | MANAGER | admin |
-| 6 | 51 | admin.head | admin.head@aoisora.vn | Admin Division Head | G7 | Admin | Division Head | Division Head | ceo |
-| 7 | 4 | manager | manager@aoisora.vn | Nguyễn Văn Manager | G6 | Grocery | Store Manager | MANAGER | admin |
-| 8 | 52 | peri.head | peri.head@aoisora.vn | PERI Dept Head | G6 | Perisable | Department Head | Department Head | op.head |
-| 9 | 57 | gro.head | gro.head@aoisora.vn | GRO Dept Head | G6 | Grocery | Department Head | Department Head | op.head |
-| 10 | 5 | g5user | g5@aoisora.vn | Lê Văn G5 | G5 | Grocery | Team Lead | STAFF | g8user |
-| 11 | 53 | peri.lead | peri.lead@aoisora.vn | PERI Team Lead | G5 | Perisable | Team Leader | Team Leader | peri.head |
-| 12 | 58 | gro.lead | gro.lead@aoisora.vn | GRO Team Lead | G5 | Grocery | Team Leader | Team Leader | gro.head |
-| 13 | 62 | deli.lead | deli.lead@aoisora.vn | DELI Team Lead | G5 | Delica | Team Leader | Team Leader | op.head |
-| 14 | 66 | dnd.lead | dnd.lead@aoisora.vn | DND Team Lead | G5 | D&D | Team Leader | Team Leader | op.head |
-| 15 | 70 | cs.lead | cs.lead@aoisora.vn | CS Team Lead | G5 | CS | Team Leader | Team Leader | op.head |
-| 16 | 74 | adm.lead | adm.lead@aoisora.vn | ADM Team Lead | G5 | Admin | Team Leader | Team Leader | admin.head |
-| 17 | 6 | g4user | g4@aoisora.vn | Phạm Văn G4 | G4 | Delica | Senior Staff | STAFF | g8user |
-| 18 | 54 | peri.senior1 | peri.senior1@aoisora.vn | PERI Senior 1 | G4 | Perisable | Senior Staff | Senior | peri.lead |
-| 19 | 59 | gro.senior1 | gro.senior1@aoisora.vn | GRO Senior 1 | G4 | Grocery | Senior Staff | Senior | gro.lead |
-| 20 | 63 | deli.senior1 | deli.senior1@aoisora.vn | DELI Senior 1 | G4 | Delica | Senior Staff | Senior | deli.lead |
-| 21 | 67 | dnd.senior1 | dnd.senior1@aoisora.vn | DND Senior 1 | G4 | D&D | Senior Staff | Senior | dnd.lead |
-| 22 | 71 | cs.senior1 | cs.senior1@aoisora.vn | CS Senior 1 | G4 | CS | Senior Staff | Senior | cs.lead |
-| 23 | 75 | adm.senior1 | adm.senior1@aoisora.vn | ADM Senior 1 | G4 | Admin | Senior Staff | Senior | adm.lead |
-| 24 | 7 | staff1 | staff1@aoisora.vn | Trần Thị Staff | G3 | D&D | Sales Staff | STAFF | manager |
-| 25 | 9 | qc1 | qc1@aoisora.vn | Lê Văn QC | G3 | CS | QC Staff | STAFF | manager |
-| 26 | 10 | acc1 | acc1@aoisora.vn | Phạm Thị Account | G3 | Admin | Accountant | STAFF | manager |
-| 27 | 55 | peri.staff1 | peri.staff1@aoisora.vn | PERI Staff 1 | G3 | Perisable | Staff | Staff | peri.senior1 |
-| 28 | 60 | gro.staff1 | gro.staff1@aoisora.vn | GRO Staff 1 | G3 | Grocery | Staff | Staff | gro.senior1 |
-| 29 | 64 | deli.staff1 | deli.staff1@aoisora.vn | DELI Staff 1 | G3 | Delica | Staff | Staff | deli.senior1 |
-| 30 | 68 | dnd.staff1 | dnd.staff1@aoisora.vn | DND Staff 1 | G3 | D&D | Staff | Staff | dnd.senior1 |
-| 31 | 72 | cs.staff1 | cs.staff1@aoisora.vn | CS Staff 1 | G3 | CS | Staff | Staff | cs.senior1 |
-| 32 | 76 | adm.staff1 | adm.staff1@aoisora.vn | ADM Staff 1 | G3 | Admin | Staff | Staff | adm.senior1 |
-| 33 | 8 | g2user | g2@aoisora.vn | Hoàng Văn G2 | G2 | CS | Junior Staff | STAFF | manager |
-| 34 | 56 | peri.junior1 | peri.junior1@aoisora.vn | PERI Junior 1 | G2 | Perisable | Junior Staff | Junior | peri.staff1 |
-| 35 | 61 | gro.junior1 | gro.junior1@aoisora.vn | GRO Junior 1 | G2 | Grocery | Junior Staff | Junior | gro.staff1 |
-| 36 | 65 | deli.junior1 | deli.junior1@aoisora.vn | DELI Junior 1 | G2 | Delica | Junior Staff | Junior | deli.staff1 |
-| 37 | 69 | dnd.junior1 | dnd.junior1@aoisora.vn | DND Junior 1 | G2 | D&D | Junior Staff | Junior | dnd.staff1 |
-| 38 | 73 | cs.junior1 | cs.junior1@aoisora.vn | CS Junior 1 | G2 | CS | Junior Staff | Junior | cs.staff1 |
-| 39 | 77 | adm.junior1 | adm.junior1@aoisora.vn | ADM Junior 1 | G2 | Admin | Junior Staff | Junior | adm.staff1 |
+| #  | ID | Username     | Email                       | Full Name           | Grade | Department | Position                | Role            | Line Manager |
+|----|----|--------------|-----------------------------|--------------------|-------|------------|-------------------------|-----------------|--------------|
+| 1  | 1  | admin        | admin@aoisora.vn            | Admin User          | G9    | Perisable  | System Administrator    | ADMIN           | -            |
+| 2  | 49 | ceo          | ceo@aoisora.vn              | CEO Nguyen          | G9    | -          | Chief Executive Officer | CEO             | -            |
+| 3  | 2  | g8user       | g8@aoisora.vn               | Trần Văn G8         | G8    | Perisable  | Senior Manager          | MANAGER         | admin        |
+| 4  | 50 | op.head      | op.head@aoisora.vn          | OP Division Head    | G8    | OP         | Division Head           | Division Head   | ceo          |
+| 5  | 3  | g7user       | g7@aoisora.vn               | Nguyễn Thị G7       | G7    | Perisable  | Area Manager            | MANAGER         | admin        |
+| 6  | 51 | admin.head   | admin.head@aoisora.vn       | Admin Division Head | G7    | Admin      | Division Head           | Division Head   | ceo          |
+| 7  | 4  | manager      | manager@aoisora.vn          | Nguyễn Văn Manager  | G6    | Grocery    | Store Manager           | MANAGER         | admin        |
+| 8  | 52 | peri.head    | peri.head@aoisora.vn        | PERI Dept Head      | G6    | Perisable  | Department Head         | Department Head | op.head      |
+| 9  | 57 | gro.head     | gro.head@aoisora.vn         | GRO Dept Head       | G6    | Grocery    | Department Head         | Department Head | op.head      |
+| 10 | 5  | g5user       | g5@aoisora.vn               | Lê Văn G5           | G5    | Grocery    | Team Lead               | STAFF           | g8user       |
+| 11 | 53 | peri.lead    | peri.lead@aoisora.vn        | PERI Team Lead      | G5    | Perisable  | Team Leader             | Team Leader     | peri.head    |
+| 12 | 58 | gro.lead     | gro.lead@aoisora.vn         | GRO Team Lead       | G5    | Grocery    | Team Leader             | Team Leader     | gro.head     |
+| 13 | 62 | deli.lead    | deli.lead@aoisora.vn        | DELI Team Lead      | G5    | Delica     | Team Leader             | Team Leader     | op.head      |
+| 14 | 66 | dnd.lead     | dnd.lead@aoisora.vn         | DND Team Lead       | G5    | D&D        | Team Leader             | Team Leader     | op.head      |
+| 15 | 70 | cs.lead      | cs.lead@aoisora.vn          | CS Team Lead        | G5    | CS         | Team Leader             | Team Leader     | op.head      |
+| 16 | 74 | adm.lead     | adm.lead@aoisora.vn         | ADM Team Lead       | G5    | Admin      | Team Leader             | Team Leader     | admin.head   |
+| 17 | 6  | g4user       | g4@aoisora.vn               | Phạm Văn G4         | G4    | Delica     | Senior Staff            | STAFF           | g8user       |
+| 18 | 54 | peri.senior1 | peri.senior1@aoisora.vn     | PERI Senior 1       | G4    | Perisable  | Senior Staff            | Senior          | peri.lead    |
+| 19 | 59 | gro.senior1  | gro.senior1@aoisora.vn      | GRO Senior 1        | G4    | Grocery    | Senior Staff            | Senior          | gro.lead     |
+| 20 | 63 | deli.senior1 | deli.senior1@aoisora.vn     | DELI Senior 1       | G4    | Delica     | Senior Staff            | Senior          | deli.lead    |
+| 21 | 67 | dnd.senior1  | dnd.senior1@aoisora.vn      | DND Senior 1        | G4    | D&D        | Senior Staff            | Senior          | dnd.lead     |
+| 22 | 71 | cs.senior1   | cs.senior1@aoisora.vn       | CS Senior 1         | G4    | CS         | Senior Staff            | Senior          | cs.lead      |
+| 23 | 75 | adm.senior1  | adm.senior1@aoisora.vn      | ADM Senior 1        | G4    | Admin      | Senior Staff            | Senior          | adm.lead     |
+| 24 | 7  | staff1       | staff1@aoisora.vn           | Trần Thị Staff      | G3    | D&D        | Sales Staff             | STAFF           | manager      |
+| 25 | 9  | qc1          | qc1@aoisora.vn              | Lê Văn QC           | G3    | CS         | QC Staff                | STAFF           | manager      |
+| 26 | 10 | acc1         | acc1@aoisora.vn             | Phạm Thị Account    | G3    | Admin      | Accountant              | STAFF           | manager      |
+| 27 | 55 | peri.staff1  | peri.staff1@aoisora.vn      | PERI Staff 1        | G3    | Perisable  | Staff                   | Staff           | peri.senior1 |
+| 28 | 60 | gro.staff1   | gro.staff1@aoisora.vn       | GRO Staff 1         | G3    | Grocery    | Staff                   | Staff           | gro.senior1  |
+| 29 | 64 | deli.staff1  | deli.staff1@aoisora.vn      | DELI Staff 1        | G3    | Delica     | Staff                   | Staff           | deli.senior1 |
+| 30 | 68 | dnd.staff1   | dnd.staff1@aoisora.vn       | DND Staff 1         | G3    | D&D        | Staff                   | Staff           | dnd.senior1  |
+| 31 | 72 | cs.staff1    | cs.staff1@aoisora.vn        | CS Staff 1          | G3    | CS         | Staff                   | Staff           | cs.senior1   |
+| 32 | 76 | adm.staff1   | adm.staff1@aoisora.vn       | ADM Staff 1         | G3    | Admin      | Staff                   | Staff           | adm.senior1  |
+| 33 | 8  | g2user       | g2@aoisora.vn               | Hoàng Văn G2        | G2    | CS         | Junior Staff            | STAFF           | manager      |
+| 34 | 56 | peri.junior1 | peri.junior1@aoisora.vn     | PERI Junior 1       | G2    | Perisable  | Junior Staff            | Junior          | peri.staff1  |
+| 35 | 61 | gro.junior1  | gro.junior1@aoisora.vn      | GRO Junior 1        | G2    | Grocery    | Junior Staff            | Junior          | gro.staff1   |
+| 36 | 65 | deli.junior1 | deli.junior1@aoisora.vn     | DELI Junior 1       | G2    | Delica     | Junior Staff            | Junior          | deli.staff1  |
+| 37 | 69 | dnd.junior1  | dnd.junior1@aoisora.vn      | DND Junior 1        | G2    | D&D        | Junior Staff            | Junior          | dnd.staff1   |
+| 38 | 73 | cs.junior1   | cs.junior1@aoisora.vn       | CS Junior 1         | G2    | CS         | Junior Staff            | Junior          | cs.staff1    |
+| 39 | 77 | adm.junior1  | adm.junior1@aoisora.vn      | ADM Junior 1        | G2    | Admin      | Junior Staff            | Junior          | adm.staff1   |
 
 ### Store Users (38 users) - Sorted by Grade
 
-| # | ID | Username | Email | Full Name | Grade | Department | Position | Role | Store |
-|---|-----|----------|-------|-----------|-------|------------|----------|------|-------|
-| 1 | 24 | s7north | s7north@aoisora.vn | Nguyen Van Region1 | S7 | - | Region Manager - North | MANAGER | - |
-| 2 | 25 | s7central | s7central@aoisora.vn | Tran Thi Region2 | S7 | - | Region Manager - Central | MANAGER | - |
-| 3 | 26 | s7south | s7south@aoisora.vn | Le Van Region3 | S7 | - | Region Manager - South | MANAGER | - |
-| 4 | 27 | s6hanoi | s6hanoi@aoisora.vn | Pham Van Zone1 | S6 | - | Zone Manager - Hanoi | MANAGER | - |
-| 5 | 28 | s6bacninh | s6bacninh@aoisora.vn | Hoang Thi Zone2 | S6 | - | Zone Manager - Bac Ninh HP | MANAGER | - |
-| 6 | 29 | s6danang | s6danang@aoisora.vn | Nguyen Van Zone3 | S6 | - | Zone Manager - Da Nang | MANAGER | - |
-| 7 | 30 | s6hue | s6hue@aoisora.vn | Tran Thi Zone4 | S6 | - | Zone Manager - Hue QN | MANAGER | - |
-| 8 | 31 | s6hcm | s6hcm@aoisora.vn | Le Van Zone5 | S6 | - | Zone Manager - HCM | MANAGER | - |
-| 9 | 32 | s6binhduong | s6binhduong@aoisora.vn | Pham Thi Zone6 | S6 | - | Zone Manager - BD DN | MANAGER | - |
-| 10 | 33 | s5longbien | s5longbien@aoisora.vn | Hoang Van Area1 | S5 | - | Area Manager - Long Bien | MANAGER | - |
-| 11 | 34 | s5hadong | s5hadong@aoisora.vn | Nguyen Thi Area2 | S5 | - | Area Manager - Ha Dong | MANAGER | - |
-| 12 | 35 | s5tanphu | s5tanphu@aoisora.vn | Tran Van Area3 | S5 | - | Area Manager - Tan Phu | MANAGER | - |
-| 13 | 36 | s4si1 | s4si1@aoisora.vn | Le Thi SI1 | S4 | - | Store In-charge North 1 | MANAGER | AEON Mall Long Biên |
-| 14 | 37 | s4si2 | s4si2@aoisora.vn | Pham Van SI2 | S4 | - | Store In-charge North 2 | MANAGER | AEON Express Long Biên 3 |
-| 15 | 38 | s4si3 | s4si3@aoisora.vn | Hoang Thi SI3 | S4 | - | Store In-charge HCM | MANAGER | - |
-| 16 | 11 | s3store1 | s3store1@aoisora.vn | Nguyễn Văn Store1 | S3 | Admin | Store Leader | MANAGER | - |
-| 17 | 12 | s3store2 | s3store2@aoisora.vn | Trần Thị Store2 | S3 | MMD | Store Leader | MANAGER | - |
-| 18 | 13 | s3store3 | s3store3@aoisora.vn | Lê Văn Store3 | S3 | MMD | Store Leader | MANAGER | - |
-| 19 | 14 | s3store4 | s3store4@aoisora.vn | Phạm Thị Store4 | S3 | ACC | Store Leader | MANAGER | - |
-| 20 | 15 | s3store5 | s3store5@aoisora.vn | Hoàng Văn Store5 | S3 | ACC | Store Leader | MANAGER | - |
-| 21 | 16 | s3store6 | s3store6@aoisora.vn | Nguyễn Văn Store6 | S3 | Perisable | Store Leader | MANAGER | AEON Express Long Biên 3 |
-| 22 | 17 | s3store7 | s3store7@aoisora.vn | Trần Thị Store7 | S3 | Perisable | Store Leader | MANAGER | AEON Express Long Biên 4 |
-| 23 | 18 | s3store8 | s3store8@aoisora.vn | Lê Văn Store8 | S3 | Grocery | Store Leader | MANAGER | AEON Express Long Biên 5 |
-| 24 | 19 | s3store9 | s3store9@aoisora.vn | Phạm Thị Store9 | S3 | Grocery | Store Leader | MANAGER | AEON Express Long Biên 6 |
-| 25 | 20 | s3store10 | s3store10@aoisora.vn | Hoàng Văn Store10 | S3 | Delica | Store Leader | MANAGER | AEON Express Long Biên 7 |
-| 26 | 21 | s3store11 | s3store11@aoisora.vn | Nguyễn Văn Store11 | S3 | Delica | Store Leader | MANAGER | AEON Express Long Biên 8 |
-| 27 | 22 | s3store12 | s3store12@aoisora.vn | Trần Thị Store12 | S3 | D&D | Store Leader | MANAGER | AEON Express Long Biên 9 |
-| 28 | 23 | s3store13 | s3store13@aoisora.vn | Lê Văn Store13 | S3 | CS | Store Leader | MANAGER | AEON Express Long Biên 10 |
-| 29 | 39 | s2deputy1 | s2deputy1@aoisora.vn | Nguyen Van Deputy1 | S2 | - | Deputy Store Leader | STAFF | AEON Mall Long Biên |
-| 30 | 40 | s2deputy2 | s2deputy2@aoisora.vn | Tran Thi Deputy2 | S2 | - | Deputy Store Leader | STAFF | AEON MaxValu Long Biên 1 |
-| 31 | 41 | s2deputy3 | s2deputy3@aoisora.vn | Le Van Deputy3 | S2 | - | Deputy Store Leader | STAFF | AEON Express Long Biên 3 |
-| 32 | 42 | s2deputy4 | s2deputy4@aoisora.vn | Pham Thi Deputy4 | S2 | - | Deputy Store Leader | STAFF | AEON Express Long Biên 7 |
-| 33 | 43 | s1staff1 | s1staff1@aoisora.vn | Hoang Van Staff1 | S1 | - | Store Staff | STAFF | AEON Mall Long Biên |
-| 34 | 44 | s1staff2 | s1staff2@aoisora.vn | Nguyen Thi Staff2 | S1 | - | Store Staff | STAFF | AEON Mall Long Biên |
-| 35 | 45 | s1staff3 | s1staff3@aoisora.vn | Tran Van Staff3 | S1 | - | Store Staff | STAFF | AEON MaxValu Long Biên 1 |
-| 36 | 46 | s1staff4 | s1staff4@aoisora.vn | Le Thi Staff4 | S1 | - | Store Staff | STAFF | AEON MaxValu Long Biên 1 |
-| 37 | 47 | s1staff5 | s1staff5@aoisora.vn | Pham Van Staff5 | S1 | - | Store Staff | STAFF | AEON Express Long Biên 3 |
-| 38 | 48 | s1staff6 | s1staff6@aoisora.vn | Hoang Thi Staff6 | S1 | - | Store Staff | STAFF | AEON Express Long Biên 3 |
+| #  | ID | Username    | Email                      | Full Name           | Grade | Dept      | Position                  | Role    | Store                     |
+|----|----|-------------|----------------------------|---------------------|-------|-----------|---------------------------|---------|---------------------------|
+| 1  | 24 | s7north     | s7north@aoisora.vn         | Nguyen Van Region1  | S7    | -         | Region Manager - North    | MANAGER | -                         |
+| 2  | 25 | s7central   | s7central@aoisora.vn       | Tran Thi Region2    | S7    | -         | Region Manager - Central  | MANAGER | -                         |
+| 3  | 26 | s7south     | s7south@aoisora.vn         | Le Van Region3      | S7    | -         | Region Manager - South    | MANAGER | -                         |
+| 4  | 27 | s6hanoi     | s6hanoi@aoisora.vn         | Pham Van Zone1      | S6    | -         | Zone Manager - Hanoi      | MANAGER | -                         |
+| 5  | 28 | s6bacninh   | s6bacninh@aoisora.vn       | Hoang Thi Zone2     | S6    | -         | Zone Manager - Bac Ninh   | MANAGER | -                         |
+| 6  | 29 | s6danang    | s6danang@aoisora.vn        | Nguyen Van Zone3    | S6    | -         | Zone Manager - Da Nang    | MANAGER | -                         |
+| 7  | 30 | s6hue       | s6hue@aoisora.vn           | Tran Thi Zone4      | S6    | -         | Zone Manager - Hue        | MANAGER | -                         |
+| 8  | 31 | s6hcm       | s6hcm@aoisora.vn           | Le Van Zone5        | S6    | -         | Zone Manager - HCM        | MANAGER | -                         |
+| 9  | 32 | s6binhduong | s6binhduong@aoisora.vn     | Pham Thi Zone6      | S6    | -         | Zone Manager - BD         | MANAGER | -                         |
+| 10 | 33 | s5longbien  | s5longbien@aoisora.vn      | Hoang Van Area1     | S5    | -         | Area Manager - Long Bien  | MANAGER | -                         |
+| 11 | 34 | s5hadong    | s5hadong@aoisora.vn        | Nguyen Thi Area2    | S5    | -         | Area Manager - Ha Dong    | MANAGER | -                         |
+| 12 | 35 | s5tanphu    | s5tanphu@aoisora.vn        | Tran Van Area3      | S5    | -         | Area Manager - Tan Phu    | MANAGER | -                         |
+| 13 | 36 | s4si1       | s4si1@aoisora.vn           | Le Thi SI1          | S4    | -         | Store In-charge North 1   | MANAGER | AEON Mall Long Biên       |
+| 14 | 37 | s4si2       | s4si2@aoisora.vn           | Pham Van SI2        | S4    | -         | Store In-charge North 2   | MANAGER | AEON Express LB 3         |
+| 15 | 38 | s4si3       | s4si3@aoisora.vn           | Hoang Thi SI3       | S4    | -         | Store In-charge HCM       | MANAGER | -                         |
+| 16 | 11 | s3store1    | s3store1@aoisora.vn        | Nguyễn Văn Store1   | S3    | Admin     | Store Leader              | MANAGER | -                         |
+| 17 | 12 | s3store2    | s3store2@aoisora.vn        | Trần Thị Store2     | S3    | MMD       | Store Leader              | MANAGER | -                         |
+| 18 | 13 | s3store3    | s3store3@aoisora.vn        | Lê Văn Store3       | S3    | MMD       | Store Leader              | MANAGER | -                         |
+| 19 | 14 | s3store4    | s3store4@aoisora.vn        | Phạm Thị Store4     | S3    | ACC       | Store Leader              | MANAGER | -                         |
+| 20 | 15 | s3store5    | s3store5@aoisora.vn        | Hoàng Văn Store5    | S3    | ACC       | Store Leader              | MANAGER | -                         |
+| 21 | 16 | s3store6    | s3store6@aoisora.vn        | Nguyễn Văn Store6   | S3    | Perisable | Store Leader              | MANAGER | AEON Express LB 3         |
+| 22 | 17 | s3store7    | s3store7@aoisora.vn        | Trần Thị Store7     | S3    | Perisable | Store Leader              | MANAGER | AEON Express LB 4         |
+| 23 | 18 | s3store8    | s3store8@aoisora.vn        | Lê Văn Store8       | S3    | Grocery   | Store Leader              | MANAGER | AEON Express LB 5         |
+| 24 | 19 | s3store9    | s3store9@aoisora.vn        | Phạm Thị Store9     | S3    | Grocery   | Store Leader              | MANAGER | AEON Express LB 6         |
+| 25 | 20 | s3store10   | s3store10@aoisora.vn       | Hoàng Văn Store10   | S3    | Delica    | Store Leader              | MANAGER | AEON Express LB 7         |
+| 26 | 21 | s3store11   | s3store11@aoisora.vn       | Nguyễn Văn Store11  | S3    | Delica    | Store Leader              | MANAGER | AEON Express LB 8         |
+| 27 | 22 | s3store12   | s3store12@aoisora.vn       | Trần Thị Store12    | S3    | D&D       | Store Leader              | MANAGER | AEON Express LB 9         |
+| 28 | 23 | s3store13   | s3store13@aoisora.vn       | Lê Văn Store13      | S3    | CS        | Store Leader              | MANAGER | AEON Express LB 10        |
+| 29 | 39 | s2deputy1   | s2deputy1@aoisora.vn       | Nguyen Van Deputy1  | S2    | -         | Deputy Store Leader       | STAFF   | AEON Mall Long Biên       |
+| 30 | 40 | s2deputy2   | s2deputy2@aoisora.vn       | Tran Thi Deputy2    | S2    | -         | Deputy Store Leader       | STAFF   | AEON MaxValu LB 1         |
+| 31 | 41 | s2deputy3   | s2deputy3@aoisora.vn       | Le Van Deputy3      | S2    | -         | Deputy Store Leader       | STAFF   | AEON Express LB 3         |
+| 32 | 42 | s2deputy4   | s2deputy4@aoisora.vn       | Pham Thi Deputy4    | S2    | -         | Deputy Store Leader       | STAFF   | AEON Express LB 7         |
+| 33 | 43 | s1staff1    | s1staff1@aoisora.vn        | Hoang Van Staff1    | S1    | -         | Store Staff               | STAFF   | AEON Mall Long Biên       |
+| 34 | 44 | s1staff2    | s1staff2@aoisora.vn        | Nguyen Thi Staff2   | S1    | -         | Store Staff               | STAFF   | AEON Mall Long Biên       |
+| 35 | 45 | s1staff3    | s1staff3@aoisora.vn        | Tran Van Staff3     | S1    | -         | Store Staff               | STAFF   | AEON MaxValu LB 1         |
+| 36 | 46 | s1staff4    | s1staff4@aoisora.vn        | Le Thi Staff4       | S1    | -         | Store Staff               | STAFF   | AEON MaxValu LB 1         |
+| 37 | 47 | s1staff5    | s1staff5@aoisora.vn        | Pham Van Staff5     | S1    | -         | Store Staff               | STAFF   | AEON Express LB 3         |
+| 38 | 48 | s1staff6    | s1staff6@aoisora.vn        | Hoang Thi Staff6    | S1    | -         | Store Staff               | STAFF   | AEON Express LB 3         |
 
 ### Summary by Grade
 
-| Grade | Type | Count | Description |
-|-------|------|-------|-------------|
-| G9 | HQ | 2 | CEO, System Admin |
-| G8 | HQ | 2 | Division Heads |
-| G7 | HQ | 2 | Division Heads (Admin) |
-| G6 | HQ | 3 | Department Heads |
-| G5 | HQ | 7 | Team Leaders |
-| G4 | HQ | 7 | Senior Staff |
-| G3 | HQ | 9 | Staff |
-| G2 | HQ | 7 | Junior Staff |
-| **HQ Total** | - | **39** | - |
-| S7 | Store | 3 | Region Managers |
-| S6 | Store | 6 | Zone Managers |
-| S5 | Store | 3 | Area Managers |
-| S4 | Store | 3 | Store In-charge (SI) |
-| S3 | Store | 13 | Store Leaders |
-| S2 | Store | 4 | Deputy Store Leaders |
-| S1 | Store | 6 | Store Staff |
-| **Store Total** | - | **38** | - |
-| **GRAND TOTAL** | - | **77** | - |
+| Grade           | Type  | Count  | Description              |
+|-----------------|-------|--------|--------------------------|
+| G9              | HQ    | 2      | CEO, System Admin        |
+| G8              | HQ    | 2      | Division Heads           |
+| G7              | HQ    | 2      | Division Heads (Admin)   |
+| G6              | HQ    | 3      | Department Heads         |
+| G5              | HQ    | 7      | Team Leaders             |
+| G4              | HQ    | 7      | Senior Staff             |
+| G3              | HQ    | 9      | Staff                    |
+| G2              | HQ    | 7      | Junior Staff             |
+| **HQ Total**    | -     | **39** | -                        |
+| S7              | Store | 3      | Region Managers          |
+| S6              | Store | 6      | Zone Managers            |
+| S5              | Store | 3      | Area Managers            |
+| S4              | Store | 3      | Store In-charge (SI)     |
+| S3              | Store | 13     | Store Leaders            |
+| S2              | Store | 4      | Deputy Store Leaders     |
+| S1              | Store | 6      | Store Staff              |
+| **Store Total** | -     | **38** | -                        |
+| **GRAND TOTAL** | -     | **77** | -                        |
