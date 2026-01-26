@@ -614,20 +614,22 @@ Ghi chú:
 ┌─────────────────────────────────────────────────────────────────┐
 │  APPROVER LOOKUP ALGORITHM                                      │
 │                                                                 │
-│  1. Lấy team_id, department_id, job_grade của Creator          │
-│  2. Tìm user trong CÙNG TEAM có job_grade > Creator             │
+│  Cấu trúc tổ chức: Department (lớn) > Division (nhỏ)           │
+│  Ví dụ: OP (Department) > PERI, GRO, Delica... (Divisions)     │
+│                                                                 │
+│  1. Lấy division_id, department_id, job_grade của Creator      │
+│  2. Tìm user trong CÙNG DIVISION có job_grade > Creator         │
 │     → Nếu tìm thấy: Chọn người có MIN(job_grade) = Approver    │
-│  3. Nếu KHÔNG tìm thấy trong Team:                              │
+│  3. Nếu KHÔNG tìm thấy trong Division:                          │
 │     → Tìm trong CÙNG DEPARTMENT có job_grade > Creator          │
 │     → Nếu tìm thấy: Chọn người có MIN(job_grade) = Approver    │
-│  4. Nếu vẫn KHÔNG tìm thấy:                                     │
-│     → Tìm lên parent organizational unit (Division/Sector)     │
-│  5. FALLBACK: System Admin hoặc designated approval account    │
+│  4. FALLBACK: System Admin hoặc designated approval account    │
 │                                                                 │
 │  VÍ DỤ:                                                         │
-│  • G2 tạo task, Team có G3 → Approver = G3                      │
-│  • G3 tạo task, Team có G4 → Approver = G4                      │
-│  • G3 tạo task, Team KHÔNG có G4, G5 → Approver = G6 (Dept Head)│
+│  • G2 (PERI) tạo task, PERI có G3 → Approver = G3               │
+│  • G3 (PERI) tạo task, PERI không có G4 → tìm trong OP          │
+│    → OP có G5 → Approver = G5                                   │
+│  • G5 (OP) tạo task, OP không có G6+ → Fallback System Admin    │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
