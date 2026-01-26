@@ -654,7 +654,7 @@ Ghi chú:
 | 1  | CMN-001     | Login       | /auth/signin            | Đăng nhập hệ thống                            | All           |
 | 2  | WS-001      | Task List   | /tasks/list             | Danh sách task với filter, search, pagination | HQ + Store    |
 | 3  | WS-002      | Task Detail | /tasks/detail           | Chi tiết task, statistics, store progress     | HQ + Store    |
-| 4  | WS-003      | Add Task    | /tasks/new              | Tạo/sửa task (3 flows)                        | HQ (G2-G9)    |
+| 4  | WS-003      | Add Task    | /tasks/new              | Tạo/sửa task (3 flows)                        | HQ (Creator)  |
 | 5  | WS-004      | Approval    | /tasks/approval         | Danh sách task chờ duyệt                      | HQ (Approver) |
 | 6  | WS-005      | Library     | /tasks/library          | Quản lý task templates                        | HQ            |
 | 7  | WS-006      | Dispatch    | /tasks/library/dispatch | Gửi template đến stores                       | HQ            |
