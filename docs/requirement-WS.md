@@ -649,22 +649,22 @@ Ghi chú:
 > - `QC-XXX`: Check Quality Module screens - *future*
 > - `TRN-XXX`: Training Module screens - *future*
 
-| # | Screen Code | Screen Name | Route | Mô tả | Người dùng |
-|---|-------------|-------------|-------|-------|------------|
-| 1 | CMN-001 | Login | /auth/signin | Đăng nhập hệ thống | All |
-| 2 | WS-001 | Task List | /tasks/list | Danh sách task với filter, search, pagination | HQ + Store |
-| 3 | WS-002 | Task Detail | /tasks/detail | Chi tiết task, statistics, store progress | HQ + Store |
-| 4 | WS-003 | Add Task | /tasks/new | Tạo/sửa task (3 flows) | HQ (G2-G9) |
-| 5 | WS-004 | Approval | /tasks/approval | Danh sách task chờ duyệt | HQ (Approver) |
-| 6 | WS-005 | Library | /tasks/library | Quản lý task templates | HQ |
-| 7 | WS-006 | Dispatch | /tasks/library/dispatch | Gửi template đến stores | HQ |
-| 8 | WS-007 | To Do Task | /tasks/todo | Task HQ giao cho HQ | HQ |
-| 9 | WS-008 | Store Tasks | /stores/[id]/tasks | Task của store | Store (S1-S7) |
-| 10 | WS-009 | HQ Check | /tasks/hq-check | Xác nhận kết quả store | HQ |
-| 11 | WS-010 | User Info | /tasks/info | Thông tin cá nhân | All |
-| 12 | WS-011 | Store Info | /tasks/store-info | Thông tin store | Store |
-| 13 | WS-012 | Messages | /tasks/messages | Tin nhắn/comment | All |
-| 14 | WS-013 | Report | /tasks/report | Báo cáo thống kê | HQ |
+| #  | Screen Code | Screen Name | Route                   | Mô tả                                         | Người dùng    |
+|----|-------------|-------------|-------------------------|-----------------------------------------------|---------------|
+| 1  | CMN-001     | Login       | /auth/signin            | Đăng nhập hệ thống                            | All           |
+| 2  | WS-001      | Task List   | /tasks/list             | Danh sách task với filter, search, pagination | HQ + Store    |
+| 3  | WS-002      | Task Detail | /tasks/detail           | Chi tiết task, statistics, store progress     | HQ + Store    |
+| 4  | WS-003      | Add Task    | /tasks/new              | Tạo/sửa task (3 flows)                        | HQ (G2-G9)    |
+| 5  | WS-004      | Approval    | /tasks/approval         | Danh sách task chờ duyệt                      | HQ (Approver) |
+| 6  | WS-005      | Library     | /tasks/library          | Quản lý task templates                        | HQ            |
+| 7  | WS-006      | Dispatch    | /tasks/library/dispatch | Gửi template đến stores                       | HQ            |
+| 8  | WS-007      | To Do Task  | /tasks/todo             | Task HQ giao cho HQ                           | HQ            |
+| 9  | WS-008      | Store Tasks | /stores/[id]/tasks      | Task của store                                | Store (S1-S7) |
+| 10 | WS-009      | HQ Check    | /tasks/hq-check         | Xác nhận kết quả store                        | HQ            |
+| 11 | WS-010      | User Info   | /tasks/info             | Thông tin cá nhân                             | All           |
+| 12 | WS-011      | Store Info  | /tasks/store-info       | Thông tin store                               | Store         |
+| 13 | WS-012      | Messages    | /tasks/messages         | Tin nhắn/comment                              | All           |
+| 14 | WS-013      | Report      | /tasks/report           | Báo cáo thống kê                              | HQ            |
 
 ### 5.2 Screen Details Summary
 
