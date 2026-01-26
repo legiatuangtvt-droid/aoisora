@@ -653,10 +653,10 @@ Ghi chú:
 
 | Rule                  | Mô tả                                      | Giá trị                |
 |-----------------------|--------------------------------------------|------------------------|
-| Auto-Save to Library  | Khi task được approve                      | Tự động lưu Library    |
+| Auto-Save to Library  | Khi task được approve từ task list         | Tự động lưu Library    |
 | Cooldown Trigger      | Dispatch cùng template + stores + period   | Kích hoạt cooldown     |
 | Cooldown Duration     | Thời gian cooldown                         | start_date → end_date  |
-| Override Cooldown     | Ai có quyền phá khóa                       | Dept/Team Head         |
+| Override Cooldown     | Ai có quyền phá khóa                       | Approver               |
 
 ### 7.4 Overdue Rules
 
@@ -682,65 +682,65 @@ Ghi chú:
 
 ### 8.1 Authentication APIs
 
-| # | Method | Endpoint | Mô tả |
-|---|--------|----------|-------|
-| 1 | POST | /api/v1/auth/login | Đăng nhập |
-| 2 | POST | /api/v1/auth/logout | Đăng xuất |
-| 3 | POST | /api/v1/auth/refresh | Làm mới token |
-| 4 | GET | /api/v1/auth/me | Lấy thông tin user hiện tại |
-| 5 | POST | /api/v1/auth/forgot-password | Quên mật khẩu |
-| 6 | POST | /api/v1/auth/verify-code | Xác thực mã OTP |
-| 7 | POST | /api/v1/auth/reset-password | Đặt lại mật khẩu |
+| #  | Method | Endpoint                                       | Mô tả                       |
+|----|--------|------------------------------------------------|-----------------------------|
+| 1  | POST   | /api/v1/auth/login                             | Đăng nhập                   |
+| 2  | POST   | /api/v1/auth/logout                            | Đăng xuất                   |
+| 3  | POST   | /api/v1/auth/refresh                           | Làm mới token               |
+| 4  | GET    | /api/v1/auth/me                                | Lấy thông tin user hiện tại |
+| 5  | POST   | /api/v1/auth/forgot-password                   | Quên mật khẩu               |
+| 6  | POST   | /api/v1/auth/verify-code                       | Xác thực mã OTP             |
+| 7  | POST   | /api/v1/auth/reset-password                    | Đặt lại mật khẩu            |
 
 ### 8.2 Task Management APIs
 
-| # | Method | Endpoint | Mô tả |
-|---|--------|----------|-------|
-| 1 | GET | /api/v1/tasks | Danh sách tasks |
-| 2 | GET | /api/v1/tasks/{id} | Chi tiết task |
-| 3 | POST | /api/v1/tasks | Tạo task/draft |
-| 4 | PUT | /api/v1/tasks/{id} | Cập nhật draft |
-| 5 | DELETE | /api/v1/tasks/{id} | Xóa draft |
-| 6 | POST | /api/v1/tasks/{id}/submit | Submit for approval |
-| 7 | POST | /api/v1/tasks/{id}/approve | Approve task |
-| 8 | POST | /api/v1/tasks/{id}/reject | Reject task |
-| 9 | GET | /api/v1/tasks/pending-approval | Tasks chờ duyệt |
-| 10 | GET | /api/v1/tasks/{id}/progress | Tiến độ task |
-| 11 | GET | /api/v1/tasks/{id}/history | Lịch sử approval |
+| #  | Method | Endpoint                                       | Mô tả                       |
+|----|--------|------------------------------------------------|-----------------------------|
+| 1  | GET    | /api/v1/tasks                                  | Danh sách tasks             |
+| 2  | GET    | /api/v1/tasks/{id}                             | Chi tiết task               |
+| 3  | POST   | /api/v1/tasks                                  | Tạo task/draft              |
+| 4  | PUT    | /api/v1/tasks/{id}                             | Cập nhật draft              |
+| 5  | DELETE | /api/v1/tasks/{id}                             | Xóa draft                   |
+| 6  | POST   | /api/v1/tasks/{id}/submit                      | Submit for approval         |
+| 7  | POST   | /api/v1/tasks/{id}/approve                     | Approve task                |
+| 8  | POST   | /api/v1/tasks/{id}/reject                      | Reject task                 |
+| 9  | GET    | /api/v1/tasks/pending-approval                 | Tasks chờ duyệt             |
+| 10 | GET    | /api/v1/tasks/{id}/progress                    | Tiến độ task                |
+| 11 | GET    | /api/v1/tasks/{id}/history                     | Lịch sử approval            |
 
 ### 8.3 Store Execution APIs
 
-| # | Method | Endpoint | Mô tả |
-|---|--------|----------|-------|
-| 1 | GET | /api/v1/stores/{id}/tasks | Tasks của store |
-| 2 | GET | /api/v1/stores/{id}/tasks/my | Tasks được assign cho user |
-| 3 | POST | /api/v1/tasks/{id}/stores/{store_id}/start | Bắt đầu task |
-| 4 | POST | /api/v1/tasks/{id}/stores/{store_id}/complete | Hoàn thành task |
-| 5 | POST | /api/v1/tasks/{id}/stores/{store_id}/unable | Đánh dấu unable |
-| 6 | POST | /api/v1/tasks/{id}/stores/{store_id}/assign | Giao việc cho staff |
-| 7 | POST | /api/v1/tasks/{id}/stores/{store_id}/check | HQ check |
-| 8 | POST | /api/v1/tasks/{id}/stores/{store_id}/reject | HQ reject |
+| #  | Method | Endpoint                                       | Mô tả                       |
+|----|--------|------------------------------------------------|-----------------------------|
+| 1  | GET    | /api/v1/stores/{id}/tasks                      | Tasks của store             |
+| 2  | GET    | /api/v1/stores/{id}/tasks/my                   | Tasks được assign cho user  |
+| 3  | POST   | /api/v1/tasks/{id}/stores/{store_id}/start     | Bắt đầu task                |
+| 4  | POST   | /api/v1/tasks/{id}/stores/{store_id}/complete  | Hoàn thành task             |
+| 5  | POST   | /api/v1/tasks/{id}/stores/{store_id}/unable    | Đánh dấu unable             |
+| 6  | POST   | /api/v1/tasks/{id}/stores/{store_id}/assign    | Giao việc cho staff         |
+| 7  | POST   | /api/v1/tasks/{id}/stores/{store_id}/check     | HQ check                    |
+| 8  | POST   | /api/v1/tasks/{id}/stores/{store_id}/reject    | HQ reject                   |
 
 ### 8.4 Library APIs
 
-| # | Method | Endpoint | Mô tả |
-|---|--------|----------|-------|
-| 1 | GET | /api/v1/library-tasks | Danh sách templates |
-| 2 | POST | /api/v1/library-tasks | Tạo template |
-| 3 | PUT | /api/v1/library-tasks/{id} | Cập nhật template |
-| 4 | DELETE | /api/v1/library-tasks/{id} | Xóa template |
-| 5 | POST | /api/v1/library-tasks/{id}/dispatch | Dispatch to stores |
-| 6 | POST | /api/v1/library-tasks/{id}/override-cooldown | Override cooldown |
+| #  | Method | Endpoint                                       | Mô tả                       |
+|----|--------|------------------------------------------------|-----------------------------|
+| 1  | GET    | /api/v1/library-tasks                          | Danh sách templates         |
+| 2  | POST   | /api/v1/library-tasks                          | Tạo template                |
+| 3  | PUT    | /api/v1/library-tasks/{id}                     | Cập nhật template           |
+| 4  | DELETE | /api/v1/library-tasks/{id}                     | Xóa template                |
+| 5  | POST   | /api/v1/library-tasks/{id}/dispatch            | Dispatch to stores          |
+| 6  | POST   | /api/v1/library-tasks/{id}/override-cooldown   | Override cooldown           |
 
 ### 8.5 Supporting APIs
 
-| # | Method | Endpoint | Mô tả |
-|---|--------|----------|-------|
-| 1 | GET | /api/v1/departments | Danh sách departments |
-| 2 | GET | /api/v1/scope-hierarchy | Region/Zone/Area/Store |
-| 3 | GET | /api/v1/hq-hierarchy | Division/Dept/Team |
-| 4 | GET | /api/v1/staff/{id}/approver | Tìm approver của user |
-| 5 | GET | /api/v1/code-master | Task types, categories |
+| #  | Method | Endpoint                                       | Mô tả                       |
+|----|--------|------------------------------------------------|-----------------------------|
+| 1  | GET    | /api/v1/departments                            | Danh sách departments       |
+| 2  | GET    | /api/v1/scope-hierarchy                        | Region/Zone/Area/Store      |
+| 3  | GET    | /api/v1/hq-hierarchy                           | Division/Dept/Team          |
+| 4  | GET    | /api/v1/staff/{id}/approver                    | Tìm approver của user       |
+| 5  | GET    | /api/v1/code-master                            | Task types, categories      |
 
 ---
 
