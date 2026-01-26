@@ -653,15 +653,14 @@ Ghi chú:
 |----|-------------|-------------|-----------------|-----------|------------------------------------| --------------|
 | 1  | CMN-001     | Login       | /auth/signin    | Web + iOS | Đăng nhập hệ thống                 | All           |
 | 2  | WS-001      | Task List   | /tasks/list     | Web + iOS | Danh sách task (scope theo role)   | HQ + Store    |
-| 3  | WS-002      | Task Detail | /tasks/detail   | Web + iOS | Chi tiết task, store progress      | HQ + Store    |
+| 3  | WS-002      | Task Detail | /tasks/detail   | Web + iOS | Chi tiết task, HQ Check, progress  | HQ + Store    |
 | 4  | WS-003      | Add Task    | /tasks/new      | Web       | Tạo/sửa task (3 flows)             | HQ (Creator)  |
 | 5  | WS-004      | Library     | /tasks/library  | Web       | Quản lý task templates             | HQ            |
 | 6  | WS-005      | To Do Task  | /tasks/todo     | Web       | Task HQ giao cho HQ                | HQ            |
-| 7  | WS-006      | HQ Check    | /tasks/hq-check | Web       | Xác nhận kết quả store             | HQ            |
-| 8  | WS-007      | User Info   | /tasks/info     | Web + iOS | Thông tin cá nhân                  | All           |
-| 9  | WS-008      | Store Info  | -               | iOS       | Thông tin store                    | Store         |
-| 10 | WS-009      | Messages    | /tasks/messages | Web + iOS | Tin nhắn/comment                   | All           |
-| 11 | WS-010      | Report      | /tasks/report   | Web       | Báo cáo thống kê                   | HQ            |
+| 7  | WS-006      | User Info   | /tasks/info     | Web + iOS | Thông tin cá nhân                  | All           |
+| 8  | WS-007      | Store Info  | -               | iOS       | Thông tin store                    | Store         |
+| 9  | WS-008      | Messages    | /tasks/messages | Web + iOS | Tin nhắn/comment                   | All           |
+| 10 | WS-009      | Report      | /tasks/report   | Web       | Báo cáo thống kê                   | HQ            |
 
 > **Note**:
 > - **Platform**: `Web` = HQ Web App (Desktop/Laptop), `iOS` = Store Native iOS App (iPad), `Web + iOS` = cả 2 platforms
@@ -669,6 +668,7 @@ Ghi chú:
 > - **Task List** dùng chung cho HQ và Store, phạm vi hiển thị khác nhau theo role:
 >   - HQ: Thấy tất cả tasks của department mình
 >   - Store: Chỉ thấy tasks được giao cho store mình
+> - **HQ Check** được thực hiện tại **Task Detail** (xem store progress → Checked/Reject), không phải screen riêng.
 > - Task chờ duyệt (Approval) được hiển thị tại **Task List** với filter `status = Approve`, không phải screen riêng.
 > - Dispatch template được thực hiện tại screen **Add Task** (từ Library chọn template → Add Task → chọn Scope → Submit), không phải screen riêng.
 
@@ -690,6 +690,23 @@ Ghi chú:
 |------|------------------|------------------|
 | **HQ** | Tất cả tasks của department mình | Add New, View, Approve/Reject, Pause |
 | **Store** | Tasks được giao cho store mình | Start, Complete, Mark Unable, Assign to Staff |
+
+#### WS-002: Task Detail
+
+| Thành phần | Mô tả |
+|------------|-------|
+| **Header** | Task name, Status badge, Back button |
+| **Info Sections** | A.Information, B.Instructions, C.Scope (read-only) |
+| **Statistics** | Cards: Not Yet, Done, Unable, Avg Time |
+| **Store Progress** | Table: Store name, Status, Assignee, Time, Actions |
+| **Comments** | Comment list, Add/Edit/Delete comments |
+
+**Actions theo Role:**
+
+| Role | Actions khả dụng |
+|------|------------------|
+| **HQ** | View, HQ Check (Checked/Reject), Add Comment |
+| **Store** | View evidence, Add Comment |
 
 #### WS-003: Add Task
 
