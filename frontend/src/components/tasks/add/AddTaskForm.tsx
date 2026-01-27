@@ -117,9 +117,13 @@ interface TaskLevelItemProps {
   canAddSubLevel: boolean;
   canDelete: boolean;
   showScopeSection: boolean;
+  // Show Approval section (hidden for child tasks)
+  showApprovalSection: boolean;
   scopeType: 'store' | 'hq';
   // Filtered task type options based on parent's task type
   taskTypeOptions: DropdownOption[];
+  // Disable only Task Type field (for child tasks - inherited from parent)
+  disableTaskType: boolean;
   zoneOptions: DropdownOption[];
   areaOptions: DropdownOption[];
   storeOptions: DropdownOption[];
@@ -151,8 +155,10 @@ const TaskLevelItem = memo(function TaskLevelItem({
   canAddSubLevel,
   canDelete,
   showScopeSection,
+  showApprovalSection,
   scopeType,
   taskTypeOptions,
+  disableTaskType,
   zoneOptions,
   areaOptions,
   storeOptions,
@@ -264,6 +270,7 @@ const TaskLevelItem = memo(function TaskLevelItem({
           executionTimeOptions={mockMasterData.executionTimes}
           errors={sectionFieldErrors.A}
           disabled={isReadOnly}
+          disableTaskType={disableTaskType}
         />
       </SectionCard>
 
@@ -310,27 +317,29 @@ const TaskLevelItem = memo(function TaskLevelItem({
         </SectionCard>
       )}
 
-      {/* D. Approval Process */}
-      <SectionCard
-        id="D"
-        title="Approval Process"
-        icon={ApprovalIcon}
-        isExpanded={expandedSection === 'D'}
-        onToggle={handleSectionToggleD}
-        errorCount={sectionErrorCounts.D}
-      >
-        <ApprovalSection
-          data={taskLevel.approval}
-          onChange={handleApprovalChange}
-          initiatorOptions={mockMasterData.initiators}
-          leaderOptions={mockMasterData.leaders}
-          hodOptions={mockMasterData.hods}
-          currentUser={currentUser}
-          autoApprover={autoApprover}
-          isHighestGrade={isHighestGrade}
-          isReadOnly={isApprovalReadOnly}
-        />
-      </SectionCard>
+      {/* D. Approval Process - Hidden for child tasks */}
+      {showApprovalSection && (
+        <SectionCard
+          id="D"
+          title="Approval Process"
+          icon={ApprovalIcon}
+          isExpanded={expandedSection === 'D'}
+          onToggle={handleSectionToggleD}
+          errorCount={sectionErrorCounts.D}
+        >
+          <ApprovalSection
+            data={taskLevel.approval}
+            onChange={handleApprovalChange}
+            initiatorOptions={mockMasterData.initiators}
+            leaderOptions={mockMasterData.leaders}
+            hodOptions={mockMasterData.hods}
+            currentUser={currentUser}
+            autoApprover={autoApprover}
+            isHighestGrade={isHighestGrade}
+            isReadOnly={isApprovalReadOnly}
+          />
+        </SectionCard>
+      )}
     </TaskLevelCard>
   );
 });
@@ -744,6 +753,10 @@ export default function AddTaskForm({
     if (defaultExecutionTime) {
       newTaskLevel.taskInformation.executionTime = defaultExecutionTime as ExecutionTime;
     }
+    // Inherit Task Type from parent for child tasks
+    if (parent.taskInformation.taskType) {
+      newTaskLevel.taskInformation.taskType = parent.taskInformation.taskType;
+    }
 
     onChange([...currentLevels, newTaskLevel]);
   }, []); // Empty deps - uses refs
@@ -792,11 +805,22 @@ export default function AddTaskForm({
       const canAddSubLevel = taskLevel.level < 5;
       const canDelete = taskLevels.length > 1;
 
+      // Determine if this is a child task (level > 1)
+      const isChildTask = taskLevel.level > 1;
+
       // Get parent's task type to filter available options for this task level
       // Child task type must have equal or smaller time span than parent
       const parent = taskLevel.parentId ? taskLevels.find((tl) => tl.id === taskLevel.parentId) : null;
       const parentTaskType = parent?.taskInformation.taskType || null;
       const filteredTaskTypeOptions = getTaskTypeOptionsForLevel(parentTaskType);
+
+      // For child tasks:
+      // - Hide Scope section (C)
+      // - Hide Approval section (D)
+      // - Disable Task Type (inherited from parent)
+      const shouldShowScopeSection = showScopeSection && !isChildTask;
+      const shouldShowApprovalSection = !isChildTask;
+      const shouldDisableTaskType = isChildTask;
 
       return (
         <TaskLevelItem
@@ -826,9 +850,11 @@ export default function AddTaskForm({
           }}
           canAddSubLevel={canAddSubLevel}
           canDelete={canDelete}
-          showScopeSection={showScopeSection}
+          showScopeSection={shouldShowScopeSection}
+          showApprovalSection={shouldShowApprovalSection}
           scopeType={scopeType}
           taskTypeOptions={filteredTaskTypeOptions}
+          disableTaskType={shouldDisableTaskType}
           zoneOptions={getZoneOptions(taskLevel.scope.regionId)}
           areaOptions={getAreaOptions(taskLevel.scope.zoneId)}
           storeOptions={getStoreOptionsForScope(taskLevel.scope.areaId, taskLevel.scope.regionId)}

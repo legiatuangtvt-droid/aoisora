@@ -10,6 +10,8 @@ interface TaskInfoSectionProps {
   executionTimeOptions: DropdownOption[];
   errors?: Record<string, string>;
   disabled?: boolean;
+  // For child tasks: disable only Task Type field (inherited from parent)
+  disableTaskType?: boolean;
 }
 
 // Helper to get today's date in YYYY-MM-DD format
@@ -25,6 +27,7 @@ export default function TaskInfoSection({
   executionTimeOptions,
   errors = {},
   disabled = false,
+  disableTaskType = false,
 }: TaskInfoSectionProps) {
   // Memoize today's date string to avoid recalculating on each render
   const todayString = useMemo(() => getTodayString(), []);
@@ -66,7 +69,7 @@ export default function TaskInfoSection({
           id="taskType"
           value={data.taskType}
           onChange={(e) => handleChange('taskType', e.target.value)}
-          disabled={disabled}
+          disabled={disabled || disableTaskType}
           data-field="taskType"
           aria-invalid={errors.taskType ? 'true' : 'false'}
           aria-describedby={errors.taskType ? 'taskType-error' : undefined}
