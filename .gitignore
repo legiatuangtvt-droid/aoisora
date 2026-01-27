@@ -37,6 +37,7 @@ Thumbs.db
 *.tmp
 *.bak
 nul
+*.tsbuildinfo
 
 # Composer
 composer.phar
