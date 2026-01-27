@@ -89,7 +89,7 @@ function validateTaskName(taskLevel: TaskLevel): ValidationError[] {
 
 /**
  * Validate Section A: Task Information
- * - Task Type: required
+ * - Task Type: required (only for root/parent tasks - child tasks inherit from parent)
  * - Applicable Period: required for task_list and todo_task flows
  * - Execution Time: required
  * - Child task date range must be within parent date range
@@ -106,8 +106,12 @@ function validateTaskInformation(
   const periodRules = TASK_VALIDATION_RULES.applicablePeriod;
   const execTimeRules = TASK_VALIDATION_RULES.executionTime;
 
-  // Task Type is always required
-  if (taskTypeRules.required && !info.taskType) {
+  // Check if this is a child task (has parentId)
+  const isChildTask = !!taskLevel.parentId;
+
+  // Task Type is required only for root/parent tasks
+  // Child tasks inherit Task Type from parent, so skip validation
+  if (!isChildTask && taskTypeRules.required && !info.taskType) {
     errors.push({
       field: 'taskType',
       message: taskTypeRules.errorMessages.required,
@@ -206,7 +210,8 @@ function validateTaskInformation(
 
   // Validate Task Type and Date Range correlation
   // Date range duration must not exceed maximum allowed for the selected task type
-  if (periodRules.dateRangeMustMatchTaskType && source !== 'library' && info.taskType && info.applicablePeriod.startDate && info.applicablePeriod.endDate) {
+  // Skip for child tasks since Task Type is inherited from parent
+  if (!isChildTask && periodRules.dateRangeMustMatchTaskType && source !== 'library' && info.taskType && info.applicablePeriod.startDate && info.applicablePeriod.endDate) {
     const validation = isDateRangeValidForTaskType(
       info.taskType,
       info.applicablePeriod.startDate,
