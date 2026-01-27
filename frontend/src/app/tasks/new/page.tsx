@@ -413,6 +413,30 @@ function AddTaskContent() {
     }
   };
 
+  // Handle Delete Task Level 1 (entire task) - called from AddTaskForm
+  // This is triggered when user clicks "Delete task level 1" in the TaskLevelCard menu
+  const handleDeleteTask = async (taskIdToDelete: number | null) => {
+    if (taskIdToDelete) {
+      // Task has ID: call API to delete entire task (including sub-tasks)
+      setIsDeleting(true);
+      try {
+        await deleteTask(taskIdToDelete);
+        showToast('Task deleted successfully', 'success');
+        router.push(backLink.href);
+      } catch (error: unknown) {
+        console.error('Error deleting task:', error);
+        showToast(error instanceof Error ? error.message : 'Failed to delete task', 'error');
+      } finally {
+        setIsDeleting(false);
+      }
+    } else {
+      // Task has no ID: clear form and redirect
+      setTaskLevels([createEmptyTaskLevel(1)]);
+      showToast('Form cleared', 'info');
+      router.push(backLink.href);
+    }
+  };
+
   // Handle Approve (Approver action)
   const handleApprove = async (_taskLevels: TaskLevel[]) => {
     if (!taskId) return;
@@ -664,6 +688,9 @@ function AddTaskContent() {
           isCreatorViewingApproval={isEditMode && isCreator && taskStatus === 'approve'}
           rejectionInfo={rejectionInfo}
           source={source}
+          taskId={taskId}
+          onDeleteTask={handleDeleteTask}
+          isDeleting={isDeleting}
         />
       ) : (
         <TaskMapsTab

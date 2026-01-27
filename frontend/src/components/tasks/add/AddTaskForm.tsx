@@ -82,6 +82,14 @@ interface AddTaskFormProps {
   // - library: C. Scope is HIDDEN (will be selected when dispatching)
   // - todo_task: C. Scope shows HQ structure (Division/Dept/Team/User)
   source?: TaskSource;
+  // Current task ID (for edit mode) - used for delete confirmation
+  taskId?: number | null;
+  // Handler for deleting Level 1 task (entire task)
+  // - If taskId exists: should call API to delete and redirect
+  // - If no taskId: should clear form and redirect
+  onDeleteTask?: (taskId: number | null) => void;
+  // Loading state for delete operation
+  isDeleting?: boolean;
 }
 
 // Section IDs for accordion
@@ -353,6 +361,9 @@ export default function AddTaskForm({
   isCreatorViewingApproval = false,
   rejectionInfo,
   source = 'task_list',
+  taskId = null,
+  onDeleteTask,
+  isDeleting = false,
 }: AddTaskFormProps) {
   // Get current user from context
   const { currentUser } = useUser();
@@ -418,6 +429,9 @@ export default function AddTaskForm({
   const [rejectReason, setRejectReason] = useState('');
   const [isRejecting, setIsRejecting] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
+
+  // State for delete Level 1 confirmation dialog
+  const [showDeleteLevel1Confirm, setShowDeleteLevel1Confirm] = useState(false);
 
   // State for auto-determined approver
   const [autoApprover, setAutoApprover] = useState<ApproverInfo | null>(null);
@@ -710,18 +724,30 @@ export default function AddTaskForm({
     if (defaultExecutionTime) {
       newTaskLevel.taskInformation.executionTime = defaultExecutionTime as ExecutionTime;
     }
-    // Inherit Task Type from parent for child tasks
-    if (parent.taskInformation.taskType) {
-      newTaskLevel.taskInformation.taskType = parent.taskInformation.taskType;
-    }
+    // ALWAYS inherit Task Type from parent for child tasks (field is disabled for children)
+    // Child tasks must have the same Task Type as parent, regardless of parent's value
+    newTaskLevel.taskInformation.taskType = parent.taskInformation.taskType;
 
     onChange([...currentLevels, newTaskLevel]);
   }, []); // Empty deps - uses refs
 
   // Delete task level - use refs to keep stable callback
+  // For Level 1: Show confirmation dialog (deletes entire task)
+  // For Level 2-5: Delete directly from local state
   const handleDeleteTaskLevel = useCallback((taskLevelId: string) => {
     const currentLevels = taskLevelsRef.current;
     const onChange = onTaskLevelsChangeRef.current;
+
+    // Find the task level being deleted
+    const taskLevelToDelete = currentLevels.find((tl) => tl.id === taskLevelId);
+
+    // If deleting Level 1 (root task), show confirmation dialog
+    if (taskLevelToDelete?.level === 1) {
+      setShowDeleteLevel1Confirm(true);
+      return;
+    }
+
+    // For Level 2-5: Delete directly from local state
     // Find all children recursively
     const findChildren = (parentId: string, levels: TaskLevel[]): string[] => {
       const children = levels.filter((tl) => tl.parentId === parentId);
@@ -731,6 +757,17 @@ export default function AddTaskForm({
     const idsToRemove = [taskLevelId, ...findChildren(taskLevelId, currentLevels)];
     onChange(currentLevels.filter((tl) => !idsToRemove.includes(tl.id)));
   }, []); // Empty deps - uses refs
+
+  // Handle confirmation for deleting Level 1 task
+  const handleDeleteLevel1Confirm = useCallback(() => {
+    if (onDeleteTask) {
+      // Delegate to parent component which handles:
+      // - If taskId exists: API call to delete + redirect
+      // - If no taskId: clear form + redirect
+      onDeleteTask(taskId);
+    }
+    setShowDeleteLevel1Confirm(false);
+  }, [onDeleteTask, taskId]);
 
   // Get zone options based on selected region
   const getZoneOptions = useCallback((regionId: string) => {
@@ -1102,6 +1139,56 @@ export default function AddTaskForm({
                 className="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isRejecting ? 'Sending...' : 'Send Request'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Level 1 Confirmation Modal */}
+      {showDeleteLevel1Confirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
+            {/* Warning Icon */}
+            <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full bg-red-100 dark:bg-red-900/30">
+              <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white text-center mb-2">
+              Delete Task
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-6">
+              {taskId
+                ? 'Are you sure you want to delete this task? This will permanently delete the task and all its sub-tasks. This action cannot be undone.'
+                : 'Are you sure you want to discard this task? All entered information will be lost.'}
+            </p>
+
+            <div className="flex justify-center gap-3">
+              <button
+                onClick={() => setShowDeleteLevel1Confirm(false)}
+                disabled={isDeleting}
+                className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteLevel1Confirm}
+                disabled={isDeleting}
+                className="px-6 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isDeleting ? (
+                  <>
+                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete'
+                )}
               </button>
             </div>
           </div>
