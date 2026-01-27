@@ -599,8 +599,19 @@ export async function getTasks(params?: TaskQueryParamsExtended): Promise<Pagina
 }
 
 export async function getTaskById(id: number): Promise<Task> {
-  const response = await fetchApi<{ data: Task }>(`/tasks/${id}`);
-  return response.data;
+  const response = await fetchApi<{ data: Task } | Task>(`/tasks/${id}`);
+  // Handle both wrapped ({ data: Task }) and unwrapped (Task) responses
+  // Laravel JsonResource may or may not wrap the response depending on configuration
+  if ('data' in response && response.data && typeof response.data === 'object' && 'task_id' in response.data) {
+    return response.data;
+  }
+  // If response is the Task object directly (unwrapped)
+  if ('task_id' in response) {
+    return response as Task;
+  }
+  // Fallback: throw error if neither format matches
+  console.error('Unexpected API response format for getTaskById:', response);
+  throw new Error('Unexpected API response format');
 }
 
 export async function createTask(data: TaskCreate): Promise<Task> {
@@ -815,8 +826,17 @@ export interface TaskApprovalHistoryResponse {
 }
 
 export async function getTaskApprovalHistory(taskId: number): Promise<TaskApprovalHistoryResponse> {
-  const response = await fetchApi<{ data: TaskApprovalHistoryResponse }>(`/tasks/${taskId}/history`);
-  return response.data;
+  const response = await fetchApi<{ data: TaskApprovalHistoryResponse } | TaskApprovalHistoryResponse>(`/tasks/${taskId}/history`);
+  // Handle both wrapped ({ data: ... }) and unwrapped responses
+  if ('data' in response && response.data && typeof response.data === 'object' && 'taskId' in response.data) {
+    return response.data;
+  }
+  // If response is the object directly (unwrapped)
+  if ('taskId' in response) {
+    return response as TaskApprovalHistoryResponse;
+  }
+  console.error('Unexpected API response format for getTaskApprovalHistory:', response);
+  throw new Error('Unexpected API response format');
 }
 
 // ============================================
