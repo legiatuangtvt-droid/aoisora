@@ -4,7 +4,6 @@ import type { TaskSource } from '@/components/tasks/add/AddTaskForm';
 import {
   getExecutionTimeMinutes,
   getTaskTypeMaxDays,
-  getTaskTypeLabel,
   isDateRangeValidForTaskType as configIsDateRangeValidForTaskType,
   getAllowedTaskTypesForDateRange as configGetAllowedTaskTypesForDateRange,
   TASK_VALIDATION_RULES,
@@ -205,27 +204,6 @@ function validateTaskInformation(
           });
         }
       }
-    }
-  }
-
-  // Validate Task Type and Date Range correlation
-  // Date range duration must not exceed maximum allowed for the selected task type
-  // Skip for child tasks since Task Type is inherited from parent
-  if (!isChildTask && periodRules.dateRangeMustMatchTaskType && source !== 'library' && info.taskType && info.applicablePeriod.startDate && info.applicablePeriod.endDate) {
-    const validation = isDateRangeValidForTaskType(
-      info.taskType,
-      info.applicablePeriod.startDate,
-      info.applicablePeriod.endDate
-    );
-
-    if (!validation.valid) {
-      const taskTypeLabel = getTaskTypeLabel(info.taskType as any);
-      errors.push({
-        field: 'taskType',
-        message: taskTypeRules.errorMessages.invalidForDateRange(validation.maxDays, validation.actualDays, taskTypeLabel),
-        section: 'A',
-        taskLevelId: taskLevel.id,
-      });
     }
   }
 

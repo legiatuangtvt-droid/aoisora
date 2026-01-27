@@ -23,10 +23,6 @@ import {
   getFieldError,
   getErrorsForTaskLevel,
   ValidationError,
-  isDateRangeValidForTaskType,
-  getAllowedTaskTypesForDateRange,
-  TASK_TYPE_LABELS,
-  TASK_TYPE_MAX_DAYS,
 } from '@/utils/taskValidation';
 
 // Helper to convert ValidationError[] to Record<string, string> for a section
@@ -613,33 +609,6 @@ export default function AddTaskForm({
       updateTaskLevel(taskLevelId, { taskInformation });
       clearValidationErrors();
       return;
-    }
-
-    // Real-time validation: Check Task Type and Date Range correlation
-    const { taskType, applicablePeriod } = taskInformation;
-    if (taskType && applicablePeriod.startDate && applicablePeriod.endDate && source !== 'library') {
-      const validation = isDateRangeValidForTaskType(
-        taskType,
-        applicablePeriod.startDate,
-        applicablePeriod.endDate
-      );
-
-      if (!validation.valid) {
-        const taskTypeLabel = TASK_TYPE_LABELS[taskType] || taskType;
-        const allowedTypes = getAllowedTaskTypesForDateRange(applicablePeriod.startDate, applicablePeriod.endDate);
-        const allowedLabels = allowedTypes.map((t) => TASK_TYPE_LABELS[t] || t).join(', ');
-
-        setWarningMessage(
-          `⚠️ ${taskTypeLabel} task cannot exceed ${validation.maxDays} day${validation.maxDays > 1 ? 's' : ''}. ` +
-          `Current range: ${validation.actualDays} days. ` +
-          `Allowed Task Types for this range: ${allowedLabels || 'None'}.`
-        );
-        setShowWarningToast(true);
-      } else {
-        // Clear warning if valid
-        setShowWarningToast(false);
-        setWarningMessage(null);
-      }
     }
 
     // Check if task type changed
