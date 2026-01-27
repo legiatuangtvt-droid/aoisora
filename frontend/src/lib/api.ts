@@ -599,7 +599,8 @@ export async function getTasks(params?: TaskQueryParamsExtended): Promise<Pagina
 }
 
 export async function getTaskById(id: number): Promise<Task> {
-  return fetchApi<Task>(`/tasks/${id}`);
+  const response = await fetchApi<{ data: Task }>(`/tasks/${id}`);
+  return response.data;
 }
 
 export async function createTask(data: TaskCreate): Promise<Task> {
@@ -814,7 +815,8 @@ export interface TaskApprovalHistoryResponse {
 }
 
 export async function getTaskApprovalHistory(taskId: number): Promise<TaskApprovalHistoryResponse> {
-  return fetchApi<TaskApprovalHistoryResponse>(`/tasks/${taskId}/history`);
+  const response = await fetchApi<{ data: TaskApprovalHistoryResponse }>(`/tasks/${taskId}/history`);
+  return response.data;
 }
 
 // ============================================

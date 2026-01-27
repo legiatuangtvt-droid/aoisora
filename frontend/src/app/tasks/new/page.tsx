@@ -11,7 +11,7 @@ import { useToast } from '@/components/ui/Toast';
 import { AddTaskPageSkeleton } from '@/components/ui/Skeleton';
 import { FullPageError } from '@/components/ui/ErrorBoundary';
 import { ConfirmationDialog } from '@/components/ui/ConfirmationDialog';
-import { createTask, getDraftInfo, DraftInfo, submitTask, getTaskById, updateTask, deleteTask } from '@/lib/api';
+import { createTask, getDraftInfo, DraftInfo, submitTask, getTaskById, updateTask, deleteTask, approveTask, rejectTask } from '@/lib/api';
 import { Task } from '@/types/api';
 import { useUser } from '@/contexts/UserContext';
 
@@ -413,6 +413,56 @@ function AddTaskContent() {
     }
   };
 
+  // Handle Approve (Approver action)
+  const handleApprove = async (_taskLevels: TaskLevel[]) => {
+    if (!taskId) return;
+
+    setIsSubmitting(true);
+
+    try {
+      await approveTask(taskId);
+      showToast('Task approved successfully', 'success');
+      router.push(backLink.href);
+    } catch (error: unknown) {
+      console.error('Error approving task:', error);
+
+      if (error && typeof error === 'object' && 'status' in error) {
+        const apiError = error as { status: number; response?: { data?: { error?: string; message?: string } } };
+        const errorMessage = apiError.response?.data?.error || apiError.response?.data?.message || 'Failed to approve task';
+        showToast(errorMessage, 'error');
+      } else {
+        showToast(error instanceof Error ? error.message : 'Failed to approve task', 'error');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle Reject (Approver action)
+  const handleReject = async (_taskLevels: TaskLevel[], reason: string) => {
+    if (!taskId) return;
+
+    setIsSubmitting(true);
+
+    try {
+      await rejectTask(taskId, reason);
+      showToast('Task rejected. Creator will be notified.', 'success');
+      router.push(backLink.href);
+    } catch (error: unknown) {
+      console.error('Error rejecting task:', error);
+
+      if (error && typeof error === 'object' && 'status' in error) {
+        const apiError = error as { status: number; response?: { data?: { error?: string; message?: string } } };
+        const errorMessage = apiError.response?.data?.error || apiError.response?.data?.message || 'Failed to reject task';
+        showToast(errorMessage, 'error');
+      } else {
+        showToast(error instanceof Error ? error.message : 'Failed to reject task', 'error');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // Loading state (edit mode only) - Skeleton
   if (isLoading) {
     return (
@@ -604,6 +654,8 @@ function AddTaskContent() {
           onTaskLevelsChange={handleTaskLevelsChange}
           onSaveDraft={handleSaveDraft}
           onSubmit={handleSubmit}
+          onApprove={handleApprove}
+          onReject={handleReject}
           isSubmitting={isSubmitting}
           isSavingDraft={isSavingDraft}
           canCreateDraft={!isHQUser || !sourceDraftInfo || sourceDraftInfo.can_create_draft || isEditMode}

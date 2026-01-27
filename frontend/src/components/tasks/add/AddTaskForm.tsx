@@ -127,6 +127,8 @@ interface TaskLevelItemProps {
   autoApprover?: { id: number; name: string; position: string; job_grade: string };
   isHighestGrade?: boolean;
   isApprovalReadOnly: boolean;
+  // Form read-only mode (for approver view)
+  isReadOnly: boolean;
   // API data for regions and stores
   regionOptions: DropdownOption[];
   totalStores: number;
@@ -158,6 +160,7 @@ const TaskLevelItem = memo(function TaskLevelItem({
   autoApprover,
   isHighestGrade,
   isApprovalReadOnly,
+  isReadOnly,
   regionOptions,
   totalStores,
 }: TaskLevelItemProps) {
@@ -243,6 +246,7 @@ const TaskLevelItem = memo(function TaskLevelItem({
       canAddSubLevel={canAddSubLevel}
       canDelete={canDelete}
       nameError={nameError}
+      isReadOnly={isReadOnly}
     >
       {/* A. Task Information */}
       <SectionCard
@@ -259,6 +263,7 @@ const TaskLevelItem = memo(function TaskLevelItem({
           taskTypeOptions={taskTypeOptions}
           executionTimeOptions={mockMasterData.executionTimes}
           errors={sectionFieldErrors.A}
+          disabled={isReadOnly}
         />
       </SectionCard>
 
@@ -276,6 +281,7 @@ const TaskLevelItem = memo(function TaskLevelItem({
           onChange={handleInstructionsChange}
           taskTypeOptions={mockMasterData.instructionTaskTypes}
           errors={sectionFieldErrors.B}
+          disabled={isReadOnly}
         />
       </SectionCard>
 
@@ -299,6 +305,7 @@ const TaskLevelItem = memo(function TaskLevelItem({
             scopeType={scopeType}
             totalStores={totalStores}
             errors={sectionFieldErrors.C}
+            disabled={isReadOnly}
           />
         </SectionCard>
       )}
@@ -838,6 +845,7 @@ export default function AddTaskForm({
           } : undefined}
           isHighestGrade={isHighestGrade}
           isApprovalReadOnly={isCreatorViewingApproval || taskStatus === 'approve'}
+          isReadOnly={isReadOnly}
           regionOptions={apiRegionOptions}
           totalStores={totalStores}
         />
