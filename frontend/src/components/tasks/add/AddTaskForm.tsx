@@ -1,13 +1,11 @@
 'use client';
 
 import { useState, useCallback, useMemo, useEffect, memo, useRef } from 'react';
-import { TaskLevel, TaskInformation, TaskInstructions, TaskScope, TaskApproval, DropdownOption, TaskFrequency, ExecutionTime } from '@/types/addTask';
+import { TaskLevel, TaskInformation, TaskInstructions, TaskScope, TaskApproval, DropdownOption, ExecutionTime } from '@/types/addTask';
 import { mockMasterData, createEmptyTaskLevel } from '@/data/mockAddTask';
 import { useScopeData } from '@/hooks/useScopeData';
 import { useHQHierarchy } from '@/hooks/useHQHierarchy';
 import {
-  TASK_TYPE_ORDER,
-  DEFAULT_TASK_TYPE_BY_LEVEL,
   getTaskTypeOptionsForLevel,
   getExecutionTimeMinutes,
   getDefaultExecutionTimeForChild,
@@ -655,10 +653,8 @@ export default function AddTaskForm({
       return;
     }
 
-    // Task type changed - need to cascade update children if necessary
-    // newTaskType is guaranteed to be non-empty at this point since we're in the "changed" branch
-    const newTaskTypeIndex = TASK_TYPE_ORDER.indexOf(newTaskType as TaskFrequency);
-
+    // Task type changed - cascade update ALL children to inherit parent's task type
+    // Child tasks always have the same Task Type as their parent (field is disabled for children)
     // Find all descendants recursively
     const findAllDescendants = (parentId: string, levels: TaskLevel[]): TaskLevel[] => {
       const children = levels.filter((tl) => tl.parentId === parentId);
@@ -667,31 +663,23 @@ export default function AddTaskForm({
 
     const descendants = findAllDescendants(taskLevelId, currentLevels);
 
-    // Update this task level and cascade update descendants if their task type is now invalid
+    // Update this task level and cascade update ALL descendants to inherit parent's task type
     const updatedLevels = currentLevels.map((tl): TaskLevel => {
       if (tl.id === taskLevelId) {
         return { ...tl, taskInformation };
       }
 
-      // Check if this is a descendant that needs task type update
+      // Check if this is a descendant - if so, inherit parent's task type
       const isDescendant = descendants.some((d) => d.id === tl.id);
       if (isDescendant) {
-        const childTaskTypeIndex = TASK_TYPE_ORDER.indexOf(tl.taskInformation.taskType as TaskFrequency);
-        // If child's task type has larger time span than new parent's, update to default for that level
-        if (childTaskTypeIndex < newTaskTypeIndex) {
-          // Get the appropriate default task type for this level that is valid
-          const validDefaultForLevel = DEFAULT_TASK_TYPE_BY_LEVEL[tl.level] || 'daily';
-          const validDefaultIndex = TASK_TYPE_ORDER.indexOf(validDefaultForLevel);
-          // Use the default if it's valid, otherwise use parent's type
-          const newChildTaskType = (validDefaultIndex >= newTaskTypeIndex ? validDefaultForLevel : newTaskType) as TaskFrequency | '';
-          return {
-            ...tl,
-            taskInformation: {
-              ...tl.taskInformation,
-              taskType: newChildTaskType,
-            },
-          };
-        }
+        // Child tasks always inherit Task Type from parent
+        return {
+          ...tl,
+          taskInformation: {
+            ...tl.taskInformation,
+            taskType: newTaskType,
+          },
+        };
       }
 
       return tl;
