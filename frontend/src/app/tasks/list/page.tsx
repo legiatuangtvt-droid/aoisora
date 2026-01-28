@@ -895,7 +895,16 @@ export default function TaskListPage() {
                 {paginatedTasks.length === 0 ? (
                   <TableEmptyState message="No tasks found" colSpan={8} />
                 ) : (
-                  paginatedTasks.map((task, index) => (
+                  paginatedTasks.map((task, index) => {
+                    // Check if task is in pre-dispatch status (DRAFT, APPROVE, AVAILABLE)
+                    // For these statuses, merge Progress/Unable/Status/HQ Check cells across all sub-tasks
+                    const isPreDispatchStatus = ['DRAFT', 'APPROVE', 'AVAILABLE'].includes(task.status);
+                    const isExpanded = expandedRows === task.id && task.subTasks && task.subTasks.length > 0;
+                    const totalFlatSubTasks = isExpanded ? flattenSubTasks(task.subTasks || []).length : 0;
+                    // Calculate rowSpan: only use rowSpan for pre-dispatch status when expanded
+                    const mergedRowSpan = isPreDispatchStatus && isExpanded ? 1 + totalFlatSubTasks : 1;
+
+                    return (
                     <React.Fragment key={task.id}>
                       {/* Parent Row */}
                       <tr
@@ -954,16 +963,22 @@ export default function TaskListPage() {
                         <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-900 text-center border-r border-gray-200">
                           {task.startDate} → {task.endDate}
                         </td>
-                        <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-900 text-center border-r border-gray-200">
+                        <td
+                          className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-900 text-center border-r border-gray-200"
+                          rowSpan={mergedRowSpan}
+                        >
                           {task.progress.total > 0 ? `${task.progress.completed}/${task.progress.total}` : '-'}
                         </td>
                         <td
                           className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-900 text-center border-r border-gray-200"
-                          rowSpan={expandedRows === task.id && task.subTasks && task.subTasks.length > 0 ? 1 + task.subTasks.length : 1}
+                          rowSpan={mergedRowSpan}
                         >
                           {task.progress.total > 0 ? task.unable : '-'}
                         </td>
-                        <td className="px-4 py-2.5 whitespace-nowrap text-sm border-r border-gray-200">
+                        <td
+                          className="px-4 py-2.5 whitespace-nowrap text-sm border-r border-gray-200"
+                          rowSpan={mergedRowSpan}
+                        >
                           <div className="flex items-center justify-center">
                             <button
                               onClick={(e) => {
@@ -978,7 +993,7 @@ export default function TaskListPage() {
                           </div>
                         </td>
                         {/* HQ Check + Action Menu */}
-                        <td className="px-4 py-2.5 whitespace-nowrap text-sm">
+                        <td className="px-4 py-2.5 whitespace-nowrap text-sm" rowSpan={mergedRowSpan}>
                           <div className="relative flex items-center justify-center">
                             {task.hqCheck ? <StatusPill status={task.hqCheck} /> : <span className="text-gray-400">-</span>}
                             {/* 3-dots Action Menu - positioned with margin from StatusPill */}
@@ -1016,11 +1031,8 @@ export default function TaskListPage() {
                       </tr>
 
                       {/* Sub Tasks (Accordion) - Displays all levels (2-5) with indentation */}
-                      {expandedRows === task.id && task.subTasks && task.subTasks.length > 0 && (() => {
-                        // Check if parent task is in pre-dispatch status (DRAFT, APPROVE, AVAILABLE)
-                        // Sub-tasks of these statuses don't have their own Progress/Status/HQ Check
-                        const isPreDispatchStatus = ['DRAFT', 'APPROVE', 'AVAILABLE'].includes(task.status);
-                        const flatSubTasks = flattenSubTasks(task.subTasks);
+                      {isExpanded && (() => {
+                        const flatSubTasks = flattenSubTasks(task.subTasks || []);
 
                         return (
                           <>
@@ -1051,11 +1063,9 @@ export default function TaskListPage() {
                                   <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 text-center border-r border-gray-200 dark:border-gray-700">
                                     {subTask.startDate} → {subTask.endDate}
                                   </td>
-                                  {isPreDispatchStatus ? (
-                                    // For DRAFT/APPROVE/AVAILABLE: merge Progress, Status, HQ Check into one empty cell
-                                    <td colSpan={3} className="px-4 py-2 border-r border-gray-200 dark:border-gray-700"></td>
-                                  ) : (
-                                    // For dispatched tasks: show individual columns
+                                  {/* For pre-dispatch status: parent row spans these columns, so don't render them here */}
+                                  {/* For dispatched tasks: show individual Progress, Status, HQ Check columns */}
+                                  {!isPreDispatchStatus && (
                                     <>
                                       <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 text-center border-r border-gray-200 dark:border-gray-700">
                                         {subTask.progress && subTask.progress.total > 0 ? `${subTask.progress.completed}/${subTask.progress.total}` : '-'}
@@ -1090,7 +1100,8 @@ export default function TaskListPage() {
                         );
                       })()}
                     </React.Fragment>
-                  ))
+                  );
+                  })
                 )}
               </tbody>
             </table>
