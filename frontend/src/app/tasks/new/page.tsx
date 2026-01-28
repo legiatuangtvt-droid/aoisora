@@ -91,7 +91,6 @@ function AddTaskContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(isEditMode);
   const [error, setError] = useState<string | null>(null);
   const [draftInfo, setDraftInfo] = useState<DraftInfo | null>(null);
@@ -421,31 +420,6 @@ function AddTaskContent() {
     }
   };
 
-  // Handle Delete Draft - Open confirmation dialog
-  const handleDeleteClick = () => {
-    if (!taskId) return;
-    setShowDeleteConfirm(true);
-  };
-
-  // Handle Delete Draft - Confirm and execute
-  const handleDeleteConfirm = async () => {
-    if (!taskId) return;
-
-    setIsDeleting(true);
-
-    try {
-      await deleteTask(taskId);
-      showToast('Draft deleted successfully', 'success');
-      setShowDeleteConfirm(false);
-      router.push(backLink.href);
-    } catch (error: unknown) {
-      console.error('Error deleting draft:', error);
-      showToast(error instanceof Error ? error.message : 'Failed to delete draft', 'error');
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
   // Handle Delete Task Level 1 (entire task) - called from AddTaskForm
   // This is triggered when user clicks "Delete task level 1" in the TaskLevelCard menu
   const handleDeleteTask = async (taskIdToDelete: number | null) => {
@@ -624,21 +598,6 @@ function AddTaskContent() {
               <span>Drafts: {sourceDraftInfo.current_drafts}/{sourceDraftInfo.max_drafts}</span>
             </div>
           )}
-
-          {/* Delete Draft button (edit mode only) */}
-          {isEditMode && canEdit && (
-            <button
-              onClick={handleDeleteClick}
-              disabled={isDeleting || isSubmitting || isSavingDraft}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              aria-label="Delete draft"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-              {isDeleting ? 'Deleting...' : 'Delete Draft'}
-            </button>
-          )}
         </div>
       </nav>
 
@@ -736,19 +695,6 @@ function AddTaskContent() {
         />
       )}
       </div>
-
-      {/* Delete Draft Confirmation Dialog */}
-      <ConfirmationDialog
-        isOpen={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        onConfirm={handleDeleteConfirm}
-        title="Delete Draft"
-        message="Are you sure you want to delete this draft? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
-        variant="danger"
-        isLoading={isDeleting}
-      />
     </div>
   );
 }
