@@ -3,7 +3,7 @@
 > **Module**: WS (Task from HQ)
 > **Screen ID**: SCR_TASK_LIST
 > **Route**: `/tasks/list`
-> **Last Updated**: 2026-01-08
+> **Last Updated**: 2026-01-28
 
 ---
 
@@ -91,6 +91,36 @@
 
 - Click on row navigates to `/tasks/{id}` detail page
 - Expand button click does NOT trigger navigation (stopPropagation)
+
+### 2.6 Task Visibility Rules by Status
+
+Tasks are filtered based on user's relationship to the task:
+
+| Status | Who Can See | Filter Field | Logic |
+|--------|-------------|--------------|-------|
+| **Draft** | Creator only | `created_staff_id` | `task.created_staff_id = current_user.staff_id` |
+| **Approve** | Creator OR Approver | `created_staff_id`, `approver_staff_id` | `task.created_staff_id = current_user.staff_id OR task.approver_staff_id = current_user.staff_id` |
+| **Not Yet** | All users | - | No additional filter |
+| **On Progress** | All users | - | No additional filter |
+| **Done** | All users | - | No additional filter |
+| **Overdue** | All users | - | No additional filter |
+
+**Implementation Notes:**
+
+```typescript
+// Backend applies these filters automatically based on status
+// Frontend just sends status filter, backend handles visibility
+
+// Example query logic in TaskController:
+// 1. If status = DRAFT → WHERE created_staff_id = auth_user
+// 2. If status = APPROVE → WHERE created_staff_id = auth_user OR approver_staff_id = auth_user
+// 3. Other statuses → No visibility filter (standard department/team scope applies)
+```
+
+**Rationale:**
+- **Draft**: Personal work-in-progress, only creator should see their drafts
+- **Approve**: Creator needs to track submission status, Approver needs to review and take action
+- **Other statuses**: Tasks are dispatched and public within the organization
 
 ---
 
@@ -771,3 +801,4 @@ frontend/src/
 | 2026-01-07 | Created useTaskUpdates React hook for WebSocket subscription |
 | 2026-01-07 | Added Live/Offline connection status indicator in Task List header |
 | 2026-01-08 | Split spec into basic and detail files |
+| 2026-01-28 | Added Task Visibility Rules by Status (Section 2.6): Draft=creator, Approve=creator/approver, others=all |

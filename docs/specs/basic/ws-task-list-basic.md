@@ -3,7 +3,7 @@
 > **Module**: WS (Task from HQ)
 > **Screen ID**: SCR_TASK_LIST
 > **Route**: `/tasks/list`
-> **Last Updated**: 2026-01-08
+> **Last Updated**: 2026-01-28
 
 ---
 
@@ -101,6 +101,22 @@ Grid displays data with hierarchical structure (Parent-Child) support.
 | 6 | Unable | Unable to complete | Number of tasks reported unable to complete |
 | 7 | Status | Status | Color pills: Not Yet (red), Done (blue), Draft (green) |
 | 8 | HQ Check | HQ verification | Similar color pills to Status, has funnel icon |
+
+#### B.1 Task Visibility Rules (By Status)
+
+| Status | Visibility Rule | Reason |
+|--------|----------------|--------|
+| **Draft** | Only visible to **Creator** | Drafts are private work-in-progress |
+| **Approve** | Visible to **Creator** AND **Approver** | Creator tracks their submission, Approver reviews it |
+| **Not Yet** | Visible to **All users** | Dispatched tasks are public |
+| **On Progress** | Visible to **All users** | Active tasks are public |
+| **Done** | Visible to **All users** | Completed tasks are public |
+| **Overdue** | Visible to **All users** | Overdue tasks are public |
+
+**Note:**
+- "All users" means users within the same department/team scope
+- Visibility rules apply regardless of "My Tasks" vs "All team" filter
+- Filter only affects owned tasks, visibility rules determine what CAN be seen
 
 ### C. Footer Area (Pagination)
 
