@@ -216,6 +216,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Save user data to localStorage
       if (typeof window !== 'undefined') {
+        // Clear any stale user switcher data from previous sessions
+        // This ensures the new logged-in user is used for all API calls
+        localStorage.removeItem('aoisora_test_user');
+        localStorage.removeItem('optichain_switched_user_id');
+
         localStorage.setItem(
           AUTH_STORAGE_KEY,
           JSON.stringify({ user: authUser })
