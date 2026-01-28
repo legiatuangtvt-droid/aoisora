@@ -133,15 +133,15 @@ function flattenSubTasks(subTasks: SubTask[]): SubTask[] {
 function transformApiTaskToTaskGroup(task: ApiTask, index: number, departments: Department[]): TaskGroup {
   // Try to use department object from API response first (includes fallback from tasks.dept_id)
   let displayDept: Department | undefined;
-  const apiDept = (task as Record<string, unknown>).department as { department_id: number; department_code: string; department_name: string; parent_id: number | null } | null;
+  const apiDept = task.department;
 
   if (apiDept) {
     // If API provides department with parent_id, find parent for display
     if (apiDept.parent_id) {
       const parentDept = departments.find(d => d.department_id === apiDept.parent_id);
-      displayDept = parentDept || apiDept as unknown as Department;
+      displayDept = parentDept || apiDept;
     } else {
-      displayDept = apiDept as unknown as Department;
+      displayDept = apiDept;
     }
   } else {
     // Fallback: look up from departments list using dept_id

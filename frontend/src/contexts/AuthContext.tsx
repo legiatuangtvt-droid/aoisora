@@ -263,6 +263,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setToken(null);
       if (typeof window !== 'undefined') {
         localStorage.removeItem(AUTH_STORAGE_KEY);
+        // Also clear user switcher data to ensure clean state on next login
+        localStorage.removeItem('aoisora_test_user');
+        localStorage.removeItem('optichain_switched_user_id');
       }
       router.push('/auth/signin');
     }

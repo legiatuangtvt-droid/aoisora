@@ -3,11 +3,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/components/ui/Toast';
 import { useSidebar } from '@/contexts/SidebarContext';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 import UserMenu from './UserMenu';
 
 export default function TopBar() {
-  const { currentUser } = useUser();
+  const { user } = useAuth();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [notificationCount] = useState(3);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -104,17 +104,17 @@ export default function TopBar() {
               {/* Avatar */}
               <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
                 <span className="text-gray-600 dark:text-gray-300 font-medium text-sm sm:text-base">
-                  {currentUser.staff_name.charAt(0).toUpperCase()}
+                  {user?.fullName?.charAt(0).toUpperCase() || '?'}
                 </span>
               </div>
 
               {/* Name & Role - Hidden on mobile */}
               <div className="hidden md:block text-left">
                 <p className="text-sm font-medium text-gray-900 dark:text-white">
-                  {currentUser.staff_name}
+                  {user?.fullName || 'Loading...'}
                 </p>
-                <span className={`text-xs px-2 py-0.5 rounded-full ${getRoleBadgeColor(currentUser.job_grade)}`}>
-                  {getRoleLabel(currentUser.job_grade)}
+                <span className={`text-xs px-2 py-0.5 rounded-full ${getRoleBadgeColor(user?.jobGrade || '')}`}>
+                  {getRoleLabel(user?.jobGrade || '')}
                 </span>
               </div>
 

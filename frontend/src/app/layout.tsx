@@ -9,7 +9,6 @@ import { UserProvider } from "@/contexts/UserContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { IdleTimerProvider } from "@/contexts/IdleTimerContext";
 import AuthGuard from "@/components/auth/AuthGuard";
-import DevToolsPanel from "@/components/DevToolsPanel";
 import SessionWarningWrapper from "@/components/SessionWarningWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
@@ -51,7 +50,6 @@ export default function RootLayout({
                         </AuthGuard>
                       </ErrorBoundary>
                       <SessionWarningWrapper />
-                      <DevToolsPanel />
                     </UserProvider>
                   </LanguageProvider>
                 </IdleTimerProvider>
