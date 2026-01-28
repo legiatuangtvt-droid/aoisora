@@ -122,6 +122,77 @@ Tasks are filtered based on user's relationship to the task:
 - **Approve**: Creator needs to track submission status, Approver needs to review and take action
 - **Other statuses**: Tasks are dispatched and public within the organization
 
+### 2.7 Date Filter Logic (Date Picker → Task Visibility)
+
+Tasks are filtered based on whether their date range **intersects** with the date picker's selected range.
+
+#### 2.7.1 Date Intersection Rule
+
+Two date ranges intersect if they have a non-empty overlap:
+- **Task date range**: `[task.start_date, task.end_date]`
+- **Picker date range**: `[picker.from, picker.to]`
+
+**Intersection formula**:
+```
+Task visible if: task.end_date >= picker.from AND task.start_date <= picker.to
+```
+
+If date picker is a single day (e.g., DAY mode), then `picker.from = picker.to`.
+
+#### 2.7.2 Special Handling by Status
+
+| Status | Date Range for Intersection | Rationale |
+|--------|----------------------------|-----------|
+| **DRAFT** | Always visible | Drafts may not have dates set yet |
+| **APPROVE** | Always visible | Pending approvals should always be visible |
+| **OVERDUE** | `[picker.from - 7 days, picker.to]` | Show overdue tasks from the past 7 days to ensure visibility of recent overdue items |
+| **NOT_YET** | `[picker.from, picker.to]` | Normal intersection |
+| **ON_PROGRESS** | `[picker.from, picker.to]` | Normal intersection |
+| **DONE** | `[picker.from, picker.to]` | Normal intersection |
+
+#### 2.7.3 Implementation Example
+
+```
+Scenario: Date picker = January 28, 2026 (single day)
+- picker.from = 2026-01-28
+- picker.to = 2026-01-28
+
+Task A (NOT_YET): start=2026-01-27, end=2026-01-31
+- Check: end(01-31) >= picker.from(01-28) ✓ AND start(01-27) <= picker.to(01-28) ✓
+- Result: VISIBLE ✓
+
+Task B (ON_PROGRESS): start=2026-01-20, end=2026-01-25
+- Check: end(01-25) >= picker.from(01-28) ✗
+- Result: NOT VISIBLE ✗
+
+Task C (OVERDUE): start=2026-01-15, end=2026-01-24
+- Extended range: picker.from - 7 days = 2026-01-21
+- Check: end(01-24) >= extended(01-21) ✓ AND start(01-15) <= picker.to(01-28) ✓
+- Result: VISIBLE ✓ (overdue from 4 days ago)
+
+Task D (OVERDUE): start=2026-01-01, end=2026-01-18
+- Extended range: picker.from - 7 days = 2026-01-21
+- Check: end(01-18) >= extended(01-21) ✗
+- Result: NOT VISIBLE ✗ (overdue more than 7 days ago)
+```
+
+#### 2.7.4 Backend Filter Implementation
+
+The date filter logic is implemented in `TaskController.php`:
+
+```php
+// filter[end_date_from] - picker.from
+// For OVERDUE: use (picker.from - 7 days)
+// For others: use picker.from directly
+
+// filter[start_date_to] - picker.to
+// Same logic for all statuses
+```
+
+**API Parameters**:
+- `filter[end_date_from]`: Tasks with `end_date >= this value` (OVERDUE uses -7 days)
+- `filter[start_date_to]`: Tasks with `start_date <= this value`
+
 ---
 
 ## 3. Filter Modal - Detail
@@ -802,3 +873,4 @@ frontend/src/
 | 2026-01-07 | Added Live/Offline connection status indicator in Task List header |
 | 2026-01-08 | Split spec into basic and detail files |
 | 2026-01-28 | Added Task Visibility Rules by Status (Section 2.6): Draft=creator, Approve=creator/approver, others=all |
+| 2026-01-28 | Added Date Filter Logic (Section 2.7): Intersection rule with special OVERDUE handling (-7 days window) |

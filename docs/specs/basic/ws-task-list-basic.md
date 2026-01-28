@@ -118,6 +118,29 @@ Grid displays data with hierarchical structure (Parent-Child) support.
 - Visibility rules apply regardless of "My Tasks" vs "All team" filter
 - Filter only affects owned tasks, visibility rules determine what CAN be seen
 
+#### B.2 Date Filter Logic (Date Picker)
+
+Tasks are filtered based on whether their date range **intersects** with the date picker's selected range.
+
+| Status | Date Filter Rule | Description |
+|--------|-----------------|-------------|
+| **DRAFT** | Always visible | Drafts may not have dates set |
+| **APPROVE** | Always visible | Pending approvals always shown |
+| **OVERDUE** | Intersection with `[picker.from - 7 days, picker.to]` | Extended 7-day window for recent overdue |
+| **NOT_YET** | Intersection with `[picker.from, picker.to]` | Normal date intersection |
+| **ON_PROGRESS** | Intersection with `[picker.from, picker.to]` | Normal date intersection |
+| **DONE** | Intersection with `[picker.from, picker.to]` | Normal date intersection |
+
+**Intersection Logic:**
+- Task shows if: `task.end_date >= picker.from` AND `task.start_date <= picker.to`
+- For single-day selection (DAY mode): `picker.from = picker.to`
+
+**OVERDUE Special Case:**
+- Uses extended window: `picker.from - 7 days` instead of `picker.from`
+- This ensures recently overdue tasks (within last 7 days) remain visible
+
+See [Detail Spec Section 2.7](ws-task-list-detail.md#27-date-filter-logic-date-picker--task-visibility) for implementation examples.
+
 ### C. Footer Area (Pagination)
 
 | No | Component | Description |

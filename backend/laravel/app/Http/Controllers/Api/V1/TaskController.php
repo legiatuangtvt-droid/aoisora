@@ -126,9 +126,13 @@ class TaskController extends Controller
                 AllowedFilter::exact('source'),
                 AllowedFilter::exact('receiver_type'),
                 AllowedFilter::partial('task_name'),
-                // Date range filters - also include:
-                // 1. Tasks with NULL dates (drafts without dates set)
-                // 2. DRAFT and APPROVE status tasks (always show regardless of date)
+                // Date range filters with special handling:
+                // 1. DRAFT and APPROVE: always show regardless of date
+                // 2. NULL dates: always show (drafts without dates set)
+                // 3. OVERDUE: extend window by 7 days back (picker_start - 7 days to picker_end)
+                // 4. NOT_YET, ON_PROGRESS, DONE: normal window (picker_start to picker_end)
+                //
+                // Intersection logic: Task shows if task.end_date >= picker.start AND task.start_date <= picker.end
                 AllowedFilter::callback('start_date_from', fn ($query, $value) => $query->where(function ($q) use ($value) {
                     $q->where('start_date', '>=', $value)
                       ->orWhereNull('start_date')
@@ -140,9 +144,21 @@ class TaskController extends Controller
                       ->orWhereIn('status_id', [self::DRAFT_STATUS_ID, self::APPROVE_STATUS_ID]);
                 })),
                 AllowedFilter::callback('end_date_from', fn ($query, $value) => $query->where(function ($q) use ($value) {
-                    $q->where('end_date', '>=', $value)
+                    // DRAFT and APPROVE: always show regardless of date
+                    $q->whereIn('status_id', [self::DRAFT_STATUS_ID, self::APPROVE_STATUS_ID])
+                      // NULL end_date: always show
                       ->orWhereNull('end_date')
-                      ->orWhereIn('status_id', [self::DRAFT_STATUS_ID, self::APPROVE_STATUS_ID]);
+                      // OVERDUE: extend window by 7 days back
+                      ->orWhere(function ($sq) use ($value) {
+                          $extendedDate = date('Y-m-d', strtotime($value . ' -7 days'));
+                          $sq->where('status_id', self::OVERDUE_STATUS_ID)
+                             ->where('end_date', '>=', $extendedDate);
+                      })
+                      // NOT_YET, ON_PROGRESS, DONE: normal window
+                      ->orWhere(function ($sq) use ($value) {
+                          $sq->whereNotIn('status_id', [self::DRAFT_STATUS_ID, self::APPROVE_STATUS_ID, self::OVERDUE_STATUS_ID])
+                             ->where('end_date', '>=', $value);
+                      });
                 })),
                 AllowedFilter::callback('end_date_to', fn ($query, $value) => $query->where(function ($q) use ($value) {
                     $q->where('end_date', '<=', $value)
