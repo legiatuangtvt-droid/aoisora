@@ -869,10 +869,11 @@ cd "D:\Project\Aura Web"
 "D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysqldump.exe" -uroot --databases auraorie68aa_aoisora --add-drop-database --add-drop-table --routines --triggers --events > "d:\Project\auraProject\deploy\full_reset.sql"
 
 # Step 2: ⚠️ LOẠI BỎ DEFINER (BẮT BUỘC - Production không có root@localhost)
-powershell -Command "(Get-Content deploy/full_reset.sql) -replace 'DEFINER=.root.@.localhost. ', '' | Set-Content deploy/full_reset.sql -Encoding UTF8"
+# ⚠️ QUAN TRỌNG: Dùng sed, KHÔNG dùng PowerShell (PowerShell làm hỏng UTF-8 encoding)
+sed -i 's/DEFINER=`root`@`localhost` //g' "d:\Project\auraProject\deploy\full_reset.sql"
 
 # Step 3: Verify không còn DEFINER=root@localhost
-grep "DEFINER=\`root\`@\`localhost\`" deploy/full_reset.sql || echo "OK: No root@localhost DEFINER found"
+grep -i "DEFINER=.root" deploy/full_reset.sql || echo "OK: No root@localhost DEFINER found"
 
 # Step 4: Verify số lượng records (optional)
 "D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysql.exe" -uroot auraorie68aa_aoisora -e "SELECT COUNT(*) as stores FROM stores; SELECT COUNT(*) as staff FROM staff; SELECT COUNT(*) as tasks FROM tasks;"
