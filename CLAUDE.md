@@ -1457,26 +1457,30 @@ backend/laravel/  →  public_html/laravel/
 │       → Test các API endpoints đã thay đổi                      │
 │       → Đảm bảo BE hoạt động trước khi deploy FE                │
 │                                                                 │
-│  ☐ 6. DEPLOY FRONTEND (Vercel CLI - Khuyến nghị)                │
+│  ☐ 6. DEPLOY FRONTEND (Vercel CLI - Claude tự chạy)             │
 │       ⚠️ QUAN TRỌNG: Có 2 Vercel projects khác nhau:            │
 │       • "aoisora" → domain aoisora.auraorientalis.vn (DÙNG CÁI NÀY)│
 │       • "frontend" → URL vercel.app riêng (KHÔNG DÙNG)          │
 │                                                                 │
-│       CÁCH 1: Vercel CLI (Khuyến nghị - nhanh hơn)              │
+│       ⚠️ CLAUDE TỰ ĐỘNG CHẠY LỆNH DEPLOY (không cần user chạy)  │
 │       ─────────────────────────────────────────────────────     │
-│       # Bước 1: Login (chỉ cần 1 lần)                           │
-│       cd frontend && npx vercel login                           │
+│       # Bước 1: Login (chỉ cần 1 lần - USER tự chạy trong terminal)│
+│       npx vercel login                                          │
 │       → Mở browser, đăng nhập Vercel                            │
 │                                                                 │
-│       # Bước 2: Link project (chỉ cần 1 lần)                    │
-│       npx vercel link                                           │
-│       → Chọn project "aoisora" (KHÔNG chọn "frontend")          │
+│       # Bước 2: Link + Deploy (CLAUDE TỰ CHẠY từ REPO ROOT)     │
+│       ⚠️ QUAN TRỌNG: Chạy từ thư mục GỐC repo, KHÔNG từ frontend│
+│       ⚠️ Project "aoisora" có Root Directory = "frontend"       │
 │                                                                 │
-│       # Bước 3: Deploy production                               │
+│       cd "d:\Project\auraProject"                               │
+│       rm -rf .vercel                                            │
+│       npx vercel link --project aoisora --yes                   │
 │       npx vercel --prod --yes                                   │
-│       → Build và deploy lên production                          │
 │                                                                 │
-│       CÁCH 2: Vercel Dashboard (Backup)                         │
+│       → Build ~40 giây, deploy lên production                   │
+│       → URL: https://aoisora.auraorientalis.vn                  │
+│                                                                 │
+│       CÁCH 2: Vercel Dashboard (Backup - nếu CLI lỗi)           │
 │       ─────────────────────────────────────────────────────     │
 │       → Vào vercel.com → Project: aoisora                       │
 │       → Tab: Deployments → Click "..." → "Redeploy"             │
