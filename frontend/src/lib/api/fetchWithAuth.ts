@@ -97,24 +97,22 @@ export async function fetchWithAuth(
   // Get current access token
   const accessToken = tokenManager.getAccessToken();
 
-  // Get switched user ID for testing mode (User Switcher)
-  // If no switched user, use current user's id for API calls that need user identity
+  // Get current logged-in user's id from AuthContext storage for API calls that need user identity
+  // Note: DevToolsPanel/User Switcher feature has been removed - always use actual logged-in user
   let effectiveUserId: string | null = null;
   if (typeof window !== 'undefined') {
-    // First priority: switched user (User Switcher feature)
-    effectiveUserId = localStorage.getItem('optichain_switched_user_id');
+    // Clean up any stale switched user from old DevToolsPanel (if exists)
+    localStorage.removeItem('optichain_switched_user_id');
 
-    // Fallback: current logged-in user's id from AuthContext storage
-    if (!effectiveUserId) {
-      const authDataStr = localStorage.getItem('optichain_auth');
-      if (authDataStr) {
-        try {
-          const authData = JSON.parse(authDataStr);
-          // AuthContext stores { user: AuthUser } where AuthUser.id is the staff_id
-          effectiveUserId = authData.user?.id?.toString() || null;
-        } catch {
-          // Ignore parse errors
-        }
+    // Get current logged-in user's id from AuthContext storage
+    const authDataStr = localStorage.getItem('optichain_auth');
+    if (authDataStr) {
+      try {
+        const authData = JSON.parse(authDataStr);
+        // AuthContext stores { user: AuthUser } where AuthUser.id is the staff_id
+        effectiveUserId = authData.user?.id?.toString() || null;
+      } catch {
+        // Ignore parse errors
       }
     }
   }
