@@ -131,16 +131,26 @@ function flattenSubTasks(subTasks: SubTask[]): SubTask[] {
 
 // Transform API Task to UI TaskGroup format
 function transformApiTaskToTaskGroup(task: ApiTask, index: number, departments: Department[]): TaskGroup {
-  // Find the department from task.dept_id (creator's department)
-  const dept = departments.find(d => d.department_id === task.dept_id);
+  // Try to use department object from API response first (includes fallback from tasks.dept_id)
+  let displayDept: Department | undefined;
+  const apiDept = (task as Record<string, unknown>).department as { department_id: number; department_code: string; department_name: string; parent_id: number | null } | null;
 
-  // If department has a parent_id, find the parent (division) and use its code
-  // This ensures we display the division (OP, Admin) instead of child department (PERI, GRO)
-  let displayDept = dept;
-  if (dept?.parent_id) {
-    const parentDept = departments.find(d => d.department_id === dept.parent_id);
-    if (parentDept) {
-      displayDept = parentDept;
+  if (apiDept) {
+    // If API provides department with parent_id, find parent for display
+    if (apiDept.parent_id) {
+      const parentDept = departments.find(d => d.department_id === apiDept.parent_id);
+      displayDept = parentDept || apiDept as unknown as Department;
+    } else {
+      displayDept = apiDept as unknown as Department;
+    }
+  } else {
+    // Fallback: look up from departments list using dept_id
+    const dept = departments.find(d => d.department_id === task.dept_id);
+    if (dept?.parent_id) {
+      const parentDept = departments.find(d => d.department_id === dept.parent_id);
+      displayDept = parentDept || dept;
+    } else {
+      displayDept = dept;
     }
   }
 
@@ -249,7 +259,7 @@ export default function TaskListPage() {
   const [expandedRows, setExpandedRows] = useState<string | null>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filters, setFilters] = useState<TaskFilters>({
-    viewScope: 'All team',
+    viewScope: 'My Tasks',  // Default to My Tasks - show only current user's tasks
     departments: [],
     status: [],
     hqCheck: [],
@@ -790,11 +800,11 @@ export default function TaskListPage() {
                       : sourceDraftInfo.remaining_drafts <= 2
                       ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
                       : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
-                  }`} title={`Drafts: ${sourceDraftInfo.current_drafts}/${sourceDraftInfo.max_drafts}`}>
+                  }`} title={`Drafts & Approve: ${sourceDraftInfo.current_drafts}/${sourceDraftInfo.max_drafts}`}>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    <span>Drafts: {sourceDraftInfo.current_drafts}/{sourceDraftInfo.max_drafts}</span>
+                    <span>Drafts & Approve: {sourceDraftInfo.current_drafts}/{sourceDraftInfo.max_drafts}</span>
                   </div>
                 )}
 
