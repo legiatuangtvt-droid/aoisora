@@ -435,11 +435,9 @@ class TaskController extends Controller
 
         // Prepare task data (exclude fields that are not DB columns)
         // - sub_tasks: handled separately for recursive creation
-        // - frequency_type: for validation only, not a DB column
-        // - scope_*: stored in task_store_assignments table, not tasks table
+        // - scope_*: stored in cache for later use when creating store assignments
         $taskData = $request->except([
             'sub_tasks',
-            'frequency_type',
             'scope_region_id',
             'scope_zone_id',
             'scope_area_id',
@@ -521,8 +519,6 @@ class TaskController extends Controller
             // Extract nested sub_tasks before creating
             $nestedSubTasks = $subTaskData['sub_tasks'] ?? [];
             unset($subTaskData['sub_tasks']);
-            // Remove frequency_type from data before saving (not a DB column)
-            unset($subTaskData['frequency_type']);
 
             // Create sub-task
             $subTask = Task::create(array_merge($subTaskData, [
@@ -591,12 +587,10 @@ class TaskController extends Controller
         }
 
         // Exclude fields that are not DB columns:
-        // - sub_tasks: handled separately for recursive creation
-        // - frequency_type: for validation only, not a DB column
+        // - sub_tasks: handled separately for recursive update
         // - scope_*: stored in cache, not in tasks table
         $updateData = $request->except([
             'sub_tasks',
-            'frequency_type',
             'scope_region_id',
             'scope_zone_id',
             'scope_area_id',

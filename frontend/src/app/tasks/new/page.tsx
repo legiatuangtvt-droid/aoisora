@@ -57,8 +57,22 @@ const convertTaskToTaskLevels = (task: Task, parentId: string | null = null): Ta
   const apiStartDate = task.start_date;
   const finalStartDate = apiStartDate && apiStartDate.trim() !== '' ? apiStartDate : today;
 
+  // A. Information fields
   taskLevel.taskInformation.applicablePeriod.startDate = finalStartDate;
   taskLevel.taskInformation.applicablePeriod.endDate = task.end_date || '';
+  taskLevel.taskInformation.taskType = (task.frequency_type as import('@/types/addTask').TaskFrequency) || '';
+  taskLevel.taskInformation.executionTime = (task.execution_time as import('@/types/addTask').ExecutionTime) || '';
+
+  // B. Instructions fields
+  taskLevel.instructions.taskType = (task.task_instruction_type as import('@/types/addTask').InstructionTaskType) || '';
+  taskLevel.instructions.manualLink = task.manual_link || '';
+  // Convert photo_guidelines from string[] to PhotoGuideline[]
+  if (task.photo_guidelines && Array.isArray(task.photo_guidelines)) {
+    taskLevel.instructions.photoGuidelines = task.photo_guidelines.map((url, index) => ({
+      id: `photo-${index}-${Date.now()}`,
+      url: url,
+    }));
+  }
 
   // Start with current task level
   const levels: TaskLevel[] = [taskLevel];
@@ -230,6 +244,15 @@ function AddTaskContent() {
       end_date: child.taskInformation.applicablePeriod.endDate || undefined,
       // Task frequency type for validation (yearly, quarterly, monthly, weekly, daily)
       frequency_type: child.taskInformation.taskType || undefined,
+      // Execution time (30min, 1hour, 2hours, etc.)
+      execution_time: child.taskInformation.executionTime || undefined,
+      // B. Instructions fields
+      task_instruction_type: child.instructions.taskType || undefined,
+      manual_link: child.instructions.manualLink || undefined,
+      // Photo guidelines - save only URLs (filter out uploading items)
+      photo_guidelines: child.instructions.photoGuidelines
+        .filter(p => p.url && !p.uploading)
+        .map(p => p.url),
       task_level: child.level,
       status_id: statusId,
       priority: 'normal' as const,
@@ -294,6 +317,15 @@ function AddTaskContent() {
         end_date: rootTask.taskInformation.applicablePeriod.endDate || undefined,
         // Task frequency type for validation (yearly, quarterly, monthly, weekly, daily)
         frequency_type: rootTask.taskInformation.taskType || undefined,
+        // Execution time (30min, 1hour, 2hours, etc.)
+        execution_time: rootTask.taskInformation.executionTime || undefined,
+        // B. Instructions fields
+        task_instruction_type: rootTask.instructions.taskType || undefined,
+        manual_link: rootTask.instructions.manualLink || undefined,
+        // Photo guidelines - save only URLs (filter out uploading items)
+        photo_guidelines: rootTask.instructions.photoGuidelines
+          .filter(p => p.url && !p.uploading)
+          .map(p => p.url),
         task_level: 1,
         sub_tasks: subTasks, // Always send, even if empty - backend will sync
         ...scopeDataForDraft, // Include scope data
@@ -379,6 +411,15 @@ function AddTaskContent() {
         end_date: rootTask.taskInformation.applicablePeriod.endDate || undefined,
         // Task frequency type for validation (yearly, quarterly, monthly, weekly, daily)
         frequency_type: rootTask.taskInformation.taskType || undefined,
+        // Execution time (30min, 1hour, 2hours, etc.)
+        execution_time: rootTask.taskInformation.executionTime || undefined,
+        // B. Instructions fields
+        task_instruction_type: rootTask.instructions.taskType || undefined,
+        manual_link: rootTask.instructions.manualLink || undefined,
+        // Photo guidelines - save only URLs (filter out uploading items)
+        photo_guidelines: rootTask.instructions.photoGuidelines
+          .filter(p => p.url && !p.uploading)
+          .map(p => p.url),
         task_level: 1,
         sub_tasks: subTasks, // Always send, even if empty - backend will sync
         ...scopeData, // Include scope data

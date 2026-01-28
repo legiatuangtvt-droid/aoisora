@@ -24,11 +24,13 @@ class Task extends Model
         // Basic task info
         'task_name',
         'task_description',
+        // A. Information section
+        'frequency_type',  // yearly, quarterly, monthly, weekly, daily
+        'execution_time',  // 30min, 1hour, 2hours, etc.
         // B. Instructions section
         'task_instruction_type',
         'manual_link',
         'photo_guidelines',
-        'execution_time',
         'manual_id',
         'task_type_id',
         'response_type_id',

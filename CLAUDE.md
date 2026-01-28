@@ -5136,9 +5136,9 @@ Request → Controller → Service → Model → Resource → Response
 | 1.13 | Creator | Kiểm tra **D. Approval Process** | Initiator = "PERI Staff 1 / G3", Approver = "PERI Senior 1 / Senior Staff" | ✅ |
 | 1.14 | Creator | Click button **Save as Draft** | Toast "Draft saved", quay về Task List | ✅ |
 | 1.15 | Creator | Tại Task List, tìm task vừa tạo | Task hiển thị với status = "Draft" (gray badge) | ✅ |
-| 1.16 | Creator | Click vào task → vào trang Edit Draft | Trang Add Task mở với data đã nhập trước đó | ⏳ |
-| 1.17 | Creator | Click button **Submit** | Toast "Task submitted", status chuyển thành "Approve" | ⏳ |
-| 1.18 | Creator | Quay về Task List, tìm task | Status = "Approve" (yellow/pink badge) | ⏳ |
+| 1.16 | Creator | Click vào task → vào trang Edit Draft | Trang Add Task mở với data đã nhập trước đó | ✅ |
+| 1.17 | Creator | Click button **Submit** | Toast "Task submitted", status chuyển thành "Approve" | ✅ |
+| 1.18 | Creator | Quay về Task List, tìm task | Status = "Approve" (yellow/pink badge) | ✅ |
 | 1.19 | Creator | **Logout** | Quay về trang Login | ⏳ |
 | 1.20 | Approver | Login với `peri.senior1` / `password` | Đăng nhập thành công | ⏳ |
 | 1.21 | Approver | Click menu **Approval** ở sidebar | Hiển thị danh sách pending approvals | ⏳ |

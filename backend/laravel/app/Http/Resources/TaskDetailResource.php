@@ -36,6 +36,8 @@ class TaskDetailResource extends JsonResource
             'receiver_type' => $this->receiver_type,
 
             // A. Information section
+            'frequency_type' => $this->frequency_type,  // yearly, quarterly, monthly, weekly, daily
+            'execution_time' => $this->execution_time,  // 30min, 1hour, 2hours, etc.
             'task_type_id' => $this->task_type_id,
             'taskType' => $this->whenLoaded('taskType', function () {
                 return [

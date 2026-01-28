@@ -161,6 +161,13 @@ export interface Task {
   // Basic info
   task_name: string;
   task_description: string | null;
+  // A. Information fields
+  frequency_type?: string | null;  // yearly, quarterly, monthly, weekly, daily
+  execution_time?: string | null;  // 30min, 1hour, 2hours, etc.
+  // B. Instructions fields
+  task_instruction_type?: 'image' | 'document' | null;
+  manual_link?: string | null;
+  photo_guidelines?: string[] | null;  // Array of URLs
   manual_id: number | null;
   task_type_id: number | null;
   response_type_id: number | null;

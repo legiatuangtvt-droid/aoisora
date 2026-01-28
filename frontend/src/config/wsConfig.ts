@@ -194,19 +194,19 @@ export const TASK_VALIDATION_RULES = {
     },
   },
 
-  // Execution Time
+  // RE Time (Execution Time)
   executionTime: {
     required: true,
-    // Sum of immediate children's execution time cannot exceed parent's
+    // Sum of immediate children's RE time cannot exceed parent's
     childrenSumCannotExceedParent: true,
     // Auto-calculate based on level and parent constraints (read-only in UI)
     autoCalculate: true,
     errorMessages: {
-      required: 'Execution time is required',
+      required: 'RE Time is required',
       childrenExceedParent: (childrenTotal: number, parentTotal: number) =>
-        `Total execution time of child tasks (${childrenTotal} min) exceeds parent's execution time (${parentTotal} min)`,
+        `Total RE Time of child tasks (${childrenTotal} min) exceeds parent's RE Time (${parentTotal} min)`,
       noRemainingTime: (parentMinutes: number) =>
-        `Cannot add sub-task: Parent's execution time (${parentMinutes} min) is fully allocated to existing child tasks.`,
+        `Cannot add sub-task: Parent's RE Time (${parentMinutes} min) is fully allocated to existing child tasks.`,
     },
   },
 

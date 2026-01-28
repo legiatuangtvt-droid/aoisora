@@ -171,10 +171,10 @@ export default function TaskInfoSection({
         )}
       </div>
 
-      {/* 3. Execution Time */}
+      {/* 3. RE Time */}
       <div>
         <label htmlFor="executionTime" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          3. Execution Time <span className="text-red-500">*</span>
+          3. RE Time <span className="text-red-500">*</span>
         </label>
         <select
           id="executionTime"
