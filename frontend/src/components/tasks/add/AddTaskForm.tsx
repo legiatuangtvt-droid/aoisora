@@ -41,7 +41,7 @@ function getFieldErrorsForSection(
     return acc;
   }, {} as Record<string, string>);
 }
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { getApproverForStaff, ApproverInfo } from '@/lib/api';
 
 export interface RejectionInfo {
@@ -365,8 +365,18 @@ export default function AddTaskForm({
   onDeleteTask,
   isDeleting = false,
 }: AddTaskFormProps) {
-  // Get current user from context
-  const { currentUser } = useUser();
+  // Get current logged-in user from AuthContext (not UserContext which was for test switcher)
+  const { user: authUser } = useAuth();
+
+  // Map AuthUser to the format expected by child components
+  const currentUser = authUser ? {
+    staff_id: authUser.id,
+    staff_name: authUser.fullName,
+    job_grade: authUser.jobGrade || 'G3',
+    position: authUser.position,
+    department_id: authUser.departmentId,
+    department_name: authUser.departmentName,
+  } : null;
 
   // Get scope data from API
   // Store hierarchy data (for task_list source)

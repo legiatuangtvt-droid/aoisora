@@ -433,14 +433,35 @@ class TaskController extends Controller
             }
         }
 
-        // Prepare task data (exclude sub_tasks and frequency_type from direct creation)
-        // frequency_type is for validation only, not a DB column
-        $taskData = $request->except(['sub_tasks', 'frequency_type']);
+        // Prepare task data (exclude fields that are not DB columns)
+        // - sub_tasks: handled separately for recursive creation
+        // - frequency_type: for validation only, not a DB column
+        // - scope_*: stored in task_store_assignments table, not tasks table
+        $taskData = $request->except([
+            'sub_tasks',
+            'frequency_type',
+            'scope_region_id',
+            'scope_zone_id',
+            'scope_area_id',
+            'scope_store_ids',
+        ]);
         $taskData['created_staff_id'] = $user->staff_id;
         $taskData['source'] = $source;
         $taskData['task_level'] = $request->input('task_level', 1);
 
+        // Store scope data for later use when creating store assignments (after approval)
+        $scopeData = [
+            'scope_region_id' => $request->input('scope_region_id'),
+            'scope_zone_id' => $request->input('scope_zone_id'),
+            'scope_area_id' => $request->input('scope_area_id'),
+            'scope_store_ids' => $request->input('scope_store_ids'),
+        ];
+
         $task = Task::create($taskData);
+
+        // Store scope data in session/cache for later retrieval when approving
+        // Key format: task_scope_{task_id}
+        \Cache::put("task_scope_{$task->task_id}", $scopeData, now()->addDays(30));
 
         // Create nested sub-tasks recursively if provided
         $subTasks = $request->input('sub_tasks', []);
@@ -569,8 +590,31 @@ class TaskController extends Controller
             }
         }
 
-        // Exclude sub_tasks and frequency_type from update data (frequency_type is for validation only, not a DB column)
-        $updateData = $request->except(['sub_tasks', 'frequency_type']);
+        // Exclude fields that are not DB columns:
+        // - sub_tasks: handled separately for recursive creation
+        // - frequency_type: for validation only, not a DB column
+        // - scope_*: stored in cache, not in tasks table
+        $updateData = $request->except([
+            'sub_tasks',
+            'frequency_type',
+            'scope_region_id',
+            'scope_zone_id',
+            'scope_area_id',
+            'scope_store_ids',
+        ]);
+
+        // Update scope data in cache if provided
+        $hasScopeUpdate = $request->has('scope_region_id') || $request->has('scope_zone_id')
+            || $request->has('scope_area_id') || $request->has('scope_store_ids');
+        if ($hasScopeUpdate) {
+            $scopeData = [
+                'scope_region_id' => $request->input('scope_region_id'),
+                'scope_zone_id' => $request->input('scope_zone_id'),
+                'scope_area_id' => $request->input('scope_area_id'),
+                'scope_store_ids' => $request->input('scope_store_ids'),
+            ];
+            \Cache::put("task_scope_{$task->task_id}", $scopeData, now()->addDays(30));
+        }
 
         // Validate frequency_type and date range correlation (skip for library source)
         if ($source !== Task::SOURCE_LIBRARY) {
@@ -1090,6 +1134,9 @@ class TaskController extends Controller
     /**
      * Create store assignments for an approved task based on scope data
      *
+     * Scope data is stored in cache (key: task_scope_{task_id}) when task is created,
+     * because the tasks table doesn't have scope columns.
+     *
      * Scope priority:
      * 1. scope_store_ids (specific stores) - use those stores
      * 2. scope_area_id - all stores in that area
@@ -1103,23 +1150,30 @@ class TaskController extends Controller
      */
     private function createStoreAssignmentsForTask(Task $task, int $assignedBy): int
     {
+        // Get scope data from cache (stored when task was created)
+        $scopeData = \Cache::get("task_scope_{$task->task_id}", []);
+        $scopeStoreIds = $scopeData['scope_store_ids'] ?? null;
+        $scopeAreaId = $scopeData['scope_area_id'] ?? null;
+        $scopeZoneId = $scopeData['scope_zone_id'] ?? null;
+        $scopeRegionId = $scopeData['scope_region_id'] ?? null;
+
         $storeIds = [];
 
         // Priority 1: Specific stores selected
-        if (!empty($task->scope_store_ids) && is_array($task->scope_store_ids)) {
-            $storeIds = $task->scope_store_ids;
+        if (!empty($scopeStoreIds) && is_array($scopeStoreIds)) {
+            $storeIds = $scopeStoreIds;
         }
         // Priority 2: All stores in a specific area
-        elseif ($task->scope_area_id) {
-            $storeIds = Store::where('area_id', $task->scope_area_id)
+        elseif ($scopeAreaId) {
+            $storeIds = Store::where('area_id', $scopeAreaId)
                 ->where('status', 'active')
                 ->pluck('store_id')
                 ->toArray();
         }
         // Priority 3: All stores in areas of a specific zone
-        elseif ($task->scope_zone_id) {
+        elseif ($scopeZoneId) {
             // Get all areas in this zone, then get stores in those areas
-            $areaIds = \App\Models\Area::where('zone_id', $task->scope_zone_id)
+            $areaIds = \App\Models\Area::where('zone_id', $scopeZoneId)
                 ->pluck('area_id')
                 ->toArray();
             $storeIds = Store::whereIn('area_id', $areaIds)
@@ -1128,8 +1182,8 @@ class TaskController extends Controller
                 ->toArray();
         }
         // Priority 4: All stores in a specific region
-        elseif ($task->scope_region_id) {
-            $storeIds = Store::where('region_id', $task->scope_region_id)
+        elseif ($scopeRegionId) {
+            $storeIds = Store::where('region_id', $scopeRegionId)
                 ->where('status', 'active')
                 ->pluck('store_id')
                 ->toArray();
@@ -1140,6 +1194,9 @@ class TaskController extends Controller
                 ->pluck('store_id')
                 ->toArray();
         }
+
+        // Clean up cache after use
+        \Cache::forget("task_scope_{$task->task_id}");
 
         // Create TaskStoreAssignment for each store
         $now = Carbon::now();

@@ -5124,18 +5124,18 @@ Request → Controller → Service → Model → Resource → Response
 | 1.1 | - | Mở browser, vào `http://localhost:3000` | Hiển thị trang Login | ✅ |
 | 1.2 | Creator | Login với `peri.staff1` / `password` | Đăng nhập thành công, redirect đến Task List | ✅ |
 | 1.3 | Creator | Default screen = Task List (không cần click sidebar) | Hiển thị danh sách tasks (Dept column: OP, ADMIN, ...) | ✅ |
-| 1.4 | Creator | Click button **Add New** (góc trên phải) | Chuyển đến trang Add Task (`/tasks/new`) | ⏳ |
-| 1.5 | Creator | Nhập **Task Name**: "Test Flow 1 - Kiểm kê hàng Q1" | Tên task hiển thị trong input | ⏳ |
-| 1.6 | Creator | Tại **A. Information**: chọn Task Type = "Monthly" | Dropdown hiển thị "Monthly" | ⏳ |
-| 1.7 | Creator | Chọn Start Date = ngày mai, End Date = 7 ngày sau | Date pickers hiển thị đúng ngày | ⏳ |
-| 1.8 | Creator | Nhập Execution Time = 2 (hours) | Input hiển thị "2" | ⏳ |
-| 1.9 | Creator | Tại **B. Instructions**: chọn Task Type = "Document" | Radio "Document" được chọn | ⏳ |
-| 1.10 | Creator | Nhập Manual Link = `https://example.com/manual` | URL hiển thị trong input | ⏳ |
-| 1.11 | Creator | Nhập Note = "Kiểm kê toàn bộ kho hàng tầng 1" | Note hiển thị trong textarea | ⏳ |
-| 1.12 | Creator | Tại **C. Scope**: chọn Region → Zone → Area → chọn 2-3 Stores | Stores được chọn, hiển thị chips | ⏳ |
-| 1.13 | Creator | Kiểm tra **D. Approval Process** | Tự động hiển thị Approver = "PERI Senior 1" | ⏳ |
-| 1.14 | Creator | Click button **Save as Draft** | Toast "Draft saved", quay về Task List | ⏳ |
-| 1.15 | Creator | Tại Task List, tìm task vừa tạo | Task hiển thị với status = "Draft" (gray badge) | ⏳ |
+| 1.4 | Creator | Click button **Add New** (góc trên phải) | Chuyển đến trang Add Task (`/tasks/new`) | ✅ |
+| 1.5 | Creator | Nhập **Task Name**: "Test Flow 1 - Kiểm kê hàng Q1" | Tên task hiển thị trong input | ✅ |
+| 1.6 | Creator | Tại **A. Information**: chọn Task Type = "Monthly" | Dropdown hiển thị "Monthly" | ✅ |
+| 1.7 | Creator | Chọn Start Date = ngày mai, End Date = 7 ngày sau | Date pickers hiển thị đúng ngày | ✅ |
+| 1.8 | Creator | Nhập Execution Time = 2 (hours) | Input hiển thị "2" | ✅ |
+| 1.9 | Creator | Tại **B. Instructions**: chọn Task Type = "Document" | Radio "Document" được chọn | ✅ |
+| 1.10 | Creator | Nhập Manual Link = `https://example.com/manual` | URL hiển thị trong input | ✅ |
+| 1.11 | Creator | Nhập Note = "Kiểm kê toàn bộ kho hàng tầng 1" | Note hiển thị trong textarea | ✅ |
+| 1.12 | Creator | Tại **C. Scope**: chọn All Region (hoặc 1 store cụ thể) | Hiển thị "460/460 Stores" (tất cả stores) | ✅ |
+| 1.13 | Creator | Kiểm tra **D. Approval Process** | Initiator = "PERI Staff 1 / G3", Approver = "PERI Senior 1 / Senior Staff" | ✅ |
+| 1.14 | Creator | Click button **Save as Draft** | Toast "Draft saved", quay về Task List | ✅ |
+| 1.15 | Creator | Tại Task List, tìm task vừa tạo | Task hiển thị với status = "Draft" (gray badge) | ✅ |
 | 1.16 | Creator | Click vào task → vào trang Edit Draft | Trang Add Task mở với data đã nhập trước đó | ⏳ |
 | 1.17 | Creator | Click button **Submit** | Toast "Task submitted", status chuyển thành "Approve" | ⏳ |
 | 1.18 | Creator | Quay về Task List, tìm task | Status = "Approve" (yellow/pink badge) | ⏳ |

@@ -52,8 +52,8 @@ export default function ApprovalSection({
   if (currentUser || autoApprover || isHighestGrade) {
     return (
       <div className="space-y-4">
-        {/* Approval Flow Info */}
-        {isHighestGrade ? (
+        {/* Auto-Approval Info - Only show for G9 */}
+        {isHighestGrade && (
           <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
             <div className="flex items-start gap-3">
               <svg className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -62,18 +62,6 @@ export default function ApprovalSection({
               <div className="text-sm text-green-700 dark:text-green-300">
                 <p className="font-medium mb-1">Auto-Approval</p>
                 <p>As G9 (highest grade), your tasks will be automatically approved upon submission.</p>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-            <div className="flex items-start gap-3">
-              <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <div className="text-sm text-blue-700 dark:text-blue-300">
-                <p className="font-medium mb-1">Approval Process</p>
-                <p>When you submit this task, it will be sent to your direct supervisor for approval.</p>
               </div>
             </div>
           </div>
@@ -145,13 +133,6 @@ export default function ApprovalSection({
           )}
         </div>
 
-        {/* Note about approval */}
-        <div className="text-xs text-gray-500 dark:text-gray-400 italic">
-          {isHighestGrade
-            ? '* As the highest grade in the system, your tasks do not require approval from others.'
-            : '* The approver is automatically determined based on your organizational hierarchy.'
-          }
-        </div>
       </div>
     );
   }
