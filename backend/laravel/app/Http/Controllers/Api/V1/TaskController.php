@@ -46,8 +46,20 @@ class TaskController extends Controller
     {
         $query = Task::query();
 
-        // Apply job grade permission filter
-        $query = $this->applyJobGradeFilter($query, $request);
+        // Get effective user for permission filtering
+        $effectiveUser = $this->getEffectiveUser($request);
+        $effectiveStaffId = $effectiveUser ? $effectiveUser->staff_id : null;
+
+        // Get permission service to check user type
+        $permissionService = app(\App\Services\JobGradePermissionService::class);
+        $isHQUser = $effectiveUser && $permissionService->isHQGrade($effectiveUser->job_grade ?? '');
+
+        // Apply job grade permission filter ONLY for Store users (S1-S7)
+        // HQ users (G2-G9) should see ALL tasks (filtered by DRAFT/APPROVE ownership below)
+        if ($effectiveUser && !$isHQUser) {
+            // Store user: apply store-based filtering
+            $query = $this->applyJobGradeFilter($query, $request);
+        }
 
         // Only get parent tasks (level 1) - sub-tasks will be nested
         $query->where(function ($q) {
@@ -55,20 +67,16 @@ class TaskController extends Controller
               ->orWhere('task_level', 1);
         });
 
-        // Get effective user for DRAFT filtering
-        $effectiveUser = $this->getEffectiveUser($request);
-        $effectiveStaffId = $effectiveUser ? $effectiveUser->staff_id : null;
-
-        // Store users (S1-S6) should NOT see DRAFT or APPROVE tasks
-        // These tasks have no store assigned yet and Store users can't take action on them
-        $permissionService = app(\App\Services\JobGradePermissionService::class);
-        if ($effectiveUser && !$permissionService->isHQGrade($effectiveUser->job_grade ?? '')) {
+        // Apply visibility rules based on user type
+        if ($effectiveUser && !$isHQUser) {
             // Store user: exclude DRAFT and APPROVE status tasks
+            // These tasks have no store assigned yet and Store users can't take action on them
             $query->whereNotIn('status_id', [self::DRAFT_STATUS_ID, self::APPROVE_STATUS_ID]);
         } else {
             // HQ user: apply DRAFT and APPROVE ownership filter
             // - DRAFT tasks: Only show to their creator
             // - APPROVE tasks: Only show to creator OR approver
+            // - Other statuses (NOT_YET, ON_PROGRESS, DONE, OVERDUE): Visible to ALL HQ users
             if ($effectiveStaffId) {
                 $query->where(function ($q) use ($effectiveStaffId) {
                     // Show tasks that are NOT DRAFT and NOT APPROVE (other statuses visible to all HQ)
