@@ -1016,64 +1016,79 @@ export default function TaskListPage() {
                       </tr>
 
                       {/* Sub Tasks (Accordion) - Displays all levels (2-5) with indentation */}
-                      {expandedRows === task.id && task.subTasks && task.subTasks.length > 0 && (
-                        <>
-                          {flattenSubTasks(task.subTasks).map((subTask, subIndex) => {
-                            // Calculate indentation based on level (level 2 = 8px, level 3 = 16px, etc.)
-                            const indentPx = (subTask.level || 2) * 8;
+                      {expandedRows === task.id && task.subTasks && task.subTasks.length > 0 && (() => {
+                        // Check if parent task is in pre-dispatch status (DRAFT, APPROVE, AVAILABLE)
+                        // Sub-tasks of these statuses don't have their own Progress/Status/HQ Check
+                        const isPreDispatchStatus = ['DRAFT', 'APPROVE', 'AVAILABLE'].includes(task.status);
+                        const flatSubTasks = flattenSubTasks(task.subTasks);
 
-                            return (
-                              <tr
-                                key={subTask.id}
-                                className="bg-gray-50 dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 animate-fade-in-down"
-                                style={{ animationDelay: `${subIndex * 50}ms`, animationFillMode: 'both' }}
-                              >
-                                <td className="px-4 py-2 text-center border-r border-gray-200"></td>
-                                <td className="px-4 py-2 border-r border-gray-200"></td>
-                                <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200">
-                                  <div style={{ paddingLeft: `${indentPx}px` }}>
-                                    <span>
-                                      {subTask.name}
-                                      {subTask.assignee && (
-                                        <span className="ml-2 text-gray-500 dark:text-gray-400 text-xs">
-                                          ({subTask.assignee})
-                                        </span>
-                                      )}
-                                    </span>
-                                  </div>
-                                </td>
-                                <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 text-center border-r border-gray-200">
-                                  {subTask.startDate} → {subTask.endDate}
-                                </td>
-                                <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 text-center border-r border-gray-200">
-                                  {subTask.progress && subTask.progress.total > 0 ? `${subTask.progress.completed}/${subTask.progress.total}` : '-'}
-                                </td>
-                                <td className="px-4 py-2 border-r border-gray-200">
-                                  <div className="flex items-center justify-center">
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleViewApprovalHistory(subTask.id);
-                                      }}
-                                      className="cursor-pointer hover:opacity-80 transition-opacity"
-                                      title="View approval history"
-                                    >
-                                      <StatusPill status={subTask.status} />
-                                    </button>
-                                  </div>
-                                </td>
-                                <td className="px-4 py-2">
-                                  {subTask.hqCheck && (
-                                    <div className="flex items-center justify-center">
-                                      <StatusPill status={subTask.hqCheck} />
+                        return (
+                          <>
+                            {flatSubTasks.map((subTask, subIndex) => {
+                              // Calculate indentation based on level (level 2 = 8px, level 3 = 16px, etc.)
+                              const indentPx = (subTask.level || 2) * 8;
+
+                              return (
+                                <tr
+                                  key={subTask.id}
+                                  className="bg-gray-50 dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 animate-fade-in-down"
+                                  style={{ animationDelay: `${subIndex * 50}ms`, animationFillMode: 'both' }}
+                                >
+                                  <td className="px-4 py-2 text-center border-r border-gray-200 dark:border-gray-700"></td>
+                                  <td className="px-4 py-2 border-r border-gray-200 dark:border-gray-700"></td>
+                                  <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700">
+                                    <div style={{ paddingLeft: `${indentPx}px` }}>
+                                      <span>
+                                        {subTask.name}
+                                        {subTask.assignee && (
+                                          <span className="ml-2 text-gray-500 dark:text-gray-400 text-xs">
+                                            ({subTask.assignee})
+                                          </span>
+                                        )}
+                                      </span>
                                     </div>
+                                  </td>
+                                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 text-center border-r border-gray-200 dark:border-gray-700">
+                                    {subTask.startDate} → {subTask.endDate}
+                                  </td>
+                                  {isPreDispatchStatus ? (
+                                    // For DRAFT/APPROVE/AVAILABLE: merge Progress, Status, HQ Check into one empty cell
+                                    <td colSpan={3} className="px-4 py-2 border-r border-gray-200 dark:border-gray-700"></td>
+                                  ) : (
+                                    // For dispatched tasks: show individual columns
+                                    <>
+                                      <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 text-center border-r border-gray-200 dark:border-gray-700">
+                                        {subTask.progress && subTask.progress.total > 0 ? `${subTask.progress.completed}/${subTask.progress.total}` : '-'}
+                                      </td>
+                                      <td className="px-4 py-2 border-r border-gray-200 dark:border-gray-700">
+                                        <div className="flex items-center justify-center">
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleViewApprovalHistory(subTask.id);
+                                            }}
+                                            className="cursor-pointer hover:opacity-80 transition-opacity"
+                                            title="View approval history"
+                                          >
+                                            <StatusPill status={subTask.status} />
+                                          </button>
+                                        </div>
+                                      </td>
+                                      <td className="px-4 py-2">
+                                        {subTask.hqCheck && (
+                                          <div className="flex items-center justify-center">
+                                            <StatusPill status={subTask.hqCheck} />
+                                          </div>
+                                        )}
+                                      </td>
+                                    </>
                                   )}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </>
-                      )}
+                                </tr>
+                              );
+                            })}
+                          </>
+                        );
+                      })()}
                     </React.Fragment>
                   ))
                 )}
