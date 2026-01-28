@@ -46,11 +46,10 @@ class TaskListResource extends JsonResource
                 ];
             }),
 
-            // Department - derived from creator's department (not from tasks.dept_id)
-            // This ensures consistent department filtering and display
+            // Department - prefer creator's department, fallback to tasks.dept_id
             'dept_id' => $this->whenLoaded('createdBy', function () {
-                return $this->createdBy->department_id;
-            }, $this->dept_id), // Fallback to tasks.dept_id for backward compatibility
+                return $this->createdBy->department_id ?? $this->dept_id;
+            }, $this->dept_id),
             'department' => $this->whenLoaded('createdBy', function () {
                 if ($this->createdBy->relationLoaded('department') && $this->createdBy->department) {
                     $dept = $this->createdBy->department;
@@ -60,6 +59,18 @@ class TaskListResource extends JsonResource
                         'department_name' => $dept->department_name,
                         'parent_id' => $dept->parent_id,
                     ];
+                }
+                // Fallback: load department from tasks.dept_id
+                if ($this->dept_id) {
+                    $dept = \App\Models\Department::find($this->dept_id);
+                    if ($dept) {
+                        return [
+                            'department_id' => $dept->department_id,
+                            'department_code' => $dept->department_code,
+                            'department_name' => $dept->department_name,
+                            'parent_id' => $dept->parent_id,
+                        ];
+                    }
                 }
                 return null;
             }),

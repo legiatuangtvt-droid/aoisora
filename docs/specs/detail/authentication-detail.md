@@ -1062,10 +1062,11 @@ Day 2:
         → Refresh token in localStorage
         → Auto-refresh to get new access token
         → Auto-login successful ✅
+        → Redirect to /tasks/list (default screen)
         → User doesn't need to enter password
 
 Day 30:
-  → Refresh token still valid → Auto-login ✅
+  → Refresh token still valid → Auto-login ✅ → Redirect to /tasks/list
 
 Day 31:
   → Refresh token expired → Must login again

@@ -14,6 +14,7 @@
 | **Purpose** | Define the general application layout including Top Bar, Sidebar Menu, User Menu, Dark/Light Mode, and Language switching |
 | **Target Users** | All authenticated users |
 | **Entry Points** | All screens after login |
+| **Default Screen** | `/tasks/list` (Task List) - default landing page after login |
 
 ---
 

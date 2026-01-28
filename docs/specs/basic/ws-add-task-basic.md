@@ -3,7 +3,7 @@
 > **Module**: WS (Task from HQ)
 > **Screen ID**: SCR_TASK_ADD
 > **Route**: `/tasks/new`
-> **Last Updated**: 2026-01-08
+> **Last Updated**: 2026-01-25
 
 ---
 
@@ -105,7 +105,22 @@
 
 ---
 
-## 8. Task Sections Summary
+## 8. Task Level Actions
+
+| Action | Level | Behavior | Confirmation |
+|--------|-------|----------|--------------|
+| **Delete task level 1** | Level 1 | Xóa toàn bộ task/draft | Yes - Modal xác nhận |
+| **Delete task level 2+** | Level 2-5 | Xóa subtask đó và tất cả con của nó | No - Xóa trực tiếp |
+| **Add task level X+1** | Level 1-4 | Thêm subtask con | No |
+
+**Note:**
+- Button "Delete task level 1" luôn **enabled** (có thể xóa bất cứ lúc nào)
+- Khi xóa Level 1 → xóa toàn bộ draft (kể cả các subtask nếu có)
+- Khi xóa Level 2+ → chỉ xóa subtask đó, không ảnh hưởng task cha
+
+---
+
+## 9. Task Sections Summary
 
 | Section | Content |
 |---------|---------|
@@ -116,7 +131,7 @@
 
 ---
 
-## 9. Related Documents
+## 10. Related Documents
 
 | Document | Path |
 |----------|------|

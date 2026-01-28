@@ -5068,335 +5068,253 @@ Request → Controller → Service → Model → Resource → Response
 
 ---
 
-**BƯỚC 3: UI/UX SCREENSHOT TEST**
+**BƯỚC 3: FLOW-BASED TEST (Test theo luồng nghiệp vụ)**
 
-> **Mục đích**: Test giao diện visual của từng screen, user cung cấp screenshot để verify.
+> **Mục đích**: Test hoàn chỉnh từng flow nghiệp vụ từ đầu đến cuối. User đóng vai trò thực hiện từng thao tác theo kịch bản, Claude quan sát kết quả (screenshot) và phát hiện bug.
 >
 > **Quy trình thực hiện**:
 > ```
 > ┌─────────────────────────────────────────────────────────────────┐
-> │  SCREENSHOT TEST WORKFLOW                                       │
+> │  FLOW-BASED TEST WORKFLOW                                       │
 > │                                                                 │
-> │  1️⃣ CLAUDE YÊU CẦU CAPTURE                                      │
-> │     → Hướng dẫn user chụp màn hình ở đâu, như thế nào          │
-> │     → Chỉ rõ URL, trạng thái cần test, điều kiện cụ thể        │
+> │  1️⃣ CLAUDE ĐƯA RA KỊCH BẢN (Script)                              │
+> │     → Hướng dẫn từng bước user cần làm                        │
+> │     → Chỉ rõ: URL, account login, thao tác cụ thể             │
+> │     → Mỗi bước có Expected Result rõ ràng                     │
 > │                                                                 │
-> │  2️⃣ USER CUNG CẤP SCREENSHOT                                    │
-> │     → User chụp màn hình theo hướng dẫn                        │
-> │     → Paste ảnh vào chat                                       │
+> │  2️⃣ USER THỰC HIỆN TỪNG BƯỚC                                     │
+> │     → Làm theo hướng dẫn từng bước một                        │
+> │     → Chụp screenshot kết quả mỗi bước (hoặc khi có lỗi)     │
+> │     → Báo cáo: PASS / FAIL / không như expected                │
 > │                                                                 │
-> │  3️⃣ CLAUDE PHÂN TÍCH & THẢO LUẬN                                │
-> │     → Review screenshot theo test scenario                     │
-> │     → So sánh với Expected UI                                  │
-> │     → Thảo luận với user về findings                          │
+> │  3️⃣ CLAUDE PHÂN TÍCH & FIX                                       │
+> │     → Review screenshot, xác nhận PASS/FAIL                   │
+> │     → Nếu FAIL → fix code ngay, CHƯA COMMIT                  │
+> │     → Hướng dẫn user hard refresh (Ctrl+Shift+R)              │
+> │     → User retest bước bị fail                                │
 > │                                                                 │
-> │  4️⃣ CLAUDE ĐỀ XUẤT                                              │
-> │     → Đề xuất cải thiện UI/UX nếu có vấn đề                   │
-> │     → Liệt kê các options (nếu có nhiều cách fix)             │
-> │                                                                 │
-> │  5️⃣ USER QUYẾT ĐỊNH                                             │
-> │     → User chọn implement những gì                             │
-> │     → User có thể skip hoặc defer to later                    │
-> │                                                                 │
-> │  6️⃣ CLAUDE THỰC HIỆN CHANGES (CHƯA COMMIT)                      │
-> │     → Implement changes theo quyết định của user              │
-> │     → ⚠️ CHƯA COMMIT - chờ user xác nhận fix thành công       │
-> │                                                                 │
-> │  7️⃣ VERIFY CODE TRƯỚC KHI RETEST                                │
-> │     → Claude đọc lại file đã sửa để xác nhận code đúng        │
-> │     → Báo cáo cho user: code đã sửa đúng chưa?                │
-> │     → Nếu code chưa đúng → quay lại bước 6                    │
-> │     → Nếu code đã đúng → hướng dẫn user hard refresh          │
-> │       (Ctrl+Shift+R hoặc restart dev server)                  │
-> │                                                                 │
-> │  8️⃣ USER RETEST & CUNG CẤP SCREENSHOT                           │
-> │     → User retest sau khi hard refresh                        │
-> │     → User cung cấp screenshot kết quả                        │
-> │     → Claude review screenshot                                │
-> │                                                                 │
-> │  9️⃣ CLAUDE XÁC NHẬN & COMMIT                                    │
-> │     → Nếu screenshot cho thấy FIX THÀNH CÔNG:                 │
-> │       ✓ Commit & Push changes                                 │
-> │       ✓ Cập nhật Status = ✅ PASSED trong bảng                │
-> │       ✓ Ghi Fix Details                                       │
-> │     → Nếu screenshot cho thấy VẪN LỖI:                        │
-> │       ✗ KHÔNG commit                                          │
-> │       ✗ Quay lại bước 3 để phân tích tiếp                    │
+> │  4️⃣ KẾT THÚC FLOW                                                │
+> │     → Khi tất cả bước PASS → đánh dấu flow hoàn thành        │
+> │     → Commit & Push changes (nếu có fix)                      │
+> │     → Chuyển sang flow tiếp theo                              │
 > │                                                                 │
 > └─────────────────────────────────────────────────────────────────┘
 > ```
 
-#### N. LOGIN PAGE
-
-| # | Test Scenario | Expected UI | Screenshot | Status | Tested At |
-|---|---------------|-------------|------------|--------|-----------|
-| N.1 | Login form - Light mode | Logo, Email input, Password input, Login button hiển thị đúng | ✅ | ✅ FIX | 2026-01-24 |
-| N.2 | Login form - Dark mode | Form switch sang dark theme, colors phù hợp | N/A | N/A | 2026-01-24 |
-| N.3 | Validation error - Empty fields | Button disables when fields empty (correct behavior) | ✅ | ✅ | 2026-01-24 |
-| N.4 | Validation error - Wrong credentials | Error message hiển thị below password field | ✅ | ✅ PASSED | 2026-01-24 |
-| N.5 | Loading state | Button disabled, spinner hiển thị khi đang login | ✅ | ✅ PASSED | 2026-01-24 |
-| N.6 | Mobile responsive | Form centered, full width on mobile (<768px) | ✅ | ✅ PASSED | 2026-01-24 |
-
-**N.1 Fix Details (2026-01-24):**
-- Fixed typo: "Welcom back" → "Welcome back"
-- Fixed typo: "deatls" → "details"
-- Removed redundant "Welcome back!" from subtitle
-- File: `frontend/src/app/auth/signin/page.tsx` (lines 130-131)
-
-**N.2 Note:** Login page không có dark mode toggle. Dark mode chỉ available sau khi login.
-
-**N.3 Note:** Form sử dụng button disable thay vì hiển thị error message khi fields trống. Sign in button chỉ enable khi cả 2 fields (Email/Phone và Password) đều có giá trị.
-
-**N.4 Fix Details (2026-01-24):**
-- **Root Cause:** AuthGuard was showing spinner for ALL routes when `isLoading=true`, causing SignInPage to unmount during login and losing form state (error message).
-- **Fix:** Added early return for public routes in AuthGuard - always render children immediately for `/auth/*` routes.
-- **File:** `frontend/src/components/auth/AuthGuard.tsx` (lines 39-43)
-- **Commit:** `a50c63a`
-- **Result:** Error message "Incorrect password" now displays correctly after login failure.
-
-#### O. TASK LIST PAGE (/tasks/list)
-
-| # | Test Scenario | Expected UI | Screenshot | Status | Tested At |
-|---|---------------|-------------|------------|--------|-----------|
-| O.1 | Page layout - Light mode | Header, filters, table hiển thị đúng layout | ✅ | ✅ | 2026-01-24 |
-| O.2 | Page layout - Dark mode | Colors chuyển đổi phù hợp dark theme | ✅ | ✅ | 2026-01-24 |
-| O.3 | Filter accordion | Click → expand/collapse, HQ Check chỉ có 2 options (Not Yet, Done) | ✅ | ✅ | 2026-01-24 |
-| O.4 | Filter chips | N/A - Design uses badge count instead of chips | ✅ | ✅ | 2026-01-25 |
-| O.5 | Department dropdown | Dropdown mở, options hiển thị đầy đủ | ✅ | ✅ | 2026-01-25 |
-| O.6 | Status filter badges | Badges có màu đúng (Draft=gray, Approve=yellow, etc.) | ✅ | ✅ | 2026-01-25 |
-| O.7 | Table header | Columns aligned, filter icons on Dept/Status/HQ Check (sort N/A - not in design) | ✅ | ✅ | 2026-01-25 |
-| O.8 | Table row hover | hover:bg-gray-50 (subtle) + 3-dots menu appears on hover | ✅ | ✅ | 2026-01-25 |
-| O.9 | Status badge colors | Approve(pink), Draft(gray), Not Yet(yellow) - colors match design | ✅ | ✅ | 2026-01-25 |
-| O.10 | Progress column | done/total counter format (0/1, 0/3) - matches design | ✅ | ✅ | 2026-01-25 |
-| O.11 | Unable column | Counter hiển thị số stores unable (no red - matches design) | ✅ | ✅ | 2026-01-25 |
-| O.12 | Sub-tasks expand | Click arrow → sub-tasks hiện với indent, columns aligned | ✅ | ✅ FIX | 2026-01-25 |
-| O.13 | Sub-tasks collapse | Click again → sub-tasks ẩn, arrow changes direction | ✅ | ✅ | 2026-01-25 |
-| O.14 | 3-dots menu | Hover row → 3-dots icon, click → dropdown (View Approval History, Pause Task) | ✅ | ✅ PASSED | 2026-01-25 |
-| O.15 | Pagination | "Showing X of Y (Page N of M)", page numbers 1-4, < > arrows, current highlighted | ✅ | ✅ PASSED | 2026-01-25 |
-| O.16 | Empty state | Search "xyzabc123" → "No tasks found" message, Total: 0 tasks | ✅ | ✅ PASSED | 2026-01-25 |
-| O.17 | Loading skeleton | Skeleton rows displayed during loading (⚠️ layout could match table columns better) | ✅ | ✅ PASSED | 2026-01-25 |
-| O.18 | History modal | Click status → modal mở với timeline (SUBMIT→APPROVE→DO TASK→CHECK steps) | ✅ | ✅ PASSED | 2026-01-25 |
-| O.19 | Mobile responsive | Resize <768px → table scroll horizontal, layout adapts | ✅ | ✅ PASSED | 2026-01-25 |
-
-**O.12 Fix Details (2026-01-25):**
-- **Issue:** Sub-task rows missing HQ Check column td element (7 columns instead of 8)
-- **Fix:** Added empty td for HQ Check column in sub-task rows
-- **File:** `frontend/src/app/tasks/list/page.tsx` (line 971)
-
-**O.17 Note (Future Enhancement):**
-- Skeleton layout hiện tại là generic rows
-- Có thể cải thiện: skeleton columns khớp với table columns thật (No, Dept, Task Group, etc.)
-
-#### P. TASK DETAIL PAGE (/tasks/detail)
-
-| # | Test Scenario | Expected UI | Screenshot | Status | Tested At |
-|---|---------------|-------------|------------|--------|-----------|
-| P.1 | Page header | Task name, status badge, back button | ⏳ | ⏳ | - |
-| P.2 | Info section | A.Information, B.Instructions, C.Scope cards | ⏳ | ⏳ | - |
-| P.3 | Statistics cards | 4 cards: Not Yet, Done, Unable, Avg Time - colors đúng | ⏳ | ⏳ | - |
-| P.4 | Statistics - Not Yet | Gray card, count hiển thị | ⏳ | ⏳ | - |
-| P.5 | Statistics - Done | Green card, count hiển thị | ⏳ | ⏳ | - |
-| P.6 | Statistics - Unable | Orange/Red card, count hiển thị | ⏳ | ⏳ | - |
-| P.7 | Statistics - Avg Time | Blue card, time format (Xh Xm) | ⏳ | ⏳ | - |
-| P.8 | Store progress table | Store name, status badge, assignee, actions | ⏳ | ⏳ | - |
-| P.9 | Store status badges | not_yet(gray), on_progress(blue), done_pending(yellow), done(green), unable(orange) | ⏳ | ⏳ | - |
-| P.10 | Comments section | Comment list, add comment form | ⏳ | ⏳ | - |
-| P.11 | Comment item | Avatar, name, timestamp, content, edit/delete buttons | ⏳ | ⏳ | - |
-| P.12 | Add comment form | Textarea, Submit button | ⏳ | ⏳ | - |
-| P.13 | Edit comment | Inline edit mode, Save/Cancel buttons | ⏳ | ⏳ | - |
-| P.14 | Delete comment confirm | Confirmation dialog hiển thị | ⏳ | ⏳ | - |
-| P.15 | Evidence modal | Click "View Evidence" → modal với images/files | ⏳ | ⏳ | - |
-| P.16 | Evidence gallery | Image thumbnails, click to expand | ⏳ | ⏳ | - |
-| P.17 | Dark mode | All elements switch colors properly | ⏳ | ⏳ | - |
-| P.18 | Mobile layout | Cards stack vertically on mobile | ⏳ | ⏳ | - |
-
-#### Q. ADD TASK PAGE (/tasks/new)
-
-| # | Test Scenario | Expected UI | Screenshot | Status | Tested At |
-|---|---------------|-------------|------------|--------|-----------|
-| Q.1 | Page layout | A.Information, B.Instructions, C.Scope, D.Approval sections | ⏳ | ⏳ | - |
-| Q.2 | Task name input | Text input với label, placeholder | ⏳ | ⏳ | - |
-| Q.3 | Task Type dropdown | Dropdown với options: Daily, Weekly, Monthly, etc. | ⏳ | ⏳ | - |
-| Q.4 | Date picker - Start | Calendar picker UI | ⏳ | ⏳ | - |
-| Q.5 | Date picker - End | Calendar picker UI, validation start < end | ⏳ | ⏳ | - |
-| Q.6 | Execution time input | Number input với unit selector (hours/minutes) | ⏳ | ⏳ | - |
-| Q.7 | Instructions type radio | Image / Document radio buttons | ⏳ | ⏳ | - |
-| Q.8 | Manual link input | URL input với validation | ⏳ | ⏳ | - |
-| Q.9 | Note textarea | Textarea với character count | ⏳ | ⏳ | - |
-| Q.10 | Photo upload - Empty | Upload area với icon, "Click or drag" text | ⏳ | ⏳ | - |
-| Q.11 | Photo upload - With images | Thumbnails grid, remove button mỗi ảnh | ⏳ | ⏳ | - |
-| Q.12 | Photo upload - Drag over | Highlight border khi drag file vào | ⏳ | ⏳ | - |
-| Q.13 | Photo upload - Progress | Upload progress bar | ⏳ | ⏳ | - |
-| Q.14 | Scope selector - Region | Dropdown với regions | ⏳ | ⏳ | - |
-| Q.15 | Scope selector - Zone | Dropdown filtered by region | ⏳ | ⏳ | - |
-| Q.16 | Scope selector - Area | Dropdown filtered by zone | ⏳ | ⏳ | - |
-| Q.17 | Scope selector - Store | Multi-select stores | ⏳ | ⏳ | - |
-| Q.18 | Scope - Selected stores | Chips hiển thị selected stores | ⏳ | ⏳ | - |
-| Q.19 | HQ Scope (source=todo_task) | Division → Dept → Team → User hierarchy | ⏳ | ⏳ | - |
-| Q.20 | D.Approval auto-fill | Approver name, title hiển thị tự động | ⏳ | ⏳ | - |
-| Q.21 | Save Draft button | Button styled, disabled khi invalid | ⏳ | ⏳ | - |
-| Q.22 | Submit button | Primary button styled | ⏳ | ⏳ | - |
-| Q.23 | Validation errors | Red border, error messages hiển thị | ⏳ | ⏳ | - |
-| Q.24 | Loading state | Buttons disabled, spinner khi saving | ⏳ | ⏳ | - |
-| Q.25 | source=library mode | C.Scope section ẩn | ⏳ | ⏳ | - |
-| Q.26 | Dark mode | All inputs, buttons switch theme | ⏳ | ⏳ | - |
-| Q.27 | Mobile layout | Form full width, scrollable | ⏳ | ⏳ | - |
-
-#### R. APPROVAL PAGE (/tasks/approval)
-
-| # | Test Scenario | Expected UI | Screenshot | Status | Tested At |
-|---|---------------|-------------|------------|--------|-----------|
-| R.1 | Page header | "Pending Approvals" title, count badge | ⏳ | ⏳ | - |
-| R.2 | Approval table | Task name, creator, department, period, status, actions | ⏳ | ⏳ | - |
-| R.3 | Creator avatar | Avatar circle với initial letter | ⏳ | ⏳ | - |
-| R.4 | View button | Eye icon, click → task detail | ⏳ | ⏳ | - |
-| R.5 | Approve button | Green button "Approve" | ⏳ | ⏳ | - |
-| R.6 | Reject button | Red button "Reject" | ⏳ | ⏳ | - |
-| R.7 | Reject modal | Modal với reason textarea | ⏳ | ⏳ | - |
-| R.8 | Reject validation | Error nếu reason empty | ⏳ | ⏳ | - |
-| R.9 | Processing state | Button disabled, "..." text khi processing | ⏳ | ⏳ | - |
-| R.10 | Success toast | Toast "Task approved" / "Task rejected" | ⏳ | ⏳ | - |
-| R.11 | Empty state | "No pending approvals" message | ⏳ | ⏳ | - |
-| R.12 | Non-HQ user | "Only HQ users can access" message | ⏳ | ⏳ | - |
-| R.13 | Dark mode | Theme switch properly | ⏳ | ⏳ | - |
-
-#### S. LIBRARY PAGE (/tasks/library)
-
-| # | Test Scenario | Expected UI | Screenshot | Status | Tested At |
-|---|---------------|-------------|------------|--------|-----------|
-| S.1 | Page header | "Library" title, "Add New" button | ⏳ | ⏳ | - |
-| S.2 | Department tabs/dropdown | Filter by department | ⏳ | ⏳ | - |
-| S.3 | Template table | Type, Task Name, Owner, Last Update, Status, Usage | ⏳ | ⏳ | - |
-| S.4 | Status badges | Draft, Approve, Available, Cooldown colors | ⏳ | ⏳ | - |
-| S.5 | Cooldown badge | Cyan/Ice blue color | ⏳ | ⏳ | - |
-| S.6 | Usage count | Number hiển thị | ⏳ | ⏳ | - |
-| S.7 | Row actions menu | Edit, Duplicate, Delete, View Usage, Dispatch | ⏳ | ⏳ | - |
-| S.8 | Dispatch action | Click → navigate to dispatch page | ⏳ | ⏳ | - |
-| S.9 | Override cooldown modal | Modal với reason input (cho highest grade) | ⏳ | ⏳ | - |
-| S.10 | Add New → /tasks/new | Navigate với source=library | ⏳ | ⏳ | - |
-| S.11 | Empty state | "No templates" message | ⏳ | ⏳ | - |
-| S.12 | Dark mode | Theme switch | ⏳ | ⏳ | - |
-
-#### T. DISPATCH PAGE (/tasks/library/dispatch)
-
-| # | Test Scenario | Expected UI | Screenshot | Status | Tested At |
-|---|---------------|-------------|------------|--------|-----------|
-| T.1 | Page header | Template name, back button | ⏳ | ⏳ | - |
-| T.2 | Template preview | Read-only info from template | ⏳ | ⏳ | - |
-| T.3 | Scope selector | Region → Zone → Area → Store hierarchy | ⏳ | ⏳ | - |
-| T.4 | Date range picker | Start date, End date | ⏳ | ⏳ | - |
-| T.5 | Priority selector | Dropdown/Radio for priority | ⏳ | ⏳ | - |
-| T.6 | Dispatch button | Primary button "Dispatch to Stores" | ⏳ | ⏳ | - |
-| T.7 | Confirmation | Confirm dialog trước dispatch | ⏳ | ⏳ | - |
-| T.8 | Success redirect | Redirect về library sau dispatch | ⏳ | ⏳ | - |
-| T.9 | Dark mode | Theme switch | ⏳ | ⏳ | - |
-
-#### U. TODO TASK PAGE (/tasks/todo)
-
-| # | Test Scenario | Expected UI | Screenshot | Status | Tested At |
-|---|---------------|-------------|------------|--------|-----------|
-| U.1 | Page header | "To Do Tasks" title | ⏳ | ⏳ | - |
-| U.2 | Task list | HQ→HQ tasks hiển thị | ⏳ | ⏳ | - |
-| U.3 | My Tasks filter | Filter checkbox/toggle | ⏳ | ⏳ | - |
-| U.4 | Add New button | Navigate to /tasks/new?source=todo_task | ⏳ | ⏳ | - |
-| U.5 | Task status badges | Same as Task List | ⏳ | ⏳ | - |
-| U.6 | Empty state | "No tasks" message | ⏳ | ⏳ | - |
-| U.7 | Dark mode | Theme switch | ⏳ | ⏳ | - |
-
-#### V. STORE TASKS PAGE (/stores/[id]/tasks)
-
-| # | Test Scenario | Expected UI | Screenshot | Status | Tested At |
-|---|---------------|-------------|------------|--------|-----------|
-| V.1 | Page header | Store name, task count | ⏳ | ⏳ | - |
-| V.2 | Task list | Tasks assigned to this store | ⏳ | ⏳ | - |
-| V.3 | Status badges | not_yet, on_progress, done_pending, done, unable | ⏳ | ⏳ | - |
-| V.4 | Start button | Blue button for not_yet tasks | ⏳ | ⏳ | - |
-| V.5 | Complete button | Green button for on_progress tasks | ⏳ | ⏳ | - |
-| V.6 | Unable button | Orange button với reason modal | ⏳ | ⏳ | - |
-| V.7 | Unable reason modal | Textarea required | ⏳ | ⏳ | - |
-| V.8 | Assign to staff button | For S4-S2 users | ⏳ | ⏳ | - |
-| V.9 | Staff selection modal | Dropdown list staff S1 | ⏳ | ⏳ | - |
-| V.10 | Unassign button | For assigned tasks | ⏳ | ⏳ | - |
-| V.11 | Complete modal | Notes input, evidence upload | ⏳ | ⏳ | - |
-| V.12 | Evidence upload | File/Image upload UI | ⏳ | ⏳ | - |
-| V.13 | Role-based visibility | S1 sees only assigned, S2-S4 sees all | ⏳ | ⏳ | - |
-| V.14 | Dark mode | Theme switch | ⏳ | ⏳ | - |
-
-#### W. HQ CHECK PAGE (/tasks/hq-check)
-
-| # | Test Scenario | Expected UI | Screenshot | Status | Tested At |
-|---|---------------|-------------|------------|--------|-----------|
-| W.1 | Page header | "HQ Check" title, count badge | ⏳ | ⏳ | - |
-| W.2 | Task cards | Expandable task cards | ⏳ | ⏳ | - |
-| W.3 | Expand/Collapse | Click → show store list | ⏳ | ⏳ | - |
-| W.4 | Store list | Store name, completion time, notes | ⏳ | ⏳ | - |
-| W.5 | View evidence | Link to view store's evidence | ⏳ | ⏳ | - |
-| W.6 | Checked button | Green button "Checked" | ⏳ | ⏳ | - |
-| W.7 | Reject button | Red button "Reject" | ⏳ | ⏳ | - |
-| W.8 | Reject reason modal | Textarea for reason | ⏳ | ⏳ | - |
-| W.9 | Processing state | Buttons disabled during action | ⏳ | ⏳ | - |
-| W.10 | Success feedback | Toast notification | ⏳ | ⏳ | - |
-| W.11 | Empty state | "No tasks pending check" message | ⏳ | ⏳ | - |
-| W.12 | Dark mode | Theme switch | ⏳ | ⏳ | - |
-
-#### X. GENERAL UI/UX
-
-| # | Test Scenario | Expected UI | Screenshot | Status | Tested At |
-|---|---------------|-------------|------------|--------|-----------|
-| X.1 | Navigation sidebar | All menu items visible, active state | ⏳ | ⏳ | - |
-| X.2 | Sidebar collapse | Toggle button, icons only mode | ⏳ | ⏳ | - |
-| X.3 | Dark mode toggle | Switch in header/sidebar | ⏳ | ⏳ | - |
-| X.4 | User dropdown | Avatar, name, logout option | ⏳ | ⏳ | - |
-| X.5 | Breadcrumb | Path navigation | ⏳ | ⏳ | - |
-| X.6 | Toast notifications | Success (green), Error (red), Info (blue) | ⏳ | ⏳ | - |
-| X.7 | Loading spinners | Consistent spinner design | ⏳ | ⏳ | - |
-| X.8 | Skeleton loaders | Content placeholders | ⏳ | ⏳ | - |
-| X.9 | Modal backdrop | Dark overlay, click outside to close | ⏳ | ⏳ | - |
-| X.10 | Modal animations | Fade in/out, scale animations | ⏳ | ⏳ | - |
-| X.11 | Button states | Normal, hover, active, disabled | ⏳ | ⏳ | - |
-| X.12 | Input focus states | Focus ring, border color change | ⏳ | ⏳ | - |
-| X.13 | Responsive breakpoints | Desktop (>1024), Tablet (768-1024), Mobile (<768) | ⏳ | ⏳ | - |
-| X.14 | Mobile navigation | Hamburger menu, drawer | ⏳ | ⏳ | - |
-| X.15 | Scroll behavior | Smooth scroll, sticky headers | ⏳ | ⏳ | - |
-| X.16 | Error pages | 404, 500 page designs | ⏳ | ⏳ | - |
-| X.17 | Print styles | Tables printable (if needed) | ⏳ | ⏳ | - |
-
----
-
-**UI/UX TEST SUMMARY:**
-
-| Section | Total Tests | Passed | Failed | N/A | Pending |
-|---------|-------------|--------|--------|-----|---------|
-| N. Login | 6 | 2 | 0 | 1 | 3 |
-| O. Task List | 19 | 17 | 0 | 0 | 2 |
-| P. Task Detail | 18 | 0 | 0 | 0 | 18 |
-| Q. Add Task | 27 | 0 | 0 | 0 | 27 |
-| R. Approval | 13 | 0 | 0 | 0 | 13 |
-| S. Library | 12 | 0 | 0 | 0 | 12 |
-| T. Dispatch | 9 | 0 | 0 | 0 | 9 |
-| U. Todo Task | 7 | 0 | 0 | 0 | 7 |
-| V. Store Tasks | 14 | 0 | 0 | 0 | 14 |
-| W. HQ Check | 12 | 0 | 0 | 0 | 12 |
-| X. General UI | 17 | 0 | 0 | 0 | 17 |
-| **TOTAL** | **154** | **19** | **0** | **1** | **134** |
-
----
-
 **TEST ACCOUNTS:**
 
-| Role | Username | Password | Job Grade | Notes |
-|------|----------|----------|-----------|-------|
-| HQ Admin | admin | password | G9 | Full access |
-| HQ User | hq_user1 | password | G3 | Normal HQ |
-| Store Leader | store_lead | password | S3 | Store 1 |
-| Store Staff | store_staff | password | S1 | Store 1 |
+| Role | Username | Password | Job Grade | Dept | Notes |
+|------|----------|----------|-----------|------|-------|
+| HQ Admin | admin | password | G9 | - | Full access, Approver cho tất cả |
+| HQ Creator | peri.staff1 | password | G3 | PERI (7) | Tạo task, Approver = peri.senior1 |
+| HQ Approver | peri.senior1 | password | G4 | PERI (7) | Approve/Reject tasks từ G3 |
+| HQ Dept Head | peri.head | password | G6 | PERI (7) | Override cooldown |
+| Store Leader | s3store1 | password | S3 | - | Store 1, nhận task từ HQ |
+| Store SI | s4si1 | password | S4 | - | Store 1, assign cho staff |
+
+---
+
+#### FLOW 1: TẠO TASK HQ→STORE (Draft → Approve → Store nhận)
+
+> **Mục tiêu**: Test toàn bộ luồng tạo task từ Task List, gửi phê duyệt, approve, và stores nhận task.
+> **Actors**: HQ Creator (peri.staff1) → HQ Approver (peri.senior1) → Store Leader (s3store1)
+
+| Step | Actor | Thao tác | Expected Result | Status |
+|------|-------|----------|-----------------|--------|
+| 1.1 | - | Mở browser, vào `http://localhost:3000` | Hiển thị trang Login | ✅ |
+| 1.2 | Creator | Login với `peri.staff1` / `password` | Đăng nhập thành công, redirect đến Task List | ✅ |
+| 1.3 | Creator | Default screen = Task List (không cần click sidebar) | Hiển thị danh sách tasks (Dept column: OP, ADMIN, ...) | ✅ |
+| 1.4 | Creator | Click button **Add New** (góc trên phải) | Chuyển đến trang Add Task (`/tasks/new`) | ⏳ |
+| 1.5 | Creator | Nhập **Task Name**: "Test Flow 1 - Kiểm kê hàng Q1" | Tên task hiển thị trong input | ⏳ |
+| 1.6 | Creator | Tại **A. Information**: chọn Task Type = "Monthly" | Dropdown hiển thị "Monthly" | ⏳ |
+| 1.7 | Creator | Chọn Start Date = ngày mai, End Date = 7 ngày sau | Date pickers hiển thị đúng ngày | ⏳ |
+| 1.8 | Creator | Nhập Execution Time = 2 (hours) | Input hiển thị "2" | ⏳ |
+| 1.9 | Creator | Tại **B. Instructions**: chọn Task Type = "Document" | Radio "Document" được chọn | ⏳ |
+| 1.10 | Creator | Nhập Manual Link = `https://example.com/manual` | URL hiển thị trong input | ⏳ |
+| 1.11 | Creator | Nhập Note = "Kiểm kê toàn bộ kho hàng tầng 1" | Note hiển thị trong textarea | ⏳ |
+| 1.12 | Creator | Tại **C. Scope**: chọn Region → Zone → Area → chọn 2-3 Stores | Stores được chọn, hiển thị chips | ⏳ |
+| 1.13 | Creator | Kiểm tra **D. Approval Process** | Tự động hiển thị Approver = "PERI Senior 1" | ⏳ |
+| 1.14 | Creator | Click button **Save as Draft** | Toast "Draft saved", quay về Task List | ⏳ |
+| 1.15 | Creator | Tại Task List, tìm task vừa tạo | Task hiển thị với status = "Draft" (gray badge) | ⏳ |
+| 1.16 | Creator | Click vào task → vào trang Edit Draft | Trang Add Task mở với data đã nhập trước đó | ⏳ |
+| 1.17 | Creator | Click button **Submit** | Toast "Task submitted", status chuyển thành "Approve" | ⏳ |
+| 1.18 | Creator | Quay về Task List, tìm task | Status = "Approve" (yellow/pink badge) | ⏳ |
+| 1.19 | Creator | **Logout** | Quay về trang Login | ⏳ |
+| 1.20 | Approver | Login với `peri.senior1` / `password` | Đăng nhập thành công | ⏳ |
+| 1.21 | Approver | Click menu **Approval** ở sidebar | Hiển thị danh sách pending approvals | ⏳ |
+| 1.22 | Approver | Tìm task "Test Flow 1 - Kiểm kê hàng Q1" | Task hiển thị trong danh sách | ⏳ |
+| 1.23 | Approver | Click **View** để xem chi tiết task | Hiển thị thông tin task (read-only) | ⏳ |
+| 1.24 | Approver | Click button **Approve** | Toast "Task approved", task biến mất khỏi danh sách | ⏳ |
+| 1.25 | Approver | Click menu **Task List** | Task hiển thị với status = "Not Yet" | ⏳ |
+| 1.26 | Approver | **Logout** | Quay về trang Login | ⏳ |
+| 1.27 | Store Leader | Login với `s3store1` / `password` | Đăng nhập thành công | ⏳ |
+| 1.28 | Store Leader | Kiểm tra task list (hoặc Store Tasks) | Task "Test Flow 1" hiển thị với status = "Not Yet" | ⏳ |
+
+---
+
+#### FLOW 2: REJECT & RESUBMIT (Approve bị từ chối, sửa và gửi lại)
+
+> **Mục tiêu**: Test luồng reject: Creator tạo task → Approver reject → Creator sửa → Resubmit.
+> **Actors**: HQ Creator (peri.staff1) → HQ Approver (peri.senior1)
+
+| Step | Actor | Thao tác | Expected Result | Status |
+|------|-------|----------|-----------------|--------|
+| 2.1 | Creator | Login `peri.staff1`, vào Task List → **Add New** | Trang Add Task mở | ⏳ |
+| 2.2 | Creator | Nhập Task Name: "Test Flow 2 - Task bị reject" | - | ⏳ |
+| 2.3 | Creator | Điền đầy đủ A.Info, B.Instructions, C.Scope | Form điền đầy đủ | ⏳ |
+| 2.4 | Creator | Click **Submit** (bỏ qua Draft) | Toast "Task submitted", status = Approve | ⏳ |
+| 2.5 | Creator | **Logout** | - | ⏳ |
+| 2.6 | Approver | Login `peri.senior1`, vào **Approval** | Task hiển thị trong pending list | ⏳ |
+| 2.7 | Approver | Click **Reject** trên task | Modal hiện lên yêu cầu nhập lý do | ⏳ |
+| 2.8 | Approver | Nhập lý do: "Cần bổ sung thêm hướng dẫn chi tiết" → Confirm | Toast "Task rejected", task biến mất | ⏳ |
+| 2.9 | Approver | **Logout** | - | ⏳ |
+| 2.10 | Creator | Login `peri.staff1`, vào **Task List** | Task hiển thị với status = "Draft" (đã bị reject về draft) | ⏳ |
+| 2.11 | Creator | Click vào task để edit | Hiển thị lý do reject từ Approver | ⏳ |
+| 2.12 | Creator | Sửa Note = "Đã bổ sung hướng dẫn theo yêu cầu" | Note cập nhật | ⏳ |
+| 2.13 | Creator | Click **Submit** lại | Toast "Task submitted", status = Approve | ⏳ |
+| 2.14 | Creator | **Logout** | - | ⏳ |
+| 2.15 | Approver | Login `peri.senior1`, vào **Approval** → **Approve** | Task approved thành công | ⏳ |
+
+---
+
+#### FLOW 3: STORE THỰC HIỆN TASK (Start → Complete → HQ Check)
+
+> **Mục tiêu**: Test luồng Store nhận task, bắt đầu làm, báo hoàn thành, HQ kiểm tra.
+> **Precondition**: Đã có task ở status "Not Yet" được giao cho store (từ Flow 1 hoặc data sẵn).
+> **Actors**: Store Leader (s3store1) → HQ Approver (peri.senior1)
+
+| Step | Actor | Thao tác | Expected Result | Status |
+|------|-------|----------|-----------------|--------|
+| 3.1 | Store Leader | Login `s3store1`, tìm task có status "Not Yet" | Task hiển thị trong danh sách | ⏳ |
+| 3.2 | Store Leader | Click **Start** trên task đó | Status chuyển thành "On Progress" (blue) | ⏳ |
+| 3.3 | Store Leader | Click **Complete** (hoặc Mark as Done) | Modal hiện lên (notes, evidence upload) | ⏳ |
+| 3.4 | Store Leader | Nhập notes: "Đã hoàn thành kiểm kê" → Submit | Status chuyển thành "Done Pending" (chờ HQ check) | ⏳ |
+| 3.5 | Store Leader | **Logout** | - | ⏳ |
+| 3.6 | Approver | Login `peri.senior1`, vào menu **HQ Check** | Task hiển thị trong danh sách cần kiểm tra | ⏳ |
+| 3.7 | Approver | Expand task → xem store đã hoàn thành | Store hiển thị với notes, completion time | ⏳ |
+| 3.8 | Approver | Click **Checked** (approve store result) | Store status → "Done" (green), toast thành công | ⏳ |
+
+---
+
+#### FLOW 4: STORE UNABLE (Store không thể thực hiện)
+
+> **Mục tiêu**: Test luồng Store đánh dấu unable với lý do.
+> **Precondition**: Có task ở status "Not Yet" hoặc "On Progress".
+> **Actor**: Store Leader (s3store1)
+
+| Step | Actor | Thao tác | Expected Result | Status |
+|------|-------|----------|-----------------|--------|
+| 4.1 | Store Leader | Login `s3store1`, tìm task có status "Not Yet" hoặc "On Progress" | Task hiển thị | ⏳ |
+| 4.2 | Store Leader | Click **Unable** trên task | Modal hiện lên yêu cầu nhập lý do | ⏳ |
+| 4.3 | Store Leader | Thử submit không nhập lý do | Validation error: lý do là bắt buộc | ⏳ |
+| 4.4 | Store Leader | Nhập lý do: "Thiếu nhân sự" → Submit | Status chuyển thành "Unable" (orange), toast thành công | ⏳ |
+
+---
+
+#### FLOW 5: HQ REJECT STORE (HQ từ chối kết quả Store)
+
+> **Mục tiêu**: Test luồng HQ reject kết quả store, yêu cầu làm lại.
+> **Precondition**: Có store ở status "Done Pending" (từ Flow 3 step 3.4).
+> **Actors**: HQ Approver (peri.senior1) → Store Leader (s3store1)
+
+| Step | Actor | Thao tác | Expected Result | Status |
+|------|-------|----------|-----------------|--------|
+| 5.1 | Approver | Login `peri.senior1`, vào **HQ Check** | Task với store done_pending hiển thị | ⏳ |
+| 5.2 | Approver | Click **Reject** trên store đó | Modal hiện lên yêu cầu nhập lý do reject | ⏳ |
+| 5.3 | Approver | Nhập lý do: "Ảnh chụp chưa rõ, cần chụp lại" → Submit | Store status quay về "On Progress", toast thành công | ⏳ |
+| 5.4 | Approver | **Logout** | - | ⏳ |
+| 5.5 | Store Leader | Login `s3store1`, tìm task | Store status = "On Progress" (phải làm lại) | ⏳ |
+
+---
+
+#### FLOW 6: LIBRARY - TẠO TEMPLATE & DISPATCH
+
+> **Mục tiêu**: Test tạo template trong Library → Approve → Dispatch đến stores.
+> **Actors**: HQ Creator (peri.staff1) → HQ Approver (peri.senior1)
+
+| Step | Actor | Thao tác | Expected Result | Status |
+|------|-------|----------|-----------------|--------|
+| 6.1 | Creator | Login `peri.staff1`, click menu **Library** | Trang Library hiển thị | ⏳ |
+| 6.2 | Creator | Click **Add New** | Chuyển đến `/tasks/new?source=library` | ⏳ |
+| 6.3 | Creator | Kiểm tra form | **C. Scope** section bị ẨN (vì là template) | ⏳ |
+| 6.4 | Creator | Nhập Task Name: "Template - Vệ sinh kho hàng" | - | ⏳ |
+| 6.5 | Creator | Điền A.Info (Task Type, Execution Time) + B.Instructions | Form điền đầy đủ, **KHÔNG có** Start/End Date | ⏳ |
+| 6.6 | Creator | Click **Submit** | Toast "Submitted", status = Approve | ⏳ |
+| 6.7 | Creator | **Logout** | - | ⏳ |
+| 6.8 | Approver | Login `peri.senior1`, vào **Approval** → **Approve** template | Template approved, status = Available | ⏳ |
+| 6.9 | Approver | Vào **Library** | Template hiển thị với status "Available" (green badge) | ⏳ |
+| 6.10 | Approver | Click **Dispatch** trên template | Chuyển đến trang Dispatch | ⏳ |
+| 6.11 | Approver | Chọn Scope (Region → Zone → Area → Stores) | Stores được chọn | ⏳ |
+| 6.12 | Approver | Chọn Start Date, End Date | Dates hiển thị đúng | ⏳ |
+| 6.13 | Approver | Click **Dispatch to Stores** | Toast thành công, redirect về Library | ⏳ |
+| 6.14 | Approver | Kiểm tra Task List | Task mới xuất hiện với status "Not Yet" | ⏳ |
+
+---
+
+#### FLOW 7: TASK DETAIL & COMMENTS
+
+> **Mục tiêu**: Test xem chi tiết task, statistics cards, và CRUD comments.
+> **Precondition**: Có task ở status "On Progress" hoặc "Not Yet" với store assignments.
+> **Actor**: HQ Creator (peri.staff1)
+
+| Step | Actor | Thao tác | Expected Result | Status |
+|------|-------|----------|-----------------|--------|
+| 7.1 | Creator | Login `peri.staff1`, vào **Task List** | Danh sách tasks hiển thị | ⏳ |
+| 7.2 | Creator | Click vào 1 task bất kỳ (có store assignments) | Trang Task Detail mở | ⏳ |
+| 7.3 | Creator | Kiểm tra **Statistics Cards** | 4 cards: Not Yet, Done, Unable, Avg Time hiển thị với số đúng | ⏳ |
+| 7.4 | Creator | Kiểm tra **Store Progress Table** | Danh sách stores với status badges, assignee | ⏳ |
+| 7.5 | Creator | Scroll xuống **Comments section** | Section comments hiển thị | ⏳ |
+| 7.6 | Creator | Nhập comment: "Test comment từ HQ" → Submit | Comment xuất hiện trong danh sách với avatar, tên, timestamp | ⏳ |
+| 7.7 | Creator | Click **Edit** trên comment vừa tạo | Comment chuyển sang edit mode | ⏳ |
+| 7.8 | Creator | Sửa text → **Save** | Comment cập nhật thành công | ⏳ |
+| 7.9 | Creator | Click **Delete** trên comment | Confirmation dialog hiển thị → Confirm → Comment bị xóa | ⏳ |
+
+---
+
+#### FLOW 8: TASK LIST FILTERS & NAVIGATION
+
+> **Mục tiêu**: Test các bộ lọc, search, pagination, và navigation trên Task List.
+> **Actor**: HQ Admin (admin)
+
+| Step | Actor | Thao tác | Expected Result | Status |
+|------|-------|----------|-----------------|--------|
+| 8.1 | Admin | Login `admin`, vào **Task List** | Danh sách tasks hiển thị đầy đủ | ⏳ |
+| 8.2 | Admin | Click vào **Filter** accordion | Expand hiển thị Department, Status, HQ Check filters | ⏳ |
+| 8.3 | Admin | Chọn filter **Department** = "PERI" | Danh sách lọc chỉ còn tasks thuộc PERI | ⏳ |
+| 8.4 | Admin | Chọn thêm filter **Status** = "Not Yet" | Danh sách lọc thêm theo status | ⏳ |
+| 8.5 | Admin | Xóa tất cả filters | Danh sách hiển thị lại đầy đủ | ⏳ |
+| 8.6 | Admin | Nhập search: "Kiểm kê" | Tasks có tên chứa "Kiểm kê" hiển thị | ⏳ |
+| 8.7 | Admin | Xóa search, nhập: "xyznotexist" | "No tasks found" empty state | ⏳ |
+| 8.8 | Admin | Xóa search | Tasks hiển thị lại | ⏳ |
+| 8.9 | Admin | Click trang 2 ở Pagination (nếu có) | Chuyển sang trang 2, data thay đổi | ⏳ |
+| 8.10 | Admin | Click expand arrow trên task có sub-tasks | Sub-tasks hiển thị với indent | ⏳ |
+| 8.11 | Admin | Click collapse arrow | Sub-tasks ẩn đi | ⏳ |
+| 8.12 | Admin | Hover 1 row → click 3-dots menu | Menu dropdown hiển thị: View Approval History, Pause Task | ⏳ |
+| 8.13 | Admin | Click **View Approval History** | Modal Approval History hiển thị timeline | ⏳ |
+| 8.14 | Admin | Click **Status badge** trên 1 task | History modal hiển thị (SUBMIT→APPROVE→DO TASK→CHECK) | ⏳ |
+
+---
+
+#### FLOW TEST SUMMARY
+
+| Flow | Mô tả | Steps | Status | Tested At |
+|------|--------|-------|--------|-----------|
+| Flow 1 | Tạo Task HQ→Store (Draft → Approve → Store nhận) | 28 | ⏳ | - |
+| Flow 2 | Reject & Resubmit | 15 | ⏳ | - |
+| Flow 3 | Store thực hiện Task (Start → Complete → HQ Check) | 8 | ⏳ | - |
+| Flow 4 | Store Unable | 4 | ⏳ | - |
+| Flow 5 | HQ Reject Store | 5 | ⏳ | - |
+| Flow 6 | Library - Tạo Template & Dispatch | 14 | ⏳ | - |
+| Flow 7 | Task Detail & Comments | 9 | ⏳ | - |
+| Flow 8 | Task List Filters & Navigation | 14 | ⏳ | - |
+| **TOTAL** | | **97** | | |
 
 **BUG TRACKING:**
 
-| # | Screen | Bug Description | Priority | Status | Fixed In |
-|---|--------|-----------------|----------|--------|----------|
-| BUG#1 | POST /tasks | status_id không tự động set =12 (DRAFT), tạo task mới có status_id=NULL | Medium | Open | - |
-| FIX#1 | POST /tasks/{id}/approve | Thiếu status_id=14 (DISPATCHED) trong code_master | High | Fixed | Manual Test |
+| # | Flow | Step | Bug Description | Priority | Status | Fixed In |
+|---|------|------|-----------------|----------|--------|----------|
+| BUG#1 | - | - | POST /tasks: status_id không tự động set =12 (DRAFT) | Medium | Open | - |
+| FIX#1 | - | - | POST /tasks/{id}/approve: Thiếu status_id=14 (DISPATCHED) | High | Fixed | Manual Test |
 
 ### PROGRESS TRACKING
 
@@ -5426,12 +5344,12 @@ Request → Controller → Service → Model → Resource → Response
 │    → Step 1 CLI/Bash Tests: ✅ PASSED (2026-01-23)             │
 │    → Step 2 Manual Tests: ✅ PASSED (2026-01-23)               │
 │      54/56 tests passed, 1 bug found (BUG#1), 1 fix applied    │
-│    → Step 3 UI/UX Screenshot Tests: 🔄 IN PROGRESS (15/155)    │
-│      N.1-N.6 ✅, O.1-O.13 ✅                                    │
+│    → Step 3 Flow-Based Tests: ⏳ NOT STARTED (0/8 flows)       │
+│      8 flows, 97 steps total                                    │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 
-Last Updated: 2026-01-25 (Step 3 UI/UX Test - O.13 passed)
+Last Updated: 2026-01-28 (Step 3 changed to Flow-Based Testing)
 ```
 
 ### LEGEND

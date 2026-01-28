@@ -408,8 +408,8 @@ useEffect(() => {
       // Try to refresh access token
       const success = await refreshAccessToken();
       if (success) {
-        // Auto-login successful, redirect to dashboard
-        router.push('/dashboard');
+        // Auto-login successful, redirect to Task List (default screen)
+        router.push('/tasks/list');
       } else {
         // Auto-login failed, show sign in page
         router.push('/auth/signin');

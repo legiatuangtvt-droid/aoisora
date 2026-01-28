@@ -67,3 +67,5 @@ deploy/laravel/.env
 
 .vercel
 .env*.local
+
+.claude/settings.json

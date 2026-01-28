@@ -134,14 +134,14 @@ The system uses **two types of tokens** for enhanced security and user experienc
 
 | No | Event | Access Token | Refresh Token | User Experience |
 |----|-------|--------------|---------------|-----------------|
-| 1 | User login (Remember Me = true) | Created (15 min) | Created (30 days, localStorage) | Login successful |
-| 1b | User login (Remember Me = false) | Created (15 min) | Created (no expiration, sessionStorage) | Login successful |
+| 1 | User login (Remember Me = true) | Created (15 min) | Created (30 days, localStorage) | Login successful, redirect to `/tasks/list` |
+| 1b | User login (Remember Me = false) | Created (15 min) | Created (no expiration, sessionStorage) | Login successful, redirect to `/tasks/list` |
 | 2 | API call | Used for authentication | Not used | API request successful |
 | 3 | Access token expires (15 min) | Auto-refresh via `/auth/refresh` | Used to get new access token | Seamless, no interruption |
 | 4 | Refresh token rotation | New token created | New token created, old revoked | Automatic, transparent to user |
 | 5 | User closes browser (Remember Me = false) | Deleted (sessionStorage) | Deleted (sessionStorage) | Must login on next visit |
 | 6 | User closes browser (Remember Me = true) | Deleted (sessionStorage) | Kept (localStorage) | Session persists |
-| 7 | User reopens browser (Remember Me = true) | Retrieved via refresh token | Used to get new access token | Auto-login (if < 30 days) |
+| 7 | User reopens browser (Remember Me = true) | Retrieved via refresh token | Used to get new access token | Auto-login (if < 30 days), redirect to `/tasks/list` |
 | 8 | Refresh token expires (30 days, Remember Me only) | N/A | Deleted | User must login again |
 | 9 | Manual logout | Deleted | Deleted, revoked on server | Redirected to Sign In |
 

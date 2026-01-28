@@ -797,7 +797,9 @@ export default function AddTaskForm({
 
     const renderTaskLevelCard = (taskLevel: TaskLevel): JSX.Element => {
       const canAddSubLevel = taskLevel.level < 5;
-      const canDelete = taskLevels.length > 1;
+      // Level 1: Delete = delete entire draft
+      // Level 2+: Delete = remove that subtask
+      const canDelete = true;
 
       // Determine if this is a child task (level > 1)
       const isChildTask = taskLevel.level > 1;
@@ -1030,7 +1032,7 @@ export default function AddTaskForm({
               disabled={isRejecting || isApproving}
               className="px-6 py-2 border border-orange-300 dark:border-orange-600 text-orange-600 dark:text-orange-400 rounded-lg text-sm font-medium hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Request to change
+              Reject
             </button>
             <button
               onClick={handleApprove}

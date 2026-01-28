@@ -438,8 +438,8 @@ const handleGoogleSignIn = useGoogleLogin({
     );
 
     if (result.success) {
-      // Redirect to dashboard
-      router.push('/dashboard');
+      // Redirect to Task List (default screen after login)
+      router.push('/tasks/list');
     } else {
       setError(result.error);
     }

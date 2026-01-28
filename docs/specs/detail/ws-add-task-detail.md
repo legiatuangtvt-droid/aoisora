@@ -3,7 +3,7 @@
 > **Module**: WS (Task from HQ)
 > **Screen ID**: SCR_TASK_ADD
 > **Route**: `/tasks/new`
-> **Last Updated**: 2026-01-08
+> **Last Updated**: 2026-01-25
 
 ---
 
@@ -70,6 +70,33 @@
 | Icon + Title | "Task level 1" | Subtitle: "Main task" |
 | Menu (...) | Click to display | Options: "+ Add task level 2", "Delete task level 1" |
 | Task name | Text input | Placeholder: "Enter task name...", max 255 chars |
+
+### 3.1.1 Delete Task Level Behavior
+
+| Action | Behavior | Confirmation |
+|--------|----------|--------------|
+| **Delete task level 1** | Xóa **toàn bộ task/draft** (bao gồm tất cả subtasks) | **Yes** - Modal xác nhận |
+| **Delete task level 2-5** | Xóa subtask đó và tất cả con của nó | **No** - Xóa trực tiếp |
+
+**Delete Level 1 Confirmation Modal:**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         ⚠️ Warning                              │
+│                                                                 │
+│  Deleting Task Level 1 will delete the entire task,            │
+│  including all subtasks.                                        │
+│                                                                 │
+│  This action cannot be undone.                                  │
+│                                                                 │
+│                    [Cancel]  [Delete Task]                      │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Logic:**
+- "Delete task level 1" luôn **enabled** (không phụ thuộc số lượng task levels)
+- Khi có nhiều task levels (Level 1 + Level 2+...) và xóa Level 1 → xóa tất cả
+- Sau khi xóa thành công → redirect về `/tasks/list`
 
 ### 3.2 Section A: Task Information
 
@@ -405,3 +432,4 @@ frontend/src/
 | 2026-01-01 | Fix: Maps tab connector lines now continuous without gaps |
 | 2026-01-06 | Restructured spec with Basic/Detail sections |
 | 2026-01-08 | Split spec into basic and detail files |
+| 2026-01-25 | Added Delete Task Level behavior: Level 1 = delete entire draft, Level 2+ = delete subtask |
