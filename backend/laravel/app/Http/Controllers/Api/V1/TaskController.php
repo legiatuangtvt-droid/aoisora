@@ -340,6 +340,10 @@ class TaskController extends Controller
             ], 403);
         }
 
+        // For DRAFT status, allow any dates (validation happens on submit)
+        $isDraft = $request->input('status_id', self::DRAFT_STATUS_ID) == self::DRAFT_STATUS_ID;
+        $startDateRule = $isDraft ? 'nullable|date' : 'nullable|date|after_or_equal:today';
+
         $request->validate([
             'task_name' => 'required|string|max:500',
             'task_description' => 'nullable|string',
@@ -349,8 +353,8 @@ class TaskController extends Controller
             'assigned_staff_id' => 'nullable|exists:staff,staff_id',
             'assigned_store_id' => 'nullable|exists:stores,store_id',
             'dept_id' => 'nullable|exists:departments,department_id',
-            // Date validation: start_date >= today, end_date >= start_date
-            'start_date' => 'nullable|date|after_or_equal:today',
+            // Date validation: skip start_date >= today for drafts (validated on submit)
+            'start_date' => $startDateRule,
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'priority' => 'nullable|string|in:low,normal,high,urgent',
             'source' => 'nullable|string|in:task_list,library,todo_task',
@@ -498,6 +502,10 @@ class TaskController extends Controller
     {
         $task = Task::findOrFail($id);
 
+        // For DRAFT status, allow any dates (validation happens on submit)
+        $isDraft = ($request->input('status_id') ?? $task->status_id) == self::DRAFT_STATUS_ID;
+        $startDateRule = $isDraft ? 'nullable|date' : 'nullable|date|after_or_equal:today';
+
         $request->validate([
             'task_name' => 'nullable|string|max:500',
             'task_description' => 'nullable|string',
@@ -505,7 +513,8 @@ class TaskController extends Controller
             'response_type_id' => 'nullable|exists:code_master,code_master_id',
             'status_id' => 'nullable|exists:code_master,code_master_id',
             'assigned_staff_id' => 'nullable|exists:staff,staff_id',
-            'start_date' => 'nullable|date|after_or_equal:today',
+            // Date validation: skip start_date >= today for drafts (validated on submit)
+            'start_date' => $startDateRule,
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'priority' => 'nullable|string|in:low,normal,high,urgent',
             // Task frequency type for date range validation

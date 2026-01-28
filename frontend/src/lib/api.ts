@@ -142,9 +142,11 @@ async function fetchApi<T>(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      // Use error message from backend if available, otherwise fallback to status text
+      const errorMessage = errorData.error || errorData.message || errorData.detail || response.statusText || 'Unknown error';
       throw new ApiError(
         response.status,
-        `API Error: ${response.statusText}`,
+        errorMessage,
         errorData.detail || errorData.message
       );
     }
