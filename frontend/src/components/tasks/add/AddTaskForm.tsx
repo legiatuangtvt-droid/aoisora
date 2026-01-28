@@ -990,17 +990,6 @@ export default function AddTaskForm({
         </div>
       )}
 
-      {/* Status Banner for Creator viewing approval */}
-      {isCreatorViewingApproval && taskStatus === 'approve' && (
-        <div className="flex items-center gap-3 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-          <svg className="w-5 h-5 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span className="text-sm text-yellow-700 dark:text-yellow-300">
-            Waiting for approval from your leader
-          </span>
-        </div>
-      )}
 
       {/* Warning Toast for Task Type / Date Range mismatch */}
       {showWarningToast && warningMessage && (
@@ -1054,7 +1043,8 @@ export default function AddTaskForm({
         )}
 
         {/* CREATOR VIEW when task is pending approval: Disabled buttons */}
-        {isCreatorViewingApproval && taskStatus === 'approve' && (
+        {/* Note: G9 self-approval case - isApprover is true, so don't show these disabled buttons */}
+        {isCreatorViewingApproval && taskStatus === 'approve' && !isApprover && (
           <>
             <button
               disabled

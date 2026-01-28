@@ -63,11 +63,12 @@ export interface TaskGroup {
   };
   unable: number;
   status: TaskStatus;
-  hqCheck: HQCheckStatus;
+  hqCheck?: HQCheckStatus;  // undefined = task not yet dispatched (DRAFT, APPROVE)
   subTasks?: SubTask[];
   isExpanded?: boolean;
   createdStaffId?: number | null;  // Staff ID who created the task (for DRAFT filtering)
   creator?: TaskCreator | null;     // Creator info for avatar/popup display
+  approverId?: number | null;       // Staff ID who is the approver (for APPROVE navigation)
 }
 
 // Filter Interface

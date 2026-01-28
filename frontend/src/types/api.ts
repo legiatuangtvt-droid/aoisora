@@ -290,6 +290,13 @@ export interface TaskCreate {
   task_level?: number;
   // Nested sub-tasks for creation (recursive)
   sub_tasks?: TaskCreate[];
+  // Scope (Store hierarchy) - for task_list source
+  scope_region_id?: number | null;
+  scope_zone_id?: number | null;
+  scope_area_id?: number | null;
+  scope_store_ids?: number[] | null;
+  // Receiver type: store or hq_user
+  receiver_type?: 'store' | 'hq_user';
 }
 
 export interface TaskUpdate {

@@ -371,22 +371,12 @@ function validateScope(
 
   if (source === 'task_list') {
     // Store structure validation: Region > Zone > Area > Store
-    if (!scope.regionId) {
-      errors.push({
-        field: 'scope.regionId',
-        message: 'Region is required',
-        section: 'C',
-        taskLevelId: taskLevel.id,
-      });
-    }
+    // "All Region" means ALL stores are selected (e.g., 460/460)
+    // This is a valid selection - no need to require a specific region
+    // The scope is valid as long as the user has made a selection (including "All")
 
-    // Zone is optional but if region is selected, zone options are available
-    // For now, we only require Region to be selected
-    // Store selection is the most important
-    if (!scope.storeId && !scope.areaId && !scope.zoneId) {
-      // At minimum, need to select something beyond Region
-      // But this depends on business logic - for now just require region
-    }
+    // No validation needed - "All Region" = all stores selected = valid
+    // Specific region/zone/area/store selection = also valid
   } else if (source === 'todo_task') {
     // HQ structure validation: Division > Dept > Team > User
     // The scope fields map differently for HQ:
@@ -394,14 +384,9 @@ function validateScope(
     // zoneId -> deptId
     // areaId -> teamId
     // storeId -> userId
-    if (!scope.regionId) {
-      errors.push({
-        field: 'scope.regionId',
-        message: 'Division is required',
-        section: 'C',
-        taskLevelId: taskLevel.id,
-      });
-    }
+
+    // "All Division" means ALL HQ users are selected - this is a valid selection
+    // No validation needed - "All Division" = all HQ users selected = valid
   }
 
   return errors;

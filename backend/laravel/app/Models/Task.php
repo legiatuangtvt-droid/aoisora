@@ -20,6 +20,11 @@ class Task extends Model
         // Source tracking (3 creation flows)
         'source',
         'receiver_type',
+        // C. Scope section (Store hierarchy: Region > Zone > Area > Store)
+        'scope_region_id',
+        'scope_zone_id',
+        'scope_area_id',
+        'scope_store_ids',
         // Basic task info
         'task_name',
         'task_description',
@@ -94,6 +99,11 @@ class Task extends Model
         // Task hierarchy
         'parent_task_id' => 'integer',
         'task_level' => 'integer',
+        // C. Scope (Store hierarchy)
+        'scope_region_id' => 'integer',
+        'scope_zone_id' => 'integer',
+        'scope_area_id' => 'integer',
+        'scope_store_ids' => 'array',
         // B. Instructions
         'photo_guidelines' => 'array',
         // Dates

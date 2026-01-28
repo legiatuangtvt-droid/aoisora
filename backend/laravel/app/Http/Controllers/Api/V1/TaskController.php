@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Task;
 use App\Models\Staff;
+use App\Models\Store;
 use App\Models\CodeMaster;
 use App\Models\TaskStoreAssignment;
 use App\Models\TaskApprovalHistory;
@@ -1054,6 +1055,85 @@ class TaskController extends Controller
     }
 
     /**
+     * Create store assignments for an approved task based on scope data
+     *
+     * Scope priority:
+     * 1. scope_store_ids (specific stores) - use those stores
+     * 2. scope_area_id - all stores in that area
+     * 3. scope_zone_id - all stores in areas of that zone
+     * 4. scope_region_id - all stores in that region
+     * 5. All null (All Region) - ALL stores
+     *
+     * @param Task $task - The approved task
+     * @param int $assignedBy - Staff ID of the approver who dispatched
+     * @return int Number of store assignments created
+     */
+    private function createStoreAssignmentsForTask(Task $task, int $assignedBy): int
+    {
+        $storeIds = [];
+
+        // Priority 1: Specific stores selected
+        if (!empty($task->scope_store_ids) && is_array($task->scope_store_ids)) {
+            $storeIds = $task->scope_store_ids;
+        }
+        // Priority 2: All stores in a specific area
+        elseif ($task->scope_area_id) {
+            $storeIds = Store::where('area_id', $task->scope_area_id)
+                ->where('status', 'active')
+                ->pluck('store_id')
+                ->toArray();
+        }
+        // Priority 3: All stores in areas of a specific zone
+        elseif ($task->scope_zone_id) {
+            // Get all areas in this zone, then get stores in those areas
+            $areaIds = \App\Models\Area::where('zone_id', $task->scope_zone_id)
+                ->pluck('area_id')
+                ->toArray();
+            $storeIds = Store::whereIn('area_id', $areaIds)
+                ->where('status', 'active')
+                ->pluck('store_id')
+                ->toArray();
+        }
+        // Priority 4: All stores in a specific region
+        elseif ($task->scope_region_id) {
+            $storeIds = Store::where('region_id', $task->scope_region_id)
+                ->where('status', 'active')
+                ->pluck('store_id')
+                ->toArray();
+        }
+        // Priority 5: ALL stores (All Region selected)
+        else {
+            $storeIds = Store::where('status', 'active')
+                ->pluck('store_id')
+                ->toArray();
+        }
+
+        // Create TaskStoreAssignment for each store
+        $now = Carbon::now();
+        $assignmentsCreated = 0;
+
+        foreach ($storeIds as $storeId) {
+            // Check if assignment already exists to avoid duplicates
+            $exists = TaskStoreAssignment::where('task_id', $task->task_id)
+                ->where('store_id', $storeId)
+                ->exists();
+
+            if (!$exists) {
+                TaskStoreAssignment::create([
+                    'task_id' => $task->task_id,
+                    'store_id' => $storeId,
+                    'status' => TaskStoreAssignment::STATUS_NOT_YET,
+                    'assigned_at' => $now,
+                    'assigned_by' => $assignedBy,
+                ]);
+                $assignmentsCreated++;
+            }
+        }
+
+        return $assignmentsCreated;
+    }
+
+    /**
      * Maximum duration in days for each task type
      * Yearly: 365 days, Quarterly: 90 days, Monthly: 31 days, Weekly: 7 days, Daily: 1 day
      */
@@ -1255,8 +1335,13 @@ class TaskController extends Controller
         // Get effective user (may be switched user in testing mode)
         $user = $this->getEffectiveUser($request);
 
-        // Only assigned approver can approve
-        if ($task->approver_id !== $user->staff_id) {
+        // Check approval permission:
+        // 1. User is the assigned approver, OR
+        // 2. User is G9 (highest grade) AND user is the creator (self-approval)
+        $isAssignedApprover = $task->approver_id === $user->staff_id;
+        $isG9SelfApproval = $user->job_grade === 'G9' && $task->created_staff_id === $user->staff_id;
+
+        if (!$isAssignedApprover && !$isG9SelfApproval) {
             return response()->json([
                 'message' => 'Unauthorized',
                 'error' => 'Only the assigned approver can approve this task.',
@@ -1279,8 +1364,12 @@ class TaskController extends Controller
         $task->update([
             'status_id' => self::NOT_YET_STATUS_ID,
             'approved_at' => Carbon::now(),
+            'dispatched_at' => Carbon::now(),
             'comment' => $request->input('comment'),
         ]);
+
+        // Create store assignments based on scope data
+        $storeAssignmentsCreated = $this->createStoreAssignmentsForTask($task, $user->staff_id);
 
         // Broadcast event
         broadcast(new TaskUpdated($task, 'approved'))->toOthers();
@@ -1288,6 +1377,7 @@ class TaskController extends Controller
         return response()->json([
             'message' => 'Task approved successfully',
             'task' => $task->fresh(),
+            'store_assignments_created' => $storeAssignmentsCreated,
         ]);
     }
 
@@ -1302,8 +1392,13 @@ class TaskController extends Controller
         // Get effective user (may be switched user in testing mode)
         $user = $this->getEffectiveUser($request);
 
-        // Only assigned approver can reject
-        if ($task->approver_id !== $user->staff_id) {
+        // Check rejection permission:
+        // 1. User is the assigned approver, OR
+        // 2. User is G9 (highest grade) AND user is the creator (self-rejection for editing)
+        $isAssignedApprover = $task->approver_id === $user->staff_id;
+        $isG9SelfApproval = $user->job_grade === 'G9' && $task->created_staff_id === $user->staff_id;
+
+        if (!$isAssignedApprover && !$isG9SelfApproval) {
             return response()->json([
                 'message' => 'Unauthorized',
                 'error' => 'Only the assigned approver can reject this task.',

@@ -117,7 +117,13 @@ function AddTaskContent() {
   const isCreator = task?.created_staff_id === currentUser?.staff_id;
 
   // Check if current user is the approver
-  const isApprover = isEditMode && !isCreator && task?.approver_id === currentUser?.staff_id;
+  // G9 is the highest grade, so they can self-approve their own tasks (no one higher to approve)
+  const isApprover = isEditMode && (
+    // Normal case: approver is different from creator
+    (!isCreator && task?.approver_id === currentUser?.staff_id) ||
+    // G9 self-approval: G9 can approve their own task
+    (isCreator && currentUser?.job_grade === 'G9' && task?.status_id === STATUS_APPROVE_ID)
+  );
 
   // Get rejection info if task was rejected
   // Use localChangesDetected OR server-side has_changes_since_rejection to determine if user can resubmit
@@ -268,6 +274,18 @@ function AddTaskContent() {
       // Build nested sub_tasks from taskLevels (levels 2-5)
       const subTasks = buildNestedTaskData(taskLevels, rootTask.id, rootTask.level, STATUS_DRAFT_ID);
 
+      // Prepare scope data - only for task_list and todo_task sources
+      // Library source doesn't have scope (will be set when dispatching)
+      const scopeDataForDraft = source !== 'library' ? {
+        scope_region_id: rootTask.scope.regionId ? parseInt(rootTask.scope.regionId) : null,
+        scope_zone_id: rootTask.scope.zoneId ? parseInt(rootTask.scope.zoneId) : null,
+        scope_area_id: rootTask.scope.areaId ? parseInt(rootTask.scope.areaId) : null,
+        scope_store_ids: rootTask.scope.storeId
+          ? rootTask.scope.storeId.split(',').map((id: string) => parseInt(id.trim())).filter((id: number) => !isNaN(id))
+          : null,
+        receiver_type: source === 'todo_task' ? 'hq_user' as const : 'store' as const,
+      } : {};
+
       // Prepare task data for API
       // Always include sub_tasks (even empty array) so backend knows to sync
       const taskData = {
@@ -279,6 +297,7 @@ function AddTaskContent() {
         frequency_type: rootTask.taskInformation.taskType || undefined,
         task_level: 1,
         sub_tasks: subTasks, // Always send, even if empty - backend will sync
+        ...scopeDataForDraft, // Include scope data
       };
 
       if (isEditMode && taskId) {
@@ -339,6 +358,19 @@ function AddTaskContent() {
       // Build nested sub_tasks from taskLevels (levels 2-5)
       const subTasks = buildNestedTaskData(taskLevels, rootTask.id, rootTask.level, STATUS_DRAFT_ID);
 
+      // Prepare scope data - only for task_list and todo_task sources
+      // Library source doesn't have scope (will be set when dispatching)
+      const scopeData = source !== 'library' ? {
+        scope_region_id: rootTask.scope.regionId ? parseInt(rootTask.scope.regionId) : null,
+        scope_zone_id: rootTask.scope.zoneId ? parseInt(rootTask.scope.zoneId) : null,
+        scope_area_id: rootTask.scope.areaId ? parseInt(rootTask.scope.areaId) : null,
+        // storeId can be comma-separated for multiple stores, or empty for "All"
+        scope_store_ids: rootTask.scope.storeId
+          ? rootTask.scope.storeId.split(',').map((id: string) => parseInt(id.trim())).filter((id: number) => !isNaN(id))
+          : null,
+        receiver_type: source === 'todo_task' ? 'hq_user' as const : 'store' as const,
+      } : {};
+
       // Prepare task data for API
       // Always include sub_tasks (even empty array) so backend knows to sync
       const taskData = {
@@ -350,6 +382,7 @@ function AddTaskContent() {
         frequency_type: rootTask.taskInformation.taskType || undefined,
         task_level: 1,
         sub_tasks: subTasks, // Always send, even if empty - backend will sync
+        ...scopeData, // Include scope data
       };
 
       let submitTaskId = taskId;

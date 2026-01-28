@@ -67,18 +67,17 @@ function transformApiSubTasks(subTasks: ApiTask[] | undefined): SubTask[] {
 
   return subTasks.map((subTask) => {
     // Calculate progress from store_progress (if available)
+    // Default to 0 - Progress should only show when task has been dispatched to stores
     let progressCompleted = 0;
-    let progressTotal = 1;
+    let progressTotal = 0;
     let unableCount = 0;
 
     if (subTask.store_progress && subTask.store_progress.total > 0) {
       progressTotal = subTask.store_progress.total;
       progressCompleted = subTask.store_progress.completed_count;
       unableCount = subTask.store_progress.unable;
-    } else {
-      // Fallback: use task's own status
-      progressCompleted = subTask.status_id === 9 ? 1 : 0;
     }
+    // If no store_progress: progress stays 0/0 (task not yet dispatched)
 
     // Use calculated_status from API if available
     const taskStatus = subTask.calculated_status
@@ -98,8 +97,9 @@ function transformApiSubTasks(subTasks: ApiTask[] | undefined): SubTask[] {
         total: progressTotal,
       },
       unable: unableCount,
-      // HQ Check: DONE if task is completed, otherwise NOT_YET
-      hqCheck: subTask.status_id === 9 ? 'DONE' : 'NOT_YET',
+      // HQ Check: Only show for dispatched tasks (progressTotal > 0)
+      // undefined = task not yet dispatched
+      hqCheck: progressTotal > 0 ? (subTask.status_id === 9 ? 'DONE' : 'NOT_YET') : undefined,
     };
   });
 }
@@ -126,24 +126,26 @@ function transformApiTaskToTaskGroup(task: ApiTask, index: number, departments: 
   const subTasks = transformApiSubTasks(task.sub_tasks);
 
   // Calculate progress from store_progress (preferred) or sub_tasks (fallback)
+  // Default to 0 - Progress should only show when task has been dispatched to stores
   let progressCompleted = 0;
-  let progressTotal = 1;
+  let progressTotal = 0;
   let unableCount = 0;
 
   if (task.store_progress && task.store_progress.total > 0) {
     // Use store_progress from API (task_store_assignments data)
+    // Only dispatched tasks (NOT_YET, ON_PROGRESS, DONE, OVERDUE) have store assignments
     progressTotal = task.store_progress.total;
     progressCompleted = task.store_progress.completed_count;
     unableCount = task.store_progress.unable;
-  } else if (subTasks.length > 0) {
-    // Fallback: Calculate from sub_tasks (sub_tasks don't have 'UNABLE' status)
+  } else if (subTasks.length > 0 && task.status_id !== 12 && task.status_id !== 13) {
+    // Fallback: Calculate from sub_tasks ONLY for dispatched tasks
+    // DRAFT (12) and APPROVE (13) tasks should NOT show progress since they haven't been dispatched
+    // sub_tasks don't have 'UNABLE' status
     progressTotal = subTasks.length;
     progressCompleted = subTasks.filter(st => st.status === 'DONE').length;
     // Note: unableCount stays 0 for sub_tasks as they don't have 'UNABLE' status
-  } else {
-    // No sub-tasks and no store_progress: use task's own status
-    progressCompleted = task.status_id === 9 ? 1 : 0;
   }
+  // If no store_progress and no sub_tasks: progress stays 0/0 (task not yet dispatched)
 
   // Use calculated_status from API if available, otherwise fall back to status_id mapping
   const taskStatus = task.calculated_status
@@ -175,11 +177,14 @@ function transformApiTaskToTaskGroup(task: ApiTask, index: number, departments: 
     },
     unable: unableCount,
     status: taskStatus,
-    // HQ Check: DONE if task is completed (status_id=9), otherwise NOT_YET
-    hqCheck: task.status_id === 9 ? 'DONE' : 'NOT_YET',
+    // HQ Check: Only show for dispatched tasks (progressTotal > 0)
+    // DONE if task is completed (status_id=9), otherwise NOT_YET
+    // undefined = task not yet dispatched (DRAFT, APPROVE status)
+    hqCheck: progressTotal > 0 ? (task.status_id === 9 ? 'DONE' : 'NOT_YET') : undefined,
     subTasks: subTasks,
     createdStaffId: task.created_staff_id,
     creator: creator,
+    approverId: task.approver_id,
   };
 }
 
@@ -432,9 +437,15 @@ export default function TaskListPage() {
 
   // Navigate to task detail page or edit page (for drafts)
   const handleRowClick = (task: TaskGroup) => {
-    // If task is DRAFT or APPROVE and current user is the creator, navigate to Add Task screen (edit mode)
-    if ((task.status === 'DRAFT' || task.status === 'APPROVE') && task.createdStaffId === currentUser.staff_id) {
-      // Use unified Add Task screen with query params for edit mode
+    // DRAFT: Chỉ creator mới thấy DRAFT của mình trong list → luôn navigate đến edit
+    // APPROVE: Approver thấy task cần duyệt → navigate đến Add Task để approve/reject
+    // APPROVE + G9 + Creator: G9 là cấp cao nhất, tự approve task của mình
+    const isApprover = task.status === 'APPROVE' && task.approverId === currentUser?.staff_id;
+    const isG9SelfApprove = task.status === 'APPROVE'
+      && task.createdStaffId === currentUser?.staff_id
+      && currentUser?.job_grade === 'G9';
+
+    if (task.status === 'DRAFT' || isApprover || isG9SelfApprove) {
       router.push(`/tasks/new?id=${task.id}&source=task_list`);
     } else {
       router.push(`/tasks/detail?id=${task.id}`);
@@ -609,8 +620,10 @@ export default function TaskListPage() {
 
     // HQ Check filter - combine modal filter (filters.hqCheck) and column filter (hqCheckColumnFilter)
     const combinedHQCheckFilter = [...new Set([...filters.hqCheck, ...hqCheckColumnFilter])];
+    // If no filter applied OR task.hqCheck matches one of the filters
+    // Note: tasks with undefined hqCheck (not yet dispatched) are shown when no filter applied
     const matchesHQCheckColumn =
-      combinedHQCheckFilter.length === 0 || combinedHQCheckFilter.includes(task.hqCheck);
+      combinedHQCheckFilter.length === 0 || (task.hqCheck !== undefined && combinedHQCheckFilter.includes(task.hqCheck));
 
     return matchesDeptColumn && matchesStatusColumn && matchesHQCheckColumn;
   });
@@ -917,13 +930,13 @@ export default function TaskListPage() {
                           {task.startDate} → {task.endDate}
                         </td>
                         <td className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-900 text-center border-r border-gray-200">
-                          {task.progress.completed}/{task.progress.total}
+                          {task.progress.total > 0 ? `${task.progress.completed}/${task.progress.total}` : '-'}
                         </td>
                         <td
                           className="px-4 py-2.5 whitespace-nowrap text-sm text-gray-900 text-center border-r border-gray-200"
                           rowSpan={expandedRows === task.id && task.subTasks && task.subTasks.length > 0 ? 1 + task.subTasks.length : 1}
                         >
-                          {task.unable}
+                          {task.progress.total > 0 ? task.unable : '-'}
                         </td>
                         <td className="px-4 py-2.5 whitespace-nowrap text-sm border-r border-gray-200">
                           <div className="flex items-center justify-center">
@@ -942,7 +955,7 @@ export default function TaskListPage() {
                         {/* HQ Check + Action Menu */}
                         <td className="px-4 py-2.5 whitespace-nowrap text-sm">
                           <div className="relative flex items-center justify-center">
-                            <StatusPill status={task.hqCheck} />
+                            {task.hqCheck ? <StatusPill status={task.hqCheck} /> : <span className="text-gray-400">-</span>}
                             {/* 3-dots Action Menu - positioned with margin from StatusPill */}
                             <div className="absolute -right-2 top-1/2 -translate-y-1/2" data-action-menu>
                               <button
@@ -1004,7 +1017,7 @@ export default function TaskListPage() {
                                 {subTask.startDate} → {subTask.endDate}
                               </td>
                               <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 text-center border-r border-gray-200">
-                                {subTask.progress ? `${subTask.progress.completed}/${subTask.progress.total}` : '-'}
+                                {subTask.progress && subTask.progress.total > 0 ? `${subTask.progress.completed}/${subTask.progress.total}` : '-'}
                               </td>
                               {/* Unable cell removed - merged with parent row via rowSpan */}
                               <td className="px-4 py-2 border-r border-gray-200">
