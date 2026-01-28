@@ -1400,12 +1400,27 @@ backend/laravel/  →  public_html/laravel/
 
 #### Khi nào cần Import Database (phpMyAdmin)
 
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ⚠️ QUY TẮC DEPLOY DATABASE - LUÔN RESET TOÀN BỘ                 │
+│                                                                 │
+│  MỖI LẦN DEPLOY → LUÔN import file deploy/full_reset.sql       │
+│                                                                 │
+│  • KHÔNG cần kiểm tra có thay đổi so với phiên bản trước        │
+│  • KHÔNG dùng migration files riêng lẻ                          │
+│  • LUÔN reset toàn bộ DB production bằng full_reset.sql         │
+│  • Đảm bảo DB production = DB local (đồng bộ hoàn toàn)         │
+│                                                                 │
+│  Lý do: Demo/Development phase - cần đồng bộ hoàn toàn          │
+│         giữa local và production, không cần giữ data cũ         │
+└─────────────────────────────────────────────────────────────────┘
+```
+
 | Tình huống | File import | Ghi chú |
 |------------|-------------|---------|
-| **Reset toàn bộ DB** | `deploy/full_reset.sql` | ⚠️ XÓA TOÀN BỘ DATA, dùng file này duy nhất |
-| **Thêm/sửa table/column** | Tạo file migration SQL mới trong `database/migrations/` | Chỉ chạy migration, không reset data |
+| **Mọi lần deploy** | `deploy/full_reset.sql` | LUÔN LUÔN dùng file này, reset toàn bộ |
 
-> **Lưu ý**: Chỉ sử dụng DUY NHẤT file `deploy/full_reset.sql` để reset database. Không tạo thêm file SQL khác trong thư mục deploy.
+> **Lưu ý**: Chỉ sử dụng DUY NHẤT file `deploy/full_reset.sql`. KHÔNG tạo migration files riêng lẻ.
 
 #### Quy trình Deploy Production (Manual - Đã tắt Auto-Deploy)
 
@@ -1427,9 +1442,9 @@ backend/laravel/  →  public_html/laravel/
 │       → Code được đẩy lên GitHub                                │
 │       → FE sẽ KHÔNG tự deploy (đã tắt)                          │
 │                                                                 │
-│  ☐ 3. DEPLOY DATABASE (nếu có thay đổi schema)                  │
+│  ☐ 3. DEPLOY DATABASE (LUÔN LUÔN - mỗi lần deploy)              │
 │       → Vào DirectAdmin → phpMyAdmin                            │
-│       → Import file SQL migration                               │
+│       → Import file deploy/full_reset.sql (reset toàn bộ DB)    │
 │                                                                 │
 │  ☐ 4. DEPLOY BACKEND (FileZilla)                                │
 │       ⚠️ EXCLUDE file .env khi upload!                          │
