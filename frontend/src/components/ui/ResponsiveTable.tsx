@@ -40,7 +40,7 @@ export function ResponsiveTable({ children, className = '' }: ResponsiveTablePro
   }, [checkScroll]);
 
   return (
-    <div className={`relative ${className}`}>
+    <div className="relative">
       {/* Left scroll indicator shadow */}
       <div
         className={`absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white to-transparent pointer-events-none z-10 transition-opacity duration-200 ${
@@ -58,7 +58,7 @@ export function ResponsiveTable({ children, className = '' }: ResponsiveTablePro
       {/* Scrollable container */}
       <div
         ref={containerRef}
-        className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
+        className={`overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent ${className}`}
       >
         {children}
       </div>

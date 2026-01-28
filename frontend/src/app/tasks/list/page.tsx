@@ -812,9 +812,9 @@ export default function TaskListPage() {
       {/* Body - Table Container */}
       {!isLoading && !error && (
         <div className="border border-gray-200 rounded-lg mb-4 overflow-hidden">
-          <ResponsiveTable>
+          <ResponsiveTable className="max-h-[calc(100vh-280px)] overflow-auto">
           <table className="w-full min-w-[800px]">
-            <thead className="bg-pink-50">
+            <thead className="bg-pink-50 sticky top-0 z-10 shadow-sm">
                 <tr>
                   <th scope="col" className="px-4 py-2.5 text-center text-xs font-semibold text-gray-700 border-r border-gray-200 bg-pink-50">
                     No
