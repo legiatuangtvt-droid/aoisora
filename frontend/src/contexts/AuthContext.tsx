@@ -134,7 +134,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(authUser);
           setToken(accessToken);
 
-          // Update localStorage with fresh user data
+          // Clear any stale user switcher data and update localStorage with fresh user data
+          // This ensures the correct user is used for all API calls after page refresh
+          localStorage.removeItem('aoisora_test_user');
+          localStorage.removeItem('optichain_switched_user_id');
           localStorage.setItem(
             AUTH_STORAGE_KEY,
             JSON.stringify({ user: authUser })
