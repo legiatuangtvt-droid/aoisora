@@ -848,27 +848,40 @@ cd "D:\Project\Aura Web"
 │     → Chạy lệnh mysqldump để export toàn bộ database            │
 │     → Output ra file deploy/full_reset.sql                      │
 │                                                                 │
-│  3. VERIFY FILE SQL                                             │
+│  3. ⚠️ LOẠI BỎ DEFINER TRONG VIEWS (BẮT BUỘC)                   │
+│     → Production server không có user root@localhost            │
+│     → Phải xóa DEFINER='root'@'localhost' khỏi file SQL         │
+│     → Nếu không sẽ gây lỗi "Access denied" khi import           │
+│                                                                 │
+│  4. VERIFY FILE SQL                                             │
 │     → Kiểm tra file đã export đúng chưa                         │
 │     → So sánh số lượng tables, views, data                      │
+│     → Đảm bảo không còn DEFINER=root@localhost                  │
 │                                                                 │
-│  4. COMMIT & PUSH                                               │
+│  5. COMMIT & PUSH                                               │
 │     → Commit file deploy/full_reset.sql                         │
 │     → Push lên GitHub trước khi deploy                          │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ```bash
-# Export toàn bộ database từ local ra file SQL
+# Step 1: Export toàn bộ database từ local ra file SQL
 "D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysqldump.exe" -uroot --databases auraorie68aa_aoisora --add-drop-database --add-drop-table --routines --triggers --events > "d:\Project\auraProject\deploy\full_reset.sql"
 
-# Verify số lượng records (optional)
+# Step 2: ⚠️ LOẠI BỎ DEFINER (BẮT BUỘC - Production không có root@localhost)
+powershell -Command "(Get-Content deploy/full_reset.sql) -replace 'DEFINER=.root.@.localhost. ', '' | Set-Content deploy/full_reset.sql -Encoding UTF8"
+
+# Step 3: Verify không còn DEFINER=root@localhost
+grep "DEFINER=\`root\`@\`localhost\`" deploy/full_reset.sql || echo "OK: No root@localhost DEFINER found"
+
+# Step 4: Verify số lượng records (optional)
 "D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysql.exe" -uroot auraorie68aa_aoisora -e "SELECT COUNT(*) as stores FROM stores; SELECT COUNT(*) as staff FROM staff; SELECT COUNT(*) as tasks FROM tasks;"
 ```
 
 **Lưu ý quan trọng:**
 - **KHÔNG** tự tạo INSERT statements thủ công
 - **PHẢI** export từ local database để đảm bảo data consistency
+- **PHẢI** loại bỏ `DEFINER='root'@'localhost'` sau khi export (production không có user này)
 - File `deploy/full_reset.sql` là **nguồn duy nhất** để import lên server
 - Sau khi export, test import lại trên local để verify
 
