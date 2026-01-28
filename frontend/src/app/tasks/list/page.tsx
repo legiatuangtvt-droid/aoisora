@@ -1043,8 +1043,9 @@ export default function TaskListPage() {
                               return (
                                 <tr
                                   key={subTask.id}
-                                  className="bg-gray-50 dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 animate-fade-in-down"
+                                  className="bg-gray-50 dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 animate-fade-in-down hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer transition-colors"
                                   style={{ animationDelay: `${subIndex * 50}ms`, animationFillMode: 'both' }}
+                                  onClick={() => router.push(`/tasks/${subTask.id}`)}
                                 >
                                   <td className="px-4 py-2 text-center border-r border-gray-200 dark:border-gray-700"></td>
                                   <td className="px-4 py-2 border-r border-gray-200 dark:border-gray-700"></td>
