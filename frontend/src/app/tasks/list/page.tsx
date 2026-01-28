@@ -61,8 +61,8 @@ const formatDateForUI = (dateStr: string | null): string => {
   return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
 };
 
-// Transform API sub_tasks to UI SubTask format (recursive)
-function transformApiSubTasks(subTasks: ApiTask[] | undefined): SubTask[] {
+// Transform API sub_tasks to UI SubTask format (recursive - supports levels 2-5)
+function transformApiSubTasks(subTasks: ApiTask[] | undefined, parentLevel: number = 1): SubTask[] {
   if (!subTasks || subTasks.length === 0) return [];
 
   return subTasks.map((subTask) => {
@@ -84,6 +84,12 @@ function transformApiSubTasks(subTasks: ApiTask[] | undefined): SubTask[] {
       ? subTask.calculated_status.toUpperCase() as SubTask['status']
       : STATUS_MAP[subTask.status_id || 7] || 'NOT_YET';
 
+    // Get the level from API or calculate from parent
+    const level = subTask.task_level || (parentLevel + 1);
+
+    // Recursively transform nested sub_tasks (levels 3, 4, 5)
+    const children = transformApiSubTasks(subTask.sub_tasks, level);
+
     return {
       id: subTask.task_id.toString(),
       name: subTask.task_name,
@@ -100,8 +106,27 @@ function transformApiSubTasks(subTasks: ApiTask[] | undefined): SubTask[] {
       // HQ Check: Only show for dispatched tasks (progressTotal > 0)
       // undefined = task not yet dispatched
       hqCheck: progressTotal > 0 ? (subTask.status_id === 9 ? 'DONE' : 'NOT_YET') : undefined,
+      // Nested children and level for recursive display
+      children: children.length > 0 ? children : undefined,
+      level,
     };
   });
+}
+
+// Helper function to flatten nested sub-tasks for table rendering
+// Converts recursive tree structure into flat array with level info
+function flattenSubTasks(subTasks: SubTask[]): SubTask[] {
+  const result: SubTask[] = [];
+
+  function processSubTask(subTask: SubTask) {
+    result.push(subTask);
+    if (subTask.children && subTask.children.length > 0) {
+      subTask.children.forEach(child => processSubTask(child));
+    }
+  }
+
+  subTasks.forEach(subTask => processSubTask(subTask));
+  return result;
 }
 
 // Transform API Task to UI TaskGroup format
@@ -990,59 +1015,71 @@ export default function TaskListPage() {
                         </td>
                       </tr>
 
-                      {/* Sub Tasks (Accordion) */}
+                      {/* Sub Tasks (Accordion) - Displays all levels (2-5) with indentation */}
                       {expandedRows === task.id && task.subTasks && task.subTasks.length > 0 && (
                         <>
-                          {task.subTasks.map((subTask, subIndex) => (
-                            <tr
-                              key={subTask.id}
-                              className="bg-gray-50 dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 animate-fade-in-down"
-                              style={{ animationDelay: `${subIndex * 50}ms`, animationFillMode: 'both' }}
-                            >
-                              <td className="px-4 py-2 text-center border-r border-gray-200"></td>
-                              <td className="px-4 py-2 border-r border-gray-200"></td>
-                              <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200">
-                                <div className="pl-8">
-                                  <span>
-                                    {subTask.name}
-                                    {subTask.assignee && (
-                                      <span className="ml-2 text-gray-500 dark:text-gray-400 text-xs">
-                                        ({subTask.assignee})
+                          {flattenSubTasks(task.subTasks).map((subTask, subIndex) => {
+                            // Calculate indentation based on level (level 2 = 8px, level 3 = 16px, etc.)
+                            const indentPx = (subTask.level || 2) * 8;
+
+                            return (
+                              <tr
+                                key={subTask.id}
+                                className="bg-gray-50 dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 animate-fade-in-down"
+                                style={{ animationDelay: `${subIndex * 50}ms`, animationFillMode: 'both' }}
+                              >
+                                <td className="px-4 py-2 text-center border-r border-gray-200"></td>
+                                <td className="px-4 py-2 border-r border-gray-200"></td>
+                                <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200">
+                                  <div style={{ paddingLeft: `${indentPx}px` }}>
+                                    <span className="flex items-center gap-1">
+                                      {/* Level indicator for levels 3+ */}
+                                      {(subTask.level || 2) > 2 && (
+                                        <span className="text-gray-400 dark:text-gray-500 text-xs">
+                                          {'└─'}
+                                        </span>
+                                      )}
+                                      <span>
+                                        {subTask.name}
+                                        {subTask.assignee && (
+                                          <span className="ml-2 text-gray-500 dark:text-gray-400 text-xs">
+                                            ({subTask.assignee})
+                                          </span>
+                                        )}
                                       </span>
-                                    )}
-                                  </span>
-                                </div>
-                              </td>
-                              <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 text-center border-r border-gray-200">
-                                {subTask.startDate} → {subTask.endDate}
-                              </td>
-                              <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 text-center border-r border-gray-200">
-                                {subTask.progress && subTask.progress.total > 0 ? `${subTask.progress.completed}/${subTask.progress.total}` : '-'}
-                              </td>
-                              {/* Unable cell removed - merged with parent row via rowSpan */}
-                              <td className="px-4 py-2 border-r border-gray-200">
-                                <div className="flex items-center justify-center">
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleViewApprovalHistory(subTask.id);
-                                    }}
-                                    className="cursor-pointer hover:opacity-80 transition-opacity"
-                                    title="View approval history"
-                                  >
-                                    <StatusPill status={subTask.status} />
-                                  </button>
-                                </div>
-                              </td>
-                              <td className="px-4 py-2">
-                                {subTask.hqCheck && (
-                                  <div className="flex items-center justify-center">
-                                    <StatusPill status={subTask.hqCheck} />
+                                    </span>
                                   </div>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
+                                </td>
+                                <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 text-center border-r border-gray-200">
+                                  {subTask.startDate} → {subTask.endDate}
+                                </td>
+                                <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 text-center border-r border-gray-200">
+                                  {subTask.progress && subTask.progress.total > 0 ? `${subTask.progress.completed}/${subTask.progress.total}` : '-'}
+                                </td>
+                                <td className="px-4 py-2 border-r border-gray-200">
+                                  <div className="flex items-center justify-center">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleViewApprovalHistory(subTask.id);
+                                      }}
+                                      className="cursor-pointer hover:opacity-80 transition-opacity"
+                                      title="View approval history"
+                                    >
+                                      <StatusPill status={subTask.status} />
+                                    </button>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-2">
+                                  {subTask.hqCheck && (
+                                    <div className="flex items-center justify-center">
+                                      <StatusPill status={subTask.hqCheck} />
+                                    </div>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </>
                       )}
                     </React.Fragment>

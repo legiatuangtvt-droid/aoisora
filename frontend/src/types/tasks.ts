@@ -35,6 +35,9 @@ export interface SubTask {
   };
   unable?: number;
   hqCheck?: HQCheckStatus;
+  // Nested children (level 3, 4, 5) for recursive display
+  children?: SubTask[];
+  level?: number; // 2, 3, 4, 5
 }
 
 // Creator info for display in task list
