@@ -259,7 +259,7 @@ export default function TaskListPage() {
   const [expandedRows, setExpandedRows] = useState<string | null>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filters, setFilters] = useState<TaskFilters>({
-    viewScope: 'My Tasks',  // Default to My Tasks - show only current user's tasks
+    viewScope: 'All team',  // Default to All team - show all visible tasks
     departments: [],
     status: [],
     hqCheck: [],
