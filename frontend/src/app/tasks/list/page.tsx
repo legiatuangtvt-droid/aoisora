@@ -1032,21 +1032,13 @@ export default function TaskListPage() {
                                 <td className="px-4 py-2 border-r border-gray-200"></td>
                                 <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200">
                                   <div style={{ paddingLeft: `${indentPx}px` }}>
-                                    <span className="flex items-center gap-1">
-                                      {/* Level indicator for levels 3+ */}
-                                      {(subTask.level || 2) > 2 && (
-                                        <span className="text-gray-400 dark:text-gray-500 text-xs">
-                                          {'└─'}
+                                    <span>
+                                      {subTask.name}
+                                      {subTask.assignee && (
+                                        <span className="ml-2 text-gray-500 dark:text-gray-400 text-xs">
+                                          ({subTask.assignee})
                                         </span>
                                       )}
-                                      <span>
-                                        {subTask.name}
-                                        {subTask.assignee && (
-                                          <span className="ml-2 text-gray-500 dark:text-gray-400 text-xs">
-                                            ({subTask.assignee})
-                                          </span>
-                                        )}
-                                      </span>
                                     </span>
                                   </div>
                                 </td>
