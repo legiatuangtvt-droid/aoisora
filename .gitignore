@@ -69,3 +69,9 @@ deploy/laravel/.env
 .env*.local
 
 .claude/settings.json
+
+# Employee data files (sensitive)
+docs/employee_list.csv
+docs/employee_list_utf8.csv
+docs/danh sách nhân viên.xlsx
+
