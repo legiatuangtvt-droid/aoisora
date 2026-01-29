@@ -13,7 +13,7 @@ import { FullPageError } from '@/components/ui/ErrorBoundary';
 import { ConfirmationDialog } from '@/components/ui/ConfirmationDialog';
 import { createTask, getDraftInfo, DraftInfo, submitTask, getTaskById, updateTask, deleteTask, approveTask, rejectTask } from '@/lib/api';
 import { Task } from '@/types/api';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Status IDs from code_master
 const STATUS_DRAFT_ID = 12;
@@ -93,7 +93,7 @@ function AddTaskContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { showToast } = useToast();
-  const { currentUser } = useUser();
+  const { user } = useAuth();
 
   // Get params from URL
   const taskId = searchParams.get('id') ? parseInt(searchParams.get('id')!, 10) : null;
@@ -118,7 +118,7 @@ function AddTaskContent() {
   const [taskLevels, setTaskLevels] = useState<TaskLevel[]>(() => [createEmptyTaskLevel(1)]);
 
   // User info
-  const isHQUser = currentUser?.job_grade?.startsWith('G') || false;
+  const isHQUser = user?.jobGrade?.startsWith('G') || false;
 
   // Get draft info for current source
   const sourceDraftInfo = draftInfo?.by_source?.[source];
@@ -127,7 +127,7 @@ function AddTaskContent() {
   const taskStatus = task?.status_id === STATUS_APPROVE_ID ? 'approve' : 'draft';
 
   // Check if current user is the creator
-  const isCreator = task?.created_staff_id === currentUser?.staff_id;
+  const isCreator = task?.created_staff_id === user?.id;
 
   // Check if current user can act as approver
   // Approach: If task status = APPROVE, show approve UI. Backend will validate actual permission.
@@ -138,7 +138,7 @@ function AddTaskContent() {
     // Any user viewing a task pending approval (backend validates actual permission)
     !isCreator ||
     // G9 self-approval: G9 can approve their own task
-    (isCreator && currentUser?.job_grade === 'G9')
+    (isCreator && user?.jobGrade === 'G9')
   );
 
   // Get rejection info if task was rejected

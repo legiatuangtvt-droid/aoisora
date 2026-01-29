@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   checkHealth,
   getStores,
@@ -122,7 +122,7 @@ interface ScheduleRow {
 
 export default function DailySchedulePage() {
   const { t } = useLanguage();
-  const { currentUser } = useUser();
+  const { user } = useAuth();
   const router = useRouter();
   const [backendOnline, setBackendOnline] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -504,16 +504,16 @@ export default function DailySchedulePage() {
             {/* Backend status indicator + Current User */}
             <div className="flex items-center gap-4">
               {/* Current User */}
-              {currentUser && (
+              {user && (
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 rounded-full">
                   <div className="w-6 h-6 bg-indigo-500 rounded-full flex items-center justify-center">
                     <span className="text-white text-xs font-bold">
-                      {currentUser.staff_name.charAt(0)}
+                      {user.fullName?.charAt(0) || 'U'}
                     </span>
                   </div>
                   <div className="text-xs">
-                    <div className="font-medium text-gray-800">{currentUser.staff_name}</div>
-                    <div className="text-gray-500">{currentUser.job_grade}</div>
+                    <div className="font-medium text-gray-800">{user.fullName}</div>
+                    <div className="text-gray-500">{user.jobGrade}</div>
                   </div>
                 </div>
               )}

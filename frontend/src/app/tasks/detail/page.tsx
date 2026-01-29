@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getTaskById, getDepartments, getTasks, getTaskProgress, getTaskComments, createTaskComment, updateTaskComment, deleteTaskComment, TaskComment, getTaskImages, TaskImage } from '@/lib/api';
 import { Task as ApiTask, Department, TaskProgressResponse, TaskStoreAssignment } from '@/types/api';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { ViewMode, TaskGroup } from '@/types/tasks';
 import Link from 'next/link';
 import ViewModeToggle from '@/components/tasks/ViewModeToggle';
@@ -47,7 +47,7 @@ export default function TaskDetailPage() {
   const [selectedEvidence, setSelectedEvidence] = useState<{ storeId: number; storeName: string; images: TaskImage[] } | null>(null);
 
   // Get current user
-  const { currentUser } = useUser();
+  const { user } = useAuth();
   const { showToast } = useToast();
 
   // Refs for scroll preservation
@@ -751,7 +751,7 @@ export default function TaskDetailPage() {
               <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                 <div className="flex gap-3">
                   <div className="w-10 h-10 rounded-full bg-[#C5055B] flex items-center justify-center text-white font-medium text-sm flex-shrink-0" aria-hidden="true">
-                    {currentUser?.staff_name?.charAt(0) || 'U'}
+                    {user?.fullName?.charAt(0) || 'U'}
                   </div>
                   <div className="flex-1">
                     <label htmlFor="newComment" className="sr-only">Write a comment</label>
@@ -799,7 +799,7 @@ export default function TaskDetailPage() {
                                 {formatCommentDate(comment.created_at)}
                               </span>
                             </div>
-                            {currentUser?.staff_id === comment.user?.staff_id && (
+                            {user?.id === comment.user?.staff_id && (
                               <div className="flex items-center gap-1">
                                 <button
                                   onClick={() => startEditingComment(comment)}

@@ -9,7 +9,7 @@ import DepartmentFilterChips from '@/components/library/DepartmentFilterChips';
 import TaskSearchBar from '@/components/library/TaskSearchBar';
 import TaskGroupSection from '@/components/library/TaskGroupSection';
 import { getDraftInfo, DraftInfo, getWsLibraryTemplates, WsLibraryTemplate, overrideWsLibraryCooldown } from '@/lib/api';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { LibraryPageSkeleton } from '@/components/ui/Skeleton';
 import { ErrorDisplay } from '@/components/ui/ErrorBoundary';
 import { SearchEmptyState } from '@/components/ui/EmptyState';
@@ -87,8 +87,8 @@ function groupTemplatesByDepartment(templates: TaskTemplate[]): TaskGroup[] {
 
 export default function TaskLibraryPage() {
   const router = useRouter();
-  const { currentUser } = useUser();
-  const isHQUser = currentUser?.job_grade?.startsWith('G') || false;
+  const { user } = useAuth();
+  const isHQUser = user?.jobGrade?.startsWith('G') || false;
 
   const [activeTab, setActiveTab] = useState<TaskCategory>('office');
   const [selectedDepartments, setSelectedDepartments] = useState<DepartmentType[]>([]);

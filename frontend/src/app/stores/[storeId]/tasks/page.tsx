@@ -15,7 +15,7 @@ import {
   StoreTaskStatus,
   StoreStaffOption,
 } from '@/lib/api';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { StoreTasksPageSkeleton } from '@/components/ui/Skeleton';
 import { LoadingSpinner } from '@/components/ui/LoadingIndicator';
 import { ErrorDisplay } from '@/components/ui/ErrorBoundary';
@@ -63,13 +63,13 @@ const getStatusLabel = (status: StoreTaskStatus): string => {
 export default function StoreTasksPage() {
   const params = useParams();
   const router = useRouter();
-  const { currentUser } = useUser();
+  const { user } = useAuth();
   const { showToast } = useToast();
 
   const storeId = Number(params.storeId);
 
   // User role detection
-  const jobGrade = currentUser?.job_grade || '';
+  const jobGrade = user?.jobGrade || '';
   const isStoreLeader = ['S2', 'S3', 'S4'].includes(jobGrade);
   const isStaff = jobGrade === 'S1';
   const isStoreUser = jobGrade.startsWith('S');
@@ -319,7 +319,7 @@ export default function StoreTasksPage() {
   // Check if user can act on task
   const canActOnTask = (task: StoreTaskAssignment): boolean => {
     if (isStoreLeader) return true;
-    if (isStaff && task.assigned_to_staff_id === currentUser?.staff_id) return true;
+    if (isStaff && task.assigned_to_staff_id === user?.id) return true;
     return false;
   };
 

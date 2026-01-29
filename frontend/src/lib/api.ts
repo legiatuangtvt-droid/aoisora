@@ -2324,29 +2324,3 @@ export async function importStoresFromFile(file: File): Promise<StoreImportResul
   return response.json();
 }
 
-// ============================================
-// User Switcher API (Development/Testing)
-// ============================================
-
-export interface UserSwitcherStaff {
-  staff_id: number;
-  staff_name: string;
-  staff_code: string;
-  email: string;
-  job_grade: string;
-  scope: string;
-  store_id: number | null;
-  store_name: string;
-  department_id: number | null;
-  department_name: string;
-}
-
-export interface UserSwitcherResponse {
-  data: UserSwitcherStaff[];
-  total: number;
-}
-
-// Get staff list for User Switcher
-export async function getUserSwitcherStaff(): Promise<UserSwitcherResponse> {
-  return fetchApi<UserSwitcherResponse>('/staff/user-switcher', { skipAuth: true });
-}

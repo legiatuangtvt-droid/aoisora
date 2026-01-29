@@ -5,7 +5,6 @@ import QueryProvider from "@/providers/QueryProvider";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ToastProvider } from "@/components/ui/Toast";
 import { LanguageProvider } from "@/contexts/LanguageContext";
-import { UserProvider } from "@/contexts/UserContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { IdleTimerProvider } from "@/contexts/IdleTimerContext";
 import AuthGuard from "@/components/auth/AuthGuard";
@@ -43,15 +42,13 @@ export default function RootLayout({
               <AuthProvider>
                 <IdleTimerProvider>
                   <LanguageProvider>
-                    <UserProvider>
-                      <ErrorBoundary>
-                        <AuthGuard>
-                          {children}
-                        </AuthGuard>
-                      </ErrorBoundary>
-                      <SessionWarningWrapper />
-                    </UserProvider>
-                  </LanguageProvider>
+                  <ErrorBoundary>
+                    <AuthGuard>
+                      {children}
+                    </AuthGuard>
+                  </ErrorBoundary>
+                  <SessionWarningWrapper />
+                </LanguageProvider>
                 </IdleTimerProvider>
               </AuthProvider>
             </ToastProvider>

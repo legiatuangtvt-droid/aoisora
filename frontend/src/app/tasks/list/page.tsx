@@ -17,8 +17,8 @@ import { ErrorDisplay, InlineError } from '@/components/ui/ErrorBoundary';
 import { TableEmptyState } from '@/components/ui/EmptyState';
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable';
 import { useTaskUpdates } from '@/hooks/useTaskUpdates';
-import { useUser } from '@/contexts/UserContext';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Map API status_id to UI status
 // code_master: 7=NOT_YET, 8=ON_PROGRESS, 9=DONE, 10=OVERDUE, 11=REJECT, 12=DRAFT, 13=APPROVE
@@ -225,7 +225,7 @@ function transformApiTaskToTaskGroup(task: ApiTask, index: number, departments: 
 
 export default function TaskListPage() {
   const router = useRouter();
-  const { currentUser } = useUser();
+  const { user } = useAuth();
   const { isHQUser: checkIsHQ, canCreateTask: checkCanCreate } = usePermissions();
 
   // Check if user is HQ type (G2-G9) - use hook for consistent permission checking
@@ -371,8 +371,8 @@ export default function TaskListPage() {
       }
 
       // My Tasks filter - filter by created_staff_id when viewScope is "My Tasks"
-      if (filters.viewScope === 'My Tasks' && currentUser?.staff_id) {
-        queryParams['filter[created_staff_id]'] = currentUser.staff_id;
+      if (filters.viewScope === 'My Tasks' && user?.id) {
+        queryParams['filter[created_staff_id]'] = user.id;
       }
 
       // Fetch tasks with server-side pagination
@@ -427,9 +427,9 @@ export default function TaskListPage() {
     } finally {
       setIsLoading(false);
     }
-  // Include currentUser.staff_id to trigger refetch when user switches
+  // Include user.id to trigger refetch when user changes
   // Include filters.viewScope to trigger refetch when switching between "All team" and "My Tasks"
-  }, [currentPage, itemsPerPage, debouncedSearch, dateRange, filters.departments, filters.status, filters.viewScope, currentUser?.staff_id]);
+  }, [currentPage, itemsPerPage, debouncedSearch, dateRange, filters.departments, filters.status, filters.viewScope, user?.id]);
 
   // Initial load - fetch departments once
   useEffect(() => {
@@ -441,8 +441,8 @@ export default function TaskListPage() {
     if (departments.length > 0) {
       fetchTasks(departments);
     }
-  // Include currentUser.staff_id to trigger refetch when user switches
-  }, [departments, currentPage, debouncedSearch, dateRange, filters.departments, filters.status, fetchTasks, currentUser?.staff_id]);
+  // Include user.id to trigger refetch when user changes
+  }, [departments, currentPage, debouncedSearch, dateRange, filters.departments, filters.status, fetchTasks, user?.id]);
 
   // Real-time updates via WebSocket
   const { isConnected: wsConnected } = useTaskUpdates({

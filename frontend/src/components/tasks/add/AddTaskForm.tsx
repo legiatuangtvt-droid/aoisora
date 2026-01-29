@@ -365,7 +365,7 @@ export default function AddTaskForm({
   onDeleteTask,
   isDeleting = false,
 }: AddTaskFormProps) {
-  // Get current logged-in user from AuthContext (not UserContext which was for test switcher)
+  // Get current logged-in user from AuthContext
   const { user: authUser } = useAuth();
 
   // Map AuthUser to the format expected by child components

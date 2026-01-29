@@ -12,7 +12,7 @@ import {
   mockOtherComments,
 } from '@/data/mockTodoTask';
 import { getDraftInfo, DraftInfo } from '@/lib/api';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 import WeekHeader from '@/components/tasks/todo/WeekHeader';
 import OverallWeekPanel from '@/components/tasks/todo/OverallWeekPanel';
 import LastWeekReviewPanel from '@/components/tasks/todo/LastWeekReviewPanel';
@@ -22,8 +22,8 @@ import ManagerCommentPanel from '@/components/tasks/todo/ManagerCommentPanel';
 
 export default function TodoTaskPage() {
   const router = useRouter();
-  const { currentUser } = useUser();
-  const isHQUser = currentUser?.job_grade?.startsWith('G') || false;
+  const { user } = useAuth();
+  const isHQUser = user?.jobGrade?.startsWith('G') || false;
 
   // State
   const [filters, setFilters] = useState<TodoFilters>({
