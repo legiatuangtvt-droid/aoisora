@@ -1382,9 +1382,9 @@ export default function TaskDetailPage() {
                 </div>
               ) : (
                 /* Document Preview Content */
-                <div className="space-y-4">
+                <div className="space-y-4 text-center">
                   {originalTask?.comment ? (
-                    <div className="prose prose-sm dark:prose-invert max-w-none">
+                    <div className="prose prose-sm dark:prose-invert max-w-none mx-auto">
                       <p className="text-[15px] leading-[20px] text-black dark:text-white whitespace-pre-wrap">
                         {originalTask.comment}
                       </p>
