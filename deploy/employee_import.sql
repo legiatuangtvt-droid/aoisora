@@ -1,6 +1,6 @@
 -- ============================================
 -- EMPLOYEE IMPORT FROM CSV
--- Generated: 2026-01-29 15:41:19
+-- Generated: 2026-01-29 15:53:00
 -- Total employees: 367
 -- HQ Staff: 44
 -- Store Staff: 323
@@ -421,6 +421,13 @@ INSERT INTO staff (staff_id, staff_code, staff_name, username, email, phone, sto
 -- ADDITIONAL HQ STAFF (Manual Entry)
 -- ============================================
 INSERT INTO staff (staff_id, staff_code, staff_name, username, email, phone, store_id, department_id, role, position, job_grade, joining_date, password_hash, status, is_active) VALUES (368, 'HQ001', 'Yoshinaga Shinichi', 'yoshinaga', 'yoshinaga@aeon.com.vn', '0901234567', NULL, 7, 'MANAGER', 'Department Manager', 'G6', '2020-01-15', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active', 1);
+
+-- ============================================
+-- SYSTEM ADMIN (Operations/Maintenance Account)
+-- NOT part of organizational hierarchy
+-- Highest privilege for app operations
+-- ============================================
+INSERT INTO staff (staff_id, staff_code, staff_name, username, email, phone, store_id, department_id, role, position, job_grade, joining_date, password_hash, status, is_active) VALUES (369, 'SYS001', 'Admin System', 'admin', 'admin@aeon.com.vn', NULL, NULL, NULL, 'SYSTEM_ADMIN', 'System Administrator', NULL, NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active', 1);
 
 -- ============================================
 -- END OF EMPLOYEE IMPORT

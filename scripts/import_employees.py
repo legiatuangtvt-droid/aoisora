@@ -183,6 +183,17 @@ def main():
     sql_lines.append(yoshinaga_sql)
     staff_id += 1
 
+    # Add System Admin (highest privilege, not in org hierarchy - for operations/maintenance)
+    sql_lines.append("")
+    sql_lines.append("-- ============================================")
+    sql_lines.append("-- SYSTEM ADMIN (Operations/Maintenance Account)")
+    sql_lines.append("-- NOT part of organizational hierarchy")
+    sql_lines.append("-- Highest privilege for app operations")
+    sql_lines.append("-- ============================================")
+    admin_sql = f"""INSERT INTO staff (staff_id, staff_code, staff_name, username, email, phone, store_id, department_id, role, position, job_grade, joining_date, password_hash, status, is_active) VALUES ({staff_id}, 'SYS001', 'Admin System', 'admin', 'admin@aeon.com.vn', NULL, NULL, NULL, 'SYSTEM_ADMIN', 'System Administrator', NULL, NULL, {escape_sql(password_hash)}, 'active', 1);"""
+    sql_lines.append(admin_sql)
+    staff_id += 1
+
     sql_lines.append("")
     sql_lines.append("-- ============================================")
     sql_lines.append("-- END OF EMPLOYEE IMPORT")
