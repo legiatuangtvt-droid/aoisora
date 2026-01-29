@@ -647,95 +647,110 @@ export default function TaskDetailPage() {
             </div>
 
             {/* Right - Statistics Cards */}
-            <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+            <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3">
               {/* Not Started */}
-              <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 text-center">
-                <div className="flex items-center justify-center mb-3">
-                  <div className="w-8 h-8 rounded-full border-2 border-gray-300 dark:border-gray-600 flex items-center justify-center">
-                    <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+              <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-center">
+                <div className="flex items-center justify-center mb-2">
+                  <div className="w-7 h-7 rounded-full border-2 border-gray-300 dark:border-gray-600 flex items-center justify-center">
+                    <svg className="w-3.5 h-3.5 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
                     </svg>
                   </div>
                 </div>
-                <div className="text-4xl font-bold text-gray-900 dark:text-white mb-1">
+                <div className="text-2xl font-bold text-gray-900 dark:text-white mb-0.5">
                   {taskProgress?.progress?.not_yet || 0}
                 </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">Not Started</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Not Started</div>
               </div>
 
-              {/* Completed */}
-              <div className="border-2 border-green-400 dark:border-green-500 rounded-xl p-4 text-center bg-green-50/30 dark:bg-green-900/20">
-                <div className="flex items-center justify-center mb-3">
-                  <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {/* Completed (done only) */}
+              <div className="border-2 border-green-400 dark:border-green-500 rounded-xl p-3 text-center bg-green-50/30 dark:bg-green-900/20">
+                <div className="flex items-center justify-center mb-2">
+                  <div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center">
+                    <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
                 </div>
-                <div className="text-4xl font-bold text-gray-900 dark:text-white mb-1">
-                  {(taskProgress?.progress?.done || 0) + (taskProgress?.progress?.done_pending || 0)}
+                <div className="text-2xl font-bold text-gray-900 dark:text-white mb-0.5">
+                  {taskProgress?.progress?.done || 0}
                 </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">Completed</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Completed</div>
+              </div>
+
+              {/* Pending (done_pending - waiting HQ check) */}
+              <div className="border-2 border-cyan-400 dark:border-cyan-500 rounded-xl p-3 text-center bg-cyan-50/30 dark:bg-cyan-900/20">
+                <div className="flex items-center justify-center mb-2">
+                  <div className="w-7 h-7 rounded-full bg-cyan-500 flex items-center justify-center">
+                    <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-2xl font-bold text-gray-900 dark:text-white mb-0.5">
+                  {taskProgress?.progress?.done_pending || 0}
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Pending</div>
               </div>
 
               {/* On Progress */}
-              <div className="border-2 border-blue-400 dark:border-blue-500 rounded-xl p-4 text-center bg-blue-50/30 dark:bg-blue-900/20">
-                <div className="flex items-center justify-center mb-3">
-                  <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="border-2 border-blue-400 dark:border-blue-500 rounded-xl p-3 text-center bg-blue-50/30 dark:bg-blue-900/20">
+                <div className="flex items-center justify-center mb-2">
+                  <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center">
+                    <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
                   </div>
                 </div>
-                <div className="text-4xl font-bold text-gray-900 dark:text-white mb-1">
+                <div className="text-2xl font-bold text-gray-900 dark:text-white mb-0.5">
                   {taskProgress?.progress?.on_progress || 0}
                 </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">On Progress</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">On Progress</div>
               </div>
 
               {/* Overdue */}
-              <div className="border-2 border-orange-400 dark:border-orange-500 rounded-xl p-4 text-center bg-orange-50/30 dark:bg-orange-900/20">
-                <div className="flex items-center justify-center mb-3">
-                  <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="border-2 border-orange-400 dark:border-orange-500 rounded-xl p-3 text-center bg-orange-50/30 dark:bg-orange-900/20">
+                <div className="flex items-center justify-center mb-2">
+                  <div className="w-7 h-7 rounded-full bg-orange-500 flex items-center justify-center">
+                    <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                 </div>
-                <div className="text-4xl font-bold text-gray-900 dark:text-white mb-1">
+                <div className="text-2xl font-bold text-gray-900 dark:text-white mb-0.5">
                   {taskProgress?.progress?.overdue || 0}
                 </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">Overdue</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Overdue</div>
               </div>
 
               {/* Unable to Complete */}
-              <div className="border-2 border-red-400 dark:border-red-500 rounded-xl p-4 text-center bg-red-50/30 dark:bg-red-900/20">
-                <div className="flex items-center justify-center mb-3">
-                  <div className="w-8 h-8 rounded-full border-2 border-red-500 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="border-2 border-red-400 dark:border-red-500 rounded-xl p-3 text-center bg-red-50/30 dark:bg-red-900/20">
+                <div className="flex items-center justify-center mb-2">
+                  <div className="w-7 h-7 rounded-full border-2 border-red-500 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                     </svg>
                   </div>
                 </div>
-                <div className="text-4xl font-bold text-gray-900 dark:text-white mb-1">
+                <div className="text-2xl font-bold text-gray-900 dark:text-white mb-0.5">
                   {taskProgress?.progress?.unable || 0}
                 </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">Unable to Complete</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Unable</div>
               </div>
 
               {/* Average Completion Time */}
-              <div className="border-2 border-yellow-400 dark:border-yellow-500 rounded-xl p-4 text-center bg-yellow-50/30 dark:bg-yellow-900/20">
-                <div className="flex items-center justify-center mb-3">
-                  <div className="w-8 h-8 rounded-full bg-yellow-400 flex items-center justify-center">
-                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <div className="border-2 border-yellow-400 dark:border-yellow-500 rounded-xl p-3 text-center bg-yellow-50/30 dark:bg-yellow-900/20">
+                <div className="flex items-center justify-center mb-2">
+                  <div className="w-7 h-7 rounded-full bg-yellow-400 flex items-center justify-center">
+                    <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.2 3.2.8-1.3-4.5-2.7V7z" />
                     </svg>
                   </div>
                 </div>
-                <div className="text-4xl font-bold text-gray-900 dark:text-white mb-1">
-                  {taskProgress?.avg_execution_time_minutes || 0}<span className="text-xl">min</span>
+                <div className="text-2xl font-bold text-gray-900 dark:text-white mb-0.5">
+                  {taskProgress?.avg_execution_time_minutes || 0}<span className="text-sm">min</span>
                 </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">Average Completion Time</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Avg Time</div>
               </div>
             </div>
           </div>
