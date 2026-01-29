@@ -1277,19 +1277,64 @@ Sau khi đồng bộ xong, khởi động servers theo thứ tự:
 # 1. Start MySQL (qua Laragon UI hoặc command)
 # Laragon UI: Click "Start All" hoặc right-click MySQL → Start
 
-# 2. Start Backend (PHP built-in server)
+# 2. ⚠️ QUAN TRỌNG: Đồng bộ Database từ Git (BẮT BUỘC - Multi-Device Sync)
+cd "d:\Project\auraProject"
+"D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysql.exe" -uroot --default-character-set=utf8mb4 auraorie68aa_aoisora < deploy/full_reset.sql
+
+# 3. Start Backend (PHP built-in server)
 cd backend/api && "D:\devtool\laragon\bin\php\php-8.3.28-Win32-vs16-x64\php.exe" -S localhost:8000
 
-# 3. Start Frontend (Next.js)
+# 4. Start Frontend (Next.js)
 cd frontend && npm run dev
 
-# 4. Start Reverb WebSocket Server (Optional - for real-time updates)
+# 5. Start Reverb WebSocket Server (Optional - for real-time updates)
 cd backend/laravel && "D:\devtool\laragon\bin\php\php-8.3.28-Win32-vs16-x64\php.exe" artisan reverb:start --port=8080
+```
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ⚠️ DATABASE SYNC - VẤN ĐỀ MULTI-DEVICE                          │
+│                                                                 │
+│  KHI LÀM VIỆC TRÊN CÙNG 1 NHÁNH NHƯNG KHÁC DEVICE:              │
+│                                                                 │
+│  → Code được sync qua Git (git pull)                            │
+│  → Database local KHÔNG được sync tự động!                      │
+│  → Dẫn đến lỗi: "Column not found", "Table doesn't exist"       │
+│                                                                 │
+│  GIẢI PHÁP:                                                     │
+│  ────────────────────────────────────────────────────────────── │
+│                                                                 │
+│  📥 KHI BẮT ĐẦU SESSION (Session Start):                         │
+│     → SAU khi git pull, TRƯỚC khi start servers                 │
+│     → Import deploy/full_reset.sql vào local DB                 │
+│     → Đảm bảo DB local khớp với schema trong Git                │
+│                                                                 │
+│  📤 KHI CÓ THAY ĐỔI DATABASE (Schema hoặc Data):                 │
+│     → SAU khi ALTER TABLE, INSERT, UPDATE trên local DB         │
+│     → Export lại vào deploy/full_reset.sql                      │
+│     → Commit & Push file full_reset.sql                         │
+│     → Tuân thủ quy tắc: loại bỏ DEFINER=root@localhost          │
+│                                                                 │
+│  🔄 WORKFLOW HOÀN CHỈNH:                                         │
+│                                                                 │
+│     Device A (thay đổi DB):                                     │
+│     1. ALTER TABLE / INSERT / UPDATE trên local DB              │
+│     2. Export: mysqldump → deploy/full_reset.sql                │
+│     3. Xóa DEFINER: sed -i 's/DEFINER=...//g' full_reset.sql    │
+│     4. git add deploy/full_reset.sql && git commit && git push  │
+│                                                                 │
+│     Device B (nhận thay đổi DB):                                │
+│     1. git fetch && git pull                                    │
+│     2. Import: mysql < deploy/full_reset.sql ← BẮT BUỘC!        │
+│     3. Start servers                                            │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 > **Notes**:
 > - Backend chạy từ `backend/api/` (entry point) chứ không phải `backend/laravel/`
 > - Reverb là optional. Nếu không chạy, app vẫn hoạt động bình thường nhưng không có real-time updates (Task List sẽ hiển thị "Offline").
+> - **Import full_reset.sql mỗi session** đảm bảo DB local luôn sync với code từ Git.
 
 #### Troubleshooting: Frontend Server Issues
 
@@ -5105,12 +5150,13 @@ Request → Controller → Service → Model → Resource → Response
 
 | Role | Username | Password | Job Grade | Dept | Notes |
 |------|----------|----------|-----------|------|-------|
-| HQ Admin | admin | password | G9 | - | Full access, Approver cho tất cả |
-| HQ Creator | peri.staff1 | password | G3 | PERI (7) | Tạo task, Approver = peri.senior1 |
-| HQ Approver | peri.senior1 | password | G4 | PERI (7) | Approve/Reject tasks từ G3 |
-| HQ Dept Head | peri.head | password | G6 | PERI (7) | Override cooldown |
-| Store Leader | s3store1 | password | S3 | - | Store 1, nhận task từ HQ |
-| Store SI | s4si1 | password | S4 | - | Store 1, assign cho staff |
+| HQ Admin | admin | password | G9 | Operation | Full access, Approver cho tất cả |
+| HQ Dept Head | peri.head | password | G6 | PERI | Override cooldown, top of hierarchy |
+| HQ Approver | peri.senior1 | password | G4 | PERI | Approve/Reject tasks từ G3, reports to peri.head |
+| HQ Creator | peri.staff1 | password | G3 | PERI | Tạo task, Approver = peri.senior1 |
+| Store SI | s4si1 | password | S4 | Store 1 | Store In-charge, assign cho staff |
+| Store Leader | s3store1 | password | S3 | Store 1 | Store Leader, nhận task từ HQ |
+| Store Staff | s1staff1 | password | S1 | Store 1 | Staff, được assign task từ S3/S4 |
 
 ---
 
