@@ -4811,13 +4811,18 @@ TRIGGERS tự động tạo history entries:
 | 1.3.32 | Add New → Add Task (source=todo_task) | ✅ | Routes to /tasks/new?source=todo_task |
 | 1.3.33 | My tasks (created by me) | ✅ | FilterModal "My Tasks" option + filter[created_staff_id] in page.tsx |
 
-**Approval Screen (/tasks/approval):**
+**Approval Flow (Integrated in /tasks/list → /tasks/new):**
+
+> **Note**: Không có screen Approval riêng biệt. Approval được thực hiện qua Task List + Add Task page:
+> 1. Approver vào Task List, filter Status = "Approve"
+> 2. Click task row → mở `/tasks/new` ở Approve Mode (read-only + Approve/Reject buttons)
+
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 1.3.34 | Pending approvals list | ✅ | Real API (getPendingApprovals), table with task info |
-| 1.3.35 | Approve action | ✅ | Approve button with API call (approveTask) |
-| 1.3.36 | Reject action | ✅ | Reject modal with reason input (rejectTask API) |
-| 1.3.37 | View task detail (read-only) | ✅ | View button links to /tasks/detail |
+| 1.3.34 | Filter pending approvals | ✅ | Task List với filter Status = "Approve" |
+| 1.3.35 | Approve action | ✅ | `/tasks/new` approve mode, Approve button |
+| 1.3.36 | Reject action | ✅ | `/tasks/new` approve mode, Reject button với reason modal |
+| 1.3.37 | View task detail (read-only) | ✅ | Approve mode hiển thị task info read-only |
 
 **Store Task View (/stores/[id]/tasks):**
 | # | Task | Status | Notes |
@@ -5079,11 +5084,11 @@ Request → Controller → Service → Model → Resource → Response
 | G.7 | /tasks/new | - Photo upload (click/paste/drag) | ✅ | 2026-01-23 |
 | G.8 | /tasks/new?source=library | - Không hiển thị Scope section | ✅ | 2026-01-23 |
 | G.9 | /tasks/new?source=todo_task | - HQ hierarchy cho scope | ✅ | 2026-01-23 |
-| **H. APPROVAL FLOW** |
-| H.1 | /tasks/approval | - Hiển thị pending approvals | ✅ | 2026-01-23 |
-| H.2 | /tasks/approval | - Approve task → status change | ✅ (FIX#1) | 2026-01-23 |
-| H.3 | /tasks/approval | - Reject task với reason | ✅ | 2026-01-23 |
-| H.4 | /tasks/approval | - Approver auto-determine | ✅ | 2026-01-23 |
+| **H. APPROVAL FLOW** (via Task List + /tasks/new approve mode) |
+| H.1 | /tasks/list | - Filter Status="Approve" để xem pending approvals | ✅ | 2026-01-23 |
+| H.2 | /tasks/new (approve mode) | - Approve task → status change | ✅ (FIX#1) | 2026-01-23 |
+| H.3 | /tasks/new (approve mode) | - Reject task với reason | ✅ | 2026-01-23 |
+| H.4 | /tasks/new | - Approver auto-determine (D. Approval Process) | ✅ | 2026-01-23 |
 | **I. LIBRARY** |
 | I.1 | /tasks/library | - Hiển thị templates theo department | ✅ | 2026-01-23 |
 | I.2 | /tasks/library | - Add New → /tasks/new?source=library | ✅ | 2026-01-23 |
@@ -5187,11 +5192,11 @@ Request → Controller → Service → Model → Resource → Response
 | 1.18 | Creator | Quay về Task List, tìm task | Status = "Approve" (yellow/pink badge) | ✅ |
 | 1.19 | Creator | **Logout** | Quay về trang Login | ⏳ |
 | 1.20 | Approver | Login với `peri.senior1` / `password` | Đăng nhập thành công | ⏳ |
-| 1.21 | Approver | Click menu **Approval** ở sidebar | Hiển thị danh sách pending approvals | ⏳ |
-| 1.22 | Approver | Tìm task "Test Flow 1 - Kiểm kê hàng Q1" | Task hiển thị trong danh sách | ⏳ |
-| 1.23 | Approver | Click **View** để xem chi tiết task | Hiển thị thông tin task (read-only) | ⏳ |
-| 1.24 | Approver | Click button **Approve** | Toast "Task approved", task biến mất khỏi danh sách | ⏳ |
-| 1.25 | Approver | Click menu **Task List** | Task hiển thị với status = "Not Yet" | ⏳ |
+| 1.21 | Approver | Vào **Task List**, filter Status = "Approve" | Hiển thị danh sách tasks đang chờ duyệt | ⏳ |
+| 1.22 | Approver | Tìm task "Test Flow 1 - Kiểm kê hàng Q1" | Task hiển thị trong danh sách với status Approve | ⏳ |
+| 1.23 | Approver | Click vào task row để mở Approve Mode | Trang Add Task mở ở chế độ Approve (read-only + Approve/Reject buttons) | ⏳ |
+| 1.24 | Approver | Click button **Approve** | Toast "Task approved", redirect về Task List | ⏳ |
+| 1.25 | Approver | Tại Task List, tìm lại task | Task hiển thị với status = "Not Yet" (đã được dispatch) | ⏳ |
 | 1.26 | Approver | **Logout** | Quay về trang Login | ⏳ |
 | 1.27 | Store Leader | Login với `s3store1` / `password` | Đăng nhập thành công | ⏳ |
 | 1.28 | Store Leader | Kiểm tra task list (hoặc Store Tasks) | Task "Test Flow 1" hiển thị với status = "Not Yet" | ⏳ |
@@ -5210,16 +5215,18 @@ Request → Controller → Service → Model → Resource → Response
 | 2.3 | Creator | Điền đầy đủ A.Info, B.Instructions, C.Scope | Form điền đầy đủ | ⏳ |
 | 2.4 | Creator | Click **Submit** (bỏ qua Draft) | Toast "Task submitted", status = Approve | ⏳ |
 | 2.5 | Creator | **Logout** | - | ⏳ |
-| 2.6 | Approver | Login `peri.senior1`, vào **Approval** | Task hiển thị trong pending list | ⏳ |
-| 2.7 | Approver | Click **Reject** trên task | Modal hiện lên yêu cầu nhập lý do | ⏳ |
-| 2.8 | Approver | Nhập lý do: "Cần bổ sung thêm hướng dẫn chi tiết" → Confirm | Toast "Task rejected", task biến mất | ⏳ |
-| 2.9 | Approver | **Logout** | - | ⏳ |
-| 2.10 | Creator | Login `peri.staff1`, vào **Task List** | Task hiển thị với status = "Draft" (đã bị reject về draft) | ⏳ |
-| 2.11 | Creator | Click vào task để edit | Hiển thị lý do reject từ Approver | ⏳ |
-| 2.12 | Creator | Sửa Note = "Đã bổ sung hướng dẫn theo yêu cầu" | Note cập nhật | ⏳ |
-| 2.13 | Creator | Click **Submit** lại | Toast "Task submitted", status = Approve | ⏳ |
-| 2.14 | Creator | **Logout** | - | ⏳ |
-| 2.15 | Approver | Login `peri.senior1`, vào **Approval** → **Approve** | Task approved thành công | ⏳ |
+| 2.6 | Approver | Login `peri.senior1`, vào **Task List**, filter Status = "Approve" | Task hiển thị trong danh sách với status Approve | ⏳ |
+| 2.7 | Approver | Click vào task row để mở Approve Mode | Trang `/tasks/new` mở ở chế độ Approve (read-only + Approve/Reject buttons) | ⏳ |
+| 2.8 | Approver | Click **Reject** | Modal hiện lên yêu cầu nhập lý do | ⏳ |
+| 2.9 | Approver | Nhập lý do: "Cần bổ sung thêm hướng dẫn chi tiết" → Confirm | Toast "Task rejected", redirect về Task List | ⏳ |
+| 2.10 | Approver | **Logout** | - | ⏳ |
+| 2.11 | Creator | Login `peri.staff1`, vào **Task List** | Task hiển thị với status = "Draft" (đã bị reject về draft) | ⏳ |
+| 2.12 | Creator | Click vào task để edit | Trang `/tasks/new` mở, hiển thị lý do reject từ Approver | ⏳ |
+| 2.13 | Creator | Sửa Note = "Đã bổ sung hướng dẫn theo yêu cầu" | Note cập nhật | ⏳ |
+| 2.14 | Creator | Click **Submit** lại | Toast "Task submitted", status = Approve | ⏳ |
+| 2.15 | Creator | **Logout** | - | ⏳ |
+| 2.16 | Approver | Login `peri.senior1`, vào **Task List**, filter Status = "Approve" | Task hiển thị trong danh sách | ⏳ |
+| 2.17 | Approver | Click vào task row → **Approve** | Toast "Task approved", redirect về Task List | ⏳ |
 
 ---
 
@@ -5287,13 +5294,14 @@ Request → Controller → Service → Model → Resource → Response
 | 6.5 | Creator | Điền A.Info (Task Type, Execution Time) + B.Instructions | Form điền đầy đủ, **KHÔNG có** Start/End Date | ⏳ |
 | 6.6 | Creator | Click **Submit** | Toast "Submitted", status = Approve | ⏳ |
 | 6.7 | Creator | **Logout** | - | ⏳ |
-| 6.8 | Approver | Login `peri.senior1`, vào **Approval** → **Approve** template | Template approved, status = Available | ⏳ |
-| 6.9 | Approver | Vào **Library** | Template hiển thị với status "Available" (green badge) | ⏳ |
-| 6.10 | Approver | Click **Dispatch** trên template | Chuyển đến trang Dispatch | ⏳ |
-| 6.11 | Approver | Chọn Scope (Region → Zone → Area → Stores) | Stores được chọn | ⏳ |
-| 6.12 | Approver | Chọn Start Date, End Date | Dates hiển thị đúng | ⏳ |
-| 6.13 | Approver | Click **Dispatch to Stores** | Toast thành công, redirect về Library | ⏳ |
-| 6.14 | Approver | Kiểm tra Task List | Task mới xuất hiện với status "Not Yet" | ⏳ |
+| 6.8 | Approver | Login `peri.senior1`, vào **Task List**, filter Status = "Approve" | Template hiển thị trong danh sách | ⏳ |
+| 6.9 | Approver | Click vào template row → **Approve** | Template approved, redirect về Task List | ⏳ |
+| 6.10 | Approver | Vào **Library** | Template hiển thị với status "Available" (green badge) | ⏳ |
+| 6.11 | Approver | Click **Dispatch** trên template | Chuyển đến trang Dispatch | ⏳ |
+| 6.12 | Approver | Chọn Scope (Region → Zone → Area → Stores) | Stores được chọn | ⏳ |
+| 6.13 | Approver | Chọn Start Date, End Date | Dates hiển thị đúng | ⏳ |
+| 6.14 | Approver | Click **Dispatch to Stores** | Toast thành công, redirect về Library | ⏳ |
+| 6.15 | Approver | Kiểm tra Task List | Task mới xuất hiện với status "Not Yet" | ⏳ |
 
 ---
 
@@ -5346,14 +5354,14 @@ Request → Controller → Service → Model → Resource → Response
 | Flow | Mô tả | Steps | Status | Tested At |
 |------|--------|-------|--------|-----------|
 | Flow 1 | Tạo Task HQ→Store (Draft → Approve → Store nhận) | 28 | ⏳ | - |
-| Flow 2 | Reject & Resubmit | 15 | ⏳ | - |
+| Flow 2 | Reject & Resubmit | 17 | ⏳ | - |
 | Flow 3 | Store thực hiện Task (Start → Complete → HQ Check) | 8 | ⏳ | - |
 | Flow 4 | Store Unable | 4 | ⏳ | - |
 | Flow 5 | HQ Reject Store | 5 | ⏳ | - |
-| Flow 6 | Library - Tạo Template & Dispatch | 14 | ⏳ | - |
+| Flow 6 | Library - Tạo Template & Dispatch | 15 | ⏳ | - |
 | Flow 7 | Task Detail & Comments | 9 | ⏳ | - |
 | Flow 8 | Task List Filters & Navigation | 14 | ⏳ | - |
-| **TOTAL** | | **97** | | |
+| **TOTAL** | | **100** | | |
 
 **BUG TRACKING:**
 
