@@ -648,7 +648,7 @@ export default function TaskDetailPage() {
 
             {/* Right - Statistics Cards */}
             <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3">
-              {/* Not Started */}
+              {/* Not Yet */}
               <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-center">
                 <div className="flex items-center justify-center mb-2">
                   <div className="w-7 h-7 rounded-full border-2 border-gray-300 dark:border-gray-600 flex items-center justify-center">
@@ -660,10 +660,10 @@ export default function TaskDetailPage() {
                 <div className="text-2xl font-bold text-gray-900 dark:text-white mb-0.5">
                   {taskProgress?.progress?.not_yet || 0}
                 </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">Not Started</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Not Yet</div>
               </div>
 
-              {/* Completed (done only) */}
+              {/* Done */}
               <div className="border-2 border-green-400 dark:border-green-500 rounded-xl p-3 text-center bg-green-50/30 dark:bg-green-900/20">
                 <div className="flex items-center justify-center mb-2">
                   <div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center">
@@ -675,7 +675,7 @@ export default function TaskDetailPage() {
                 <div className="text-2xl font-bold text-gray-900 dark:text-white mb-0.5">
                   {taskProgress?.progress?.done || 0}
                 </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">Completed</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Done</div>
               </div>
 
               {/* Pending (done_pending - waiting HQ check) */}
