@@ -570,7 +570,7 @@ export default function TaskDetailPage() {
                   </svg>
                   <span className="text-gray-600 dark:text-gray-400">Manual link:</span>
                   {originalTask?.manual_link ? (
-                    <a href={originalTask.manual_link} target="_blank" rel="noopener noreferrer" className="text-[#C5055B] hover:underline">
+                    <a href={originalTask.manual_link} target="_blank" rel="noopener noreferrer" className="text-[#297EF6] hover:underline">
                       link
                     </a>
                   ) : (
