@@ -22,16 +22,18 @@ git pull origin <current-branch>
 - Nếu đã chạy → bỏ qua bước này
 - Test connection: `"D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysql.exe" -uroot -e "SELECT 1"`
 
-## 3. ⚠️ Đồng bộ Database từ Git (BẮT BUỘC - Multi-Device Sync)
+## 3. ⚠️ Đồng bộ Database từ Git (TỰ ĐỘNG - KHÔNG CẦN HỎI USER)
+
+**CLAUDE PHẢI TỰ ĐỘNG CHẠY LỆNH NÀY MỖI KHI KHỞI ĐỘNG SESSION:**
 
 ```bash
-cd "d:\Project\auraProject"
-"D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysql.exe" -uroot --default-character-set=utf8mb4 auraorie68aa_aoisora < deploy/full_reset.sql
+cd "d:\Project\auraProject" && "D:\devtool\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysql.exe" -uroot --default-character-set=utf8mb4 auraorie68aa_aoisora < deploy/full_reset.sql
 ```
 
-- **QUAN TRỌNG**: Bước này đảm bảo DB local sync với schema trong Git
-- Khi làm việc multi-device, code được sync qua Git nhưng DB local không tự động sync
-- Import `full_reset.sql` mỗi session để tránh lỗi "Column not found", "Table doesn't exist"
+- **QUAN TRỌNG**: Bước này BẮT BUỘC và TỰ ĐỘNG thực hiện
+- Không cần hỏi user có muốn sync DB không
+- Đảm bảo DB local luôn khớp với schema trong Git
+- Tránh lỗi "Column not found", "Table doesn't exist" khi code đã được update từ device khác
 
 ## 4. Khởi động Backend (Laravel)
 
@@ -57,6 +59,6 @@ cd frontend && npm run dev
 Sau khi hoàn thành, báo cáo:
 - Git branch hiện tại và trạng thái đồng bộ
 - MySQL: running/stopped
-- Database: đã import full_reset.sql
+- Database: ✅ đã import full_reset.sql (sync thành công)
 - Backend: running on port 8000
 - Frontend: running on port 3000
