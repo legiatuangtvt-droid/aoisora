@@ -129,13 +129,16 @@ function AddTaskContent() {
   // Check if current user is the creator
   const isCreator = task?.created_staff_id === currentUser?.staff_id;
 
-  // Check if current user is the approver
-  // G9 is the highest grade, so they can self-approve their own tasks (no one higher to approve)
-  const isApprover = isEditMode && (
-    // Normal case: approver is different from creator
-    (!isCreator && task?.approver_id === currentUser?.staff_id) ||
+  // Check if current user can act as approver
+  // Approach: If task status = APPROVE, show approve UI. Backend will validate actual permission.
+  // This handles cases where approver_id might not be set correctly in database.
+  // G9 users can self-approve their own tasks (no one higher to approve them).
+  const isApproveStatus = task?.status_id === STATUS_APPROVE_ID;
+  const isApprover = isEditMode && isApproveStatus && (
+    // Any user viewing a task pending approval (backend validates actual permission)
+    !isCreator ||
     // G9 self-approval: G9 can approve their own task
-    (isCreator && currentUser?.job_grade === 'G9' && task?.status_id === STATUS_APPROVE_ID)
+    (isCreator && currentUser?.job_grade === 'G9')
   );
 
   // Get rejection info if task was rejected

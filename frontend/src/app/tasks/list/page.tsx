@@ -470,17 +470,14 @@ export default function TaskListPage() {
     setExpandedRows(expandedRows === taskId ? null : taskId);
   };
 
-  // Navigate to task detail page or edit page (for drafts)
+  // Navigate to task detail page or edit page (for drafts/approve)
   const handleRowClick = (task: TaskGroup) => {
-    // DRAFT: Chỉ creator mới thấy DRAFT của mình trong list → luôn navigate đến edit
-    // APPROVE: Approver thấy task cần duyệt → navigate đến Add Task để approve/reject
-    // APPROVE + G9 + Creator: G9 là cấp cao nhất, tự approve task của mình
-    const isApprover = task.status === 'APPROVE' && task.approverId === currentUser?.staff_id;
-    const isG9SelfApprove = task.status === 'APPROVE'
-      && task.createdStaffId === currentUser?.staff_id
-      && currentUser?.job_grade === 'G9';
+    // DRAFT: Chỉ creator mới thấy DRAFT của mình trong list → navigate đến edit mode
+    // APPROVE: Bất kỳ task nào đang chờ duyệt → navigate đến Add Task (approve mode)
+    //          Validation quyền approve/reject sẽ được xử lý ở trang /tasks/new
+    // Các status khác (NOT_YET, ON_PROGRESS, DONE, OVERDUE): Navigate đến detail page
 
-    if (task.status === 'DRAFT' || isApprover || isG9SelfApprove) {
+    if (task.status === 'DRAFT' || task.status === 'APPROVE') {
       router.push(`/tasks/new?id=${task.id}&source=task_list`);
     } else {
       router.push(`/tasks/detail?id=${task.id}`);
