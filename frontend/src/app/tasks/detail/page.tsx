@@ -553,7 +553,7 @@ export default function TaskDetailPage() {
                   {originalTask?.task_instruction_type ? (
                     <button
                       onClick={() => setIsInstructionPreviewOpen(true)}
-                      className="text-[#C5055B] hover:underline cursor-pointer"
+                      className="text-[#297EF6] hover:underline cursor-pointer"
                       title="Click to preview instructions"
                     >
                       {originalTask.task_instruction_type === 'image' ? 'Image' : 'Document'}
