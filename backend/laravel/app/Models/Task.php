@@ -474,11 +474,13 @@ class Task extends Model
     /**
      * Calculate overall task status from store assignment statuses
      *
-     * Rules (from CLAUDE.md Section 12.4):
-     * - NOT YET: All stores = not_yet
-     * - ON PROGRESS: At least 1 store is on_progress or done_pending (and no overdue)
-     * - DONE: All stores = done or unable
-     * - OVERDUE: end_date < today AND task not done (has stores not in final state)
+     * Priority order (from CLAUDE.md Section 12.4.1):
+     * 1. OVERDUE = At least 1 store = overdue (highest priority)
+     * 2. NOT_YET = At least 1 store = not_yet AND no overdue
+     * 3. ON_PROGRESS = At least 1 store = on_progress AND no overdue AND no not_yet
+     * 4. DONE = If none of above (all stores are done/done_pending/unable)
+     *
+     * Store "overdue" = task end_date < today AND store status = not_yet or on_progress
      *
      * @return string|null Overall status or null if task has no store assignments
      */
@@ -496,27 +498,29 @@ class Task extends Model
             return null;
         }
 
-        // done_pending = store completed work (waiting HQ check), count as "completed" not "in progress"
-        $completedCount = $counts['done'] + $counts['done_pending'] + $counts['unable'];
-
-        // Check DONE: All stores have completed (done/done_pending/unable)
-        if ($completedCount === $counts['total']) {
-            return self::OVERALL_DONE;
+        // Calculate overdue stores: stores with not_yet or on_progress when task end_date < today
+        $overdueCount = 0;
+        if ($this->end_date && $this->end_date->lt(now()->startOfDay())) {
+            $overdueCount = $counts['not_yet'] + $counts['on_progress'];
         }
 
-        // Check OVERDUE: end_date < today AND not all completed
-        if ($this->end_date && $this->end_date->lt(now()->startOfDay())) {
+        // Priority 1: OVERDUE - At least 1 store is overdue
+        if ($overdueCount > 0) {
             return self::OVERALL_OVERDUE;
         }
 
-        // Check ON PROGRESS: At least 1 store is actively working (on_progress only)
-        // done_pending is NOT "in progress" - store has finished their work
+        // Priority 2: NOT_YET - At least 1 store is not_yet (and no overdue)
+        if ($counts['not_yet'] > 0) {
+            return self::OVERALL_NOT_YET;
+        }
+
+        // Priority 3: ON_PROGRESS - At least 1 store is on_progress (and no overdue, no not_yet)
         if ($counts['on_progress'] > 0) {
             return self::OVERALL_ON_PROGRESS;
         }
 
-        // Default: NOT YET (all stores are not_yet)
-        return self::OVERALL_NOT_YET;
+        // Priority 4: DONE - All stores are done/done_pending/unable
+        return self::OVERALL_DONE;
     }
 
     /**

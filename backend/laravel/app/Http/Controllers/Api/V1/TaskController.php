@@ -179,21 +179,35 @@ class TaskController extends Controller
                     $today = now()->startOfDay();
 
                     switch ($value) {
+                        case Task::OVERALL_OVERDUE:
+                            // Priority 1: At least 1 store is overdue
+                            // (end_date < today AND store status = not_yet or on_progress)
+                            $query->where('end_date', '<', $today)
+                                ->whereHas('storeAssignments', function ($sq) {
+                                    $sq->whereIn('status', ['not_yet', 'on_progress']);
+                                });
+                            break;
+
                         case Task::OVERALL_NOT_YET:
-                            // All stores are not_yet OR task has no assignments yet
-                            $query->where(function ($q) {
-                                $q->whereDoesntHave('storeAssignments', function ($sq) {
-                                    $sq->where('status', '!=', 'not_yet');
-                                })
-                                ->whereHas('storeAssignments');
+                            // Priority 2: At least 1 store = not_yet AND no overdue
+                            // (end_date >= today or null) AND has not_yet stores
+                            $query->whereHas('storeAssignments', function ($sq) {
+                                $sq->where('status', 'not_yet');
+                            })
+                            ->where(function ($q) use ($today) {
+                                $q->whereNull('end_date')
+                                  ->orWhere('end_date', '>=', $today);
                             });
                             break;
 
                         case Task::OVERALL_ON_PROGRESS:
-                            // At least 1 store is actively working (on_progress only)
-                            // done_pending is NOT "in progress" - store has finished their work
+                            // Priority 3: At least 1 store = on_progress AND no overdue AND no not_yet
+                            // (end_date >= today or null) AND has on_progress AND no not_yet
                             $query->whereHas('storeAssignments', function ($sq) {
                                 $sq->where('status', 'on_progress');
+                            })
+                            ->whereDoesntHave('storeAssignments', function ($sq) {
+                                $sq->where('status', 'not_yet');
                             })
                             ->where(function ($q) use ($today) {
                                 $q->whereNull('end_date')
@@ -202,19 +216,11 @@ class TaskController extends Controller
                             break;
 
                         case Task::OVERALL_DONE:
-                            // All stores have completed (done, done_pending, or unable)
+                            // Priority 4: All stores are done/done_pending/unable
                             $query->whereDoesntHave('storeAssignments', function ($sq) {
                                 $sq->whereNotIn('status', ['done', 'done_pending', 'unable']);
                             })
                             ->whereHas('storeAssignments');
-                            break;
-
-                        case Task::OVERALL_OVERDUE:
-                            // end_date < today AND has stores not in final state
-                            $query->where('end_date', '<', $today)
-                                ->whereHas('storeAssignments', function ($sq) {
-                                    $sq->whereNotIn('status', ['done', 'unable']);
-                                });
                             break;
                     }
                 }),

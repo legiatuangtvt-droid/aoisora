@@ -3124,7 +3124,7 @@ STORE STATUS:
 │                                                                                 │
 │  OVERALL STATUS CALCULATION - FLOWCHART                                         │
 │                                                                                 │
-│  Input: Tất cả self_status (Parent + Descendants)                               │
+│  Input: Tất cả store statuses (Parent + Descendants)                            │
 │                                                                                 │
 │         ┌─────────────────────────┐                                             │
 │         │   Có OVERDUE không?     │                                             │
@@ -3133,29 +3133,27 @@ STORE STATUS:
 │           ┌────YES──┴──NO────┐                                                  │
 │           ▼                  ▼                                                  │
 │    ┌──────────────┐   ┌─────────────────────────┐                               │
-│    │   OVERDUE    │   │  Có ON_PROGRESS không?  │                               │
+│    │   OVERDUE    │   │   Có NOT_YET không?     │                               │
 │    │   🔴 Red     │   └───────────┬─────────────┘                               │
 │    └──────────────┘               │                                             │
 │                         ┌────YES──┴──NO────┐                                    │
 │                         ▼                  ▼                                    │
-│                  ┌──────────────┐   ┌─────────────────────────────┐             │
-│                  │ ON_PROGRESS  │   │ Tất cả = DONE hoặc UNABLE?  │             │
-│                  │   🔵 Blue    │   └───────────┬─────────────────┘             │
+│                  ┌──────────────┐   ┌─────────────────────────┐                 │
+│                  │   NOT_YET    │   │  Có ON_PROGRESS không?  │                 │
+│                  │  🟡 Yellow   │   └───────────┬─────────────┘                 │
 │                  └──────────────┘               │                               │
 │                                       ┌────YES──┴──NO────┐                      │
 │                                       ▼                  ▼                      │
-│                                ┌──────────────┐   ┌─────────────────────┐       │
-│                                │     DONE     │   │ Tất cả = NOT_YET?   │       │
-│                                │   🟢 Green   │   └───────────┬─────────┘       │
-│                                └──────────────┘               │                 │
-│                                                     ┌────YES──┴──NO────┐        │
-│                                                     ▼                  ▼        │
-│                                              ┌──────────────┐   ┌──────────────┐│
-│                                              │   NOT_YET    │   │ ON_PROGRESS  ││
-│                                              │  🟡 Yellow  │   │   🔵 Blue    ││
-│                                              └──────────────┘   └──────────────┘│
-│                                                                 (mix not_yet    │
-│                                                                  + done/unable) │
+│                                ┌──────────────┐   ┌──────────────┐              │
+│                                │ ON_PROGRESS  │   │     DONE     │              │
+│                                │   🔵 Blue    │   │   🟢 Green   │              │
+│                                └──────────────┘   └──────────────┘              │
+│                                                                                 │
+│  Priority Order:                                                                │
+│  1. OVERDUE   = Có ít nhất 1 store overdue (highest)                            │
+│  2. NOT_YET   = Có ít nhất 1 store not_yet (và không có overdue)                │
+│  3. ON_PROGRESS = Có ít nhất 1 store on_progress (không overdue, không not_yet) │
+│  4. DONE      = Không thuộc 3 trường hợp trên (lowest)                          │
 │                                                                                 │
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -3169,29 +3167,25 @@ STORE STATUS:
 │  │  Ưu tiên   │              Điều kiện                     │   Kết quả        │ │
 │  ├────────────┼────────────────────────────────────────────┼──────────────────┤ │
 │  │            │                                            │                  │ │
-│  │     1      │   🔴 Có BẤT KỲ task = overdue              │   OVERDUE        │ │
-│  │  (cao nhất)│                                            │   🔴 Red         │ │
+│  │     1      │   🔴 Có BẤT KỲ store = overdue             │   OVERDUE        │ │
+│  │  (cao nhất)│      (end_date < today VÀ status =         │   🔴 Red         │ │
+│  │            │       not_yet hoặc on_progress)            │                  │ │
 │  │            │                                            │                  │ │
 │  ├────────────┼────────────────────────────────────────────┼──────────────────┤ │
 │  │            │                                            │                  │ │
-│  │     2      │   🔵 Có BẤT KỲ task = on_progress          │   ON_PROGRESS    │ │
-│  │            │      (và không có overdue)                 │   🔵 Blue        │ │
+│  │     2      │   🟡 Có BẤT KỲ store = not_yet             │   NOT_YET        │ │
+│  │            │      (và không có overdue)                 │   🟡 Yellow      │ │
 │  │            │                                            │                  │ │
 │  ├────────────┼────────────────────────────────────────────┼──────────────────┤ │
 │  │            │                                            │                  │ │
-│  │     3      │   🟢 TẤT CẢ tasks = done hoặc unable       │   DONE           │ │
-│  │            │      (không có not_yet, on_progress,       │   🟢 Green       │ │
-│  │            │       overdue)                             │                  │ │
+│  │     3      │   🔵 Có BẤT KỲ store = on_progress         │   ON_PROGRESS    │ │
+│  │            │      (và không có overdue, không có        │   🔵 Blue        │ │
+│  │            │       not_yet)                             │                  │ │
 │  │            │                                            │                  │ │
 │  ├────────────┼────────────────────────────────────────────┼──────────────────┤ │
 │  │            │                                            │                  │ │
-│  │     4      │   🟡 TẤT CẢ tasks = not_yet                │   NOT_YET        │ │
-│  │            │      (chưa ai bắt đầu)                     │   🟡 Yellow      │ │
-│  │            │                                            │                  │ │
-│  ├────────────┼────────────────────────────────────────────┼──────────────────┤ │
-│  │            │                                            │                  │ │
-│  │     5      │   🔵 Mix: not_yet + (done hoặc unable)     │   ON_PROGRESS    │ │
-│  │  (thấp nhất)│      (có tiến độ nhưng chưa hoàn thành)   │   🔵 Blue        │ │
+│  │     4      │   🟢 Không thuộc 3 trường hợp trên         │   DONE           │ │
+│  │  (thấp nhất)│      (tất cả done/done_pending/unable)    │   🟢 Green       │ │
 │  │            │                                            │                  │ │
 │  └────────────┴────────────────────────────────────────────┴──────────────────┘ │
 │                                                                                 │
@@ -3202,21 +3196,21 @@ STORE STATUS:
 
 | # | overdue | on_prog | not_yet | done | unable | → Overall | Rule |
 |---|:-------:|:-------:|:-------:|:----:|:------:|-----------|------|
-| 1 | - | - | - | - | ✓ | **DONE** | 3 |
-| 2 | - | - | - | ✓ | - | **DONE** | 3 |
-| 3 | - | - | - | ✓ | ✓ | **DONE** | 3 |
-| 4 | - | - | ✓ | - | - | **NOT_YET** | 4 |
-| 5 | - | - | ✓ | - | ✓ | **ON_PROGRESS** | 5 |
-| 6 | - | - | ✓ | ✓ | - | **ON_PROGRESS** | 5 |
-| 7 | - | - | ✓ | ✓ | ✓ | **ON_PROGRESS** | 5 |
-| 8 | - | ✓ | - | - | - | **ON_PROGRESS** | 2 |
-| 9 | - | ✓ | - | - | ✓ | **ON_PROGRESS** | 2 |
-| 10 | - | ✓ | - | ✓ | - | **ON_PROGRESS** | 2 |
-| 11 | - | ✓ | - | ✓ | ✓ | **ON_PROGRESS** | 2 |
-| 12 | - | ✓ | ✓ | - | - | **ON_PROGRESS** | 2 |
-| 13 | - | ✓ | ✓ | - | ✓ | **ON_PROGRESS** | 2 |
-| 14 | - | ✓ | ✓ | ✓ | - | **ON_PROGRESS** | 2 |
-| 15 | - | ✓ | ✓ | ✓ | ✓ | **ON_PROGRESS** | 2 |
+| 1 | - | - | - | - | ✓ | **DONE** | 4 |
+| 2 | - | - | - | ✓ | - | **DONE** | 4 |
+| 3 | - | - | - | ✓ | ✓ | **DONE** | 4 |
+| 4 | - | - | ✓ | - | - | **NOT_YET** | 2 |
+| 5 | - | - | ✓ | - | ✓ | **NOT_YET** | 2 |
+| 6 | - | - | ✓ | ✓ | - | **NOT_YET** | 2 |
+| 7 | - | - | ✓ | ✓ | ✓ | **NOT_YET** | 2 |
+| 8 | - | ✓ | - | - | - | **ON_PROGRESS** | 3 |
+| 9 | - | ✓ | - | - | ✓ | **ON_PROGRESS** | 3 |
+| 10 | - | ✓ | - | ✓ | - | **ON_PROGRESS** | 3 |
+| 11 | - | ✓ | - | ✓ | ✓ | **ON_PROGRESS** | 3 |
+| 12 | - | ✓ | ✓ | - | - | **NOT_YET** | 2 |
+| 13 | - | ✓ | ✓ | - | ✓ | **NOT_YET** | 2 |
+| 14 | - | ✓ | ✓ | ✓ | - | **NOT_YET** | 2 |
+| 15 | - | ✓ | ✓ | ✓ | ✓ | **NOT_YET** | 2 |
 | 16 | ✓ | - | - | - | - | **OVERDUE** | 1 |
 | 17 | ✓ | - | - | - | ✓ | **OVERDUE** | 1 |
 | 18 | ✓ | - | - | ✓ | - | **OVERDUE** | 1 |
@@ -3237,10 +3231,10 @@ STORE STATUS:
 **Tóm tắt:**
 | Overall Status | Số trường hợp | Điều kiện |
 |----------------|---------------|-----------|
-| **OVERDUE** | 16 cases | Có bất kỳ overdue |
-| **ON_PROGRESS** | 11 cases | Có on_progress HOẶC mix not_yet với done/unable |
-| **DONE** | 3 cases | Chỉ có done và/hoặc unable |
-| **NOT_YET** | 1 case | Tất cả là not_yet |
+| **OVERDUE** | 16 cases | Có bất kỳ store overdue |
+| **NOT_YET** | 8 cases | Có not_yet, không có overdue |
+| **ON_PROGRESS** | 4 cases | Có on_progress, không có overdue và not_yet |
+| **DONE** | 3 cases | Không thuộc 3 trường hợp trên |
 
 #### VÍ DỤ MINH HỌA
 
@@ -3305,7 +3299,7 @@ STORE STATUS:
 │                                                                                 │
 ├─────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                 │
-│  VÍ DỤ 5: Task 5 levels - mix not_yet + done (có tiến độ)                       │
+│  VÍ DỤ 5: Task 5 levels - có not_yet + done (một số store chưa bắt đầu)         │
 │                                                                                 │
 │  📋 ROOT (L1)                                                                   │
 │   ├── 📋 Task 1 (L2) ─────── self: done                                        │
@@ -3314,10 +3308,8 @@ STORE STATUS:
 │                                                                                 │
 │  All statuses = [done, done, done, not_yet]                                     │
 │  → Có overdue? ❌ NO                                                            │
-│  → Có on_progress? ❌ NO                                                        │
-│  → Tất cả done/unable? ❌ NO (có not_yet)                                       │
-│  → Tất cả not_yet? ❌ NO (có done)                                              │
-│  → Mix not_yet + done → Overall = 🔵 ON_PROGRESS                                │
+│  → Có not_yet? ✅ YES → Overall = 🟡 NOT_YET                                    │
+│  (Rule 2: Có ít nhất 1 store not_yet và không có overdue → NOT_YET)             │
 │                                                                                 │
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -3330,28 +3322,23 @@ type SelfStatus = 'not_yet' | 'on_progress' | 'done' | 'unable' | 'overdue';
 type OverallStatus = 'NOT_YET' | 'ON_PROGRESS' | 'DONE' | 'OVERDUE';
 
 function calculateOverallStatus(allSelfStatuses: SelfStatus[]): OverallStatus {
-  // Rule 1: OVERDUE (highest priority)
+  // Priority 1: OVERDUE (highest priority)
   if (allSelfStatuses.includes('overdue')) {
     return 'OVERDUE';
   }
 
-  // Rule 2: ON_PROGRESS
+  // Priority 2: NOT_YET (at least 1 store not_yet, no overdue)
+  if (allSelfStatuses.includes('not_yet')) {
+    return 'NOT_YET';
+  }
+
+  // Priority 3: ON_PROGRESS (at least 1 store on_progress, no overdue, no not_yet)
   if (allSelfStatuses.includes('on_progress')) {
     return 'ON_PROGRESS';
   }
 
-  // Rule 3: DONE (all finished)
-  if (allSelfStatuses.every(s => s === 'done' || s === 'unable')) {
-    return 'DONE';
-  }
-
-  // Rule 4: NOT_YET (none started)
-  if (allSelfStatuses.every(s => s === 'not_yet')) {
-    return 'NOT_YET';
-  }
-
-  // Rule 5: Mix not_yet + done/unable
-  return 'ON_PROGRESS';
+  // Priority 4: DONE (all finished - done/done_pending/unable)
+  return 'DONE';
 }
 ```
 
@@ -3359,34 +3346,23 @@ function calculateOverallStatus(allSelfStatuses: SelfStatus[]): OverallStatus {
 // PHP/Laravel
 function calculateOverallStatus(array $allSelfStatuses): string
 {
-    // Rule 1: OVERDUE (highest priority)
+    // Priority 1: OVERDUE (highest priority)
     if (in_array('overdue', $allSelfStatuses)) {
         return 'OVERDUE';
     }
 
-    // Rule 2: ON_PROGRESS
+    // Priority 2: NOT_YET (at least 1 store not_yet, no overdue)
+    if (in_array('not_yet', $allSelfStatuses)) {
+        return 'NOT_YET';
+    }
+
+    // Priority 3: ON_PROGRESS (at least 1 store on_progress, no overdue, no not_yet)
     if (in_array('on_progress', $allSelfStatuses)) {
         return 'ON_PROGRESS';
     }
 
-    // Rule 3: DONE (all finished)
-    $allFinished = collect($allSelfStatuses)->every(
-        fn($s) => in_array($s, ['done', 'unable'])
-    );
-    if ($allFinished) {
-        return 'DONE';
-    }
-
-    // Rule 4: NOT_YET (none started)
-    $allNotYet = collect($allSelfStatuses)->every(
-        fn($s) => $s === 'not_yet'
-    );
-    if ($allNotYet) {
-        return 'NOT_YET';
-    }
-
-    // Rule 5: Mix not_yet + done/unable
-    return 'ON_PROGRESS';
+    // Priority 4: DONE (all finished - done/done_pending/unable)
+    return 'DONE';
 }
 ```
 
@@ -3394,15 +3370,17 @@ function calculateOverallStatus(array $allSelfStatuses): string
 -- SQL Query (MySQL)
 SELECT
     CASE
+        -- Priority 1: OVERDUE
         WHEN EXISTS (SELECT 1 FROM tasks WHERE root_id = ? AND self_status = 'overdue')
             THEN 'OVERDUE'
+        -- Priority 2: NOT_YET (has not_yet, no overdue)
+        WHEN EXISTS (SELECT 1 FROM tasks WHERE root_id = ? AND self_status = 'not_yet')
+            THEN 'NOT_YET'
+        -- Priority 3: ON_PROGRESS (has on_progress, no overdue, no not_yet)
         WHEN EXISTS (SELECT 1 FROM tasks WHERE root_id = ? AND self_status = 'on_progress')
             THEN 'ON_PROGRESS'
-        WHEN NOT EXISTS (SELECT 1 FROM tasks WHERE root_id = ? AND self_status NOT IN ('done', 'unable'))
-            THEN 'DONE'
-        WHEN NOT EXISTS (SELECT 1 FROM tasks WHERE root_id = ? AND self_status != 'not_yet')
-            THEN 'NOT_YET'
-        ELSE 'ON_PROGRESS'
+        -- Priority 4: DONE (all done/done_pending/unable)
+        ELSE 'DONE'
     END as overall_status
 ```
 
