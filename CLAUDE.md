@@ -5197,9 +5197,9 @@ Request → Controller → Service → Model → Resource → Response
 | 1.23 | Approver | Click vào task row để mở Approve Mode | Trang Add Task mở ở chế độ Approve (read-only + Approve/Reject buttons) | ✅ |
 | 1.24 | Approver | Click button **Approve** | Toast "Task approved", redirect về Task List | ✅ |
 | 1.25 | Approver | Tại Task List, tìm lại task | Task hiển thị với status = "Not Yet" (đã được dispatch) | ✅ |
-| 1.26 | Approver | **Logout** | Quay về trang Login | ⏳ |
-| 1.27 | Store Leader | Login với `s3store1` / `password` | Đăng nhập thành công | ⏳ |
-| 1.28 | Store Leader | Kiểm tra task list (hoặc Store Tasks) | Task "Test Flow 1" hiển thị với status = "Not Yet" | ⏳ |
+| 1.26 | Approver | **Logout** | Quay về trang Login | ✅ |
+| 1.27 | Store Leader | Login với `s3store1` / `password` | Đăng nhập thành công | ✅ |
+| 1.28 | Store Leader | Kiểm tra task list (hoặc Store Tasks) | Task "Test Flow 1" hiển thị với status = "Not Yet" | ✅ |
 
 ---
 
