@@ -148,8 +148,8 @@ def main():
     sql_lines.append("-- ============================================")
     sql_lines.append("")
 
-    # Default password hash for 'password' (matches existing test accounts)
-    password_hash = "$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi"
+    # Default password hash for 'Aeon@2025'
+    password_hash = "$2y$10$idvzmZcmOvwlHM8JgODnBO1/N.wiBpIJv/nDJKS04rlvkryp9BqsW"
 
     # Start staff_id from 1 (no more test accounts)
     staff_id = 1
