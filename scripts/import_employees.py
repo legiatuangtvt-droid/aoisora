@@ -6,6 +6,8 @@ Generates INSERT statements for:
 """
 
 import csv
+import re
+import unicodedata
 from datetime import datetime
 
 # Department mapping: CSV Detail → department_id
@@ -38,6 +40,115 @@ DEPT_MAPPING = {
     'NEW STORE SUPPORT': 7,  # PERI - New Store Support maps to PERI (leaf under OP)
 }
 
+# Vietnamese character mapping for special cases
+VIETNAMESE_MAP = {
+    'đ': 'd', 'Đ': 'D',
+    'ă': 'a', 'Ă': 'A',
+    'â': 'a', 'Â': 'A',
+    'ê': 'e', 'Ê': 'E',
+    'ô': 'o', 'Ô': 'O',
+    'ơ': 'o', 'Ơ': 'O',
+    'ư': 'u', 'Ư': 'U',
+}
+
+def remove_vietnamese_diacritics(text):
+    """Convert Vietnamese text to non-accented ASCII"""
+    if not text:
+        return ''
+
+    # First, handle special Vietnamese characters
+    for vn_char, ascii_char in VIETNAMESE_MAP.items():
+        text = text.replace(vn_char, ascii_char)
+
+    # Then normalize Unicode and remove remaining diacritics
+    # NFD decomposes characters (e.g., é -> e + ´)
+    normalized = unicodedata.normalize('NFD', text)
+
+    # Remove diacritical marks (category 'Mn' = Mark, Nonspacing)
+    ascii_text = ''.join(c for c in normalized if unicodedata.category(c) != 'Mn')
+
+    # Remove any remaining non-ASCII characters
+    ascii_text = ascii_text.encode('ascii', 'ignore').decode('ascii')
+
+    return ascii_text
+
+def name_to_username(name):
+    """Convert Vietnamese name to username (lowercase, no spaces, no diacritics)"""
+    if not name:
+        return ''
+
+    # Remove diacritics
+    ascii_name = remove_vietnamese_diacritics(name)
+
+    # Lowercase and remove spaces/special characters
+    username = ascii_name.lower()
+    username = re.sub(r'[^a-z0-9]', '', username)
+
+    return username
+
+def generate_unique_username(base_username, joining_date, used_usernames):
+    """
+    Generate unique username with suffix if duplicate.
+    Suffix order: year[yy] → month[mm] → day[dd] → a,b,c,...
+    """
+    # Try base username first
+    if base_username not in used_usernames:
+        used_usernames.add(base_username)
+        return base_username
+
+    # Parse joining date for suffix
+    year_suffix = ''
+    month_suffix = ''
+    day_suffix = ''
+
+    if joining_date:
+        try:
+            # Format: 2015-05-04
+            parts = joining_date.split('-')
+            if len(parts) >= 3:
+                year_suffix = parts[0][-2:]  # Last 2 digits of year
+                month_suffix = parts[1]
+                day_suffix = parts[2]
+        except:
+            pass
+
+    # Try with year suffix
+    if year_suffix:
+        candidate = f"{base_username}{year_suffix}"
+        if candidate not in used_usernames:
+            used_usernames.add(candidate)
+            return candidate
+
+        # Try with year + month
+        if month_suffix:
+            candidate = f"{base_username}{year_suffix}{month_suffix}"
+            if candidate not in used_usernames:
+                used_usernames.add(candidate)
+                return candidate
+
+            # Try with year + month + day
+            if day_suffix:
+                candidate = f"{base_username}{year_suffix}{month_suffix}{day_suffix}"
+                if candidate not in used_usernames:
+                    used_usernames.add(candidate)
+                    return candidate
+
+    # Fall back to alphabetical suffix (a, b, c, ...)
+    for suffix in 'abcdefghijklmnopqrstuvwxyz':
+        candidate = f"{base_username}{suffix}"
+        if candidate not in used_usernames:
+            used_usernames.add(candidate)
+            return candidate
+
+    # If all else fails, use number suffix
+    counter = 1
+    while True:
+        candidate = f"{base_username}{counter}"
+        if candidate not in used_usernames:
+            used_usernames.add(candidate)
+            return candidate
+        counter += 1
+
 # Job grade to role mapping
 def get_role(job_grade):
     if not job_grade:
@@ -67,7 +178,8 @@ def main():
     with open('d:/Project/auraProject/docs/employee_list_utf8.csv', 'r', encoding='utf-8-sig') as f:
         reader = csv.DictReader(f, fieldnames=[
             'NO', 'PHOTO', 'Employee code', 'NAME', 'JOINING DATE',
-            'Detail', 'Working Location', 'Position', 'Position_VN', 'Job grade'
+            'Detail', 'Working Location', 'Position', 'Position_VN', 'Job grade',
+            'Account', 'Password'  # New columns
         ])
         # Skip header rows
         for _ in range(5):
@@ -104,6 +216,22 @@ def main():
                 'job_grade': row['Job grade'].strip() if row['Job grade'] else None,
                 'is_store': is_store,
             })
+
+    # Track used usernames for uniqueness
+    used_usernames = set()
+    # Reserve special usernames
+    used_usernames.add('admin')
+    used_usernames.add('yoshinaga')
+
+    # Generate usernames for all employees first
+    employee_usernames = []
+    for emp in employees:
+        base_username = name_to_username(emp['staff_name'])
+        if not base_username:
+            base_username = f"emp{emp['staff_code']}"
+
+        username = generate_unique_username(base_username, emp['joining_date'], used_usernames)
+        employee_usernames.append(username)
 
     # Generate SQL
     sql_lines = []
@@ -154,7 +282,7 @@ def main():
     # Start staff_id from 1 (no more test accounts)
     staff_id = 1
 
-    for emp in employees:
+    for i, emp in enumerate(employees):
         # Determine department_id and store_id
         if emp['is_store']:
             dept_id = 'NULL'  # Store staff don't have department
@@ -164,8 +292,8 @@ def main():
             store_id_val = 'NULL'
 
         role = get_role(emp['job_grade'])
-        username = f"emp{emp['staff_code']}"
-        email = f"emp{emp['staff_code']}@aeon.com.vn"
+        username = employee_usernames[i]
+        email = f"{username}@aeon.com.vn"
 
         joining_date_sql = escape_sql(emp['joining_date']) if emp['joining_date'] else 'NULL'
 
@@ -208,7 +336,67 @@ def main():
     print(f"Total employees: {len(employees)}")
     print(f"New stores: {len(store_names)}")
 
+    # Return employee_usernames for CSV update
+    return output_path, employees, employee_usernames
+
+def update_csv_with_usernames():
+    """Update the CSV file with generated usernames"""
+    output_path, employees, employee_usernames = main()
+
+    # Read original CSV
+    csv_path = 'd:/Project/auraProject/docs/employee_list_utf8.csv'
+    with open(csv_path, 'r', encoding='utf-8-sig') as f:
+        lines = f.readlines()
+
+    # Parse header (first 5 lines are headers)
+    header_lines = lines[:5]
+    data_lines = lines[5:]
+
+    # Update Account column in each data row
+    updated_lines = header_lines.copy()
+    emp_index = 0
+
+    for line in data_lines:
+        if not line.strip():
+            updated_lines.append(line)
+            continue
+
+        # Parse CSV line (handle commas in quoted fields)
+        parts = []
+        current = ''
+        in_quotes = False
+        for char in line.rstrip('\n\r'):
+            if char == '"':
+                in_quotes = not in_quotes
+                current += char
+            elif char == ',' and not in_quotes:
+                parts.append(current)
+                current = ''
+            else:
+                current += char
+        parts.append(current)
+
+        # Check if this is an employee row (has employee code)
+        if len(parts) >= 3:
+            emp_code = parts[2].strip().strip('"')
+            if emp_code and emp_code.isdigit() and emp_index < len(employee_usernames):
+                # Update Account column (index 10)
+                while len(parts) < 12:
+                    parts.append('')
+                parts[10] = employee_usernames[emp_index]
+                parts[11] = 'Aeon@2025'
+                emp_index += 1
+
+        updated_lines.append(','.join(parts) + '\n')
+
+    # Write updated CSV
+    with open(csv_path, 'w', encoding='utf-8-sig') as f:
+        f.writelines(updated_lines)
+
+    print(f"\nUpdated CSV file: {csv_path}")
+    print(f"Updated {emp_index} employee accounts")
+
     return output_path
 
 if __name__ == '__main__':
-    main()
+    update_csv_with_usernames()
