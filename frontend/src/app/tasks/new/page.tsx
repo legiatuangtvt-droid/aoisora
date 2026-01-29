@@ -335,22 +335,19 @@ function AddTaskContent() {
         // Update existing task
         await updateTask(taskId, taskData);
         showToast('Draft saved successfully', 'success');
-        // Stay on the same page - don't redirect
       } else {
         // Create new task with sub-tasks
-        const createdTask = await createTask({
+        await createTask({
           ...taskData,
           status_id: STATUS_DRAFT_ID,
           priority: 'normal',
           source: source,
         });
         showToast('Task saved as draft successfully', 'success');
-
-        // Switch to edit mode with the new task ID (stay on page, now editing the draft)
-        if (createdTask?.task_id) {
-          router.replace(`/tasks/new?id=${createdTask.task_id}&source=${source}`);
-        }
       }
+
+      // Redirect to task list after saving draft
+      router.push('/tasks/list');
     } catch (error: unknown) {
       console.error('Error saving draft:', error);
 
