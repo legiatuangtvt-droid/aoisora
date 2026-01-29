@@ -613,7 +613,7 @@ class TaskStoreAssignmentController extends Controller
     {
         $task = Task::findOrFail($taskId);
 
-        $assignments = TaskStoreAssignment::with(['store', 'assignedToStaff', 'completedBy'])
+        $assignments = TaskStoreAssignment::with(['store.area.zone.region', 'assignedToStaff', 'completedBy'])
             ->where('task_id', $taskId)
             ->orderBy('store_id')
             ->get();
@@ -647,10 +647,18 @@ class TaskStoreAssignmentController extends Controller
                     $executionTime = $a->started_at->diffInMinutes($a->completed_at);
                 }
 
+                // Get geographic hierarchy
+                $area = $a->store?->area;
+                $zone = $area?->zone;
+                $region = $zone?->region;
+
                 return [
                     'id' => $a->id,
                     'store_id' => $a->store_id,
                     'store_name' => $a->store?->store_name,
+                    'region_name' => $region?->region_name,
+                    'zone_name' => $zone?->zone_name,
+                    'area_name' => $area?->area_name,
                     'status' => $a->status,
                     'assigned_to_staff' => $a->assignedToStaff ? [
                         'id' => $a->assignedToStaff->staff_id,

@@ -50,6 +50,9 @@ export default function TaskDetailPage() {
   // Store task action states
   const [startingStoreId, setStartingStoreId] = useState<number | null>(null);
 
+  // Instruction Preview Modal state
+  const [isInstructionPreviewOpen, setIsInstructionPreviewOpen] = useState(false);
+
   // Get current user
   const { user } = useAuth();
   const { showToast } = useToast();
@@ -866,15 +869,13 @@ export default function TaskDetailPage() {
                                     WORK NOT DELIVERED
                                   </h4>
                                   {/* Show link for Document type, nothing for Image type */}
-                                  {isDocumentType && originalTask?.manual_link && (
-                                    <a
-                                      href={originalTask.manual_link}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-[15px] leading-[17px] italic underline text-[#297EF6] hover:opacity-80"
+                                  {isDocumentType && (
+                                    <button
+                                      onClick={() => setIsInstructionPreviewOpen(true)}
+                                      className="text-[15px] leading-[17px] italic underline text-[#297EF6] hover:opacity-80 text-left"
                                     >
                                       Link báo cáo
-                                    </a>
+                                    </button>
                                   )}
                                 </>
                               )}
@@ -885,16 +886,12 @@ export default function TaskDetailPage() {
                                   <h4 className="text-[24px] leading-[28px] font-bold text-[#297EF6]">
                                     WORK DELIVERED
                                   </h4>
-                                  {originalTask?.manual_link && (
-                                    <a
-                                      href={originalTask.manual_link}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-[15px] leading-[17px] italic underline text-[#297EF6] hover:opacity-80"
-                                    >
-                                      Link báo cáo
-                                    </a>
-                                  )}
+                                  <button
+                                    onClick={() => setIsInstructionPreviewOpen(true)}
+                                    className="text-[15px] leading-[17px] italic underline text-[#297EF6] hover:opacity-80 text-left"
+                                  >
+                                    Link báo cáo
+                                  </button>
                                 </>
                               )}
 
@@ -1299,6 +1296,113 @@ export default function TaskDetailPage() {
               >
                 Close
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Instruction Preview Modal */}
+      {isInstructionPreviewOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="instruction-preview-title"
+          onClick={() => setIsInstructionPreviewOpen(false)}
+        >
+          <div
+            className="bg-white dark:bg-gray-800 rounded-[10px] w-full max-w-[654px] overflow-hidden"
+            style={{
+              border: '0.5px solid #9B9B9B',
+              filter: 'drop-shadow(2px 2px 9.9px rgba(0, 0, 0, 0.15))'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-5 py-4">
+              <h3 id="instruction-preview-title" className="text-[18px] leading-[21px] font-bold text-black dark:text-white">
+                {originalTask?.task_instruction_type === 'image' ? 'IMAGE PREVIEW' : 'DOCUMENT PREVIEW'}
+              </h3>
+              <button
+                onClick={() => setIsInstructionPreviewOpen(false)}
+                className="w-6 h-6 flex items-center justify-center text-[#6B6B6B] hover:text-gray-900 dark:hover:text-white transition-colors"
+                aria-label="Close preview"
+              >
+                <svg className="w-[14px] h-[14px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="px-5 pb-4">
+              {originalTask?.task_instruction_type === 'image' ? (
+                /* Image Preview Content */
+                <div className="flex flex-row gap-[10px]">
+                  {originalTask?.photo_guidelines && originalTask.photo_guidelines.length > 0 ? (
+                    originalTask.photo_guidelines.map((imageUrl, index) => (
+                      <div key={index} className="flex flex-col gap-[6px]" style={{ width: '300px' }}>
+                        {/* Image Container */}
+                        <div
+                          className="w-[300px] h-[145px] rounded-[5px] overflow-hidden bg-gray-200 dark:bg-gray-700"
+                        >
+                          <img
+                            src={imageUrl}
+                            alt={`Hình ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        {/* Image Caption */}
+                        <p className="text-[15px] leading-[17px] font-bold text-black dark:text-white">
+                          Hình {index + 1}: Chụp ảnh khi ABC
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 w-full">
+                      <svg className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <p className="text-gray-500 dark:text-gray-400">No photo guidelines available</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Document Preview Content */
+                <div className="space-y-4">
+                  {originalTask?.comment ? (
+                    <div className="prose prose-sm dark:prose-invert max-w-none">
+                      <p className="text-[15px] leading-[20px] text-black dark:text-white whitespace-pre-wrap">
+                        {originalTask.comment}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <svg className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <p className="text-gray-500 dark:text-gray-400">No document instructions available</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer - Warning Message */}
+            <div
+              className="flex items-center gap-[5px] px-5 h-[39px]"
+              style={{ borderTop: '0.5px solid #9B9B9B' }}
+            >
+              {/* Warning Icon */}
+              <svg className="w-6 h-6 flex-shrink-0" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
+                  fill="#D38200"
+                />
+              </svg>
+              <span className="text-[13px] leading-[15px] text-[#D38200]">
+                Please attach the report file in the comment section after completing the task.
+              </span>
             </div>
           </div>
         </div>

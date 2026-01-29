@@ -236,6 +236,9 @@ export interface TaskStoreAssignment {
   id: number;
   store_id: number;
   store_name: string;
+  region_name: string | null;
+  zone_name: string | null;
+  area_name: string | null;
   status: 'not_yet' | 'on_progress' | 'done_pending' | 'done' | 'unable';
   assigned_to_staff: {
     id: number;
