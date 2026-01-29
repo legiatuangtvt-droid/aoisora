@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getTaskById, getDepartments, getTasks, getTaskProgress, getTaskComments, createTaskComment, updateTaskComment, deleteTaskComment, TaskComment, getTaskImages, TaskImage } from '@/lib/api';
-import { Task as ApiTask, Department, TaskProgressResponse, TaskStoreAssignment } from '@/types/api';
+import { getTaskById, getDepartments, getTasks, getTaskProgress, getTaskComments, createTaskComment, updateTaskComment, deleteTaskComment, TaskComment, getTaskImages, TaskImage, startStoreTask } from '@/lib/api';
+import { Task as ApiTask, Department, TaskProgressResponse, TaskStoreAssignment, Store } from '@/types/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { ViewMode, TaskGroup } from '@/types/tasks';
 import Link from 'next/link';
@@ -28,6 +28,7 @@ export default function TaskDetailPage() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isContentVisible, setIsContentVisible] = useState(true);
   const [task, setTask] = useState<TaskGroup | null>(null);
+  const [originalTask, setOriginalTask] = useState<ApiTask | null>(null);  // Keep original task for instruction_type and manual_link
   const [taskProgress, setTaskProgress] = useState<TaskProgressResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,6 +46,9 @@ export default function TaskDetailPage() {
   // Evidence images state
   const [taskImages, setTaskImages] = useState<TaskImage[]>([]);
   const [selectedEvidence, setSelectedEvidence] = useState<{ storeId: number; storeName: string; images: TaskImage[] } | null>(null);
+
+  // Store task action states
+  const [startingStoreId, setStartingStoreId] = useState<number | null>(null);
 
   // Get current user
   const { user } = useAuth();
@@ -156,6 +160,7 @@ export default function TaskDetailPage() {
         };
 
         setTask(transformedTask);
+        setOriginalTask(apiTask);  // Save original task for instruction_type and manual_link
         setTaskProgress(progressData);
       } catch (err) {
         console.error('Failed to fetch task:', err);
@@ -226,12 +231,15 @@ export default function TaskDetailPage() {
   const resultsCount = taskProgress?.assignments?.length || 0;
   const commentsCount = comments.length;
 
-  // Sort store assignments by status priority:
-  // 1. not_yet/on_progress (chưa hoàn thành) - first
-  // 2. unable (không hoàn thành được) - second
-  // 3. done_pending/done (đã hoàn thành) - last, sorted by completion time
+  // Sort store assignments:
+  // 1. User's store (current user's store) - always first
+  // 2. not_yet/on_progress (chưa hoàn thành) - second
+  // 3. unable (không hoàn thành được) - third
+  // 4. done_pending/done (đã hoàn thành) - last, sorted by completion time
   const sortedAssignments = useMemo(() => {
     if (!taskProgress?.assignments) return [];
+
+    const userStoreId = user?.storeId;
 
     const getStatusPriority = (status: TaskStoreAssignment['status']): number => {
       switch (status) {
@@ -249,10 +257,17 @@ export default function TaskDetailPage() {
     };
 
     return [...taskProgress.assignments].sort((a, b) => {
+      // First: User's store always comes first
+      const aIsUserStore = userStoreId && a.store_id === userStoreId;
+      const bIsUserStore = userStoreId && b.store_id === userStoreId;
+
+      if (aIsUserStore && !bIsUserStore) return -1;
+      if (!aIsUserStore && bIsUserStore) return 1;
+
+      // Then sort by status priority
       const priorityA = getStatusPriority(a.status);
       const priorityB = getStatusPriority(b.status);
 
-      // First sort by status priority
       if (priorityA !== priorityB) {
         return priorityA - priorityB;
       }
@@ -267,7 +282,7 @@ export default function TaskDetailPage() {
 
       return 0;
     });
-  }, [taskProgress?.assignments]);
+  }, [taskProgress?.assignments, user?.storeId]);
 
   // Save scroll position before view change
   const saveScrollPosition = useCallback(() => {
@@ -428,6 +443,25 @@ export default function TaskDetailPage() {
     }
   };
 
+  // Handle Start Task action
+  const handleStartTask = async (storeId: number) => {
+    if (!taskId) return;
+
+    setStartingStoreId(storeId);
+    try {
+      await startStoreTask(Number(taskId), storeId);
+      showToast('Task started successfully', 'success');
+      // Refresh task progress to update UI
+      const progressData = await getTaskProgress(Number(taskId));
+      setTaskProgress(progressData);
+    } catch (err) {
+      console.error('Failed to start task:', err);
+      showToast(err instanceof Error ? err.message : 'Failed to start task', 'error');
+    } finally {
+      setStartingStoreId(null);
+    }
+  };
+
   const startEditingComment = (comment: TaskComment) => {
     setEditingCommentId(comment.comment_id);
     setEditingContent(comment.content);
@@ -501,23 +535,33 @@ export default function TaskDetailPage() {
 
               {/* Task Type, Manual Link and User Icon - Same Row */}
               <div className="flex items-center gap-4 text-sm">
-                {/* Task Type */}
+                {/* Task Type - Dynamic based on originalTask.task_instruction_type */}
                 <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  Task type: Image
+                  {originalTask?.task_instruction_type === 'image' ? (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  )}
+                  Task type: {originalTask?.task_instruction_type === 'image' ? 'Image' : originalTask?.task_instruction_type === 'document' ? 'Document' : '--'}
                 </span>
 
-                {/* Manual Link */}
+                {/* Manual Link - Dynamic based on originalTask.manual_link */}
                 <span className="flex items-center gap-1.5">
                   <svg className="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                   </svg>
                   <span className="text-gray-600 dark:text-gray-400">Manual link:</span>
-                  <Link href="#" className="text-[#C5055B] hover:underline">
-                    link
-                  </Link>
+                  {originalTask?.manual_link ? (
+                    <a href={originalTask.manual_link} target="_blank" rel="noopener noreferrer" className="text-[#C5055B] hover:underline">
+                      link
+                    </a>
+                  ) : (
+                    <span className="text-gray-400">--</span>
+                  )}
                 </span>
 
                 {/* User Check Icon - Opens Workflow Steps Panel */}
@@ -666,78 +710,350 @@ export default function TaskDetailPage() {
           className={`transition-opacity duration-150 ease-in-out ${isContentVisible ? 'opacity-100' : 'opacity-0'
             }`}
         >
-          {/* Store Results Table */}
+          {/* Store Results Cards */}
           {viewMode === 'results' && (
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+            <div className="space-y-4">
               {sortedAssignments.length > 0 ? (
-                <ResponsiveTable>
-                <table className="w-full min-w-[800px]">
-                  <thead className="bg-gray-50 dark:bg-gray-900 border-b dark:border-gray-700">
-                    <tr>
-                      <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">#</th>
-                      <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Store</th>
-                      <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Status</th>
-                      <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Assigned To</th>
-                      <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Time</th>
-                      <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Completed By</th>
-                      <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Evidence</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y dark:divide-gray-700">
-                    {sortedAssignments.map((assignment, index) => (
-                      <tr key={assignment.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                        <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">{index + 1}</td>
-                        <td className="px-4 py-3 text-sm text-gray-900 dark:text-white font-medium">{assignment.store_name}</td>
-                        <td className="px-4 py-3">
-                          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                            assignment.status === 'done' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-                            assignment.status === 'done_pending' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
-                            assignment.status === 'on_progress' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
-                            assignment.status === 'unable' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                            'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
-                          }`}>
-                            {assignment.status === 'done' ? 'Done' :
-                             assignment.status === 'done_pending' ? 'Pending Check' :
-                             assignment.status === 'on_progress' ? 'In Progress' :
-                             assignment.status === 'unable' ? 'Unable' :
-                             'Not Yet'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                          {assignment.assigned_to_staff?.name || '-'}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                          {assignment.execution_time_minutes ? `${assignment.execution_time_minutes} min` : '-'}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                          {assignment.completed_by?.name || '-'}
-                        </td>
-                        <td className="px-4 py-3">
-                          {(() => {
-                            const images = imagesByAssignment.get(assignment.id) || [];
-                            if (images.length === 0) {
-                              return <span className="text-gray-400 dark:text-gray-500">-</span>;
-                            }
-                            return (
-                              <button
-                                onClick={() => openEvidenceViewer(assignment.id, assignment.store_name)}
-                                className="flex items-center gap-1.5 text-[#C5055B] hover:text-[#A00449] transition-colors"
+                sortedAssignments.map((assignment) => {
+                  const images = imagesByAssignment.get(assignment.id) || [];
+                  const isDocumentType = originalTask?.task_instruction_type === 'document';
+                  const isImageType = originalTask?.task_instruction_type === 'image';
+
+                  // Format dates - HH:MM DD Mon YYYY
+                  const formatDateTime = (dateStr: string | null | undefined) => {
+                    if (!dateStr) return '--:-- -- --- ----';
+                    const date = new Date(dateStr);
+                    const hours = date.getHours().toString().padStart(2, '0');
+                    const minutes = date.getMinutes().toString().padStart(2, '0');
+                    const day = date.getDate().toString().padStart(2, '0');
+                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    const month = months[date.getMonth()];
+                    const year = date.getFullYear();
+                    return `${hours}:${minutes} ${day} ${month} ${year}`;
+                  };
+
+                  // Use assignment dates - show null if not started/completed yet
+                  // Start time: only show when task has been started (started_at is set)
+                  // End time: only show when task has been completed (completed_at is set)
+                  const startDate = assignment.started_at;
+                  const endDate = assignment.completed_at;
+
+                  // Status color mapping for badge
+                  const getStatusStyle = (status: string) => {
+                    switch (status) {
+                      case 'done':
+                        return { bg: 'bg-[#10B981]/10', border: 'border-[#10B981]', text: 'text-[#10B981]', dot: 'bg-[#10B981]' };
+                      case 'done_pending':
+                        return { bg: 'bg-[#F59E0B]/10', border: 'border-[#F59E0B]', text: 'text-[#F59E0B]', dot: 'bg-[#F59E0B]' };
+                      case 'on_progress':
+                        return { bg: 'bg-[#297EF6]/10', border: 'border-[#297EF6]', text: 'text-[#297EF6]', dot: 'bg-[#297EF6]' };
+                      case 'unable':
+                        return { bg: 'bg-[#EF4444]/10', border: 'border-[#EF4444]', text: 'text-[#EF4444]', dot: 'bg-[#EF4444]' };
+                      case 'not_yet':
+                        return { bg: 'bg-[#990000]/10', border: 'border-[#B30000]', text: 'text-[#990000]', dot: 'bg-[#990000]' };
+                      default:
+                        return { bg: 'bg-[#6B7280]/10', border: 'border-[#6B7280]', text: 'text-[#6B7280]', dot: 'bg-[#6B7280]' };
+                    }
+                  };
+
+                  // Card background and border based on status
+                  const getCardStyle = (status: string) => {
+                    if (status === 'not_yet') {
+                      return {
+                        background: 'rgba(153, 0, 0, 0.05)',
+                        border: '0.5px solid #990000'
+                      };
+                    }
+                    return {
+                      background: 'rgba(41, 126, 246, 0.05)',
+                      border: '0.5px solid #297EF6'
+                    };
+                  };
+
+                  const cardStyle = getCardStyle(assignment.status);
+
+                  const statusStyle = getStatusStyle(assignment.status);
+                  const statusLabel = assignment.status === 'done' ? 'Done' :
+                                     assignment.status === 'done_pending' ? 'Pending' :
+                                     assignment.status === 'on_progress' ? 'Progress' :
+                                     assignment.status === 'unable' ? 'Unable' : 'Not Yet';
+
+                  // Check if this is the current user's store
+                  const isUserStore = user?.storeId && assignment.store_id === user.storeId;
+
+                  return (
+                    <div
+                      key={assignment.id}
+                      className={`bg-white dark:bg-gray-800 rounded-[10px] overflow-hidden shadow-sm w-full ${
+                        isUserStore ? 'ring-2 ring-[#C5055B] ring-offset-2' : ''
+                      }`}
+                    >
+                      {/* Card Header - Light Pink Background (#FFE8E8) */}
+                      <div className="bg-[#FFE8E8] dark:bg-gray-700 px-[10px] py-[10px]" style={{ borderRadius: '10px 10px 0 0' }}>
+                        <div className="flex items-center justify-between">
+                          {/* Left - Store Info */}
+                          <div className="flex flex-col">
+                            {/* Geographic Hierarchy - Region / Zone / Area */}
+                            {(assignment.region_name || assignment.zone_name || assignment.area_name) && (
+                              <div className="text-[11px] leading-[13px] text-[#536887] dark:text-gray-400 mb-0.5">
+                                {[assignment.region_name, assignment.zone_name, assignment.area_name]
+                                  .filter(Boolean)
+                                  .join(' - ')}
+                              </div>
+                            )}
+                            {/* Store Name with "Your Store" badge */}
+                            <div className="flex items-center gap-2">
+                              <h3 className="text-[20px] leading-[23px] font-bold text-black dark:text-white">
+                                {assignment.store_name}
+                              </h3>
+                              {/* "Your Store" badge for current user's store */}
+                              {isUserStore && (
+                                <span className="px-2 py-0.5 text-[10px] font-bold text-white bg-[#C5055B] rounded-full">
+                                  Your Store
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Right - Times and Menu */}
+                          <div className="flex items-center gap-[15px]">
+                            {/* Start Time */}
+                            <div className="flex items-center gap-[7px]">
+                              <span className="text-[11px] leading-[13px] font-bold text-[#536887]">Start</span>
+                              <span className="text-[13px] leading-[15px] text-black dark:text-white">{formatDateTime(startDate)}</span>
+                            </div>
+
+                            {/* End Time */}
+                            <div className="flex items-center gap-[4px]">
+                              <span className="text-[11px] leading-[13px] font-bold text-[#0F766E]">End</span>
+                              <span className="text-[13px] leading-[15px] text-black dark:text-white">{formatDateTime(endDate)}</span>
+                            </div>
+
+                            {/* 3-dots Kebab Menu */}
+                            <button className="p-1 hover:bg-pink-200 dark:hover:bg-gray-600 rounded transition-colors">
+                              <svg className="w-4 h-4 text-[#132B45] dark:text-gray-300" viewBox="0 0 16 16" fill="currentColor">
+                                <circle cx="8" cy="2.5" r="1.5" />
+                                <circle cx="8" cy="8" r="1.5" />
+                                <circle cx="8" cy="13.5" r="1.5" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Card Content - Work Delivered Section */}
+                      <div className="p-[10px]">
+                        {/* Status-based Border Card */}
+                        <div
+                          className={`rounded-[10px] p-5 ${assignment.status === 'not_yet' ? 'dark:bg-red-900/10' : 'dark:bg-blue-900/10'}`}
+                          style={cardStyle}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 flex flex-col gap-[5px]">
+                              {/* Status Badge - Outline style with dot */}
+                              <div
+                                className={`inline-flex items-center gap-2 px-2 py-0 rounded-[26px] w-fit ${statusStyle.bg} ${statusStyle.text}`}
+                                style={{ border: `0.5px solid currentColor`, height: '20px' }}
                               >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                <span className={`w-1.5 h-1.5 rounded-full ${statusStyle.dot}`}></span>
+                                <span className="text-[13px] leading-[15px]">{statusLabel}</span>
+                              </div>
+
+                              {/* Content for not_yet status - WORK NOT DELIVERED */}
+                              {assignment.status === 'not_yet' && (
+                                <>
+                                  <h4 className="text-[24px] leading-[28px] font-bold text-[#990000]">
+                                    WORK NOT DELIVERED
+                                  </h4>
+                                  {/* Show link for Document type, nothing for Image type */}
+                                  {isDocumentType && originalTask?.manual_link && (
+                                    <a
+                                      href={originalTask.manual_link}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-[15px] leading-[17px] italic underline text-[#297EF6] hover:opacity-80"
+                                    >
+                                      Link báo cáo
+                                    </a>
+                                  )}
+                                </>
+                              )}
+
+                              {/* Content for done/done_pending status - WORK DELIVERED */}
+                              {isDocumentType && (assignment.status === 'done' || assignment.status === 'done_pending') && (
+                                <>
+                                  <h4 className="text-[24px] leading-[28px] font-bold text-[#297EF6]">
+                                    WORK DELIVERED
+                                  </h4>
+                                  {originalTask?.manual_link && (
+                                    <a
+                                      href={originalTask.manual_link}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-[15px] leading-[17px] italic underline text-[#297EF6] hover:opacity-80"
+                                    >
+                                      Link báo cáo
+                                    </a>
+                                  )}
+                                </>
+                              )}
+
+                              {isImageType && images.length > 0 && (
+                                <>
+                                  <h4 className="text-[24px] leading-[28px] font-bold text-[#297EF6]">
+                                    EVIDENCE PHOTOS
+                                  </h4>
+                                  <div className="grid grid-cols-4 gap-2 mt-2">
+                                    {images.slice(0, 4).map((img, idx) => (
+                                      <button
+                                        key={img.image_id}
+                                        onClick={() => openEvidenceViewer(assignment.id, assignment.store_name)}
+                                        className="relative aspect-square rounded-lg overflow-hidden hover:opacity-80 transition-opacity"
+                                      >
+                                        <img
+                                          src={img.thumbnail_url || img.image_url}
+                                          alt={img.title || `Evidence ${idx + 1}`}
+                                          className="w-full h-full object-cover"
+                                        />
+                                        {idx === 3 && images.length > 4 && (
+                                          <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-lg font-semibold">
+                                            +{images.length - 4}
+                                          </div>
+                                        )}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </>
+                              )}
+
+                              {/* Notes if any */}
+                              {assignment.notes && (
+                                <p className="text-[15px] leading-[17px] text-gray-600 dark:text-gray-400 mt-2">
+                                  <span className="font-medium">Notes:</span> {assignment.notes}
+                                </p>
+                              )}
+
+                              {/* Unable reason if status is unable */}
+                              {assignment.status === 'unable' && assignment.unable_reason && (
+                                <p className="text-[15px] leading-[17px] text-[#EF4444] mt-2">
+                                  <span className="font-medium">Reason:</span> {assignment.unable_reason}
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Like Section - Heart button + Avatars + Count */}
+                            <div className="flex items-center gap-2">
+                              {/* Like Button */}
+                              <button
+                                className="flex items-center justify-center gap-1.5 px-2 py-1 rounded-[5px] hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                style={{ background: '#F0F0F0', border: '0.5px solid #9B9B9B' }}
+                              >
+                                <svg className="w-4 h-4" viewBox="0 0 16 16" fill="#F8312F">
+                                  <path d="M8 14.25l-1.45-1.32C3.1 10.02 1 8.07 1 5.68 1 3.79 2.49 2.25 4.3 2.25c1.04 0 2.04.49 2.7 1.26.66-.77 1.66-1.26 2.7-1.26C11.51 2.25 13 3.79 13 5.68c0 2.39-2.1 4.34-5.55 7.25L8 14.25z"/>
                                 </svg>
-                                <span className="text-sm font-medium">{images.length}</span>
+                                <span className="text-[15px] leading-[17px] text-black dark:text-white">Like</span>
                               </button>
-                            );
-                          })()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                </ResponsiveTable>
+
+                              {/* Avatars Stack - TODO: Show actual likers */}
+                              <div className="flex -space-x-2">
+                                <div className="w-[30px] h-[30px] rounded-full bg-gray-300 border-2 border-white dark:border-gray-800"></div>
+                                <div className="w-[30px] h-[30px] rounded-full bg-gray-400 border-2 border-white dark:border-gray-800"></div>
+                              </div>
+
+                              {/* Like Count */}
+                              <span className="text-[13px] leading-[15px] text-[#6B6B6B]">2 likes</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Comments Section */}
+                      <div className="bg-white dark:bg-gray-800 px-[10px] pb-[10px]" style={{ borderRadius: '0 0 10px 10px' }}>
+                        {/* Comments Header */}
+                        <div className="flex items-center justify-between py-[10px]">
+                          <h5 className="text-[18px] leading-[21px] font-bold text-black dark:text-white">
+                            Comments (2)
+                          </h5>
+                          <button className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                            <svg className="w-5 h-5 text-black dark:text-white" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M5 12.5L10 7.5L15 12.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          </button>
+                        </div>
+
+                        {/* Comment List */}
+                        <div className="flex flex-col gap-[10px] px-[10px]">
+                          {/* Comment Item 1 - Demo */}
+                          <div className="flex items-start gap-[14px]">
+                            {/* Avatar */}
+                            <div className="w-9 h-9 rounded-full bg-[#E5F0FF] flex items-center justify-center flex-shrink-0">
+                              <span className="text-[15px] leading-[17px] font-bold text-[#003E95]">TS</span>
+                            </div>
+                            {/* Comment Bubble */}
+                            <div
+                              className="flex-1 py-2 px-5 dark:bg-gray-700"
+                              style={{ border: '0.5px solid #9B9B9B', borderRadius: '0 10px 10px 10px' }}
+                            >
+                              <div className="flex items-end gap-[7px] mb-1">
+                                <span className="text-[16px] leading-[18px] font-bold text-black dark:text-white">Tùng SM Ocean</span>
+                                <span className="text-[13px] leading-[15px] text-[#6B6B6B]">Dec 01, 10:21 AM</span>
+                              </div>
+                              <p className="text-[16px] leading-[18px] text-black dark:text-white">
+                                nhà cung cấp giao thiếu hoa nên chỉ có hình ABC.
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Comment Item 2 - Demo */}
+                          <div className="flex items-start gap-[14px]">
+                            {/* Avatar */}
+                            <div className="w-9 h-9 rounded-full bg-[#E5F0FF] flex items-center justify-center flex-shrink-0">
+                              <span className="text-[15px] leading-[17px] font-bold text-[#003E95]">V</span>
+                            </div>
+                            {/* Comment Bubble */}
+                            <div
+                              className="flex-1 py-2 px-5 dark:bg-gray-700"
+                              style={{ border: '0.5px solid #9B9B9B', borderRadius: '0 10px 10px 10px' }}
+                            >
+                              <div className="flex items-end gap-[5px] mb-1">
+                                <span className="text-[16px] leading-[18px] font-bold text-black dark:text-white">Việt</span>
+                                <span className="text-[13px] leading-[15px] text-[#6B6B6B]">Dec 01, 10:50 AM</span>
+                              </div>
+                              <p className="text-[16px] leading-[18px] text-black dark:text-white">
+                                ok ntt đã báo MD xử lý tiếp.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Comment Input */}
+                        <div className="px-[10px] pt-[10px]">
+                          <div
+                            className="flex items-center justify-between px-5 h-10 dark:bg-gray-700"
+                            style={{ background: '#F4F4F4', border: '0.5px solid #9B9B9B', borderRadius: '10px' }}
+                          >
+                            <input
+                              type="text"
+                              placeholder="Write a comment..."
+                              className="flex-1 bg-transparent text-[16px] leading-[18px] text-black dark:text-white placeholder-[#6B6B6B] outline-none"
+                            />
+                            <button className="p-1 hover:opacity-70 transition-opacity">
+                              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                                <path d="M22 2L11 13" stroke="#C5055B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="#C5055B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
               ) : (
-                <div className="p-12 text-center">
+                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-12 text-center">
+                  <svg className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
                   <p className="text-gray-500 dark:text-gray-400">No store assignments yet.</p>
                 </div>
               )}
