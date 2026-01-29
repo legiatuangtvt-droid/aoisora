@@ -5141,79 +5141,89 @@ Request → Controller → Service → Model → Resource → Response
 
 **TEST ACCOUNTS:**
 
-| Role | Username | Password | Job Grade | Dept | Notes |
-|------|----------|----------|-----------|------|-------|
-| HQ Admin | admin | password | G9 | Operation | Full access, Approver cho tất cả |
-| HQ Dept Head | peri.head | password | G6 | PERI | Override cooldown, top of hierarchy |
-| HQ Approver | peri.senior1 | password | G4 | PERI | Approve/Reject tasks từ G3, reports to peri.head |
-| HQ Creator | peri.staff1 | password | G3 | PERI | Tạo task, Approver = peri.senior1 |
-| Store SI | s4si1 | password | S4 | Store 1 | Store In-charge, assign cho staff |
-| Store Leader | s3store1 | password | S3 | Store 1 | Store Leader, nhận task từ HQ |
-| Store Staff | s1staff1 | password | S1 | Store 1 | Staff, được assign task từ S3/S4 |
+| Role | Username | Password | Job Grade | Location | Notes |
+|------|----------|----------|-----------|----------|-------|
+| System Admin | `admin` | Aeon@2025 | - | System | Full access, operations/maintenance |
+| General Manager | `yoshinaga` | Aeon@2025 | G6 | (None) | Highest business level, manages all HQ & Stores |
+| HQ Manager | `nguyendaiviet` | Aeon@2025 | G5 | PERI | Approve tasks từ G3/G4 |
+| HQ Supervisor | `dangvietthang` | Aeon@2025 | G3 | PERI | Tạo task, Approver = nguyendaiviet |
+| HQ Staff | `nguyendieulinh` | Aeon@2025 | G2 | PERI | Support staff |
+| Store Supervisor | `doquanghuy` | Aeon@2025 | G3 | MAXVALU CIPUTRA | Store Leader, nhận task từ HQ |
+| Store Staff | `catngocphuong` | Aeon@2025 | G2 | MAXVALU CIPUTRA | Staff, được assign task từ Supervisor |
+| Store Staff | `lehoanganh` | Aeon@2025 | G1 | MAXVALU CIPUTRA | Staff, cấp thấp nhất |
+
+**APPROVAL HIERARCHY:**
+```
+G6 yoshinaga (General Manager) ← highest business level, no dept/store
+ └── PERI Department:
+      └── G5 nguyendaiviet (Manager) ← approves G3/G4
+           └── G3 dangvietthang (Supervisor) ← creates tasks
+           └── G2 nguyendieulinh (Staff)
+```
 
 ---
 
 #### FLOW 1: TẠO TASK HQ→STORE (Draft → Approve → Store nhận)
 
 > **Mục tiêu**: Test toàn bộ luồng tạo task từ Task List, gửi phê duyệt, approve, và stores nhận task.
-> **Actors**: HQ Creator (peri.staff1) → HQ Approver (peri.senior1) → Store Leader (s3store1)
+> **Actors**: HQ Supervisor (dangvietthang) → HQ Manager (nguyendaiviet) → Store Supervisor (doquanghuy)
 
 | Step | Actor | Thao tác | Expected Result | Status |
 |------|-------|----------|-----------------|--------|
-| 1.1 | - | Mở browser, vào `http://localhost:3000` | Hiển thị trang Login | ✅ |
-| 1.2 | Creator | Login với `peri.staff1` / `password` | Đăng nhập thành công, redirect đến Task List | ✅ |
-| 1.3 | Creator | Default screen = Task List (không cần click sidebar) | Hiển thị danh sách tasks (Dept column: OP, ADMIN, ...) | ✅ |
-| 1.4 | Creator | Click button **Add New** (góc trên phải) | Chuyển đến trang Add Task (`/tasks/new`) | ✅ |
-| 1.5 | Creator | Nhập **Task Name**: "Test Flow 1 - Kiểm kê hàng Q1" | Tên task hiển thị trong input | ✅ |
-| 1.6 | Creator | Tại **A. Information**: chọn Task Type = "Monthly" | Dropdown hiển thị "Monthly" | ✅ |
-| 1.7 | Creator | Chọn Start Date = ngày mai, End Date = 7 ngày sau | Date pickers hiển thị đúng ngày | ✅ |
-| 1.8 | Creator | Nhập Execution Time = 2 (hours) | Input hiển thị "2" | ✅ |
-| 1.9 | Creator | Tại **B. Instructions**: chọn Task Type = "Document" | Radio "Document" được chọn | ✅ |
-| 1.10 | Creator | Nhập Manual Link = `https://example.com/manual` | URL hiển thị trong input | ✅ |
-| 1.11 | Creator | Nhập Note = "Kiểm kê toàn bộ kho hàng tầng 1" | Note hiển thị trong textarea | ✅ |
-| 1.12 | Creator | Tại **C. Scope**: chọn All Region (hoặc 1 store cụ thể) | Hiển thị "460/460 Stores" (tất cả stores) | ✅ |
-| 1.13 | Creator | Kiểm tra **D. Approval Process** | Initiator = "PERI Staff 1 / G3", Approver = "PERI Senior 1 / Senior Staff" | ✅ |
-| 1.14 | Creator | Click button **Save as Draft** | Toast "Draft saved", quay về Task List | ✅ |
-| 1.15 | Creator | Tại Task List, tìm task vừa tạo | Task hiển thị với status = "Draft" (gray badge) | ✅ |
-| 1.16 | Creator | Click vào task → vào trang Edit Draft | Trang Add Task mở với data đã nhập trước đó | ✅ |
-| 1.17 | Creator | Click button **Submit** | Toast "Task submitted", status chuyển thành "Approve" | ✅ |
-| 1.18 | Creator | Quay về Task List, tìm task | Status = "Approve" (yellow/pink badge) | ✅ |
-| 1.19 | Creator | **Logout** | Quay về trang Login | ✅ |
-| 1.20 | Approver | Login với `peri.senior1` / `password` | Đăng nhập thành công | ✅ |
-| 1.21 | Approver | Vào **Task List**, filter Status = "Approve" | Hiển thị danh sách tasks đang chờ duyệt | ✅ |
-| 1.22 | Approver | Tìm task "Test Flow 1 - Kiểm kê hàng Q1" | Task hiển thị trong danh sách với status Approve | ✅ |
-| 1.23 | Approver | Click vào task row để mở Approve Mode | Trang Add Task mở ở chế độ Approve (read-only + Approve/Reject buttons) | ✅ |
-| 1.24 | Approver | Click button **Approve** | Toast "Task approved", redirect về Task List | ✅ |
-| 1.25 | Approver | Tại Task List, tìm lại task | Task hiển thị với status = "Not Yet" (đã được dispatch) | ✅ |
-| 1.26 | Approver | **Logout** | Quay về trang Login | ✅ |
-| 1.27 | Store Leader | Login với `s3store1` / `password` | Đăng nhập thành công | ✅ |
-| 1.28 | Store Leader | Kiểm tra task list (hoặc Store Tasks) | Task "Test Flow 1" hiển thị với status = "Not Yet" | ✅ |
+| 1.1 | - | Mở browser, vào `http://localhost:3000` | Hiển thị trang Login | ⏳ |
+| 1.2 | Creator | Login với `dangvietthang` / `Aeon@2025` | Đăng nhập thành công, redirect đến Task List | ⏳ |
+| 1.3 | Creator | Default screen = Task List (không cần click sidebar) | Hiển thị danh sách tasks (trống vì chưa có data) | ⏳ |
+| 1.4 | Creator | Click button **Add New** (góc trên phải) | Chuyển đến trang Add Task (`/tasks/new`) | ⏳ |
+| 1.5 | Creator | Nhập **Task Name**: "Test Flow 1 - Kiểm kê hàng Q1" | Tên task hiển thị trong input | ⏳ |
+| 1.6 | Creator | Tại **A. Information**: chọn Task Type = "Monthly" | Dropdown hiển thị "Monthly" | ⏳ |
+| 1.7 | Creator | Chọn Start Date = ngày mai, End Date = 7 ngày sau | Date pickers hiển thị đúng ngày | ⏳ |
+| 1.8 | Creator | Nhập Execution Time = 2 (hours) | Input hiển thị "2" | ⏳ |
+| 1.9 | Creator | Tại **B. Instructions**: chọn Task Type = "Document" | Radio "Document" được chọn | ⏳ |
+| 1.10 | Creator | Nhập Manual Link = `https://example.com/manual` | URL hiển thị trong input | ⏳ |
+| 1.11 | Creator | Nhập Note = "Kiểm kê toàn bộ kho hàng tầng 1" | Note hiển thị trong textarea | ⏳ |
+| 1.12 | Creator | Tại **C. Scope**: chọn 1 store = "MAXVALU CIPUTRA" | Store được chọn, hiển thị "1 Store selected" | ⏳ |
+| 1.13 | Creator | Kiểm tra **D. Approval Process** | Initiator = "Đặng Việt Thắng / G3", Approver = "Nguyễn Đại Việt / G5" | ⏳ |
+| 1.14 | Creator | Click button **Save as Draft** | Toast "Draft saved", quay về Task List | ⏳ |
+| 1.15 | Creator | Tại Task List, tìm task vừa tạo | Task hiển thị với status = "Draft" (gray badge) | ⏳ |
+| 1.16 | Creator | Click vào task → vào trang Edit Draft | Trang Add Task mở với data đã nhập trước đó | ⏳ |
+| 1.17 | Creator | Click button **Submit** | Toast "Task submitted", status chuyển thành "Approve" | ⏳ |
+| 1.18 | Creator | Quay về Task List, tìm task | Status = "Approve" (yellow/pink badge) | ⏳ |
+| 1.19 | Creator | **Logout** | Quay về trang Login | ⏳ |
+| 1.20 | Approver | Login với `nguyendaiviet` / `Aeon@2025` | Đăng nhập thành công | ⏳ |
+| 1.21 | Approver | Vào **Task List**, filter Status = "Approve" | Hiển thị danh sách tasks đang chờ duyệt | ⏳ |
+| 1.22 | Approver | Tìm task "Test Flow 1 - Kiểm kê hàng Q1" | Task hiển thị trong danh sách với status Approve | ⏳ |
+| 1.23 | Approver | Click vào task row để mở Approve Mode | Trang Add Task mở ở chế độ Approve (read-only + Approve/Reject buttons) | ⏳ |
+| 1.24 | Approver | Click button **Approve** | Toast "Task approved", redirect về Task List | ⏳ |
+| 1.25 | Approver | Tại Task List, tìm lại task | Task hiển thị với status = "Not Yet" (đã được dispatch) | ⏳ |
+| 1.26 | Approver | **Logout** | Quay về trang Login | ⏳ |
+| 1.27 | Store Leader | Login với `doquanghuy` / `Aeon@2025` | Đăng nhập thành công | ⏳ |
+| 1.28 | Store Leader | Kiểm tra task list (hoặc Store Tasks) | Task "Test Flow 1" hiển thị với status = "Not Yet" | ⏳ |
 
 ---
 
 #### FLOW 2: REJECT & RESUBMIT (Approve bị từ chối, sửa và gửi lại)
 
 > **Mục tiêu**: Test luồng reject: Creator tạo task → Approver reject → Creator sửa → Resubmit.
-> **Actors**: HQ Creator (peri.staff1) → HQ Approver (peri.senior1)
+> **Actors**: HQ Supervisor (dangvietthang) → HQ Manager (nguyendaiviet)
 
 | Step | Actor | Thao tác | Expected Result | Status |
 |------|-------|----------|-----------------|--------|
-| 2.1 | Creator | Login `peri.staff1`, vào Task List → **Add New** | Trang Add Task mở | ⏳ |
+| 2.1 | Creator | Login `dangvietthang` / `Aeon@2025`, vào Task List → **Add New** | Trang Add Task mở | ⏳ |
 | 2.2 | Creator | Nhập Task Name: "Test Flow 2 - Task bị reject" | - | ⏳ |
 | 2.3 | Creator | Điền đầy đủ A.Info, B.Instructions, C.Scope | Form điền đầy đủ | ⏳ |
 | 2.4 | Creator | Click **Submit** (bỏ qua Draft) | Toast "Task submitted", status = Approve | ⏳ |
 | 2.5 | Creator | **Logout** | - | ⏳ |
-| 2.6 | Approver | Login `peri.senior1`, vào **Task List**, filter Status = "Approve" | Task hiển thị trong danh sách với status Approve | ⏳ |
+| 2.6 | Approver | Login `nguyendaiviet` / `Aeon@2025`, vào **Task List**, filter Status = "Approve" | Task hiển thị trong danh sách với status Approve | ⏳ |
 | 2.7 | Approver | Click vào task row để mở Approve Mode | Trang `/tasks/new` mở ở chế độ Approve (read-only + Approve/Reject buttons) | ⏳ |
 | 2.8 | Approver | Click **Reject** | Modal hiện lên yêu cầu nhập lý do | ⏳ |
 | 2.9 | Approver | Nhập lý do: "Cần bổ sung thêm hướng dẫn chi tiết" → Confirm | Toast "Task rejected", redirect về Task List | ⏳ |
 | 2.10 | Approver | **Logout** | - | ⏳ |
-| 2.11 | Creator | Login `peri.staff1`, vào **Task List** | Task hiển thị với status = "Draft" (đã bị reject về draft) | ⏳ |
+| 2.11 | Creator | Login `dangvietthang`, vào **Task List** | Task hiển thị với status = "Draft" (đã bị reject về draft) | ⏳ |
 | 2.12 | Creator | Click vào task để edit | Trang `/tasks/new` mở, hiển thị lý do reject từ Approver | ⏳ |
 | 2.13 | Creator | Sửa Note = "Đã bổ sung hướng dẫn theo yêu cầu" | Note cập nhật | ⏳ |
 | 2.14 | Creator | Click **Submit** lại | Toast "Task submitted", status = Approve | ⏳ |
 | 2.15 | Creator | **Logout** | - | ⏳ |
-| 2.16 | Approver | Login `peri.senior1`, vào **Task List**, filter Status = "Approve" | Task hiển thị trong danh sách | ⏳ |
+| 2.16 | Approver | Login `nguyendaiviet`, vào **Task List**, filter Status = "Approve" | Task hiển thị trong danh sách | ⏳ |
 | 2.17 | Approver | Click vào task row → **Approve** | Toast "Task approved", redirect về Task List | ⏳ |
 
 ---
@@ -5222,16 +5232,16 @@ Request → Controller → Service → Model → Resource → Response
 
 > **Mục tiêu**: Test luồng Store nhận task, bắt đầu làm, báo hoàn thành, HQ kiểm tra.
 > **Precondition**: Đã có task ở status "Not Yet" được giao cho store (từ Flow 1 hoặc data sẵn).
-> **Actors**: Store Leader (s3store1) → HQ Approver (peri.senior1)
+> **Actors**: Store Leader (doquanghuy) → HQ Manager (nguyendaiviet)
 
 | Step | Actor | Thao tác | Expected Result | Status |
 |------|-------|----------|-----------------|--------|
-| 3.1 | Store Leader | Login `s3store1`, tìm task có status "Not Yet" | Task hiển thị trong danh sách | ⏳ |
+| 3.1 | Store Leader | Login `doquanghuy` / `Aeon@2025`, tìm task có status "Not Yet" | Task hiển thị trong danh sách | ⏳ |
 | 3.2 | Store Leader | Click **Start** trên task đó | Status chuyển thành "On Progress" (blue) | ⏳ |
 | 3.3 | Store Leader | Click **Complete** (hoặc Mark as Done) | Modal hiện lên (notes, evidence upload) | ⏳ |
 | 3.4 | Store Leader | Nhập notes: "Đã hoàn thành kiểm kê" → Submit | Status chuyển thành "Done Pending" (chờ HQ check) | ⏳ |
 | 3.5 | Store Leader | **Logout** | - | ⏳ |
-| 3.6 | Approver | Login `peri.senior1`, vào menu **HQ Check** | Task hiển thị trong danh sách cần kiểm tra | ⏳ |
+| 3.6 | Approver | Login `nguyendaiviet` / `Aeon@2025`, vào menu **HQ Check** | Task hiển thị trong danh sách cần kiểm tra | ⏳ |
 | 3.7 | Approver | Expand task → xem store đã hoàn thành | Store hiển thị với notes, completion time | ⏳ |
 | 3.8 | Approver | Click **Checked** (approve store result) | Store status → "Done" (green), toast thành công | ⏳ |
 
@@ -5241,11 +5251,11 @@ Request → Controller → Service → Model → Resource → Response
 
 > **Mục tiêu**: Test luồng Store đánh dấu unable với lý do.
 > **Precondition**: Có task ở status "Not Yet" hoặc "On Progress".
-> **Actor**: Store Leader (s3store1)
+> **Actor**: Store Leader (doquanghuy)
 
 | Step | Actor | Thao tác | Expected Result | Status |
 |------|-------|----------|-----------------|--------|
-| 4.1 | Store Leader | Login `s3store1`, tìm task có status "Not Yet" hoặc "On Progress" | Task hiển thị | ⏳ |
+| 4.1 | Store Leader | Login `doquanghuy` / `Aeon@2025`, tìm task có status "Not Yet" hoặc "On Progress" | Task hiển thị | ⏳ |
 | 4.2 | Store Leader | Click **Unable** trên task | Modal hiện lên yêu cầu nhập lý do | ⏳ |
 | 4.3 | Store Leader | Thử submit không nhập lý do | Validation error: lý do là bắt buộc | ⏳ |
 | 4.4 | Store Leader | Nhập lý do: "Thiếu nhân sự" → Submit | Status chuyển thành "Unable" (orange), toast thành công | ⏳ |
@@ -5256,33 +5266,33 @@ Request → Controller → Service → Model → Resource → Response
 
 > **Mục tiêu**: Test luồng HQ reject kết quả store, yêu cầu làm lại.
 > **Precondition**: Có store ở status "Done Pending" (từ Flow 3 step 3.4).
-> **Actors**: HQ Approver (peri.senior1) → Store Leader (s3store1)
+> **Actors**: HQ Manager (nguyendaiviet) → Store Leader (doquanghuy)
 
 | Step | Actor | Thao tác | Expected Result | Status |
 |------|-------|----------|-----------------|--------|
-| 5.1 | Approver | Login `peri.senior1`, vào **HQ Check** | Task với store done_pending hiển thị | ⏳ |
+| 5.1 | Approver | Login `nguyendaiviet` / `Aeon@2025`, vào **HQ Check** | Task với store done_pending hiển thị | ⏳ |
 | 5.2 | Approver | Click **Reject** trên store đó | Modal hiện lên yêu cầu nhập lý do reject | ⏳ |
 | 5.3 | Approver | Nhập lý do: "Ảnh chụp chưa rõ, cần chụp lại" → Submit | Store status quay về "On Progress", toast thành công | ⏳ |
 | 5.4 | Approver | **Logout** | - | ⏳ |
-| 5.5 | Store Leader | Login `s3store1`, tìm task | Store status = "On Progress" (phải làm lại) | ⏳ |
+| 5.5 | Store Leader | Login `doquanghuy` / `Aeon@2025`, tìm task | Store status = "On Progress" (phải làm lại) | ⏳ |
 
 ---
 
 #### FLOW 6: LIBRARY - TẠO TEMPLATE & DISPATCH
 
 > **Mục tiêu**: Test tạo template trong Library → Approve → Dispatch đến stores.
-> **Actors**: HQ Creator (peri.staff1) → HQ Approver (peri.senior1)
+> **Actors**: HQ Supervisor (dangvietthang) → HQ Manager (nguyendaiviet)
 
 | Step | Actor | Thao tác | Expected Result | Status |
 |------|-------|----------|-----------------|--------|
-| 6.1 | Creator | Login `peri.staff1`, click menu **Library** | Trang Library hiển thị | ⏳ |
+| 6.1 | Creator | Login `dangvietthang` / `Aeon@2025`, click menu **Library** | Trang Library hiển thị | ⏳ |
 | 6.2 | Creator | Click **Add New** | Chuyển đến `/tasks/new?source=library` | ⏳ |
 | 6.3 | Creator | Kiểm tra form | **C. Scope** section bị ẨN (vì là template) | ⏳ |
 | 6.4 | Creator | Nhập Task Name: "Template - Vệ sinh kho hàng" | - | ⏳ |
 | 6.5 | Creator | Điền A.Info (Task Type, Execution Time) + B.Instructions | Form điền đầy đủ, **KHÔNG có** Start/End Date | ⏳ |
 | 6.6 | Creator | Click **Submit** | Toast "Submitted", status = Approve | ⏳ |
 | 6.7 | Creator | **Logout** | - | ⏳ |
-| 6.8 | Approver | Login `peri.senior1`, vào **Task List**, filter Status = "Approve" | Template hiển thị trong danh sách | ⏳ |
+| 6.8 | Approver | Login `nguyendaiviet` / `Aeon@2025`, vào **Task List**, filter Status = "Approve" | Template hiển thị trong danh sách | ⏳ |
 | 6.9 | Approver | Click vào template row → **Approve** | Template approved, redirect về Task List | ⏳ |
 | 6.10 | Approver | Vào **Library** | Template hiển thị với status "Available" (green badge) | ⏳ |
 | 6.11 | Approver | Click **Dispatch** trên template | Chuyển đến trang Dispatch | ⏳ |
@@ -5297,11 +5307,11 @@ Request → Controller → Service → Model → Resource → Response
 
 > **Mục tiêu**: Test xem chi tiết task, statistics cards, và CRUD comments.
 > **Precondition**: Có task ở status "On Progress" hoặc "Not Yet" với store assignments.
-> **Actor**: HQ Creator (peri.staff1)
+> **Actor**: HQ Supervisor (dangvietthang)
 
 | Step | Actor | Thao tác | Expected Result | Status |
 |------|-------|----------|-----------------|--------|
-| 7.1 | Creator | Login `peri.staff1`, vào **Task List** | Danh sách tasks hiển thị | ⏳ |
+| 7.1 | Creator | Login `dangvietthang` / `Aeon@2025`, vào **Task List** | Danh sách tasks hiển thị | ⏳ |
 | 7.2 | Creator | Click vào 1 task bất kỳ (có store assignments) | Trang Task Detail mở | ⏳ |
 | 7.3 | Creator | Kiểm tra **Statistics Cards** | 4 cards: Not Yet, Done, Unable, Avg Time hiển thị với số đúng | ⏳ |
 | 7.4 | Creator | Kiểm tra **Store Progress Table** | Danh sách stores với status badges, assignee | ⏳ |
@@ -5320,7 +5330,7 @@ Request → Controller → Service → Model → Resource → Response
 
 | Step | Actor | Thao tác | Expected Result | Status |
 |------|-------|----------|-----------------|--------|
-| 8.1 | Admin | Login `admin`, vào **Task List** | Danh sách tasks hiển thị đầy đủ | ⏳ |
+| 8.1 | Admin | Login `admin` / `Aeon@2025`, vào **Task List** | Danh sách tasks hiển thị đầy đủ | ⏳ |
 | 8.2 | Admin | Click vào **Filter** accordion | Expand hiển thị Department, Status, HQ Check filters | ⏳ |
 | 8.3 | Admin | Chọn filter **Department** = "PERI" | Danh sách lọc chỉ còn tasks thuộc PERI | ⏳ |
 | 8.4 | Admin | Chọn thêm filter **Status** = "Not Yet" | Danh sách lọc thêm theo status | ⏳ |

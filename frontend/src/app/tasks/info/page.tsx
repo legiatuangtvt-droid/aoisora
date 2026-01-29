@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { DepartmentId, HierarchyNode, Department, Team, Employee } from '@/types/userInfo';
 import {
   getSMBUHierarchy,
@@ -37,6 +38,11 @@ const DEPARTMENT_CODE_TO_ID: Record<string, number> = {
 };
 
 export default function UserInfoPage() {
+  const { user } = useAuth();
+
+  // Only admin can create/edit/delete - others are view-only
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SYSTEM_ADMIN';
+
   const [activeTab, setActiveTab] = useState<DepartmentId | 'SMBU'>('SMBU');
   const [hierarchy, setHierarchy] = useState<HierarchyNode | null>(null);
   const [departmentTabs, setDepartmentTabs] = useState<DepartmentTab[]>([]);
@@ -398,6 +404,7 @@ export default function UserInfoPage() {
         <UserInfoHeader
           onPermissionsClick={handlePermissionsClick}
           onImportClick={handleImportClick}
+          isReadOnly={!isAdmin}
         />
 
         {/* Department Tabs */}
@@ -419,6 +426,7 @@ export default function UserInfoPage() {
             onToggleTeam={handleToggleTeamInHierarchy}
             onAddMember={handleAddMember}
             onMemberClick={handleMemberClick}
+            isReadOnly={!isAdmin}
           />
         ) : selectedDepartment ? (
           /* Department Detail View */
@@ -427,6 +435,7 @@ export default function UserInfoPage() {
             onToggleTeam={handleToggleTeam}
             onAddMember={handleAddMember}
             onMemberClick={handleMemberClick}
+            isReadOnly={!isAdmin}
           />
         ) : loading ? (
           <HierarchySkeleton />

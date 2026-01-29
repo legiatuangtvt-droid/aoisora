@@ -1,6 +1,6 @@
 -- ============================================
 -- EMPLOYEE IMPORT FROM CSV
--- Generated: 2026-01-29 16:03:44
+-- Generated: 2026-01-29 16:23:55
 -- Total employees: 367
 -- HQ Staff: 44
 -- Store Staff: 323
@@ -418,9 +418,10 @@ INSERT INTO staff (staff_id, staff_code, staff_name, username, email, phone, sto
 INSERT INTO staff (staff_id, staff_code, staff_name, username, email, phone, store_id, department_id, role, position, job_grade, joining_date, password_hash, status, is_active) VALUES (367, '424602', 'Nguyễn Xuân Minh Phú', 'nguyenxuanminhphu', 'nguyenxuanminhphu@aeon.com.vn', NULL, 1, NULL, 'STAFF', 'Parttime staff', 'G1', '2026-01-29', '$2y$10$idvzmZcmOvwlHM8JgODnBO1/N.wiBpIJv/nDJKS04rlvkryp9BqsW', 'active', 1);
 
 -- ============================================
--- ADDITIONAL HQ STAFF (Manual Entry)
+-- GENERAL MANAGER (Highest Business Level)
+-- NOT assigned to any department or store
 -- ============================================
-INSERT INTO staff (staff_id, staff_code, staff_name, username, email, phone, store_id, department_id, role, position, job_grade, joining_date, password_hash, status, is_active) VALUES (368, 'HQ001', 'Yoshinaga Shinichi', 'yoshinaga', 'yoshinaga@aeon.com.vn', '0901234567', NULL, 7, 'MANAGER', 'Department Manager', 'G6', '2020-01-15', '$2y$10$idvzmZcmOvwlHM8JgODnBO1/N.wiBpIJv/nDJKS04rlvkryp9BqsW', 'active', 1);
+INSERT INTO staff (staff_id, staff_code, staff_name, username, email, phone, store_id, department_id, role, position, job_grade, joining_date, password_hash, status, is_active) VALUES (368, 'HQ001', 'Yoshinaga Shinichi', 'yoshinaga', 'yoshinaga@aeon.com.vn', '0901234567', NULL, NULL, 'ADMIN', 'General Manager', 'G6', '2020-01-15', '$2y$10$idvzmZcmOvwlHM8JgODnBO1/N.wiBpIJv/nDJKS04rlvkryp9BqsW', 'active', 1);
 
 -- ============================================
 -- SYSTEM ADMIN (Operations/Maintenance Account)

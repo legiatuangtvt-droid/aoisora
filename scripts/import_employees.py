@@ -302,12 +302,13 @@ def main():
         sql_lines.append(sql)
         staff_id += 1
 
-    # Add Yoshinaga Shinichi (G6 HQ staff - requested by user)
+    # Add Yoshinaga Shinichi (G6 General Manager - highest business level, no dept/store)
     sql_lines.append("")
     sql_lines.append("-- ============================================")
-    sql_lines.append("-- ADDITIONAL HQ STAFF (Manual Entry)")
+    sql_lines.append("-- GENERAL MANAGER (Highest Business Level)")
+    sql_lines.append("-- NOT assigned to any department or store")
     sql_lines.append("-- ============================================")
-    yoshinaga_sql = f"""INSERT INTO staff (staff_id, staff_code, staff_name, username, email, phone, store_id, department_id, role, position, job_grade, joining_date, password_hash, status, is_active) VALUES ({staff_id}, 'HQ001', 'Yoshinaga Shinichi', 'yoshinaga', 'yoshinaga@aeon.com.vn', '0901234567', NULL, 7, 'MANAGER', 'Department Manager', 'G6', '2020-01-15', {escape_sql(password_hash)}, 'active', 1);"""
+    yoshinaga_sql = f"""INSERT INTO staff (staff_id, staff_code, staff_name, username, email, phone, store_id, department_id, role, position, job_grade, joining_date, password_hash, status, is_active) VALUES ({staff_id}, 'HQ001', 'Yoshinaga Shinichi', 'yoshinaga', 'yoshinaga@aeon.com.vn', '0901234567', NULL, NULL, 'ADMIN', 'General Manager', 'G6', '2020-01-15', {escape_sql(password_hash)}, 'active', 1);"""
     sql_lines.append(yoshinaga_sql)
     staff_id += 1
 

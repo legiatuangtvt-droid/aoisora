@@ -14,6 +14,7 @@ interface HierarchyTreeProps {
   onToggleTeam?: (departmentId: DepartmentId, teamId: string) => void;
   onAddMember: () => void;
   onMemberClick?: (member: Employee) => void;
+  isReadOnly?: boolean;
 }
 
 const HierarchyTree: React.FC<HierarchyTreeProps> = ({
@@ -22,13 +23,16 @@ const HierarchyTree: React.FC<HierarchyTreeProps> = ({
   onToggleTeam,
   onAddMember,
   onMemberClick,
+  isReadOnly = false,
 }) => {
   const departmentsCount = hierarchy.departments.length;
 
   return (
     <div className="flex flex-col">
-      {/* Root User Card */}
-      <RootUserCard user={hierarchy.rootUser} onClick={onMemberClick} />
+      {/* Root User Card - only render if rootUser exists */}
+      {hierarchy.rootUser && (
+        <RootUserCard user={hierarchy.rootUser} onClick={onMemberClick} isReadOnly={isReadOnly} />
+      )}
 
       {/* Departments with connector lines */}
       {departmentsCount > 0 && (
@@ -133,10 +137,12 @@ const HierarchyTree: React.FC<HierarchyTreeProps> = ({
         </div>
       )}
 
-      {/* Add Member Button */}
-      <div className="mt-6 ml-12">
-        <AddMemberButton onClick={onAddMember} />
-      </div>
+      {/* Add Member Button - Hidden in read-only mode */}
+      {!isReadOnly && (
+        <div className="mt-6 ml-12">
+          <AddMemberButton onClick={onAddMember} />
+        </div>
+      )}
     </div>
   );
 };

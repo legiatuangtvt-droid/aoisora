@@ -11,6 +11,7 @@ interface DepartmentDetailViewProps {
   onToggleTeam: (teamId: string) => void;
   onAddMember: () => void;
   onMemberClick?: (member: Employee) => void;
+  isReadOnly?: boolean;
 }
 
 const DepartmentDetailView: React.FC<DepartmentDetailViewProps> = ({
@@ -18,6 +19,7 @@ const DepartmentDetailView: React.FC<DepartmentDetailViewProps> = ({
   onToggleTeam,
   onAddMember,
   onMemberClick,
+  isReadOnly = false,
 }) => {
   const teamsCount = department.teams?.length || 0;
 
@@ -25,7 +27,7 @@ const DepartmentDetailView: React.FC<DepartmentDetailViewProps> = ({
     <div className="flex flex-col">
       {/* Department Head Card */}
       {department.head && (
-        <DepartmentHeadCard head={department.head} onClick={onMemberClick} />
+        <DepartmentHeadCard head={department.head} onClick={onMemberClick} isReadOnly={isReadOnly} />
       )}
 
       {/* Teams with connector lines */}
@@ -53,6 +55,7 @@ const DepartmentDetailView: React.FC<DepartmentDetailViewProps> = ({
                   team={team}
                   onToggle={onToggleTeam}
                   onMemberClick={onMemberClick}
+                  isReadOnly={isReadOnly}
                 />
               </div>
             );
@@ -60,10 +63,12 @@ const DepartmentDetailView: React.FC<DepartmentDetailViewProps> = ({
         </div>
       )}
 
-      {/* Add Member Button */}
-      <div className="mt-6 ml-12">
-        <AddMemberButton onClick={onAddMember} />
-      </div>
+      {/* Add Member Button - Hidden in read-only mode */}
+      {!isReadOnly && (
+        <div className="mt-6 ml-12">
+          <AddMemberButton onClick={onAddMember} />
+        </div>
+      )}
     </div>
   );
 };
