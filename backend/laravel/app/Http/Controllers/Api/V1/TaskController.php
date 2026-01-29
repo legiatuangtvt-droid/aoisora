@@ -190,9 +190,10 @@ class TaskController extends Controller
                             break;
 
                         case Task::OVERALL_ON_PROGRESS:
-                            // At least 1 store is on_progress or done_pending, and not overdue
+                            // At least 1 store is actively working (on_progress only)
+                            // done_pending is NOT "in progress" - store has finished their work
                             $query->whereHas('storeAssignments', function ($sq) {
-                                $sq->whereIn('status', ['on_progress', 'done_pending']);
+                                $sq->where('status', 'on_progress');
                             })
                             ->where(function ($q) use ($today) {
                                 $q->whereNull('end_date')
@@ -201,9 +202,9 @@ class TaskController extends Controller
                             break;
 
                         case Task::OVERALL_DONE:
-                            // All stores are done or unable
+                            // All stores have completed (done, done_pending, or unable)
                             $query->whereDoesntHave('storeAssignments', function ($sq) {
-                                $sq->whereNotIn('status', ['done', 'unable']);
+                                $sq->whereNotIn('status', ['done', 'done_pending', 'unable']);
                             })
                             ->whereHas('storeAssignments');
                             break;

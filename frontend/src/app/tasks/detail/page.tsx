@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getTaskById, getDepartments, getTasks, getTaskProgress, getTaskComments, createTaskComment, updateTaskComment, deleteTaskComment, TaskComment, getTaskImages, TaskImage, startStoreTask } from '@/lib/api';
+import { getTaskById, getDepartments, getTasks, getTaskProgress, getTaskComments, createTaskComment, updateTaskComment, deleteTaskComment, TaskComment, getTaskImages, TaskImage, startStoreTask, completeStoreTask, markStoreTaskUnable } from '@/lib/api';
 import { Task as ApiTask, Department, TaskProgressResponse, TaskStoreAssignment, Store } from '@/types/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { ViewMode, TaskGroup } from '@/types/tasks';
@@ -49,6 +49,10 @@ export default function TaskDetailPage() {
 
   // Store task action states
   const [startingStoreId, setStartingStoreId] = useState<number | null>(null);
+  const [completingStoreId, setCompletingStoreId] = useState<number | null>(null);
+  const [markingUnableStoreId, setMarkingUnableStoreId] = useState<number | null>(null);
+  const [unableReasonModal, setUnableReasonModal] = useState<{ storeId: number; storeName: string } | null>(null);
+  const [unableReason, setUnableReason] = useState('');
 
   // Instruction Preview Modal state
   const [isInstructionPreviewOpen, setIsInstructionPreviewOpen] = useState(false);
@@ -465,6 +469,55 @@ export default function TaskDetailPage() {
     }
   };
 
+  // Handle Complete Task action (Complete button)
+  const handleCompleteTask = async (storeId: number) => {
+    if (!taskId) return;
+
+    setCompletingStoreId(storeId);
+    try {
+      await completeStoreTask(Number(taskId), storeId);
+      showToast('Task completed successfully', 'success');
+      // Refresh task progress to update UI
+      const progressData = await getTaskProgress(Number(taskId));
+      setTaskProgress(progressData);
+    } catch (err) {
+      console.error('Failed to complete task:', err);
+      showToast(err instanceof Error ? err.message : 'Failed to complete task', 'error');
+    } finally {
+      setCompletingStoreId(null);
+    }
+  };
+
+  // Handle Mark Unable action
+  const handleOpenUnableModal = (storeId: number, storeName: string) => {
+    setUnableReasonModal({ storeId, storeName });
+    setUnableReason('');
+  };
+
+  const handleCloseUnableModal = () => {
+    setUnableReasonModal(null);
+    setUnableReason('');
+  };
+
+  const handleConfirmUnable = async () => {
+    if (!taskId || !unableReasonModal || !unableReason.trim()) return;
+
+    setMarkingUnableStoreId(unableReasonModal.storeId);
+    try {
+      await markStoreTaskUnable(Number(taskId), unableReasonModal.storeId, unableReason.trim());
+      showToast('Task marked as unable', 'success');
+      // Refresh task progress to update UI
+      const progressData = await getTaskProgress(Number(taskId));
+      setTaskProgress(progressData);
+      handleCloseUnableModal();
+    } catch (err) {
+      console.error('Failed to mark task as unable:', err);
+      showToast(err instanceof Error ? err.message : 'Failed to mark task as unable', 'error');
+    } finally {
+      setMarkingUnableStoreId(null);
+    }
+  };
+
   const startEditingComment = (comment: TaskComment) => {
     setEditingCommentId(comment.comment_id);
     setEditingContent(comment.content);
@@ -594,7 +647,7 @@ export default function TaskDetailPage() {
             </div>
 
             {/* Right - Statistics Cards */}
-            <div className="flex-1 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
               {/* Not Started */}
               <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 text-center">
                 <div className="flex items-center justify-center mb-3">
@@ -605,7 +658,7 @@ export default function TaskDetailPage() {
                   </div>
                 </div>
                 <div className="text-4xl font-bold text-gray-900 dark:text-white mb-1">
-                  {(taskProgress?.progress?.not_yet || 0) + (taskProgress?.progress?.on_progress || 0)}
+                  {taskProgress?.progress?.not_yet || 0}
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">Not Started</div>
               </div>
@@ -620,9 +673,39 @@ export default function TaskDetailPage() {
                   </div>
                 </div>
                 <div className="text-4xl font-bold text-gray-900 dark:text-white mb-1">
-                  {taskProgress?.progress?.done || task.progress.completed}
+                  {(taskProgress?.progress?.done || 0) + (taskProgress?.progress?.done_pending || 0)}
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">Completed</div>
+              </div>
+
+              {/* On Progress */}
+              <div className="border-2 border-blue-400 dark:border-blue-500 rounded-xl p-4 text-center bg-blue-50/30 dark:bg-blue-900/20">
+                <div className="flex items-center justify-center mb-3">
+                  <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-4xl font-bold text-gray-900 dark:text-white mb-1">
+                  {taskProgress?.progress?.on_progress || 0}
+                </div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">On Progress</div>
+              </div>
+
+              {/* Overdue */}
+              <div className="border-2 border-orange-400 dark:border-orange-500 rounded-xl p-4 text-center bg-orange-50/30 dark:bg-orange-900/20">
+                <div className="flex items-center justify-center mb-3">
+                  <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-4xl font-bold text-gray-900 dark:text-white mb-1">
+                  {taskProgress?.progress?.overdue || 0}
+                </div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">Overdue</div>
               </div>
 
               {/* Unable to Complete */}
@@ -635,7 +718,7 @@ export default function TaskDetailPage() {
                   </div>
                 </div>
                 <div className="text-4xl font-bold text-gray-900 dark:text-white mb-1">
-                  {taskProgress?.progress?.unable || task.unable}
+                  {taskProgress?.progress?.unable || 0}
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">Unable to Complete</div>
               </div>
@@ -758,11 +841,11 @@ export default function TaskDetailPage() {
                   const getStatusStyle = (status: string) => {
                     switch (status) {
                       case 'done':
-                        return { bg: 'bg-[#10B981]/10', border: 'border-[#10B981]', text: 'text-[#10B981]', dot: 'bg-[#10B981]' };
-                      case 'done_pending':
-                        return { bg: 'bg-[#F59E0B]/10', border: 'border-[#F59E0B]', text: 'text-[#F59E0B]', dot: 'bg-[#F59E0B]' };
-                      case 'on_progress':
                         return { bg: 'bg-[#297EF6]/10', border: 'border-[#297EF6]', text: 'text-[#297EF6]', dot: 'bg-[#297EF6]' };
+                      case 'done_pending':
+                        return { bg: 'bg-[#297EF6]/10', border: 'border-[#297EF6]', text: 'text-[#297EF6]', dot: 'bg-[#297EF6]' };
+                      case 'on_progress':
+                        return { bg: 'bg-[#EDA600]/10', border: 'border-[#EDA600]', text: 'text-[#EDA600]', dot: 'bg-[#EDA600]' };
                       case 'unable':
                         return { bg: 'bg-[#EF4444]/10', border: 'border-[#EF4444]', text: 'text-[#EF4444]', dot: 'bg-[#EF4444]' };
                       case 'not_yet':
@@ -780,6 +863,12 @@ export default function TaskDetailPage() {
                         border: '0.5px solid #990000'
                       };
                     }
+                    if (status === 'on_progress') {
+                      return {
+                        background: 'rgba(237, 166, 0, 0.05)',
+                        border: '0.5px solid #EDA600'
+                      };
+                    }
                     return {
                       background: 'rgba(41, 126, 246, 0.05)',
                       border: '0.5px solid #297EF6'
@@ -791,7 +880,7 @@ export default function TaskDetailPage() {
                   const statusStyle = getStatusStyle(assignment.status);
                   const statusLabel = assignment.status === 'done' ? 'Done' :
                                      assignment.status === 'done_pending' ? 'Pending' :
-                                     assignment.status === 'on_progress' ? 'Progress' :
+                                     assignment.status === 'on_progress' ? 'In Process' :
                                      assignment.status === 'unable' ? 'Unable' : 'Not Yet';
 
                   // Check if this is the current user's store
@@ -861,7 +950,11 @@ export default function TaskDetailPage() {
                       <div className="p-[10px]">
                         {/* Status-based Border Card */}
                         <div
-                          className={`rounded-[10px] p-5 ${assignment.status === 'not_yet' ? 'dark:bg-red-900/10' : 'dark:bg-blue-900/10'}`}
+                          className={`rounded-[10px] p-5 ${
+                            assignment.status === 'not_yet' ? 'dark:bg-red-900/10' :
+                            assignment.status === 'on_progress' ? 'dark:bg-yellow-900/10' :
+                            'dark:bg-blue-900/10'
+                          }`}
                           style={cardStyle}
                         >
                           <div className="flex items-start justify-between">
@@ -878,34 +971,138 @@ export default function TaskDetailPage() {
                               {/* Content for not_yet status - WORK NOT DELIVERED */}
                               {assignment.status === 'not_yet' && (
                                 <>
-                                  <h4 className="text-[24px] leading-[28px] font-bold text-[#990000]">
-                                    WORK NOT DELIVERED
-                                  </h4>
-                                  {/* Show link for Document type, nothing for Image type */}
-                                  {isDocumentType && (
-                                    <button
-                                      onClick={() => setIsInstructionPreviewOpen(true)}
-                                      className="text-[15px] leading-[17px] italic underline text-[#297EF6] hover:opacity-80 text-left"
-                                    >
-                                      Link báo cáo
-                                    </button>
-                                  )}
+                                  {/* Heading and Buttons on same row */}
+                                  <div className="flex items-center">
+                                    <h4 className="text-[24px] leading-[28px] font-bold text-[#990000]">
+                                      WORK NOT DELIVERED
+                                    </h4>
+                                    {/* Start and Unable Buttons - Only show for user's store */}
+                                    {isUserStore && (
+                                      <div className="flex-1 flex justify-center gap-3">
+                                        {/* Start Button */}
+                                        <button
+                                          onClick={() => handleStartTask(assignment.store_id)}
+                                          disabled={startingStoreId === assignment.store_id}
+                                          className="inline-flex items-center gap-2 px-6 py-2 bg-[#C5055B] hover:bg-[#A50449] text-white text-[15px] leading-[17px] font-medium rounded-[5px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                          {startingStoreId === assignment.store_id ? (
+                                            <>
+                                              <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                              </svg>
+                                              Starting...
+                                            </>
+                                          ) : (
+                                            <>
+                                              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M8 5v14l11-7z" />
+                                              </svg>
+                                              Start
+                                            </>
+                                          )}
+                                        </button>
+                                        {/* Unable Button */}
+                                        <button
+                                          onClick={() => handleOpenUnableModal(assignment.store_id, assignment.store_name)}
+                                          disabled={markingUnableStoreId === assignment.store_id}
+                                          className="inline-flex items-center gap-2 px-6 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[15px] leading-[17px] font-medium rounded-[5px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                          {markingUnableStoreId === assignment.store_id ? (
+                                            <>
+                                              <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                              </svg>
+                                              Processing...
+                                            </>
+                                          ) : (
+                                            <>
+                                              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <circle cx="12" cy="12" r="10" />
+                                                <line x1="15" y1="9" x2="9" y2="15" />
+                                                <line x1="9" y1="9" x2="15" y2="15" />
+                                              </svg>
+                                              Unable
+                                            </>
+                                          )}
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                </>
+                              )}
+
+                              {/* Content for on_progress status - WORK PENDING */}
+                              {assignment.status === 'on_progress' && (
+                                <>
+                                  {/* Heading and Buttons on same row */}
+                                  <div className="flex items-center">
+                                    <h4 className="text-[24px] leading-[28px] font-bold text-[#EDA600]">
+                                      WORK PENDING
+                                    </h4>
+                                    {/* Complete and Unable Buttons - Only show for user's store */}
+                                    {isUserStore && (
+                                      <div className="flex-1 flex justify-center gap-3">
+                                        {/* Complete Button */}
+                                        <button
+                                          onClick={() => handleCompleteTask(assignment.store_id)}
+                                          disabled={completingStoreId === assignment.store_id}
+                                          className="inline-flex items-center gap-2 px-6 py-2 bg-[#10B981] hover:bg-[#059669] text-white text-[15px] leading-[17px] font-medium rounded-[5px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                          {completingStoreId === assignment.store_id ? (
+                                            <>
+                                              <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                              </svg>
+                                              Completing...
+                                            </>
+                                          ) : (
+                                            <>
+                                              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <polyline points="20 6 9 17 4 12" />
+                                              </svg>
+                                              Complete
+                                            </>
+                                          )}
+                                        </button>
+                                        {/* Unable Button */}
+                                        <button
+                                          onClick={() => handleOpenUnableModal(assignment.store_id, assignment.store_name)}
+                                          disabled={markingUnableStoreId === assignment.store_id}
+                                          className="inline-flex items-center gap-2 px-6 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[15px] leading-[17px] font-medium rounded-[5px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                          {markingUnableStoreId === assignment.store_id ? (
+                                            <>
+                                              <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                              </svg>
+                                              Processing...
+                                            </>
+                                          ) : (
+                                            <>
+                                              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <circle cx="12" cy="12" r="10" />
+                                                <line x1="15" y1="9" x2="9" y2="15" />
+                                                <line x1="9" y1="9" x2="15" y2="15" />
+                                              </svg>
+                                              Unable
+                                            </>
+                                          )}
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
                                 </>
                               )}
 
                               {/* Content for done/done_pending status - WORK DELIVERED */}
-                              {isDocumentType && (assignment.status === 'done' || assignment.status === 'done_pending') && (
-                                <>
-                                  <h4 className="text-[24px] leading-[28px] font-bold text-[#297EF6]">
-                                    WORK DELIVERED
-                                  </h4>
-                                  <button
-                                    onClick={() => setIsInstructionPreviewOpen(true)}
-                                    className="text-[15px] leading-[17px] italic underline text-[#297EF6] hover:opacity-80 text-left"
-                                  >
-                                    Link báo cáo
-                                  </button>
-                                </>
+                              {(assignment.status === 'done' || assignment.status === 'done_pending') && (
+                                <h4 className="text-[24px] leading-[28px] font-bold text-[#297EF6]">
+                                  WORK DELIVERED
+                                </h4>
                               )}
 
                               {isImageType && images.length > 0 && (
@@ -951,28 +1148,21 @@ export default function TaskDetailPage() {
                               )}
                             </div>
 
-                            {/* Like Section - Heart button + Avatars + Count */}
-                            <div className="flex items-center gap-2">
-                              {/* Like Button */}
-                              <button
-                                className="flex items-center justify-center gap-1.5 px-2 py-1 rounded-[5px] hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            {/* Like Button with Count - Only for done/done_pending, clickable for HQ only */}
+                            {(assignment.status === 'done' || assignment.status === 'done_pending') && (
+                              <div
+                                className={`flex items-center justify-center gap-1.5 px-2 py-1 rounded-[5px] ${
+                                  !user?.storeId ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700' : 'cursor-default'
+                                } transition-colors`}
                                 style={{ background: '#F0F0F0', border: '0.5px solid #9B9B9B' }}
+                                onClick={!user?.storeId ? () => {/* TODO: Handle HQ like action */} : undefined}
                               >
                                 <svg className="w-4 h-4" viewBox="0 0 16 16" fill="#F8312F">
                                   <path d="M8 14.25l-1.45-1.32C3.1 10.02 1 8.07 1 5.68 1 3.79 2.49 2.25 4.3 2.25c1.04 0 2.04.49 2.7 1.26.66-.77 1.66-1.26 2.7-1.26C11.51 2.25 13 3.79 13 5.68c0 2.39-2.1 4.34-5.55 7.25L8 14.25z"/>
                                 </svg>
-                                <span className="text-[15px] leading-[17px] text-black dark:text-white">Like</span>
-                              </button>
-
-                              {/* Avatars Stack - TODO: Show actual likers */}
-                              <div className="flex -space-x-2">
-                                <div className="w-[30px] h-[30px] rounded-full bg-gray-300 border-2 border-white dark:border-gray-800"></div>
-                                <div className="w-[30px] h-[30px] rounded-full bg-gray-400 border-2 border-white dark:border-gray-800"></div>
+                                <span className="text-[15px] leading-[17px] text-black dark:text-white">0</span>
                               </div>
-
-                              {/* Like Count */}
-                              <span className="text-[13px] leading-[15px] text-[#6B6B6B]">2 likes</span>
-                            </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -1332,13 +1522,13 @@ export default function TaskDetailPage() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-5 py-4">
-              <h3 id="instruction-preview-title" className="text-[18px] leading-[21px] font-bold text-black dark:text-white">
+            <div className="relative flex items-center px-5 py-4">
+              <h3 id="instruction-preview-title" className="text-[18px] leading-[21px] font-bold text-black dark:text-white w-full text-center">
                 {originalTask?.task_instruction_type === 'image' ? 'IMAGE PREVIEW' : 'DOCUMENT PREVIEW'}
               </h3>
               <button
                 onClick={() => setIsInstructionPreviewOpen(false)}
-                className="w-6 h-6 flex items-center justify-center text-[#6B6B6B] hover:text-gray-900 dark:hover:text-white transition-colors"
+                className="absolute right-5 w-6 h-6 flex items-center justify-center text-[#6B6B6B] hover:text-gray-900 dark:hover:text-white transition-colors"
                 aria-label="Close preview"
               >
                 <svg className="w-[14px] h-[14px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
@@ -1382,11 +1572,11 @@ export default function TaskDetailPage() {
                 </div>
               ) : (
                 /* Document Preview Content */
-                <div className="space-y-4 text-center">
-                  {originalTask?.comment ? (
-                    <div className="prose prose-sm dark:prose-invert max-w-none mx-auto">
-                      <p className="text-[15px] leading-[20px] text-black dark:text-white whitespace-pre-wrap">
-                        {originalTask.comment}
+                <div className="space-y-4">
+                  {originalTask?.task_description ? (
+                    <div className="prose prose-sm dark:prose-invert max-w-none">
+                      <p className="text-[15px] leading-[20px] text-black dark:text-white whitespace-pre-wrap text-left">
+                        {originalTask.task_description}
                       </p>
                     </div>
                   ) : (
@@ -1414,7 +1604,7 @@ export default function TaskDetailPage() {
                 />
               </svg>
               <span className="text-[13px] leading-[15px] text-[#D38200]">
-                Please attach the report file in the comment section after completing the task.
+                Please follow the instructions above to complete the task.
               </span>
             </div>
           </div>
@@ -1433,6 +1623,59 @@ export default function TaskDetailPage() {
         variant="danger"
         isLoading={isDeletingComment}
       />
+
+      {/* Unable Reason Modal */}
+      {unableReasonModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={handleCloseUnableModal}
+          />
+          {/* Modal */}
+          <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md p-6 animate-fade-in">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              Mark Task as Unable
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Please provide a reason why the task cannot be completed for <span className="font-medium">{unableReasonModal.storeName}</span>.
+            </p>
+            <textarea
+              value={unableReason}
+              onChange={(e) => setUnableReason(e.target.value)}
+              placeholder="Enter reason..."
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent resize-none"
+              rows={4}
+              autoFocus
+            />
+            <div className="flex justify-end gap-3 mt-4">
+              <button
+                onClick={handleCloseUnableModal}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmUnable}
+                disabled={!unableReason.trim() || markingUnableStoreId !== null}
+                className="px-4 py-2 text-sm font-medium text-white bg-[#F59E0B] hover:bg-[#D97706] rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+              >
+                {markingUnableStoreId !== null ? (
+                  <>
+                    <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Processing...
+                  </>
+                ) : (
+                  'Confirm Unable'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

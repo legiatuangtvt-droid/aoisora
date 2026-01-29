@@ -1886,24 +1886,34 @@ Chi tiết: `docs/06-deployment/DEPLOY-PA-VIETNAM-HOSTING.md`
 │  📌 TASK STATUS CALCULATION (Auto từ Receiver Statuses):                                   │
 │  ══════════════════════════════════════════════════════════════════════════════════════════│
 │                                                                                            │
+│  ⚠️ QUAN TRỌNG: done_pending = store ĐÃ HOÀN THÀNH (chờ HQ check), KHÔNG PHẢI "đang làm"  │
+│                                                                                            │
+│  THỨ TỰ ƯU TIÊN KIỂM TRA (Priority Order):                                                 │
 │  ┌─────────────────────┬────────────────────────────────────────────────────────┐          │
-│  │ TASK STATUS         │ ĐIỀU KIỆN (System check conditions)                    │          │
-│  ├─────────────────────┼────────────────────────────────────────────────────────┤          │
-│  │ NOT YET             │ TẤT CẢ receivers = not_yet                             │          │
-│  │ ON PROGRESS         │ ÍT NHẤT 1 receiver đang thực hiện (on_progress,        │          │
-│  │                     │ done_pending) VÀ không có overdue                      │          │
-│  │ DONE                │ TẤT CẢ receivers = done (confirmed) HOẶC unable        │          │
-│  │ OVERDUE             │ Có BẤT KỲ receiver = overdue                           │          │
-│  └─────────────────────┴────────────────────────────────────────────────────────┘          │
+│  │ Priority │ STATUS   │ ĐIỀU KIỆN                                              │          │
+│  ├──────────┼──────────┼────────────────────────────────────────────────────────┤          │
+│  │    1     │ OVERDUE  │ end_date < today VÀ chưa all completed                 │          │
+│  │    2     │ DONE     │ TẤT CẢ receivers đã completed (done/done_pending/unable)│          │
+│  │    3     │ ON_PROG  │ ÍT NHẤT 1 receiver = on_progress (đang thực hiện)      │          │
+│  │    4     │ NOT_YET  │ ÍT NHẤT 1 receiver = not_yet VÀ không có on_progress   │          │
+│  └──────────┴──────────┴────────────────────────────────────────────────────────┘          │
+│                                                                                            │
+│  📌 CHI TIẾT:                                                                              │
+│     • OVERDUE: Quá hạn và chưa hoàn thành tất cả                                           │
+│     • DONE: Tất cả stores đã completed (done + done_pending + unable đều tính là completed)│
+│     • ON_PROGRESS: Có ít nhất 1 store ĐANG thực hiện (chỉ on_progress, KHÔNG tính done_pending)│
+│     • NOT_YET: Có ít nhất 1 store chưa bắt đầu VÀ không có store nào đang thực hiện        │
 │                                                                                            │
 │  📌 VÍ DỤ (Task giao cho 3 receivers: A, B, C):                                            │
 │  ┌─────────────────────────────────────────────────────────────────────────────────┐       │
 │  │ Case 1: A=not_yet, B=not_yet, C=not_yet         → TASK = NOT YET               │       │
 │  │ Case 2: A=on_progress, B=not_yet, C=not_yet     → TASK = ON PROGRESS           │       │
-│  │ Case 3: A=done_pending, B=not_yet, C=not_yet    → TASK = ON PROGRESS           │       │
+│  │ Case 3: A=done_pending, B=not_yet, C=not_yet    → TASK = NOT YET ⚠️            │       │
+│  │         (done_pending = đã xong, không phải "đang làm")                        │       │
 │  │ Case 4: A=done, B=done_pending, C=on_progress   → TASK = ON PROGRESS           │       │
 │  │ Case 5: A=done, B=done, C=unable                → TASK = DONE ✓                │       │
-│  │ Case 6: A=done, B=done, C=done_pending          → TASK = ON PROGRESS (chờ HQ)  │       │
+│  │ Case 6: A=done, B=done, C=done_pending          → TASK = DONE ✓                │       │
+│  │         (tất cả đã completed, dù có pending HQ check)                          │       │
 │  │ Case 7: A=done, B=on_progress, C=overdue        → TASK = OVERDUE ⚠️            │       │
 │  │ Case 8: A=done, B=done, C=overdue               → TASK = OVERDUE ⚠️            │       │
 │  └─────────────────────────────────────────────────────────────────────────────────┘       │
@@ -1932,8 +1942,8 @@ Chi tiết: `docs/06-deployment/DEPLOY-PA-VIETNAM-HOSTING.md`
 │      → "Reject": receiver status = on_progress (yêu cầu làm lại)                           │
 │    • AUTO CONFIRM: Nếu today > end_date mà status = done_pending                           │
 │      → System tự động chuyển done_pending → done (lỗi HQ không check kịp)                  │
-│    • Khi TẤT CẢ receivers = done hoặc unable → TASK = DONE                                 │
-│    • Nếu có BẤT KỲ receiver = overdue → TASK = OVERDUE                                     │
+│    • Khi TẤT CẢ receivers đã completed (done/done_pending/unable) → TASK = DONE            │
+│    • Nếu end_date < today VÀ chưa all completed → TASK = OVERDUE                           │
 │                                                                                            │
 │  ══════════════════════════════════════════════════════════════════════════════════════════│
 │  📌 PAUSE FLOW (Tạm dừng task):                                                            │

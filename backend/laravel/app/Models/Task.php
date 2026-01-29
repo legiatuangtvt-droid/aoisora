@@ -496,21 +496,22 @@ class Task extends Model
             return null;
         }
 
-        $finalCount = $counts['done'] + $counts['unable'];
-        $inProgressCount = $counts['on_progress'] + $counts['done_pending'];
+        // done_pending = store completed work (waiting HQ check), count as "completed" not "in progress"
+        $completedCount = $counts['done'] + $counts['done_pending'] + $counts['unable'];
 
-        // Check DONE: All stores in final state
-        if ($finalCount === $counts['total']) {
+        // Check DONE: All stores have completed (done/done_pending/unable)
+        if ($completedCount === $counts['total']) {
             return self::OVERALL_DONE;
         }
 
-        // Check OVERDUE: end_date < today AND not all done
+        // Check OVERDUE: end_date < today AND not all completed
         if ($this->end_date && $this->end_date->lt(now()->startOfDay())) {
             return self::OVERALL_OVERDUE;
         }
 
-        // Check ON PROGRESS: At least 1 store in progress
-        if ($inProgressCount > 0) {
+        // Check ON PROGRESS: At least 1 store is actively working (on_progress only)
+        // done_pending is NOT "in progress" - store has finished their work
+        if ($counts['on_progress'] > 0) {
             return self::OVERALL_ON_PROGRESS;
         }
 
@@ -534,6 +535,7 @@ class Task extends Model
                 'done_pending' => 0,
                 'done' => 0,
                 'unable' => 0,
+                'overdue' => 0,
                 'total' => 0,
                 'completed_count' => 0,
                 'completion_rate' => 0,
@@ -542,7 +544,15 @@ class Task extends Model
 
         $completedCount = $counts['done'] + $counts['unable'];
 
+        // Calculate overdue stores: stores with not_yet or on_progress when task is past end_date
+        $overdueCount = 0;
+        if ($this->end_date && $this->end_date->lt(now()->startOfDay())) {
+            // Task is overdue - count stores that haven't completed
+            $overdueCount = $counts['not_yet'] + $counts['on_progress'];
+        }
+
         return array_merge($counts, [
+            'overdue' => $overdueCount,
             'completed_count' => $completedCount,
             'completion_rate' => round(($completedCount / $counts['total']) * 100, 1),
         ]);
